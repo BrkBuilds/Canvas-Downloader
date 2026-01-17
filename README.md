@@ -1,10 +1,10 @@
-# 🎓 Canvas Downloader
+# Canvas Downloader
 
 A simple tool for students to download all files and modules from Canvas courses in one go.
 
 ---
 
-## ✨ Features
+## Features
 *   **Save Hours of Clicking**: Download *all* files from a course in seconds. No more clicking "download" on every single PDF.
 *   **Stay Organized**: Automatically creates folders that match your Canvas Modules. Perfect for exam prep!
 *   **Offline Study**: Get all your materials on your hard drive so you can study without internet.
@@ -16,7 +16,7 @@ A simple tool for students to download all files and modules from Canvas courses
 
 ---
 
-## 💻 For Windows Users (How to Run)
+## For Windows Users (How to Run)
 
 1.  **Download**: Download the `Canvas_Downloader.exe` file.
 2.  **Run**: Double-click the file to start.
@@ -31,7 +31,7 @@ A simple tool for students to download all files and modules from Canvas courses
 
 ---
 
-## 🍎 For Mac Users (How to Run)
+## For Mac Users (How to Run)
 
 Since the `.exe` file only works on Windows, Mac users need to run the application using Python (don't worry, it's straightforward).
 
@@ -56,7 +56,7 @@ Since the `.exe` file only works on Windows, Mac users need to run the applicati
 The application should now open in your browser!
 
 
-### 🆘 Help! It's not working?
+### Help! It's not working?
 If you're stuck, you might need to install Python.
 
 1.  **Install Python**: Go to [python.org](https://www.python.org/downloads/) and download the latest version.
@@ -66,7 +66,7 @@ If you're stuck, you might need to install Python.
 
 ---
 
-### 🍏 Bonus: Make it a double-clickable App (Mac)
+### Bonus: Make it a double-clickable App (Mac)
 You don't want to open the terminal every time? You can make a real app icon in 2 minutes:
 
 1.  Open the **Automator** app on your Mac (Press Cmd+Space and type "Automator").
@@ -83,7 +83,7 @@ You don't want to open the terminal every time? You can make a real app icon in 
 
 ---
 
-## 🚀 How to Use
+## How to Use
 
 ### Step 1: Authentication
 1.  Open the app.
@@ -110,11 +110,11 @@ You don't want to open the terminal every time? You can make a real app icon in 
     *   **Flat**: Puts all files for a course into one big folder.
 2.  Choose a **Destination Folder** on your computer.
 3.  Click **"Confirm and Download"**.
-4.  Wait for the magic to happen! 🪄
+4.  Wait for the download to complete!
 
 ---
 
-## 📂 What are these files?
+## What are these files?
 
 *   `Canvas_Downloader.exe`: The main program (Windows only).
 *   `start.py`: The "Launcher" script that starts the system.
@@ -125,15 +125,15 @@ You don't want to open the terminal every time? You can make a real app icon in 
 
 ---
 
-## ⚠️ Common Issues & Troubleshooting
+## Common Issues & Troubleshooting
 
 *   **"Unauthorized" Error**:
     *   If you see an error saying "unauthorized", your token might be expired, or you might be downloading too fast. The app now has "smart retries" to handle this, so just try again.
 *   **White Screen**:
     *   If the browser window turns white and doesn't load, simply **refresh the page** (F5 or Cmd+R) or close the tab and reopen the link shown in the black "Mother" window.
 *   **Download Speed**:
-    *   To be safe and avoid getting blocked by Canvas, the app downloads 2 files at a time. Large courses might take a minute or two. Grab a coffee! ☕
+    *   To be safe and avoid getting blocked by Canvas, the app downloads 2 files at a time. Large courses might take a minute or two.
 
 ---
 
-*Made with ❤️ for Students*
+*Made for Students*
