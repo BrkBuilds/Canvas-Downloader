@@ -84,12 +84,11 @@ Since this is a Python application, you can run it directly from the source code
 
 ## What do the files in the project folder do?
 
-*   `Canvas_Downloader.exe`: The main program (Windows only).
 *   `start.py`: The "Launcher" script that starts the system.
 *   `app.py`: The visual interface you see in the browser.
 *   `canvas_logic.py`: The "Brain" that talks to Canvas and handles downloads.
 *   `translations.py`: Contains all text in English and Danish.
-*   `requirements.txt`: List of tools the app needs (for Mac users).
+*   `requirements.txt`: List of tools the app needs.
 
 ## Common Issues & Troubleshooting
 
