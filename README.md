@@ -1,139 +1,66 @@
 # Canvas Downloader
 
-A simple tool for students to download all files and modules from Canvas courses in one go.
+<p align="center">
+  <img src="assets/icon.png" width="150" alt="Canvas Downloader Logo">
+</p>
 
----
+This application allows students to batch download files and modules from Canvas LMS courses. It mirrors the exact module structure of your courses on your local drive, ensuring you have offline access to all your study materials.
+
+![Screenshot of Course Selection](assets/screenshot_selection.png)
 
 ## Features
-*   **Save Hours of Clicking**: Download *all* files from a course in seconds. No more clicking "download" on every single PDF.
-*   **Stay Organized**: Automatically creates folders that match your Canvas Modules. Perfect for exam prep!
-*   **Offline Study**: Get all your materials on your hard drive so you can study without internet.
-*   **Downloads Everything**: Supports Files, Modules, Panopto Videos, Pages, and External Links.
-*   **Always Up-to-Date**: New courses added to your Canvas account appear automatically in the app.
-*   **Study Mode**: Use the "Pdf & Powerpoint only" filter to download only the most important study materials (skips everything else).
-*   **Smart & Robust**: Skips files you can't access and retries automatically if the connection fails.
-*   **Safe**: Runs locally on your machine. Your token is saved securely on your own computer.
+*   **One-Click Bulk Download**: Select multiple courses and download everything at once. This solves the pain of clicking "download" on hundreds of individual files.
+*   **Module-Based Organization**: Creates folders that match your Canvas Modules perfectly (e.g., `Course Name/Week 1/Lecture.pdf`).
+*   **Smart & Robust**:
+    *   Async downloads for high speed.
+    *   Automatic retries for network glitches.
+    *   Handles restricted/unauthorized files gracefully (logs them instead of crashing).
+*   **Study Mode**: Toggle to download only `.pdf` and `.pptx` files, skipping images and other clutter.
 
----
+![Screenshot of Downloading](assets/screenshot_download.png)
 
-## For Windows Users (How to Run)
+## Installation & Running
 
-1.  **Download**: Download the `Canvas_Downloader.exe` file.
-2.  **Run**: Double-click the file to start.
-3.  **Security Warnings (Important!)**:
-    *   **"Windows protected your PC" (SmartScreen)**:
-        *   Because this app is made by a student and not a large corporation (like Microsoft), Windows might try to block it.
-        *   **Solution**: Click **"More info"** (under the text) and then click the **"Run anyway"** button.
-    *   **Firewall Popup**:
-        *   When the app starts, Windows Firewall might ask for permission.
-        *   **Why?**: The app runs a small local "web server" on your computer to display the user interface in your browser. It needs permission to "talk" to itself.
-        *   **Solution**: Check the boxes and click **"Allow access"**. It is completely safe.
+### For Users (Run from Code)
+Since this is a Python application, you can run it directly from the source code on Windows, Mac, or Linux.
 
----
+**Prerequisites:**
+1.  **Install Python 3**: Download from [python.org](https://www.python.org/downloads/). *Ensure you check "Add Python to PATH" during installation.*
 
-## For Mac Users (How to Run)
-
-Since the `.exe` file only works on Windows, Mac users need to run the application using Python (don't worry, it's straightforward).
-
-### Prerequisites
-1.  **Install Python**: Download and install the latest Python 3 from [python.org](https://www.python.org/downloads/).
-    *   *Note: Make sure to check "Add Python to PATH" if asked during installation.*
-
-### Installation & Running
-1.  **Download Source**: Download the folder containing these files.
-2.  **Open Terminal**: Press `Cmd + Space`, type "Terminal", and press Enter.
-3.  **Navigate to Folder**:
-    *   Type `cd ` (type cd followed by a space).
-    *   Drag the downloaded folder from Finder into the Terminal window (this automatically types the path).
-    *   Press **Enter**.
-4.  **Install Dependencies** (Only needed the first time):
-    *   Copy and paste this command: `pip3 install -r requirements.txt`
-    *   Press **Enter**.
-5.  **Run the App**:
-    *   Type: `python3 start.py`
-    *   Press **Enter**.
-
-The application should now open in your browser!
-
-
-### Help! It's not working?
-If you're stuck, you might need to install Python.
-
-1.  **Install Python**: Go to [python.org](https://www.python.org/downloads/) and download the latest version.
-2.  **Check "Add to PATH"**: When installing, make sure to check the box that says "Add Python to PATH".
-3.  **Try again**: Open your terminal, go to the folder, and run `pip3 install -r requirements.txt` followed by `python3 start.py`.
-
-
----
-
-### Bonus: Make it a double-clickable App (Mac)
-You don't want to open the terminal every time? You can make a real app icon in 2 minutes:
-
-1.  Open the **Automator** app on your Mac (Press Cmd+Space and type "Automator").
-2.  Choose **"Application"** when asked what to create.
-3.  In the search bar, type **"Run Shell Script"** and drag it into the main window.
-4.  Delete the text inside and paste this (replace `/path/to/folder` with the actual path to your folder):
+**Steps:**
+1.  **Clone or Download**: Click the green "<> Code" button above and select "Download ZIP" (or `git clone` this repo).
+2.  **Unzip**: Extract the folder.
+3.  **Install Requirements**:
+    Open your terminal/command prompt in the folder and run:
     ```bash
-    cd /Users/YOUR_USERNAME/Downloads/canvas_downloader
-    /usr/local/bin/python3 start.py
+    pip install -r requirements.txt
     ```
-    *(Tip: To get the path, just drag the folder into the text box)*
-5.  Press **Cmd + S** to save. Name it "Canvas Downloader" and save it to your **Applications** folder.
-6.  **Done!** Now you just double-click that icon to run the app.
+4.  **Launch**:
+    Run the start script:
+    ```bash
+    python start.py
+    ```
+    The application will automatically launch in your default web browser.
 
----
+## Under the Hood: Technical Overview
 
-## How to Use
+This application is built as a hybrid local web app to combine the power of Python with a modern UI.
 
-### Step 1: Authentication
-1.  Open the app.
-2.  **Enter your Canvas URL**:
-    *   **Crucial**: You must use the *actual* Canvas URL, not your school's login portal.
-    *   **How to find it**: Log in to Canvas in your browser. Look at the address bar **after** you are logged in.
-    *   It often looks like `https://schoolname.instructure.com` (even if you went to `canvas.school.edu` to get there).
-    *   Copy that URL and paste it into the app.
-3.  **Get an API Token**:
-    *   Go to **Account** -> **Settings** on Canvas.
-    *   Scroll to **Approved Integrations**.
-    *   Click **+ New Access Token**.
-    *   Copy the long string and paste it into the app.
-4.  Click **"Validate & Save Token"**.
+### Architecture
+*   **Frontend**: Built with **Streamlit**, providing a responsive and clean web interface.
+*   **Launcher**: A lightweight **Tkinter** wrapper (`start.py`) that manages the Streamlit server process in a background thread, giving users a simple "double-click" experience without needing to manage command-line servers manually.
+*   **Canvas Integration**: Uses the **CanvasAPI** library to interact with the LMS. It handles pagination, rate limiting, and object retrieval (Files, Pages, Modules).
 
-### Step 2: Select Courses
-1.  You will see a list of your courses.
-2.  Select the ones you want to download (or click "Select All").
-3.  Click **"Continue"**.
+### Key Technical Features
+*   **Asynchronous I/O**: The core downloader (`canvas_logic.py`) utilizes `asyncio` and `aiohttp`. This allows the app to download multiple files in parallel (concurrency limited to prevent API bans), significantly speeding up large course traversals compared to synchronous requests.
+*   **Resiliency Patterns**:
+    *   **Smart Retries**: Implements exponential backoff for HTTP 429 (Rate Limit) and 5xx errors.
+    *   **Conflict Resolution**: Automatically renames files if duplicates exist (e.g., `Exam (1).pdf`) to prevent overwriting.
+    *   **Sanitization**: Cleans filenames of illegal characters to ensure cross-platform compatibility (Windows/Mac/Linux).
 
-### Step 3: Download
-1.  Choose your **Download Structure**:
-    *   **With subfolders**: Keeps files organized exactly like in Canvas Modules (Recommended).
-    *   **Flat**: Puts all files for a course into one big folder.
-2.  Choose a **Destination Folder** on your computer.
-3.  Click **"Confirm and Download"**.
-4.  Wait for the download to complete!
+## Security
+*   **Local Execution**: The app runs entirely on your local machine (`localhost`).
+*   **Token Safety**: Your API Token is stored locally in `canvas_downloader_settings.json` and is **never** sent to any external server other than the official Canvas API for authentication.
 
----
-
-## What are these files?
-
-*   `Canvas_Downloader.exe`: The main program (Windows only).
-*   `start.py`: The "Launcher" script that starts the system.
-*   `app.py`: The visual interface you see in the browser.
-*   `canvas_logic.py`: The "Brain" that talks to Canvas and handles downloads.
-*   `translations.py`: Contains all text in English and Danish.
-*   `requirements.txt`: List of tools the app needs (for Mac users).
-
----
-
-## Common Issues & Troubleshooting
-
-*   **"Unauthorized" Error**:
-    *   If you see an error saying "unauthorized", your token might be expired, or you might be downloading too fast. The app now has "smart retries" to handle this, so just try again.
-*   **White Screen**:
-    *   If the browser window turns white and doesn't load, simply **refresh the page** (F5 or Cmd+R) or close the tab and reopen the link shown in the black "Mother" window.
-*   **Download Speed**:
-    *   To be safe and avoid getting blocked by Canvas, the app downloads 2 files at a time. Large courses might take a minute or two.
-
----
-
-*Made for Students*
+## License
+MIT License. Feel free to modify and use this for your own studies!
