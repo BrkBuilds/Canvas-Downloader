@@ -23,23 +23,22 @@ This application allows students to batch download files and modules from Canvas
 
 ### Security Warnings (Important!)
 *   **"Windows protected your PC" (SmartScreen)**:
-    *   If you download the `.exe` version, Windows might try to block it because it's made by a student, not a corporation.
-    *   **Solution**: Click **"More info"** and then **"Run anyway"**.
+    *   Windows might try to block the .exe from running, as the application is unsigned.
+    *   **Solution**: Click **"More info"** and then **"Run anyway"** (the app is safe, windows just "doesn't like" independent developers who don't pay for having apps signed).
 *   **Firewall Popup**:
     *   When the app starts, Windows Firewall might ask for permission.
-    *   **Why?**: The app runs a small local "web server" to show the UI. It needs permission to "talk" to itself.
+    *   **Why?**: The app runs a small local "web server" to show the UI. It needs permission to "talk" to itself, and to communicate with Instructure's Canvas API.
     *   **Solution**: Check the boxes and click **"Allow access"**. It is completely safe.
 
 ## Installation & Running
 
-### For Users (Run from Code)
 Since this is a Python application, you can run it directly from the source code on Windows, Mac, or Linux.
 
 **Prerequisites:**
 1.  **Install Python 3**: Download from [python.org](https://www.python.org/downloads/). *Ensure you check "Add Python to PATH" during installation.*
 
 **Steps:**
-1.  **Clone or Download**: Click the green "<> Code" button above and select "Download ZIP" (or `git clone` this repo).
+1.  **Clone or Download**: Click the green "<> Code" button above in the Github Repository and select "Download ZIP" (or `git clone` this repo).
 2.  **Unzip**: Extract the folder.
 3.  **Install Requirements**:
     Open your terminal/command prompt in the folder and run:
@@ -51,7 +50,7 @@ Since this is a Python application, you can run it directly from the source code
     ```bash
     python start.py
     ```
-    The application will automatically launch in your default web browser.
+    The application will automatically start the "mother-window" and launch the application UI in your default web browser.
 
 ## How to use Canvas Downloader
 
@@ -94,10 +93,6 @@ Since this is a Python application, you can run it directly from the source code
 
 *   **"Unauthorized" Error**:
     *   If you see an error saying "unauthorized", your token might be expired, or you might be downloading too fast. The app now has "smart retries" to handle this, so just try again.
-*   **White Screen**:
-    *   If the browser window turns white and doesn't load, simply **refresh the page** (F5 or Cmd+R) or close the tab and reopen the link shown in the black "Mother" window.
-*   **Download Speed**:
-    *   To be safe and avoid getting blocked by Canvas, the app downloads 2 files at a time. Large courses might take a minute or two. Grab a coffee! ☕
 
 ## Under the Hood: Technical Overview
 
