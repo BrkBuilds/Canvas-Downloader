@@ -1,0 +1,5 @@
+streamlit
+canvasapi
+watchdog
+aiohttp
+requests

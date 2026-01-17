@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / Build
+build/
+dist/
+
+
+# Secrets
+canvas_downloader_settings.json
+*.env
+
+# VS Code
+.vscode/
+
+# System
+.DS_Store
+Thumbs.db
