@@ -50,7 +50,7 @@ if 'cancel_requested' not in st.session_state:
 if 'user_name' not in st.session_state:
     st.session_state['user_name'] = ""
 if 'language' not in st.session_state:
-    st.session_state['language'] = 'da'  # Default to Danish
+    st.session_state['language'] = 'en'  # Default to English
 if 'course_mb_downloaded' not in st.session_state:
     st.session_state['course_mb_downloaded'] = {}
 if 'file_filter' not in st.session_state:
