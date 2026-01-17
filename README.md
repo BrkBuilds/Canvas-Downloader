@@ -6,7 +6,10 @@
 
 This application allows students to batch download files and modules from Canvas LMS courses. It mirrors the exact module structure of your courses on your local drive, ensuring you have offline access to all your study materials.
 
-![Screenshot of Course Selection](assets/screenshot_selection.png)
+<p align="center">
+  <img src="assets/screenshot_selection.png" width="48%" />
+  <img src="assets/screenshot_download.png" width="48%" />
+</p>
 
 ## Features
 *   **One-Click Bulk Download**: Select multiple courses and download everything at once. This solves the pain of clicking "download" on hundreds of individual files.
@@ -16,8 +19,6 @@ This application allows students to batch download files and modules from Canvas
     *   Automatic retries for network glitches.
     *   Handles restricted/unauthorized files gracefully (logs them instead of crashing).
 *   **Study Mode**: Toggle to download only `.pdf` and `.pptx` files, skipping images and other clutter.
-
-![Screenshot of Downloading](assets/screenshot_download.png)
 
 ## Installation & Running
 
