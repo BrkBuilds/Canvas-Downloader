@@ -1328,7 +1328,7 @@ def _show_analysis_review(lang):
 
             with c1:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);">
+                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 10px 20px -5px rgba(74, 144, 226, 0.6);">
                     <div style="{num_css}">{total_new}</div>
                     <div style="{lbl_css}">{lbl_new}</div>
                     <div style="{icon_css}">📄</div>
@@ -1336,7 +1336,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c2:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 20px -5px rgba(46, 204, 113, 0.6);">
                     <div style="{num_css}">{total_upd}</div>
                     <div style="{lbl_css}">{lbl_upd}</div>
                     <div style="{icon_css}">🔄</div>
@@ -1344,7 +1344,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c3:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);">
+                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 10px 20px -5px rgba(241, 196, 15, 0.6);">
                     <div style="{num_css}">{total_miss}</div>
                     <div style="{lbl_css}">{lbl_miss}</div>
                     <div style="{icon_css}">⚠️</div>
@@ -1352,7 +1352,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c4:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);">
+                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 10px 20px -5px rgba(155, 89, 182, 0.6);">
                     <div style="{num_css}">{total_loc_del}</div>
                     <div style="{lbl_css}">{lbl_loc_del}</div>
                     <div style="{icon_css}">✂️</div>
@@ -1360,7 +1360,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c5:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);">
+                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 20px -5px rgba(231, 76, 60, 0.6);">
                     <div style="{num_css}">{total_del}</div>
                     <div style="{lbl_css}">{lbl_del}</div>
                     <div style="{icon_css}">🗑️</div>
