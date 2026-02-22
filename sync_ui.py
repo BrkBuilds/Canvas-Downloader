@@ -557,17 +557,74 @@ def _render_sync_history(lang):
 
     if history:
         with st.expander(get_text('sync_history_title', lang), expanded=False):
+            if not history:
+                st.write(get_text('sync_history_empty', lang))
+                return
+                
             # Show most recent first, limit to 10
             for entry in reversed(history[-10:]):
                 count = entry.get('files_synced', 0)
-                courses = entry.get('courses', 0)
-        st.caption(get_text('sync_history_entry', lang,
-                    time=entry.get('timestamp', '?'),
-                    count=count,
-                    courses=courses,
-                    file_word=pluralize(count, 'file', lang),
-                    course_word=pluralize(courses, 'course', lang),
-                ))
+                courses_count = entry.get('courses', 0)
+                course_names = entry.get('course_names', [])
+                
+                # Format the time beautifully
+                raw_time = entry.get('timestamp', '')
+                time_display = raw_time
+                try:
+                    dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
+                    now = datetime.now()
+                    diff = now - dt
+                    
+                    if diff.days == 0:
+                        if diff.seconds < 3600:
+                            mins = diff.seconds // 60
+                            time_display = f"⏳ {mins} minute{'s' if mins != 1 else ''} ago ({dt.strftime('%H:%M')})"
+                        else:
+                            hrs = diff.seconds // 3600
+                            time_display = f"⏳ {hrs} hour{'s' if hrs != 1 else ''} ago ({dt.strftime('%H:%M')})"
+                    elif diff.days == 1:
+                        time_display = f"📅 Yesterday at {dt.strftime('%H:%M')}"
+                    elif diff.days < 7:
+                        time_display = f"📅 {diff.days} days ago ({dt.strftime('%A')} at {dt.strftime('%H:%M')})"
+                    else:
+                        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                        month_name = months[dt.month - 1]
+                        
+                        day_suffix = "th"
+                        if 11 <= dt.day <= 13:
+                            pass
+                        elif dt.day % 10 == 1:
+                            day_suffix = "st"
+                        elif dt.day % 10 == 2:
+                            day_suffix = "nd"
+                        elif dt.day % 10 == 3:
+                            day_suffix = "rd"
+                            
+                        time_display = f"📅 {diff.days} days ago ({dt.day}{day_suffix} of {month_name} at {dt.strftime('%H:%M')})"
+                except Exception:
+                    time_display = f"⏳ {raw_time}"
+                
+                # Course names display
+                courses_text = ""
+                if course_names:
+                    # Filter and format course names
+                    # (Already friendly from backend update, but safe to wrap again)
+                    formatted_names = [friendly_course_name(name) for name in course_names if name]
+                    if formatted_names:
+                        courses_text = f"<div style='font-size:0.9em;color:#aaa;margin-top:4px;'>📚 <i>{', '.join(formatted_names)}</i></div>"
+                elif courses_count > 0:
+                    courses_text = f"<div style='font-size:0.9em;color:#aaa;margin-top:4px;'>📚 <i>Across {courses_count} course{'s' if courses_count != 1 else ''}</i></div>"
+
+                # Render HTML card inside the expander (Vertical stack layout)
+                st.markdown(f"""
+                <div style="background-color:#2a2b30;border-left:3px solid #3498db;border-radius:4px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:2px;">
+                    <div style="color:#888;font-size:0.85em;">{time_display}</div>
+                    <div style="color:#ddd;font-weight:600;font-size:0.95em;margin-top:2px;">
+                        ✅ Synced {count} file{'s' if count != 1 else ''}
+                    </div>
+                    {courses_text}
+                </div>
+                """, unsafe_allow_html=True)
 
 
 @st.dialog("Ignored Files", width="large")
@@ -1929,14 +1986,22 @@ def _run_sync(lang):
         try:
             from ui_helpers import get_config_dir
             history_mgr = SyncHistoryManager(get_config_dir())
+            
+            # Extract names of courses that actually had files synced
+            synced_course_names = []
+            for sel in sync_selections:
+                if sel['pair_idx'] in synced_details and len(synced_details[sel['pair_idx']]) > 0:
+                    synced_course_names.append(sel['res_data']['pair']['course_name'])
+
             history_mgr.add_entry({
                 'timestamp': now_str,
                 'files_synced': synced_counter[0],
                 'courses': len(sync_selections),
+                'course_names': synced_course_names,
                 'errors': len(error_list),
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Failed to record sync history: {e}")
 
     if st.session_state.get('sync_cancel_requested', False):
         st.session_state['download_status'] = 'sync_cancelled'

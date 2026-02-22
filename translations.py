@@ -184,7 +184,17 @@ TRANSLATIONS = {
         # Sync Folder Pairing
         'sync_step1_header': 'Select Folders to Sync',
         'sync_tutorial_title': '📖 How Smart Sync Works',
-        'sync_tutorial_text': '''Smart Sync checks your existing downloaded course folders for updates. If new files have been added to your course, this feature will find and download them. To sync, simply select the downloaded course folder on your computer and select the corresponding Canvas course here.''',
+        'sync_tutorial_text': '''**Smart Sync keeps your local folders up-to-date without overwriting your work.**
+
+1. **Add a Folder**: Select an existing course folder on your computer and pair it with the corresponding Canvas course.
+2. **Analyze**: We compare your local files with Canvas.
+3. **Review**: You'll see exactly what changed:
+   - 🆕 **New Files**: Downloaded to your folder.
+   - 🔄 **Updated Files**: Saved as a copy (e.g., `file_NewVersion.pdf`) so your notes aren't overwritten.
+   - 📦 **Missing Files**: Re-download files you accidentally deleted, or ignore them forever.
+   - 🗑️ **Deleted on Canvas**: Files removed by the teacher are preserved safely on your computer.
+
+*Tip: Use **⚡ Quick Sync All** to skip the review and instantly download all new and updated files across all your courses!*''',
         'sync_add_folder': 'Add Folder to Sync',
         'sync_add_course_folder': 'Add Course folder to Sync',
         'sync_courses_to_sync': 'Canvas Courses to Sync',
@@ -494,7 +504,17 @@ TRANSLATIONS = {
         # Sync Folder Pairing
         'sync_step1_header': 'Vælg Mapper at Synkronisere',
         'sync_tutorial_title': '📖 Sådan Fungerer Smart Sync',
-        'sync_tutorial_text': '''Smart Sync tjekker dine eksisterende downloadede kursusmapper for opdateringer. Hvis der er tilføjet nye filer til dit kursus, vil denne funktion finde og downloade dem. For at synkronisere skal du blot vælge den downloadede kursusmappe på din computer og vælge det tilsvarende Canvas-kursus her.''',
+        'sync_tutorial_text': '''**Smart Sync holder dine lokale mapper opdaterede uden at overskrive dit arbejde.**
+
+1. **Tilføj en Mappe**: Vælg en eksisterende kursusmappe på din computer og par den med det tilsvarende Canvas-kursus.
+2. **Analysér**: Vi sammenligner dine lokale filer med Canvas.
+3. **Gennemgå**: Du vil se præcis, hvad der er ændret:
+   - 🆕 **Nye Filer**: Downloades til din mappe.
+   - 🔄 **Opdaterede Filer**: Gemmes som en kopi (f.eks. `fil_NewVersion.pdf`), så dine noter ikke overskrives.
+   - 📦 **Manglende Filer**: Gen-download filer du ved et uheld har slettet, eller ignorer dem fremover.
+   - 🗑️ **Slettet på Canvas**: Filer fjernet af læreren bevares sikkert på din computer.
+
+*Tip: Brug **⚡ Hurtig Synk Alle** for at springe gennemgangen over og øjeblikkeligt downloade alle nye og opdaterede filer på tværs af alle dine kurser!*''',
         'sync_add_folder': 'Tilføj Mappe til Synkronisering',
         'sync_add_course_folder': 'Tilføj Kursusmappe til Synkronisering',
         'sync_courses_to_sync': 'Canvas Kurser at Synkronisere',
