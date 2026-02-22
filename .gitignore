@@ -7,10 +7,21 @@ __pycache__/
 build/
 dist/
 
-
 # Secrets
 canvas_downloader_settings.json
 *.env
+
+# Application Data
+canvas_sync_history.json
+canvas_sync_pairs.json
+.canvas_sync.db
+Streamlit UI Manipulation Guide.md
+
+# UI & Tests
+UI Screenshots/
+playwright-report/
+test-results/
+.playwright/
 
 # VS Code
 .vscode/

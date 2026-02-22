@@ -1,12 +1,14 @@
 import streamlit as st
 import tkinter as tk
 from tkinter import filedialog
-from canvas_logic import CanvasManager
+from canvas_logic import CanvasManager, DownloadError
 import os
 from pathlib import Path
 import time
 import re
 from translations import get_text
+from sync_ui import render_sync_step1, render_sync_step4
+from ui_helpers import friendly_course_name, parse_cbs_metadata, render_download_wizard
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
@@ -27,6 +29,16 @@ st.markdown("""
     /* Hide the blinking cursor in the language dropdown to look like a static menu */
     div[data-testid="stSelectbox"] input { caret-color: transparent; cursor: default !important; }
     div[data-testid="stSelectbox"] > div { cursor: default !important; }
+    
+    /* Destructive buttons (Cancel / Remove) turn red on hover */
+    [class*="st-key-remove_pair"] button:hover,
+    [class*="st-key-cancel_pair"] button:hover,
+    .st-key-cancel_download_btn button:hover,
+    .st-key-sync_cancel_btn button:hover {
+        border-color: #ff4b4b !important;
+        color: #ff4b4b !important;
+        background-color: rgba(255, 75, 75, 0.1) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -55,6 +67,24 @@ if 'course_mb_downloaded' not in st.session_state:
     st.session_state['course_mb_downloaded'] = {}
 if 'file_filter' not in st.session_state:
     st.session_state['file_filter'] = 'all' # 'all' or 'study'
+# Sync mode session state
+if 'sync_mode' not in st.session_state:
+    st.session_state['sync_mode'] = False  # False = normal download, True = sync
+if 'analysis_result' not in st.session_state:
+    st.session_state['analysis_result'] = None
+if 'sync_selected_files' not in st.session_state:
+    st.session_state['sync_selected_files'] = {}
+if 'sync_manifest' not in st.session_state:
+    st.session_state['sync_manifest'] = None
+if 'sync_manager' not in st.session_state:
+    st.session_state['sync_manager'] = None
+if 'current_mode' not in st.session_state:
+    st.session_state['current_mode'] = 'download'  # 'download' or 'sync'
+# Sync pairs: list of dicts with keys: local_folder, course_id, course_name
+if 'sync_pairs' not in st.session_state:
+    st.session_state['sync_pairs'] = []
+if 'pending_sync_folder' not in st.session_state:
+    st.session_state['pending_sync_folder'] = None  # Temp storage for folder picker
 
 # --- Helper Functions ---
 def select_folder():
@@ -70,13 +100,38 @@ def select_folder():
     if folder_path:
         st.session_state['download_path'] = folder_path
 
+def select_sync_folder():
+    """Open folder picker for sync mode and store in pending_sync_folder."""
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    try:
+        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+    except:
+        pass
+    folder_path = filedialog.askdirectory(master=root)
+    root.destroy()
+    if folder_path:
+        st.session_state['pending_sync_folder'] = folder_path
+
 def check_cancellation():
     return st.session_state.get('cancel_requested', False)
 
 @st.cache_data
 def fetch_courses(token, url, fav_only, language='en'):
     mgr = CanvasManager(token, url, language)
-    return mgr.get_courses(fav_only)
+    try:
+        courses = list(mgr.get_courses(fav_only))
+        # Global Alphabetical Sort
+        courses.sort(key=lambda c: (c.name or "").lower())
+        return courses
+    except Exception as e:
+        # If fetching fails (e.g. auth error), return empty list or let UI handle it. 
+        # But mgr.get_courses already raises exception. We should probably let it propagate or return empty.
+        # Existing code expected it to raise or return iterable. 
+        # Since we wrapper it, let's just let it raise if mgr.get_courses raises.
+        # But we need to handle the list conversion safely if it returns None (unlikely).
+        raise e
 
 # --- Sidebar: Authentication ---
 with st.sidebar:
@@ -132,6 +187,9 @@ with st.sidebar:
                     st.session_state['api_url'] = config.get('api_url', '')
                     st.session_state['api_token'] = config.get('api_token', '')
                     
+                    if 'concurrent_downloads' in config:
+                        st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
+                        
                     if st.session_state['api_token']:
                         # Use default language 'en' here as session state might not be fully ready
                         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], st.session_state.get('language', 'en'))
@@ -193,11 +251,15 @@ with st.sidebar:
                 
                 # Save to config (JSON)
                 try:
+                    config_data = {
+                        'api_url': st.session_state['api_url'],
+                        'api_token': st.session_state['api_token']
+                    }
+                    if 'concurrent_downloads' in st.session_state:
+                        config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
+                        
                     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-                        json.dump({
-                            'api_url': st.session_state['api_url'],
-                            'api_token': st.session_state['api_token']
-                        }, f)
+                        json.dump(config_data, f)
                 except Exception as e:
                     st.error(f"Could not save config: {e}")
                     
@@ -215,10 +277,150 @@ with st.sidebar:
             st.markdown(get_text('url_instructions', lang))
     else:
         st.success(st.session_state['user_name'])
-        if st.button(get_text('logout_edit', lang)):
+        
+        # Navigation section (under logged in status)
+        st.markdown("---")
+        mode = st.session_state.get('current_mode', 'download')
+        
+        # Download mode button
+        download_label = "📥 " + get_text('nav_download', lang)
+        if mode == 'download':
+            # Active state - light grey background, outlined style
+            st.markdown(f"""
+            <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
+                        padding: 8px 16px; text-align: center; margin-bottom: 8px;">
+                <span style="color: #fff; font-weight: 500;">{download_label}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            if st.button(download_label, use_container_width=True, key="nav_btn_download"):
+                st.session_state['current_mode'] = 'download'
+                st.session_state['step'] = 1
+                st.session_state['sync_mode'] = False
+                st.session_state['sync_pairs'] = []  # Clear sync pairs
+                st.rerun()
+        
+        # Sync mode button
+        sync_label = "🔄 " + get_text('nav_sync', lang)
+        if mode == 'sync':
+            # Active state - light grey background, outlined style
+            st.markdown(f"""
+            <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
+                        padding: 8px 16px; text-align: center; margin-bottom: 8px;">
+                <span style="color: #fff; font-weight: 500;">{sync_label}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            if st.button(sync_label, use_container_width=True, key="nav_btn_sync"):
+                st.session_state['current_mode'] = 'sync'
+                st.session_state['step'] = 1
+                st.session_state['sync_mode'] = True
+                st.session_state['sync_pairs'] = []  # Initialize sync pairs
+                st.rerun()
+                
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        
+        @st.dialog("⚙️ Application Settings", width="large")
+        def _global_settings_dialog():
+            val = st.session_state.get('concurrent_downloads', 5)
+            st.markdown("""
+                <style>
+                    /* Maximize height of dialog content similar to course selector */
+                    div.st-key-settings_scroll_container {
+                        height: 65vh !important;
+                        min-height: 65vh !important;
+                        max-height: 65vh !important;
+                        overflow-y: auto !important;
+                        overflow-x: hidden !important;
+                        padding-right: 5px;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            with st.container(border=False, key="settings_scroll_container"):
+                col_dl, col_sync = st.columns(2, gap="large")
+                
+                with col_dl:
+                    st.markdown("### 📥 Download Settings")
+                    st.markdown("---")
+                    st.markdown("#### Max Concurrent Downloads")
+                    st.markdown(
+                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
+                        "Controls how many files are downloaded simultaneously. <br><br>"
+                        "⚠️ <b>Warning:</b> Canvas has strict rate limits. Increasing this too high may cause "
+                        "the server to temporarily block your connection, resulting in failed downloads. "
+                        "Only increase if you have a very stable, high-speed connection."
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+                    
+                    if 'concurrent_downloads' not in st.session_state:
+                        st.session_state['concurrent_downloads'] = 5
+                        
+                    val = st.slider(
+                        "Simultaneous Files",
+                        min_value=2,
+                        max_value=20,
+                        value=st.session_state['concurrent_downloads'],
+                        step=1,
+                        key="slider_concurrent_dl"
+                    )
+                
+                with col_sync:
+                    st.markdown("### 🔄 Sync Settings")
+                    st.markdown("---")
+                    st.markdown(
+                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
+                        "<i>Future sync optimizations and configuration options will appear here.</i>"
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+            st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+            
+            c_save, c_cancel = st.columns([1, 1])
+            with c_save:
+                if st.button("Save Settings", type="primary", use_container_width=True):
+                    st.session_state['concurrent_downloads'] = val
+                    
+                    # Persist to config
+                    if os.path.exists(CONFIG_FILE):
+                        try:
+                            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                                config_data = json.load(f)
+                        except Exception:
+                            config_data = {}
+                    else:
+                        config_data = {}
+                        
+                    config_data['api_url'] = st.session_state.get('api_url', '')
+                    config_data['api_token'] = st.session_state.get('api_token', '')
+                    config_data['concurrent_downloads'] = val
+                    
+                    try:
+                        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                            json.dump(config_data, f)
+                    except Exception as e:
+                        pass
+                        
+                    st.rerun()
+            with c_cancel:
+                if st.button("Cancel", use_container_width=True):
+                    st.rerun()
+
+        # Add the settings button in the sidebar
+        if st.button("⚙️ Settings", use_container_width=True, key="nav_btn_settings"):
+            _global_settings_dialog()
+            
+        # Logout button at the very bottom
+        st.markdown("---")
+        st.markdown("")  # Spacer
+        st.markdown("")
+        if st.button(get_text('logout_edit', lang), use_container_width=True):
             st.session_state['is_authenticated'] = False
             st.session_state['api_token'] = ""
             st.session_state['step'] = 1
+            st.session_state['current_mode'] = 'download'
             # Clear the course cache to prevent showing old user's courses
             fetch_courses.clear()
             if os.path.exists(CONFIG_FILE):
@@ -234,407 +436,705 @@ if not st.session_state['is_authenticated']:
     st.stop()
 
 # --- Wizard Steps ---
+# Wrap in st.empty().container() to prevent stale elements from previous steps
+# persisting during long-running operations (e.g., sync downloads via asyncio.run).
+_main_content = st.empty()
+with _main_content.container():
 
-# STEP 1: SELECT COURSES
-if st.session_state['step'] == 1:
-    st.markdown(f'<div class="step-header">{get_text("step1_header", lang)}</div>', unsafe_allow_html=True)
-    
-    filter_mode = st.radio(
-        get_text('show_label', lang),
-        [get_text('show_favorites', lang), get_text('show_all', lang)],
-        horizontal=True
-    )
-    favorites_only = (filter_mode == get_text('show_favorites', lang))
-    
-    courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], favorites_only, lang)
-    
-    if not courses:
-        st.warning(get_text('no_courses', lang))
-    else:
-        # "Select All" buttons - Fixed to work properly
-        col_sa1, col_sa2 = st.columns([1, 5])
-        select_all_clicked = col_sa1.button(get_text('select_all', lang), key="btn_select_all")
-        clear_sel_clicked = col_sa2.button(get_text('clear_selection', lang), key="btn_clear_sel")
+    # STEP 1: Different UI based on mode
+    if st.session_state['step'] == 1:
         
-        # Handle button clicks - Update session state keys directly
-        if select_all_clicked:
-            st.session_state['selected_course_ids'] = [c.id for c in courses]
-            # Set all checkbox widget states to True
-            for course in courses:
-                st.session_state[f"chk_{course.id}"] = True
-            st.rerun()
+        # ========== SYNC MODE - STEP 1 ==========
+        if st.session_state['current_mode'] == 'sync':
+            render_sync_step1(lang, fetch_courses, _main_content)
+        
+            # ========== DOWNLOAD MODE - STEP 1 ==========
+        else:
+            render_download_wizard(st, 1, lang)
+            st.markdown(f'<div class="step-header">{get_text("step1_header", lang)}</div>', unsafe_allow_html=True)
             
-        if clear_sel_clicked:
-            st.session_state['selected_course_ids'] = []
-            # Set all checkbox widget states to False
-            for course in courses:
-                st.session_state[f"chk_{course.id}"] = False
-            st.rerun()
-
-        # Course List with Checkboxes
-        selected_ids = st.session_state['selected_course_ids']
-        new_selected_ids = []
-        
-        for course in courses:
-            c_name = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
-            checkbox_key = f"chk_{course.id}"
+            filter_mode = st.radio(
+                get_text('show_label', lang),
+                [get_text('show_favorites', lang), get_text('show_all', lang)],
+                horizontal=True
+            )
+            favorites_only = (filter_mode == get_text('show_favorites', lang))
             
-            # If key is in session_state, let Streamlit use that value. 
-            # Otherwise, set default based on selected_course_ids.
-            if checkbox_key in st.session_state:
-                if st.checkbox(c_name, key=checkbox_key):
-                    new_selected_ids.append(course.id)
+            courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], favorites_only, lang)
+            
+            if not courses:
+                st.warning(get_text('no_courses', lang))
             else:
-                is_checked = course.id in selected_ids
-                if st.checkbox(c_name, value=is_checked, key=checkbox_key):
-                    new_selected_ids.append(course.id)
-        
-        st.session_state['selected_course_ids'] = new_selected_ids
+                # --- CBS Filters Feature ---
+                
+                # Filter Toggle
+                show_filters = st.toggle(get_text('enable_cbs_filters', lang, default="Enable CBS Filters"))
+                
+                filtered_courses = courses
+                
+                if show_filters:
+                    # 1. Parse metadata for all courses
+                    # We do this on the fly; it's fast enough for <100 courses.
+                    course_meta = {}
+                    all_types = set()
+                    all_semesters = set()
+                    all_years = set()
+                    
+                    for c in courses:
+                        # Parse from full name (or friendly name? parser handles raw strings)
+                        # We use the full name to be safe as it contains the codes
+                        full_name_str = f"{c.name} ({c.course_code})" if hasattr(c, 'course_code') else c.name
+                        meta = parse_cbs_metadata(full_name_str)
+                        course_meta[c.id] = meta
+                        
+                        if meta['type']: all_types.add(meta['type'])
+                        if meta['semester']: all_semesters.add(meta['semester'])
+                        if meta['year_full']: all_years.add(meta['year_full'])
+                    
+                    # 2. Render Filter Widgets
+                    with st.container(border=True):
+                        st.markdown(f"**{get_text('filter_criteria', lang, default='Filter Criteria')}**")
+                        col_f1, col_f2, col_f3 = st.columns(3)
+                        
+                        with col_f1:
+                            sel_types = st.multiselect(
+                                get_text('filter_type', lang, default="Class Type"),
+                                options=sorted(list(all_types)),
+                                format_func=lambda x: get_text(f"type_{x.lower()}", lang, default=x)
+                            )
+                        with col_f2:
+                            sel_sem = st.multiselect(
+                                get_text('filter_semester', lang, default="Semester"),
+                                options=sorted(list(all_semesters)),
+                                format_func=lambda x: get_text(f"sem_{x.lower()}", lang, default=x)
+                            )
+                        with col_f3:
+                            sel_years = st.multiselect(
+                                get_text('filter_year', lang, default="Year"),
+                                options=sorted(list(all_years), reverse=True)
+                            )
+                    
+                    # 3. Apply Filters
+                    if sel_types or sel_sem or sel_years:
+                        filtered_courses = []
+                        for c in courses:
+                            meta = course_meta[c.id]
+                            # Logic: AND across categories, OR within category
+                            
+                            # Type Check
+                            match_type = True
+                            if sel_types:
+                                match_type = meta['type'] in sel_types
+                            
+                            # Semester Check
+                            match_sem = True
+                            if sel_sem:
+                                match_sem = meta['semester'] in sel_sem
+                                
+                            # Year Check
+                            match_year = True
+                            if sel_years:
+                                match_year = meta['year_full'] in sel_years
+                                
+                            if match_type and match_sem and match_year:
+                                filtered_courses.append(c)
+                        
+                        if not filtered_courses:
+                            st.info(get_text('no_courses_match_filters', lang, default="No courses match the selected filters."))
 
-        st.markdown("---")
-        if st.button(get_text('continue_btn', lang), type="primary"):
-            if not st.session_state['selected_course_ids']:
-                st.error(get_text('select_one_course', lang))
+                # "Select All" buttons - operate on FILTERED list
+                col_sa1, col_sa2, _ = st.columns([1.3, 1.3, 10], gap="small")
+                select_all_clicked = col_sa1.button(get_text('select_all', lang), key="btn_select_all", use_container_width=True)
+                clear_sel_clicked = col_sa2.button(get_text('clear_selection', lang), key="btn_clear_sel", use_container_width=True)
+                
+                # Handle button clicks - Update session state keys directly
+                # IMPORTANT: Select All now only selects visible (filtered) courses!
+                if select_all_clicked:
+                    # Merge existing selection with visible courses
+                    current_ids = set(st.session_state['selected_course_ids'])
+                    visible_ids = {c.id for c in filtered_courses}
+                    new_ids = current_ids.union(visible_ids)
+                    st.session_state['selected_course_ids'] = list(new_ids)
+                    
+                    # Update widgets
+                    for cid in visible_ids:
+                        st.session_state[f"chk_{cid}"] = True
+                    st.rerun()
+                    
+                if clear_sel_clicked:
+                    # Remove visible courses from selection
+                    # (Or clear all? Standard behavior is usually "Clear Selection" = Clear All)
+                    # Let's keep it simple: Clear All (Global) or Clear Visible?
+                    # "Clear Selection" usually implies resetting the state. Let's clear ALL for simplicity.
+                    st.session_state['selected_course_ids'] = []
+                    # Reset widgets for filtered courses
+
+                    for c in courses: # Clear ALL widgets to be safe
+                         st.session_state[f"chk_{c.id}"] = False
+                    st.rerun()
+
+                # Error container for validation messages (placed above the list)
+                error_container = st.empty()
+
+                # Course List with Checkboxes (Render Filtered List)
+                selected_ids = st.session_state['selected_course_ids']
+                new_selected_ids = [] # Temp list to rebuild selection from widgets
+                
+                # We need to preserve selections for HIDDEN courses too!
+                # So `new_selected_ids` should start with ids that are SELECTED but NOT IN `filtered_courses`
+                filtered_ids = {fc.id for fc in filtered_courses}
+
+                
+                # --- SORTING: Selected first, then Alphabetical ---
+                # We sort the filtered_courses list in-place before rendering
+                saved_selection_set = set(st.session_state['selected_course_ids'])
+                
+                # Key: (is_NOT_selected, name_lower)
+                # selected (=True) -> not selected (=False/0) -> comes first
+                filtered_courses.sort(key=lambda c: (c.id not in saved_selection_set, (c.name or "").lower()))
+                
+                for sid in selected_ids:
+                    if sid not in filtered_ids:
+                        new_selected_ids.append(sid)
+
+                for course in filtered_courses:
+                    # Logic for names
+                    full_name_str = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
+                    friendly = friendly_course_name(full_name_str)
+                    
+                    # If friendly is same as full, don't show duplicate in parens?
+                    # User asked for: "friendly course names ... followed by the full course name ... in parentheses"
+                    # Even if they are substantially similar, let's follow the pattern, 
+                    # but maybe avoid literal exact duplication if possible. 
+                    # Assuming they will differ slightly due to stripping.
+                    
+                    checkbox_key = f"chk_{course.id}"
+                    
+                    # Columns for layout: [Checkbox] [Styled Name]
+                    # Adjust ratio to keep checkbox tight
+                    c1, c2 = st.columns([0.035, 0.965])
+                    
+                    with c1:
+                        # Determine current state for value=...
+                        is_checked = False
+                        if checkbox_key in st.session_state:
+                            # Let Streamlit handle state via key, but we can read it to sync `selected_course_ids` logic if needed?
+                            # Actually, providing `value` when `key` exists in session_state triggers a warning in some versions,
+                            # or is ignored. Best to rely on session_state if present.
+                            # But our "Select All" logic writes to session_state.
+                            pass 
+                        else:
+                            # Initialize from `selected_ids` list if not in session state
+                            if course.id in selected_ids:
+                                is_checked = True 
+                                # Pre-seed session state to avoid widget value mismatch (optional but safer)
+                                # st.session_state[checkbox_key] = True
+
+                        # Render checkbox with collapsed label
+                        # Note: We must fetch the result to append to `new_selected_ids`
+                        # Since we set the key, `st.checkbox` will auto-read/write that key in session_state.
+                        # However, for the *return value* to be correct in this run loop:
+                        
+                        # We use `value=is_checked` only if key not in session state?
+                        # Streamlit rule: if key in session_state, value arg is ignored (mostly).
+                        
+                        checked = False
+                        if checkbox_key in st.session_state:
+                             checked = st.checkbox(friendly, key=checkbox_key, label_visibility="collapsed")
+                        else:
+                             checked = st.checkbox(friendly, value=is_checked, key=checkbox_key, label_visibility="collapsed")
+                             
+                    with c2:
+                        # Styled text
+                        # Vertically align with checkbox (checkbox is ~ top aligned or center?)
+                        # Adding a small top margin to markdown might help align with checkbox center
+                        # Checkbox is standard ~24px height. Text line height ~1.5. 
+                        # This usually aligns "okay" by default, or text sits slightly high.
+                        # Let's try default first.
+                        # Using div with styling
+                        st.markdown(
+                            f'<div style="margin-top: 8px;">'
+                            f'<strong>{friendly}</strong> '
+                            f'<span style="color:#888; font-size:0.9em;">({full_name_str})</span>'
+                            f'</div>',
+                            unsafe_allow_html=True
+                        )
+
+                    if checked:
+                        new_selected_ids.append(course.id)
+                
+                st.session_state['selected_course_ids'] = new_selected_ids
+
+                st.markdown("---")
+                if st.button(get_text('continue_btn', lang), type="primary"):
+                    if not st.session_state['selected_course_ids']:
+                        error_container.error(get_text('select_one_course', lang))
+                    else:
+                        st.session_state['step'] = 2
+                        st.rerun()
+
+    # STEP 2: DOWNLOAD SETTINGS
+    elif st.session_state['step'] == 2:
+        render_download_wizard(st, 2, lang)
+        st.markdown(f'<div class="step-header">{get_text("step2_header", lang)}</div>', unsafe_allow_html=True)
+        
+        step2_container = st.empty()
+        with step2_container.container():
+            st.subheader(get_text('download_structure', lang))
+            mode_options = [
+                get_text('with_subfolders', lang), 
+                # get_text('mode_files', lang), # Removed per user request
+                get_text('flat_structure', lang)
+            ]
+            
+            # Determine current index
+            current_mode_idx = 0
+            # If mode is 'files' (legacy), default back to 0 (modules)
+            if st.session_state['download_mode'] == 'flat':
+                current_mode_idx = 1
+                
+            mode_choice = st.radio(
+                get_text('structure_question', lang),
+                mode_options,
+                index=current_mode_idx
+            )
+            
+            if mode_choice == get_text('with_subfolders', lang):
+                st.session_state['download_mode'] = 'modules'
+            # elif mode_choice == get_text('mode_files', lang):
+            #     st.session_state['download_mode'] = 'files'
             else:
+                st.session_state['download_mode'] = 'flat'
+            
+            st.subheader(get_text('file_filter_label', lang))
+            filter_choice = st.radio(
+                get_text('file_filter_label', lang), # Hidden label via label_visibility if needed, but subheader is fine
+                [get_text('filter_all', lang), get_text('filter_study', lang)],
+                index=0 if st.session_state['file_filter'] == 'all' else 1,
+                label_visibility="collapsed"
+            )
+            st.session_state['file_filter'] = 'all' if filter_choice == get_text('filter_all', lang) else 'study'
+            
+            st.subheader(get_text('destination', lang))
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                if st.button(get_text('select_folder', lang)):
+                    select_folder()
+            with col2:
+                st.text_input(get_text('path_label', lang), value=st.session_state['download_path'], disabled=True)
+                
+            st.markdown("---")
+            
+            # Debug Option (Troubleshooting)
+            st.checkbox("Enable Troubleshooting Mode (Debug Log)", key="debug_mode_checkbox")
+            st.session_state['debug_mode'] = st.session_state.get('debug_mode_checkbox', False)
+            
+            st.markdown("---")
+
+            col_conf, col_back, _ = st.columns([1.2, 1, 5])
+            with col_conf:
+                # Button label changes based on mode
+                button_label = get_text('sync_selected', lang) if st.session_state['current_mode'] == 'sync' else get_text('confirm_download', lang)
+                if st.button(button_label, type="primary", use_container_width=True):
+                    try:
+                        # Initialize download state
+                        all_courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False, lang)
+                        course_map = {c.id: c for c in all_courses}
+                        courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
+                        
+                        st.session_state['courses_to_download'] = courses_to_download
+                        st.session_state['current_course_index'] = 0
+                        st.session_state['cancel_requested'] = False
+                        st.session_state['total_items'] = 0
+                        st.session_state['downloaded_items'] = 0
+                        st.session_state['course_mb_downloaded'] = {}
+                        st.session_state['log_content'] = ""  # Initialize log content
+                        
+                        if st.session_state['current_mode'] == 'sync':
+                            # Sync mode - go to Step 4 (Analysis)
+                            st.session_state['download_status'] = 'analyzing'
+                            st.session_state['step'] = 4
+                        else:
+                            # Download mode - go to Step 3 (Progress)
+                            st.session_state['download_status'] = 'scanning'
+                            st.session_state['step'] = 3
+                        
+                        # Brief pause to ensure state is saved before rerun
+                        time.sleep(0.1)
+                        step2_container.empty() # Clear EVERYTHING in Step 2
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error initializing: {e}")
+
+            with col_back:
+                if st.button(get_text('back_btn', lang), use_container_width=True):
+                    st.session_state['step'] = 1
+                    st.rerun()
+
+
+    elif st.session_state['step'] == 3:
+        wiz_step = 4 if st.session_state.get('download_status') == 'done' else 3
+        render_download_wizard(st, wiz_step, lang)
+        
+        st.markdown(f'<div class="step-header">{get_text("step3_header", lang)}</div>', unsafe_allow_html=True)
+        
+        # Safety check: ensure download state exists
+        if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
+            st.error(get_text('download_state_error', lang))
+            if st.button(get_text('go_back_settings', lang)):
                 st.session_state['step'] = 2
                 st.rerun()
-
-# STEP 2: DOWNLOAD SETTINGS
-elif st.session_state['step'] == 2:
-    st.markdown(f'<div class="step-header">{get_text("step2_header", lang)}</div>', unsafe_allow_html=True)
-    
-    step2_container = st.empty()
-    with step2_container.container():
-        st.subheader(get_text('download_structure', lang))
-        mode_choice = st.radio(
-            get_text('structure_question', lang),
-            [get_text('with_subfolders', lang), get_text('flat_structure', lang)],
-            index=0 if st.session_state['download_mode'] == 'modules' else 1
-        )
-        st.session_state['download_mode'] = 'modules' if get_text('with_subfolders', lang) in mode_choice else 'flat'
+            st.stop()
         
-        st.subheader(get_text('file_filter_label', lang))
-        filter_choice = st.radio(
-            get_text('file_filter_label', lang), # Hidden label via label_visibility if needed, but subheader is fine
-            [get_text('filter_all', lang), get_text('filter_study', lang)],
-            index=0 if st.session_state['file_filter'] == 'all' else 1,
-            label_visibility="collapsed"
-        )
-        st.session_state['file_filter'] = 'all' if filter_choice == get_text('filter_all', lang) else 'study'
+        total = len(st.session_state['courses_to_download'])
+        current_idx = st.session_state['current_course_index']
         
-        st.subheader(get_text('destination', lang))
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button(get_text('select_folder', lang)):
-                select_folder()
-        with col2:
-            st.text_input(get_text('path_label', lang), value=st.session_state['download_path'], disabled=True)
+        # UI elements in correct order
+        status_text = st.empty()
+        progress_container = st.empty()  # For custom progress bar with text
+        mb_counter = st.empty()  # For "Downloading: X / Y MB"
+        log_area = st.empty()
+        
+        # Cancel Button - only show when download is running or scanning
+        cancel_placeholder = st.empty()
+        if st.session_state['download_status'] in ['running', 'scanning']:
+            if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
+                cancel_placeholder.empty() # Clear immediately
+                st.session_state['cancel_requested'] = True
+                st.session_state['download_status'] = 'cancelled'
+        
+        # Handle download state
+        if st.session_state['download_status'] == 'scanning':
+            # Scanning phase - count total items
+            status_text.text(get_text('scanning_files', lang, current=0, total=total))
             
-        st.markdown("---")
-        
-        col_back, col_conf = st.columns([1, 1])
-        with col_back:
-            if st.button(get_text('back_btn', lang)):
-                st.session_state['step'] = 1
-                st.rerun()
-        with col_conf:
-            if st.button(get_text('confirm_download', lang), type="primary"):
-                try:
-                    # Initialize download state
-                    all_courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False, lang)
-                    course_map = {c.id: c for c in all_courses}
-                    courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
-                    
-                    st.session_state['courses_to_download'] = courses_to_download
-                    st.session_state['current_course_index'] = 0
-                    st.session_state['download_status'] = 'scanning' # Start with scanning
-                    st.session_state['step'] = 3
-                    st.session_state['cancel_requested'] = False
-                    st.session_state['total_items'] = 0
-                    st.session_state['downloaded_items'] = 0
-                    st.session_state['course_mb_downloaded'] = {} # Track MB per course for global total
-                    
-                    # Brief pause to ensure state is saved before rerun
-                    time.sleep(0.1)
-                    step2_container.empty() # Clear EVERYTHING in Step 2
+            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+            total_items = 0
+            total_mb = 0
+            
+            for idx, course in enumerate(st.session_state['courses_to_download']):
+                if st.session_state['cancel_requested']:
+                    st.session_state['download_status'] = 'cancelled'
                     st.rerun()
-                except Exception as e:
-                    st.error(f"Error initializing download: {e}")
-
-
-
-# STEP 3: PROGRESS
-elif st.session_state['step'] == 3:
-    st.markdown(f'<div class="step-header">{get_text("step3_header", lang)}</div>', unsafe_allow_html=True)
-    
-    # Safety check: ensure download state exists
-    if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
-        st.error(get_text('download_state_error', lang))
-        if st.button(get_text('go_back_settings', lang)):
-            st.session_state['step'] = 2
+                
+                # Update scanning status
+                status_text.text(get_text('scanning_files', lang, current=idx + 1, total=total))
+                # Simple progress bar for scanning
+                progress_container.progress((idx + 1) / total)
+                
+                # Count items and calculate size
+                count = cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
+                course_size_mb = cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
+                total_items += count
+                total_mb += course_size_mb
+            
+            st.session_state['total_items'] = total_items
+            st.session_state['total_mb'] = total_mb
+            st.session_state['download_status'] = 'running'
             st.rerun()
-        st.stop()
-    
-    total = len(st.session_state['courses_to_download'])
-    current_idx = st.session_state['current_course_index']
-    
-    # UI elements in correct order
-    status_text = st.empty()
-    progress_container = st.empty()  # For custom progress bar with text
-    mb_counter = st.empty()  # For "Downloading: X / Y MB"
-    log_area = st.empty()
-    
-    # Cancel Button - only show when download is running or scanning
-    cancel_placeholder = st.empty()
-    if st.session_state['download_status'] in ['running', 'scanning']:
-        if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary"):
-            cancel_placeholder.empty() # Clear immediately
-            st.session_state['cancel_requested'] = True
-            st.session_state['download_status'] = 'cancelled'
-    
-    # Handle download state
-    if st.session_state['download_status'] == 'scanning':
-        # Scanning phase - count total items
-        status_text.text(get_text('scanning_files', lang, current=0, total=total))
-        
-        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
-        total_items = 0
-        total_mb = 0
-        
-        for idx, course in enumerate(st.session_state['courses_to_download']):
+
+        elif st.session_state['download_status'] == 'running':
             if st.session_state['cancel_requested']:
                 st.session_state['download_status'] = 'cancelled'
+                st.warning(get_text('download_cancelled', lang))
+            elif current_idx < total:
+                # Initialize counters if first run
+                if 'downloaded_items' not in st.session_state:
+                    st.session_state['downloaded_items'] = 0
+                if 'failed_items' not in st.session_state:
+                    st.session_state['failed_items'] = 0
+                if 'download_errors_list' not in st.session_state:
+                    st.session_state['download_errors_list'] = []  # Track error messages in memory
+                    
+                # Download the current course
+                course = st.session_state['courses_to_download'][current_idx]
+                
+                # Update progress bar with file counter text inside
+                total_items = st.session_state.get('total_items', 1)
+                current_items = st.session_state.get('downloaded_items', 0)
+                progress_value = min(current_items / total_items, 1.0) if total_items > 0 else 0
+                progress_pct = int(progress_value * 100)
+                
+                # Custom progress bar with text inside
+                progress_text = get_text('downloading_progress_text', lang, current=current_items, total=total_items)
+                progress_container.markdown(f"""
+                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
+                        <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                status_text.text(get_text('processing', lang, current=current_idx + 1, total=total, course=course.name))
+                
+                # Initialize MB counter immediately (left-aligned)
+                total_mb = st.session_state.get('total_mb', 0)
+                
+                # Calculate current total downloaded MB
+                current_total_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
+                
+                if total_mb > 0:
+                    mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
+                    mb_counter.markdown(mb_text)
+                
+                def update_ui(msg, progress_type='log', **kwargs):
+                    """Update UI with progress information.
+                    Args:
+                        msg: Message to display
+                        progress_type: Type of progress update
+                        **kwargs: Additional data (mb_downloaded for MB tracking)
+                    """
+                    if progress_type in ('download', 'page', 'link'):
+                        st.session_state['downloaded_items'] += 1
+                        current = st.session_state['downloaded_items']
+                        failed = st.session_state.get('failed_items', 0)
+                        total_processed = current + failed
+                        total_items = st.session_state.get('total_items', 1)
+                        progress_value = min(total_processed / total_items, 1.0) if total_items > 0 else 0
+                        progress_pct = int(progress_value * 100)
+                        
+                        # Update custom progress bar with file counter
+                        progress_text_str = get_text('downloading_progress_text', lang, current=current, total=total_items)
+                        if failed > 0:
+                            progress_text_str += f" ({failed} failed)"
+                            
+                        progress_container.markdown(f"""
+                            <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
+                                <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text_str}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+                        # Show current file being downloaded
+                        if msg:
+                             # We can reuse status_text but it might be overwritten by "Processing Course X".
+                             # Better to append to log or have a dedicated "Current File" slot.
+                             # For now, let's put it in the log area so it's visible what's happening.
+                             # Actually, user wants to see "name of the file that's currently downloading".
+                             # The Log area is good for history, but maybe a dedicated text below progress bar is better.
+                             # Let's use log_area for now as it autoscrolls (usually).
+                             log_area.text(f"📥 {msg}")
+
+                    
+                    elif progress_type == 'error':
+                        st.session_state['failed_items'] += 1
+                        current = st.session_state['downloaded_items']
+                        failed = st.session_state['failed_items']
+                        total_processed = current + failed
+                        total_items = st.session_state.get('total_items', 1)
+                        progress_value = min(total_processed / total_items, 1.0) if total_items > 0 else 0
+                        progress_pct = int(progress_value * 100)
+                        
+                        # Update custom progress bar with failure info
+                        progress_text_str = get_text('downloading_progress_text', lang, current=current, total=total_items)
+                        if failed > 0:
+                            progress_text_str += f" ({failed} failed)"
+                        
+                        progress_container.markdown(f"""
+                            <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
+                                <div style="width: {progress_pct}%; height: 100%; background-color: #e74c3c; transition: width 0.3s;"></div>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text_str}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Store error in list for final summary
+                        if msg:
+                            # Handle structured DownloadError or legacy string
+                            if isinstance(msg, DownloadError):
+                                error_obj = msg
+                            else:
+                                # Wrap legacy string
+                                error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
+                            
+                            if 'download_errors_list' not in st.session_state:
+                                st.session_state['download_errors_list'] = []
+                            st.session_state['download_errors_list'].append(error_obj)
+
+                        # Also log the error to the log area
+                        if msg:
+                             st.session_state['log_content'] += f"❌ {msg}\n"
+                             log_area.code(st.session_state['log_content'], language='text')
+
+                    elif progress_type == 'mb_progress':
+                        # Update MB counter (left-aligned)
+                        mb_down_course = kwargs.get('mb_downloaded', 0)
+                        
+                        # Update global tracker
+                        if 'course_mb_downloaded' not in st.session_state:
+                             st.session_state['course_mb_downloaded'] = {}
+                        st.session_state['course_mb_downloaded'][course.id] = mb_down_course
+                        
+                        current_total_mb = sum(st.session_state['course_mb_downloaded'].values())
+                        total_mb = st.session_state.get('total_mb', 0)
+                        
+                        if total_mb > 0:
+                            mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
+                            mb_counter.markdown(mb_text)
+                        return  # Don't update log_area for MB progress
+                    
+                    # Only update log for 'log' type or general info
+                    elif msg and progress_type == 'log':
+                        new_line = f"[{course.name}] {msg}\n"
+                        st.session_state['log_content'] += new_line
+                        log_area.code(st.session_state['log_content'], language='text')
+                
+
+                import asyncio
+                cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+                asyncio.run(cm.download_course_async(
+                    course,
+                    st.session_state['download_mode'],
+                    st.session_state['download_path'],
+                    progress_callback=update_ui,
+                    check_cancellation=check_cancellation,
+                    file_filter=st.session_state['file_filter'],
+                    debug_mode=st.session_state.get('debug_mode', False)
+                ))
+                
+                # Move to next course
+                st.session_state['current_course_index'] += 1
+                
+                # Check if we're done
+                if st.session_state['current_course_index'] >= total:
+                    st.session_state['download_status'] = 'done'
+                    st.balloons()
+                    status_text.text(get_text('all_complete', lang))
+                # Ensure 100% at the end
+                progress_container.markdown(f"""
+                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('downloading_progress_text', lang, current=total, total=total)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Auto-rerun to process next course
+                time.sleep(0.1)  # Brief pause to see the update
                 st.rerun()
-            
-            # Update scanning status
-            status_text.text(get_text('scanning_files', lang, current=idx + 1, total=total))
-            # Simple progress bar for scanning
-            progress_container.progress((idx + 1) / total)
-            
-            # Count items and calculate size
-            count = cm.count_course_items(course, file_filter=st.session_state['file_filter'])
-            course_size_mb = cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
-            total_items += count
-            total_mb += course_size_mb
-        
-        st.session_state['total_items'] = total_items
-        st.session_state['total_mb'] = total_mb
-        st.session_state['download_status'] = 'running'
-        st.rerun()
-
-    elif st.session_state['download_status'] == 'running':
-        if st.session_state['cancel_requested']:
-            st.session_state['download_status'] = 'cancelled'
-            st.warning(get_text('download_cancelled', lang))
-        elif current_idx < total:
-            # Download the current course
-            course = st.session_state['courses_to_download'][current_idx]
-            
-            # Update progress bar with file counter text inside
-            total_items = st.session_state.get('total_items', 1)
-            current_items = st.session_state.get('downloaded_items', 0)
-            progress_value = min(current_items / total_items, 1.0) if total_items > 0 else 0
-            progress_pct = int(progress_value * 100)
-            
-            # Custom progress bar with text inside
-            progress_text = get_text('downloading_progress_text', lang, current=current_items, total=total_items)
-            progress_container.markdown(f"""
-                <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                    <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text}</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            status_text.text(get_text('processing', lang, current=current_idx + 1, total=total, course=course.name))
-            
-            # Initialize MB counter immediately (left-aligned)
-            total_mb = st.session_state.get('total_mb', 0)
-            
-            # Calculate current total downloaded MB
-            current_total_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
-            
-            if total_mb > 0:
-                mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
-                mb_counter.markdown(mb_text)
-            
-            def update_ui(msg, progress_type='log', **kwargs):
-                """Update UI with progress information.
-                Args:
-                    msg: Message to display
-                    progress_type: Type of progress update
-                    **kwargs: Additional data (mb_downloaded for MB tracking)
-                """
-                if progress_type in ('download', 'page', 'link'):
-                    st.session_state['downloaded_items'] += 1
-                    current = st.session_state['downloaded_items']
-                    total_items = st.session_state.get('total_items', 1)
-                    progress_value = min(current / total_items, 1.0) if total_items > 0 else 0
-                    progress_pct = int(progress_value * 100)
-                    
-                    # Update custom progress bar with file counter
-                    progress_container.markdown(f"""
-                        <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                            <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('downloading_progress_text', lang, current=current, total=total_items)}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                elif progress_type == 'mb_progress':
-                    # Update MB counter (left-aligned)
-                    mb_down_course = kwargs.get('mb_downloaded', 0)
-                    
-                    # Update global tracker
-                    if 'course_mb_downloaded' not in st.session_state:
-                         st.session_state['course_mb_downloaded'] = {}
-                    st.session_state['course_mb_downloaded'][course.id] = mb_down_course
-                    
-                    current_total_mb = sum(st.session_state['course_mb_downloaded'].values())
-                    total_mb = st.session_state.get('total_mb', 0)
-                    
-                    if total_mb > 0:
-                        mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
-                        mb_counter.markdown(mb_text)
-                    return  # Don't update log_area for MB progress
-                
-                # Only update log if there's a message
-                if msg:
-                    log_area.text(f"[{course.name}] {msg}")
-            
-
-            import asyncio
-            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
-            asyncio.run(cm.download_course_async(
-                course,
-                st.session_state['download_mode'],
-                st.session_state['download_path'],
-                progress_callback=update_ui,
-                check_cancellation=check_cancellation,
-                file_filter=st.session_state['file_filter']
-            ))
-            
-            # Move to next course
-            st.session_state['current_course_index'] += 1
-            
-            # Check if we're done
-            if st.session_state['current_course_index'] >= total:
+            else:
+                # All done
                 st.session_state['download_status'] = 'done'
-                st.balloons()
-                status_text.text(get_text('all_complete', lang))
-            # Ensure 100% at the end
+                
+                # --- NEW: Force-write session error log (Backup/Guaranteed file) ---
+                if 'download_errors_list' in st.session_state and st.session_state['download_errors_list']:
+                    try:
+                        from pathlib import Path
+                        root_path = Path(st.session_state['download_path'])
+                        root_path.mkdir(parents=True, exist_ok=True)
+                        session_log = root_path / "session_errors.txt"
+                        with open(session_log, "w", encoding="utf-8") as f:
+                            f.write(f"Session Error Log - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                            f.write("===================================================\n")
+                            for err in st.session_state['download_errors_list']:
+                                f.write(f"{err}\n")
+                    except Exception as e:
+                        print(f"Failed to write session log: {e}")
+                # -------------------------------------------------------------------
+        
+        elif st.session_state['download_status'] == 'done':
+            st.success(get_text('download_complete', lang))
+            # Show download location (no background color)
+            st.markdown(f"**{get_text('download_location', lang, path=st.session_state['download_path'])}**")
+            # Show final progress bar at 100%
             progress_container.markdown(f"""
                 <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
                     <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('downloading_progress_text', lang, current=total, total=total)}</div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('complete_text', lang)}</div>
                 </div>
             """, unsafe_allow_html=True)
+            status_text.text(get_text('downloaded_courses', lang, total=total))
             
-            # Auto-rerun to process next course
-            time.sleep(0.1)  # Brief pause to see the update
-            st.rerun()
-        else:
-            # All done
-            st.session_state['download_status'] = 'done'
-    
-    elif st.session_state['download_status'] == 'done':
-        st.success(get_text('download_complete', lang))
-        # Show download location (no background color)
-        st.markdown(f"**{get_text('download_location', lang, path=st.session_state['download_path'])}**")
-        # Show final progress bar at 100%
-        progress_container.markdown(f"""
-            <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('complete_text', lang)}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        status_text.text(get_text('downloaded_courses', lang, total=total))
-        
-        # Check for download errors
-        from pathlib import Path
-        error_messages = []
-        download_path = Path(st.session_state['download_path'])
-        
-        # Collect errors from all course folders
-        for course in st.session_state['courses_to_download']:
-            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
-            course_name = cm._sanitize_filename(course.name)
-            error_file = download_path / course_name / "download_errors.txt"
-            if error_file.exists():
-                try:
-                    with open(error_file, 'r', encoding='utf-8') as f:
-                        errors = f.read().strip()
-                        if errors:
-                            error_messages.extend(errors.split('\n'))
-                except:
-                    pass
-        
-        # Display error summary if there are errors
-        if error_messages:
-            st.warning(get_text('errors_occurred', lang, count=len(error_messages)))
+            # Check for download errors (In-Memory first, fallback to disk)
+            error_messages = st.session_state.get('download_errors_list', [])
             
-            with st.expander(get_text('view_error_details', lang), expanded=True):
-                # Categorize errors
-                no_url_errors = [e for e in error_messages if 'No download URL' in e]
-                # Check for 429 or "Rate Limit" in the error string
-                rate_limit_errors = [e for e in error_messages if '429' in e or 'Rate Limit' in e]
-                # Check for 401 or "Unauthorized" or "Access Denied"
-                unauthorized_errors = [e for e in error_messages if '401' in e or 'Unauthorized' in e or 'Access Denied' in e or 'Adgang Nægtet' in e]
+            # Fallback (optional): If empty, check disk (legacy/redundant if list works)
+            if not error_messages:
+                from pathlib import Path
+                download_path = Path(st.session_state['download_path'])
                 
-                http_errors = [e for e in error_messages if 'HTTP' in e and 'No download URL' not in e and e not in rate_limit_errors and e not in unauthorized_errors]
-                other_errors = [e for e in error_messages if e not in no_url_errors and e not in http_errors and e not in rate_limit_errors and e not in unauthorized_errors]
+                # Collect errors from all course folders
+                for course in st.session_state['courses_to_download']:
+                    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+                    course_name = cm._sanitize_filename(course.name)
+                    error_file = download_path / course_name / "download_errors.txt"
+                    if error_file.exists():
+                        try:
+                            with open(error_file, 'r', encoding='utf-8') as f:
+                                errors = f.read().strip()
+                                if errors:
+                                    error_messages.extend(errors.split('\n'))
+                        except:
+                            pass
+            
+            # Display error summary if there are errors
+            if error_messages:
+                st.warning(get_text('errors_occurred', lang, count=len(error_messages)))
                 
-                if no_url_errors:
-                    st.markdown(get_text('no_url_header', lang))
-                    for error in no_url_errors[:10]:  # Show first 10
-                        st.text(f"  • {error}")
-                    if len(no_url_errors) > 10:
-                        st.caption(f"  ... and {len(no_url_errors) - 10} more")
-                    st.info(get_text('no_url_explanation', lang))
-                
-                if rate_limit_errors:
-                    st.markdown(f"**⚠️ {get_text('rate_limit_error', lang).split(':')[0]}**") # Use title part of error
-                    for error in rate_limit_errors[:5]:
-                        st.text(f"  • {get_text('rate_limit_error', lang)}")
-                    st.warning(get_text('rate_limit_error', lang))
+                with st.expander(get_text('view_error_details', lang), expanded=True):
+                    # Group by course
+                    errors_by_course = {}
+                    for err in error_messages:
+                        c_name = err.course_name if isinstance(err, DownloadError) else "Unknown"
+                        if c_name not in errors_by_course: errors_by_course[c_name] = []
+                        errors_by_course[c_name].append(err)
+                    
+                    for course_name, errs in errors_by_course.items():
+                        st.markdown(f"**{course_name}** ({len(errs)})")
+                        for err in errs:
+                            if isinstance(err, DownloadError):
+                                item_label = f"{err.item_name}: " if err.item_name else ""
+                                st.markdown(f"- {item_label}{err.message}", unsafe_allow_html=True)
+                            else:
+                                st.text(f"  • {err}")
+                    
+                    st.caption(get_text('full_error_details', lang))
 
-                if unauthorized_errors:
-                    st.markdown(f"**🚫 {get_text('course_unauthorized', lang).split(':')[0]}**")
-                    for error in unauthorized_errors[:5]:
-                        st.text(f"  • {get_text('course_unauthorized', lang)}")
+                # Retry Button
+                st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+                retry_label = "Retry Failed Items" if lang == 'en' else "Prøv fejlslagne elementer igen"
+                col_retry, _ = st.columns([0.25, 0.75])
+                with col_retry:
+                    if st.button(f"🔄 {retry_label}", type="secondary", key="retry_failed_btn", use_container_width=True):
+                         st.session_state['current_course_index'] = 0
+                         st.session_state['download_status'] = 'scanning'
+                         st.session_state['downloaded_items'] = 0
+                         st.session_state['failed_items'] = 0
+                         st.session_state['download_errors_list'] = []
+                         st.session_state['log_content'] = ""
+                         st.rerun()
+        
+        elif st.session_state['download_status'] == 'cancelled':
+            st.warning(get_text('download_was_cancelled', lang))
+            # Show partial progress
+            progress_container.progress(current_idx / total if total > 0 else 0)
+            status_text.text(get_text('cancelled_after', lang, current=current_idx, total=total))
+        
+        # Start Over / Go back button (show when done or cancelled)
+        if st.session_state['download_status'] in ['done', 'cancelled']:
+            # Use "Go back" for cancelled, "Go to front page" for done
+            button_text = get_text('go_back', lang) if st.session_state['download_status'] == 'cancelled' else get_text('go_to_front_page', lang)
+            if st.button(button_text):
+                # Determine target step: 2 if cancelled (back to settings), 1 if done (front page)
+                target_step = 2 if st.session_state['download_status'] == 'cancelled' else 1
                 
-                if http_errors:
-                    st.markdown(get_text('http_error_header', lang))
-                    for error in http_errors[:10]:
-                        st.text(f"  • {error}")
-                    if len(http_errors) > 10:
-                        st.caption(f"  ... and {len(http_errors) - 10} more")
-                    st.info(get_text('http_error_explanation', lang))
+                # Check if we should clean up ALL state (for step 1) or just download state (for step 2)
+                # If step 1, we want full reset. If step 2, we want to keep course selection.
                 
-                if other_errors:
-                    st.markdown(get_text('other_error_header', lang))
-                    for error in other_errors[:10]:
-                        st.text(f"  • {error}")
-                    if len(other_errors) > 10:
-                        st.caption(f"  ... and {len(other_errors) - 10} more")
+                keys_to_clear = ['download_status', 'current_course_index', 'total_items', 
+                            'downloaded_items', 'failed_items', 'download_errors_list', 'log_content']
                 
-                st.caption(get_text('full_error_details', lang))
-    
-    elif st.session_state['download_status'] == 'cancelled':
-        st.warning(get_text('download_was_cancelled', lang))
-        # Show partial progress
-        progress_container.progress(current_idx / total if total > 0 else 0)
-        status_text.text(get_text('cancelled_after', lang, current=current_idx, total=total))
-    
-    # Start Over / Go back button (show when done or cancelled)
-    if st.session_state['download_status'] in ['done', 'cancelled']:
-        # Use "Go back" for cancelled, "Go to front page" for done
-        button_text = get_text('go_back', lang) if st.session_state['download_status'] == 'cancelled' else get_text('go_to_front_page', lang)
-        if st.button(button_text):
-            # Clean up download state
-            for key in ['download_status', 'current_course_index', 'courses_to_download', 'total_items', 'downloaded_items']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.session_state['step'] = 1
-            st.session_state['cancel_requested'] = False
-            st.rerun()
+                if target_step == 1:
+                     keys_to_clear.append('courses_to_download') # Maybe keep selection if step 1? 
+                     # Actually standard flow is clear everything if going to front.
+                     pass 
+
+                for key in keys_to_clear:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                
+                st.session_state['step'] = target_step
+                st.session_state['cancel_requested'] = False
+                st.rerun()
 
 
+    # STEP 4: SYNC ANALYSIS (Only shown when current_mode is 'sync')
+    elif st.session_state['step'] == 4:
+        render_sync_step4(lang)

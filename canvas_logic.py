@@ -5,12 +5,44 @@ import uuid
 import shutil
 import html
 import urllib.parse
+import traceback
 from pathlib import Path
+from datetime import datetime
 from canvasapi import Canvas
-from canvasapi.exceptions import CanvasException
+from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
 import aiohttp
 from translations import get_text
+from canvas_debug import log_debug, clear_debug_log
+import logging
+
+from sync_manager import SyncManager, CanvasFileInfo
+
+logger = logging.getLogger(__name__)
+
+# --- Constants ---
+MAX_RETRIES = 5
+TIMEOUT_SECONDS = 300
+RETRY_DELAY = 1
+
+class DownloadError:
+    """Structured error object for UI display and logging."""
+    def __init__(self, course_name, item_name, error_type, message, raw_error=None, context=None):
+        self.course_name = course_name
+        self.item_name = item_name
+        self.error_type = error_type # e.g., '401', 'Rate Limit', 'Network', 'Generic'
+        self.message = message
+        self.raw_error = raw_error
+        self.context = context or {}
+        self.timestamp = datetime.now()
+
+    def __str__(self):
+        return f"[{self.course_name}] {self.message}"
+
+    def to_log_entry(self):
+        """Format for log file"""
+        ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        return f"[{ts}] [{self.course_name}] [{self.error_type}] {self.item_name}: {self.message}"
 
 class CanvasManager:
     def __init__(self, api_key, api_url, language='en'):
@@ -27,11 +59,10 @@ class CanvasManager:
             
         self.language = language
         # Initialize Canvas object
-        # Note: We don't catch initialization errors here, they usually happen on first request
         try:
             self.canvas = Canvas(self.api_url, self.api_key)
         except Exception:
-            # If URL is completely malformed, Canvas init might fail
+            # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
             
         self.user = None
@@ -42,74 +73,245 @@ class CanvasManager:
             return False, get_text('login_failed', self.language)
 
         try:
-            # We attempt to fetch the user. This validates both the URL (connectivity)
-            # and the Token (authentication) in one go.
+            # We attempt to fetch the user. This validates both the URL and Token.
             self.user = self.canvas.get_current_user()
             return True, get_text('logged_in_as', self.language, name=self.user.name)
-        except Exception:
-            # As requested: One unified error message for any failure (URL or Token)
-            return False, get_text('login_failed', self.language)
+        except Exception as e:
+            # Return specific message if possible, else generic
+            msg = str(e) if str(e) else get_text('login_failed', self.language)
+            return False, msg
 
     def get_courses(self, favorites_only=True):
-        """Fetches courses. If favorites_only is True, fetches only favorite courses."""
-        try:
-            if favorites_only:
-                # Lazy-load user if not already set (avoids redundant validation API call)
-                if self.user is None:
-                    self.user = self.canvas.get_current_user()
-                # get_favorite_courses returns a PaginatedList
-                courses = self.user.get_favorite_courses()
-            else:
-                # Optimize: Only fetch active and invited courses to speed up loading
-                # Fetching 'completed' (past) courses can be very slow if there are many.
-                courses = self.canvas.get_courses(enrollment_state=['active', 'invited_or_pending'])
-            
-            # Convert to list to ensure we can iterate easily and filter out restricted access
-            course_list = []
-            for course in courses:
-                # Some courses might be restricted or not have a name
-                if hasattr(course, 'name') and hasattr(course, 'id'):
-                     course_list.append(course)
-            return course_list
-        except Exception as e:
-            print(f"Error fetching courses: {e}")
-            return []
+        """
+        Fetches courses. 
+        Raises exceptions for UI to handle (no silent failures).
+        """
+        if not self.canvas:
+             raise ValueError("Canvas object not initialized (check URL).")
 
-    def count_course_items(self, course, file_filter='all'):
+        if favorites_only:
+            # Lazy-load user if not already set
+            if self.user is None:
+                self.user = self.canvas.get_current_user()
+            courses = self.user.get_favorite_courses()
+        else:
+            # Fetch active and invited courses
+            courses = self.canvas.get_courses(enrollment_state=['active', 'invited_or_pending'])
+        
+        # Validation/Filter loop (might raise API errors if connection drops)
+        course_list = []
+        for course in courses:
+            if hasattr(course, 'name') and hasattr(course, 'id'):
+                    course_list.append(course)
+        return course_list
+
+    def get_course_files_metadata(self, course):
+        """
+        Fetch metadata for all files in a course using a robust Hybrid strategy.
+        
+        Strategy:
+        1. Try to fetch all files using `course.get_files()`. This is the primary source.
+           - If it fails mid-stream, we CATCH the error but KEEP the files found so far.
+        2. Always run a secondary scan of Modules to find files that might be locked/hidden 
+           or were missed due to the error in step 1.
+        3. Deduplicate by File ID.
+        
+        Returns:
+            List of CanvasFileInfo objects (unique by ID).
+        """
+        from sync_manager import CanvasFileInfo
+        
+        all_files_map = {} # ID -> CanvasFileInfo
+        
+        # --- Phase 1: Bulk Fetch (get_files) ---
+        try:
+            # We iterate manually to catch errors during pagination
+            canvas_files = course.get_files()
+            for file in canvas_files:
+                try:
+                    f_info = CanvasFileInfo(
+                        id=file.id,
+                        filename=getattr(file, 'filename', ''),
+                        display_name=getattr(file, 'display_name', getattr(file, 'filename', '')),
+                        size=getattr(file, 'size', 0),
+                        modified_at=getattr(file, 'modified_at', None),
+                        md5=getattr(file, 'md5', None),
+                        url=getattr(file, 'url', ''),
+                        content_type=getattr(file, 'content-type', ''),
+                        folder_id=getattr(file, 'folder_id', None),
+                    )
+                    all_files_map[file.id] = f_info
+                except Exception as e:
+                    logger.warning(f"Error parsing file object {getattr(file, 'id', '?')}: {e}")
+        except Exception as e:
+            logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")
+            # We do NOT raise here. We continue to Phase 2 to supplement what we found.
+            
+        # --- Phase 2: Module Scan (Supplement) ---
+        try:
+            module_files = self._get_files_from_modules(course)
+            module_only_count = 0
+            for f_info in module_files:
+                if f_info.id not in all_files_map:
+                    all_files_map[f_info.id] = f_info
+                    module_only_count += 1
+            
+            # Diagnostic: If bulk fetch missed items that modules found, it suggests Files tab is restricted/hidden
+            if module_only_count > 0:
+                logger.warning(
+                    f"Hybrid Fetch: Found {module_only_count} files in Modules that were missing from 'Files' tab. "
+                    f"This suggests 'Files' tab access is restricted for course {course.id}."
+                )
+                    
+        except Exception as e:
+            logger.error(f"Error during module scan fallback: {e}")
+            # If BOTH failed and wfe have 0 files, we might want to raise, 
+            # but usually returning empty list is safer for UI than crashing.
+            
+        return list(all_files_map.values())
+    
+    def _get_files_from_modules(self, course):
+        """Fallback: Get files by iterating through modules."""
+        from sync_manager import CanvasFileInfo
+        
+        files = []
+        modules = course.get_modules()
+        for module in modules:
+            items = module.get_module_items()
+            for item in items:
+                if item.type == 'File':
+                    if not hasattr(item, 'content_id') or not item.content_id:
+                        continue
+                    try:
+                        file = course.get_file(item.content_id)
+                        files.append(CanvasFileInfo(
+                            id=file.id,
+                            filename=getattr(file, 'filename', ''),
+                            display_name=getattr(file, 'display_name', getattr(file, 'filename', '')),
+                            size=getattr(file, 'size', 0),
+                            modified_at=getattr(file, 'modified_at', None),
+                            md5=getattr(file, 'md5', None),
+                            url=getattr(file, 'url', ''),
+                            content_type=getattr(file, 'content-type', ''),
+                            folder_id=getattr(file, 'folder_id', None),
+                        ))
+                    except Exception:
+                        # If a specific file content_id is invalid, we skip it.
+                        # This works as "best effort".
+                        pass
+        return files
+
+    def get_folder_map(self, course) -> dict:
+        """
+        Fetch all folders in a course and return a mapping of folder_id to relative path.
+        
+        Returns:
+            Dict mapping folder_id (int) to relative path string (e.g. 'Module 1/Sub').
+            Returns empty dict on failure.
+        """
+        folder_map = {}
+        try:
+            all_folders = course.get_folders()
+            for folder in all_folders:
+                full_name = getattr(folder, 'full_name', '')
+                if full_name.startswith("course files"):
+                    rel_path = full_name[len("course files"):].strip('/')
+                else:
+                    rel_path = full_name
+                folder_map[folder.id] = rel_path
+        except Exception as e:
+            logger.warning(f"Failed to fetch folder map for course: {e}")
+        return folder_map
+
+
+    def count_course_items(self, course, mode='modules', file_filter='all'):
         """
         Counts total number of downloadable items in a course.
-        This iterates through modules to count files, pages, and external links.
+        Matches the logic of download_course_async (including Hybrid Mode catch-all).
         """
         count = 0
+        allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
+        
         try:
-            modules = course.get_modules()
-            for module in modules:
-                items = module.get_module_items()
-                for item in items:
-                    if file_filter == 'study':
-                        # Strict filter: Only PDF/PPT files. Skip Pages, Links, Tools.
-                        if item.type == 'File':
-                            # We can't check extension easily without fetching file info, 
-                            # but we can try to guess from title or content_id if needed.
-                            # For accuracy, we might need to fetch file obj, but that's slow.
-                            # Optimization: Just count it for now, actual filter happens at download.
-                            # Or better: Don't count Pages/Links/Tools.
+            if mode == 'flat':
+                # 1. Count Files
+                try:
+                    files = list(course.get_files())
+                    for f in files:
+                        if file_filter == 'study':
+                            ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
+                            if ext in allowed_exts:
+                                count += 1
+                        else:
                             count += 1
-                    elif item.type in ['File', 'Page', 'ExternalUrl', 'ExternalTool']:
+                except Exception:
+                    pass # Fallback to modules will catch files if get_files failed
+                
+                # 2. Count non-file Module Items 
+                if file_filter != 'study':
+                    try:
+                        modules = course.get_modules()
+                        for module in modules:
+                            items = module.get_module_items()
+                            for item in items:
+                                if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                                    count += 1
+                    except Exception:
+                         pass
+
+            else:
+                # Modules Mode (Default) - Hybrid Logic
+                # 1. Count Module Items
+                module_file_ids = set()
+                modules = course.get_modules()
+                for module in modules:
+                    items = module.get_module_items()
+                    for item in items:
+                        if item.type == 'File':
+                            if hasattr(item, 'content_id'):
+                                module_file_ids.add(item.content_id)
+                            
+                            if file_filter == 'study':
+                                # We can't easily check extension of module item without file object, 
+                                # but usually we count it. Accurately? 
+                                # Let's assume for now if filter='study', we only count files?
+                                # Ideally we'd fetch the file to check ext, but that's slow.
+                                # Let's just count it for now.
+                                count += 1
+                            else:
+                                count += 1
+                                
+                        elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                            if file_filter != 'study':
+                                count += 1
+                
+                # 2. Count Catch-All Files (Files NOT in modules)
+                try:
+                    all_files = course.get_files()
+                    for file in all_files:
+                        if file.id in module_file_ids:
+                            continue # Already counted
+                        
+                        if file_filter == 'study':
+                            ext = os.path.splitext(getattr(file, 'filename', ''))[1].lower()
+                            if ext not in allowed_exts:
+                                continue
+                        
                         count += 1
-        except Exception as e:
-            print(f"Error counting items for {course.name}: {e}")
+                except Exception:
+                    pass
+
+        except Exception:
+            # Counting is "best effort" for progress bar. 
+            pass
         return count
     
     def get_course_total_size_mb(self, course, mode='modules', file_filter='all'):
-        """Calculate total size in MB of all files in a course.
-        Optimized to use get_files() which is faster than iterating modules.
-        """
+        """Calculate total size in MB."""
         total_bytes = 0
         allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
         try:
-            # Always use get_files() for size calculation as it's much faster (O(1) paginated vs O(N) modules)
-            # This avoids timeouts on large courses just to get the size.
+            # Try get_files() first
             try:
                 files = course.get_files()
                 for file in files:
@@ -117,11 +319,9 @@ class CanvasManager:
                         ext = os.path.splitext(getattr(file, 'filename', ''))[1].lower()
                         if ext not in allowed_exts:
                             continue
-                    file_size = getattr(file, 'size', 0)
-                    total_bytes += file_size
-            except Exception as e:
-                # Fallback to modules if get_files() is restricted (401)
-                print(f"get_files() failed (likely restricted), falling back to modules: {e}")
+                    total_bytes += getattr(file, 'size', 0)
+            except Exception:
+                # Fallback to modules
                 modules = course.get_modules()
                 for module in modules:
                     items = module.get_module_items()
@@ -133,27 +333,30 @@ class CanvasManager:
                                     ext = os.path.splitext(getattr(file_obj, 'filename', ''))[1].lower()
                                     if ext not in allowed_exts:
                                         continue
-                                file_size = getattr(file_obj, 'size', 0)
-                                total_bytes += file_size
+                                total_bytes += getattr(file_obj, 'size', 0)
                             except:
                                 pass
-        except Exception as e:
-            print(f"Error calculating course size: {e}")
-        return total_bytes / (1024 * 1024)  # Convert to MB
+        except Exception:
+            pass
+        return total_bytes / (1024 * 1024)
 
-    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all'):
+    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False):
         """
         Downloads content for a single course asynchronously.
         """
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
         
-        # Check disk space before starting
-        # Check disk space before starting
+        # Check disk space
         if not self._check_disk_space(save_dir):
-            error_msg = get_text('insufficient_space', self.language)
-            if progress_callback: progress_callback(error_msg)
-            self._log_error(Path(save_dir), error_msg)
+            error = DownloadError(
+                course.name, 
+                "Disk Check", 
+                "Disk Full", 
+                get_text('insufficient_space', self.language)
+            )
+            if progress_callback: progress_callback(error, progress_type='error')
+            self._log_error(save_dir, error)
             return
         
         base_path.mkdir(parents=True, exist_ok=True)
@@ -162,353 +365,531 @@ class CanvasManager:
             if progress_callback: progress_callback(get_text('download_cancelled_msg', self.language))
             return
         
-        # Track total MB downloaded for this course
+        debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
+        if debug_mode:
+            clear_debug_log(debug_file)
+            log_debug(f"Starting download for course: {course.name} (ID: {course.id}) Mode: {mode}", debug_file)
+            log_debug(f"Save Dir: {save_dir}", debug_file)
+
+        downloaded_file_ids = set()
         mb_tracker = {'bytes_downloaded': 0}
-
-        # Semaphore to limit concurrency (Reduced to 2 for robustness)
-        sem = asyncio.Semaphore(2) 
+        
+        # Determine semaphore limit from session state if available, default to 5
+        import streamlit as st
+        concurrent_limit = st.session_state.get('concurrent_downloads', 5)
+        sem = asyncio.Semaphore(concurrent_limit)
+        
         tasks = []
+        timeout = aiohttp.ClientTimeout(total=TIMEOUT_SECONDS)
 
-        # Set timeout for all requests (5 minutes per file)
-        timeout = aiohttp.ClientTimeout(total=300)
         async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
+            downloaded_files_info = []
+            
             try:
                 if mode == 'flat':
-                    await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter)
+                    downloaded_files_info = await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file)
+                elif mode == 'files':
+                    downloaded_files_info = await self._download_folders_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file)
                 else:
                     # Modules mode
-                    # Note: get_modules is synchronous, but we can process items async
-                    try:
-                        # Retry logic for fetching modules (handle transient 500/timeouts)
-                        modules = None
-                        for attempt in range(3):
-                            try:
-                                modules = course.get_modules()
-                                # Force iteration to trigger potential API errors immediately
-                                modules = list(modules)
-                                break
-                            except Exception as e:
-                                if attempt < 2:
-                                    await asyncio.sleep(2 * (attempt + 1))
-                                else:
-                                    raise e
+                    # 1. Fetch Modules
+                    modules = None
+                    for attempt in range(3):
+                        try:
+                            modules = course.get_modules()
+                            modules = list(modules) # Force fetch
+                            break
+                        except Exception as e:
+                            if attempt < 2:
+                                await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+                            else:
+                                raise e
 
-                        for module in modules:
-                            if check_cancellation and check_cancellation(): break
-                            
-                            try:
-                                module_name = self._sanitize_filename(module.name)
-                                target_path = base_path / module_name
-                                target_path.mkdir(parents=True, exist_ok=True)
-
-                                items = module.get_module_items()
-                                for item in items:
-                                    if check_cancellation and check_cancellation(): break
-                                    
-                                    try:
-                                        if item.type == 'File':
-                                            # Validate content_id exists
-                                            if not hasattr(item, 'content_id') or not item.content_id:
-                                                self._log_error(base_path, get_text('missing_content_id', self.language, title=getattr(item, 'title', 'unknown')))
-                                                continue
-                                            # We need the file object for the URL. 
-                                            # This part is still sync because canvasapi doesn't support async
-                                            # But we can offload the actual download
-                                            file_obj = course.get_file(item.content_id)
-                                            task = asyncio.create_task(self._download_file_async(sem, session, file_obj, target_path, progress_callback, mb_tracker, file_filter))
-                                            tasks.append(task)
-                                        elif item.type == 'Page':
-                                            if file_filter == 'study': continue # Skip pages in study mode
-                                            # Validate page_url exists
-                                            if not hasattr(item, 'page_url') or not item.page_url:
-                                                self._log_error(base_path, get_text('missing_page_url', self.language, title=getattr(item, 'title', 'unknown')))
-                                                continue
-                                            page_obj = course.get_page(item.page_url)
-                                            self._save_page(page_obj, target_path, progress_callback)
-                                        elif item.type == 'ExternalUrl':
-                                            if file_filter == 'study': continue # Skip links in study mode
-                                            # Validate external_url exists
-                                            if not hasattr(item, 'external_url') or not item.external_url:
-                                                self._log_error(base_path, get_text('missing_external_url', self.language, title=getattr(item, 'title', 'unknown')))
-                                                continue
-                                            self._create_link(item.title, item.external_url, target_path, progress_callback)
-                                        elif item.type == 'ExternalTool':
-                                            if file_filter == 'study': continue # Skip tools in study mode
-                                            # For ExternalTool (e.g. Panopto), the 'external_url' is often an LTI launch URL
-                                            # which requires a POST request with signed parameters (OAuth).
-                                            # A simple GET request or shortcut to this URL will fail (as seen by the user).
-                                            # The best workaround is to use the 'html_url' which points to the Canvas page
-                                            # where the tool is embedded. Canvas handles the LTI launch when the user visits this page.
-                                            
-                                            url = getattr(item, 'html_url', None)
-                                            if not url:
-                                                # Fallback to external_url if html_url is missing (unlikely for standard items)
-                                                url = getattr(item, 'external_url', None)
-                                            
-                                            if not url:
-                                                # Log detailed debug info
-                                                try:
-                                                    debug_info = {k: v for k, v in item.__dict__.items() if not k.startswith('_')}
-                                                except:
-                                                    debug_info = "Could not retrieve item attributes"
-                                                self._log_error(base_path, f"ExternalTool '{getattr(item, 'title', 'unknown')}' missing URL. Debug info: {debug_info}")
-                                                continue
-                                            self._create_link(item.title, url, target_path, progress_callback)
-                                    except Exception as item_e:
-                                        self._log_error(base_path, get_text('error_processing_item', self.language, title=getattr(item, 'title', 'unknown'), module=module.name, error=item_e))
-                            except Exception as module_e:
-                                 self._log_error(base_path, get_text('error_processing_module', self.language, name=getattr(module, 'name', 'unknown'), error=module_e))
-                    except Exception as e:
-                        # Check for Unauthorized (401)
-                        is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)
+                    for module in modules:
+                        if check_cancellation and check_cancellation(): break
                         
-                        if is_unauthorized:
-                            # Fallback to flat download
-                            self._log_error(base_path, get_text('modules_unauthorized_fallback', self.language) + f" (Error: {e})")
-                            if progress_callback:
-                                progress_callback(get_text('modules_unauthorized_fallback', self.language))
-                            
-                            # Attempt flat download
-                            await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter)
-                        else:
-                            self._log_error(base_path, get_text('error_module_list', self.language, error=e))
+                        try:
+                            log_debug(f"Processing Module: {module.name} (ID: {module.id})", debug_file)
+                            module_name = self._sanitize_filename(module.name)
+                            target_path = base_path / module_name
+                            target_path.mkdir(parents=True, exist_ok=True)
 
-                # Wait for all downloads to complete
+                            items = list(module.get_module_items())
+                            log_debug(f"Found {len(items)} items in module '{module.name}'", debug_file)
+                            for item in items:
+                                if check_cancellation and check_cancellation(): break
+                                
+                                log_debug(f"  - Item: {getattr(item, 'title', 'unknown')} (Type: {getattr(item, 'type', 'unknown')})", debug_file)
+                                
+                                try:
+                                    if item.type == 'File':
+                                        if not hasattr(item, 'content_id') or not item.content_id:
+                                            # Create Error
+                                            err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Content ID", get_text('missing_content_id', self.language, title=getattr(item, 'title', 'unknown')))
+                                            if progress_callback: progress_callback(err, progress_type='error')
+                                            self._log_error(save_dir, err)
+                                            continue
+                                        
+                                        file_obj = course.get_file(item.content_id)
+                                        downloaded_file_ids.add(file_obj.id)
+                                        log_debug(f"Module file tracked: {file_obj.filename} (ID: {file_obj.id})", debug_file)
+                                        task = asyncio.create_task(self._download_file_async(
+                                            sem, session, file_obj, target_path, progress_callback, mb_tracker, file_filter, 
+                                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file
+                                        ))
+                                        tasks.append(task)
+                                    
+                                    elif item.type == 'Page':
+                                        if file_filter == 'study': continue
+                                        if not hasattr(item, 'page_url') or not item.page_url:
+                                            # Error
+                                            err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Page URL", "Page has no URL")
+                                            if progress_callback: progress_callback(err, progress_type='error')
+                                            self._log_error(save_dir, err)
+                                            continue
+                                        
+                                        page_obj = course.get_page(item.page_url)
+                                        self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                    
+                                    elif item.type == 'ExternalUrl':
+                                        if file_filter == 'study': continue
+                                        if not hasattr(item, 'external_url') or not item.external_url:
+                                             # Error
+                                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing External URL", "Link has no URL")
+                                             if progress_callback: progress_callback(err, progress_type='error')
+                                             self._log_error(save_dir, err)
+                                             continue
+                                        self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                    
+                                    elif item.type == 'ExternalTool':
+                                        if file_filter == 'study': continue
+                                        url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None)
+                                        if not url:
+                                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Tool URL", "External Tool missing launch URL")
+                                             if progress_callback: progress_callback(err, progress_type='error')
+                                             self._log_error(save_dir, err)
+                                             continue
+                                        self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        
+                                except Exception as item_e:
+                                    err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Item Processing Error", str(item_e), raw_error=item_e)
+                                    if progress_callback: progress_callback(err, progress_type='error')
+                                    self._log_error(save_dir, err)
+
+                        except Exception as module_e:
+                             err = DownloadError(course.name, getattr(module, 'name', 'unknown'), "Module Error", str(module_e), raw_error=module_e)
+                             if progress_callback: progress_callback(err, progress_type='error')
+                             self._log_error(save_dir, err)
+                             
+                # Wait for file downloads
                 if tasks:
-                    # Use return_exceptions to prevent one failure from cancelling all downloads
                     results = await asyncio.gather(*tasks, return_exceptions=True)
-                    # Log any exceptions that occurred
                     for i, result in enumerate(results):
                         if isinstance(result, Exception):
-                            self._log_error(base_path, get_text('task_failed', self.language, i=i, error=result))
+                            err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                            if progress_callback: progress_callback(err, progress_type='error')
+                            self._log_error(save_dir, err)
+                        elif result:
+                            downloaded_files_info.append(result)
+
+
+                # ---- HYBRID MODE CATCH-ALL STARTED ----
+                try:
+                    log_debug("Starting Catch-All Phase for non-module files...", debug_file)
+                    if progress_callback: progress_callback(get_text('scanning_remaining_files', self.language), progress_type='log')
+                    
+                    all_files = course.get_files()
+                    all_files = list(all_files)
+                    catch_all_tasks = []
+
+                    for file in all_files:
+                        if check_cancellation and check_cancellation(): break
+                        
+                        if file.id in downloaded_file_ids:
+                            log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
+                            continue # Already downloaded in a module
+                        
+                        log_debug(f"Catch-All found new file: {file.filename} (ID: {file.id})", debug_file)
+                        
+                        # Download to course root
+                        task = asyncio.create_task(self._download_file_async(
+                            sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
+                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file
+                        ))
+                        catch_all_tasks.append(task)
+                    
+                    if catch_all_tasks:
+                        log_debug(f"Downloading {len(catch_all_tasks)} catch-all files...", debug_file)
+                        results = await asyncio.gather(*catch_all_tasks, return_exceptions=True)
+                        for result in results:
+                            if isinstance(result, Exception):
+                                err = DownloadError(course.name, "Catch-All Task", "Async Error", str(result), raw_error=result)
+                                if progress_callback: progress_callback(err, progress_type='error')
+                                self._log_error(save_dir, err)
+                            elif result:
+                                downloaded_files_info.append(result)
+
+                    else:
+                        log_debug("No partial/non-module files found.", debug_file)
+
+                except Exception as e:
+                     log_debug(f"Catch-All Phase Error: {e}", debug_file)
+                     err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e)
+                     self._log_error(save_dir, err)
+                # ---- HYBRID MODE CATCH-ALL ENDED ----
 
             except Exception as e:
-                 if "unauthorized" in str(e).lower():
-                     self._log_error(base_path, get_text('course_unauthorized', self.language))
+                 is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)
+                 if is_unauthorized and mode != 'flat':
+                     # Fallback to flat
+                     msg = get_text('modules_unauthorized_fallback', self.language)
+                     if progress_callback: progress_callback(msg, progress_type='log')
+                     # Log the partial failure
+                     err = DownloadError(course.name, "Modules Access", "401 Unauthorized", "Modules locked, falling back to file scan.", raw_error=e)
+                     self._log_error(save_dir, err)
+                     
+                     downloaded_files_info.extend(await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file))
                  else:
-                     self._log_error(base_path, get_text('error_processing_course', self.language, course=course_name, error=e))
+                     err = DownloadError(course.name, "Course Download", "Processing Error", str(e), raw_error=e)
+                     if progress_callback: progress_callback(err, progress_type='error')
+                     self._log_error(save_dir, err)
+            
+            # --- Generate Manifest ---
+            try:
+                log_debug(f"Manifest generation: {len(downloaded_files_info)} files collected.", debug_file)
+                
+                if downloaded_files_info:
+                    sm = SyncManager(base_path, course.id, course.name, self.language)
+                    sm.create_initial_manifest(downloaded_files_info)
+                    log_debug(f"Manifest created successfully with {len(downloaded_files_info)} entries.", debug_file)
+                else:
+                    log_debug("WARNING: No downloaded files info collected. Manifest skipped.", debug_file)
+            except Exception as e:
+                logger.error(f"Failed to create initial manifest: {e}")
+                log_debug(f"ERROR creating manifest: {e}", debug_file)
 
-    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all'):
-        """Helper to download files in flat structure with retry logic for 401s."""
+
+    async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None):
+        """Downloads files preserving actual folder structure."""
         tasks = []
+        downloaded = []
+        folder_map = {}
+        log_debug(f"Starting Folders Download for {course.name}", debug_file)
+
+        # 1. Fetch Folders
+        try:
+            if progress_callback: progress_callback(get_text('fetching_folders', self.language))
+            all_folders = course.get_folders()
+            for folder in all_folders:
+                full_name = getattr(folder, 'full_name', '')
+                if full_name.startswith("course files"):
+                    rel_path = full_name[len("course files"):].strip('/')
+                else:
+                    rel_path = full_name
+                folder_map[folder.id] = rel_path
+            log_debug(f"Mapped {len(folder_map)} folders.", debug_file)
+        except Exception as e:
+            err = DownloadError(course.name, "Folder Structure", "Fetch Error", f"Could not fetch folders: {e}", raw_error=e)
+            if progress_callback: progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+            # Continue to allow flat file download if possible?
+            # If folder fetch failed, likely file fetch will too, but let's try.
+
+        # 2. Fetch and Download Files
+        try:
+            if progress_callback: progress_callback(get_text('fetching_files_list', self.language))
+            files = course.get_files()
+            files = list(files)
+            
+            for file in files:
+                if check_cancellation and check_cancellation(): break
+                try:
+                    # Calculate path
+                    folder_id = getattr(file, 'folder_id', None)
+                    rel_folder_path = folder_map.get(folder_id, "")
+                    path_parts = [self._sanitize_filename(p) for p in rel_folder_path.split('/') if p]
+                    target_path = base_path
+                    for part in path_parts:
+                        target_path = target_path / part
+                    target_path.mkdir(parents=True, exist_ok=True)
+                    
+                    task = asyncio.create_task(self._download_file_async(
+                        sem, session, file, target_path, progress_callback, mb_tracker, file_filter, 
+                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                    ))
+                    tasks.append(task)
+                except Exception as e:
+                    err = DownloadError(course.name, getattr(file, 'filename', 'unknown'), "Queue Error", str(e), raw_error=e)
+                    if progress_callback: progress_callback(err, progress_type='error')
+                    self._log_error(error_root_path, err)
+            
+            if tasks:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for result in results:
+                    if isinstance(result, Exception):
+                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                        if progress_callback: progress_callback(err, progress_type='error')
+                        self._log_error(error_root_path, err)
+                    elif result:
+                        downloaded.append(result)
+
+
+        except Exception as e:
+            err = DownloadError(course.name, "File List", "Fetch Error", str(e), raw_error=e)
+            if progress_callback: progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+        
+        return downloaded
+
+    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None):
+        """Downloads all files to the root folder."""
+        tasks = []
+        downloaded = []
+        log_debug(f"Starting Flat Download for {course.name}", debug_file)
         files_access_failed = False
         
         try:
-            # Retry logic for fetching file list (in case of transient 401/429)
             files = None
             for attempt in range(3):
                 try:
                     files = course.get_files()
-                    # Force iteration to trigger potential API errors immediately
                     files = list(files) 
                     break
                 except Exception as e:
                     if attempt < 2:
-                        await asyncio.sleep(2 * (attempt + 1))
+                        await asyncio.sleep(RETRY_DELAY * (attempt + 1))
                     else:
-                        # If get_files fails (e.g. Access Denied), we set a flag and continue
-                        # The module scan below will pick up the files instead.
-                        # Suppress error log (don't create download_errors.txt for a successful fallback)
-                        print(f"Could not access 'Files' tab directly (Restricted?). Falling back to Module scan. Error: {e}")
                         files_access_failed = True
-                        files = [] # Empty list to skip the loop below
+                        files = []
+                        # Log warning
+                        if progress_callback: progress_callback(f"Files tab restricted, trying modules...", progress_type='log')
+                        log_debug("Files tab restricted (401?), falling back to module scan.", debug_file)
 
             for file in files:
                 if check_cancellation and check_cancellation(): break
                 try:
-                    task = asyncio.create_task(self._download_file_async(sem, session, file, base_path, progress_callback, mb_tracker, file_filter))
+                    task = asyncio.create_task(self._download_file_async(
+                        sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
+                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                    ))
                     tasks.append(task)
                 except Exception as e:
-                    self._log_error(base_path, f"Error queuing file {getattr(file, 'filename', 'unknown')}: {e}")
-            
+                    err = DownloadError(course.name, getattr(file, 'filename', 'unknown'), "Queue Error", str(e), raw_error=e)
+                    if progress_callback: progress_callback(err, progress_type='error')
+                    self._log_error(error_root_path, err)
+
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
-                for i, result in enumerate(results):
+                for result in results:
                     if isinstance(result, Exception):
-                        self._log_error(base_path, get_text('task_failed', self.language, i=i, error=result))
+                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                        if progress_callback: progress_callback(err, progress_type='error')
+                        self._log_error(error_root_path, err)
+                    elif result:
+                        downloaded.append(result)
 
-            # NEW: Also scan modules for non-file items (Pages, Links, ExternalTools)
-            # This ensures Flat Mode includes everything, not just files.
-            # AND if files_access_failed is True, we also pick up files here.
+            # Module Scan Fallback
             module_tasks = []
             try:
                 modules = course.get_modules()
                 for module in modules:
                     if check_cancellation and check_cancellation(): break
-                    try:
-                        items = module.get_module_items()
-                        for item in items:
-                            if check_cancellation and check_cancellation(): break
-                            
-                            # Skip Files unless we failed to access them directly
-                            if item.type == 'File' and not files_access_failed:
-                                continue
-                                
-                            try:
-                                if item.type == 'File':
-                                    # Fallback for restricted files
-                                    if not hasattr(item, 'content_id') or not item.content_id: continue
-                                    # Need to fetch file obj individually (slower but works)
-                                    file_obj = course.get_file(item.content_id)
-                                    task = asyncio.create_task(self._download_file_async(sem, session, file_obj, base_path, progress_callback, mb_tracker, file_filter))
-                                    module_tasks.append(task)
-                                    
-                                elif item.type == 'Page':
-                                    if file_filter == 'study': continue
-                                    if not hasattr(item, 'page_url') or not item.page_url: continue
-                                    page_obj = course.get_page(item.page_url)
-                                    self._save_page(page_obj, base_path, progress_callback) # Save to base_path (Flat)
-                                    
-                                elif item.type == 'ExternalUrl':
-                                    if file_filter == 'study': continue
-                                    if not hasattr(item, 'external_url') or not item.external_url: continue
-                                    self._create_link(item.title, item.external_url, base_path, progress_callback)
-                                    
-                                elif item.type == 'ExternalTool':
-                                    if file_filter == 'study': continue
-                                    # Use html_url for robust Panopto handling
-                                    url = getattr(item, 'html_url', None)
-                                    if not url: url = getattr(item, 'external_url', None)
-                                    
-                                    if not url:
-                                        # Log debug info but don't crash
-                                        try:
-                                            debug_info = {k: v for k, v in item.__dict__.items() if not k.startswith('_')}
-                                        except:
-                                            debug_info = "Could not retrieve item attributes"
-                                        self._log_error(base_path, f"ExternalTool '{getattr(item, 'title', 'unknown')}' missing URL. Debug info: {debug_info}")
-                                        continue
-                                    self._create_link(item.title, url, base_path, progress_callback)
-                                    
-                            except Exception as item_e:
-                                # Log but continue
-                                self._log_error(base_path, get_text('error_processing_item', self.language, title=getattr(item, 'title', 'unknown'), module=module.name, error=item_e))
-                                
-                    except Exception as module_e:
-                        self._log_error(base_path, get_text('error_processing_module', self.language, name=getattr(module, 'name', 'unknown'), error=module_e))
-                
-                # Await all module tasks
-                if module_tasks:
-                    results = await asyncio.gather(*module_tasks, return_exceptions=True)
-                    for i, result in enumerate(results):
-                        if isinstance(result, Exception):
-                            self._log_error(base_path, get_text('task_failed', self.language, i=i, error=result))
+                    items = list(module.get_module_items())
+                    log_debug(f"Fallback Scan: Module {module.name} (found {len(items)} items)", debug_file)
+                    for item in items:
+                        if check_cancellation and check_cancellation(): break
+                        
+                        if item.type == 'File' and not files_access_failed: continue
 
-            except Exception as e:
-                # If module access fails (e.g. 401), just log it. 
-                # We already got the files, so it's a partial success.
-                self._log_error(base_path, f"Could not scan modules for extra items: {e}")
+                        try:
+                            log_debug(f"  Fallback Item: {getattr(item, 'title', 'unknown')} (Type: {getattr(item, 'type', 'unknown')})", debug_file)
+                            if item.type == 'File':
+                                if not hasattr(item, 'content_id') or not item.content_id: continue
+                                file_obj = course.get_file(item.content_id)
+                                task = asyncio.create_task(self._download_file_async(
+                                    sem, session, file_obj, base_path, progress_callback, mb_tracker, file_filter, 
+                                    error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                                ))
+                                module_tasks.append(task)
+                            elif item.type == 'Page':
+                                if file_filter == 'study': continue
+                                if not hasattr(item, 'page_url') or not item.page_url: continue
+                                page_obj = course.get_page(item.page_url)
+                                self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                            elif item.type in ['ExternalUrl', 'ExternalTool']:
+                                if file_filter == 'study': continue
+                                url = getattr(item, 'external_url', None)
+                                if item.type == 'ExternalTool':
+                                     url = getattr(item, 'html_url', None) or url
+                                if url:
+                                    self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                        except Exception as e:
+                             pass # Logging every single item error in fallback scan might spam? 
+                             # Let's log unique ones? 
+                             # For flat scan, we want to know failures.
+                             # err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Fallback Scan Error", str(e))
+                             # if progress_callback: progress_callback(err, progress_type='error')
+                             # self._log_error(error_root_path, err)
+
+                if module_tasks:
+                   module_results = await asyncio.gather(*module_tasks, return_exceptions=True)
+                   for result in module_results:
+                       if isinstance(result, Exception):
+                           err = DownloadError(course.name, "Fallback File Task", "Async Error", str(result), raw_error=result)
+                           if progress_callback: progress_callback(err, progress_type='error')
+                           self._log_error(error_root_path, err)
+                       elif result:
+                           downloaded.append(result)
+
+            except Exception:
+                pass # Module scan failed
 
         except Exception as e:
-            # If flat download also fails with unauthorized, then it's truly inaccessible
-            is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)
-            if is_unauthorized:
-                self._log_error(base_path, get_text('course_unauthorized', self.language))
-            else:
-                self._log_error(base_path, get_text('error_processing_course', self.language, course=course.name, error=e))
+             err = DownloadError(course.name, "Flat Download", "Fatal Error", str(e), raw_error=e)
+             if progress_callback: progress_callback(err, progress_type='error')
+             self._log_error(error_root_path, err)
+        
+        return downloaded
 
-    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all'):
+    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None):
         async with sem:
             filename = self._sanitize_filename(file_obj.filename)
             filepath = folder_path / filename
 
-            # Filter check
             if file_filter == 'study':
                 ext = filepath.suffix.lower()
                 if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
-                    return # Skip
+                    return
 
-            # Duplicate Prevention: Check if file exists and size matches
+            # Check duplication by size
             file_size_bytes = getattr(file_obj, 'size', 0)
             if filepath.exists():
                 try:
+                    # We only skip if size matches. If size differs, we overwrite (update).
                     if file_size_bytes > 0 and filepath.stat().st_size == file_size_bytes:
-                        # File exists and size matches - SKIP
-                        return
+                        log_debug(f"Skipping existing file: {filename}", debug_file)
+                        # User Request: Remove skipped files from Total MB count (they don't need downloading)
+                        if progress_callback:
+                             progress_callback("", progress_type='skipped', file_size=file_size_bytes)
+                        return (
+                            CanvasFileInfo(
+                                id=file_obj.id,
+                                filename=getattr(file_obj, 'filename', ''),
+                                display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
+                                size=getattr(file_obj, 'size', 0),
+                                modified_at=getattr(file_obj, 'modified_at', None),
+                                md5=getattr(file_obj, 'md5', None),
+                                url=getattr(file_obj, 'url', ''),
+                                content_type=getattr(file_obj, 'content-type', ''),
+                                folder_id=getattr(file_obj, 'folder_id', None)
+                            ), filepath
+                        ) # Skip
+                    else:
+                        log_debug(f"File exists but size mismatch. Canvas: {file_size_bytes}, Local: {filepath.stat().st_size}. Re-downloading.", debug_file)
                 except:
-                    pass # If stat fails, proceed to conflict handling/download
+                    pass
 
-            # Conflict handling
             filepath = self._handle_conflict(filepath)
             
-            # Get file size for logging
-            file_size_mb = file_size_bytes / (1024 * 1024) if file_size_bytes > 0 else 0
-
             if progress_callback:
                 progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
 
             url = file_obj.url
-            # Validate URL
-            if not url or url.strip() == '':
-                self._log_error(folder_path.parent, get_text('skipping_no_url', self.language, filename=filename))
+            if not url:
+                # Check for LTI/Media streams
+                ext_lower = filepath.suffix.lower()
+                media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
+                if ext_lower in media_exts:
+                    err = DownloadError(course_name, filename, "LTI/Media Stream", "This video is streamed via a Canvas plugin (e.g., Panopto/Studio) and cannot be directly downloaded.")
+                else:
+                    err = DownloadError(course_name, filename, "No URL", "File object has no URL")
+                    
+                if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                self._log_error(error_root_path, err)
                 return
 
-            # Retry logic with exponential backoff
-            max_retries = 5
-            base_delay = 1
-            
-            for attempt in range(max_retries):
-                try:
-                    async with session.get(url) as response:
-                        if response.status == 200:
-                            bytes_downloaded = 0
-                            with open(filepath, 'wb') as f:
-                                while True:
-                                    chunk = await response.content.read(1024*1024) # 1MB chunks
-                                    if not chunk:
-                                        break
-                                    f.write(chunk)
-                                    bytes_downloaded += len(chunk)  # Track bytes for this file
-                                    
-                                    # Update course-level MB tracker
-                                    if mb_tracker is not None:
-                                        mb_tracker['bytes_downloaded'] += len(chunk)
-                                        if progress_callback:
-                                            mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
-                                            progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
-                            return # Success!
-                        
-                        elif response.status == 429: # Too Many Requests
-                            wait_time = base_delay * (2 ** attempt)
-                            # Check for Retry-After header
-                            if 'Retry-After' in response.headers:
-                                try:
-                                    wait_time = int(response.headers['Retry-After'])
-                                except:
-                                    pass
-                            await asyncio.sleep(wait_time)
-                            continue # Retry
-                            
-                        elif 500 <= response.status < 600: # Server Error
-                            wait_time = base_delay * (2 ** attempt)
-                            await asyncio.sleep(wait_time)
-                            continue # Retry
-                            
-                        else:
-                            # Other errors (404, 403, etc.) - do not retry
-                            self._log_error(folder_path.parent, get_text('download_failed_http', self.language, filename=filename, status=response.status))
-                            return
+            import aiofiles
 
+            for attempt in range(MAX_RETRIES):
+                try:
+                    log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
+                    async with session.get(url) as response:
+                        log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
+                        if response.status == 200:
+                            try:
+                                async with aiofiles.open(filepath, 'wb') as f:
+                                    total_bytes = 0
+                                    while True:
+                                        chunk = await response.content.read(1024*1024)
+                                        if not chunk: break
+                                        await f.write(chunk)
+                                        total_bytes += len(chunk)
+                                        
+                                        if mb_tracker:
+                                            mb_tracker['bytes_downloaded'] += len(chunk)
+                                            if progress_callback:
+                                                mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
+                                                progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
+                                    
+                                    # Verify download completeness
+                                    if file_size_bytes > 0 and total_bytes != file_size_bytes:
+                                        # Incomplete download
+                                        raise Exception(f"Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
+                                        
+                                    log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
+                                    return (
+                                        CanvasFileInfo(
+                                            id=file_obj.id,
+                                            filename=getattr(file_obj, 'filename', ''),
+                                            display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
+                                            size=getattr(file_obj, 'size', 0),
+                                            modified_at=getattr(file_obj, 'modified_at', None),
+                                            md5=getattr(file_obj, 'md5', None),
+                                            url=getattr(file_obj, 'url', ''),
+                                            content_type=getattr(file_obj, 'content-type', ''),
+                                            folder_id=getattr(file_obj, 'folder_id', None)
+                                        ), filepath
+                                    )
+
+                            except Exception as e:
+                                # Cleanup partial file
+                                if filepath.exists():
+                                    try:
+                                        filepath.unlink()
+                                        log_debug(f"Deleted partial file: {filepath}", debug_file)
+                                    except:
+                                        pass
+                                raise e
+
+                        elif response.status == 429: # Rate Limit
+                            wait = int(response.headers.get('Retry-After', RETRY_DELAY * (2 ** attempt)))
+                            await asyncio.sleep(wait)
+                            continue
+                        elif 500 <= response.status < 600:
+                            await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+                            continue
+                        else:
+                            err_msg = f"Download failed with status {response.status}"
+                            log_debug(f"ERROR: {err_msg}", debug_file)
+                            err = DownloadError(course_name, filename, f"HTTP {response.status}", err_msg)
+                            if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                            self._log_error(error_root_path, err)
+                            return
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                    if attempt < max_retries - 1:
-                        wait_time = base_delay * (2 ** attempt)
-                        await asyncio.sleep(wait_time)
-                        continue
+                    if attempt < MAX_RETRIES - 1:
+                        await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
                     else:
-                        import traceback
-                        error_details = traceback.format_exc()
-                        self._log_error(folder_path.parent, get_text('download_failed_exc', self.language, filename=filename, error_type=type(e).__name__, error=f"{e}\n{error_details}"))
+                        err = DownloadError(course_name, filename, "Network Error", f"Max retries exceeded: {e}", raw_error=e)
+                        if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                        self._log_error(error_root_path, err)
                         return
                 except Exception as e:
-                    # Non-network errors (e.g. file write) - do not retry
-                    import traceback
-                    error_details = traceback.format_exc()
-                    self._log_error(folder_path.parent, get_text('download_failed_exc', self.language, filename=filename, error_type=type(e).__name__, error=f"{e}\n{error_details}"))
+                    err = DownloadError(course_name, filename, "Write Error", f"File system error: {e}", raw_error=e)
+                    if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                    self._log_error(error_root_path, err)
                     return
 
-    # Keep sync versions for non-file items or fallback
-    def _save_page(self, page_obj, folder_path, progress_callback):
-        # Define safe_title first for use in callbacks and file operations
+    def _save_page(self, page_obj, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None):
         safe_title = html.escape(page_obj.title) if hasattr(page_obj, 'title') else 'Untitled'
         filename = self._sanitize_filename(page_obj.title if hasattr(page_obj, 'title') else 'Untitled') + ".html"
         filepath = folder_path / filename
@@ -516,20 +897,24 @@ class CanvasManager:
 
         if progress_callback:
             progress_callback(get_text('saving_page', self.language, title=safe_title), progress_type='page')
+        
+        log_debug(f"Saving Page: {safe_title} -> {filepath}", debug_file)
 
         try:
-            # Basic HTML wrapper with escaped title
             body_content = page_obj.body if hasattr(page_obj, 'body') else ''
             content = f"<html><head><title>{safe_title}</title></head><body><h1>{safe_title}</h1>{body_content}</body></html>"
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
         except Exception as e:
-            self._log_error(folder_path.parent, get_text('save_page_failed', self.language, title=safe_title, error=e))
+            err = DownloadError(course_name, safe_title, "Page Save Error", str(e), raw_error=e)
+            if progress_callback: progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+            log_debug(f"Error saving page: {e}", debug_file)
 
-    def _create_link(self, title, url, folder_path, progress_callback):
+    def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None):
         safe_title = self._sanitize_filename(title)
         
-        if platform.system() == 'Darwin': # macOS
+        if platform.system() == 'Darwin':
             filename = f"{safe_title}.webloc"
             filepath = folder_path / filename
             filepath = self._handle_conflict(filepath)
@@ -542,7 +927,7 @@ class CanvasManager:
 </dict>
 </plist>
 '''
-        else: # Windows and others
+        else:
             filename = f"{safe_title}.url"
             filepath = folder_path / filename
             filepath = self._handle_conflict(filepath)
@@ -551,92 +936,70 @@ class CanvasManager:
         if progress_callback:
             progress_callback(get_text('creating_link', self.language, title=title), progress_type='link')
 
+        log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
+
         try:
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
         except Exception as e:
-            self._log_error(folder_path.parent, get_text('create_link_failed', self.language, title=title, error=e))
+            err = DownloadError(course_name, title, "Link Creation Error", str(e), raw_error=e)
+            if progress_callback: progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+            log_debug(f"Error creating link: {e}", debug_file)
 
     def _handle_conflict(self, filepath):
         if not filepath.exists():
             return filepath
-        
-        # If exists, rename to "Name (1).ext"
         base = filepath.stem
         ext = filepath.suffix
         parent = filepath.parent
         counter = 1
-        max_attempts = 1000  # Prevent infinite loop
-        
-        while filepath.exists() and counter < max_attempts:
+        while filepath.exists() and counter < 1000:
             new_name = f"{base} ({counter}){ext}"
             filepath = parent / new_name
             counter += 1
-        
-        # If we hit max attempts, use UUID to avoid any conflict
-        if counter >= max_attempts:
-            unique_id = str(uuid.uuid4())[:8]
-            new_name = f"{base}_{unique_id}{ext}"
-            filepath = parent / new_name
-        
+        if counter >= 1000:
+            filepath = parent / f"{base}_{uuid.uuid4().hex[:8]}{ext}"
         return filepath
 
     def _sanitize_filename(self, filename, replace_spaces=False, max_length=120):
-        """Removes illegal characters from filenames while preserving Unicode.
-        
-        Args:
-            filename: The filename to sanitize (may be URL-encoded)
-            replace_spaces: If True, replace spaces with underscores for better readability
-            max_length: Maximum length of the filename (default 120 to prevent Windows MAX_PATH issues)
-        """
-        if not filename:
-            return "untitled"
-        
-        # URL-decode the filename to handle Canvas API encoding
-        # %C3%98 -> Ø, + -> space, etc.
-        try:
-            filename = urllib.parse.unquote_plus(filename)
-        except Exception:
-            pass  # If decoding fails, use original filename
-        
-        # Only remove characters that are truly invalid in Windows/Unix: <>:"/\|?*
-        # Also remove control characters
+        if not filename: return "untitled"
+        try: filename = urllib.parse.unquote_plus(filename)
+        except: pass
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
-        
-        # Replace spaces with underscores if requested (better readability)
-        if replace_spaces:
-            sanitized = sanitized.replace(' ', '_')
-        
-        sanitized = sanitized.strip('. _')  # Remove leading/trailing dots, spaces, and underscores
-        
-        # Truncate to max_length (preserving extension if possible)
+        if replace_spaces: sanitized = sanitized.replace(' ', '_')
+        sanitized = sanitized.strip('. _')
         if len(sanitized) > max_length:
             name, ext = os.path.splitext(sanitized)
-            # If extension is too long, just truncate the whole thing
-            if len(ext) > 10:
-                sanitized = sanitized[:max_length]
-            else:
-                # Truncate name part, keep extension
-                max_name_len = max_length - len(ext)
-                sanitized = name[:max_name_len] + ext
-                
+            if len(ext) > 10: sanitized = sanitized[:max_length]
+            else: sanitized = name[:(max_length - len(ext))] + ext
         return sanitized if sanitized else "untitled"
 
-    def _log_error(self, base_path, message):
-        error_file = base_path / "download_errors.txt"
+    def _log_error(self, base_path, error):
+        """Log structured error to a single file in the root path."""
+        # 'error' can be a DownloadError object or a string (legacy support)
+        if not base_path: return
+        
+        path = Path(base_path)
+        path.mkdir(parents=True, exist_ok=True)
+        log_file = path / "download_errors.txt"
+        
         try:
-            with open(error_file, "a", encoding="utf-8") as f:
-                f.write(message + "\n")
-        except Exception as e:
-            # Print to stderr as fallback if we can't write to file
-            print(f"Error logging failed: {e}. Original message: {message}", file=__import__('sys').stderr)
-    
+            entry = ""
+            if isinstance(error, DownloadError):
+                entry = error.to_log_entry()
+            else:
+                entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {error}"
+                
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(entry + "\n")
+        except:
+            # Last resort fallback if logging fails
+            pass
+
     def _check_disk_space(self, path, min_free_gb=1):
-        """Check if there's enough disk space available."""
         try:
             stat = shutil.disk_usage(path)
-            free_gb = stat.free / (1024**3)
-            return free_gb >= min_free_gb
-        except Exception:
-            # If we can't check, assume there's enough space
+            return (stat.free / (1024**3)) >= min_free_gb
+        except:
             return True
