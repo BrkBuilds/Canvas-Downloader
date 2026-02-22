@@ -431,9 +431,6 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             )
 
     # --- (5) Analyze + Quick Sync action buttons ---
-    # Extra spacing above the action buttons as requested (approx 25px)
-    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
-    
     # Task 1: Check for ignored files
     total_ignored = 0
     ignored_by_course = {}
