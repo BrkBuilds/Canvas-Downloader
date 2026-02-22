@@ -1310,46 +1310,60 @@ def _show_analysis_review(lang):
     if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0:
         st.markdown("<div style='margin-bottom: 10px; font-weight: 600; font-size: 1.1em;'>Analysis found:</div>", unsafe_allow_html=True)
         
-        sum_cols = st.columns([1, 1])
+        sum_cols = st.columns([3, 2])
         with sum_cols[0]:
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3, c4, c5 = st.columns(5)
             
             # Determine labels safely based on lang
             lbl_new = get_text('new_files', lang) if 'new_files' in get_text.__code__.co_consts else ("Nye filer" if lang == 'da' else "New files")
             lbl_upd = "Opdateringer" if lang == 'da' else "Updates available"
             lbl_miss = "Manglende filer" if lang == 'da' else "Missing files"
+            lbl_loc_del = "Slettet lokalt" if lang == 'da' else "Deleted locally"
             lbl_del = "Slettet på Canvas" if lang == 'da' else "Deleted on Canvas"
+
+            card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px;"
+            icon_css = "position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.15); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:1.2em;"
+            num_css = "font-size:2.7em; font-weight:700; color:white; line-height:1;"
+            lbl_css = "font-size:0.95em; color:rgba(255,255,255,1); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
 
             with c1:
                 st.markdown(f"""
-                <div style="background-color:#262730; border:1px solid #444; border-radius:8px; padding:12px; text-align:center;">
-                    <div style="font-size:1.5em; margin-bottom: 4px;">🆕</div>
-                    <div style="font-size:1.5em; font-weight:bold; color:#2ecc71;">{total_new}</div>
-                    <div style="font-size:0.9em; color:#bbb; font-weight:500;">{lbl_new}</div>
+                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);">
+                    <div style="{num_css}">{total_new}</div>
+                    <div style="{lbl_css}">{lbl_new}</div>
+                    <div style="{icon_css}">📄</div>
                 </div>
                 """, unsafe_allow_html=True)
             with c2:
                 st.markdown(f"""
-                <div style="background-color:#262730; border:1px solid #444; border-radius:8px; padding:12px; text-align:center;">
-                    <div style="font-size:1.5em; margin-bottom: 4px;">🔄</div>
-                    <div style="font-size:1.5em; font-weight:bold; color:#3498db;">{total_upd}</div>
-                    <div style="font-size:0.9em; color:#bbb; font-weight:500;">{lbl_upd}</div>
+                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                    <div style="{num_css}">{total_upd}</div>
+                    <div style="{lbl_css}">{lbl_upd}</div>
+                    <div style="{icon_css}">🔄</div>
                 </div>
                 """, unsafe_allow_html=True)
             with c3:
                 st.markdown(f"""
-                <div style="background-color:#262730; border:1px solid #444; border-radius:8px; padding:12px; text-align:center;">
-                    <div style="font-size:1.5em; margin-bottom: 4px;">⚠️</div>
-                    <div style="font-size:1.5em; font-weight:bold; color:#e74c3c;">{total_miss}</div>
-                    <div style="font-size:0.9em; color:#bbb; font-weight:500;">{lbl_miss}</div>
+                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);">
+                    <div style="{num_css}">{total_miss}</div>
+                    <div style="{lbl_css}">{lbl_miss}</div>
+                    <div style="{icon_css}">⚠️</div>
                 </div>
                 """, unsafe_allow_html=True)
             with c4:
                 st.markdown(f"""
-                <div style="background-color:#262730; border:1px solid #444; border-radius:8px; padding:12px; text-align:center;">
-                    <div style="font-size:1.5em; margin-bottom: 4px;">🗑️</div>
-                    <div style="font-size:1.5em; font-weight:bold; color:#95a5a6;">{total_del}</div>
-                    <div style="font-size:0.9em; color:#bbb; font-weight:500;">{lbl_del}</div>
+                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);">
+                    <div style="{num_css}">{total_loc_del}</div>
+                    <div style="{lbl_css}">{lbl_loc_del}</div>
+                    <div style="{icon_css}">✂️</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with c5:
+                st.markdown(f"""
+                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);">
+                    <div style="{num_css}">{total_del}</div>
+                    <div style="{lbl_css}">{lbl_del}</div>
+                    <div style="{icon_css}">🗑️</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
