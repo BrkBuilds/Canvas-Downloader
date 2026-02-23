@@ -1322,13 +1322,13 @@ def _show_analysis_review(lang):
             lbl_del = "Slettet på Canvas" if lang == 'da' else "Deleted on Canvas"
 
             card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px;"
-            icon_css = "position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.15); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:1.2em;"
+            icon_css = "position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.15); border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.5em;"
             num_css = "font-size:2.7em; font-weight:700; color:white; line-height:1;"
             lbl_css = "font-size:0.95em; color:rgba(255,255,255,1); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
 
             with c1:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 10px 20px -5px rgba(74, 144, 226, 0.6);">
+                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 10px 20px -5px rgba(74, 144, 226, 0.35);">
                     <div style="{num_css}">{total_new}</div>
                     <div style="{lbl_css}">{lbl_new}</div>
                     <div style="{icon_css}">📄</div>
@@ -1336,7 +1336,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c2:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 20px -5px rgba(46, 204, 113, 0.6);">
+                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 20px -5px rgba(46, 204, 113, 0.35);">
                     <div style="{num_css}">{total_upd}</div>
                     <div style="{lbl_css}">{lbl_upd}</div>
                     <div style="{icon_css}">🔄</div>
@@ -1344,7 +1344,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c3:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 10px 20px -5px rgba(241, 196, 15, 0.6);">
+                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 10px 20px -5px rgba(241, 196, 15, 0.35);">
                     <div style="{num_css}">{total_miss}</div>
                     <div style="{lbl_css}">{lbl_miss}</div>
                     <div style="{icon_css}">⚠️</div>
@@ -1352,7 +1352,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c4:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 10px 20px -5px rgba(155, 89, 182, 0.6);">
+                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 10px 20px -5px rgba(155, 89, 182, 0.35);">
                     <div style="{num_css}">{total_loc_del}</div>
                     <div style="{lbl_css}">{lbl_loc_del}</div>
                     <div style="{icon_css}">✂️</div>
@@ -1360,7 +1360,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
             with c5:
                 st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 20px -5px rgba(231, 76, 60, 0.6);">
+                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 20px -5px rgba(231, 76, 60, 0.35);">
                     <div style="{num_css}">{total_del}</div>
                     <div style="{lbl_css}">{lbl_del}</div>
                     <div style="{icon_css}">🗑️</div>
@@ -1558,18 +1558,144 @@ def _show_analysis_review(lang):
         # Locally Deleted Files (Student deleted locally to save space)
         if result.locally_deleted_files:
             with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=True):
-                st.warning("You deleted these files locally. Do you want to re-download them, or ignore them going forward?")
+                st.markdown(
+                    "<div style='background-color: rgba(184, 134, 11, 0.15); border: 1px solid rgba(184, 134, 11, 0.3); border-radius: 6px; padding: 12px; margin-bottom: 15px; color: #e6c229; font-size: 0.95em;'>"
+                    "You deleted these files locally. Do you want to re-download them, or ignore them going forward?"
+                    "</div>",
+                    unsafe_allow_html=True
+                )
+                
+                st.markdown("""
+                <style>
+                /* Shrink wrap columns for locally deleted rows */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) {
+                    align-items: center !important;
+                    gap: 8px !important;
+                    justify-content: flex-start !important;
+                }
+                /* Target the correct Streamlit column wrapper */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"] {
+                    width: auto !important;
+                    flex: 0 0 auto !important;
+                    min-width: 0 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    height: 34px !important; /* Force fixed height to match buttons */
+                }
+                /* Ensure checkbox column stays tiny */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"]:first-child {
+                    margin-right: -4px;
+                }
+                /* Eliminate internal padding inside the column */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stVerticalBlock"] {
+                    padding: 0 !important;
+                    gap: 0 !important;
+                    justify-content: center !important;
+                    height: 100% !important;
+                }
+                /* Buttons sizing - slightly larger */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) button {
+                    padding: 4px 18px !important;
+                    min-height: 34px !important;
+                    height: 34px !important;
+                    font-size: 0.9em !important;
+                    line-height: 1.2 !important;
+                    margin: 0 !important;
+                }
+                /* Ensure file name has some breathing room but doesn't stretch */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"]:nth-child(2) {
+                    margin-right: 15px;
+                }
+                /* Remove paragraph margins for text */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) p {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    line-height: 34px !important; /* Match container height for perfect visual center */
+                    display: flex !important;
+                    align-items: center !important;
+                }
+                /* Force perfect flex alignment on text wrapper */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stMarkdownContainer"] {
+                    display: flex !important;
+                    align-items: center !important;
+                    height: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                /* Strip default padding from checkbox element to match height */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stCheckbox"] {
+                    min-height: 34px !important;
+                    height: 34px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stCheckbox"] > label {
+                    min-height: auto !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
                 for sync_info in result.locally_deleted_files:
                     icon = get_file_icon(sync_info.canvas_filename)
-                    col_chk, col_ign = st.columns([3, 1])
+                    key_redownload = f'sync_locdel_{idx}_{sync_info.canvas_file_id}'
+                    key_ignore = f'ignore_{idx}_{sync_info.canvas_file_id}'
+                    
+                    if key_redownload not in st.session_state:
+                        st.session_state[key_redownload] = False
+                    if key_ignore not in st.session_state:
+                        st.session_state[key_ignore] = False
+                        
+                    is_redownload = st.session_state[key_redownload]
+                    is_ignore = st.session_state[key_ignore]
+                    
+                    # Columns: [Checkbox], [Filename], [Btn1], [Btn2]
+                    col_chk, col_name, col_btn1, col_btn2 = st.columns([1, 1, 1, 1], gap="small", vertical_alignment="center")
+                    
                     with col_chk:
-                        key = f'sync_locdel_{idx}_{sync_info.canvas_file_id}'
-                        if key not in st.session_state:
-                            st.session_state[key] = False # Default to NOT redownloading
-                        st.checkbox(f"Re-download {icon} {sync_info.canvas_filename}", key=key)
-                    with col_ign:
-                        ign_key = f'ignore_{idx}_{sync_info.canvas_file_id}'
-                        st.checkbox(get_text('ignore_forever', lang), key=ign_key)
+                        st.markdown("<span class='locdel-marker' style='display:none;'></span>", unsafe_allow_html=True)
+                        def on_checkbox_change(kr=key_redownload, ki=key_ignore):
+                            if st.session_state[kr]:
+                                st.session_state[ki] = False
+                                
+                        st.checkbox(" ", key=key_redownload, disabled=is_ignore, on_change=on_checkbox_change, label_visibility="collapsed")
+                    
+                    with col_name:
+                        text_color = "#888" if is_ignore else "inherit"
+                        text_decor = "text-decoration: line-through;" if is_ignore else ""
+                        st.markdown(f"<span style='color:{text_color};{text_decor}'>{icon} {sync_info.canvas_filename}</span>", unsafe_allow_html=True)
+                        
+                    with col_btn1:
+                        def toggle_redownload(kr=key_redownload, ki=key_ignore):
+                            st.session_state[kr] = not st.session_state.get(kr, False)
+                            if st.session_state[kr]:
+                                st.session_state[ki] = False
+                                
+                        st.button(
+                            "Add to Sync (redownload file)", 
+                            key=f"btn_redl_{idx}_{sync_info.canvas_file_id}", 
+                            type="primary" if is_redownload else "secondary", 
+                            use_container_width=False,
+                            on_click=toggle_redownload,
+                            disabled=is_ignore
+                        )
+                            
+                    with col_btn2:
+                        def toggle_ignore(kr=key_redownload, ki=key_ignore):
+                            st.session_state[ki] = not st.session_state.get(ki, False)
+                            if st.session_state[ki]:
+                                st.session_state[kr] = False
+                                
+                        st.button(
+                            "Stop Syncing (Ignore file)", 
+                            key=f"btn_ign_{idx}_{sync_info.canvas_file_id}", 
+                            type="primary" if is_ignore else "secondary", 
+                            use_container_width=False,
+                            on_click=toggle_ignore
+                        )
 
         # Deleted files — always starts OPEN
         if result.deleted_on_canvas:
@@ -2073,7 +2199,6 @@ def _show_sync_complete(lang):
     # We want to be very clear about what happened.
     # Scenarios:
     # 1. Full Failure: 0 synced, >0 errors -> RED Error, NO Success card.
-    # 2. Partial Success: >0 synced, >0 errors -> YELLOW Warning card.
     # 3. Success: >0 synced, 0 errors -> GREEN Success card.
     # 4. Nothing to sync (should be caught earlier, but just in case): Info.
 
