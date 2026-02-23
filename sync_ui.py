@@ -1431,6 +1431,11 @@ def _show_analysis_review(lang):
         def _apply_filter_to_files(exts, match_val):
             for ext in exts:
                 for k in files_by_ext[ext]:
+                    # Do not check a locally deleted file if it is currently set to ignored
+                    if match_val and k.startswith('sync_locdel_'):
+                        ignore_key = k.replace('sync_locdel_', 'ignore_')
+                        if st.session_state.get(ignore_key, False):
+                            continue
                     st.session_state[k] = match_val
 
         def toggle_all_exts():
@@ -1464,6 +1469,10 @@ def _show_analysis_review(lang):
         with col_sa:
             if st.button("Select All", use_container_width=True):
                 for k in sum(files_by_ext.values(), []):
+                    if k.startswith('sync_locdel_'):
+                        ignore_key = k.replace('sync_locdel_', 'ignore_')
+                        if st.session_state.get(ignore_key, False):
+                            continue
                     st.session_state[k] = True
                 st.rerun()
         with col_da:
@@ -1559,81 +1568,104 @@ def _show_analysis_review(lang):
         if result.locally_deleted_files:
             with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=True):
                 st.markdown(
-                    "<div style='background-color: rgba(184, 134, 11, 0.15); border: 1px solid rgba(184, 134, 11, 0.3); border-radius: 6px; padding: 12px; margin-bottom: 15px; color: #e6c229; font-size: 0.95em;'>"
-                    "You deleted these files locally. Do you want to re-download them, or ignore them going forward?"
+                    "<div style='background-color: rgba(184, 134, 11, 0.15); border: 1px solid rgba(184, 134, 11, 0.3); border-radius: 6px; padding: 12px; margin-bottom: 5px; color: #e6c229; font-size: 0.95em;'>"
+                    "You deleted these files locally. Do you want to redownload them (adds them back to sync), or ignore them? (Ignored files won't appear as missing in future syncs; you can un-ignore them later in settings)."
                     "</div>",
                     unsafe_allow_html=True
                 )
                 
                 st.markdown("""
                 <style>
-                /* Shrink wrap columns for locally deleted rows */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) {
-                    align-items: center !important;
-                    gap: 8px !important;
-                    justify-content: flex-start !important;
+                /* Global styling for locally deleted cards */
+                .locdel-card-active {
+                    background-color: #262730 !important;
                 }
-                /* Target the correct Streamlit column wrapper */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"] {
+                .locdel-card-ignored {
+                    background-color: transparent !important;
+                    opacity: 0.6;
+                }
+                
+                /* Aggressively compact padding for the card container */
+                div[data-testid="stVerticalBlock"]:has(> div > div > div > .locdel-card-marker),
+                div[data-testid="stVerticalBlockBorderWrapper"]:has(.locdel-card-marker) > div > div[data-testid="stVerticalBlock"] {
+                    padding: 0px 10px 0px 10px !important;
+                    gap: 0px !important; /* Bring row 1 and row 2 closer together */
+                }
+
+                /* Reduce gap between individual file cards */
+                /* Target the parent stVerticalBlock that contains the file cards directly to override Streamlit's 1rem gap */
+                div[data-testid="stVerticalBlock"]:has(> div > div[data-testid="stVerticalBlockBorderWrapper"]:has(.locdel-card-marker)) {
+                    gap: 0.3rem !important;
+                }
+
+                /* --- ROW 1: Checkbox + Filename --- */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) {
+                    align-items: flex-start !important;
+                    gap: 6px !important; /* Minimal gap between checkbox and text */
+                    justify-content: flex-start !important;
+                    margin-bottom: -6px !important; /* Reduce gap between text and buttons */
+                    margin-top: -24px !important; /* Pull content up against card padding */
+                }
+                /* Shrink wrap columns so checkbox is tight to text */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) > div[data-testid="stColumn"] {
                     width: auto !important;
                     flex: 0 0 auto !important;
                     min-width: 0 !important;
                     display: flex !important;
-                    align-items: center !important;
-                    height: 34px !important; /* Force fixed height to match buttons */
+                    align-items: flex-start !important;
                 }
-                /* Ensure checkbox column stays tiny */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"]:first-child {
-                    margin-right: -4px;
-                }
-                /* Eliminate internal padding inside the column */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stVerticalBlock"] {
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) p {
+                    margin: 0 !important;
                     padding: 0 !important;
+                }
+                /* Text wrapping container fix for flex-start alignment */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) div[data-testid="stMarkdownContainer"] {
+                    margin-top: 1px !important; /* Tiny adjustment to perfectly align text baseline with checkbox box */
+                }
+                /* Remove bottom/top margin inside row 1 containers */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) div[data-testid="stElementContainer"] {
+                    margin-bottom: 0 !important;
+                    margin-top: 0 !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row1-marker) div[data-testid="stVerticalBlock"] {
+                    padding-bottom: 0 !important;
                     gap: 0 !important;
-                    justify-content: center !important;
-                    height: 100% !important;
                 }
-                /* Buttons sizing - slightly larger */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) button {
-                    padding: 4px 18px !important;
-                    min-height: 34px !important;
-                    height: 34px !important;
-                    font-size: 0.9em !important;
+
+                /* --- ROW 2: Buttons --- */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) {
+                    align-items: flex-start !important;
+                    gap: 6px !important;
+                    justify-content: flex-start !important;
+                    margin-top: -6px !important; /* Pull up next row */
+                    margin-bottom: -6px !important; /* Harmonize bottom border */
+                }
+                /* Shrink wrap button columns */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) > div[data-testid="stColumn"] {
+                    width: auto !important;
+                    flex: 0 0 auto !important;
+                    min-width: 0 !important;
+                    display: flex !important;
+                    align-items: flex-start !important;
+                }
+                /* Indent spacer for row 2 to perfectly match checkbox width (approx 24px) */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) > div[data-testid="stColumn"]:first-child {
+                    width: 30px !important; /* Align buttons underneath the emoji icon */
+                }
+                /* Remove top margins inside row 2 containers to stay close to row 1 */
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) div[data-testid="stElementContainer"] {
+                    margin-top: 0 !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) div[data-testid="stVerticalBlock"] {
+                    padding-top: 0 !important;
+                    gap: 0 !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.locdel-row2-marker) button {
+                    padding: 2px 14px !important;
+                    min-height: 28px !important;
+                    height: 28px !important;
+                    font-size: 0.85em !important;
                     line-height: 1.2 !important;
-                    margin: 0 !important;
-                }
-                /* Ensure file name has some breathing room but doesn't stretch */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) > div[data-testid="stColumn"]:nth-child(2) {
-                    margin-right: 15px;
-                }
-                /* Remove paragraph margins for text */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) p {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    line-height: 34px !important; /* Match container height for perfect visual center */
-                    display: flex !important;
-                    align-items: center !important;
-                }
-                /* Force perfect flex alignment on text wrapper */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stMarkdownContainer"] {
-                    display: flex !important;
-                    align-items: center !important;
-                    height: 100% !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-                /* Strip default padding from checkbox element to match height */
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stCheckbox"] {
-                    min-height: 34px !important;
-                    height: 34px !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-                div[data-testid="stHorizontalBlock"]:has(.locdel-marker) div[data-testid="stCheckbox"] > label {
-                    min-height: auto !important;
-                    padding: 0 !important;
                     margin: 0 !important;
                 }
                 </style>
@@ -1652,50 +1684,57 @@ def _show_analysis_review(lang):
                     is_redownload = st.session_state[key_redownload]
                     is_ignore = st.session_state[key_ignore]
                     
-                    # Columns: [Checkbox], [Filename], [Btn1], [Btn2]
-                    col_chk, col_name, col_btn1, col_btn2 = st.columns([1, 1, 1, 1], gap="small", vertical_alignment="center")
+                    card_class = "locdel-card-ignored" if is_ignore else "locdel-card-active"
                     
-                    with col_chk:
-                        st.markdown("<span class='locdel-marker' style='display:none;'></span>", unsafe_allow_html=True)
-                        def on_checkbox_change(kr=key_redownload, ki=key_ignore):
-                            if st.session_state[kr]:
-                                st.session_state[ki] = False
-                                
-                        st.checkbox(" ", key=key_redownload, disabled=is_ignore, on_change=on_checkbox_change, label_visibility="collapsed")
-                    
-                    with col_name:
-                        text_color = "#888" if is_ignore else "inherit"
-                        text_decor = "text-decoration: line-through;" if is_ignore else ""
-                        st.markdown(f"<span style='color:{text_color};{text_decor}'>{icon} {sync_info.canvas_filename}</span>", unsafe_allow_html=True)
+                    # Create the card container
+                    with st.container(border=True, key=f"locdel_container_{idx}_{sync_info.canvas_file_id}"):
+                        # Inject marker to style the parent container via CSS :has()
+                        st.markdown(f"<span class='locdel-card-marker {card_class}' style='display:none;'></span>", unsafe_allow_html=True)
                         
-                    with col_btn1:
-                        def toggle_redownload(kr=key_redownload, ki=key_ignore):
-                            st.session_state[kr] = not st.session_state.get(kr, False)
-                            if st.session_state[kr]:
-                                st.session_state[ki] = False
-                                
-                        st.button(
-                            "Add to Sync (redownload file)", 
-                            key=f"btn_redl_{idx}_{sync_info.canvas_file_id}", 
-                            type="primary" if is_redownload else "secondary", 
-                            use_container_width=False,
-                            on_click=toggle_redownload,
-                            disabled=is_ignore
-                        )
-                            
-                    with col_btn2:
-                        def toggle_ignore(kr=key_redownload, ki=key_ignore):
-                            st.session_state[ki] = not st.session_state.get(ki, False)
-                            if st.session_state[ki]:
-                                st.session_state[kr] = False
-                                
-                        st.button(
-                            "Stop Syncing (Ignore file)", 
-                            key=f"btn_ign_{idx}_{sync_info.canvas_file_id}", 
-                            type="primary" if is_ignore else "secondary", 
-                            use_container_width=False,
-                            on_click=toggle_ignore
-                        )
+                        # --- Row 1: Checkbox & Filename ---
+                        # We use [1, 1] instead of percentages because CSS auto-width will override it and wrap the content.
+                        col_chk, col_name = st.columns([1, 1], gap="small")
+                        with col_chk:
+                            st.markdown("<span class='locdel-row1-marker' style='display:none;'></span>", unsafe_allow_html=True)
+                            def on_checkbox_change(kr=key_redownload, ki=key_ignore):
+                                if st.session_state[kr]:
+                                    st.session_state[ki] = False
+                            st.checkbox(" ", key=key_redownload, disabled=is_ignore, on_change=on_checkbox_change, label_visibility="collapsed")
+                        with col_name:
+                            text_color = "#888" if is_ignore else "inherit"
+                            text_decor = "text-decoration: line-through;" if is_ignore else ""
+                            st.markdown(f"<div style='color:{text_color};{text_decor}; font-size:1em;'>{icon} {sync_info.canvas_filename}</div>", unsafe_allow_html=True)
+
+                        # --- Row 2: Action Buttons ---
+                        # First column acts as fixed-width spacer (set via CSS), others shrink wrap.
+                        col_indent, col_btn1, col_btn2 = st.columns([1, 1, 1], gap="small")
+                        with col_indent:
+                            st.markdown("<span class='locdel-row2-marker' style='display:none;'></span>", unsafe_allow_html=True)
+                        with col_btn1:
+                            def toggle_redownload(kr=key_redownload, ki=key_ignore):
+                                st.session_state[kr] = not st.session_state.get(kr, False)
+                                if st.session_state[kr]:
+                                    st.session_state[ki] = False
+                            st.button(
+                                "Redownload", 
+                                key=f"btn_redl_{idx}_{sync_info.canvas_file_id}", 
+                                type="primary" if is_redownload else "secondary", 
+                                use_container_width=False,
+                                on_click=toggle_redownload,
+                                disabled=is_ignore
+                            )
+                        with col_btn2:
+                            def toggle_ignore(kr=key_redownload, ki=key_ignore):
+                                st.session_state[ki] = not st.session_state.get(ki, False)
+                                if st.session_state[ki]:
+                                    st.session_state[kr] = False
+                            st.button(
+                                "Ignore this file", 
+                                key=f"btn_ign_{idx}_{sync_info.canvas_file_id}", 
+                                type="primary" if is_ignore else "secondary", 
+                                use_container_width=False,
+                                on_click=toggle_ignore
+                            )
 
         # Deleted files — always starts OPEN
         if result.deleted_on_canvas:
