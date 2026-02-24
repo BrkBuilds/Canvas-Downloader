@@ -26,6 +26,7 @@ import streamlit as st
 import aiohttp
 from collections import defaultdict
 import sqlite3
+import aiofiles
 
 
 from translations import get_text
@@ -1304,7 +1305,7 @@ def _show_analysis_review(lang):
     total_miss = sum(len(r['result'].missing_files) for r in all_results)
     total_loc_del = sum(len(r['result'].locally_deleted_files) for r in all_results)
     total_del = sum(len(r['result'].deleted_on_canvas) for r in all_results)
-    total_uptodate = sum(len(r['result'].uptodate_files) for r in all_results)
+    total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in all_results)
 
     # Summary logic
     if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0:
@@ -1495,7 +1496,7 @@ def _show_analysis_review(lang):
         header_border = "#3498db" if has_changes else "#2ecc71"
 
         # Build a small up-to-date pill to show inside the card header
-        uptodate_count = len(result.uptodate_files)
+        uptodate_count = len(result.uptodate_files) + getattr(result, 'untracked_shortcuts', 0)
         uptodate_html = ""
         if uptodate_count:
             uptodate_label = get_text('sync_files_uptodate_count', lang, count=uptodate_count,
@@ -1906,7 +1907,6 @@ def _run_sync(lang):
     error_list = []
 
     async def download_sync_files_batch():
-        import aiofiles
         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
         timeout = aiohttp.ClientTimeout(total=300)
         

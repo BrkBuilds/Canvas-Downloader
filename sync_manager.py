@@ -57,6 +57,7 @@ class AnalysisResult:
     uptodate_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
     deleted_on_canvas: list[SyncFileInfo] = field(default_factory=list)
     locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
+    untracked_shortcuts: int = 0
 
 
 # --- Constants ---
@@ -418,17 +419,22 @@ class SyncManager:
         
         # Scan local files for discovery of "existing but untracked" files
         local_files_map = {}
+        all_local_files = []  # Flat list for accurate untracked counting
         from ui_helpers import robust_filename_normalize
 
         for root, _, files in os.walk(self.local_path):
             for filename in files:
-                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME):
+                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME) or filename.startswith('.'):
                     continue
                 filepath = Path(root) / filename
                 norm_name = robust_filename_normalize(filename)
                 try:
                     size = filepath.stat().st_size
-                    local_files_map[norm_name] = (filepath, size)
+                    # Store as a list to handle duplicate filenames in different folders
+                    if norm_name not in local_files_map:
+                        local_files_map[norm_name] = []
+                    local_files_map[norm_name].append((filepath, size))
+                    all_local_files.append(filepath)
                 except OSError:
                     pass
 
@@ -454,29 +460,35 @@ class SyncManager:
                 # 1. Not in manifest. Checking if it already exists locally.
                 norm_name = robust_filename_normalize(c_file.filename)
                 
+                auto_discovered = False
                 if norm_name in local_files_map:
-                    local_path, local_size = local_files_map[norm_name]
-                    if local_size == c_file.size:
-                        # Auto-discover the file and count it as up-to-date
-                        try:
-                            rel_path = local_path.relative_to(self.local_path)
-                            entry = {
-                                'canvas_file_id': c_file.id,
-                                'canvas_filename': c_file.filename,
-                                'local_path': str(rel_path).replace('\\', '/'),
-                                'canvas_updated_at': c_file.modified_at or datetime.now(timezone.utc).isoformat(),
-                                'downloaded_at': datetime.now(timezone.utc).isoformat(),
-                                'original_size': c_file.size,
-                                'is_ignored': False,
-                                'original_md5': SyncManager.compute_local_md5(local_path)
-                            }
-                            files_section[file_id] = entry
-                            sync_info = self._dict_to_sync_info(file_id, entry, c_file)
-                            sync_info.target_local_path = calc_path
-                            result.uptodate_files.append((c_file, sync_info))
-                            continue
-                        except ValueError:
-                            pass
+                    # Check all files with this name
+                    for local_path, local_size in local_files_map[norm_name]:
+                        if local_size == c_file.size:
+                            # Auto-discover the file and count it as up-to-date
+                            try:
+                                rel_path = local_path.relative_to(self.local_path)
+                                entry = {
+                                    'canvas_file_id': c_file.id,
+                                    'canvas_filename': c_file.filename,
+                                    'local_path': str(rel_path).replace('\\', '/'),
+                                    'canvas_updated_at': c_file.modified_at or datetime.now(timezone.utc).isoformat(),
+                                    'downloaded_at': datetime.now(timezone.utc).isoformat(),
+                                    'original_size': c_file.size,
+                                    'is_ignored': False,
+                                    'original_md5': SyncManager.compute_local_md5(local_path)
+                                }
+                                files_section[file_id] = entry
+                                sync_info = self._dict_to_sync_info(file_id, entry, c_file)
+                                sync_info.target_local_path = calc_path
+                                result.uptodate_files.append((c_file, sync_info))
+                                auto_discovered = True
+                                break # Stop checking other files with same name
+                            except ValueError:
+                                pass
+                                
+                if auto_discovered:
+                    continue
                 
                 # Truly new file (add target path to c_file dynamically or create a proxy)
                 c_file._target_local_path = calc_path
@@ -554,6 +566,23 @@ class SyncManager:
         result.new_files = final_new_files
         result.missing_files = final_missing_files
         result.locally_deleted_files = final_locally_deleted
+        
+        # Count ALL untracked local files so they reflect in the "up to date" UI
+        # This ensures the student's local folder count matches what the app reports
+        tracked_local_paths = {
+            os.path.normpath(str(self.local_path / entry.get('local_path', '')))
+            for entry in files_section.values()
+        }
+        
+        untracked_count = 0
+        for filepath in all_local_files:
+            if os.path.normpath(str(filepath)) not in tracked_local_paths:
+                # We count all untracked files (shortcuts, pages, personal notes, etc.)
+                # except the internal sync log
+                if filepath.name != "☁️ Canvas Updates & Deletions.txt" and filepath.name != "download_errors.txt":
+                    untracked_count += 1
+                    
+        result.untracked_shortcuts = untracked_count
     
         return result
 
