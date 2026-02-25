@@ -1443,38 +1443,79 @@ def _show_analysis_review(lang):
 
         st.markdown(f'<div class="step-header" style="margin-bottom: 15px;">Select files to sync</div>', unsafe_allow_html=True)
         
-        filter_col = st.columns([1, 1])
-        with filter_col[0]:
+        st.markdown("""
+        <style>
+        /* 1. Remove border and padding from the container */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
+        .st-key-filetypes_flex_box {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
+        
+        /* 2. Target the horizontal block created by st.columns and force wrap */
+        .st-key-filetypes_flex_box div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+            row-gap: 5px !important;
+            column-gap: 15px !important;
+        }
+        
+        /* 3. Shrink-wrap the columns */
+        .st-key-filetypes_flex_box div[data-testid="stColumn"] {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+        }
+        
+        /* 4. Remove inner gap of the column's vertical block so it's tight */
+        .st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+        
+        /* 5. Fix checkbox label margins */
+        .st-key-filetypes_flex_box label[data-baseweb="checkbox"] {
+            margin-bottom: 0 !important;
+            padding-right: 0 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        col_main, _ = st.columns([3.5, 8.5])
+        with col_main:
             with st.container(border=True):
-                st.markdown("<div style='margin-bottom: 5px; font-size: 0.95em; font-weight: 600;'>Include these filetypes in Sync</div>", unsafe_allow_html=True)
-                
                 include_all = st.checkbox("Include ALL filetypes", key="sync_filter_all_exts", on_change=toggle_all_exts)
                 
-                # Horizontal layout for extensions clustered to the left using fixed columns
                 if all_exts_sorted:
-                    cols = st.columns(6)
-                    for i, ext in enumerate(all_exts_sorted):
-                        with cols[i % len(cols)]:
-                            st.checkbox(ext, key=f"sync_filter_ext_{ext}", disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
+                    st.markdown("<hr style='margin: 10px 0; border-color: rgba(255,255,255,0.1);' />", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-bottom: 10px; font-size: 0.95em;'>Or select specific types:</div>", unsafe_allow_html=True)
+                    
+                    with st.container(border=True, key="filetypes_flex_box"):
+                        safe_len = min(len(all_exts_sorted), 90)
+                        cols = st.columns(safe_len)
+                        for i, ext in enumerate(all_exts_sorted):
+                            col_idx = i % safe_len
+                            with cols[col_idx]:
+                                st.checkbox(ext, key=f"sync_filter_ext_{ext}", disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
 
-        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-        
-        # Global Select All / Deselect All
-        col_sa, col_da, _ = st.columns([1.5, 1.5, 9])
-        with col_sa:
-            if st.button("Select All", use_container_width=True):
-                for k in sum(files_by_ext.values(), []):
-                    if k.startswith('sync_locdel_'):
-                        ignore_key = k.replace('sync_locdel_', 'ignore_')
-                        if st.session_state.get(ignore_key, False):
-                            continue
-                    st.session_state[k] = True
-                st.rerun()
-        with col_da:
-            if st.button("Deselect All", use_container_width=True):
-                for k in sum(files_by_ext.values(), []):
-                    st.session_state[k] = False
-                st.rerun()
+            st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+            
+            # Global Select All / Deselect All
+            col_sa, col_da = st.columns([1, 1])
+            with col_sa:
+                if st.button("✓ Select All", type="primary", use_container_width=True):
+                    for k in sum(files_by_ext.values(), []):
+                        if k.startswith('sync_locdel_'):
+                            ignore_key = k.replace('sync_locdel_', 'ignore_')
+                            if st.session_state.get(ignore_key, False):
+                                continue
+                        st.session_state[k] = True
+                    st.rerun()
+            with col_da:
+                if st.button("✕ Deselect All", use_container_width=True):
+                    for k in sum(files_by_ext.values(), []):
+                        st.session_state[k] = False
+                    st.rerun()
 
         st.markdown("---")
 
