@@ -1150,12 +1150,6 @@ def render_sync_step4(lang: str):
     elif status == 'analyzed':
         _show_analysis_review(lang)
     elif status == 'pre_sync':
-        render_sync_wizard(st, 3, lang)
-        st.markdown(
-            f'<div class="step-header">{get_text("sync_progress_header", lang)}</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown("<div style='text-align: center; margin-top: 50px; font-size: 1.2em; color: #888;'>🚀 Preparing sync...</div>", unsafe_allow_html=True)
         st.session_state['download_status'] = 'syncing'
         st.rerun()
     elif status == 'syncing':
@@ -1795,8 +1789,8 @@ def _show_analysis_review(lang):
             # redownload items are SyncInfo; look up their size from canvas_files
             total_bytes = 0
             for s in sync_selections:
-                total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
-                total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['updates'])
+                total_bytes += sum(f.size for f in s['new'] if hasattr(f, 'size'))
+                total_bytes += sum(f[0].size for f in s['updates'] if hasattr(f[0], 'size'))
                 # redownload items are SyncInfo objects — look up size via canvas_files_map
                 canvas_files_map = {f.id: f for f in s['res_data']['canvas_files']}
                 for si in s['redownload']:
@@ -1810,7 +1804,7 @@ def _show_analysis_review(lang):
 
             # Disk space check (use first pair's folder)
             first_folder = sync_selections[0]['res_data']['pair']['local_folder']
-            has_space, avail_mb = check_disk_space(first_folder, required_bytes=total_bytes)
+            has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
             if not has_space:
                 st.error(get_text('sync_insufficient_space', lang))
                 st.stop()
@@ -1820,7 +1814,16 @@ def _show_analysis_review(lang):
                 if s['new'] or s['updates'] or s['redownload']
             ))
             
-            _show_sync_confirmation(lang, sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb)
+            # Extract destination folder from the first selection
+            dest_folder = "Multiple folders"
+            if folders_count == 1:
+                # Find the single folder used
+                for s in sync_selections:
+                    if s['new'] or s['updates'] or s['redownload']:
+                        dest_folder = short_path(s['res_data']['pair']['local_folder'])
+                        break
+            
+            _show_sync_confirmation(lang, sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
 
     with col_back:
         if st.button(get_text('back_btn', lang), use_container_width=True):
@@ -1831,34 +1834,277 @@ def _show_analysis_review(lang):
 # ---- Confirmation dialog ----
 
 @st.dialog("Confirm Sync")
-def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_mb):
-    # Vertically center the modal
-    st.markdown("""
-        <style>
-        div[data-testid="stModal"] > div[role="dialog"] {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            margin: 0 !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes):
+    # --- Data Collection for Dropdowns ---
+    file_items = []
+    folder_set = set()
+    for s in sync_selections:
+        # Get the friendly course name for the folder
+        pair = s['res_data']['pair']
+        course_display = friendly_course_name(pair.get('course_name', 'Unknown'))
+        folder_set.add(course_display)
+        
+        # Helper to format filename friendly
+        def get_friendly_name(name):
+            # Replace + with space and unquote
+            unquoted = urllib.parse.unquote(name).replace('+', ' ')
+            return unquoted
 
-    st.markdown(get_text('sync_confirm_proceed', lang, count=count, size=size, folders=folders,
-                         file_word=pluralize(count, 'file', lang),
-                         folder_word=pluralize(folders, 'folder', lang)))
-                         
-    st.markdown(f"<div style='margin-top: 10px; margin-bottom: 20px; color: #888; font-size: 0.9em;'>💾 Available Disk Space: <strong>{format_file_size(avail_mb * 1024 * 1024)}</strong></div>", unsafe_allow_html=True)
+        # Collect files from all categories with emojis and friendly names
+        # Use structured spans for hanging indent
+        for f in s['new']:
+            icon = get_file_icon(f.filename)
+            fname = get_friendly_name(f.display_name or f.filename)
+            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
+        for f, _ in s['updates']:
+            icon = get_file_icon(f.filename)
+            fname = get_friendly_name(f.display_name or f.filename)
+            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
+        for f in s['redownload']:
+            icon = get_file_icon(f.canvas_filename)
+            fname = get_friendly_name(f.canvas_filename)
+            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.original_size)})</span></span></li>")
+    
+    # Tight HTML structure - NO whitespace
+    file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted(file_items))}</ul>"
+    sorted_folders = sorted(list(folder_set))
+    folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(f'<li><span class=\'li-icon\'>📁</span><span class=\'li-text\'>{p}</span></li>' for p in sorted_folders)}</ul>"
+    
+    # --- UI Logic ---
+    avail_bytes = avail_mb * 1024 * 1024
+    
+    # VISUAL PROGRESS CALCULATION
+    # User feedback: if < 1% show 1%, else show linearly.
+    real_ratio = total_bytes / avail_bytes if avail_bytes > 0 else 0
+    real_pct = real_ratio * 100
+    
+    # Apply 1% floor for visibility, but keep it linear otherwise
+    if total_bytes > 0:
+        fill_percent = min(100, max(1, real_pct))
+    else:
+        fill_percent = 0
+    
+    # Conditional Destination Row
+    if len(folder_set) > 1:
+        dest_html = (
+            f'<div class="stat-row-dropdown">'
+            f'<details>'
+            f'<summary>'
+            f'<div class="stat-left">📁 <span class="stat-label">Destination:</span></div>'
+            f'<div class="stat-value">{len(folder_set)} courses <span class="arrow-icon"></span></div>'
+            f'</summary>'
+            f'<div class="dropdown-list">{folder_list_html}</div>'
+            f'</details>'
+            f'</div>'
+        )
+    else:
+        # Single folder - static row showing friendly name
+        dest_html = (
+            f'<div class="stat-row-static">'
+            f'<div class="stat-left">📁 <span class="stat-label">Destination:</span></div>'
+            f'<div class="stat-value">{sorted_folders[0]}</div>'
+            f'</div>'
+        )
 
-    col_yes, col_no = st.columns([1, 1])
+    html_content = (
+        f'<style>'
+        f'div[data-testid="stModal"] {{'
+        f'display: flex !important;'
+        f'align-items: center !important;'
+        f'justify-content: center !important;'
+        f'background-color: rgba(0, 0, 0, 0.7) !important;'
+        f'}}'
+        f'div[data-testid="stModal"] > div[role="dialog"] {{'
+        f'position: relative !important;'
+        f'top: 0 !important;'
+        f'left: 0 !important;'
+        f'transform: none !important;'
+        f'margin: auto !important;'
+        f'max-width: 480px !important;'
+        f'width: 90vw !important;'
+        f'border-radius: 20px !important;'
+        f'border: 1px solid rgba(255, 255, 255, 0.1) !important;'
+        f'box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;'
+        f'background-color: #1a1c1e !important;'
+        f'padding: 0 !important;'
+        f'overflow: hidden !important;'
+        f'}}'
+        f'div[data-testid="stModal"] [data-testid="stVerticalBlock"] {{'
+        f'padding: 25px !important;'
+        f'gap: 0 !important;'
+        f'}}'
+        f'div[data-testid="stModal"] h2 {{'
+        f'margin: 0 0 12px 0 !important;'
+        f'font-size: 1.6rem !important;'
+        f'font-weight: 700 !important;'
+        f'color: #ffffff !important;'
+        f'}}'
+        f'.sync-subtitle {{'
+        f'color: rgba(255, 255, 255, 0.6);'
+        f'font-size: 0.85rem;'
+        f'margin-bottom: 22px;'
+        f'line-height: 1.4;'
+        f'}}'
+        f'.stats-card {{'
+        f'background-color: #121416;'
+        f'border: 1px solid rgba(255, 255, 255, 0.05);'
+        f'border-radius: 14px;'
+        f'padding: 18px;'
+        f'margin-bottom: 20px;'
+        f'}}'
+        f'.stat-row-dropdown {{'
+        f'margin-bottom: 12px;'
+        f'}}'
+        f'details summary {{'
+        f'display: flex;'
+        f'align-items: center;'
+        f'justify-content: space-between;'
+        f'cursor: pointer;'
+        f'list-style: none;'
+        f'color: rgba(255, 255, 255, 0.9);'
+        f'font-size: 0.95rem;'
+        f'outline: none;'
+        f'transition: color 0.2s;'
+        f'}}'
+        f'details summary:hover {{ color: #ffffff; }}'
+        f'details summary::-webkit-details-marker {{ display: none; }}'
+        f'.stat-left {{'
+        f'display: flex;'
+        f'align-items: center;'
+        f'gap: 10px;'
+        f'}}'
+        f'.stat-label {{'
+        f'font-weight: 500;'
+        f'}}'
+        f'.stat-value {{'
+        f'color: #ffffff;'
+        f'font-weight: 600;'
+        f'text-align: right;'
+        f'font-size: 0.95rem;'
+        f'display: flex;'
+        f'align-items: center;'
+        f'gap: 8px;'
+        f'}}'
+        f'.arrow-icon {{'
+        f'font-size: 0.75rem;'
+        f'color: rgba(255, 255, 255, 0.4);;'
+        f'margin-left: 2px;'
+        f'}}'
+        f'.arrow-icon::before {{ content: "▸"; }}'
+        f'details[open] summary .arrow-icon::before {{ content: "▾"; color: #ffffff; }}'
+        f'.dropdown-list {{'
+        f'background: rgba(0, 0, 0, 0.3);'
+        f'border-radius: 8px;'
+        f'padding: 6px 10px !important;'
+        f'margin-top: 8px;'
+        f'max-height: 150px;'
+        f'overflow-y: auto;'
+        f'font-size: 0.8rem;'
+        f'color: rgba(255, 255, 255, 0.6);'
+        f'border: 1px solid rgba(255, 255, 255, 0.03);'
+        f'display: block;'
+        f'}}'
+        f'.stat-row-static {{'
+        f'display: flex;'
+        f'align-items: center;'
+        f'justify-content: space-between;'
+        f'margin-bottom: 12px;'
+        f'}}'
+        f'.progress-divider {{'
+        f'border-top: 1px solid rgba(255, 255, 255, 0.08);'
+        f'margin: 12px 0 15px 0;'
+        f'}}'
+        f'.custom-progress-bg {{'
+        f'background-color: #2a2d31;'
+        f'border-radius: 10px;'
+        f'height: 8px;'
+        f'width: 100%;'
+        f'margin-bottom: 10px;'
+        f'overflow: hidden;'
+        f'}}'
+        f'.custom-progress-fill {{'
+        f'background-color: #3498db;'
+        f'height: 100%;'
+        f'border-radius: 10px;'
+        f'transition: width 0.3s ease-out;'
+        f'}}'
+        f'.metrics-line {{'
+        f'display: flex;'
+        f'justify-content: space-between;'
+        f'color: rgba(255, 255, 255, 0.45);'
+        f'font-size: 0.75rem;'
+        f'font-weight: 500;'
+        f'}}'
+        f'div[data-testid="stModal"] .stButton > button {{'
+        f'border-radius: 8px !important;'
+        f'height: 44px !important;'
+        f'font-weight: 600 !important;'
+        f'font-size: 0.95rem !important;'
+        f'}}'
+        f'button[data-testid="stBaseButton-secondary"] {{'
+        f'background-color: #262730 !important;'
+        f'border: 1px solid rgba(255, 255, 255, 0.1) !important;'
+        f'color: #ffffff !important;'
+        f'}}'
+        f'/* Direct Left alignment and hanging indent for dropdown lists */'
+        f'.dropdown-list ul li {{'
+        f'margin: 0 0 4px 0 !important;'
+        f'padding: 0 !important;'
+        f'line-height: 1.3 !important;'
+        f'text-align: left !important;'
+        f'list-style: none !important;'
+        f'display: flex !important;'
+        f'align-items: flex-start !important;'
+        f'min-height: 0 !important;'
+        f'}}'
+        f'.dropdown-list ul li:last-child {{ margin-bottom: 0 !important; }}'
+        f'.li-icon {{'
+        f'width: 24px !important;'
+        f'flex-shrink: 0 !important;'
+        f'display: inline-block !important;'
+        f'}}'
+        f'.li-text {{'
+        f'flex: 1 !important;'
+        f'word-break: break-word !important;'
+        f'}}'
+        f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
+        f'</style>'
+        f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.</div>'
+        f'<div class="stats-card">'
+        f'<div class="stat-row-dropdown">'
+        f'<details>'
+        f'<summary>'
+        f'<div class="stat-left">📄 <span class="stat-label">Files:</span></div>'
+        f'<div class="stat-value">{count} files <span class="arrow-icon"></span></div>'
+        f'</summary>'
+        f'<div class="dropdown-list">{file_list_html}</div>'
+        f'</details>'
+        f'</div>'
+        f'<div class="stat-row-static">'
+        f'<div class="stat-left">💾 <span class="stat-label">Total Size:</span></div>'
+        f'<div class="stat-value">{size}</div>'
+        f'</div>'
+        f'{dest_html}'
+        f'<div class="progress-divider"></div>'
+        f'<div class="custom-progress-bg">'
+        f'<div class="custom-progress-fill" style="width: {fill_percent}%;"></div>'
+        f'</div>'
+        f'<div class="metrics-line">'
+        f'<div>{size} of {format_file_size(avail_bytes)}</div>'
+        f'<div>Available Disk Space: {format_file_size(avail_bytes)}</div>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(html_content, unsafe_allow_html=True)
+
+    col_yes, col_no = st.columns([1, 1], gap="medium")
     with col_yes:
-        if st.button(get_text('sync_confirm_yes', lang), type="primary", use_container_width=True):
+        if st.button("Yes, Start Sync", type="primary", use_container_width=True):
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
             st.rerun()
     with col_no:
-        if st.button(get_text('sync_confirm_no', lang), use_container_width=True, key="cancel_sync_dialog_btn"):
+        if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
             st.rerun()
 
 
