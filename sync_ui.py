@@ -1533,7 +1533,7 @@ def _show_analysis_review(lang):
             # Global Select All / Deselect All
             col_sa, col_da = st.columns([1, 1])
             with col_sa:
-                if st.button("Select All", type="primary", use_container_width=True):
+                if st.button("Select All Files", type="primary", use_container_width=True):
                     for k in sum(files_by_ext.values(), []):
                         if k.startswith('sync_locdel_'):
                             ignore_key = k.replace('sync_locdel_', 'ignore_')
@@ -1542,7 +1542,7 @@ def _show_analysis_review(lang):
                         st.session_state[k] = True
                     st.rerun()
             with col_da:
-                if st.button("Deselect All", use_container_width=True):
+                if st.button("Deselect All Files", use_container_width=True):
                     for k in sum(files_by_ext.values(), []):
                         st.session_state[k] = False
                     st.rerun()
