@@ -1478,17 +1478,47 @@ def _show_analysis_review(lang):
             margin-bottom: 0 !important;
             padding-right: 0 !important;
         }
+
+        /* 6. Tighten the outer filter box container */
+        .st-key-sync_filter_box_outer > div[data-testid="stVerticalBlock"] {
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+            gap: 0 !important;
+        }
+
+        /* 7. Aggressively pull elements up */
+        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"] {
+            margin-top: -12px !important;
+        }
+        /* Add gap between label and the filetype checkboxes container */
+        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:has(.st-key-filetypes_flex_box) {
+            margin-top: 5px !important;
+        }
+        /* Pull the toggle (first child) to the very top */
+        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:first-child {
+            margin-top: -15px !important;
+        }
+
+        /* 8. Tighten separator and labels */
+        .st-key-sync_filter_box_outer hr {
+            margin-top: -8px !important;
+            margin-bottom: 0 !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+        .st-key-sync_filter_box_outer div[data-testid="stMarkdownContainer"] p {
+            margin-bottom: 0 !important;
+        }
         </style>
         """, unsafe_allow_html=True)
 
         col_main, _ = st.columns([3.5, 8.5])
         with col_main:
-            with st.container(border=True):
+            with st.container(border=True, key="sync_filter_box_outer"):
                 include_all = st.checkbox("Include ALL filetypes", key="sync_filter_all_exts", on_change=toggle_all_exts)
                 
                 if all_exts_sorted:
-                    st.markdown("<hr style='margin: 10px 0; border-color: rgba(255,255,255,0.1);' />", unsafe_allow_html=True)
-                    st.markdown("<div style='margin-bottom: 10px; font-size: 0.95em;'>Or select specific types:</div>", unsafe_allow_html=True)
+                    st.markdown("<hr />", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size: 0.95em; padding-bottom: 10px;'>Or select specific types:</div>", unsafe_allow_html=True)
                     
                     with st.container(border=True, key="filetypes_flex_box"):
                         safe_len = min(len(all_exts_sorted), 90)
@@ -1503,7 +1533,7 @@ def _show_analysis_review(lang):
             # Global Select All / Deselect All
             col_sa, col_da = st.columns([1, 1])
             with col_sa:
-                if st.button("✓ Select All", type="primary", use_container_width=True):
+                if st.button("Select All", type="primary", use_container_width=True):
                     for k in sum(files_by_ext.values(), []):
                         if k.startswith('sync_locdel_'):
                             ignore_key = k.replace('sync_locdel_', 'ignore_')
@@ -1512,7 +1542,7 @@ def _show_analysis_review(lang):
                         st.session_state[k] = True
                     st.rerun()
             with col_da:
-                if st.button("✕ Deselect All", use_container_width=True):
+                if st.button("Deselect All", use_container_width=True):
                     for k in sum(files_by_ext.values(), []):
                         st.session_state[k] = False
                     st.rerun()
