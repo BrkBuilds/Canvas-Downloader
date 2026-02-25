@@ -1220,12 +1220,12 @@ def _run_analysis(lang, sync_pairs):
             
         canvas_files = cm.get_course_files_metadata(course)
         manifest = sync_mgr.heal_manifest(manifest)
+        detected = sync_mgr.detect_structure()
         # Pass canvas manager to analyze_course for backend structure pre-calculation
-        result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm)
+        result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm, download_mode=detected)
 
         # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
         
-        detected = sync_mgr.detect_structure()
         all_results.append({
             'pair': pair,
             'result': result,
@@ -1371,7 +1371,7 @@ def _show_analysis_review(lang):
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
     # Nothing to sync
-    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0:
+    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0:
         if total_uptodate:
             st.info(get_text('sync_files_uptodate_count', lang, count=total_uptodate,
                              file_word=pluralize(total_uptodate, 'file', lang)))
@@ -2354,28 +2354,78 @@ def _show_sync_complete(lang):
             # expander border and tighten spacing so the dropdown sits right
             # below the folder title.
             with st.container(border=True):
-                # CSS: remove inner expander border & reduce gap above it
-                st.markdown("""<style>
+                # CSS: remove inner expander border & tighten horizontal row
+                st.markdown(f"""<style>
                 /* Remove border from expanders nested inside bordered containers */
-                div[data-testid="stExpander"] {
+                div[data-testid="stExpander"] {{
                     border: none !important;
                     box-shadow: none !important;
                     padding: 0 !important;
-                    margin-top: -1rem !important;
-                }
+                    margin-top: 0 !important; /* Reset out the negative margin previously used */
+                }}
+                /* Tighten the parent container padding to reduce top dead space */
+                div[data-testid="stVerticalBlock"]:has(span#folder_row_{pair_idx}) {{
+                    padding-top: 5px !important;
+                }}
+                /* Tight horizontal column layouts for the folder display */
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) {{
+                    align-items: center !important;
+                    gap: 15px !important; /* Increased gap between course name and button */
+                    min-height: 0 !important;
+                    margin-bottom: 0px !important; /* Reduced expander gap to 0px */
+                }}
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stColumn"] {{
+                    width: auto !important;
+                    flex: 0 0 auto !important;
+                    min-width: 0 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                }}
+                /* Fix negative margins that clip text and break flex alignment */
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stMarkdownContainer"] {{
+                    margin: 0 !important;
+                }}
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stMarkdown"] {{
+                    display: flex !important;
+                    align-items: center !important;
+                    overflow: visible !important;
+                }}
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stElementContainer"] {{
+                    margin: 0 !important;
+                    overflow: visible !important;
+                }}
+                /* Kill paragraph margins & normalize line height to allow perfect alignment */
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) p {{
+                    margin: 0 !important;
+                    line-height: 1.4 !important;
+                }}
+                /* Target the specific Open Folder button to adjust height/padding and vertical position */
+                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) button {{
+                    border: 1px solid rgba(255,255,255,0.3) !important;
+                    padding: 4px 14px !important;
+                    font-size: 0.85rem !important;
+                    line-height: 1.4 !important;
+                    min-height: 0 !important;
+                    height: auto !important;
+                    /* Translate is more reliable than margin inside a flex container */
+                    transform: translateY(-2px) !important; 
+                }}
                 </style>""", unsafe_allow_html=True)
 
-                c1, c2 = st.columns([4, 1])
+                c1, c2, c3 = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
                 with c1:
-                    st.markdown(f"**📁 {folder_display}**")
+                    st.markdown(f'<span id="folder_row_{pair_idx}"></span>**📁 {folder_display}**', unsafe_allow_html=True)
                 with c2:
                     if Path(pair['local_folder']).exists():
                         if st.button(get_text('sync_open_folder_btn', lang), key=f"open_complete_{pair_idx}"):
                             open_folder(pair['local_folder'])
+                with c3:
+                    st.empty()
 
                 with st.expander(get_text('sync_see_synced_files', lang, count=len(files_synced))):
                     for fname in files_synced:
                         st.markdown(f"<div style='font-size:0.85em;color:#ccc;'>✅ {fname}</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     if st.button("🏠 " + get_text('go_to_front_page', lang), type="primary", use_container_width=True):

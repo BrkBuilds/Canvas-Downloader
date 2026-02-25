@@ -445,6 +445,10 @@ class SyncManager:
         raw_missing_infos = []
         raw_locally_deleted = []
 
+        # Deduplicate canvas files based on their target path and size
+        unique_canvas_files = []
+        seen_path_sizes = set()
+        
         for c_file in canvas_files:
             file_id = str(c_file.id)
             seen_ids.add(file_id)
@@ -455,6 +459,14 @@ class SyncManager:
                 calc_path = f"{subfolder}/{c_file.filename}"
             else:
                 calc_path = c_file.filename
+                
+            path_size_key = (robust_filename_normalize(calc_path), getattr(c_file, 'size', 0))
+            if path_size_key not in seen_path_sizes:
+                seen_path_sizes.add(path_size_key)
+                unique_canvas_files.append((c_file, calc_path))
+
+        for c_file, calc_path in unique_canvas_files:
+            file_id = str(c_file.id)
                 
             if file_id not in files_section:
                 # 1. Not in manifest. Checking if it already exists locally.

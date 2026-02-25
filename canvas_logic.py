@@ -128,6 +128,8 @@ class CanvasManager:
             # We iterate manually to catch errors during pagination
             canvas_files = course.get_files()
             for file in canvas_files:
+                if not getattr(file, 'url', ''):
+                    continue
                 try:
                     f_info = CanvasFileInfo(
                         id=file.id,
@@ -184,6 +186,8 @@ class CanvasManager:
                         continue
                     try:
                         file = course.get_file(item.content_id)
+                        if not getattr(file, 'url', ''):
+                            continue
                         files.append(CanvasFileInfo(
                             id=file.id,
                             filename=getattr(file, 'filename', ''),
@@ -665,8 +669,11 @@ class CanvasManager:
                         if progress_callback: progress_callback(f"Files tab restricted, trying modules...", progress_type='log')
                         log_debug("Files tab restricted (401?), falling back to module scan.", debug_file)
 
+            downloaded_ids = set()
             for file in files:
                 if check_cancellation and check_cancellation(): break
+                if getattr(file, 'id', None):
+                    downloaded_ids.add(file.id)
                 try:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
@@ -699,7 +706,7 @@ class CanvasManager:
                     for item in items:
                         if check_cancellation and check_cancellation(): break
                         
-                        if item.type == 'File' and not files_access_failed: continue
+                        if item.type == 'File' and hasattr(item, 'content_id') and item.content_id in downloaded_ids: continue
 
                         try:
                             log_debug(f"  Fallback Item: {getattr(item, 'title', 'unknown')} (Type: {getattr(item, 'type', 'unknown')})", debug_file)
