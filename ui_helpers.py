@@ -122,7 +122,7 @@ def save_sync_pairs(pairs: list[dict], config_dir: str = None):
 
 # --- Disk Space ---
 
-def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.0) -> tuple[bool, float]:
+def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.0) -> tuple[bool, float, float]:
     """Check if there's enough disk space.
     
     Args:
@@ -131,17 +131,18 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
         min_free_gb: Minimum free space in GB
         
     Returns:
-        Tuple of (has_enough_space, available_mb)
+        Tuple of (has_enough_space, available_mb, total_mb)
     """
     try:
         stat = shutil.disk_usage(path)
         available_mb = stat.free / (1024 * 1024)
+        total_mb = stat.total / (1024 * 1024)
         required_total = (min_free_gb * 1024 * 1024 * 1024) + required_bytes
         has_enough = stat.free >= required_total
-        return has_enough, available_mb
+        return has_enough, available_mb, total_mb
     except Exception:
         # If we can't check, assume OK
-        return True, -1
+        return True, -1, -1
 
 
 # --- Folder Opener ---
