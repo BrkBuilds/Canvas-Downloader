@@ -1685,7 +1685,7 @@ def _show_analysis_review(lang):
 
         /* 8. Tighten separator and labels */
         .st-key-sync_filter_box_outer hr {
-            margin-top: -8px !important;
+            margin-top: -3px !important;
             margin-bottom: 0 !important;
             border-color: rgba(255,255,255,0.1) !important;
         }
