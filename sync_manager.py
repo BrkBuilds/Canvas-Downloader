@@ -751,14 +751,6 @@ class SyncManager:
                 return False
         return False
     
-    def mark_files_ignored(self, manifest: dict, file_ids: list) -> dict:
-        """Mark files as ignored in the manifest."""
-        for file_id in file_ids:
-            str_id = str(file_id)
-            if str_id in manifest.get('files', {}):
-                manifest['files'][str_id]['is_ignored'] = True
-        return manifest
-        
     def get_ignored_files(self) -> list[SyncFileInfo]:
         """Return a list of all files currently marked as ignored in the DB."""
         ignored = []
@@ -770,24 +762,100 @@ class SyncManager:
         except Exception as e:
             logger.warning(f"Error getting ignored files: {e}")
         return ignored
-        
-    def unignore_files(self, file_ids: list[int]) -> bool:
-        """Mark a list of file IDs as no longer ignored."""
-        try:
-            manifest = self.load_manifest()
-            changed = False
-            for fid in file_ids:
-                str_id = str(fid)
-                if str_id in manifest.get('files', {}):
-                    manifest['files'][str_id]['is_ignored'] = False
-                    changed = True
+
+    def ignore_file(self, canvas_file_id: int) -> bool:
+        """Mark a file as ignored directly in the SQLite DB."""
+        if os.name == 'nt':
+            self._windows_unhide_file(self.db_path)
             
-            if changed:
-                return self.save_manifest(manifest)
+        success = False
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute(
+                    'UPDATE sync_manifest SET is_ignored = 1 WHERE canvas_file_id = ?', 
+                    (canvas_file_id,)
+                )
+                conn.commit()
+            success = True
+        except sqlite3.Error as e:
+            logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
+        finally:
+            if os.name == 'nt':
+                self._windows_hide_file(self.db_path)
+                
+        return success
+
+    def restore_file(self, canvas_file_id: int) -> bool:
+        """Mark a file as no longer ignored directly in the SQLite DB."""
+        if os.name == 'nt':
+            self._windows_unhide_file(self.db_path)
+            
+        success = False
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute(
+                    'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
+                    (canvas_file_id,)
+                )
+                conn.commit()
+            success = True
+        except sqlite3.Error as e:
+            logger.warning(f"Error restoring file {canvas_file_id}: {e}")
+        finally:
+            if os.name == 'nt':
+                self._windows_hide_file(self.db_path)
+                
+        return success
+
+    def bulk_ignore_files(self, file_ids: list[int]) -> bool:
+        """Mark multiple files as ignored directly in the SQLite DB within a transaction."""
+        if not file_ids:
             return True
-        except Exception as e:
-            logger.warning(f"Error unignoring files: {e}")
-            return False
+            
+        if os.name == 'nt':
+            self._windows_unhide_file(self.db_path)
+            
+        success = False
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.executemany(
+                    'UPDATE sync_manifest SET is_ignored = 1 WHERE canvas_file_id = ?', 
+                    [(fid,) for fid in file_ids]
+                )
+                conn.commit()
+            success = True
+        except sqlite3.Error as e:
+            logger.warning(f"Error bulk ignoring files: {e}")
+        finally:
+            if os.name == 'nt':
+                self._windows_hide_file(self.db_path)
+                
+        return success
+
+    def bulk_restore_files(self, file_ids: list[int]) -> bool:
+        """Mark multiple files as no longer ignored directly in the SQLite DB within a transaction."""
+        if not file_ids:
+            return True
+            
+        if os.name == 'nt':
+            self._windows_unhide_file(self.db_path)
+            
+        success = False
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.executemany(
+                    'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
+                    [(fid,) for fid in file_ids]
+                )
+                conn.commit()
+            success = True
+        except sqlite3.Error as e:
+            logger.warning(f"Error bulk restoring files: {e}")
+        finally:
+            if os.name == 'nt':
+                self._windows_hide_file(self.db_path)
+                
+        return success
 
 
 # --- Sync History Manager ---
