@@ -1781,7 +1781,7 @@ def _show_analysis_review(lang):
         if result.new_files:
             is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'new_files'
             with st.expander(f"🆕 {get_text('new_files', lang)} ({len(result.new_files)})", expanded=is_expanded):
-                st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'))
+                st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                 
                 for file in result.new_files:
                     ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
@@ -1800,7 +1800,7 @@ def _show_analysis_review(lang):
         if result.updated_files:
             is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'updated_files'
             with st.expander(f"🔄 {get_text('updated_files', lang)} ({len(result.updated_files)})", expanded=is_expanded):
-                st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'))
+                st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                 
                 for canvas_file, sync_info in result.updated_files:
                     ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
@@ -1819,7 +1819,7 @@ def _show_analysis_review(lang):
         if result.missing_files:
             is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'missing_files'
             with st.expander(f"📦 {get_text('missing_files', lang)} ({len(result.missing_files)})", expanded=is_expanded):
-                st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'))
+                st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                 
                 for sync_info in result.missing_files:
                     ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
@@ -1837,7 +1837,7 @@ def _show_analysis_review(lang):
         if result.locally_deleted_files:
             is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'locally_deleted_files'
             with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=is_expanded):
-                st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'))
+                st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                 
                 for sync_info in result.locally_deleted_files:
                     icon = get_file_icon(sync_info.canvas_filename)
