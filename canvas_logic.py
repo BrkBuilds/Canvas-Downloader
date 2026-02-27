@@ -7,7 +7,7 @@ import html
 import urllib.parse
 import traceback
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
@@ -207,6 +207,22 @@ class CanvasManager:
                         # If a specific file content_id is invalid, we skip it.
                         # This works as "best effort".
                         pass
+                elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                    ext = ".html" if item.type == 'Page' else ".url"
+                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + ext
+                    
+                    actual_url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None) or getattr(item, 'url', '')
+                    
+                    mock_info = CanvasFileInfo(
+                        id=-int(item.id) if hasattr(item, 'id') else 0,
+                        filename=safe_title,
+                        display_name=safe_title,
+                        size=0,
+                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                        url=actual_url,
+                        content_type="text/html" if item.type == 'Page' else "application/x-url"
+                    )
+                    files.append(mock_info)
         return files
 
     def get_folder_map(self, course) -> dict:
@@ -457,7 +473,18 @@ class CanvasManager:
                                             continue
                                         
                                         page_obj = course.get_page(item.page_url)
-                                        self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        if filepath and filepath.exists():
+                                            info = CanvasFileInfo(
+                                                id=-int(item.id) if hasattr(item, 'id') else 0,
+                                                filename=filepath.name,
+                                                display_name=getattr(page_obj, 'title', filepath.name),
+                                                size=0,
+                                                modified_at=getattr(page_obj, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                                                url=getattr(item, 'html_url', ''),
+                                                content_type="text/html"
+                                            )
+                                            downloaded_files_info.append((info, filepath))
                                     
                                     elif item.type == 'ExternalUrl':
                                         if file_filter == 'study': continue
@@ -467,7 +494,18 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        if filepath and filepath.exists():
+                                            info = CanvasFileInfo(
+                                                id=-int(item.id) if hasattr(item, 'id') else 0,
+                                                filename=filepath.name,
+                                                display_name=item.title,
+                                                size=0,
+                                                modified_at=datetime.now(timezone.utc).isoformat(),
+                                                url=getattr(item, 'external_url', ''),
+                                                content_type="application/x-url"
+                                            )
+                                            downloaded_files_info.append((info, filepath))
                                     
                                     elif item.type == 'ExternalTool':
                                         if file_filter == 'study': continue
@@ -477,7 +515,18 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        if filepath and filepath.exists():
+                                            info = CanvasFileInfo(
+                                                id=-int(item.id) if hasattr(item, 'id') else 0,
+                                                filename=filepath.name,
+                                                display_name=item.title,
+                                                size=0,
+                                                modified_at=datetime.now(timezone.utc).isoformat(),
+                                                url=url,
+                                                content_type="application/x-url"
+                                            )
+                                            downloaded_files_info.append((info, filepath))
                                         
                                 except Exception as item_e:
                                     err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Item Processing Error", str(item_e), raw_error=item_e)
@@ -732,14 +781,36 @@ class CanvasManager:
                                 if file_filter == 'study': continue
                                 if not hasattr(item, 'page_url') or not item.page_url: continue
                                 page_obj = course.get_page(item.page_url)
-                                self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                filepath = self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                if filepath and filepath.exists():
+                                    info = CanvasFileInfo(
+                                        id=-int(item.id) if hasattr(item, 'id') else 0,
+                                        filename=filepath.name,
+                                        display_name=getattr(page_obj, 'title', filepath.name),
+                                        size=0,
+                                        modified_at=getattr(page_obj, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                                        url=getattr(item, 'html_url', ''),
+                                        content_type="text/html"
+                                    )
+                                    downloaded.append((info, filepath))
                             elif item.type in ['ExternalUrl', 'ExternalTool']:
                                 if file_filter == 'study': continue
                                 url = getattr(item, 'external_url', None)
                                 if item.type == 'ExternalTool':
                                      url = getattr(item, 'html_url', None) or url
                                 if url:
-                                    self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                    filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                    if filepath and filepath.exists():
+                                        info = CanvasFileInfo(
+                                            id=-int(item.id) if hasattr(item, 'id') else 0,
+                                            filename=filepath.name,
+                                            display_name=item.title,
+                                            size=0,
+                                            modified_at=datetime.now(timezone.utc).isoformat(),
+                                            url=url,
+                                            content_type="application/x-url"
+                                        )
+                                        downloaded.append((info, filepath))
                         except Exception as e:
                              pass # Logging every single item error in fallback scan might spam? 
                              # Let's log unique ones? 
@@ -807,9 +878,6 @@ class CanvasManager:
                     pass
 
             filepath = self._handle_conflict(filepath)
-            
-            if progress_callback:
-                progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
 
             url = file_obj.url
             if not url:
@@ -861,6 +929,10 @@ class CanvasManager:
                                             raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
                                         
                                     log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
+                                    
+                                    if progress_callback:
+                                        progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
+                                        
                                     return (
                                         CanvasFileInfo(
                                             id=file_obj.id,
@@ -929,11 +1001,13 @@ class CanvasManager:
             content = f"<html><head><title>{safe_title}</title></head><body><h1>{safe_title}</h1>{body_content}</body></html>"
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
+            return filepath
         except Exception as e:
             err = DownloadError(course_name, safe_title, "Page Save Error", str(e), raw_error=e)
             if progress_callback: progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
             log_debug(f"Error saving page: {e}", debug_file)
+            return None
 
     def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None):
         safe_title = self._sanitize_filename(title)
@@ -965,11 +1039,13 @@ class CanvasManager:
         try:
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
+            return filepath
         except Exception as e:
             err = DownloadError(course_name, title, "Link Creation Error", str(e), raw_error=e)
             if progress_callback: progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
             log_debug(f"Error creating link: {e}", debug_file)
+            return None
 
     def _handle_conflict(self, filepath):
         if not filepath.exists():

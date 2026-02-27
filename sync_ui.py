@@ -2512,6 +2512,28 @@ def _run_sync(lang):
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
 
+                        if getattr(file, 'id', 0) < 0:
+                            # It's a synthetic shortcut. Recreate it directly
+                            filepath.parent.mkdir(parents=True, exist_ok=True)
+                            
+                            is_url_ext = filepath.name.lower().endswith('.url')
+                            is_html_ext = filepath.name.lower().endswith('.html')
+                            
+                            if is_url_ext:
+                                shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
+                                filepath.write_text(shortcut_content, encoding='utf-8')
+                            elif is_html_ext:
+                                html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
+                                filepath.write_text(html_content, encoding='utf-8')
+                            
+                            if is_url_ext or is_html_ext:
+                                rel_path = filepath.relative_to(local_path)
+                                sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
+                                synced_counter[0] += 1
+                                synced_details[pair_idx].append(display_file_name)
+                                terminal_log.append(f"<span style='color:#2ecc71'>[✅] Recreated: </span> {display_file_name}")
+                                continue
+
                         # Refresh download URL from Canvas API (signed URLs expire quickly)
                         download_url = file.url
                         try:

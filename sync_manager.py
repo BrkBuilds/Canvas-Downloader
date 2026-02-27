@@ -653,6 +653,11 @@ class SyncManager:
 
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry."""
+        if canvas_file.id < 0:
+            # Synthetic shortcuts (Pages, URLs) do not have reliable update timestamps.
+            # Return False to force the sync engine to check local existence (Missing vs Up-to-date)
+            return False
+            
         if not canvas_file.modified_at:
             return False
         
