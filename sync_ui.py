@@ -20,7 +20,7 @@ import asyncio
 import logging
 from pathlib import Path
 from datetime import datetime
-import urllib.parse
+from urllib.parse import unquote_plus
 
 import streamlit as st
 import aiohttp
@@ -1214,7 +1214,7 @@ def _run_analysis(lang, sync_pairs):
         def sync_progress_hook(current, total, status_text):
             percent = int((current / total) * 100) if total > 0 else 0
             analysis_ui_placeholder.markdown(f"""
-            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
+            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
                 <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
                 <p style="color: #8A91A6; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
                 <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
@@ -1488,11 +1488,6 @@ def _show_analysis_review(lang):
                 
         st.session_state['active_expander'] = source_list_name
 
-    st.markdown(
-        f'<div class="step-header">{get_text("step4_header", lang)}</div>',
-        unsafe_allow_html=True,
-    )
-
     st.markdown('''
         <style>
         /* Force Streamlit modal to vertically center */
@@ -1677,11 +1672,18 @@ def _show_analysis_review(lang):
 
         def toggle_all_exts():
             val = st.session_state.get('sync_filter_all_exts', True)
-            _apply_filter_to_files(all_exts_sorted, val)
+            if val:
+                _apply_filter_to_files(all_exts_sorted, val)
         
         def toggle_single_ext(ext_name):
-            val = st.session_state.get(f'sync_filter_ext_{ext_name}', True)
-            _apply_filter_to_files([ext_name], val)
+            new_state = st.session_state.get(f'sync_filter_ext_{ext_name}', True)
+            ext_files = [k for k in files_by_ext[ext_name] if k.startswith('sync_')]
+            for file_key in ext_files:
+                if file_key in st.session_state:
+                    st.session_state[file_key] = new_state
+            
+            if not new_state:
+                st.session_state['sync_filter_all_exts'] = False
 
         st.markdown(f'<div class="step-header" style="margin-bottom: 15px;">Select files to sync</div>', unsafe_allow_html=True)
         
@@ -1767,8 +1769,27 @@ def _show_analysis_review(lang):
                         cols = st.columns(safe_len)
                         for i, ext in enumerate(all_exts_sorted):
                             col_idx = i % safe_len
+                            ext_files = [k for k in files_by_ext[ext] if k.startswith('sync_')]
+                            total_ext_files = len(ext_files)
+                            
+                            if total_ext_files > 0:
+                                selected_ext_files = sum(1 for k in ext_files if st.session_state.get(k, False))
+                                expected_val = True if selected_ext_files > 0 else False
+                                
+                                if 0 < selected_ext_files < total_ext_files:
+                                    ext_label = f"{ext} ({selected_ext_files}/{total_ext_files})"
+                                else:
+                                    ext_label = f"{ext}"
+                            else:
+                                expected_val = False
+                                ext_label = f"{ext}"
+                                
+                            ext_key = f"sync_filter_ext_{ext}"
+                            if ext_key not in st.session_state or st.session_state[ext_key] != expected_val:
+                                st.session_state[ext_key] = expected_val
+                                
                             with cols[col_idx]:
-                                st.checkbox(ext, key=f"sync_filter_ext_{ext}", disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
+                                st.checkbox(ext_label, key=ext_key, disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
 
             st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
             
@@ -1850,7 +1871,7 @@ def _show_analysis_review(lang):
                         st.session_state[key] = True
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
-                        st.checkbox(f"{icon} {file.display_name or file.filename} ({size})", key=key)
+                        st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
                     with col2:
                         st.button("🚫", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
@@ -1869,7 +1890,7 @@ def _show_analysis_review(lang):
                         st.session_state[key] = True
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
-                        st.checkbox(f"{icon} {canvas_file.display_name or canvas_file.filename} ({size})", key=key)
+                        st.checkbox(f"{icon} {unquote_plus(canvas_file.display_name or canvas_file.filename)} ({size})", key=key)
                     with col2:
                         st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
@@ -1887,7 +1908,7 @@ def _show_analysis_review(lang):
                         key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
                         if key not in st.session_state:
                             st.session_state[key] = False
-                        st.checkbox(f"{icon} {sync_info.canvas_filename}", key=key)
+                        st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
                     with col2:
                         st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
@@ -1909,7 +1930,7 @@ def _show_analysis_review(lang):
                         
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
-                        st.checkbox(f"{icon} {sync_info.canvas_filename}", key=key)
+                        st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
                     with col2:
                         st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
@@ -1920,7 +1941,7 @@ def _show_analysis_review(lang):
                 st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                 for sync_info in result.deleted_on_canvas:
                     icon = get_file_icon(sync_info.canvas_filename)
-                    st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{sync_info.canvas_filename}</s></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
 
         # Ignored files Bucket
         if hasattr(result, 'ignored_files') and result.ignored_files:
@@ -1934,7 +1955,7 @@ def _show_analysis_review(lang):
                     icon = get_file_icon(sync_info.canvas_filename)
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
-                        st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{sync_info.canvas_filename}</s></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
                     with col2:
                         st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
 
