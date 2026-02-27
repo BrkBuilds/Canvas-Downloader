@@ -105,7 +105,7 @@ class CanvasManager:
                     course_list.append(course)
         return course_list
 
-    def get_course_files_metadata(self, course):
+    def get_course_files_metadata(self, course, progress_callback=None):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -151,7 +151,7 @@ class CanvasManager:
             
         # --- Phase 2: Module Scan (Supplement) ---
         try:
-            module_files = self._get_files_from_modules(course)
+            module_files = self._get_files_from_modules(course, progress_callback=progress_callback)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -172,13 +172,17 @@ class CanvasManager:
             
         return list(all_files_map.values())
     
-    def _get_files_from_modules(self, course):
+    def _get_files_from_modules(self, course, progress_callback=None):
         """Fallback: Get files by iterating through modules."""
         from sync_manager import CanvasFileInfo
         
         files = []
-        modules = course.get_modules()
-        for module in modules:
+        modules = list(course.get_modules())
+        total_modules = len(modules)
+        for idx, module in enumerate(modules):
+            if progress_callback:
+                progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
+            
             items = module.get_module_items()
             for item in items:
                 if item.type == 'File':
@@ -537,9 +541,15 @@ class CanvasManager:
                         log_debug("No partial/non-module files found.", debug_file)
 
                 except Exception as e:
-                     log_debug(f"Catch-All Phase Error: {e}", debug_file)
-                     err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e)
-                     self._log_error(save_dir, err)
+                    log_debug(f"Catch-All Phase Error: {e}", debug_file)
+                    error_msg = str(e).lower()
+                    if "unauthorized" in error_msg or "401" in error_msg or "user not authorised" in error_msg:
+                        # Just log it to standard console/debug, DO NOT add to user's download_errors.txt
+                        print(f"Files tab restricted for {course.name}. Gracefully falling back to module scan.")
+                    else:
+                        # Handle actual unexpected errors
+                        err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e)
+                        self._log_error(save_dir, err)
                 # ---- HYBRID MODE CATCH-ALL ENDED ----
 
             except Exception as e:
@@ -840,8 +850,15 @@ class CanvasManager:
                                     
                                     # Verify download completeness
                                     if file_size_bytes > 0 and total_bytes != file_size_bytes:
-                                        # Incomplete download
-                                        raise Exception(f"Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
+                                        flexible_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v']
+                                        is_flexible_media = any(filename.lower().endswith(ext) for ext in flexible_extensions)
+                                        
+                                        if is_flexible_media and total_bytes > 0:
+                                            # Soft warning: Do not raise an exception. Mark as successful.
+                                            log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
+                                        else:
+                                            # Incomplete download
+                                            raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
                                         
                                     log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
                                     return (

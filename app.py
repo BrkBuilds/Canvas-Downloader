@@ -790,47 +790,148 @@ with _main_content.container():
         current_idx = st.session_state['current_course_index']
         
         # UI elements in correct order
-        status_text = st.empty()
-        progress_container = st.empty()  # For custom progress bar with text
-        mb_counter = st.empty()  # For "Downloading: X / Y MB"
-        log_area = st.empty()
-        
-        # Cancel Button - only show when download is running or scanning
-        cancel_placeholder = st.empty()
-        if st.session_state['download_status'] in ['running', 'scanning']:
+        if st.session_state['download_status'] == 'running':
+            import time
+            import collections
+            if 'start_time' not in st.session_state:
+                st.session_state['start_time'] = time.time()
+            if 'log_deque' not in st.session_state:
+                st.session_state['log_deque'] = collections.deque(maxlen=6)
+                
+            header_placeholder = st.empty()
+            progress_placeholder = st.empty()
+            metrics_placeholder = st.empty()
+            active_file_placeholder = st.empty()
+            log_placeholder = st.empty()
+
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            
+            cancel_placeholder = st.empty()
             if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
                 cancel_placeholder.empty() # Clear immediately
                 st.session_state['cancel_requested'] = True
                 st.session_state['download_status'] = 'cancelled'
+        else:
+            status_text = st.empty()
+            progress_container = st.empty()  # For custom progress bar with text
+            mb_counter = st.empty()  # For "Downloading: X / Y MB"
+            log_area = st.empty()
+            
+            # Cancel Button placeholder for later (after running/scanning specific rendering)
+            cancel_placeholder = st.empty()
         
         # Handle download state
         if st.session_state['download_status'] == 'scanning':
-            # Scanning phase - count total items
-            status_text.text(get_text('scanning_files', lang, current=0, total=total))
+            # Modern Course Analysis UI (Phase 1)
+            total_courses = len(st.session_state['courses_to_download'])
+            analysis_ui_placeholder = st.empty()
             
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
             total_items = 0
             total_mb = 0
             
             for idx, course in enumerate(st.session_state['courses_to_download']):
-                if st.session_state['cancel_requested']:
+                current_course_num = idx + 1
+                percent = int((current_course_num / total_courses) * 100)
+                
+                # Progress Hook for granular module scanning
+                def analysis_progress_hook(current_mod, total_mods, mod_status_text):
+                    mod_percent = int((current_mod / total_mods) * 100) if total_mods > 0 else 0
+                    analysis_ui_placeholder.markdown(f"""
+                    <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
+                        <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                        <p style="color: #8A91A6; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{course.name}</b></p>
+                        <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{mod_status_text}</p>
+                        <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                            <div style="background-color: #4DA8DA; width: {mod_percent}%; height: 100%; transition: width 0.1s ease;"></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Also keep the cancel button alive
+                    if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key=f"cancel_scan_{idx}_{current_mod}"):
+                        st.session_state['cancel_requested'] = True
+                        st.session_state['download_status'] = 'cancelled'
+                        st.rerun()
+
+                # Render initial modern loading UI
+                analysis_ui_placeholder.markdown(f"""
+                <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    <p style="color: #8A91A6; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{course.name}</b></p>
+                    <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; margin-top: 10px; overflow: hidden;">
+                        <div style="background-color: #4DA8DA; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Render Cancel Button for Scanning Phase (after analysis UI)
+                if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
+                    cancel_placeholder.empty() # Clear immediately
+                    st.session_state['cancel_requested'] = True
                     st.session_state['download_status'] = 'cancelled'
                     st.rerun()
                 
-                # Update scanning status
-                status_text.text(get_text('scanning_files', lang, current=idx + 1, total=total))
-                # Simple progress bar for scanning
-                progress_container.progress((idx + 1) / total)
                 
-                # Count items and calculate size
-                count = cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
-                course_size_mb = cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
-                total_items += count
-                total_mb += course_size_mb
+                # Use robust Hybrid file fetching logic directly, identical to actual download loop
+                try:
+                    course_files = cm.get_course_files_metadata(course, progress_callback=analysis_progress_hook)
+                    
+                    # Apply file filter if needed ('study' vs 'all')
+                    allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
+                    filtered_files = []
+                    for f in course_files:
+                        if st.session_state['file_filter'] == 'study':
+                            ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
+                            if ext in allowed_exts:
+                                filtered_files.append(f)
+                        else:
+                            filtered_files.append(f)
+                            
+                    total_items += len(filtered_files)
+                    
+                    # Add non-file items if mode is flat and filter is not study
+                    if st.session_state['download_mode'] == 'flat' and st.session_state['file_filter'] != 'study':
+                        try:
+                            modules = course.get_modules()
+                            for module in modules:
+                                items = module.get_module_items()
+                                for item in items:
+                                    if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                                        total_items += 1
+                        except Exception:
+                            pass
+                            
+                    # Add module items if mode is modules
+                    if st.session_state['download_mode'] == 'modules':
+                        try:
+                            modules = course.get_modules()
+                            for module in modules:
+                                items = module.get_module_items()
+                                for item in items:
+                                    if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                                        if st.session_state['file_filter'] != 'study':
+                                            total_items += 1
+                        except Exception:
+                            pass
+                    
+                    total_mb += sum(getattr(f, 'size', 0) for f in filtered_files) / (1024 * 1024)
+                    
+                except Exception as e:
+                    # Fallback to older count_course_items if Hybrid fetch fails critically
+                    total_items += cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
+                    total_mb += cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
+            
+            # Clear UI before dashboard
+            analysis_ui_placeholder.empty()
             
             st.session_state['total_items'] = total_items
             st.session_state['total_mb'] = total_mb
             st.session_state['download_status'] = 'running'
+            
+            import time
+            st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
+            
             st.rerun()
 
         elif st.session_state['download_status'] == 'running':
@@ -838,6 +939,13 @@ with _main_content.container():
                 st.session_state['download_status'] = 'cancelled'
                 st.warning(get_text('download_cancelled', lang))
             elif current_idx < total:
+                import time
+                import collections
+                
+                # Fetch state variables initialized up top
+                start_time = st.session_state.get('start_time', time.time())
+                log_deque = st.session_state.get('log_deque', collections.deque(maxlen=6))
+                
                 # Initialize counters if first run
                 if 'downloaded_items' not in st.session_state:
                     st.session_state['downloaded_items'] = 0
@@ -845,137 +953,118 @@ with _main_content.container():
                     st.session_state['failed_items'] = 0
                 if 'download_errors_list' not in st.session_state:
                     st.session_state['download_errors_list'] = []  # Track error messages in memory
+                if 'course_mb_downloaded' not in st.session_state:
+                    st.session_state['course_mb_downloaded'] = {}
                     
                 # Download the current course
                 course = st.session_state['courses_to_download'][current_idx]
-                
-                # Update progress bar with file counter text inside
                 total_items = st.session_state.get('total_items', 1)
-                current_items = st.session_state.get('downloaded_items', 0)
-                progress_value = min(current_items / total_items, 1.0) if total_items > 0 else 0
-                progress_pct = int(progress_value * 100)
-                
-                # Custom progress bar with text inside
-                progress_text = get_text('downloading_progress_text', lang, current=current_items, total=total_items)
-                progress_container.markdown(f"""
-                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                        <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                status_text.text(get_text('processing', lang, current=current_idx + 1, total=total, course=course.name))
-                
-                # Initialize MB counter immediately (left-aligned)
                 total_mb = st.session_state.get('total_mb', 0)
                 
-                # Calculate current total downloaded MB
-                current_total_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
+                def render_dashboard():
+                    # Calculate current progress
+                    current_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
+                    current_files = st.session_state.get('downloaded_items', 0) + st.session_state.get('failed_items', 0)
+                    
+                    if total_items > 0:
+                        percent = int((current_files / total_items) * 100)
+                        percent = min(100, percent) # Clamp to max 100
+                        if current_files == total_items:
+                            percent = 100
+                    else:
+                        percent = 0
+
+                    # Calculate Speed & ETA
+                    elapsed = time.time() - start_time
+                    speed_mb_s = (current_mb / elapsed) if elapsed > 0 else 0.0
+                    remaining_mb = max(0, total_mb - current_mb) # prevent negative remaining mb
+                    eta_seconds = (remaining_mb / speed_mb_s) if speed_mb_s > 0 else 0
+                    eta_string = time.strftime('%M:%S', time.gmtime(max(0, eta_seconds)))
+                    
+                    header_placeholder.markdown(f'''
+                    <div style="margin-bottom: 0.5rem;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">📦 Downloading Courses</p>
+                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">{course.name}</h3>
+                    </div>
+                    ''', unsafe_allow_html=True)
+
+                    progress_placeholder.markdown(f'''
+                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                        <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
+                            {percent}%
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    metrics_placeholder.markdown(f'''
+                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
+                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_mb:.1f} MB</span></span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
+                            <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
+                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_items}</span></span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
+                            <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    log_content = "<br>".join(reversed(list(log_deque)))
+                    log_placeholder.markdown(f'''
+                    <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                        {log_content}
+                    </div>
+                    ''', unsafe_allow_html=True)
                 
-                if total_mb > 0:
-                    mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
-                    mb_counter.markdown(mb_text)
+                # Render initial state
+                render_dashboard()
                 
                 def update_ui(msg, progress_type='log', **kwargs):
-                    """Update UI with progress information.
-                    Args:
-                        msg: Message to display
-                        progress_type: Type of progress update
-                        **kwargs: Additional data (mb_downloaded for MB tracking)
-                    """
+                    """Update UI with progress information."""
                     if progress_type in ('download', 'page', 'link'):
                         st.session_state['downloaded_items'] += 1
-                        current = st.session_state['downloaded_items']
-                        failed = st.session_state.get('failed_items', 0)
-                        total_processed = current + failed
-                        total_items = st.session_state.get('total_items', 1)
-                        progress_value = min(total_processed / total_items, 1.0) if total_items > 0 else 0
-                        progress_pct = int(progress_value * 100)
-                        
-                        # Update custom progress bar with file counter
-                        progress_text_str = get_text('downloading_progress_text', lang, current=current, total=total_items)
-                        if failed > 0:
-                            progress_text_str += f" ({failed} failed)"
-                            
-                        progress_container.markdown(f"""
-                            <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                                <div style="width: {progress_pct}%; height: 100%; background-color: #1f77b4; transition: width 0.3s;"></div>
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text_str}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-
-                        # Show current file being downloaded
                         if msg:
-                             # We can reuse status_text but it might be overwritten by "Processing Course X".
-                             # Better to append to log or have a dedicated "Current File" slot.
-                             # For now, let's put it in the log area so it's visible what's happening.
-                             # Actually, user wants to see "name of the file that's currently downloading".
-                             # The Log area is good for history, but maybe a dedicated text below progress bar is better.
-                             # Let's use log_area for now as it autoscrolls (usually).
-                             log_area.text(f"📥 {msg}")
-
-                    
+                            log_deque.append(f"[✅] Finished: {msg}")
+                        render_dashboard()
+                        
                     elif progress_type == 'error':
                         st.session_state['failed_items'] += 1
-                        current = st.session_state['downloaded_items']
-                        failed = st.session_state['failed_items']
-                        total_processed = current + failed
-                        total_items = st.session_state.get('total_items', 1)
-                        progress_value = min(total_processed / total_items, 1.0) if total_items > 0 else 0
-                        progress_pct = int(progress_value * 100)
                         
-                        # Update custom progress bar with failure info
-                        progress_text_str = get_text('downloading_progress_text', lang, current=current, total=total_items)
-                        if failed > 0:
-                            progress_text_str += f" ({failed} failed)"
-                        
-                        progress_container.markdown(f"""
-                            <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                                <div style="width: {progress_pct}%; height: 100%; background-color: #e74c3c; transition: width 0.3s;"></div>
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{progress_text_str}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Store error in list for final summary
                         if msg:
-                            # Handle structured DownloadError or legacy string
                             if isinstance(msg, DownloadError):
                                 error_obj = msg
                             else:
-                                # Wrap legacy string
                                 error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
                             
                             if 'download_errors_list' not in st.session_state:
                                 st.session_state['download_errors_list'] = []
                             st.session_state['download_errors_list'].append(error_obj)
-
-                        # Also log the error to the log area
-                        if msg:
-                             st.session_state['log_content'] += f"❌ {msg}\n"
-                             log_area.code(st.session_state['log_content'], language='text')
+                            
+                            error_text = f"[{course.name}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                            log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {error_text}</span>")
+                            
+                        render_dashboard()
 
                     elif progress_type == 'mb_progress':
-                        # Update MB counter (left-aligned)
                         mb_down_course = kwargs.get('mb_downloaded', 0)
-                        
-                        # Update global tracker
                         if 'course_mb_downloaded' not in st.session_state:
                              st.session_state['course_mb_downloaded'] = {}
                         st.session_state['course_mb_downloaded'][course.id] = mb_down_course
-                        
-                        current_total_mb = sum(st.session_state['course_mb_downloaded'].values())
-                        total_mb = st.session_state.get('total_mb', 0)
-                        
-                        if total_mb > 0:
-                            mb_text = get_text('mb_progress_text', lang, current=current_total_mb, total=total_mb)
-                            mb_counter.markdown(mb_text)
-                        return  # Don't update log_area for MB progress
+                        render_dashboard()
                     
-                    # Only update log for 'log' type or general info
                     elif msg and progress_type == 'log':
-                        new_line = f"[{course.name}] {msg}\n"
-                        st.session_state['log_content'] += new_line
-                        log_area.code(st.session_state['log_content'], language='text')
+                        new_line = f"[{course.name}] {msg}"
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ℹ️] {new_line}</span>")
+                        render_dashboard()
                 
 
                 import asyncio
@@ -997,17 +1086,8 @@ with _main_content.container():
                 if st.session_state['current_course_index'] >= total:
                     st.session_state['download_status'] = 'done'
                     st.balloons()
-                    status_text.text(get_text('all_complete', lang))
-                # Ensure 100% at the end
-                progress_container.markdown(f"""
-                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                        <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('downloading_progress_text', lang, current=total, total=total)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
                 
-                # Auto-rerun to process next course
-                time.sleep(0.1)  # Brief pause to see the update
+                # Auto-rerun instantly to process next course or done screen
                 st.rerun()
             else:
                 # All done
