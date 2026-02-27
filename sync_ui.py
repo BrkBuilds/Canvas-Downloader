@@ -1395,6 +1395,7 @@ def _show_analysis_review(lang):
         }
         prefix = prefixes.get(origin, 'sync_miss')
         st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
+        st.session_state['keep_ignored_open'] = True
 
     def handle_restore_all(pair_idx):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -1431,6 +1432,7 @@ def _show_analysis_review(lang):
             st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
             
         pair_data['result'].ignored_files.clear()
+        st.session_state['keep_ignored_open'] = True
 
     def handle_sweep(pair_idx, source_list_name, item_key_prefix):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -1942,13 +1944,15 @@ def _show_analysis_review(lang):
                 st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                 for sync_info in result.deleted_on_canvas:
                     icon = get_file_icon(sync_info.canvas_filename)
-                    st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color:#8A91A6; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
 
         # Ignored files Bucket
         if hasattr(result, 'ignored_files') and result.ignored_files:
             st.divider()
             st.markdown("##### 🗑️ Trash / Ignored")
-            with st.expander(f"🚫 Ignored Files ({len(result.ignored_files)})", expanded=False):
+            is_ignored_open = st.session_state.get('keep_ignored_open', False)
+            with st.expander(f"🚫 Ignored Files ({len(result.ignored_files)})", expanded=is_ignored_open):
+                st.session_state['keep_ignored_open'] = False
                 st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                 st.caption("These files are safely ignored and will not be synced.")
                 with st.container(key=f"sync_review_file_list_{idx}_ign"):
@@ -1956,7 +1960,7 @@ def _show_analysis_review(lang):
                         icon = get_file_icon(sync_info.canvas_filename)
                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                         with col1:
-                            st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color:#8A91A6; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
                         with col2:
                             st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
 
