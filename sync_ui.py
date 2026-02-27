@@ -1150,8 +1150,32 @@ def render_sync_step4(lang: str):
     elif status == 'analyzed':
         _show_analysis_review(lang)
     elif status == 'pre_sync':
-        st.session_state['download_status'] = 'syncing'
-        st.rerun()
+        st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
+        # We must let this render loop FINISH completely so the frontend can tear down the `st.dialog` DOM elements.
+        # Otherwise, if we immediately string together long-running tasks or `st.rerun()`, the Streamlit backend
+        # never yields to the WebSocket, and the modal gets permanently stuck on screen visually over the progress bars.
+        # We inject a tiny JS script that waits 100ms for React to unmount the modal, then clicks a hidden button to start the actual sync loop.
+        import streamlit.components.v1 as components
+        components.html("""
+        <script>
+        setTimeout(function() {
+            var doc = window.parent.document;
+            var buttons = Array.from(doc.querySelectorAll('button'));
+            var target = buttons.find(b => b.innerText.includes('START_SYNC_ROUTINE_NOW'));
+            if(target) {
+                target.click();
+            }
+        }, 200);
+        </script>
+        """, height=0)
+        
+        # Hidden button to catch the JS click
+        st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
+        if st.button("START_SYNC_ROUTINE_NOW", key="hidden_trigger_sync"):
+            st.session_state['download_status'] = 'syncing'
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
     elif status == 'syncing':
         _run_sync(lang)
     elif status == 'sync_cancelled':
@@ -1451,6 +1475,28 @@ def _show_analysis_review(lang):
 
     st.markdown('''
         <style>
+        /* Force Streamlit modal to vertically center */
+        div[data-testid="stModal"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+        }
+        div[data-testid="stModal"] > div[role="dialog"] {
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            transform: none !important;
+            margin: auto !important;
+            max-width: 480px !important;
+            width: 90vw !important;
+            border-radius: 20px !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
+            background-color: #1a1c1e !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
         /* Make the bulk action buttons inside expanders slightly shorter and subtle */
         [data-testid="stExpanderDetails"] button[kind="secondary"] {
             min-height: 2rem !important;
@@ -1484,9 +1530,10 @@ def _show_analysis_review(lang):
     total_loc_del = sum(len(r['result'].locally_deleted_files) for r in all_results)
     total_del = sum(len(r['result'].deleted_on_canvas) for r in all_results)
     total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in all_results)
+    total_ignored = sum(len(r['result'].ignored_files) if hasattr(r['result'], 'ignored_files') else 0 for r in all_results)
 
     # Summary logic
-    if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0:
+    if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
         st.markdown("<div style='margin-bottom: 10px; font-weight: 600; font-size: 1.1em;'>Analysis found:</div>", unsafe_allow_html=True)
         
         sum_cols = st.columns([3, 2])
@@ -1500,56 +1547,46 @@ def _show_analysis_review(lang):
             lbl_loc_del = "Slettet lokalt" if lang == 'da' else "Deleted locally"
             lbl_del = "Slettet på Canvas" if lang == 'da' else "Deleted on Canvas"
 
-            card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px;"
-            icon_css = "position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.15); border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.5em;"
-            num_css = "font-size:2.7em; font-weight:700; color:white; line-height:1;"
-            lbl_css = "font-size:0.95em; color:rgba(255,255,255,1); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
+            def _render_metric_card(val, lbl, icon, hex_start, hex_end, shadow_color):
+                base_card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px; transition: all 0.2s ease-in-out;"
+                
+                if val > 0:
+                    bg_style = f"background: linear-gradient(135deg, {hex_start}, {hex_end}); box-shadow: 0 10px 20px -5px {shadow_color}; border: 1px solid transparent;"
+                    text_opacity = "1"
+                    icon_bg = "rgba(0,0,0,0.15)"
+                else:
+                    # Muted state: 10% opacity gradient, 25% opacity border, 50% text opacity
+                    bg_style = f"background: linear-gradient(135deg, {hex_start}1A, {hex_end}1A); border: 1px solid {hex_start}40; box-shadow: none;"
+                    text_opacity = "0.5"
+                    icon_bg = f"{hex_start}26"
+
+                icon_css = f"position:absolute; top:14px; right:14px; background:{icon_bg}; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.5em; opacity: {text_opacity};"
+                num_css = f"font-size:2.7em; font-weight:700; color:rgba(255,255,255,{text_opacity}); line-height:1;"
+                lbl_css = f"font-size:0.95em; color:rgba(255,255,255,{text_opacity}); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
+
+                return f'''
+                <div style="{base_card_css} {bg_style}">
+                    <div style="{num_css}">{val}</div>
+                    <div style="{lbl_css}">{lbl}</div>
+                    <div style="{icon_css}">{icon}</div>
+                </div>
+                '''
 
             with c1:
-                st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #4a90e2, #2980b9); box-shadow: 0 10px 20px -5px rgba(74, 144, 226, 0.35);">
-                    <div style="{num_css}">{total_new}</div>
-                    <div style="{lbl_css}">{lbl_new}</div>
-                    <div style="{icon_css}">📄</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_new, lbl_new, "📄", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
             with c2:
-                st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 20px -5px rgba(46, 204, 113, 0.35);">
-                    <div style="{num_css}">{total_upd}</div>
-                    <div style="{lbl_css}">{lbl_upd}</div>
-                    <div style="{icon_css}">🔄</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", "#2ecc71", "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #f1c40f, #e67e22); box-shadow: 0 10px 20px -5px rgba(241, 196, 15, 0.35);">
-                    <div style="{num_css}">{total_miss}</div>
-                    <div style="{lbl_css}">{lbl_miss}</div>
-                    <div style="{icon_css}">⚠️</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", "#f1c40f", "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
-                st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 10px 20px -5px rgba(155, 89, 182, 0.35);">
-                    <div style="{num_css}">{total_loc_del}</div>
-                    <div style="{lbl_css}">{lbl_loc_del}</div>
-                    <div style="{icon_css}">✂️</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "✂️", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
-                st.markdown(f"""
-                <div style="{card_css} background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 20px -5px rgba(231, 76, 60, 0.35);">
-                    <div style="{num_css}">{total_del}</div>
-                    <div style="{lbl_css}">{lbl_del}</div>
-                    <div style="{icon_css}">🗑️</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", "#e74c3c", "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
     # Nothing to sync
-    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0:
+    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
         if total_uptodate:
             st.info(get_text('sync_files_uptodate_count', lang, count=total_uptodate,
                              file_word=pluralize(total_uptodate, 'file', lang)))
@@ -1567,22 +1604,23 @@ def _show_analysis_review(lang):
     
     for idx, res_data in enumerate(all_results):
         res = res_data['result']
+        cid = res_data['pair']['course_id']
         for f in res.new_files:
             ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
-            files_by_ext[ext].append(f'sync_new_{idx}_{f.id}')
+            files_by_ext[ext].append(f'sync_new_{cid}_{f.id}')
         for f, _ in res.updated_files:
             ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
-            files_by_ext[ext].append(f'sync_upd_{idx}_{f.id}')
+            files_by_ext[ext].append(f'sync_upd_{cid}_{f.id}')
         for si in res.missing_files:
             ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
-            files_by_ext[ext].append(f'sync_miss_{idx}_{si.canvas_file_id}')
+            files_by_ext[ext].append(f'sync_miss_{cid}_{si.canvas_file_id}')
         for si in res.locally_deleted_files:
             ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
-            files_by_ext[ext].append(f'sync_locdel_{idx}_{si.canvas_file_id}')
+            files_by_ext[ext].append(f'sync_locdel_{cid}_{si.canvas_file_id}')
 
     if all_extensions:
         all_exts_sorted = sorted(list(all_extensions))
@@ -1840,10 +1878,14 @@ def _show_analysis_review(lang):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                 
                 for sync_info in result.locally_deleted_files:
+                    ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
                     icon = get_file_icon(sync_info.canvas_filename)
                     key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
+                    
                     if key not in st.session_state:
-                        st.session_state[key] = False
+                        # Determine if file matches aggregate global filters just like new_files does implicitly
+                        is_checked = st.session_state.get(f"sync_filter_ext_{ext}", False) and st.session_state.get('sync_filter_all_exts', True)
+                        st.session_state[key] = is_checked
                         
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
@@ -1894,21 +1936,22 @@ def _show_analysis_review(lang):
             sync_selections = []
             for idx, res_data in enumerate(all_results):
                 result = res_data['result']
+                cid = res_data['pair']['course_id']
                 selected_new = [
                     f for f in result.new_files
-                    if st.session_state.get(f'sync_new_{idx}_{f.id}', True)
+                    if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
                 ]
                 selected_upd = [
                     f for f, _ in result.updated_files
-                    if st.session_state.get(f'sync_upd_{idx}_{f.id}', True)
+                    if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
                 ]
                 selected_miss = [
                     si for si in result.missing_files
-                    if st.session_state.get(f'sync_miss_{idx}_{si.canvas_file_id}', False)
+                    if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
                 ]
                 selected_locdel = [
                     si for si in result.locally_deleted_files
-                    if st.session_state.get(f'sync_locdel_{idx}_{si.canvas_file_id}', False)
+                    if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
                 ]
                 # Combine both missing and locally deleted files that the user opted to redownload
                 selected_miss.extend(selected_locdel)
@@ -2047,27 +2090,7 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
 
     html_content = (
         f'<style>'
-        f'div[data-testid="stModal"] {{'
-        f'display: flex !important;'
-        f'align-items: center !important;'
-        f'justify-content: center !important;'
-        f'background-color: rgba(0, 0, 0, 0.7) !important;'
-        f'}}'
-        f'div[data-testid="stModal"] > div[role="dialog"] {{'
-        f'position: relative !important;'
-        f'top: 0 !important;'
-        f'left: 0 !important;'
-        f'transform: none !important;'
-        f'margin: auto !important;'
-        f'max-width: 480px !important;'
-        f'width: 90vw !important;'
-        f'border-radius: 20px !important;'
-        f'border: 1px solid rgba(255, 255, 255, 0.1) !important;'
-        f'box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;'
-        f'background-color: #1a1c1e !important;'
-        f'padding: 0 !important;'
-        f'overflow: hidden !important;'
-        f'}}'
+        f'/* Override modal styles */'
         f'div[data-testid="stModal"] [data-testid="stVerticalBlock"] {{'
         f'padding: 25px !important;'
         f'gap: 0 !important;'
@@ -2266,11 +2289,13 @@ def _run_sync(lang):
 
     status_text = st.empty()
     progress_container = st.empty()
-    mb_counter = st.empty()
-    log_area = st.empty()
+    metrics_dashboard = st.empty()
+    active_file_placeholder = st.empty()
+    log_container = st.empty()
 
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
-    if cancel_placeholder.button(get_text('sync_cancel', lang), type="secondary", key="sync_cancel_btn"):
+    if cancel_placeholder.button(get_text('sync_cancel', lang), key="cancel_sync_btn"):
         cancel_placeholder.empty()
         st.session_state['sync_cancel_requested'] = True
         st.session_state['download_status'] = 'sync_cancelled'
@@ -2290,6 +2315,42 @@ def _run_sync(lang):
 
     synced_counter = [0, 0]  # [count, bytes]
     error_list = []
+
+    # Format helpers for the injected HTML UI
+    def format_time(seconds):
+        if seconds < 0 or seconds > 86400: return "--:--"
+        m, s = divmod(int(seconds), 60)
+        return f"{m:02d}:{s:02d}"
+
+    def render_metrics_html(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string):
+        return f"""
+        <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
+                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{d_mb:.1f} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {t_mb:.1f} MB</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
+                <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
+                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_file_idx} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_files}</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
+                <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
+            </div>
+        </div>
+        """
+        
+    def render_terminal_html(lines):
+        joined = "<br>".join(reversed(lines)) if lines else "<span style='color: #666;'>Waiting for files...</span>"
+        return f"""
+        <div style="background: #0e1117; border: 1px solid #222; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: #bbb; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+            {joined}
+        </div>
+        """
 
     async def download_sync_files_batch():
         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
@@ -2327,8 +2388,19 @@ def _run_sync(lang):
             total_pairs = len(sync_selections)
 
             render_progress_bar(progress_container, 0, total_files, lang)
-            if total_mb > 0:
-                mb_counter.markdown(get_text('sync_mb_progress', lang, current=0.0, total=total_mb))
+            
+            # Setup Tracking Variables
+            import time
+            from collections import deque
+            start_time = time.time()
+            last_ui_update = 0
+            terminal_log = deque(maxlen=10)
+            
+            # Initial UI Draw
+            metrics_dashboard.markdown(render_metrics_html(0, total_files, 0.0, total_mb, 0.0, "--:--"), unsafe_allow_html=True)
+            active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Preparing sync...</p>", unsafe_allow_html=True)
+            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+            progress_container.progress(0, text="0%")
 
             for pair_idx, sel in enumerate(sync_selections):
                 if st.session_state.get('sync_cancel_requested', False):
@@ -2342,9 +2414,14 @@ def _run_sync(lang):
                 canvas_files_map = {f.id: f for f in res_data['canvas_files']}
                 pair = res_data['pair']
 
-                display_name = friendly_course_name(pair['course_name'])
-                status_text.text(get_text('sync_progress_course', lang,
-                    current=pair_idx + 1, total=total_pairs, course=display_name))
+                course_name = friendly_course_name(pair['course_name'])
+                header_html = f"""
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">📦 Course {pair_idx + 1} of {total_pairs}</p>
+                    <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">{course_name}</h3>
+                </div>
+                """
+                status_text.markdown(header_html, unsafe_allow_html=True)
 
                 # Task 4: State Leakage Fix
                 # We save the auto-healed manifest + any newly ignored files only ONCE per folder, 
@@ -2387,9 +2464,15 @@ def _run_sync(lang):
 
                     current_file += 1
                     display_file_name = file.display_name or file.filename
-
-                    render_progress_bar(progress_container, current_file, total_files, lang)
-                    log_area.text(get_text('sync_downloading_file', lang, filename=display_file_name))
+                    
+                    # Throttled progress update (Prevent Streamlit from choking on rapid tiny files)
+                    curr_time = time.time()
+                    if curr_time - last_ui_update > 0.4:
+                        active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
+                        pct = min(1.0, (current_file - 1) / total_files) if total_files > 0 else 0.0
+                        progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                        last_ui_update = curr_time
 
                     try:
                         filename = cm._sanitize_filename(file.filename)
@@ -2452,12 +2535,26 @@ def _run_sync(lang):
                                                 await f.write(chunk)
                                                 chunk_size = len(chunk)
                                                 downloaded_mb += chunk_size / (1024 * 1024)
-                                                # Track actual byte count for summary
                                                 synced_counter[1] += chunk_size
                                             
-                                                if total_mb > 0:
-                                                    mb_counter.markdown(get_text('sync_mb_progress', lang,
-                                                        current=downloaded_mb, total=total_mb))
+                                                # Throttled UI math update
+                                                c_t = time.time()
+                                                if c_t - last_ui_update > 0.4:
+                                                    # Calculate Speed & ETA
+                                                    elapsed = c_t - start_time
+                                                    speed = downloaded_mb / elapsed if elapsed > 0 else 0
+                                                    
+                                                    rem_mb = max(0, total_mb - downloaded_mb)
+                                                    eta_sec = rem_mb / speed if speed > 0 else 0
+                                                    
+                                                    # Apply to UI
+                                                    metrics_dashboard.markdown(render_metrics_html(
+                                                        current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
+                                                    ), unsafe_allow_html=True)
+                                                    
+                                                    pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
+                                                    progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                                                    last_ui_update = c_t
 
                                         rel_path = filepath.relative_to(local_path)
                                         sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
@@ -2465,10 +2562,12 @@ def _run_sync(lang):
                                         
                                         # Track success for UI dropdown
                                         synced_details[pair_idx].append(display_file_name)
+                                        terminal_log.append(f"<span style='color:#2ecc71'>[✅] Finished: </span> {display_file_name}")
                                     else:
                                         failed_files_for_pair.append(file)
                                         error_list.append(get_text('sync_error_file', lang,
                                             filename=display_file_name, error=f"HTTP {response.status}"))
+                                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
                         else:
                             # Check for LTI/Media streams
                             ext_lower = filepath.suffix.lower()
@@ -2481,15 +2580,37 @@ def _run_sync(lang):
                             failed_files_for_pair.append(file)
                             error_list.append(get_text('sync_error_file', lang,
                                 filename=display_file_name, error=err_msg))
+                            terminal_log.append(f"<span style='color:#e74c3c'>[❌] Skipped: </span> {display_file_name} <span style='color:#666'>({err_msg})</span>")
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
                         error_list.append(get_text('sync_error_file', lang,
                             filename=display_file_name, error=str(e)))
+                        str_err = str(e).replace('<', '&lt;').replace('>', '&gt;')
+                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Error: </span> {display_file_name} <span style='color:#666'>({str_err})</span>")
+                        
+                    # Final flush per file loop ensuring the log renders
+                    if time.time() - last_ui_update > 0.1:
+                        active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
+                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                        
+            # Final 100% UI Paint after the loop
+            elapsed_final = time.time() - start_time
+            speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
+            render_progress_bar(progress_container, total_files, total_files, lang)
+            metrics_dashboard.markdown(render_metrics_html(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
+            active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
+            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+
+            for sel in sync_selections:
+                res_data = sel['res_data']
+                sync_mgr = res_data['sync_manager']
+                manifest = res_data['manifest']
+                local_path = sync_mgr.local_path
 
                 sync_mgr.save_manifest(manifest)
                 
-                # Check for updates and deletions to write log file
+                # Setup updates reference explicitly to fix `updates is not defined` NameError traceback
                 updates = sel['updates']
                 deletions = res_data['result'].deleted_on_canvas
                 if updates or deletions:
@@ -2572,6 +2693,8 @@ def _run_sync(lang):
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:
         st.session_state['download_status'] = 'sync_complete'
+        
+    st.session_state['step'] = 4
     st.rerun()
 
 
