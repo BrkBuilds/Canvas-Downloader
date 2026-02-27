@@ -18,6 +18,11 @@
     - [x] **Path Integrity**: Fixed bug causing subfolder creation in Flat Mode downloads.
     - [x] **Deduplication**: Collapsed duplicate Canvas files sharing target paths/sizes to normalize file counts.
     - [x] **Error Prevention**: Pruned locked/restricted files from sync analysis to avoid "No URL" errors.
+- [x] **Synthetic Shortcut & LTI Link Sync** (2026-02-27):
+    - [x] **Manifest Tracking**: Support for Pages, ExternalUrls, and ExternalTools in `.canvas_sync.db`.
+    - [x] **Negative ID Pattern**: Using negative integers for synthetic objects to prevent database PK collisions.
+    - [x] **Sync Restore Logic**: Intercepting and recreating shortcut files during sync restoration.
+    - [x] **Diffing Bypass**: Ignoring timestamps for synthetic items to support "Missing vs Up-to-date" logic.
 
 ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)

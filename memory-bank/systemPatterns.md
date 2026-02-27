@@ -29,6 +29,10 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 
 ## Synchronization Strategy
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
+- **Negative ID Pattern**: Synthetic shortcuts (Pages, ExternalUrls, ExternalTools) are assigned `id = -int(item.id)`. This keeps them unique and prevents primary key collisions with physical Canvas `File` objects in SQLite.
+- **Shortcut Bypass Logic**: `_is_canvas_newer()` in `sync_manager.py` explicitly returns `False` for `id < 0`. This bypasses unreliable module timestamps and forces the engine to rely on local existence checks.
+- **Sync Restoration Interception**: The download pipeline in `sync_ui.py` intercepts negative IDs and recreates `.url` or `.html` files locally using static templates rather than performing an HTTP GET.
+- **URL Extraction Priority**: For synthetic shortcuts, `html_url` is prioritized over `external_url` to ensure LTI tools route through the Canvas wrapper for authentication.
 - **Deduplication**: Files are deduplicated by calculated target path and size to handle identical items linked in multiple modules.
 - **Analysis Engine**: Diffing Canvas vs Local Manifest vs Local Disk.
 - **Path Determination**: `detect_structure()` must precede analysis to correctly calculate relative paths for "Flat" vs "Folders" modes.

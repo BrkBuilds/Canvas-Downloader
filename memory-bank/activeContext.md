@@ -1,10 +1,18 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **UI/UX Refinement Phase**: Perfecting the "Confirm Sync" dialog aesthetics and the "Sync Review" page layout logic.
+- **Archiving Synthetic Logic**: Just completed full integration of synthetic shortcuts (Pages, Links, LTI Tools) into the Sync Manifest and Restoration engine.
 
-## Recent Changes (Session 2026-02-26)
-- **Sync Execution UI Overhaul**:
+## Recent Changes (Session 2026-02-27)
+- **Synthetic Shortcut Sync Support**:
+  - **Manifest Integration**: Modified `_save_page` and `_create_link` to return filepaths. Captured these in download loops to create `CanvasFileInfo` mock objects with negative IDs (e.g., `-int(item.id)`).
+  - **Shortcut-Aware Live Fetching**: Upgraded `_get_files_from_modules` in `canvas_logic.py` to generate reciprocal mock objects during sync analysis, ensuring the Sync engine "sees" Pages and ExternalUrls as matching database entries.
+  - **LTI URL Priority Fix**: Flipped extraction logic to strictly prefer `html_url` over `external_url`, ensuring ExternalTools route through the Canvas wrapper for correct JWT authentication.
+  - **Size Normalization**: Hardcoded `size=0` for all synthetic items across both Manifest generation and Live Fetching to prevent perpetual "Update Available" size mismatches.
+- **Sync Engine Reconciliation**:
+  - **Negative ID Bypass**: Injected a bypass in `sync_manager.py`'s `_is_canvas_newer()` function. If `canvas_file.id < 0`, the engine skips timestamp comparison (which is unreliable for module items) and falls through to a strict local existence check.
+  - **Restoration Interception**: Modified `sync_ui.py`'s download batch loop to detect negative IDs and recreate `.url`/`.html` shortcut files directly using Pathlib instead of attempting an HTTP byte-download.
+- **Sync Execution UI Overhaul**: (Previous session changes maintained...)
   - **Speed & ETA Dashboard**: Replaced the static Streamlit text metric with a sleek, injected HTML/CSS 4-column dashboard rendering Sync Progress (X/Y), Downloaded (MB), Speed (MB/s), and ETA (MM:SS).
   - **Live Terminal Log**: Added a native-looking terminal window tracking active asynchronous downloads in real-time, managed efficiently via an in-memory `collections.deque(maxlen=10)` and HTML injection to prevent heavy Streamlit re-renders. Checkmarks and cross emojis visually categorize file successes, skips, and failures.
   - **Cancel Button Realignment**: Fixed the Cancel button's alignment by ensuring it renders natively to the left below the log container rather than in an enforced column structure.
