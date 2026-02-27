@@ -1659,7 +1659,40 @@ def _show_analysis_review(lang):
         
         st.markdown("""
         <style>
-        /* 1. Remove border and padding from the container */
+        /* 1. Squeeze the row boundaries to absolute minimums */
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] {
+            border-bottom: 1px dashed #3A415A !important;
+            padding-top: 0px !important;      
+            padding-bottom: 2px !important;   
+            margin-bottom: 0px !important;    
+            min-height: 0px !important;
+            align-items: center !important; 
+        }
+
+        /* 2. Completely eliminate gap between rows */
+        div[class*="st-key-sync_review_file_list"] > div[data-testid="stVerticalBlock"] {
+            gap: 0px !important; 
+        }
+
+        /* 3. OVERRIDE STREAMLIT'S INVISIBLE MIN-HEIGHTS ON WIDGETS */
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stElementContainer"],
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stMarkdownContainer"],
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stCheckbox"],
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important; /* Kills the dead space forcing the row open */
+        }
+
+        /* 4. Compress the button's vertical footprint */
+        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] button {
+            margin: 0 !important;
+            min-height: 1.8rem !important; /* Shrinks the button's invisible boundary */
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Original 1. Remove border and padding from the container */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
         .st-key-filetypes_flex_box {
             border: none !important;
@@ -1831,72 +1864,76 @@ def _show_analysis_review(lang):
             with st.expander(f"🆕 {get_text('new_files', lang)} ({len(result.new_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                 
-                for file in result.new_files:
-                    ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
-                    icon = get_file_icon(file.filename)
-                    size = format_file_size(file.size) if file.size else ""
-                    key = f"sync_new_{pair['course_id']}_{file.id}"
-                    if key not in st.session_state:
-                        st.session_state[key] = True
-                    col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
-                    with col1:
-                        st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
-                    with col2:
-                        st.button("🚫", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                with st.container(key=f"sync_review_file_list_{idx}_new"):
+                    for file in result.new_files:
+                        ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
+                        icon = get_file_icon(file.filename)
+                        size = format_file_size(file.size) if file.size else ""
+                        key = f"sync_new_{pair['course_id']}_{file.id}"
+                        if key not in st.session_state:
+                            st.session_state[key] = True
+                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                        with col1:
+                            st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
+                        with col2:
+                            st.button("🚫", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
         # Updated files — always starts OPEN
         if result.updated_files:
             with st.expander(f"🔄 {get_text('updated_files', lang)} ({len(result.updated_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                 
-                for canvas_file, sync_info in result.updated_files:
-                    ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
-                    icon = get_file_icon(canvas_file.filename)
-                    size = format_file_size(canvas_file.size) if canvas_file.size else ""
-                    key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
-                    if key not in st.session_state:
-                        st.session_state[key] = True
-                    col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
-                    with col1:
-                        st.checkbox(f"{icon} {unquote_plus(canvas_file.display_name or canvas_file.filename)} ({size})", key=key)
-                    with col2:
-                        st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
+                with st.container(key=f"sync_review_file_list_{idx}_upd"):
+                    for canvas_file, sync_info in result.updated_files:
+                        ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
+                        icon = get_file_icon(canvas_file.filename)
+                        size = format_file_size(canvas_file.size) if canvas_file.size else ""
+                        key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
+                        if key not in st.session_state:
+                            st.session_state[key] = True
+                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                        with col1:
+                            st.checkbox(f"{icon} {unquote_plus(canvas_file.display_name or canvas_file.filename)} ({size})", key=key)
+                        with col2:
+                            st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
         # Missing files — always starts OPEN
         if result.missing_files:
             with st.expander(f"📦 {get_text('missing_files', lang)} ({len(result.missing_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                 
-                for sync_info in result.missing_files:
-                    ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                    icon = get_file_icon(sync_info.canvas_filename)
-                    col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
-                    with col1:
-                        key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
-                        if key not in st.session_state:
-                            st.session_state[key] = True
-                        st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
-                    with col2:
-                        st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
+                with st.container(key=f"sync_review_file_list_{idx}_miss"):
+                    for sync_info in result.missing_files:
+                        ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
+                        icon = get_file_icon(sync_info.canvas_filename)
+                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                        with col1:
+                            key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
+                            if key not in st.session_state:
+                                st.session_state[key] = True
+                            st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
+                        with col2:
+                            st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
         # Locally Deleted Files (Student deleted locally to save space)
         if result.locally_deleted_files:
             with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                 
-                for sync_info in result.locally_deleted_files:
-                    ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                    icon = get_file_icon(sync_info.canvas_filename)
-                    key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
-                    
-                    if key not in st.session_state:
-                        st.session_state[key] = True
+                with st.container(key=f"sync_review_file_list_{idx}_locdel"):
+                    for sync_info in result.locally_deleted_files:
+                        ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
+                        icon = get_file_icon(sync_info.canvas_filename)
+                        key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                         
-                    col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
-                    with col1:
-                        st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
-                    with col2:
-                        st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                        if key not in st.session_state:
+                            st.session_state[key] = True
+                            
+                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                        with col1:
+                            st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
+                        with col2:
+                            st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
         # Deleted files — always starts OPEN
         if result.deleted_on_canvas:
@@ -1914,13 +1951,14 @@ def _show_analysis_review(lang):
             with st.expander(f"🚫 Ignored Files ({len(result.ignored_files)})", expanded=False):
                 st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                 st.caption("These files are safely ignored and will not be synced.")
-                for sync_info in result.ignored_files:
-                    icon = get_file_icon(sync_info.canvas_filename)
-                    col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
-                    with col1:
-                        st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
-                    with col2:
-                        st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
+                with st.container(key=f"sync_review_file_list_{idx}_ign"):
+                    for sync_info in result.ignored_files:
+                        icon = get_file_icon(sync_info.canvas_filename)
+                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                        with col1:
+                            st.markdown(f"<div style='color:#bbb; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; <s>{unquote_plus(sync_info.canvas_filename)}</s></div>", unsafe_allow_html=True)
+                        with col2:
+                            st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
 
     # --- Action buttons (Sync left, Back right) ---
     st.markdown("---")
