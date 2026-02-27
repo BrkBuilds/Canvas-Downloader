@@ -21,6 +21,7 @@ import logging
 from pathlib import Path
 from datetime import datetime
 from urllib.parse import unquote_plus
+import urllib.parse
 
 import streamlit as st
 import aiohttp
@@ -1361,8 +1362,6 @@ def _show_analysis_review(lang):
         # 2. Append to ignored list ONLY if not already there
         if not any(f.canvas_file_id == canvas_file_id for f in pair_data['result'].ignored_files):
             pair_data['result'].ignored_files.append(sync_info)
-            
-        st.session_state['active_expander'] = source_list_name
 
     def handle_restore(pair_idx, sync_info):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -1396,7 +1395,6 @@ def _show_analysis_review(lang):
         }
         prefix = prefixes.get(origin, 'sync_miss')
         st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
-        st.session_state['active_expander'] = 'ignored'
 
     def handle_restore_all(pair_idx):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -1433,7 +1431,6 @@ def _show_analysis_review(lang):
             st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
             
         pair_data['result'].ignored_files.clear()
-        st.session_state['active_expander'] = 'ignored'
 
     def handle_sweep(pair_idx, source_list_name, item_key_prefix):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -1485,8 +1482,6 @@ def _show_analysis_review(lang):
             # append safely
             if not any(f.canvas_file_id == fid for f in pair_data['result'].ignored_files):
                 pair_data['result'].ignored_files.append(sync_info)
-                
-        st.session_state['active_expander'] = source_list_name
 
     st.markdown('''
         <style>
@@ -1640,47 +1635,22 @@ def _show_analysis_review(lang):
     if all_extensions:
         all_exts_sorted = sorted(list(all_extensions))
         
-        # 1. Compute current state bottom-up based on the actual individual file checkboxes
-        ext_state = {}
-        all_files_checked = True
-
-        for ext in all_exts_sorted:
-            keys = files_by_ext[ext]
-            if not keys: continue
-            
-            # Default to True for files if they aren't in session_state yet
-            checked_count = sum(1 for k in keys if st.session_state.get(k, True))
-            is_fully_checked = (checked_count == len(keys))
-            ext_state[ext] = is_fully_checked
-            if not is_fully_checked:
-                all_files_checked = False
-                
-        # 2. Sync computed state into session_state BEFORE widget render to match UI logic seamlessly
-        st.session_state['sync_filter_all_exts'] = all_files_checked
-        for ext in all_exts_sorted:
-            st.session_state[f'sync_filter_ext_{ext}'] = ext_state[ext]
-            
-        def _apply_filter_to_files(exts, match_val):
-            for ext in exts:
-                for k in files_by_ext[ext]:
-                    # Do not check a locally deleted file if it is currently set to ignored
-                    if match_val and k.startswith('sync_locdel_'):
-                        ignore_key = k.replace('sync_locdel_', 'ignore_')
-                        if st.session_state.get(ignore_key, False):
-                            continue
-                    st.session_state[k] = match_val
+        if 'sync_filter_all_exts' not in st.session_state:
+            st.session_state['sync_filter_all_exts'] = True
 
         def toggle_all_exts():
-            val = st.session_state.get('sync_filter_all_exts', True)
-            if val:
-                _apply_filter_to_files(all_exts_sorted, val)
+            if st.session_state.get('sync_filter_all_exts', True):
+                for ext in all_exts_sorted:
+                    st.session_state[f"sync_filter_ext_{ext}"] = True
+                    for file_key in files_by_ext[ext]:
+                        if file_key.startswith('sync_'):
+                            st.session_state[file_key] = True
         
         def toggle_single_ext(ext_name):
             new_state = st.session_state.get(f'sync_filter_ext_{ext_name}', True)
             ext_files = [k for k in files_by_ext[ext_name] if k.startswith('sync_')]
             for file_key in ext_files:
-                if file_key in st.session_state:
-                    st.session_state[file_key] = new_state
+                st.session_state[file_key] = new_state
             
             if not new_state:
                 st.session_state['sync_filter_all_exts'] = False
@@ -1773,11 +1743,11 @@ def _show_analysis_review(lang):
                             total_ext_files = len(ext_files)
                             
                             if total_ext_files > 0:
-                                selected_ext_files = sum(1 for k in ext_files if st.session_state.get(k, False))
+                                selected_ext_files = sum(1 for k in ext_files if st.session_state.get(k, True))
                                 expected_val = True if selected_ext_files > 0 else False
                                 
                                 if 0 < selected_ext_files < total_ext_files:
-                                    ext_label = f"{ext} ({selected_ext_files}/{total_ext_files})"
+                                    ext_label = f"{ext} :gray[({selected_ext_files}/{total_ext_files})]"
                                 else:
                                     ext_label = f"{ext}"
                             else:
@@ -1858,8 +1828,7 @@ def _show_analysis_review(lang):
 
         # New files — always starts OPEN
         if result.new_files:
-            is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'new_files'
-            with st.expander(f"🆕 {get_text('new_files', lang)} ({len(result.new_files)})", expanded=is_expanded):
+            with st.expander(f"🆕 {get_text('new_files', lang)} ({len(result.new_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                 
                 for file in result.new_files:
@@ -1877,8 +1846,7 @@ def _show_analysis_review(lang):
 
         # Updated files — always starts OPEN
         if result.updated_files:
-            is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'updated_files'
-            with st.expander(f"🔄 {get_text('updated_files', lang)} ({len(result.updated_files)})", expanded=is_expanded):
+            with st.expander(f"🔄 {get_text('updated_files', lang)} ({len(result.updated_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                 
                 for canvas_file, sync_info in result.updated_files:
@@ -1896,8 +1864,7 @@ def _show_analysis_review(lang):
 
         # Missing files — always starts OPEN
         if result.missing_files:
-            is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'missing_files'
-            with st.expander(f"📦 {get_text('missing_files', lang)} ({len(result.missing_files)})", expanded=is_expanded):
+            with st.expander(f"📦 {get_text('missing_files', lang)} ({len(result.missing_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                 
                 for sync_info in result.missing_files:
@@ -1907,15 +1874,14 @@ def _show_analysis_review(lang):
                     with col1:
                         key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
                         if key not in st.session_state:
-                            st.session_state[key] = False
+                            st.session_state[key] = True
                         st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
                     with col2:
                         st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
         # Locally Deleted Files (Student deleted locally to save space)
         if result.locally_deleted_files:
-            is_expanded = st.session_state.get('active_expander') is None or st.session_state.get('active_expander') == 'locally_deleted_files'
-            with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=is_expanded):
+            with st.expander(f"✂️ Locally Deleted ({len(result.locally_deleted_files)})", expanded=True):
                 st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                 
                 for sync_info in result.locally_deleted_files:
@@ -1924,9 +1890,7 @@ def _show_analysis_review(lang):
                     key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                     
                     if key not in st.session_state:
-                        # Determine if file matches aggregate global filters just like new_files does implicitly
-                        is_checked = st.session_state.get(f"sync_filter_ext_{ext}", False) and st.session_state.get('sync_filter_all_exts', True)
-                        st.session_state[key] = is_checked
+                        st.session_state[key] = True
                         
                     col1, col2 = st.columns([0.92, 0.08], vertical_alignment="center")
                     with col1:
@@ -1947,8 +1911,7 @@ def _show_analysis_review(lang):
         if hasattr(result, 'ignored_files') and result.ignored_files:
             st.divider()
             st.markdown("##### 🗑️ Trash / Ignored")
-            is_expanded = st.session_state.get('active_expander') == 'ignored'
-            with st.expander(f"🚫 Ignored Files ({len(result.ignored_files)})", expanded=is_expanded):
+            with st.expander(f"🚫 Ignored Files ({len(result.ignored_files)})", expanded=False):
                 st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                 st.caption("These files are safely ignored and will not be synced.")
                 for sync_info in result.ignored_files:
@@ -2573,6 +2536,7 @@ def _run_sync(lang):
                                 synced_counter[0] += 1
                                 synced_details[pair_idx].append(display_file_name)
                                 terminal_log.append(f"<span style='color:#2ecc71'>[✅] Recreated: </span> {display_file_name}")
+                                log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                 continue
 
                         # Refresh download URL from Canvas API (signed URLs expire quickly)
@@ -2626,11 +2590,13 @@ def _run_sync(lang):
                                         # Track success for UI dropdown
                                         synced_details[pair_idx].append(display_file_name)
                                         terminal_log.append(f"<span style='color:#2ecc71'>[✅] Finished: </span> {display_file_name}")
+                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                     else:
                                         failed_files_for_pair.append(file)
                                         error_list.append(get_text('sync_error_file', lang,
                                             filename=display_file_name, error=f"HTTP {response.status}"))
                                         terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
+                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         else:
                             # Check for LTI/Media streams
                             ext_lower = filepath.suffix.lower()
@@ -2644,6 +2610,7 @@ def _run_sync(lang):
                             error_list.append(get_text('sync_error_file', lang,
                                 filename=display_file_name, error=err_msg))
                             terminal_log.append(f"<span style='color:#e74c3c'>[❌] Skipped: </span> {display_file_name} <span style='color:#666'>({err_msg})</span>")
+                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
@@ -2651,11 +2618,11 @@ def _run_sync(lang):
                             filename=display_file_name, error=str(e)))
                         str_err = str(e).replace('<', '&lt;').replace('>', '&gt;')
                         terminal_log.append(f"<span style='color:#e74c3c'>[❌] Error: </span> {display_file_name} <span style='color:#666'>({str_err})</span>")
+                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         
                     # Final flush per file loop ensuring the log renders
                     if time.time() - last_ui_update > 0.1:
                         active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
-                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         
             # Final 100% UI Paint after the loop
             elapsed_final = time.time() - start_time
