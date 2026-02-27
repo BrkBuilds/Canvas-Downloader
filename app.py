@@ -816,15 +816,17 @@ with _main_content.container():
             progress_container = st.empty()  # For custom progress bar with text
             mb_counter = st.empty()  # For "Downloading: X / Y MB"
             log_area = st.empty()
-            
-            # Cancel Button placeholder for later (after running/scanning specific rendering)
-            cancel_placeholder = st.empty()
         
         # Handle download state
         if st.session_state['download_status'] == 'scanning':
             # Modern Course Analysis UI (Phase 1)
             total_courses = len(st.session_state['courses_to_download'])
+            
+            # 1. Define the UI placeholder first
             analysis_ui_placeholder = st.empty()
+            
+            # 2. Define the Cancel button placeholder second (so it sits below)
+            cancel_placeholder = st.empty()
             
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
             total_items = 0
@@ -914,7 +916,6 @@ with _main_content.container():
                                             total_items += 1
                         except Exception:
                             pass
-                    
                     total_mb += sum(getattr(f, 'size', 0) for f in filtered_files) / (1024 * 1024)
                     
                 except Exception as e:
