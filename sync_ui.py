@@ -1190,11 +1190,6 @@ def _run_analysis(lang, sync_pairs):
     # Step wizard
     render_sync_wizard(st, 2, lang)
 
-    st.markdown(
-        f'<div class="step-header">{get_text("step4_header", lang)}</div>',
-        unsafe_allow_html=True,
-    )
-
     # Check if only syncing a single pair
     single_idx = st.session_state.get('sync_single_pair_idx')
     if single_idx is not None:
@@ -1205,8 +1200,7 @@ def _run_analysis(lang, sync_pairs):
     total_pairs = len(sync_pairs)
 
     # Clean progress display — no stale cards
-    progress_container = st.empty()
-    status_container = st.empty()
+    analysis_ui_placeholder = st.empty()
 
     for pair_num, pair in enumerate(sync_pairs, 1):
         # Folder-not-found guard
@@ -1215,15 +1209,27 @@ def _run_analysis(lang, sync_pairs):
             continue
 
         display_name = friendly_course_name(pair['course_name'])
-        status_container.markdown(get_text('sync_analyzing_progress', lang, current=pair_num, total=total_pairs))
-        render_progress_bar(progress_container, pair_num, total_pairs, lang, 
-                            custom_text=get_text('sync_analyzing_progress', lang, current=pair_num, total=total_pairs))
+        
+        # Define the granular hook for this specific course
+        def sync_progress_hook(current, total, status_text):
+            percent = int((current / total) * 100) if total > 0 else 0
+            analysis_ui_placeholder.markdown(f"""
+            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
+                <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                <p style="color: #8A91A6; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
+                <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
+                <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                    <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         local_folder = pair['local_folder']
         course_id = pair['course_id']
         course_name = pair['course_name']
 
         try:
+            sync_progress_hook(0, 1, "Connecting to Canvas API...")
             course = cm.canvas.get_course(course_id)
         except Exception as e:
             st.error(f"Error accessing course {display_name}: {e}")
@@ -1231,13 +1237,19 @@ def _run_analysis(lang, sync_pairs):
 
         sync_mgr = SyncManager(str(local_folder), course_id, course_name, lang)
         try:
+            sync_progress_hook(0, 1, "Loading local sync manifest...")
             manifest = sync_mgr.load_manifest()
         except sqlite3.Error as e:
             st.error(get_text('sync_error_db_locked', lang, default=f"Database error for {display_name}: {e}. Please try again later."))
             continue
             
-        canvas_files = cm.get_course_files_metadata(course)
+        sync_progress_hook(0, 1, "Fetching files from Canvas...")
+        canvas_files = cm.get_course_files_metadata(course, progress_callback=sync_progress_hook)
+        
+        sync_progress_hook(1, 1, "Healing local sync manifest...")
         manifest = sync_mgr.heal_manifest(manifest)
+        
+        sync_progress_hook(1, 1, "Comparing files...")
         detected = sync_mgr.detect_structure()
         # Pass canvas manager to analyze_course for backend structure pre-calculation
         result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm, download_mode=detected)
@@ -1254,6 +1266,9 @@ def _run_analysis(lang, sync_pairs):
             'detected_structure': detected,
         })
 
+    # Clean up the UI when all courses are done analyzing
+    analysis_ui_placeholder.empty()
+    
     st.session_state['sync_analysis_results'] = all_results
 
     # Quick Sync mode — skip review and go straight to sync
@@ -1304,6 +1319,11 @@ def _run_analysis(lang, sync_pairs):
 def _show_analysis_review(lang):
     # Step wizard
     render_sync_wizard(st, 2, lang)
+
+    st.markdown(
+        f'<div class="step-header">{get_text("step4_header", lang)}</div>',
+        unsafe_allow_html=True,
+    )
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -1739,8 +1759,8 @@ def _show_analysis_review(lang):
                 include_all = st.checkbox("Include ALL filetypes", key="sync_filter_all_exts", on_change=toggle_all_exts)
                 
                 if all_exts_sorted:
-                    st.markdown("<hr />", unsafe_allow_html=True)
-                    st.markdown("<div style='font-size: 0.95em; padding-bottom: 10px;'>Or select specific types:</div>", unsafe_allow_html=True)
+                    st.markdown("<hr style='margin-top: 10px; margin-bottom: 15px; border-color: #2D3248;' />", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size: 0.95em; padding-bottom: 10px; margin-top: 12px; font-weight: bold;'>Or select specific types:</div>", unsafe_allow_html=True)
                     
                     with st.container(border=True, key="filetypes_flex_box"):
                         safe_len = min(len(all_exts_sorted), 90)
