@@ -828,11 +828,22 @@ with _main_content.container():
             # 2. Define the Cancel button placeholder second (so it sits below)
             cancel_placeholder = st.empty()
             
+            # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP
+            if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
+                cancel_placeholder.empty() # Clear immediately
+                st.session_state['cancel_requested'] = True
+                st.session_state['download_status'] = 'cancelled'
+                st.rerun()
+            
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
             total_items = 0
             total_mb = 0
             
             for idx, course in enumerate(st.session_state['courses_to_download']):
+                # Check if the user clicked the global cancel button before processing the next course
+                if st.session_state.get('cancel_requested', False):
+                    break # Escape the loop immediately!
+                    
                 current_course_num = idx + 1
                 percent = int((current_course_num / total_courses) * 100)
                 
@@ -866,13 +877,6 @@ with _main_content.container():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                # Render Cancel Button for Scanning Phase (after analysis UI)
-                if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
-                    cancel_placeholder.empty() # Clear immediately
-                    st.session_state['cancel_requested'] = True
-                    st.session_state['download_status'] = 'cancelled'
-                    st.rerun()
                 
                 
                 # Use robust Hybrid file fetching logic directly, identical to actual download loop
