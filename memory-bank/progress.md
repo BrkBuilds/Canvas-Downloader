@@ -14,10 +14,18 @@
     - [x] **Dynamic Visuals**: Added a disk space impact bar with a linear scale and a 1% visibility floor.
     - [x] **Formatting Precision**: Added hanging indents for wrapped filenames and friendly name normalization (unquoting, space conversion).
     - [x] **Calculation Integrity**: Fixed total sync size summing to include updated files.
-- [x] **Sync Engine Polish & Bug Fixes** (2026-02-25):
-    - [x] **Path Integrity**: Fixed bug causing subfolder creation in Flat Mode downloads.
-    - [x] **Deduplication**: Collapsed duplicate Canvas files sharing target paths/sizes to normalize file counts.
-    - [x] **Error Prevention**: Pruned locked/restricted files from sync analysis to avoid "No URL" errors.
+- [x] **Sync Engine Polish & UX Iteration** (2026-02-27):
+    - [x] **Dashed Row Separators**: Robust CSS Flexbox implementation using keyed container scoping.
+    - [x] **Filter Paradigm**: Opt-out selection logic with indeterminate state `(x/y)` display.
+    - [x] **Expander Persistence**: Fixed Trash expander collapse using `keep_ignored_open` state flag.
+    - [x] **Analysis Progress**: Ported standard download progress bar to the analysis phase.
+    - [x] **Terminal Clarity**: Real-time log rendering decoupled from UI throttling.
+- [x] **Sync Review UI Final Polish** (2026-02-28):
+    - [x] **Dynamic Counters**: Live selection tracking (`selected / total`) in expander titles.
+    - [x] **Batch Sync Crash Fix**: Resolved `StreamlitDuplicateElementKey` bug by implementing dynamic container keys (`cat_new_{course.id}`) and wildcard CSS pseudo-element injection.
+    - [x] **Phase 1 Global Cancel**: Added a unified "Cancel Analysis" button to safely abort multi-course Canvas scanning.
+    - [x] **Scoped Layout Refinements**: Fixed button row margins, tightened flush header padding, and added inter-course 20px spacing gaps.
+    - [x] **Batch Tracking**: Injected blue numbered indices (`1.`, `2.`, etc.) into course headers for better orientation.
 - [x] **Synthetic Shortcut & LTI Link Sync** (2026-02-27):
     - [x] **Manifest Tracking**: Support for Pages, ExternalUrls, and ExternalTools in `.canvas_sync.db`.
     - [x] **Negative ID Pattern**: Using negative integers for synthetic objects to prevent database PK collisions.
@@ -32,8 +40,8 @@
 - [x] Sync Engine SQLite Migration & Heuristics Phase (2026-02-21)
 
 ## Current Status
-- Application UI is professional and highly responsive, with advanced confirmation dialogs that provide deep insight into sync impact.
-- Engine is robust, handling deduplication and technical metadata stripping.
+- Application UI is professional, high-performance, and feature-complete, with robust sync analysis and real-time download dashboards.
+- Sync engine handles all file types including synthetic shortcuts, with high-fidelity UI tracking.
 
 ## Pending Tasks
 - [ ] Manual end-to-end testing with live multisession Canvas instances.

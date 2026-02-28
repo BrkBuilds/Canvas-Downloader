@@ -23,9 +23,22 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - Use `display: flex; align-items: flex-start;` on `<li>`.
     - Wrap the icon in a fixed-width `span` (e.g., `24px`).
     - Wrap the text in a `flex:1` `span` with `word-break: break-word`.
+- **Keyed Container Scoping for CSS Overrides**:
+    - *Problem*: Streamlit's default margins/paddings on `st.columns` and `st.container` are often too loose for dense data lists.
+    - *Solution*: Wrap targeted loops in `st.container(key="some_key")`. 
+    - Injected CSS then uses partial attribute selectors `div[class*="st-key-some_key"]` to target the internal `stHorizontalBlock` (columns) or `stVerticalBlock` without polluting the global scope or colliding with other keyed instances in loops.
+- **Wildcard Attribute Selector for Dynamic Widgets**:
+    - *Problem*: When widget keys are dynamic (e.g., `key=f"cat_new_{course.id}"`), standard class selectors like `.st-key-cat_new` fail.
+    - *Solution*: Use CSS wildcard attribute selectors `div[class*="st-key-cat_new"]` to target all dynamically keyed containers that share a common prefix. This allows a single global CSS block to style many unique widgets simultaneously.
 - **Progress Bar Visibility Pattern**:
     - For disk space checks: `min(100, max(1, real_pct))` if `bytes > 0`.
     - Pure linear mapping on high-capacity drives makes small downloads look like 0% (invisibility). Always implement a 1% floor for any non-zero sync size.
+- **Dynamic File Selection Counting (CSS Ghost Text) Pattern**:
+    - *Problem*: Expander titles in Streamlit are used as their internal state ID. If you inject dynamic numbers (e.g. `[1 / 5]`) directly into the Python string `st.expander()`, the ID changes on every rerun. This destroys the user's open/closed state, causing them to forcefully pop open or snap shut unexpectedly.
+    - *Solution*: Revert the expander title to a purely static string (e.g., `st.expander("🆕 New files")`). Calculate the `selectedCount` dynamically via a list comprehension on `st.session_state`. Then, project that string onto the screen by injecting a targeted `<style>` block that uses the `::after` CSS pseudo-element on the expander's summary tag. Streamlit's reactive rerun model updates the CSS instantly without destroying the widget state constraint.
+- **Margin Collapse Override (Scoped CSS)**:
+    - *Problem*: Streamlit's internal layout often swallows HTML `<div style='height:Xpx'>` spacers due to margin collapsing or negative margins on nearby components.
+    - *Solution*: Wrap the target component (e.g., a button row) in a keyed `st.container` and use scoped CSS with `!important` on the `margin-top` of the `.st-key-...` class to force the desired vertical break.
 
 ## Synchronization Strategy
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.

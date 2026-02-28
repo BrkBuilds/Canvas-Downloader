@@ -1,9 +1,29 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Archiving Synthetic Logic**: Just completed full integration of synthetic shortcuts (Pages, Links, LTI Tools) into the Sync Manifest and Restoration engine.
+- **Final Sync UI & Verification**: Completed the absolute final polish of the Sync Review UI, including live selection counters, clean category spacing, and scoped CSS layout corrections. Transitioning to manual end-to-end verification.
+
+## Recent Changes (Session 2026-02-28)
+- **Batch Sync Stability & Duplicate Key Fixes**:
+  - **Dynamic Container Keys**: Resolved `StreamlitDuplicateElementKey` bug by appending `_{course.id}` to all `st.container` keys in `sync_ui.py`.
+  - **Wildcard CSS Scoping**: Updated the global expander styling to use wildcard attribute selectors (`div[class*="st-key-cat_new"]`), ensuring color-coded borders work across all dynamically keyed course blocks.
+  - **Phase 1 Global Cancel**: Injected a unified "Cancel Analysis" button above the Canvas scanning loop, allowing users to safely abort Phase 1 of a multi-course sync.
+- **Sync Review UI Layout Finalization**:
+  - **Compact Headers & Numbering**: Reduced header bottom margin (16px → 4px) and padding for a slim profile; added blue index numbering (`1.`, `2.`, etc.) for batch tracking.
+  - **Course Isolation Spacing**: Injected 20px physical gaps between course container blocks to prevent visual bleeding.
+  - **Dynamic Expander Counters**: Live selection tracking (`selected / total`) projected via CSS `::after` ghost text to maintain expander persistence.
+  - **Clean Title Formatting**: Replaced bullets (`•`) with double-space padding for a sleeker, symbol-free finish.
+  - **Button Spacing Correction**: Fixed margin-collapsing on Bulk Selection buttons via keyed container overrides.
+- **Progress Parity & Dialog Polish**:
+  - **Vertical Centering**: Forced `st.dialog` to center-screen via global CSS injection.
+  - **Frontend Yield Hack**: Implemented JS-triggered "hidden button" clicks to ensure modals unmount before heavy processing starts.
 
 ## Recent Changes (Session 2026-02-27)
+- **Synthetic Shortcut Sync Support**:
+  - **Manifest Integration**: Support for Pages, ExternalUrls, and ExternalTools using the "Negative ID Pattern" to prevent database collisions.
+  - **LTI URL Priority Fix**: Prefer `html_url` for ExternalTools to ensure correct Canvas-wrapped authentication.
+- **Sync Review UI Restructure**:
+  - **Flush Header Band**: Negative margin bleed trick to create seamless course headers.
 - **Synthetic Shortcut Sync Support**:
   - **Manifest Integration**: Modified `_save_page` and `_create_link` to return filepaths. Captured these in download loops to create `CanvasFileInfo` mock objects with negative IDs (e.g., `-int(item.id)`).
   - **Shortcut-Aware Live Fetching**: Upgraded `_get_files_from_modules` in `canvas_logic.py` to generate reciprocal mock objects during sync analysis, ensuring the Sync engine "sees" Pages and ExternalUrls as matching database entries.
@@ -14,34 +34,28 @@
   - **Restoration Interception**: Modified `sync_ui.py`'s download batch loop to detect negative IDs and recreate `.url`/`.html` shortcut files directly using Pathlib instead of attempting an HTTP byte-download.
 - **Sync Execution UI Overhaul**: (Previous session changes maintained...)
   - **Speed & ETA Dashboard**: Replaced the static Streamlit text metric with a sleek, injected HTML/CSS 4-column dashboard rendering Sync Progress (X/Y), Downloaded (MB), Speed (MB/s), and ETA (MM:SS).
-  - **Live Terminal Log**: Added a native-looking terminal window tracking active asynchronous downloads in real-time, managed efficiently via an in-memory `collections.deque(maxlen=10)` and HTML injection to prevent heavy Streamlit re-renders. Checkmarks and cross emojis visually categorize file successes, skips, and failures.
-  - **Cancel Button Realignment**: Fixed the Cancel button's alignment by ensuring it renders natively to the left below the log container rather than in an enforced column structure.
+  - **Live Terminal Log**: Added a native-looking terminal window tracking active asynchronous downloads in real-time. Checkmarks and cross emojis visually categorize file successes, skips, and failures.
 - **Sync Review Feature Fixes**:
   - **Ignored Files Rendering**: Fixed a conditional block that hid the analyze summary if zero actionable files existed; the section now persists if `total_ignored > 0`.
-  - **Locally Deleted Binding**: Checkboxes for manually deleted local files now initialize by checking the global aggregate filters (extensions and "Select All") before falling back to False.
-  - **Key Synchronization**: Unified all file-level checkbox keys to use `course_id` (not `idx`), ensuring state Persistence across filter changes and preventing payload extraction errors.
-  - **Zero-Value Metric Card Muting**: Transitioned from static HTML cards to a dynamic `_render_metric_card` Python helper. Zero-value cards intelligently drop their background opacity to 10%, remove box-shadows, and apply a subtle colored border to dramatically reduce visual clutter while preserving readability.
+  - **Locally Deleted Binding**: Checkboxes for manually deleted local files now initialize by checking the global aggregate filters before falling back to False.
+  - **Key Synchronization**: Unified all file-level checkbox keys to use `course_id`, ensuring state Persistence across filter changes.
+  - **Zero-Value Metric Card Muting**: Transitioned from static HTML cards to a dynamic `_render_metric_card` Python helper. Zero-value cards intelligently drop their background opacity to 10% and remove box-shadows.
 - **Confirm Sync Modal UX**:
-  - **Vertical Centering**: Injected CSS globally within Step 4 to force `st.dialog` to appear dead-center in the viewport by setting `display: flex !important` and `align-items: center !important` on the modal container.
-  - **Immediate Closure Strategy**: Implemented a "Frontend Yield" hack using a hidden button click triggered by a 200ms `setTimeout` JS script. This ensures the React DOM can unmount the modal before the heavy Python sync loop starts, preventing the modal from being "stuck" or "greyed out" on screen while processing.
+  - **Vertical Centering**: Injected CSS globally within Step 4 to force `st.dialog` to appear dead-center in the viewport.
+  - **Immediate Closure Strategy**: Implemented a "Frontend Yield" hack using a hidden button click triggered by a 200ms `setTimeout` JS script.
 - **Standard Download UX Parity**:
-  - **Confirmation Dialog**: Ported the `@st.dialog` vertical centering modal logic over to `app.py` Step 2 to pause standard download execution until explicit user confirmation.
-  - **Modal Optimization**: Refined the dialog to load instantly by deferring heavy file/size calculations to Step 3. Removed the technical `HIDDEN_START` button hack.
-  - **Smart Course Display**: Implemented conditional rendering in the modal; showing a static row for single course selections and a clean dropdown for multiple courses.
-  - **Dashboard Analytics**: Upgraded the standard download progress block (Step 3) to strictly utilize the injected HTML Sync metrics rendering structure in an `st.empty()` block, including the new 4-column "Files" count configuration.
-  - **Routing Rescue (No-Hang)**: Fixed the Standard Download async sequence leaking on large file completions by re-routing the execution end directly to Step 4.
+  - **Confirmation Dialog**: Ported the `@st.dialog` vertical centering modal logic over to `app.py` Step 2.
+  - **Dashboard Analytics**: Upgraded the standard download progress block (Step 3) to strictly utilize the injected HTML Sync metrics rendering structure.
 
 ## Active Tasks
-- [x] Refine "Select files to sync" box (Tighten layout, Remove emojis)
-- [x] Refine "Confirm Sync" dialog (Dropdowns, Dynamic Bar)
-- [x] Refine "Sync Review" expanders (Top padding, Trash layout, Button styling)
-- [x] Fix `StreamlitDuplicateElementKey` race condition
-- [x] Vertically center and fix closure logic for Sync Confirmation dialog
-- [x] Implement Zero-Value muting for Sync Review metric cards
-- [x] Implement high-visibility Speed & ETA custom metrics dashboard
-- [x] De-noise Live Terminal logger and add Active Downloading status indicator
-- [x] Fix "Hanging Completion" bug by forcing Streamlit state change and `st.rerun()`
-- [x] Port Sync Metrics and Terminal UI to Standard Download
+- [x] Implement robust Row Separator CSS using keyed container scoping
+- [x] Implement Opt-Out filter paradigm and fix state-lock bugs
+- [x] Port Sync Progress UI to Analysis phase
+- [x] Refine Trash/Ignored UX (Clean grey text, Persistent expander)
+- [x] Fix terminal log rendering lag by immediate markdown updates
+- [x] Standardize filename unquoting across all UI components
+- [x] Refine "Select files to sync" box (Group header, filter options, and global uncheck buttons)
+- [x] Refine "Sync Review" expanders (Wrap course blocks in master containers)
 
 ## Architecture Notes
 - **Scoped Layout Overrides**: Use `st.container(key="...")` combined with targeted CSS (e.g., `.st-key-X > div[data-testid="stVerticalBlock"]`) to override Streamlit's default 1rem gaps without affecting the rest of the application.
