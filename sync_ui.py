@@ -1628,6 +1628,32 @@ def _show_analysis_review(lang):
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
+        # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
+        def _sync_master_toggle_changed():
+            st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
+        
+        def _sync_sub_toggle_changed():
+            if not st.session_state['convert_pptx']:
+                st.session_state['notebooklm_master'] = False
+        
+        with st.container(border=True):
+            st.checkbox(
+                "🤖 NotebookLM Compatible Download",
+                key="notebooklm_master",
+                on_change=_sync_master_toggle_changed,
+                help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
+            )
+            st.markdown("<div style='margin-left: 25px; margin-top: -10px;'>", unsafe_allow_html=True)
+            st.checkbox(
+                "📊 Convert PowerPoints to PDF",
+                key="convert_pptx",
+                on_change=_sync_sub_toggle_changed,
+                help="Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed."
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+
     # Nothing to sync
     if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
         if total_uptodate:
@@ -2428,6 +2454,8 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
         if st.button("Yes, Start Sync", type="primary", use_container_width=True):
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
+            # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
+            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
             st.rerun()
     with col_no:
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
@@ -2834,6 +2862,110 @@ def _run_sync(lang):
         return synced_details, retry_selections
 
     synced_details, retry_selections = asyncio.run(download_sync_files_batch())
+
+    # --- Post-Download: PPTX → PDF Conversion (runs OUTSIDE async loop) ---
+    if st.session_state.get('persistent_convert_pptx', False):
+        from pdf_converter import convert_pptx_to_pdf
+        
+        # Collect all .pptx/.ppt files across all synced course folders
+        all_pptx_files = []  # list of (pptx_path, sync_mgr, res_data)
+        for sel in sync_selections:
+            res_data = sel['res_data']
+            sync_mgr = res_data['sync_manager']
+            local_path = sync_mgr.local_path
+            
+            if local_path.exists():
+                for f in local_path.rglob('*'):
+                    if f.suffix.lower() in ('.pptx', '.ppt') and f.is_file():
+                        # Only convert files that were just synced (check if in synced_details)
+                        pair_idx = sel['pair_idx']
+                        display_name = f.name
+                        if pair_idx in synced_details:
+                            # Check if this file (or its display name) was synced this session
+                            synced_names = synced_details[pair_idx]
+                            if any(display_name in sn or Path(sn).stem == f.stem for sn in synced_names):
+                                all_pptx_files.append((f, sync_mgr, res_data))
+        
+        if all_pptx_files:
+            total_pptx = len(all_pptx_files)
+            print(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files in Sync mode.")
+            
+            # Custom render function to hijack the main UI placeholders
+            def render_conversion_dashboard(current_idx):
+                percent = int((current_idx / total_pptx) * 100) if total_pptx > 0 else 100
+                percent = min(100, percent)
+                
+                status_text.markdown(f"**🪄 Post-Processing:** Converting PowerPoint files... ({current_idx}/{total_pptx})")
+                
+                progress_container.markdown(f'''
+                <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 15px;">
+                    <div style="background-color: #A5B4FC; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                        {percent}%
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                metrics_dashboard.markdown(f'''
+                <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                        <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #A5B4FC;">/ {total_pptx}</span></span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
+                        <span style="color: #A5B4FC; font-size: 1.2rem; font-weight: bold;">Processing PDF(s)</span>
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Updating Database Manifests...</p>", unsafe_allow_html=True)
+            
+            # 1. Append starting message to the existing log list
+            render_conversion_dashboard(0)
+            terminal_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span></code><br>")
+            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+            
+            import time
+            time.sleep(0.2)
+            
+            for i, (pptx_file, sync_mgr, res_data) in enumerate(all_pptx_files, 1):
+                # (No st.write here, keep UI clean)
+                
+                pdf_path = convert_pptx_to_pdf(
+                    pptx_file,
+                    error_log_path=sync_mgr.local_path
+                )
+                
+                if pdf_path:
+                    # Find the canvas_file_id from the manifest
+                    manifest = sync_mgr.load_manifest()
+                    for file_id, info in manifest.get('files', {}).items():
+                        local_p = info.get('local_path', '')
+                        try:
+                            original_rel = pptx_file.relative_to(sync_mgr.local_path)
+                            if str(original_rel).replace('\\', '/') == local_p:
+                                new_rel = pdf_path.relative_to(sync_mgr.local_path)
+                                sync_mgr.update_file_to_pdf(int(file_id), str(new_rel).replace('\\', '/'))
+                                break
+                        except (ValueError, KeyError):
+                            pass
+                            
+                    # 2. Append success message
+                    terminal_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path.name}</span></code><br>")
+                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                else:
+                    # 3. Append failure message
+                    terminal_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span></code><br>")
+                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                
+                # Update progress mid-loop
+                render_conversion_dashboard(i)
+            
+            terminal_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span></code><br>")
+            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+            render_conversion_dashboard(total_pptx)
+    # --- End Post-Download Conversion ---
 
     # --- Organize files into module folders (if requested) ---
 

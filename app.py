@@ -86,6 +86,12 @@ if 'sync_pairs' not in st.session_state:
 if 'pending_sync_folder' not in st.session_state:
     st.session_state['pending_sync_folder'] = None  # Temp storage for folder picker
 
+# NotebookLM Compatible Download toggles
+if 'notebooklm_master' not in st.session_state:
+    st.session_state['notebooklm_master'] = False
+if 'convert_pptx' not in st.session_state:
+    st.session_state['convert_pptx'] = False
+
 # --- Helper Functions ---
 def select_folder():
     root = tk.Tk()
@@ -730,6 +736,33 @@ with _main_content.container():
             st.session_state['debug_mode'] = st.session_state.get('debug_mode_checkbox', False)
             
             st.markdown("---")
+            
+            # --- NotebookLM Compatible Download ---
+            def _master_toggle_changed():
+                st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
+            
+            def _sub_toggle_changed():
+                if not st.session_state['convert_pptx']:
+                    st.session_state['notebooklm_master'] = False
+            
+            st.checkbox(
+                "🤖 NotebookLM Compatible Download",
+                key="notebooklm_master",
+                on_change=_master_toggle_changed,
+                help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
+            )
+            
+            with st.container():
+                st.markdown("<div style='margin-left: 25px; margin-top: -10px;'>", unsafe_allow_html=True)
+                st.checkbox(
+                    "📊 Convert PowerPoints to PDF",
+                    key="convert_pptx",
+                    on_change=_sub_toggle_changed,
+                    help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.markdown("---")
 
             col_conf, col_back, _ = st.columns([1.2, 1, 5])
             with col_conf:
@@ -749,6 +782,9 @@ with _main_content.container():
                         st.session_state['downloaded_items'] = 0
                         st.session_state['course_mb_downloaded'] = {}
                         st.session_state['log_content'] = ""  # Initialize log content
+                        
+                        # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
+                        st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
                         
                         if st.session_state['current_mode'] == 'sync':
                             # Sync mode - go to Step 4 (Analysis)
@@ -1083,6 +1119,109 @@ with _main_content.container():
                     file_filter=st.session_state['file_filter'],
                     debug_mode=st.session_state.get('debug_mode', False)
                 ))
+                
+                # --- Post-Download: PPTX → PDF Conversion ---
+                if st.session_state.get('persistent_convert_pptx', False):
+                    from pdf_converter import convert_pptx_to_pdf
+                    from sync_manager import SyncManager
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    # Gather all .pptx/.ppt files in the course folder
+                    pptx_files = []
+                    if course_folder.exists():
+                        for f in course_folder.rglob('*'):
+                            if f.suffix.lower() in ('.pptx', '.ppt') and f.is_file():
+                                pptx_files.append(f)
+                    
+                    if pptx_files:
+                        total_pptx = len(pptx_files)
+                        print(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files.")
+                        
+                        # Custom render function to hijack the main UI placeholders
+                        def render_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_pptx) * 100) if total_pptx > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting PowerPoint Files for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #A5B4FC; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #A5B4FC;">/ {total_pptx}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
+                                    <span style="color: #A5B4FC; font-size: 1.2rem; font-weight: bold;">Processing PDF(s)</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            # Also re-render log
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        # 1. Start with 0 progress
+                        render_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span>")
+                        render_conversion_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, pptx_file in enumerate(pptx_files, 1):
+                            pdf_path = convert_pptx_to_pdf(
+                                pptx_file,
+                                error_log_path=Path(st.session_state['download_path'])
+                            )
+                            
+                            if pdf_path:
+                                manifest = sm.load_manifest()
+                                for file_id, info in manifest.get('files', {}).items():
+                                    local_p = info.get('local_path', '')
+                                    try:
+                                        original_rel = pptx_file.relative_to(course_folder)
+                                        if str(original_rel).replace('\\', '/') == local_p:
+                                            new_rel = pdf_path.relative_to(course_folder)
+                                            sm.update_file_to_pdf(int(file_id), str(new_rel).replace('\\', '/'))
+                                            break
+                                    except (ValueError, KeyError):
+                                        pass
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path.name}</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span>")
+                                
+                            # 2. Update progress mid-loop
+                            render_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
+                        # 3. Final 100% render
+                        render_conversion_dashboard(total_pptx)
+                # --- End Post-Download Conversion ---
                 
                 # Move to next course
                 st.session_state['current_course_index'] += 1
