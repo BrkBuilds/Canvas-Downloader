@@ -40,6 +40,17 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: Streamlit's internal layout often swallows HTML `<div style='height:Xpx'>` spacers due to margin collapsing or negative margins on nearby components.
     - *Solution*: Wrap the target component (e.g., a button row) in a keyed `st.container` and use scoped CSS with `!important` on the `margin-top` of the `.st-key-...` class to force the desired vertical break.
 
+## Synchronous API Integration Patterns (Win32COM)
+- **Widget Cleanup Bypass via Button Hooks**:
+    - *Problem*: Transitioning from a step with an active widget (e.g., a checkbox) to a new step destroys the widget and deletes its key from `st.session_state`.
+    - *Solution*: Capture the widget's boolean state into a custom, non-widget `persistent_` session state key directly inside the `if st.button('Next'):` execution block, immediately before the app reruns.
+- **UI Thread Flushing**:
+    - *Problem*: Initiating heavy blocking synchronous calls (like `PowerPoint.Application.SaveAs`) immediately after rendering new Streamlit placeholders causes the backend to lock up before the frontend DOM has time to paint the new UI state.
+    - *Solution*: Inject an explicit `time.sleep(0.2)` explicitly between rendering the loading UI and initiating the blocking COM thread to guarantee frontend synchronization.
+- **Office 365 COM Visibility Bypass**:
+    - *Problem*: Modern click-to-run Office 365 environments throw `Invalid request` exceptions when attempting to coerce `Application.Visible = False`.
+    - *Solution*: Wrap visibility attribute coercions in a `try...except` block, allowing the COM script to fall back to a visible window state if security constraints prevent hidden execution.
+
 ## Synchronization Strategy
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
 - **Negative ID Pattern**: Synthetic shortcuts (Pages, ExternalUrls, ExternalTools) are assigned `id = -int(item.id)`. This keeps them unique and prevents primary key collisions with physical Canvas `File` objects in SQLite.

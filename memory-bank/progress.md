@@ -14,6 +14,11 @@
     - [x] **Dynamic Visuals**: Added a disk space impact bar with a linear scale and a 1% visibility floor.
     - [x] **Formatting Precision**: Added hanging indents for wrapped filenames and friendly name normalization (unquoting, space conversion).
     - [x] **Calculation Integrity**: Fixed total sync size summing to include updated files.
+- [x] **NotebookLM Compatible Download** (2026-03-01):
+    - [x] **Win32COM Converter**: `pdf_converter.py` implementation with graceful degradation.
+    - [x] **Manifest Updating**: `update_file_to_pdf` logic mimicking native files.
+    - [x] **UI Hijacking**: Dynamic reassignment of the main progress bar for post-processing phases.
+    - [x] **State Persistence**: Streamlit widget cleanup bypass logic.
 - [x] **Sync Engine Polish & UX Iteration** (2026-02-27):
     - [x] **Dashed Row Separators**: Robust CSS Flexbox implementation using keyed container scoping.
     - [x] **Filter Paradigm**: Opt-out selection logic with indeterminate state `(x/y)` display.

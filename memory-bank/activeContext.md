@@ -3,6 +3,18 @@
 ## Current Focus
 - **Final Sync UI & Verification**: Completed the absolute final polish of the Sync Review UI, including live selection counters, clean category spacing, and scoped CSS layout corrections. Transitioning to manual end-to-end verification.
 
+## Recent Changes (Session 2026-03-01)
+- **NotebookLM Compatible Download (PPTX→PDF)**:
+  - **Win32COM Integration**: Implemented `pdf_converter.py` to silently convert PowerPoint files to PDF natively post-download. Built with graceful degradation (skips if Office is missing) and thread-safe `pythoncom.CoInitialize()`.
+  - **Manifest Translation**: Added `update_file_to_pdf()` to `sync_manager.py`. It updates `local_path`, `original_size`, and `original_md5` to the new PDF, while leaving `canvas_filename` untouched so the sync engine's diffing mechanics remain intact.
+- **Streamlit UI Hijacking & Post-Processing**:
+  - **Progress Bar Re-routing**: Prevented the download UI from appearing "frozen" at 100% by hijacking the main download progress bar, status text, and metrics placeholders to visually track the slow PPTX→PDF conversion loop.
+  - **Native Terminal Hooks**: Removed isolated `st.status` expanders and injected the conversion progress directly into the custom `log_deque` / `terminal_log` HTML rendering loops.
+- **Streamlit State & COM Debugging**:
+  - **Widget Cleanup Bypass**: Fixed a bug where transitioning from the Settings Step to the Download Step destroyed the NotebookLM checkbox value. Captured the value into a `persistent_convert_pptx` state key precisely on button-click before `st.rerun()`.
+  - **UI Thread Flushing**: Injected explicit `time.sleep(0.2)` pauses immediately after rendering the post-processing UI framework. This guarantees Streamlit completes the browser DOM paint before the thread locks up on heavy blocking Win32COM `SaveAs` operations.
+  - **Office 365 Strict Constraints**: Wrapped `powerpoint.Visible = False` in a `try...except` block, safely bypassing modern click-to-run Office versions that throw exceptions when attempting to hide the application window.
+
 ## Recent Changes (Session 2026-02-28)
 - **Batch Sync Stability & Duplicate Key Fixes**:
   - **Dynamic Container Keys**: Resolved `StreamlitDuplicateElementKey` bug by appending `_{course.id}` to all `st.container` keys in `sync_ui.py`.

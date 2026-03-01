@@ -21,6 +21,7 @@
 - `shutil`: Disk space checking (`disk_usage`).
 - `sqlite3`: Robust manifest database management.
 - `difflib`: Levenshtein string matching for collision resolution (`SequenceMatcher`).
+- `pywin32` (`win32com.client`, `pythoncom`): Windows COM automation for natively converting PPTX files to PDF.
 
 ## File Structure
 ```
