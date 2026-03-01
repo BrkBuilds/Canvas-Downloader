@@ -4,3 +4,6 @@ watchdog
 aiohttp
 requests
 aiofiles
+beautifulsoup4
+markdownify
+moviepy

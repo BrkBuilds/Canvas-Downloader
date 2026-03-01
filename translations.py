@@ -70,7 +70,7 @@ TRANSLATIONS = {
         'structure_question': 'Choose how files should be organized:',
         'with_subfolders': 'With subfolders (Matches Canvas Modules)',
         'mode_files': 'Files (Course Folders)',
-        'flat_structure': 'Full (All files in one folder)',
+        'flat_structure': 'Flat (All files in one folder)',
         'destination': 'Destination',
         'select_folder': '📂 Select Folder',
         'path_label': 'Path',
