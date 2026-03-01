@@ -1,18 +1,35 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Final Sync UI & Verification**: Completed the absolute final polish of the Sync Review UI, including live selection counters, clean category spacing, and scoped CSS layout corrections. Transitioning to manual end-to-end verification.
+- **Final UI Revision & Verification**: Completed the absolute final overhaul of the Step 2 Download Settings, including "Flat" terminology, debug mode relocation to global settings, and pixel-perfect header suction with fractional column alignment. Transitioning to build packaging.
 
-## Recent Changes (Session 2026-03-01)
-- **NotebookLM Compatible Download (PPTX→PDF)**:
-  - **Win32COM Integration**: Implemented `pdf_converter.py` to silently convert PowerPoint files to PDF natively post-download. Built with graceful degradation (skips if Office is missing) and thread-safe `pythoncom.CoInitialize()`.
-  - **Manifest Translation**: Added `update_file_to_pdf()` to `sync_manager.py`. It updates `local_path`, `original_size`, and `original_md5` to the new PDF, while leaving `canvas_filename` untouched so the sync engine's diffing mechanics remain intact.
+## Recent Changes (Session 2026-03-01 Revision)
+- **Step 2 Download Settings Overhaul**:
+  - **Terminology Pivot**: Changed "Full" download structure to "Flat" for better user clarity.
+  - **Aggressive Header Suction**: Replaced native Streamlit markdown headers with custom HTML `h3` tags using `-25px` bottom margins to eliminate dead vertical space.
+  - **Merged CSS Injection**: Combined scoped CSS `<style>` blocks with HTML headers in single `st.markdown` calls to remove implicit `div` wrapper gaps.
+  - **Destination Alignment**: Implemented a `[1, 6]` fractional column ratio with a `28px` invisible spacer to horizontally and vertically align the "Select Folder" button with the "Path" input box.
+- **Settings Relocation**:
+  - **Debug Mode**: Moved "Enable Troubleshooting Mode (Debug Log)" from the main wizard view into the global `⚙️ Application Settings` modal.
+- **NotebookLM Sync Logic**:
+  - **Dynamic (x/y) Counter**: Implemented a mathematical sync logic for master/sub toggles that tracks current active features in real-time.
+
+## Recent Changes (Session 2026-03-01 - NotebookLM Full Suite)
+- **NotebookLM Compatible Download Expansion**:
+  - **Archive Extraction (Ghost Stub)**: Built `archive_extractor.py` to automatically unzip `.zip` and `.tar.gz` payloads. Designed a 0-byte `.extracted` stub system to satisfy the sync engine and prevent endless re-downloads. Injected this step at the *very top* of the post-processing pipeline to ensure unpacked format-viable files (like raw HTML or PPTX trapped in a zip) are handed to downstream converters.
+  - **Video to Audio**: Implemented `video_converter.py` using `moviepy` to rip `.mp3` tracks from massive `.mp4/.mov` payloads, deleting the original video to save space and enable NotebookLM transcription.
+  - **Legacy Word to PDF**: Expanded the Win32COM architecture via `word_converter.py` to target `.doc`, `.rtf`, and `.odt` files, upgrading them to modern `.pdf` format.
+  - **HTML to Markdown**: Built `md_converter.py` using `beautifulsoup4` and `markdownify` to strip Canvas Pages of nested HTML boilerplate and convert them into clean `.md` files.
+  - **Code & Data Preservation**: Developed `code_converter.py` to intercept the top 50 student programming/data extensions (e.g., `.py`, `.java`, `.json`) and safely append a `.txt` suffix (e.g., `script_py.txt`) while enforcing UTF-8 encoding.
+  - **URL Complier**: Engineered `url_compiler.py` to scrape directories for synthetic `.url` shortcuts and aggregate them into a single `NotebookLM_External_Links.txt` reference file per course.
+  - **Win32COM PowerPoint to PDF**: (Previously Implemented) `pdf_converter.py` for `.pptx` and `.ppt`.
+  - **Excel to PDF (Tabular Integrity)**: Built `excel_converter.py` to handle `.xlsx`, `.xls`, and `.xlsm`. Designed a specific `PageSetup` logic (`FitToPagesWide = 1`, `FitToPagesTall = False`, zero margins) to ensure wide spreadsheets are rendered as 1-page-wide, infinitely-tall PDFs, preserving tabular structure for LLM ingestion. Original files are deleted post-conversion.
 - **Streamlit UI Hijacking & Post-Processing**:
-  - **Progress Bar Re-routing**: Prevented the download UI from appearing "frozen" at 100% by hijacking the main download progress bar, status text, and metrics placeholders to visually track the slow PPTX→PDF conversion loop.
+  - **Progress Bar Re-routing**: Prevented the download UI from appearing "frozen" at 100% by hijacking the main download progress bar, status text, and metrics placeholders to visually track the slow post-processing extraction/conversion loops.
   - **Native Terminal Hooks**: Removed isolated `st.status` expanders and injected the conversion progress directly into the custom `log_deque` / `terminal_log` HTML rendering loops.
 - **Streamlit State & COM Debugging**:
   - **Widget Cleanup Bypass**: Fixed a bug where transitioning from the Settings Step to the Download Step destroyed the NotebookLM checkbox value. Captured the value into a `persistent_convert_pptx` state key precisely on button-click before `st.rerun()`.
-  - **UI Thread Flushing**: Injected explicit `time.sleep(0.2)` pauses immediately after rendering the post-processing UI framework. This guarantees Streamlit completes the browser DOM paint before the thread locks up on heavy blocking Win32COM `SaveAs` operations.
+  - **UI Thread Flushing**: Injected explicit `time.sleep(0.2)` pauses immediately after rendering the post-processing UI framework. This guarantees Streamlit completes the browser DOM paint before the thread locks up on heavy blocking Python or Win32COM operations.
   - **Office 365 Strict Constraints**: Wrapped `powerpoint.Visible = False` in a `try...except` block, safely bypassing modern click-to-run Office versions that throw exceptions when attempting to hide the application window.
 
 ## Recent Changes (Session 2026-02-28)

@@ -756,23 +756,23 @@ class SyncManager:
                 return False
         return False
     
-    def update_file_to_pdf(self, canvas_file_id: int, new_pdf_relative_path: str) -> bool:
+    def update_converted_file(self, canvas_file_id: int, new_file_path: str) -> bool:
         """
-        Update a manifest entry after PPTX→PDF conversion.
+        Update a manifest entry after converting a downloaded file (e.g. PPTX->PDF, HTML->MD).
         
         Only updates local_path, original_size, and original_md5.
         Leaves canvas_filename untouched so the sync engine can still
-        match by canvas_file_id against the Canvas API's .pptx filename.
+        match by canvas_file_id against the Canvas API's original filename.
         """
         import time
         
-        full_pdf_path = self.local_path / new_pdf_relative_path
-        if not full_pdf_path.exists():
-            logger.warning(f"PDF file not found for DB update: {full_pdf_path}")
+        full_new_path = self.local_path / new_file_path
+        if not full_new_path.exists():
+            logger.warning(f"Converted file not found for DB update: {full_new_path}")
             return False
         
-        new_size = full_pdf_path.stat().st_size
-        new_md5 = SyncManager.compute_local_md5(full_pdf_path)
+        new_size = full_new_path.stat().st_size
+        new_md5 = SyncManager.compute_local_md5(full_new_path)
         
         max_retries = 3
         for attempt in range(max_retries):
@@ -785,23 +785,23 @@ class SyncManager:
                         '''UPDATE sync_manifest 
                            SET local_path = ?, original_size = ?, original_md5 = ?
                            WHERE canvas_file_id = ?''',
-                        (new_pdf_relative_path, new_size, new_md5, canvas_file_id)
+                        (new_file_path, new_size, new_md5, canvas_file_id)
                     )
                     conn.commit()
                 
                 if os.name == 'nt':
                     self._windows_hide_file(self.db_path)
                 
-                logger.info(f"Updated manifest entry {canvas_file_id} to PDF: {new_pdf_relative_path}")
+                logger.info(f"Updated manifest entry {canvas_file_id} to new file: {new_file_path}")
                 return True
             except sqlite3.OperationalError as e:
                 if 'database is locked' in str(e) and attempt < max_retries - 1:
                     time.sleep(0.5)
                 else:
-                    logger.warning(f"Error updating file to PDF in DB: {e}")
+                    logger.warning(f"Error updating converted file in DB: {e}")
                     return False
             except sqlite3.Error as e:
-                logger.warning(f"Error updating file to PDF in DB: {e}")
+                logger.warning(f"Error updating converted file in DB: {e}")
                 return False
         return False
 

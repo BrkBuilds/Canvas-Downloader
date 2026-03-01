@@ -14,11 +14,23 @@
     - [x] **Dynamic Visuals**: Added a disk space impact bar with a linear scale and a 1% visibility floor.
     - [x] **Formatting Precision**: Added hanging indents for wrapped filenames and friendly name normalization (unquoting, space conversion).
     - [x] **Calculation Integrity**: Fixed total sync size summing to include updated files.
-- [x] **NotebookLM Compatible Download** (2026-03-01):
-    - [x] **Win32COM Converter**: `pdf_converter.py` implementation with graceful degradation.
-    - [x] **Manifest Updating**: `update_file_to_pdf` logic mimicking native files.
+- [x] **UI Revision & Polish** (2026-03-01):
+    - [x] **Terminology Shift**: Updated "Full" structure to "Flat" across all UI and translations.
+    - [x] **Settings Relocation**: Moved Debug Mode to global settings modal.
+    - [x] **Step 2 Layout Overhaul**: Implemented aggressive header suction and fractional column alignment for a compact, pixel-perfect wizard.
+    - [x] **Dynamic Toggles**: Upgraded NotebookLM master toggle with mathematical `(x/y)` counter logic.
+- [x] **NotebookLM Compatible Download Suite** (2026-03-01):
+    - [x] **PPTX/PPT to PDF**: `pdf_converter.py` natively converts presentations via COM.
+    - [x] **DOC/RTF to PDF**: `word_converter.py` natively converts legacy documents via COM.
+    - [x] **HTML to Markdown**: `md_converter.py` cleanly strips Canvas Pages.
+    - [x] **Code to TXT**: `code_converter.py` safely appends `.txt` to ~50 programming/data formats.
+    - [x] **URL Compiler**: `url_compiler.py` scrapes `.url` shortcuts into a single master text file.
+    - [x] **Video to Audio**: `video_converter.py` pulls `.mp3` tracks out of heavy `.mp4/.mov` payloads.
+    - [x] **Excel to PDF**: `excel_converter.py` converts spreadsheets to 1-page-wide PDFs to maintain tabular structure.
+    - [x] **Archive Extractor**: `archive_extractor.py` unzips payloads, dropping a 0-byte `.extracted` ghost stub to satisfy the sync engine.
+    - [x] **Manifest Updating**: Mimicking native Canvas files by updating paths and hashes seamlessly.
     - [x] **UI Hijacking**: Dynamic reassignment of the main progress bar for post-processing phases.
-    - [x] **State Persistence**: Streamlit widget cleanup bypass logic.
+    - [x] **State Persistence**: Streamlit widget cleanup bypass logic for post-UI execution constraints.
 - [x] **Sync Engine Polish & UX Iteration** (2026-02-27):
     - [x] **Dashed Row Separators**: Robust CSS Flexbox implementation using keyed container scoping.
     - [x] **Filter Paradigm**: Opt-out selection logic with indeterminate state `(x/y)` display.
@@ -51,4 +63,4 @@
 ## Pending Tasks
 - [ ] Manual end-to-end testing with live multisession Canvas instances.
 - [ ] Package updated version with PyInstaller.
-- [ ] Documentation updates and user walkthrough finalization.
+- [x] Documentation updates and user walkthrough finalization.

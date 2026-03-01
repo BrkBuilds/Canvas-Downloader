@@ -6,7 +6,7 @@ Desktop application for university students to batch download and synchronize co
 ## Key Features
 - **Batch Download**:
     - **Wizard Interface**: Guided 4-step process (Select -> Settings -> Progress -> Complete).
-    - **Structure Options**: Choose between organized module structure (with subfolders) or a single flat folder.
+    - **Structure Options**: Choose between organized module structure (with subfolders) or a single flat folder ("Flat" structure).
     - **Centralized Error Log**: Consolidates all download errors into a single `download_errors.txt` in the root folder, grouped by course.
     - **Resilient Progress**: Tracks successful and failed downloads, ensuring feedback even during network instability.
 - **Smart Sync**:
@@ -21,6 +21,14 @@ Desktop application for university students to batch download and synchronize co
     - **Detailed History**: Logs past sync operations.
 - **Offline Access**: Materials available without internet after download/sync.
 - **Internationalization**: Full English and Danish support (53+ sync keys).
+- **NotebookLM Compatible Content Generation**:
+    - Extends the core downloaded assets by dynamically converting or extracting them into formats optimized for LLM ingestion (like Google NotebookLM).
+    - Features native PDF conversion for modern/legacy PowerPoints, Word Docs, and Excel spreadsheets via COM automation (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`).
+    - Compiles URL shortcuts into a single master TXT file (`url_compiler.py`).
+    - Strips HTML Canvas pages down to pristine Markdown (`md_converter.py`).
+    - Appends `.txt` extensions to raw programming/data files to survive AI ingestion checks (`code_converter.py`).
+    - Eliminates large video payloads by swapping `.mp4/.mov` files with extracted `.mp3` audio tracks (`video_converter.py`).
+    - Identifies heavy `.zip` and `.tar.gz` payloads, automatically extracting their contents and replacing the archive with a `.extracted` ghost stub to bypass future sync conflicts (`archive_extractor.py`).
 - **User-Friendly UI**:
     - **Visual Step Trackers**: Clear progress indicators with emojis for both Download and Sync modes.
     - **CBS Filters**: Filter courses by Type, Semester, and Year (sorted newest first).

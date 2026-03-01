@@ -10,6 +10,7 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **`canvas_logic.py`**: Canvas API interactions.
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).
 - **`translations.py`**: Centralized i18n dictionary.
+- **`excel_converter.py`**: Excel to PDF conversion utility using Win32COM.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
@@ -39,6 +40,18 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Margin Collapse Override (Scoped CSS)**:
     - *Problem*: Streamlit's internal layout often swallows HTML `<div style='height:Xpx'>` spacers due to margin collapsing or negative margins on nearby components.
     - *Solution*: Wrap the target component (e.g., a button row) in a keyed `st.container` and use scoped CSS with `!important` on the `margin-top` of the `.st-key-...` class to force the desired vertical break.
+- **Aggressive Header Suction Pattern**:
+    - *Problem*: Native Streamlit `###` headers have large default bottom margins that create excessive dead space.
+    - *Solution*: Replace with custom HTML `<h3 style='margin-bottom: -25px;'>` to forcefully pull widgets up against the header. Adjust margin-bottom per widget type (e.g., -10px for deeper widgets, -25px for flat ones).
+- **Merged CSS/HTML Injection Pattern**:
+    - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
+    - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.
+- **Extreme Column Ratio Alignment Pattern**:
+    - *Problem*: Default `st.columns(2)` splits are too wide for small buttons, pushing dependent content too far right.
+    - *Solution*: Use extreme ratios like `[1, 6]` or `[1.2, 8.8]` to crush the trigger-widget's column, pulling the main input field horizontally into a tight layout.
+- **Dynamic Master/Sub Syncing Pattern**:
+    - *Problem*: Binary master toggles don't reflect how many sub-options are active.
+    - *Solution*: Use a `TOTAL_SUBS` constant and calculate `active_subs = sum([...])` on every rerun. Use an f-string label for the master checkbox: `f"Master Label :gray[({active_subs}/{TOTAL_SUBS})]"` to provide real-time mathematical feedback.
 
 ## Synchronous API Integration Patterns (Win32COM)
 - **Widget Cleanup Bypass via Button Hooks**:
@@ -50,6 +63,17 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Office 365 COM Visibility Bypass**:
     - *Problem*: Modern click-to-run Office 365 environments throw `Invalid request` exceptions when attempting to coerce `Application.Visible = False`.
     - *Solution*: Wrap visibility attribute coercions in a `try...except` block, allowing the COM script to fall back to a visible window state if security constraints prevent hidden execution.
+
+## NotebookLM Data Pipeline Patterns
+  - **Excel to PDF (Tabular Integrity)**:
+    - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. This forces the entire spreadsheet width into a single continuous column, preventing horizontal context fragmentation.
+- **The Ghost Stub Pattern (Archive Extraction)**:
+    - *Problem*: Automatically extracting large `.zip` / `.tar.gz` payloads after download creates massive file duplication, but deleting the original archive causes the sync engine to endlessly re-download it.
+    - *Solution*: Extract the contents, delete the original archive, and instantly drop a 0-byte `.extracted` file matching the original archive's name. Update the SQLite manifest `local_path` to point to this stub, preserving sync integrity without wasting disk space.
+- **Top-of-Pipeline Extraction**:
+    - *Pattern*: Always run Archive Extraction *before* any other post-processing hook (like HTML->MD or Code->TXT). This ensures files liberated from a student's ZIP folder are caught by the subsequent loops and format-shifted properly.
+- **Manifest Translation**:
+    - *Pattern*: When converting a file (e.g., `.pptx` to `.pdf`), the system updates the `local_path`, `original_size`, and `original_md5` in the database to match the new derivative file, but preserves the original `canvas_filename`. This effectively tricks the sync diffing engine into linking a remote PPTX to a local PDF for version control.
 
 ## Synchronization Strategy
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
