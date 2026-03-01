@@ -371,6 +371,17 @@ with st.sidebar:
                         step=1,
                         key="slider_concurrent_dl"
                     )
+                    
+                    st.markdown("---")
+                    st.markdown("#### Debug Mode")
+                    st.markdown(
+                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
+                        "Enable advanced logging for troubleshooting."
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+                    st.checkbox("Enable Troubleshooting Mode (Debug Log)", key="debug_mode_checkbox")
+                    st.session_state['debug_mode'] = st.session_state.get('debug_mode_checkbox', False)
                 
                 with col_sync:
                     st.markdown("### 🔄 Sync Settings")
@@ -682,11 +693,11 @@ with _main_content.container():
     # STEP 2: DOWNLOAD SETTINGS
     elif st.session_state['step'] == 2:
         render_download_wizard(st, 2, lang)
-        st.markdown(f'<div class="step-header">{get_text("step2_header", lang)}</div>', unsafe_allow_html=True)
-        
+        # 1. Squeeze the Main "Step 2" Header
+        st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
         step2_container = st.empty()
         with step2_container.container():
-            st.subheader(get_text('download_structure', lang))
+            # Removed "Download Structure" per request
             mode_options = [
                 get_text('with_subfolders', lang), 
                 # get_text('mode_files', lang), # Removed per user request
@@ -712,7 +723,8 @@ with _main_content.container():
             else:
                 st.session_state['download_mode'] = 'flat'
             
-            st.subheader(get_text('file_filter_label', lang))
+            # 2. File Types (Radio buttons have standard padding)
+            st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>File Types</h3>", unsafe_allow_html=True)
             filter_choice = st.radio(
                 get_text('file_filter_label', lang), # Hidden label via label_visibility if needed, but subheader is fine
                 [get_text('filter_all', lang), get_text('filter_study', lang)],
@@ -721,49 +733,116 @@ with _main_content.container():
             )
             st.session_state['file_filter'] = 'all' if filter_choice == get_text('filter_all', lang) else 'study'
             
-            st.subheader(get_text('destination', lang))
-            col1, col2 = st.columns([1, 3])
+            # --- NotebookLM Compatible Download ---
+            TOTAL_NOTEBOOK_SUBS = 8 # Update this number when adding more features later
+
+            def _master_toggle_changed():
+                # Force all sub-checkboxes to match the master toggle's new state
+                st.session_state['convert_zip'] = st.session_state['notebooklm_master']
+                st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
+                st.session_state['convert_html'] = st.session_state['notebooklm_master']
+                st.session_state['convert_code'] = st.session_state['notebooklm_master']
+                st.session_state['convert_urls'] = st.session_state['notebooklm_master']
+                st.session_state['convert_word'] = st.session_state['notebooklm_master']
+                st.session_state['convert_video'] = st.session_state['notebooklm_master']
+                st.session_state['convert_excel'] = st.session_state['notebooklm_master']
+
+            def _sub_toggle_changed():
+                # Calculate how many sub-checkboxes are currently active
+                active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+                # Master is only True if ALL sub-checkboxes are True
+                st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
+
+            # 2. Additional Settings (Combined CSS + Header to eliminate Streamlit's div gap)
+            st.markdown("""
+<style>
+/* Forces the sub-checkbox to indent and hug the master checkbox */
+.st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel {
+    margin-left: 35px !important;
+    margin-top: -15px !important; 
+}
+/* Ensure the sub-checkboxes don't overlap */
+.st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel { margin-top: -10px !important; }
+</style>
+<h3 style='margin-top: 15px; margin-bottom: -10px;'>Additional Settings</h3>
+""", unsafe_allow_html=True)
+
+            # 2. Calculate current active subs
+            current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+
+            # 3. Render Master
+            st.checkbox(
+                f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
+                key="notebooklm_master",
+                on_change=_master_toggle_changed,
+                help="Enable conversions to optimize files for AI processing."
+            )
+            
+            # 4. Render Sub (No elements between them now!)
+            st.checkbox(
+                "Auto-Extract Archives (.zip, .tar.gz)",
+                key="convert_zip",
+                on_change=_sub_toggle_changed,
+                help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
+            )
+            st.checkbox(
+                "Convert PowerPoints to PDF",
+                key="convert_pptx",
+                on_change=_sub_toggle_changed,
+                help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
+            )
+            st.checkbox(
+                "Convert Canvas Pages (HTML) to Markdown",
+                key="convert_html",
+                on_change=_sub_toggle_changed,
+                help="Converts Canvas Pages from HTML to clean Markdown formats."
+            )
+            st.checkbox(
+                "Convert Code & Data Files to .txt",
+                key="convert_code",
+                on_change=_sub_toggle_changed,
+                help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
+            )
+            st.checkbox(
+                "Compile Web Links (.url) into a single list",
+                key="convert_urls",
+                on_change=_sub_toggle_changed,
+                help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
+            )
+            st.checkbox(
+                "Convert Old Word Docs (.doc, .rtf) to PDF",
+                key="convert_word",
+                on_change=_sub_toggle_changed,
+                help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
+            )
+            st.checkbox(
+                "Extract Audio (.mp3) from Videos (.mp4, .mov)",
+                key="convert_video",
+                on_change=_sub_toggle_changed,
+                help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
+            )
+            st.checkbox(
+                "Convert Excel Files (.xlsx, .xls) to PDF",
+                key="convert_excel",
+                on_change=_sub_toggle_changed,
+                help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
+            )
+
+            # 2. Destination (Columns have weird padding)
+            st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
+            
+            # 3. Extreme ratio to kill dead space, small gap for a ~20px distance
+            col1, col2 = st.columns([1, 6], gap="small") 
+
             with col1:
+                # 28px spacer pushes the button down to align with the text box (ignoring the "Path" label)
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                 if st.button(get_text('select_folder', lang)):
                     select_folder()
             with col2:
                 st.text_input(get_text('path_label', lang), value=st.session_state['download_path'], disabled=True)
-                
-            st.markdown("---")
-            
-            # Debug Option (Troubleshooting)
-            st.checkbox("Enable Troubleshooting Mode (Debug Log)", key="debug_mode_checkbox")
-            st.session_state['debug_mode'] = st.session_state.get('debug_mode_checkbox', False)
-            
-            st.markdown("---")
-            
-            # --- NotebookLM Compatible Download ---
-            def _master_toggle_changed():
-                st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
-            
-            def _sub_toggle_changed():
-                if not st.session_state['convert_pptx']:
-                    st.session_state['notebooklm_master'] = False
-            
-            st.checkbox(
-                "🤖 NotebookLM Compatible Download",
-                key="notebooklm_master",
-                on_change=_master_toggle_changed,
-                help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
-            )
-            
-            with st.container():
-                st.markdown("<div style='margin-left: 25px; margin-top: -10px;'>", unsafe_allow_html=True)
-                st.checkbox(
-                    "📊 Convert PowerPoints to PDF",
-                    key="convert_pptx",
-                    on_change=_sub_toggle_changed,
-                    help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
-                )
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            st.markdown("---")
 
+            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             col_conf, col_back, _ = st.columns([1.2, 1, 5])
             with col_conf:
                 # Button label changes based on mode
@@ -784,7 +863,14 @@ with _main_content.container():
                         st.session_state['log_content'] = ""  # Initialize log content
                         
                         # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
+                        st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
                         st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
+                        st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
+                        st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
+                        st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
+                        st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
+                        st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
+                        st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
                         
                         if st.session_state['current_mode'] == 'sync':
                             # Sync mode - go to Step 4 (Analysis)
@@ -1120,6 +1206,119 @@ with _main_content.container():
                     debug_mode=st.session_state.get('debug_mode', False)
                 ))
                 
+                # --- Post-Download: Archive Extraction (Zip/Tar) ---
+                if st.session_state.get('persistent_convert_zip', False):
+                    from archive_extractor import extract_and_stub
+                    from sync_manager import SyncManager
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    archive_exts = {'.zip', '.tar', '.tar.gz'}
+                    archive_files = [
+                        f for f in course_folder.rglob("*") 
+                        if f.is_file() and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz'))
+                    ] if course_folder.exists() else []
+                    
+                    if archive_files:
+                        total_archives = len(archive_files)
+                        print(f"[Post-Download] Archive Extraction toggle is ON. Found {total_archives} archives.")
+                        
+                        # Set up UI
+                        def render_archive_dashboard(current_idx):
+                            percent = int((current_idx / total_archives) * 100) if total_archives > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting Archives for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #8b5cf6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #8b5cf6;">/ {total_archives}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                                    <span style="color: #8b5cf6; font-size: 1.2rem; font-weight: bold;">Archive → .extracted</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_archive_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting {total_archives} compressed archives...</span>")
+                        render_archive_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, archive_file in enumerate(archive_files, 1):
+                            log_deque.append(f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>")
+                            render_archive_dashboard(i - 1)
+                            
+                            old_relative = archive_file.relative_to(course_folder)
+                            
+                            new_stub_path_str = extract_and_stub(archive_file)
+                            
+                            if new_stub_path_str:
+                                new_stub_path = Path(new_stub_path_str)
+                                # DB Update
+                                try:
+                                    if os.name == 'nt':
+                                        sm._windows_unhide_file(sm.db_path)
+                                        
+                                    with sqlite3.connect(sm.db_path) as conn:
+                                        c = conn.cursor()
+                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative).replace('\\', '/'),))
+                                        row = c.fetchone()
+                                        
+                                        if row:
+                                            new_rel = new_stub_path.relative_to(course_folder)
+                                            sm.update_converted_file(row[0], str(new_rel).replace('\\', '/'))
+                                            
+                                    if os.name == 'nt':
+                                        try:
+                                            sm._windows_hide_file(sm.db_path)
+                                        except Exception:
+                                            pass
+                                except Exception as e:
+                                    print(f"Failed DB update for {archive_file.name}: {e}")
+
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {archive_file.name}</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span>")
+                                
+                            render_archive_dashboard(i)
+                            
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>")
+                        render_archive_dashboard(total_archives)
+                # --- End Post-Download Conversion (Archive) ---
+
                 # --- Post-Download: PPTX → PDF Conversion ---
                 if st.session_state.get('persistent_convert_pptx', False):
                     from pdf_converter import convert_pptx_to_pdf
@@ -1128,12 +1327,12 @@ with _main_content.container():
                     course_name = cm._sanitize_filename(course.name)
                     course_folder = Path(st.session_state['download_path']) / course_name
                     
-                    # Gather all .pptx/.ppt files in the course folder
-                    pptx_files = []
-                    if course_folder.exists():
-                        for f in course_folder.rglob('*'):
-                            if f.suffix.lower() in ('.pptx', '.ppt') and f.is_file():
-                                pptx_files.append(f)
+                    # Gather all supported PowerPoint files in the course folder
+                    supported_ppt_exts = {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}
+                    pptx_files = [
+                        f for f in course_folder.rglob('*')
+                        if f.is_file() and f.suffix.lower() in supported_ppt_exts
+                    ] if course_folder.exists() else []
                     
                     if pptx_files:
                         total_pptx = len(pptx_files)
@@ -1206,7 +1405,7 @@ with _main_content.container():
                                         original_rel = pptx_file.relative_to(course_folder)
                                         if str(original_rel).replace('\\', '/') == local_p:
                                             new_rel = pdf_path.relative_to(course_folder)
-                                            sm.update_file_to_pdf(int(file_id), str(new_rel).replace('\\', '/'))
+                                            sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
                                             break
                                     except (ValueError, KeyError):
                                         pass
@@ -1221,7 +1420,588 @@ with _main_content.container():
                         log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
                         # 3. Final 100% render
                         render_conversion_dashboard(total_pptx)
+                        
+                # --- Post-Download: HTML → MD Conversion ---
+                if st.session_state.get('persistent_convert_html', False):
+                    from md_converter import convert_html_to_md
+                    from sync_manager import SyncManager
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    # Gather all .html files in the course folder
+                    html_files = []
+                    if course_folder.exists():
+                        for f in course_folder.rglob('*'):
+                            if f.suffix.lower() == '.html' and f.is_file():
+                                html_files.append(f)
+                    
+                    if html_files:
+                        total_html = len(html_files)
+                        print(f"[Post-Download] HTML Conversion toggle is ON. Found {total_html} files.")
+                        
+                        # Custom render function for HTML conversion
+                        def render_html_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_html) * 100) if total_html > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Canvas Pages for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #34D399; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #34D399;">/ {total_html}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
+                                    <span style="color: #34D399; font-size: 1.2rem; font-weight: bold;">Processing Markdown</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_html_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_html} Canvas Pages to Markdown...</span>")
+                        render_html_conversion_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, html_file in enumerate(html_files, 1):
+                            old_relative_html = html_file.relative_to(course_folder)
+                            
+                            md_path = convert_html_to_md(html_file)
+                            
+                            if md_path:
+                                # Safe DB lookup
+                                try:
+                                    # Ensure DB is accessible
+                                    if os.name == 'nt':
+                                        sm._windows_unhide_file(sm.db_path)
+                                        
+                                    with sqlite3.connect(sm.db_path) as conn:
+                                        c = conn.cursor()
+                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_html).replace('\\', '/'),))
+                                        row = c.fetchone()
+                                        
+                                        if row:
+                                            canvas_file_id = row[0]
+                                            new_rel = md_path.relative_to(course_folder)
+                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
+                                            db_updated = True
+                                    
+                                    if os.name == 'nt':
+                                        try:
+                                            sm._windows_hide_file(sm.db_path)
+                                        except Exception:
+                                            pass
+                                except Exception as e:
+                                    print(f"Failed to cleanly query/update manifest for {html_file.name}: {e}")
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span>")
+                                
+                            render_html_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>")
+                        render_html_conversion_dashboard(total_html)
                 # --- End Post-Download Conversion ---
+                
+                # --- Post-Download: Code → TXT Conversion ---
+                if st.session_state.get('persistent_convert_code', False):
+                    from code_converter import convert_code_to_txt, CODE_EXTENSIONS
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    # Gather all supported code files in the course folder
+                    code_files = []
+                    if course_folder.exists():
+                        for f in course_folder.rglob('*'):
+                            if f.is_file() and f.suffix.lower() in CODE_EXTENSIONS:
+                                code_files.append(f)
+                    
+                    if code_files:
+                        total_code = len(code_files)
+                        print(f"[Post-Download] Code Conversion toggle is ON. Found {total_code} files.")
+                        
+                        # Custom render function for Code conversion
+                        def render_code_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_code) * 100) if total_code > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Optimizing Code Files for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #FBBF24; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #1E293B; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(255,255,255,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #FBBF24;">/ {total_code}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
+                                    <span style="color: #FBBF24; font-size: 1.2rem; font-weight: bold;">Processing .txt</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_code_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_code} Code & Data files to TXT...</span>")
+                        render_code_conversion_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, code_file in enumerate(code_files, 1):
+                            old_relative_code = code_file.relative_to(course_folder)
+                            
+                            txt_path_str = convert_code_to_txt(code_file)
+                            
+                            if txt_path_str:
+                                txt_path = Path(txt_path_str)
+                                # Safe DB lookup
+                                try:
+                                    # Ensure DB is accessible
+                                    if os.name == 'nt':
+                                        sm._windows_unhide_file(sm.db_path)
+                                        
+                                    with sqlite3.connect(sm.db_path) as conn:
+                                        c = conn.cursor()
+                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_code).replace('\\', '/'),))
+                                        row = c.fetchone()
+                                        
+                                        if row:
+                                            canvas_file_id = row[0]
+                                            new_rel = txt_path.relative_to(course_folder)
+                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
+                                    
+                                    if os.name == 'nt':
+                                        try:
+                                            sm._windows_hide_file(sm.db_path)
+                                        except Exception:
+                                            pass
+                                except Exception as e:
+                                    print(f"Failed to cleanly query/update manifest for {code_file.name}: {e}")
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {code_file.name} -> TXT</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span>")
+                                
+                            render_code_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>")
+                        render_code_conversion_dashboard(total_code)
+                # --- End Post-Download Conversion (Code) ---
+                
+                # --- Post-Download: NotebookLM Link Compiler ---
+                if st.session_state.get('persistent_convert_urls', False):
+                    from url_compiler import compile_urls_to_txt
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    if course_folder.exists():
+                        # Briefly hijack the dashboard UI logic to show the log
+                        header_placeholder.markdown(f'''
+                        <div style="margin-bottom: 0.5rem;">
+                            <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                            <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Compiling Web Links for {course.name}</h3>
+                        </div>
+                        ''', unsafe_allow_html=True)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Scouring '{course.name}' for .url shortcuts...</span>")
+                        
+                        log_content = "<br>".join(reversed(list(log_deque)))
+                        log_placeholder.markdown(f'''
+                        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                            {log_content}
+                        </div>
+                        ''', unsafe_allow_html=True)
+                        
+                        compiled_path = compile_urls_to_txt(course_folder, course.name)
+                        
+                        if compiled_path:
+                            log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Links successfully compiled into: NotebookLM_External_Links.txt</span>")
+                        
+                        # Trigger final UI refresh so log updates
+                        log_content = "<br>".join(reversed(list(log_deque)))
+                        log_placeholder.markdown(f'''
+                        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                            {log_content}
+                        </div>
+                        ''', unsafe_allow_html=True)
+                # --- End Post-Download Link Compiler ---
+
+                # --- Post-Download: Legacy Word → PDF Conversion ---
+                if st.session_state.get('persistent_convert_word', False):
+                    from word_converter import convert_word_to_pdf
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    # Gather all legacy word files in the course folder
+                    legacy_word_exts = {'.doc', '.rtf', '.odt'}
+                    word_files = [
+                        f for f in course_folder.rglob('*')
+                        if f.is_file() and f.suffix.lower() in legacy_word_exts
+                    ] if course_folder.exists() else []
+                    
+                    if word_files:
+                        total_word = len(word_files)
+                        print(f"[Post-Download] Word Conversion toggle is ON. Found {total_word} legacy files.")
+                        
+                        # Custom render function for Word conversion
+                        def render_word_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_word) * 100) if total_word > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Legacy Word Docs for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #3b82f6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #3b82f6;">/ {total_word}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                                    <span style="color: #3b82f6; font-size: 1.2rem; font-weight: bold;">Legacy Doc → .pdf</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_word_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_word} Legacy Word docs to PDF...</span>")
+                        render_word_conversion_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, word_file in enumerate(word_files, 1):
+                            old_relative_word = word_file.relative_to(course_folder)
+                            
+                            pdf_path_str = convert_word_to_pdf(word_file)
+                            
+                            if pdf_path_str:
+                                pdf_path = Path(pdf_path_str)
+                                # Safe DB lookup
+                                try:
+                                    # Ensure DB is accessible
+                                    if os.name == 'nt':
+                                        sm._windows_unhide_file(sm.db_path)
+                                        
+                                    with sqlite3.connect(sm.db_path) as conn:
+                                        c = conn.cursor()
+                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_word).replace('\\', '/'),))
+                                        row = c.fetchone()
+                                        
+                                        if row:
+                                            canvas_file_id = row[0]
+                                            new_rel = pdf_path.relative_to(course_folder)
+                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
+                                    
+                                    if os.name == 'nt':
+                                        try:
+                                            sm._windows_hide_file(sm.db_path)
+                                        except Exception:
+                                            pass
+                                except Exception as e:
+                                    print(f"Failed to cleanly query/update manifest for {word_file.name}: {e}")
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {word_file.name} -> PDF</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span>")
+                                
+                            render_word_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Word to PDF conversion complete!</span>")
+                        render_word_conversion_dashboard(total_word)
+                # --- End Post-Download Conversion (Word) ---
+                
+                # --- Post-Download: Excel to PDF Conversion ---
+                if st.session_state.get('persistent_convert_excel', False):
+                    from excel_converter import convert_excel_to_pdf
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    excel_exts = {'.xlsx', '.xls', '.xlsm'}
+                    excel_files = [
+                        f for f in course_folder.rglob('*')
+                        if f.is_file() and f.suffix.lower() in excel_exts and not f.name.startswith('~$')
+                    ] if course_folder.exists() else []
+                    
+                    if excel_files:
+                        total_excel = len(excel_files)
+                        print(f"[Post-Download] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
+                        
+                        def render_excel_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_excel) * 100) if total_excel > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Excel to PDF for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #22c55e; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #22c55e;">/ {total_excel}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                                    <span style="color: #22c55e; font-size: 1.2rem; font-weight: bold;">Excel → .pdf</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_excel_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>")
+                        render_excel_conversion_dashboard(0)
+                        
+                        for i, excel_file in enumerate(excel_files, 1):
+                            abs_path = str(excel_file.absolute())
+                            new_pdf_path = convert_excel_to_pdf(abs_path)
+                            
+                            if new_pdf_path:
+                                old_rel_path = os.path.relpath(abs_path, st.session_state['download_path'])
+                                new_rel_path = os.path.relpath(new_pdf_path, st.session_state['download_path'])
+                                
+                                conn = sqlite3.connect(db_path)
+                                c = conn.cursor()
+                                c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (old_rel_path,))
+                                row = c.fetchone()
+                                if row:
+                                    # Update DB
+                                    c.execute("UPDATE sync_manifest SET local_path = ? WHERE canvas_file_id = ?", (new_rel_path, row[0]))
+                                    conn.commit()
+                                conn.close()
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {excel_file.name} -> PDF</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span>")
+                                
+                            render_excel_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>")
+                        render_excel_conversion_dashboard(total_excel)
+                # --- End Post-Download Conversion (Excel) ---
+                
+                # --- Post-Download: Video to MP3 Conversion ---
+                if st.session_state.get('persistent_convert_video', False):
+                    from video_converter import convert_video_to_mp3
+                    import sqlite3
+                    import os
+                    
+                    course_name = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name
+                    
+                    # Gather all video files in the course folder
+                    video_exts = {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}
+                    video_files = [
+                        f for f in course_folder.rglob('*')
+                        if f.is_file() and f.suffix.lower() in video_exts
+                    ] if course_folder.exists() else []
+                    
+                    if video_files:
+                        total_video = len(video_files)
+                        print(f"[Post-Download] Video Conversion toggle is ON. Found {total_video} video files.")
+                        
+                        # Custom render function for Video conversion
+                        def render_video_conversion_dashboard(current_idx):
+                            percent = int((current_idx / total_video) * 100) if total_video > 0 else 100
+                            percent = min(100, percent)
+                            
+                            header_placeholder.markdown(f'''
+                            <div style="margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting Audio from Videos for {course.name}</h3>
+                            </div>
+                            ''', unsafe_allow_html=True)
+
+                            progress_placeholder.markdown(f'''
+                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                                <div style="background-color: #f59e0b; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                                    {percent}%
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            metrics_placeholder.markdown(f'''
+                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
+                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #f59e0b;">/ {total_video}</span></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                                    <span style="color: #f59e0b; font-size: 1.2rem; font-weight: bold;">Video → .mp3</span>
+                                </div>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                            log_content = "<br>".join(reversed(list(log_deque)))
+                            log_placeholder.markdown(f'''
+                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                                {log_content}
+                            </div>
+                            ''', unsafe_allow_html=True)
+                            
+                        render_video_conversion_dashboard(0)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting audio from {total_video} video files...</span>")
+                        render_video_conversion_dashboard(0)
+                        
+                        import time
+                        time.sleep(0.2)
+                        
+                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        
+                        for i, video_file in enumerate(video_files, 1):
+                            log_deque.append(f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>")
+                            render_video_conversion_dashboard(i - 1)
+                            
+                            old_relative_video = video_file.relative_to(course_folder)
+                            
+                            mp3_path_str = convert_video_to_mp3(video_file)
+                            
+                            if mp3_path_str:
+                                mp3_path = Path(mp3_path_str)
+                                # Safe DB lookup
+                                try:
+                                    # Ensure DB is accessible
+                                    if os.name == 'nt':
+                                        sm._windows_unhide_file(sm.db_path)
+                                        
+                                    with sqlite3.connect(sm.db_path) as conn:
+                                        c = conn.cursor()
+                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_video).replace('\\', '/'),))
+                                        row = c.fetchone()
+                                        
+                                        if row:
+                                            canvas_file_id = row[0]
+                                            new_rel = mp3_path.relative_to(course_folder)
+                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
+                                    
+                                    if os.name == 'nt':
+                                        try:
+                                            sm._windows_hide_file(sm.db_path)
+                                        except Exception:
+                                            pass
+                                except Exception as e:
+                                    print(f"Failed to cleanly query/update manifest for {video_file.name}: {e}")
+                                
+                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {video_file.name} -> MP3</span>")
+                            else:
+                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span>")
+                                
+                            render_video_conversion_dashboard(i)
+                        
+                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>")
+                        render_video_conversion_dashboard(total_video)
+                # --- End Post-Download Conversion (Video) ---
                 
                 # Move to next course
                 st.session_state['current_course_index'] += 1
