@@ -1,6 +1,12 @@
 import os
 from pathlib import Path
-from moviepy.editor import VideoFileClip
+
+try:
+    # MoviePy v2.x
+    from moviepy import VideoFileClip
+except ImportError:
+    # Fallback for MoviePy v1.x (just in case)
+    from moviepy.editor import VideoFileClip
 
 def convert_video_to_mp3(video_path: str | Path) -> str | None:
     abs_video = str(Path(video_path).resolve().absolute())

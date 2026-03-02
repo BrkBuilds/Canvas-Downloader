@@ -2948,7 +2948,7 @@ def _run_sync(lang):
             sm = result.get('sync_mgr')
             if sm and sm.local_path.exists():
                 for f in sm.local_path.rglob('*'):
-                    if f.is_file() and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz')):
+                    if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz')):
                         archive_files_to_convert.append((f, sm))
         
         if archive_files_to_convert:
@@ -3057,7 +3057,7 @@ def _run_sync(lang):
             
             if local_path.exists():
                 for f in local_path.rglob('*'):
-                    if f.is_file() and f.suffix.lower() in supported_ppt_exts:
+                    if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in supported_ppt_exts:
                         # Only convert files that were just synced (check if in synced_details)
                         pair_idx = sel['pair_idx']
                         display_name = f.name
@@ -3161,7 +3161,7 @@ def _run_sync(lang):
                 sm = result.get('sync_mgr')
                 if sm and sm.local_path.exists():
                     for f in sm.local_path.rglob('*'):
-                        if f.suffix.lower() == '.html' and f.is_file():
+                        if f.suffix.lower() == '.html' and f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts:
                             html_files_to_convert.append((f, sm))
             
             if html_files_to_convert:
@@ -3264,7 +3264,7 @@ def _run_sync(lang):
                 sm = result.get('sync_mgr')
                 if sm and sm.local_path.exists():
                     for f in sm.local_path.rglob('*'):
-                        if f.is_file() and f.suffix.lower() in CODE_EXTENSIONS:
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in CODE_EXTENSIONS:
                             code_files_to_convert.append((f, sm))
             
             if code_files_to_convert:
@@ -3397,7 +3397,7 @@ def _run_sync(lang):
                 sm = result.get('sync_mgr')
                 if sm and sm.local_path.exists():
                     for f in sm.local_path.rglob('*'):
-                        if f.is_file() and f.suffix.lower() in legacy_word_exts:
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in legacy_word_exts:
                             word_files_to_convert.append((f, sm))
             
             if word_files_to_convert:
@@ -3501,7 +3501,7 @@ def _run_sync(lang):
                 sm = result.get('sync_mgr')
                 if sm and sm.local_path.exists():
                     for f in sm.local_path.rglob('*'):
-                        if f.is_file() and f.suffix.lower() in excel_exts and not f.name.startswith('~$'):
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in excel_exts and not f.name.startswith('~$'):
                             excel_files_to_convert.append((f, sm))
             
             if excel_files_to_convert:
@@ -3603,7 +3603,7 @@ def _run_sync(lang):
                 sm = result.get('sync_mgr')
                 if sm and sm.local_path.exists():
                     for f in sm.local_path.rglob('*'):
-                        if f.is_file() and f.suffix.lower() in video_exts:
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in video_exts:
                             video_files_to_convert.append((f, sm))
             
             if video_files_to_convert:
