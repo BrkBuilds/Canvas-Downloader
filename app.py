@@ -1219,7 +1219,7 @@ with _main_content.container():
                     archive_exts = {'.zip', '.tar', '.tar.gz'}
                     archive_files = [
                         f for f in course_folder.rglob("*") 
-                        if f.is_file() and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz'))
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz'))
                     ] if course_folder.exists() else []
                     
                     if archive_files:
@@ -1331,7 +1331,7 @@ with _main_content.container():
                     supported_ppt_exts = {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}
                     pptx_files = [
                         f for f in course_folder.rglob('*')
-                        if f.is_file() and f.suffix.lower() in supported_ppt_exts
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in supported_ppt_exts
                     ] if course_folder.exists() else []
                     
                     if pptx_files:
@@ -1435,7 +1435,7 @@ with _main_content.container():
                     html_files = []
                     if course_folder.exists():
                         for f in course_folder.rglob('*'):
-                            if f.suffix.lower() == '.html' and f.is_file():
+                            if f.suffix.lower() == '.html' and f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts:
                                 html_files.append(f)
                     
                     if html_files:
@@ -1547,7 +1547,7 @@ with _main_content.container():
                     code_files = []
                     if course_folder.exists():
                         for f in course_folder.rglob('*'):
-                            if f.is_file() and f.suffix.lower() in CODE_EXTENSIONS:
+                            if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in CODE_EXTENSIONS:
                                 code_files.append(f)
                     
                     if code_files:
@@ -1697,7 +1697,7 @@ with _main_content.container():
                     legacy_word_exts = {'.doc', '.rtf', '.odt'}
                     word_files = [
                         f for f in course_folder.rglob('*')
-                        if f.is_file() and f.suffix.lower() in legacy_word_exts
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in legacy_word_exts
                     ] if course_folder.exists() else []
                     
                     if word_files:
@@ -1808,7 +1808,7 @@ with _main_content.container():
                     excel_exts = {'.xlsx', '.xls', '.xlsm'}
                     excel_files = [
                         f for f in course_folder.rglob('*')
-                        if f.is_file() and f.suffix.lower() in excel_exts and not f.name.startswith('~$')
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in excel_exts and not f.name.startswith('~$')
                     ] if course_folder.exists() else []
                     
                     if excel_files:
@@ -1901,7 +1901,7 @@ with _main_content.container():
                     video_exts = {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}
                     video_files = [
                         f for f in course_folder.rglob('*')
-                        if f.is_file() and f.suffix.lower() in video_exts
+                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in video_exts
                     ] if course_folder.exists() else []
                     
                     if video_files:
