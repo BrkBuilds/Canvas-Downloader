@@ -26,7 +26,7 @@ def convert_html_to_md(html_path: Path | str) -> Path | None:
         md_path = html_path.with_suffix('.md')
         
         # Enforce UTF-8 encoding for reading
-        with open(html_path, 'r', encoding='utf-8') as f:
+        with open(html_path, 'r', encoding='utf-8', errors='replace') as f:
             html_content = f.read()
             
         # Parse HTML
@@ -36,7 +36,7 @@ def convert_html_to_md(html_path: Path | str) -> Path | None:
         md_content = markdownify.markdownify(str(soup), heading_style="ATX")
         
         # Enforce UTF-8 encoding for writing
-        with open(md_path, 'w', encoding='utf-8') as f:
+        with open(md_path, 'w', encoding='utf-8', errors='replace') as f:
             f.write(md_content)
             
         # Delete original HTML file
