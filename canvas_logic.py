@@ -391,8 +391,8 @@ class CanvasManager:
         
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         if debug_mode:
-            clear_debug_log(debug_file)
-            log_debug(f"Starting download for course: {course.name} (ID: {course.id}) Mode: {mode}", debug_file)
+            # Append course header (never wipe — one global log per session)
+            log_debug(f"\n{'='*50}\n--- Download: {course.name} (ID: {course.id}) Mode: {mode} ---\n{'='*50}", debug_file)
             log_debug(f"Save Dir: {save_dir}", debug_file)
 
         downloaded_file_ids = set()

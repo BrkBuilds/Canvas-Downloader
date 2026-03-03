@@ -21,125 +21,106 @@ logger = logging.getLogger(__name__)
 PP_SAVE_AS_PDF = 32
 
 
-def convert_pptx_to_pdf(pptx_path: Path, error_log_path: Path = None) -> Path | None:
-    """
-    Convert a PowerPoint file to PDF using Win32COM.
+class PowerPointToPDF:
+    def __init__(self, error_log_path: Path = None):
+        self.error_log_path = error_log_path
+        self.app = None
 
-    Args:
-        pptx_path: Absolute path to the .pptx/.ppt file.
-        error_log_path: Directory where download_errors.txt lives (for logging failures).
-
-    Returns:
-        Path to the new PDF file on success, or None on failure.
-        On failure, the original .pptx file is preserved.
-    """
-    pptx_path = Path(pptx_path)
-    if not pptx_path.exists():
-        logger.warning(f"PPTX file not found for conversion: {pptx_path}")
-        return None
-
-    # Task 1: FORCE ABSOLUTE PATHS
-    abs_pptx = str(pptx_path.resolve().absolute())
-    abs_pdf = str(pptx_path.with_suffix('.pdf').resolve().absolute())
-    pdf_path = Path(abs_pdf)
-    
-    # Add a terminal print so we know the function was actually called
-    print(f"[COM Converter] Attempting to convert: {abs_pptx}")
-
-    # --- Attempt COM conversion ---
-    try:
-        import pythoncom
-        import win32com.client
-    except ImportError:
-        _log_conversion_error(
-            error_log_path,
-            pptx_path.name,
-            "pywin32 is not installed. Install with: pip install pywin32"
-        )
-        return None
-
-    powerpoint = None
-    presentation = None
-    try:
-        pythoncom.CoInitialize()
-
-        powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+    def __enter__(self):
         try:
-            powerpoint.Visible = False
-            powerpoint.DisplayAlerts = False
-        except Exception:
-            pass # Ignore Office 365 restriction, fallback to default visibility
-
-        # Open presentation (use absolute path string for COM)
-        presentation = powerpoint.Presentations.Open(
-            abs_pptx,
-            ReadOnly=True,
-            Untitled=False,
-            WithWindow=False
-        )
-
-        # Save as PDF
-        presentation.SaveAs(abs_pdf, PP_SAVE_AS_PDF)
-        presentation.Close()
-        presentation = None
-
-        # Verify the PDF was actually created
-        if not pdf_path.exists():
-            _log_conversion_error(
-                error_log_path,
-                pptx_path.name,
-                "PowerPoint reported success but PDF file was not found on disk."
-            )
-            return None
-
-        # Delete the original PPTX
-        try:
-            pptx_path.unlink()
-        except OSError as e:
-            logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
-            # PDF was created successfully, so we still return it
-
-        logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
-        return pdf_path
-
-    except Exception as e:
-        error_msg = str(e)
-
-        # Common error: PowerPoint is not installed
-        if "Class not registered" in error_msg or "0x80040154" in error_msg:
-            friendly_msg = "Microsoft PowerPoint is not installed on this machine."
-        elif "RPC" in error_msg:
-            friendly_msg = f"PowerPoint COM server error (is another instance hanging?): {error_msg}"
-        else:
-            friendly_msg = f"COM conversion failed: {error_msg}"
-
-        # Task 3: Improve Error Logging - Print explicitly to terminal
-        print(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
-        
-        _log_conversion_error(error_log_path, pptx_path.name, friendly_msg)
-
-        # Clean up partial PDF if it was created
-        if pdf_path.exists():
+            import pythoncom
+            import win32com.client
+            pythoncom.CoInitialize()
+            self.app = win32com.client.DispatchEx("PowerPoint.Application")
             try:
-                pdf_path.unlink()
-            except OSError:
-                pass
+                self.app.Visible = False
+                self.app.DisplayAlerts = False
+            except Exception:
+                pass # Ignore Office 365 restriction
+        except Exception as e:
+            logger.warning(f"COM Initialization failed: {e}")
+        return self
 
-        return None
-
-    finally:
-        # Ensure COM objects are released even on error
+    def convert(self, pptx_path: str | Path) -> str | None:
+        if self.app is None:
+            return None
+            
+        pptx_path = Path(pptx_path)
+        abs_pptx = str(pptx_path.resolve().absolute())
+        abs_pdf = str(pptx_path.with_suffix('.pdf').resolve().absolute())
+        pdf_path = Path(abs_pdf)
+        
+        print(f"[COM Converter] Attempting to convert: {abs_pptx}")
+        presentation = None
+        
         try:
+            # Open presentation
+            presentation = self.app.Presentations.Open(
+                abs_pptx,
+                ReadOnly=True,
+                Untitled=False,
+                WithWindow=False
+            )
+
+            # Save as PDF
+            presentation.SaveAs(abs_pdf, PP_SAVE_AS_PDF)
+            presentation.Close()
+            presentation = None
+
+            # Verify the PDF was actually created
+            if not pdf_path.exists():
+                _log_conversion_error(
+                    self.error_log_path,
+                    pptx_path.name,
+                    "PowerPoint reported success but PDF file was not found on disk."
+                )
+                return None
+
+            # Delete the original PPTX
+            try:
+                pptx_path.unlink()
+            except OSError as e:
+                logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
+
+            logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
+            return abs_pdf
+
+        except Exception as e:
+            error_msg = str(e)
+            
+            if "Class not registered" in error_msg or "0x80040154" in error_msg:
+                friendly_msg = "Microsoft PowerPoint is not installed on this machine."
+            elif "RPC" in error_msg:
+                friendly_msg = f"PowerPoint COM server error (is another instance hanging?): {error_msg}"
+            else:
+                friendly_msg = f"COM conversion failed: {error_msg}"
+
+            print(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
+            
+            _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
+
+            if pdf_path.exists():
+                try:
+                    pdf_path.unlink()
+                except OSError:
+                    pass
+
+            return None
+        finally:
             if presentation is not None:
-                presentation.Close()
-        except Exception:
-            pass
+                try:
+                    presentation.Close()
+                except Exception:
+                    pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.app:
+            try:
+                self.app.Quit()
+            except Exception:
+                pass
         try:
-            if powerpoint is not None:
-                powerpoint.Quit()
-        except Exception:
-            pass
-        try:
+            import pythoncom
             pythoncom.CoUninitialize()
         except Exception:
             pass
