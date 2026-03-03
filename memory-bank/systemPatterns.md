@@ -54,6 +54,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Solution*: Use a `TOTAL_SUBS` constant and calculate `active_subs = sum([...])` on every rerun. Use an f-string label for the master checkbox: `f"Master Label :gray[({active_subs}/{TOTAL_SUBS})]"` to provide real-time mathematical feedback.
 
 ## Synchronous API Integration Patterns (Win32COM)
+- **COM Application Context Managers**:
+    - *Problem*: Cold-booting and tearing down instances of Excel, Word, or PowerPoint for *every single file* in a batch download creates massive CPU overhead and severely bottlenecks post-processing speed.
+    - *Solution*: Refactored `pdf_converter.py`, `word_converter.py`, and `excel_converter.py` into Python Context Managers (`__enter__`, `__exit__`). The `with ConverterClass() as converter:` block strictly wraps the outside of the file processing loops. This guarantees the heavyweight COM application is initialized exactly once per batch and safely exits securely when the block completes.
 - **Widget Cleanup Bypass via Button Hooks**:
     - *Problem*: Transitioning from a step with an active widget (e.g., a checkbox) to a new step destroys the widget and deletes its key from `st.session_state`.
     - *Solution*: Capture the widget's boolean state into a custom, non-widget `persistent_` session state key directly inside the `if st.button('Next'):` execution block, immediately before the app reruns.
@@ -63,10 +66,17 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Office 365 COM Visibility Bypass**:
     - *Problem*: Modern click-to-run Office 365 environments throw `Invalid request` exceptions when attempting to coerce `Application.Visible = False`.
     - *Solution*: Wrap visibility attribute coercions in a `try...except` block, allowing the COM script to fall back to a visible window state if security constraints prevent hidden execution.
+- **Proactive COM Health Checks (`_is_alive`)**:
+    - *Problem*: Repeatedly opening and closing files via headless COM often silently corrupts the RPC channel. The COM object reference (`self.app`) remains non-None, but the next `Workbooks.Open` command crashes.
+    - *Solution*: Implement a lightweight method (`try: self.app.Version`) at the very start of the `convert()` loop. If the ping fails, immediately execute the self-healing routine (`Quit()` + `_init_app()`) *before* attempting the actual file conversion.
+- **Headless COM Throttling**:
+    - *Problem*: Sequential high-speed COM operations (`Open` -> `Export` -> `Close`) outpace the physical hardware spooler or thread release, destabilizing batch loops.
+    - *Solution*: Explicitly inject small `time.sleep(0.3)` pauses between massive synchronous milestones (e.g., ExportAsFixedFormat) to give the application time to stabilize the thread.
 
 ## NotebookLM Data Pipeline Patterns
-  - **Excel to PDF (Tabular Integrity)**:
-    - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. This forces the entire spreadsheet width into a single continuous column, preventing horizontal context fragmentation.
+  - **Excel to PDF (Tabular Integrity & Global Export)**:
+    - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. 
+    - *Anti-Pattern Avoidance*: Never attempt to select sheets via `ActiveWindow` or filter data via `WorksheetFunction.CountA(sheet.Cells)`. `ActiveWindow` crashes reliably in `Visible=False` environments, and `CountA` sweeps billions of cells causing guaranteed RPC timeouts. The cleanest strategy is to just export the entire workbook via `ExportAsFixedFormat(0)`—empty sheets will produce small harmless PDFs instead of crashing the batch pipeline.
 - **The Ghost Stub Pattern (Archive Extraction)**:
     - *Problem*: Automatically extracting large `.zip` / `.tar.gz` payloads after download creates massive file duplication, but deleting the original archive causes the sync engine to endlessly re-download it.
     - *Solution*: Extract the contents, delete the original archive, and instantly drop a 0-byte `.extracted` file matching the original archive's name. Update the SQLite manifest `local_path` to point to this stub, preserving sync integrity without wasting disk space.
@@ -89,3 +99,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Locked File Pruning**: Pre-filtering Canvas `File` objects for missing `url` attributes to prevent batch download crashes.
 - **LTI/Media Catch**: Graceful reporting of restricted media streams via extension/URL inspection.
 - **Centralized Logs**: `download_errors.txt` created in the workspace root.
+- **Post-Processing Dual Logging Architecture**:
+    - `canvas_debug.log_debug(message, debug_file)` — writes timestamped plain text to `debug_log.txt` (gated by Debug Mode toggle). The `debug_file` is `Path(save_dir) / "debug_log.txt"` or `None`.
+    - `log_post_process_error(directory, filename, error_msg)` — inline helper defined in `app.py` that appends `[Post-Processing]`-tagged entries to `download_errors.txt` (always active on failures).
+    - Every post-processing log message is mirrored to three destinations: `log_deque` (Streamlit terminal UI), `logger.info/error` (Python logging), and `log_debug` (debug file).
+
+## UI Collapsible Settings Pattern
+- **Expander for Sub-Toggles**:
+    - *Problem*: 8+ sub-checkboxes clutter the Step 2 UI and visually overwhelm the page.
+    - *Solution*: Keep the master toggle (`notebooklm_master`) always visible, and nest all sub-checkboxes inside `st.expander(f"⚙️ Advanced Conversion Settings ({active}/{total})")`. The dynamic label updates on rerun. No custom CSS indentation needed — the expander provides natural visual hierarchy.

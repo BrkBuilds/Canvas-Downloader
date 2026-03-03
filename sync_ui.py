@@ -1645,27 +1645,54 @@ def _show_analysis_review(lang):
             active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
             st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
         
-        with st.container(border=True):
-            st.markdown("### Additional Settings")
+        # 1. Inject Borderless Expander + Tree-View CSS
+        st.markdown("""
+        <style>
+        /* 1. Target ONLY the specific expander containing the master checkbox */
+        [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
+            border-style: none !important;
+            background-color: transparent !important;
+        }
+        [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            background-color: transparent !important;
+        }
+        [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
+            font-size: 1.75rem !important;
+            font-weight: 600 !important;
+        }
+
+        /* 2. Tree-view styling for nested sub-checkboxes */
+        .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
+        .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
+        .st-key-convert_urls, .st-key-convert_video {
+            margin-left: 28px !important;
+            padding-left: 15px !important;
+            border-left: 2px solid #3E4353 !important; 
+            margin-top: -12px !important; 
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
+        .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
+        .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+        </style>
+        """, unsafe_allow_html=True)
+
+        with st.expander("File format - download settings", expanded=False):
             current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
 
             st.checkbox(
-                f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
+                f"**NotebookLM Compatible Sync** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
                 key="notebooklm_master",
                 on_change=_sync_master_toggle_changed,
                 help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
             )
-
-            st.markdown("""
-<style>
-/* Force strict left indentation on the sub-checkbox to create a Parent/Child visual hierarchy */
-.st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel {
-    margin-left: 35px !important;
-}
-/* Ensure the sub-checkboxes don't overlap */
-.st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel { margin-top: -10px !important; }
-</style>
-""", unsafe_allow_html=True)
             
             st.checkbox(
                 "Auto-Extract Archives (.zip, .tar.gz)",
@@ -1678,6 +1705,18 @@ def _show_analysis_review(lang):
                 key="convert_pptx",
                 on_change=_sync_sub_toggle_changed,
                 help="Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed."
+            )
+            st.checkbox(
+                "Convert Old Word Docs (.doc, .rtf) to PDF",
+                key="convert_word",
+                on_change=_sync_sub_toggle_changed,
+                help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
+            )
+            st.checkbox(
+                "Convert Excel Files (.xlsx, .xls) to PDF",
+                key="convert_excel",
+                on_change=_sync_sub_toggle_changed,
+                help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
             )
             st.checkbox(
                 "Convert Canvas Pages (HTML) to Markdown",
@@ -1698,22 +1737,10 @@ def _show_analysis_review(lang):
                 help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
             )
             st.checkbox(
-                "Convert Old Word Docs (.doc, .rtf) to PDF",
-                key="convert_word",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-            )
-            st.checkbox(
                 "Extract Audio (.mp3) from Videos (.mp4, .mov)",
                 key="convert_video",
                 on_change=_sync_sub_toggle_changed,
                 help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-            )
-            st.checkbox(
-                "Convert Excel Files (.xlsx, .xls) to PDF",
-                key="convert_excel",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
             )
         
         st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
@@ -2882,6 +2909,16 @@ def _run_sync(lang):
                     # Final flush per file loop ensuring the log renders
                     if time.time() - last_ui_update > 0.1:
                         active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
+                
+                if failed_files_for_pair:
+                    retry_selections.append({
+                        'pair_idx': pair_idx,
+                        'res_data': sel['res_data'],
+                        'new': failed_files_for_pair,
+                        'updates': [],
+                        'redownload': [],
+                        'ignore': []
+                    })
                         
             # Final 100% UI Paint after the loop
             elapsed_final = time.time() - start_time
@@ -2920,19 +2957,104 @@ def _run_sync(lang):
                         import logging
                         logging.warning(f"Failed to write updates log: {e}")
                 
-                if failed_files_for_pair:
-                    retry_selections.append({
-                        'pair_idx': sel['pair_idx'],
-                        'res_data': sel['res_data'],
-                        'new': failed_files_for_pair,
-                        'updates': [],
-                        'redownload': [],
-                        'ignore': []
-                    })
-                
-        return synced_details, retry_selections
+        return synced_details, retry_selections, list(terminal_log)
 
-    synced_details, retry_selections = asyncio.run(download_sync_files_batch())
+    synced_details, retry_selections, _download_log_history = asyncio.run(download_sync_files_batch())
+
+    # --- Shared post-processing helpers ---
+    def get_synced_file_paths(target_exts):
+        """Return list of (Path, sync_mgr, pair_idx) for synced files matching target_exts."""
+        results = []
+        for sel in sync_selections:
+            pair_idx = sel['pair_idx']
+            res_data = sel['res_data']
+            sm = res_data['sync_manager']
+            for fname in synced_details.get(pair_idx, []):
+                if Path(fname).suffix.lower() in target_exts:
+                    matches = list(sm.local_path.rglob(fname))
+                    for m in matches:
+                        if m.is_file() and not m.name.startswith('._') and "__MACOSX" not in m.parts:
+                            results.append((m, sm, pair_idx))
+        return results
+
+    def update_synced_detail(pair_idx, old_name, new_name):
+        """Update a filename in synced_details so the final success screen shows the converted extension."""
+        details = synced_details.get(pair_idx, [])
+        for i, fname in enumerate(details):
+            if fname == old_name:
+                details[i] = new_name
+                break
+
+    # ==========================================
+    # POST-PROCESSING UI SETUP
+    # ==========================================
+    import time as _time
+
+    # 1. Clear the Phase 2 download UI to prevent stacking
+    cancel_placeholder.empty()
+    active_file_placeholder.empty()
+    
+    # 2. Inherit the terminal log history from the download phase (seamless continuity)
+    pp_log = _download_log_history
+
+    def pp_terminal(msg=None):
+        """Append msg (if given) to the post-processing terminal, then render into the EXISTING log_container."""
+        if msg:
+            pp_log.append(msg)
+        log_container.markdown(render_terminal_html(pp_log), unsafe_allow_html=True)
+        _time.sleep(0.05)
+
+    # 3. Rich conversion dashboard — renders into the EXISTING Phase 2 containers
+    #    Color map per conversion type for visual distinction
+    _COLOR_MAP = {
+        'Archives':           '#a78bfa',  # violet
+        'PowerPoint files':   '#f97316',  # orange
+        'HTML files':         '#34D399',  # emerald
+        'Code files':         '#FBBF24',  # amber
+        'Legacy Word files':  '#3b82f6',  # blue
+        'Excel files':        '#22c55e',  # green
+        'Video files':        '#f59e0b',  # amber-orange
+    }
+
+    def render_conversion_dashboard(current, total, task_name):
+        """Overwrite the Phase 2 progress bar and metrics dashboard with conversion-specific UI."""
+        accent = _COLOR_MAP.get(task_name, '#4ade80')
+        pct = int((current / total) * 100) if total > 0 else 0
+        pct = min(100, pct)
+
+        # Overwrite the Phase 1 status header
+        status_text.markdown(f"""
+        <div style="margin-bottom: 0.5rem;">
+            <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+            <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting {task_name}</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Overwrite the progress bar
+        progress_container.markdown(f"""
+        <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+            <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                {pct}%
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Overwrite the metrics dashboard
+        metrics_dashboard.markdown(f"""
+        <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{task_name}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        _time.sleep(0.05)
+    # ==========================================
 
     # --- Post-Sync: Archive Extraction (Zip/Tar) ---
     if getattr(st.session_state, 'persistent_convert_zip', False):
@@ -2940,83 +3062,34 @@ def _run_sync(lang):
         import sqlite3
         import os
         
-        # Gather archive files from all active sync_mgrs
-        archive_exts = {'.zip', '.tar', '.tar.gz'}
-        archive_files_to_convert = []
-        
-        for result in results:
-            sm = result.get('sync_mgr')
-            if sm and sm.local_path.exists():
-                for f in sm.local_path.rglob('*'):
-                    if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz')):
-                        archive_files_to_convert.append((f, sm))
+        archive_files_to_convert = get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'})
+        extra_targz = []
+        for sel in sync_selections:
+            pair_idx = sel['pair_idx']
+            sm = sel['res_data']['sync_manager']
+            for fname in synced_details.get(pair_idx, []):
+                if fname.lower().endswith('.tar.gz'):
+                    matches = list(sm.local_path.rglob(fname))
+                    for m in matches:
+                        if m.is_file() and (m, sm, pair_idx) not in archive_files_to_convert:
+                            extra_targz.append((m, sm, pair_idx))
+        archive_files_to_convert.extend(extra_targz)
         
         if archive_files_to_convert:
             total_archives = len(archive_files_to_convert)
             print(f"[Post-Sync] Archive Extraction toggle is ON. Found {total_archives} Archive files.")
             
-            # Setup UI
-            st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Extracting Archives</h3>", unsafe_allow_html=True)
-            sync_archive_header = st.empty()
-            progress_archive_placeholder = st.empty()
-            metrics_archive_placeholder = st.empty()
-            log_archive_container = st.empty()
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_archives} Archive files for extraction...</span>")
+            render_conversion_dashboard(0, total_archives, "Archives")
+            _time.sleep(0.2)
             
-            terminal_archive_log = []
-            
-            def render_archive_conversion_dashboard(current_idx):
-                percent = int((current_idx / total_archives) * 100) if total_archives > 0 else 100
-                percent = min(100, percent)
-                
-                sync_archive_header.markdown(f'''
-                <div style="margin-bottom: 0.5rem;">
-                    <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                    <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting Zip/Tar Archives</h3>
-                </div>
-                ''', unsafe_allow_html=True)
-
-                progress_archive_placeholder.markdown(f'''
-                <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                    <div style="background-color: #8b5cf6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                        {percent}%
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-                metrics_archive_placeholder.markdown(f'''
-                <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
-                        <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #8b5cf6;">/ {total_archives}</span></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                        <span style="color: #8b5cf6; font-size: 1.2rem; font-weight: bold;">Archive → .extracted</span>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-            render_archive_conversion_dashboard(0)
-            
-            terminal_archive_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_archives} Archive files for extraction...</span></code><br>")
-            log_archive_container.markdown(render_terminal_html(terminal_archive_log), unsafe_allow_html=True)
-            
-            import time
-            time.sleep(0.2)
-            
-            for i, (archive_file, sm) in enumerate(archive_files_to_convert, 1):
-                terminal_archive_log.append(f"<code><span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span></code><br>")
-                log_archive_container.markdown(render_terminal_html(terminal_archive_log), unsafe_allow_html=True)
-                render_archive_conversion_dashboard(i - 1)
-                
-                old_relative = archive_file.relative_to(sm.local_path)
-                
+            for i, (archive_file, sm, pair_idx) in enumerate(archive_files_to_convert, 1):
+                old_name = archive_file.name
+                render_conversion_dashboard(i, total_archives, "Archives")
                 new_stub_path_str = extract_and_stub(archive_file)
                 
                 if new_stub_path_str:
                     new_stub_path = Path(new_stub_path_str)
-                    # Find the canvas_file_id from the manifest
                     manifest = sm.load_manifest()
                     for file_id, info in manifest.get('files', {}).items():
                         local_p = info.get('local_path', '')
@@ -3028,440 +3101,180 @@ def _run_sync(lang):
                                 break
                         except (ValueError, KeyError):
                             pass
-                            
-                    terminal_archive_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Extracted: {archive_file.name}</span></code><br>")
-                    log_archive_container.markdown(render_terminal_html(terminal_archive_log), unsafe_allow_html=True)
+                    
+                    update_synced_detail(pair_idx, old_name, new_stub_path.name)
+                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {old_name}</span>")
                 else:
-                    terminal_archive_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span></code><br>")
-                    log_archive_container.markdown(render_terminal_html(terminal_archive_log), unsafe_allow_html=True)
-                
-                render_archive_conversion_dashboard(i)
+                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Extraction failed)</span>")
             
-            terminal_archive_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span></code><br>")
-            log_archive_container.markdown(render_terminal_html(terminal_archive_log), unsafe_allow_html=True)
-            render_archive_conversion_dashboard(total_archives)
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>")
     # --- End Post-Sync Conversion (Archive) ---
 
-    # --- Post-Download: PPTX → PDF Conversion (runs OUTSIDE async loop) ---
+    # --- Post-Download: PPTX → PDF Conversion ---
     if st.session_state.get('persistent_convert_pptx', False):
-        from pdf_converter import convert_pptx_to_pdf
+        from pdf_converter import PowerPointToPDF
         
-        # Collect all supported PowerPoint files across all synced course folders
-        all_pptx_files = []  # list of (pptx_path, sync_mgr, res_data)
-        supported_ppt_exts = {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}
-        
-        for sel in sync_selections:
-            res_data = sel['res_data']
-            sync_mgr = res_data['sync_manager']
-            local_path = sync_mgr.local_path
-            
-            if local_path.exists():
-                for f in local_path.rglob('*'):
-                    if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in supported_ppt_exts:
-                        # Only convert files that were just synced (check if in synced_details)
-                        pair_idx = sel['pair_idx']
-                        display_name = f.name
-                        if pair_idx in synced_details:
-                            # Check if this file (or its display name) was synced this session
-                            synced_names = synced_details[pair_idx]
-                            if any(display_name in sn or Path(sn).stem == f.stem for sn in synced_names):
-                                all_pptx_files.append((f, sync_mgr, res_data))
+        all_pptx_files = get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'})
         
         if all_pptx_files:
             total_pptx = len(all_pptx_files)
             print(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files in Sync mode.")
             
-            # Custom render function to hijack the main UI placeholders
-            def render_conversion_dashboard(current_idx):
-                percent = int((current_idx / total_pptx) * 100) if total_pptx > 0 else 100
-                percent = min(100, percent)
-                
-                status_text.markdown(f"**🪄 Post-Processing:** Converting PowerPoint files... ({current_idx}/{total_pptx})")
-                
-                progress_container.markdown(f'''
-                <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 15px;">
-                    <div style="background-color: #A5B4FC; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                        {percent}%
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-                metrics_dashboard.markdown(f'''
-                <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                        <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #A5B4FC;">/ {total_pptx}</span></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
-                        <span style="color: #A5B4FC; font-size: 1.2rem; font-weight: bold;">Processing PDF(s)</span>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-                active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Updating Database Manifests...</p>", unsafe_allow_html=True)
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Converting {total_pptx} PowerPoint files to PDF...</span>")
+            render_conversion_dashboard(0, total_pptx, "PowerPoint files")
+            _time.sleep(0.2)
             
-            # 1. Append starting message to the existing log list
-            render_conversion_dashboard(0)
-            terminal_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span></code><br>")
-            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-            
-            import time
-            time.sleep(0.2)
-            
-            for i, (pptx_file, sync_mgr, res_data) in enumerate(all_pptx_files, 1):
-                # (No st.write here, keep UI clean)
-                
-                pdf_path = convert_pptx_to_pdf(
-                    pptx_file,
-                    error_log_path=sync_mgr.local_path
-                )
-                
-                if pdf_path:
-                    # Find the canvas_file_id from the manifest
-                    manifest = sync_mgr.load_manifest()
-                    for file_id, info in manifest.get('files', {}).items():
-                        local_p = info.get('local_path', '')
-                        try:
-                            original_rel = pptx_file.relative_to(sync_mgr.local_path)
-                            if str(original_rel).replace('\\', '/') == local_p:
-                                new_rel = pdf_path.relative_to(sync_mgr.local_path)
-                                sync_mgr.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                break
-                        except (ValueError, KeyError):
-                            pass
-                            
-                    # 2. Append success message
-                    terminal_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path.name}</span></code><br>")
-                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                else:
-                    # 3. Append failure message
-                    terminal_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span></code><br>")
-                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                
-                # Update progress mid-loop
-                render_conversion_dashboard(i)
-            
-            terminal_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span></code><br>")
-            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-            render_conversion_dashboard(total_pptx)
-            
-        # --- Post-Sync: HTML → MD Conversion ---
-        if getattr(st.session_state, 'persistent_convert_html', False):
-            from md_converter import convert_html_to_md
-            import sqlite3
-            import os
-            
-            # Since sync processes active courses dynamically, gather HTML files from all active sync_mgrs
-            html_files_to_convert = []
-            
-            # Re-collect sync managers from results
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    for f in sm.local_path.rglob('*'):
-                        if f.suffix.lower() == '.html' and f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts:
-                            html_files_to_convert.append((f, sm))
-            
-            if html_files_to_convert:
-                total_html = len(html_files_to_convert)
-                print(f"[Post-Sync] HTML Conversion toggle is ON. Found {total_html} HTML files.")
-                
-                # Setup UI
-                st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: HTML to Markdown</h3>", unsafe_allow_html=True)
-                sync_html_header = st.empty()
-                progress_html_placeholder = st.empty()
-                metrics_html_placeholder = st.empty()
-                log_html_container = st.empty()
-                
-                terminal_html_log = []
-                
-                def render_html_conversion_dashboard(current_idx):
-                    percent = int((current_idx / total_html) * 100) if total_html > 0 else 100
-                    percent = min(100, percent)
-                    
-                    sync_html_header.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Optimizing Canvas Pages</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_html_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #34D399; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_html_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #34D399;">/ {total_html}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                            <span style="color: #34D399; font-size: 1.2rem; font-weight: bold;">.html → .md</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                render_html_conversion_dashboard(0)
-                
-                terminal_html_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_html} HTML files for Markdown conversion...</span></code><br>")
-                log_html_container.markdown(render_terminal_html(terminal_html_log), unsafe_allow_html=True)
-                
-                import time
-                time.sleep(0.2)
-                
-                for i, (html_file, sm) in enumerate(html_files_to_convert, 1):
-                    old_relative_html = html_file.relative_to(sm.local_path)
-                    
-                    md_path = convert_html_to_md(html_file)
-                    
-                    if md_path:
-                        # Find the canvas_file_id from the manifest
-                        manifest = sm.load_manifest()
-                        for file_id, info in manifest.get('files', {}).items():
-                            local_p = info.get('local_path', '')
-                            try:
-                                original_rel = html_file.relative_to(sm.local_path)
-                                if str(original_rel).replace('\\', '/') == local_p:
-                                    new_rel = md_path.relative_to(sm.local_path)
-                                    sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                    break
-                            except (ValueError, KeyError):
-                                pass
-                                
-                        terminal_html_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span></code><br>")
-                        log_html_container.markdown(render_terminal_html(terminal_html_log), unsafe_allow_html=True)
-                    else:
-                        terminal_html_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span></code><br>")
-                        log_html_container.markdown(render_terminal_html(terminal_html_log), unsafe_allow_html=True)
-                    
-                    render_html_conversion_dashboard(i)
-                
-                terminal_html_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span></code><br>")
-                log_html_container.markdown(render_terminal_html(terminal_html_log), unsafe_allow_html=True)
-                render_html_conversion_dashboard(total_html)
-        # --- End Post-Sync Conversion ---
-        
-        # --- Post-Sync: Code → TXT Conversion ---
-        if getattr(st.session_state, 'persistent_convert_code', False):
-            from code_converter import convert_code_to_txt, CODE_EXTENSIONS
-            import sqlite3
-            import os
-            
-            # Since sync processes active courses dynamically, gather CODE files from all active sync_mgrs
-            code_files_to_convert = []
-            
-            # Re-collect sync managers from results
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    for f in sm.local_path.rglob('*'):
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in CODE_EXTENSIONS:
-                            code_files_to_convert.append((f, sm))
-            
-            if code_files_to_convert:
-                total_code = len(code_files_to_convert)
-                print(f"[Post-Sync] Code Conversion toggle is ON. Found {total_code} Code files.")
-                
-                # Setup UI
-                st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Code/Data to TXT</h3>", unsafe_allow_html=True)
-                sync_code_header = st.empty()
-                progress_code_placeholder = st.empty()
-                metrics_code_placeholder = st.empty()
-                log_code_container = st.empty()
-                
-                terminal_code_log = []
-                
-                def render_code_conversion_dashboard(current_idx):
-                    percent = int((current_idx / total_code) * 100) if total_code > 0 else 100
-                    percent = min(100, percent)
-                    
-                    sync_code_header.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Optimizing Code Files</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_code_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #FBBF24; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #1E293B; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(255,255,255,0.5);">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_code_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #FBBF24;">/ {total_code}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                            <span style="color: #FBBF24; font-size: 1.2rem; font-weight: bold;">Code/Data → .txt</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                render_code_conversion_dashboard(0)
-                
-                terminal_code_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_code} Code & Data files for TXT conversion...</span></code><br>")
-                log_code_container.markdown(render_terminal_html(terminal_code_log), unsafe_allow_html=True)
-                
-                import time
-                time.sleep(0.2)
-                
-                for i, (code_file, sm) in enumerate(code_files_to_convert, 1):
-                    old_relative_code = code_file.relative_to(sm.local_path)
-                    
-                    txt_path_str = convert_code_to_txt(code_file)
-                    
-                    if txt_path_str:
-                        txt_path = Path(txt_path_str)
-                        # Find the canvas_file_id from the manifest
-                        manifest = sm.load_manifest()
-                        for file_id, info in manifest.get('files', {}).items():
-                            local_p = info.get('local_path', '')
-                            try:
-                                original_rel = code_file.relative_to(sm.local_path)
-                                if str(original_rel).replace('\\', '/') == local_p:
-                                    new_rel = txt_path.relative_to(sm.local_path)
-                                    sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                    break
-                            except (ValueError, KeyError):
-                                pass
-                                
-                        terminal_code_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {code_file.name} -> TXT</span></code><br>")
-                        log_code_container.markdown(render_terminal_html(terminal_code_log), unsafe_allow_html=True)
-                    else:
-                        terminal_code_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span></code><br>")
-                        log_code_container.markdown(render_terminal_html(terminal_code_log), unsafe_allow_html=True)
-                    
-                    render_code_conversion_dashboard(i)
-                
-                terminal_code_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span></code><br>")
-                log_code_container.markdown(render_terminal_html(terminal_code_log), unsafe_allow_html=True)
-                render_code_conversion_dashboard(total_code)
-        # --- End Post-Sync Conversion (Code) ---
-        
-        # --- Post-Sync: NotebookLM Link Compiler ---
-        if getattr(st.session_state, 'persistent_convert_urls', False):
-            from url_compiler import compile_urls_to_txt
-            
-            # Since sync runs on multiple courses, we group URL compiling by course folder.
-            st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Compiling Web Links</h3>", unsafe_allow_html=True)
-            log_url_container = st.empty()
-            terminal_url_log = []
-            
-            terminal_url_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span></code><br>")
-            log_url_container.markdown(render_terminal_html(terminal_url_log), unsafe_allow_html=True)
-            
-            # Use a set to track already processed paths so we don't compile twice for the same course root
-            processed_roots = set()
-            
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    course_root = sm.local_path
-                    if course_root not in processed_roots:
-                        processed_roots.add(course_root)
-                        
-                        compiled_path = compile_urls_to_txt(course_root, sm.course_name)
-                        if compiled_path:
-                            terminal_url_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Compiled links for '{sm.course_name}' into: NotebookLM_External_Links.txt</span></code><br>")
-                            log_url_container.markdown(render_terminal_html(terminal_url_log), unsafe_allow_html=True)
-                            
-        # --- End Post-Sync Link Compiler ---
-        
-        # --- Post-Sync: Legacy Word → PDF Conversion ---
-        if getattr(st.session_state, 'persistent_convert_word', False):
-            from word_converter import convert_word_to_pdf
-            import sqlite3
-            import os
-            
-            # Gather legacy Word files from all active sync_mgrs
-            legacy_word_exts = {'.doc', '.rtf', '.odt'}
-            word_files_to_convert = []
-            
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    for f in sm.local_path.rglob('*'):
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in legacy_word_exts:
-                            word_files_to_convert.append((f, sm))
-            
-            if word_files_to_convert:
-                total_word = len(word_files_to_convert)
-                print(f"[Post-Sync] Word Conversion toggle is ON. Found {total_word} Legacy Word files.")
-                
-                # Setup UI
-                st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Legacy Word to PDF</h3>", unsafe_allow_html=True)
-                sync_word_header = st.empty()
-                progress_word_placeholder = st.empty()
-                metrics_word_placeholder = st.empty()
-                log_word_container = st.empty()
-                
-                terminal_word_log = []
-                
-                def render_word_conversion_dashboard(current_idx):
-                    percent = int((current_idx / total_word) * 100) if total_word > 0 else 100
-                    percent = min(100, percent)
-                    
-                    sync_word_header.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Optimizing Legacy Word Docs</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_word_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #3b82f6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_word_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #3b82f6;">/ {total_word}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                            <span style="color: #3b82f6; font-size: 1.2rem; font-weight: bold;">Legacy Doc → .pdf</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                render_word_conversion_dashboard(0)
-                
-                terminal_word_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_word} Legacy Word files for PDF conversion...</span></code><br>")
-                log_word_container.markdown(render_terminal_html(terminal_word_log), unsafe_allow_html=True)
-                
-                import time
-                time.sleep(0.2)
-                
-                for i, (word_file, sm) in enumerate(word_files_to_convert, 1):
-                    old_relative_word = word_file.relative_to(sm.local_path)
-                    
-                    pdf_path_str = convert_word_to_pdf(word_file)
+            with PowerPointToPDF(error_log_path=all_pptx_files[0][1].local_path) as converter:
+                for i, (pptx_file, sync_mgr, pair_idx) in enumerate(all_pptx_files, 1):
+                    old_name = pptx_file.name
+                    render_conversion_dashboard(i, total_pptx, "PowerPoint files")
+                    pdf_path_str = converter.convert(pptx_file)
                     
                     if pdf_path_str:
                         pdf_path = Path(pdf_path_str)
-                        # Find the canvas_file_id from the manifest
+                        manifest = sync_mgr.load_manifest()
+                        for file_id, info in manifest.get('files', {}).items():
+                            local_p = info.get('local_path', '')
+                            try:
+                                original_rel = pptx_file.relative_to(sync_mgr.local_path)
+                                if str(original_rel).replace('\\', '/') == local_p:
+                                    new_rel = pdf_path.relative_to(sync_mgr.local_path)
+                                    sync_mgr.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
+                                    break
+                            except (ValueError, KeyError):
+                                pass
+                        
+                        update_synced_detail(pair_idx, old_name, pdf_path.name)
+                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
+                    else:
+                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
+        
+    # --- Post-Sync: HTML → MD Conversion ---
+    if getattr(st.session_state, 'persistent_convert_html', False):
+        from md_converter import convert_html_to_md
+        
+        html_files_to_convert = get_synced_file_paths({'.html'})
+        
+        if html_files_to_convert:
+            total_html = len(html_files_to_convert)
+            print(f"[Post-Sync] HTML Conversion toggle is ON. Found {total_html} HTML files.")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_html} HTML files for Markdown conversion...</span>")
+            render_conversion_dashboard(0, total_html, "HTML files")
+            _time.sleep(0.2)
+            
+            for i, (html_file, sm, pair_idx) in enumerate(html_files_to_convert, 1):
+                old_name = html_file.name
+                render_conversion_dashboard(i, total_html, "HTML files")
+                md_path = convert_html_to_md(html_file)
+                
+                if md_path:
+                    manifest = sm.load_manifest()
+                    for file_id, info in manifest.get('files', {}).items():
+                        local_p = info.get('local_path', '')
+                        try:
+                            original_rel = html_file.relative_to(sm.local_path)
+                            if str(original_rel).replace('\\', '/') == local_p:
+                                new_rel = md_path.relative_to(sm.local_path)
+                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
+                                break
+                        except (ValueError, KeyError):
+                            pass
+                    
+                    update_synced_detail(pair_idx, old_name, md_path.name)
+                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>")
+                else:
+                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>")
+    # --- End Post-Sync Conversion ---
+    
+    # --- Post-Sync: Code → TXT Conversion ---
+    if getattr(st.session_state, 'persistent_convert_code', False):
+        from code_converter import convert_code_to_txt, CODE_EXTENSIONS
+        
+        code_files_to_convert = get_synced_file_paths(CODE_EXTENSIONS)
+        
+        if code_files_to_convert:
+            total_code = len(code_files_to_convert)
+            print(f"[Post-Sync] Code Conversion toggle is ON. Found {total_code} Code files.")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_code} Code & Data files for TXT conversion...</span>")
+            render_conversion_dashboard(0, total_code, "Code files")
+            _time.sleep(0.2)
+            
+            for i, (code_file, sm, pair_idx) in enumerate(code_files_to_convert, 1):
+                old_name = code_file.name
+                render_conversion_dashboard(i, total_code, "Code files")
+                txt_path_str = convert_code_to_txt(code_file)
+                
+                if txt_path_str:
+                    txt_path = Path(txt_path_str)
+                    manifest = sm.load_manifest()
+                    for file_id, info in manifest.get('files', {}).items():
+                        local_p = info.get('local_path', '')
+                        try:
+                            original_rel = code_file.relative_to(sm.local_path)
+                            if str(original_rel).replace('\\', '/') == local_p:
+                                new_rel = txt_path.relative_to(sm.local_path)
+                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
+                                break
+                        except (ValueError, KeyError):
+                            pass
+                    
+                    update_synced_detail(pair_idx, old_name, txt_path.name)
+                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> TXT</span>")
+                else:
+                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>")
+    # --- End Post-Sync Conversion (Code) ---
+    
+    # --- Post-Sync: NotebookLM Link Compiler ---
+    if getattr(st.session_state, 'persistent_convert_urls', False):
+        from url_compiler import compile_urls_to_txt
+        
+        pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
+        
+        processed_roots = set()
+        
+        for sel in st.session_state.get('sync_selections', []):
+            sm = sel.get('res_data', {}).get('sync_manager')
+            if sm and sm.local_path.exists():
+                course_root = sm.local_path
+                if course_root not in processed_roots:
+                    processed_roots.add(course_root)
+                    
+                    compiled_path = compile_urls_to_txt(course_root, sm.course_name)
+                    if compiled_path:
+                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Compiled links for '{sm.course_name}' into: NotebookLM_External_Links.txt</span>")
+                        
+    # --- End Post-Sync Link Compiler ---
+    
+    # --- Post-Sync: Legacy Word → PDF Conversion ---
+    if getattr(st.session_state, 'persistent_convert_word', False):
+        from word_converter import WordToPDF
+        
+        word_files_to_convert = get_synced_file_paths({'.doc', '.rtf', '.odt'})
+        
+        if word_files_to_convert:
+            total_word = len(word_files_to_convert)
+            print(f"[Post-Sync] Word Conversion toggle is ON. Found {total_word} Legacy Word files.")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_word} Legacy Word files for PDF conversion...</span>")
+            render_conversion_dashboard(0, total_word, "Legacy Word files")
+            _time.sleep(0.2)
+            
+            with WordToPDF() as converter:
+                for i, (word_file, sm, pair_idx) in enumerate(word_files_to_convert, 1):
+                    old_name = word_file.name
+                    render_conversion_dashboard(i, total_word, "Legacy Word files")
+                    pdf_path_str = converter.convert(word_file)
+                    
+                    if pdf_path_str:
+                        pdf_path = Path(pdf_path_str)
                         manifest = sm.load_manifest()
                         for file_id, info in manifest.get('files', {}).items():
                             local_p = info.get('local_path', '')
@@ -3473,94 +3286,37 @@ def _run_sync(lang):
                                     break
                             except (ValueError, KeyError):
                                 pass
-                                
-                        terminal_word_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {word_file.name} -> PDF</span></code><br>")
-                        log_word_container.markdown(render_terminal_html(terminal_word_log), unsafe_allow_html=True)
+                        
+                        update_synced_detail(pair_idx, old_name, pdf_path.name)
+                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
                     else:
-                        terminal_word_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span></code><br>")
-                        log_word_container.markdown(render_terminal_html(terminal_word_log), unsafe_allow_html=True)
-                    
-                    render_word_conversion_dashboard(i)
-                
-                terminal_word_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Legacy Word to PDF conversion complete!</span></code><br>")
-                log_word_container.markdown(render_terminal_html(terminal_word_log), unsafe_allow_html=True)
-                render_word_conversion_dashboard(total_word)
-        # --- End Post-Sync Conversion (Word) ---
+                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Legacy Word to PDF conversion complete!</span>")
+    # --- End Post-Sync Conversion (Word) ---
+    
+    # --- Post-Sync: Excel to PDF Conversion ---
+    if getattr(st.session_state, 'persistent_convert_excel', False):
+        from excel_converter import ExcelToPDF
+        import sqlite3
+        import os
         
-        # --- Post-Sync: Excel to PDF Conversion ---
-        if getattr(st.session_state, 'persistent_convert_excel', False):
-            from excel_converter import convert_excel_to_pdf
-            import sqlite3
-            import os
+        excel_files_to_convert = get_synced_file_paths({'.xlsx', '.xls', '.xlsm'})
+        
+        if excel_files_to_convert:
+            total_excel = len(excel_files_to_convert)
+            print(f"[Post-Sync] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
             
-            # Gather Excel files from all active sync_mgrs
-            excel_exts = {'.xlsx', '.xls', '.xlsm'}
-            excel_files_to_convert = []
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>")
+            render_conversion_dashboard(0, total_excel, "Excel files")
+            _time.sleep(0.2)
             
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    for f in sm.local_path.rglob('*'):
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in excel_exts and not f.name.startswith('~$'):
-                            excel_files_to_convert.append((f, sm))
-            
-            if excel_files_to_convert:
-                total_excel = len(excel_files_to_convert)
-                print(f"[Post-Sync] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
-                
-                # Setup UI
-                st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Converting Excel to PDF</h3>", unsafe_allow_html=True)
-                sync_excel_header = st.empty()
-                progress_excel_placeholder = st.empty()
-                metrics_excel_placeholder = st.empty()
-                log_excel_container = st.empty()
-                
-                terminal_excel_log = []
-                
-                def render_excel_conversion_dashboard(current_idx):
-                    percent = int((current_idx / total_excel) * 100) if total_excel > 0 else 100
-                    percent = min(100, percent)
-                    
-                    sync_excel_header.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Excel Spreadsheets to PDF</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_excel_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #22c55e; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_excel_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #22c55e;">/ {total_excel}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                            <span style="color: #22c55e; font-size: 1.2rem; font-weight: bold;">Excel → .pdf</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                render_excel_conversion_dashboard(0)
-                
-                terminal_excel_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span></code><br>")
-                log_excel_container.markdown(render_terminal_html(terminal_excel_log), unsafe_allow_html=True)
-                
-                import time
-                time.sleep(0.2)
-                
-                for i, (excel_file, sm) in enumerate(excel_files_to_convert, 1):
+            with ExcelToPDF() as converter:
+                for i, (excel_file, sm, pair_idx) in enumerate(excel_files_to_convert, 1):
+                    old_name = excel_file.name
+                    render_conversion_dashboard(i, total_excel, "Excel files")
                     abs_path = str(excel_file.absolute())
-                    new_pdf_path = convert_excel_to_pdf(abs_path)
+                    new_pdf_path, excel_error_msg = converter.convert(abs_path)
                     
                     if new_pdf_path:
                         old_rel_path = os.path.relpath(abs_path, sm.local_path)
@@ -3575,128 +3331,59 @@ def _run_sync(lang):
                             if row:
                                 sm.update_converted_file(row[0], new_rel_path)
                             conn.close()
-                                
-                        terminal_excel_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Converted: {excel_file.name} -> PDF</span></code><br>")
-                        log_excel_container.markdown(render_terminal_html(terminal_excel_log), unsafe_allow_html=True)
+                        
+                        update_synced_detail(pair_idx, old_name, Path(new_pdf_path).name)
+                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
                     else:
-                        terminal_excel_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span></code><br>")
-                        log_excel_container.markdown(render_terminal_html(terminal_excel_log), unsafe_allow_html=True)
-                    
-                    render_excel_conversion_dashboard(i)
-                
-                terminal_excel_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span></code><br>")
-                log_excel_container.markdown(render_terminal_html(terminal_excel_log), unsafe_allow_html=True)
-                render_excel_conversion_dashboard(total_excel)
-        # --- End Post-Sync Conversion (Excel) ---
+                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} ({excel_error_msg})</span>")
+            
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>")
+    # --- End Post-Sync Conversion (Excel) ---
+    
+    # --- Post-Sync: Video to MP3 Conversion ---
+    if getattr(st.session_state, 'persistent_convert_video', False):
+        from video_converter import convert_video_to_mp3
         
-        # --- Post-Sync: Video to MP3 Conversion ---
-        if getattr(st.session_state, 'persistent_convert_video', False):
-            from video_converter import convert_video_to_mp3
-            import sqlite3
-            import os
+        video_files_to_convert = get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'})
+        
+        if video_files_to_convert:
+            total_video = len(video_files_to_convert)
+            print(f"[Post-Sync] Video Conversion toggle is ON. Found {total_video} Video files.")
             
-            # Gather video files from all active sync_mgrs
-            video_exts = {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}
-            video_files_to_convert = []
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_video} Video files for audio extraction...</span>")
+            render_conversion_dashboard(0, total_video, "Video files")
+            _time.sleep(0.2)
             
-            for result in results:
-                sm = result.get('sync_mgr')
-                if sm and sm.local_path.exists():
-                    for f in sm.local_path.rglob('*'):
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in video_exts:
-                            video_files_to_convert.append((f, sm))
+            for i, (video_file, sm, pair_idx) in enumerate(video_files_to_convert, 1):
+                old_name = video_file.name
+                render_conversion_dashboard(i, total_video, "Video files")
+                mp3_path_str = convert_video_to_mp3(video_file)
+                
+                if mp3_path_str:
+                    mp3_path = Path(mp3_path_str)
+                    manifest = sm.load_manifest()
+                    for file_id, info in manifest.get('files', {}).items():
+                        local_p = info.get('local_path', '')
+                        try:
+                            original_rel = video_file.relative_to(sm.local_path)
+                            if str(original_rel).replace('\\', '/') == local_p:
+                                new_rel = mp3_path.relative_to(sm.local_path)
+                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
+                                break
+                        except (ValueError, KeyError):
+                            pass
+                    
+                    update_synced_detail(pair_idx, old_name, mp3_path.name)
+                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {old_name} -> MP3</span>")
+                else:
+                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Audio extraction failed)</span>")
             
-            if video_files_to_convert:
-                total_video = len(video_files_to_convert)
-                print(f"[Post-Sync] Video Conversion toggle is ON. Found {total_video} Video files.")
-                
-                # Setup UI
-                st.markdown("<h3 style='margin-top: 30px; margin-bottom: -10px;'>Post-Processing: Extracting Audio from Videos</h3>", unsafe_allow_html=True)
-                sync_video_header = st.empty()
-                progress_video_placeholder = st.empty()
-                metrics_video_placeholder = st.empty()
-                log_video_container = st.empty()
-                
-                terminal_video_log = []
-                
-                def render_video_conversion_dashboard(current_idx):
-                    percent = int((current_idx / total_video) * 100) if total_video > 0 else 100
-                    percent = min(100, percent)
-                    
-                    sync_video_header.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Conversion</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting MP3s from Videos</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_video_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #f59e0b; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_video_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #f59e0b;">/ {total_video}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                            <span style="color: #f59e0b; font-size: 1.2rem; font-weight: bold;">Video → .mp3</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                render_video_conversion_dashboard(0)
-                
-                terminal_video_log.append(f"<code><span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_video} Video files for audio extraction...</span></code><br>")
-                log_video_container.markdown(render_terminal_html(terminal_video_log), unsafe_allow_html=True)
-                
-                import time
-                time.sleep(0.2)
-                
-                for i, (video_file, sm) in enumerate(video_files_to_convert, 1):
-                    terminal_video_log.append(f"<code><span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span></code><br>")
-                    log_video_container.markdown(render_terminal_html(terminal_video_log), unsafe_allow_html=True)
-                    render_video_conversion_dashboard(i - 1)
-                    
-                    old_relative_video = video_file.relative_to(sm.local_path)
-                    
-                    mp3_path_str = convert_video_to_mp3(video_file)
-                    
-                    if mp3_path_str:
-                        mp3_path = Path(mp3_path_str)
-                        # Find the canvas_file_id from the manifest
-                        manifest = sm.load_manifest()
-                        for file_id, info in manifest.get('files', {}).items():
-                            local_p = info.get('local_path', '')
-                            try:
-                                original_rel = video_file.relative_to(sm.local_path)
-                                if str(original_rel).replace('\\', '/') == local_p:
-                                    new_rel = mp3_path.relative_to(sm.local_path)
-                                    sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                    break
-                            except (ValueError, KeyError):
-                                pass
-                                
-                        terminal_video_log.append(f"<code><span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {video_file.name} -> MP3</span></code><br>")
-                        log_video_container.markdown(render_terminal_html(terminal_video_log), unsafe_allow_html=True)
-                    else:
-                        terminal_video_log.append(f"<code><span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span></code><br>")
-                        log_video_container.markdown(render_terminal_html(terminal_video_log), unsafe_allow_html=True)
-                    
-                    render_video_conversion_dashboard(i)
-                
-                terminal_video_log.append(f"<code><span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span></code><br>")
-                log_video_container.markdown(render_terminal_html(terminal_video_log), unsafe_allow_html=True)
-                render_video_conversion_dashboard(total_video)
-        # --- End Post-Sync Conversion (Video) ---
+            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>")
+    # --- End Post-Sync Conversion (Video) ---
     # --- End Post-Download Conversion ---
+
+
+
 
     # --- Organize files into module folders (if requested) ---
 

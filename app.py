@@ -384,8 +384,16 @@ with st.sidebar:
                         "</div>",
                         unsafe_allow_html=True
                     )
-                    st.checkbox("Enable Troubleshooting Mode (Debug Log)", key="debug_mode_checkbox")
-                    st.session_state['debug_mode'] = st.session_state.get('debug_mode_checkbox', False)
+                    if 'debug_mode' not in st.session_state:
+                        st.session_state['debug_mode'] = False
+
+                    def _toggle_debug():
+                        st.session_state['debug_mode'] = st.session_state['debug_checkbox']
+
+                    st.checkbox("Enable Troubleshooting Mode (Debug Log)",
+                                value=st.session_state['debug_mode'],
+                                key="debug_checkbox",
+                                on_change=_toggle_debug)
                 
                 with col_sync:
                     st.markdown("### 🔄 Sync Settings")
@@ -757,80 +765,110 @@ with _main_content.container():
                 # Master is only True if ALL sub-checkboxes are True
                 st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
 
-            # 2. Additional Settings (Combined CSS + Header to eliminate Streamlit's div gap)
+            # 1. Inject Borderless Expander + Tree-View CSS
             st.markdown("""
-<style>
-/* Forces the sub-checkbox to indent and hug the master checkbox */
-.st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel {
-    margin-left: 35px !important;
-    margin-top: -15px !important; 
-}
-/* Ensure the sub-checkboxes don't overlap */
-.st-key-convert_html, .st-key-convert_code, .st-key-convert_urls, .st-key-convert_word, .st-key-convert_video, .st-key-convert_excel { margin-top: -10px !important; }
-</style>
-<h3 style='margin-top: 15px; margin-bottom: -10px;'>Additional Settings</h3>
-""", unsafe_allow_html=True)
+            <style>
+            /* 1. Target ONLY the specific expander containing the master checkbox */
+            [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
+                border-style: none !important;
+                background-color: transparent !important;
+            }
+            [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                background-color: transparent !important;
+            }
+            [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                padding-bottom: 0 !important;
+            }
+            [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
+                font-size: 1.75rem !important;
+                font-weight: 600 !important;
+            }
 
-            # 2. Calculate current active subs
-            current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+            /* 2. Tree-view styling for nested sub-checkboxes */
+            .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
+            .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
+            .st-key-convert_urls, .st-key-convert_video {
+                margin-left: 28px !important;
+                padding-left: 15px !important;
+                border-left: 2px solid #3E4353 !important; 
+                margin-top: -12px !important; 
+                padding-top: 4px !important;
+                padding-bottom: 4px !important;
+            }
+            .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
+            .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+            </style>
+            """, unsafe_allow_html=True)
 
-            # 3. Render Master
-            st.checkbox(
-                f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
-                key="notebooklm_master",
-                on_change=_master_toggle_changed,
-                help="Enable conversions to optimize files for AI processing."
-            )
-            
-            # 4. Render Sub (No elements between them now!)
-            st.checkbox(
-                "Auto-Extract Archives (.zip, .tar.gz)",
-                key="convert_zip",
-                on_change=_sub_toggle_changed,
-                help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
-            )
-            st.checkbox(
-                "Convert PowerPoints to PDF",
-                key="convert_pptx",
-                on_change=_sub_toggle_changed,
-                help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
-            )
-            st.checkbox(
-                "Convert Canvas Pages (HTML) to Markdown",
-                key="convert_html",
-                on_change=_sub_toggle_changed,
-                help="Converts Canvas Pages from HTML to clean Markdown formats."
-            )
-            st.checkbox(
-                "Convert Code & Data Files to .txt",
-                key="convert_code",
-                on_change=_sub_toggle_changed,
-                help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
-            )
-            st.checkbox(
-                "Compile Web Links (.url) into a single list",
-                key="convert_urls",
-                on_change=_sub_toggle_changed,
-                help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
-            )
-            st.checkbox(
-                "Convert Old Word Docs (.doc, .rtf) to PDF",
-                key="convert_word",
-                on_change=_sub_toggle_changed,
-                help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-            )
-            st.checkbox(
-                "Extract Audio (.mp3) from Videos (.mp4, .mov)",
-                key="convert_video",
-                on_change=_sub_toggle_changed,
-                help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-            )
-            st.checkbox(
-                "Convert Excel Files (.xlsx, .xls) to PDF",
-                key="convert_excel",
-                on_change=_sub_toggle_changed,
-                help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
-            )
+            notebook_sub_keys = [
+                'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                'convert_html', 'convert_code', 'convert_urls', 'convert_video'
+            ]
+            TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
+            current_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+
+            with st.expander("Additional Settings", expanded=False):
+                # Master Toggle (always visible)
+                st.checkbox(
+                    f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
+                    key="notebooklm_master",
+                    on_change=_master_toggle_changed,
+                    help="Enable conversions to optimize files for AI processing."
+                )
+                
+                # Sub-toggles directly underneath (Tree-view styling via CSS)
+                st.checkbox(
+                    "Auto-Extract Archives (.zip, .tar.gz)",
+                    key="convert_zip",
+                    on_change=_sub_toggle_changed,
+                    help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
+                )
+                st.checkbox(
+                    "Convert PowerPoints (.pptx) to PDF",
+                    key="convert_pptx",
+                    on_change=_sub_toggle_changed,
+                    help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
+                )
+                st.checkbox(
+                    "Convert Old Word Docs (.doc, .rtf) to PDF",
+                    key="convert_word",
+                    on_change=_sub_toggle_changed,
+                    help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
+                )
+                st.checkbox(
+                    "Convert Excel Files (.xlsx, .xls) to PDF",
+                    key="convert_excel",
+                    on_change=_sub_toggle_changed,
+                    help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
+                )
+                st.checkbox(
+                    "Convert Canvas Pages (HTML) to Markdown",
+                    key="convert_html",
+                    on_change=_sub_toggle_changed,
+                    help="Converts Canvas Pages from HTML to clean Markdown formats."
+                )
+                st.checkbox(
+                    "Convert Code & Data Files to .txt",
+                    key="convert_code",
+                    on_change=_sub_toggle_changed,
+                    help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
+                )
+                st.checkbox(
+                    "Compile Web Links (.url) into a single list",
+                    key="convert_urls",
+                    on_change=_sub_toggle_changed,
+                    help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
+                )
+                st.checkbox(
+                    "Extract Audio (.mp3) from Videos (.mp4, .mov)",
+                    key="convert_video",
+                    on_change=_sub_toggle_changed,
+                    help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
+                )
 
             # 2. Destination (Columns have weird padding)
             st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
@@ -875,6 +913,11 @@ with _main_content.container():
                         st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
                         st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
                         st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+                        
+                        # Clear debug log once at session start (subsequent courses append)
+                        if st.session_state.get('debug_mode', False):
+                            from canvas_debug import clear_debug_log
+                            clear_debug_log(Path(st.session_state['download_path']) / "debug_log.txt")
                         
                         if st.session_state['current_mode'] == 'sync':
                             # Sync mode - go to Step 4 (Analysis)
@@ -1210,6 +1253,35 @@ with _main_content.container():
                     debug_mode=st.session_state.get('debug_mode', False)
                 ))
                 
+                # --- Post-Processing: Setup logging for NotebookLM hooks ---
+                from datetime import datetime
+                from canvas_debug import log_debug
+
+                save_dir = st.session_state['download_path']
+                debug_mode = st.session_state.get('debug_mode', False)
+                root_dir = Path(save_dir)
+                course_name = cm._sanitize_filename(course.name)
+                course_folder_for_debug = root_dir / course_name
+                debug_file = (root_dir / "debug_log.txt") if debug_mode else None
+                db_path = course_folder_for_debug / ".canvas_sync.db"
+
+                # Inject course header into the global debug log (append, never overwrite)
+                if debug_file:
+                    try:
+                        with open(debug_file, "a", encoding="utf-8") as f:
+                            f.write(f"\n{'='*50}\n--- Post-Processing: {course.name} ---\n{'='*50}\n")
+                    except Exception:
+                        pass
+
+                def log_post_process_error(directory, filename, error_msg):
+                    err_file = root_dir / "download_errors.txt"
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    try:
+                        with open(err_file, "a", encoding="utf-8") as f:
+                            f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
+                    except Exception:
+                        pass
+
                 # --- Post-Download: Archive Extraction (Zip/Tar) ---
                 if st.session_state.get('persistent_convert_zip', False):
                     from archive_extractor import extract_and_stub
@@ -1279,6 +1351,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_archive_dashboard(0)
                         
                         import time
@@ -1293,6 +1366,7 @@ with _main_content.container():
                                 logger.error(re.sub(r'<[^>]+>', '', _msg))
                             else:
                                 logger.info(re.sub(r'<[^>]+>', '', _msg))
+                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             render_archive_dashboard(i - 1)
                             
                             old_relative = archive_file.relative_to(course_folder)
@@ -1329,6 +1403,7 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             else:
                                 _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span>"
                                 log_deque.append(_msg)
@@ -1336,6 +1411,8 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                log_post_process_error(save_dir, archive_file.name, "Archive extraction failed")
                                 
                             render_archive_dashboard(i)
                             
@@ -1345,6 +1422,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_archive_dashboard(total_archives)
                 # --- End Post-Download Conversion (Archive) ---
 
@@ -1418,6 +1496,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_conversion_dashboard(0)
                         
                         import time
@@ -1449,6 +1528,7 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                                 else:
                                     _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span>"
                                     log_deque.append(_msg)
@@ -1456,6 +1536,8 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                    log_post_process_error(save_dir, pptx_file.name, "PDF conversion failed")
                                     
                                 # 2. Update progress mid-loop
                                 render_conversion_dashboard(i)
@@ -1466,6 +1548,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         # 3. Final 100% render
                         render_conversion_dashboard(total_pptx)
                         
@@ -1539,6 +1622,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_html_conversion_dashboard(0)
                         
                         import time
@@ -1583,6 +1667,7 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             else:
                                 _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span>"
                                 log_deque.append(_msg)
@@ -1590,6 +1675,8 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                log_post_process_error(save_dir, html_file.name, "Markdown conversion failed")
                                 
                             render_html_conversion_dashboard(i)
                         
@@ -1599,6 +1686,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_html_conversion_dashboard(total_html)
                 # --- End Post-Download Conversion ---
                 
@@ -1671,6 +1759,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_code_conversion_dashboard(0)
                         
                         import time
@@ -1715,6 +1804,7 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             else:
                                 _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span>"
                                 log_deque.append(_msg)
@@ -1722,6 +1812,8 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                log_post_process_error(save_dir, code_file.name, "Code to TXT conversion failed")
                                 
                             render_code_conversion_dashboard(i)
                         
@@ -1731,6 +1823,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_code_conversion_dashboard(total_code)
                 # --- End Post-Download Conversion (Code) ---
                 
@@ -1755,6 +1848,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         
                         log_content = "<br>".join(reversed(list(log_deque)))
                         log_placeholder.markdown(f'''
@@ -1772,6 +1866,7 @@ with _main_content.container():
                                 logger.error(re.sub(r'<[^>]+>', '', _msg))
                             else:
                                 logger.info(re.sub(r'<[^>]+>', '', _msg))
+                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         
                         # Trigger final UI refresh so log updates
                         log_content = "<br>".join(reversed(list(log_deque)))
@@ -1851,6 +1946,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_word_conversion_dashboard(0)
                         
                         import time
@@ -1896,6 +1992,7 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                                 else:
                                     _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span>"
                                     log_deque.append(_msg)
@@ -1903,6 +2000,8 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                    log_post_process_error(save_dir, word_file.name, "Word to PDF conversion failed")
                                     
                                 render_word_conversion_dashboard(i)
                         
@@ -1912,6 +2011,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_word_conversion_dashboard(total_word)
                 # --- End Post-Download Conversion (Word) ---
                 
@@ -1982,12 +2082,13 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_excel_conversion_dashboard(0)
                         
                         with ExcelToPDF() as converter:
                             for i, excel_file in enumerate(excel_files, 1):
                                 abs_path = str(excel_file.absolute())
-                                new_pdf_path = converter.convert(abs_path)
+                                new_pdf_path, excel_error_msg = converter.convert(abs_path)
                                 
                                 if new_pdf_path:
                                     old_rel_path = os.path.relpath(abs_path, st.session_state['download_path'])
@@ -2009,6 +2110,7 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                                 else:
                                     _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span>"
                                     log_deque.append(_msg)
@@ -2016,6 +2118,8 @@ with _main_content.container():
                                         logger.error(re.sub(r'<[^>]+>', '', _msg))
                                     else:
                                         logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                    log_post_process_error(save_dir, excel_file.name, excel_error_msg if excel_error_msg else "Excel to PDF conversion failed")
                                     
                                 render_excel_conversion_dashboard(i)
                         
@@ -2025,6 +2129,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_excel_conversion_dashboard(total_excel)
                 # --- End Post-Download Conversion (Excel) ---
                 
@@ -2097,6 +2202,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_video_conversion_dashboard(0)
                         
                         import time
@@ -2111,6 +2217,7 @@ with _main_content.container():
                                 logger.error(re.sub(r'<[^>]+>', '', _msg))
                             else:
                                 logger.info(re.sub(r'<[^>]+>', '', _msg))
+                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             render_video_conversion_dashboard(i - 1)
                             
                             old_relative_video = video_file.relative_to(course_folder)
@@ -2149,6 +2256,7 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                             else:
                                 _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span>"
                                 log_deque.append(_msg)
@@ -2156,6 +2264,8 @@ with _main_content.container():
                                     logger.error(re.sub(r'<[^>]+>', '', _msg))
                                 else:
                                     logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
+                                log_post_process_error(save_dir, video_file.name, "Video to MP3 extraction failed")
                                 
                             render_video_conversion_dashboard(i)
                         
@@ -2165,6 +2275,7 @@ with _main_content.container():
                             logger.error(re.sub(r'<[^>]+>', '', _msg))
                         else:
                             logger.info(re.sub(r'<[^>]+>', '', _msg))
+                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_video_conversion_dashboard(total_video)
                 # --- End Post-Download Conversion (Video) ---
                 
@@ -2203,13 +2314,16 @@ with _main_content.container():
             # Show download location (no background color)
             st.markdown(f"**{get_text('download_location', lang, path=st.session_state['download_path'])}**")
             # Show final progress bar at 100%
-            progress_container.markdown(f"""
-                <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                    <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('complete_text', lang)}</div>
-                </div>
-            """, unsafe_allow_html=True)
-            status_text.text(get_text('downloaded_courses', lang, total=total))
+            try:
+                progress_container.markdown(f"""
+                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('complete_text', lang)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                status_text.text(get_text('downloaded_courses', lang, total=total))
+            except Exception:
+                pass
             
             # Check for download errors (In-Memory first, fallback to disk)
             error_messages = st.session_state.get('download_errors_list', [])
@@ -2273,8 +2387,11 @@ with _main_content.container():
         elif st.session_state['download_status'] == 'cancelled':
             st.warning(get_text('download_was_cancelled', lang))
             # Show partial progress
-            progress_container.progress(current_idx / total if total > 0 else 0)
-            status_text.text(get_text('cancelled_after', lang, current=current_idx, total=total))
+            try:
+                progress_container.progress(current_idx / total if total > 0 else 0)
+                status_text.text(get_text('cancelled_after', lang, current=current_idx, total=total))
+            except Exception:
+                pass
         
         # Start Over / Go back button (show when done or cancelled)
         if st.session_state['download_status'] in ['done', 'cancelled']:

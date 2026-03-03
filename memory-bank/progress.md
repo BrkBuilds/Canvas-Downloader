@@ -27,6 +27,7 @@
     - [x] **URL Compiler**: `url_compiler.py` scrapes `.url` shortcuts into a single master text file.
     - [x] **Video to Audio**: `video_converter.py` pulls `.mp3` tracks out of heavy `.mp4/.mov` payloads.
     - [x] **Excel to PDF**: `excel_converter.py` converts spreadsheets to 1-page-wide PDFs to maintain tabular structure.
+    - [x] **COM Context Manager Refactoring**: Re-architected Word, PPTX, and Excel PDF converters from single-shot functions into Context Managers (`__enter__`, `__exit__`), resulting in massive performance gains by avoiding COM cold-boots natively per file.
     - [x] **Archive Extractor**: `archive_extractor.py` unzips payloads, dropping a 0-byte `.extracted` ghost stub to satisfy the sync engine.
     - [x] **Manifest Updating**: Mimicking native Canvas files by updating paths and hashes seamlessly.
     - [x] **UI Hijacking**: Dynamic reassignment of the main progress bar for post-processing phases.
@@ -48,6 +49,15 @@
     - [x] **Negative ID Pattern**: Using negative integers for synthetic objects to prevent database PK collisions.
     - [x] **Sync Restore Logic**: Intercepting and recreating shortcut files during sync restoration.
     - [x] **Diffing Bypass**: Ignoring timestamps for synthetic items to support "Missing vs Up-to-date" logic.
+- [x] **Post-Processing Logging & UI Cleanup** (2026-03-02):
+    - [x] **Dual Logging**: Wired 32 `log_debug()` calls and 7 `log_post_process_error()` calls across all 8 NotebookLM post-processing hooks in `app.py`.
+    - [x] **Expander Refactor**: Moved sub-toggles into `st.expander` and removed legacy CSS indentation hacks.
+- [x] **Excel COM Robustness Polish** (2026-03-02):
+    - [x] **Removed CountA() Overload**: Removed 17-billion-cell dataset inspection which hung the COM thread and triggered RPC timeouts.
+    - [x] **Global Export**: Exporting entire workbook (including empty sheets) to bypass the missing `ActiveWindow` headless COM crash.
+    - [x] **Proactive Revival**: Added `_is_alive()` ping (`self.app.Version`) at the start of every iteration to immediately detect and revive a silently corrupted COM object channel.
+    - [x] **Throttling**: Added `time.sleep(0.3)` pauses after the `Open` and `Export` commands.
+    - [x] **Session Global Log Headers**: `debug_log.txt` now sits globally in the workspace with automatically injected Course Headers.
 
 ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)
@@ -59,6 +69,7 @@
 ## Current Status
 - Application UI is professional, high-performance, and feature-complete, with robust sync analysis and real-time download dashboards.
 - Sync engine handles all file types including synthetic shortcuts, with high-fidelity UI tracking.
+- Post-processing pipeline now has complete observability via dual logging to `debug_log.txt` and `download_errors.txt`.
 
 ## Pending Tasks
 - [ ] Manual end-to-end testing with live multisession Canvas instances.

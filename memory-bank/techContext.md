@@ -21,7 +21,7 @@
 - `shutil`: Disk space checking (`disk_usage`).
 - `sqlite3`: Robust manifest database management.
 - `difflib`: Levenshtein string matching for collision resolution (`SequenceMatcher`).
-- `pywin32` (`win32com.client`, `pythoncom`): Windows COM automation natively converting legacy Docs (`.doc/.rtf`), Presentations (`.pptx/.ppt`), and Excel workbooks (`.xlsx/.xls/.xlsm`) to PDF.
+- `pywin32` (`win32com.client`, `pythoncom`): Windows COM automation natively converting legacy Docs (`.doc/.rtf`), Presentations (`.pptx/.ppt`), and Excel workbooks (`.xlsx/.xls/.xlsm`) to PDF, utilizing high-performance batch Context Managers.
 - `beautifulsoup4` / `markdownify`: Cleaning HTML Canvas Pages and converting them to Markdown.
 - `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
 - `zipfile` / `tarfile`: Native extraction of compressed payloads.
