@@ -181,7 +181,12 @@ class SyncManager:
         return manifest
             
     def save_manifest(self, manifest: dict) -> bool:
-        """Save the in-memory manifest dictionary to the SQLite DB."""
+        """Save the in-memory manifest dictionary to the SQLite DB using atomic upserts.
+        
+        Uses INSERT OR REPLACE per row instead of DELETE + reinsert.
+        This ensures that a crash at any point leaves all previously-committed
+        rows intact — no data loss scenario.
+        """
         import time
         max_retries = 3
         
@@ -195,11 +200,13 @@ class SyncManager:
                     now_iso = datetime.now(timezone.utc).isoformat()
                     cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_sync', now_iso))
                     
-                    cursor.execute('DELETE FROM sync_manifest')
-                    
-                    rows = []
+                    # Atomic upsert: INSERT OR REPLACE per row (no DELETE)
                     for file_id_str, info in manifest.get('files', {}).items():
-                        rows.append((
+                        cursor.execute('''
+                            INSERT OR REPLACE INTO sync_manifest 
+                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
                             info.get('canvas_file_id', int(file_id_str)),
                             info.get('canvas_filename', ''),
                             info.get('local_path', ''),
@@ -209,12 +216,6 @@ class SyncManager:
                             1 if info.get('is_ignored') else 0,
                             info.get('original_md5', '')
                         ))
-                        
-                    cursor.executemany('''
-                        INSERT INTO sync_manifest 
-                        (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', rows)
                     conn.commit()
                     
                 if os.name == 'nt':
@@ -614,42 +615,6 @@ class SyncManager:
                 if item.is_dir() and not item.name.startswith('.'):
                     return 'modules'
         return 'flat'
-
-    def create_initial_manifest(self, downloaded_files: list) -> None:
-        """Creates a manifest from a list of newly downloaded files."""
-        manifest = {
-            'course_id': self.course_id,
-            'course_name': self.course_name,
-            'files': {}
-        }
-        
-        now_iso = datetime.now(timezone.utc).isoformat()
-        for file_info, filepath in downloaded_files:
-            try:
-                filepath = Path(filepath)
-                if not filepath.exists():
-                    continue
-                    
-                rel_path = filepath.relative_to(self.local_path)
-                file_id = str(getattr(file_info, 'id', ''))
-                if not file_id:
-                    continue
-
-                manifest['files'][file_id] = {
-                    'canvas_file_id': int(file_id),
-                    'canvas_filename': getattr(file_info, 'filename', filepath.name),
-                    'local_path': str(rel_path).replace('\\', '/'),
-                    'canvas_updated_at': getattr(file_info, 'modified_at', now_iso) or now_iso,
-                    'downloaded_at': now_iso,
-                    'original_size': filepath.stat().st_size,
-                    'is_ignored': False,
-                    'original_md5': SyncManager.compute_local_md5(filepath)
-                }
-            except Exception as e:
-                logger.warning(f"Failed to add file {getattr(file_info, 'filename', 'unknown')} to initial manifest: {e}")
-                
-        self.save_manifest(manifest)
-        logger.info(f"Created initial manifest with {len(manifest['files'])} files.")
 
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry."""
