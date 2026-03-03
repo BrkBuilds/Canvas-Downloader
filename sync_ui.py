@@ -2758,7 +2758,11 @@ def _run_sync(lang):
                 # exactly when the sync is executing (after user confirmation)
                 if sel['ignore']:
                     manifest = sync_mgr.mark_files_ignored(manifest, sel['ignore'])
-                sync_mgr.save_manifest(manifest)
+                # Selective persist: only save ignored/healed entries to DB before download
+                # (NOT the full auto-discovered manifest, to avoid premature commit)
+                for file_id_str, entry in manifest.get('files', {}).items():
+                    if entry.get('is_ignored'):
+                        sync_mgr._save_single_file_to_db(entry)
 
                 all_files = list(sel['new']) + list(sel['updates'])
                 for sync_info in sel['redownload']:
@@ -2881,35 +2885,72 @@ def _run_sync(lang):
                             async with sem:
                                 async with session.get(download_url) as response:
                                     if response.status == 200:
-                                        async with aiofiles.open(filepath, 'wb') as f:
-                                            while True:
-                                                chunk = await response.content.read(1024 * 1024)
-                                                if not chunk:
-                                                    break
-                                                await f.write(chunk)
-                                                chunk_size = len(chunk)
-                                                downloaded_mb += chunk_size / (1024 * 1024)
-                                                synced_counter[1] += chunk_size
-                                            
-                                                # Throttled UI math update
-                                                c_t = time.time()
-                                                if c_t - last_ui_update > 0.4:
-                                                    # Calculate Speed & ETA
-                                                    elapsed = c_t - start_time
-                                                    speed = downloaded_mb / elapsed if elapsed > 0 else 0
+                                        # --- Atomic .part Pattern ---
+                                        part_path = filepath.parent / (filepath.name + '.part')
+                                        download_interrupted = False
+                                        
+                                        try:
+                                            async with aiofiles.open(part_path, 'wb') as f:
+                                                while True:
+                                                    # Instant cancel check INSIDE the chunk loop
+                                                    if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
+                                                        download_interrupted = True
+                                                        break
                                                     
-                                                    rem_mb = max(0, total_mb - downloaded_mb)
-                                                    eta_sec = rem_mb / speed if speed > 0 else 0
-                                                    
-                                                    # Apply to UI
-                                                    metrics_dashboard.markdown(render_metrics_html(
-                                                        current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
-                                                    ), unsafe_allow_html=True)
-                                                    
-                                                    pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
-                                                    progress_container.progress(pct, text=f"{int(pct * 100)}%")
-                                                    last_ui_update = c_t
+                                                    chunk = await response.content.read(1024 * 1024)
+                                                    if not chunk:
+                                                        break
+                                                    await f.write(chunk)
+                                                    chunk_size = len(chunk)
+                                                    downloaded_mb += chunk_size / (1024 * 1024)
+                                                    synced_counter[1] += chunk_size
+                                                
+                                                    # Throttled UI math update
+                                                    c_t = time.time()
+                                                    if c_t - last_ui_update > 0.4:
+                                                        # Calculate Speed & ETA
+                                                        elapsed = c_t - start_time
+                                                        speed = downloaded_mb / elapsed if elapsed > 0 else 0
+                                                        
+                                                        rem_mb = max(0, total_mb - downloaded_mb)
+                                                        eta_sec = rem_mb / speed if speed > 0 else 0
+                                                        
+                                                        # Apply to UI
+                                                        metrics_dashboard.markdown(render_metrics_html(
+                                                            current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
+                                                        ), unsafe_allow_html=True)
+                                                        
+                                                        pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
+                                                        progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                                                        last_ui_update = c_t
+                                        except Exception as write_err:
+                                            download_interrupted = True
+                                            # Clean up .part file on write error
+                                            try:
+                                                if part_path.exists():
+                                                    part_path.unlink()
+                                            except OSError:
+                                                pass
+                                            raise write_err
+                                        
+                                        # Handle interrupted download: delete partial file
+                                        if download_interrupted:
+                                            try:
+                                                if part_path.exists():
+                                                    part_path.unlink()
+                                            except OSError:
+                                                pass
+                                            continue  # Skip to next file (outer cancel guard will catch)
 
+                                        # 100% success: atomic rename .part → final path
+                                        try:
+                                            part_path.rename(filepath)
+                                        except OSError:
+                                            # Fallback: If rename fails (cross-device), use replace
+                                            import shutil
+                                            shutil.move(str(part_path), str(filepath))
+
+                                        # Only commit to DB AFTER file is physically complete on disk
                                         rel_path = filepath.relative_to(local_path)
                                         sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
                                         synced_counter[0] += 1
@@ -2970,6 +3011,11 @@ def _run_sync(lang):
             active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
+            # CANCEL GUARD: Skip all post-download state mutations if cancelled
+            if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+                st.session_state['download_status'] = 'sync_cancelled'
+                st.rerun()
+
             for sel in sync_selections:
                 res_data = sel['res_data']
                 sync_mgr = res_data['sync_manager']
@@ -3028,11 +3074,11 @@ def _run_sync(lang):
                 break
 
     # ==========================================
-    # HARD GUARD: Do NOT proceed to Phase 3 if cancelled during Phase 2
+    # SECONDARY GUARD (defense-in-depth): Catch any cancel that slipped past the primary guard above save_manifest
     # ==========================================
     if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
         st.session_state['download_status'] = 'sync_cancelled'
-        st.rerun()  # Force the UI to transition to the _show_sync_cancelled screen immediately!
+        st.rerun()
 
     # ==========================================
     # POST-PROCESSING UI SETUP

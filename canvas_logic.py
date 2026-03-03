@@ -617,19 +617,8 @@ class CanvasManager:
                      if progress_callback: progress_callback(err, progress_type='error')
                      self._log_error(save_dir, err)
             
-            # --- Generate Manifest ---
-            try:
-                log_debug(f"Manifest generation: {len(downloaded_files_info)} files collected.", debug_file)
-                
-                if downloaded_files_info:
-                    sm = SyncManager(base_path, course.id, course.name, self.language)
-                    sm.create_initial_manifest(downloaded_files_info)
-                    log_debug(f"Manifest created successfully with {len(downloaded_files_info)} entries.", debug_file)
-                else:
-                    log_debug("WARNING: No downloaded files info collected. Manifest skipped.", debug_file)
-            except Exception as e:
-                logger.error(f"Failed to create initial manifest: {e}")
-                log_debug(f"ERROR creating manifest: {e}", debug_file)
+            # Manifest creation removed — analyze_course() auto-discovery handles
+            # the Download→Sync bridge implicitly when a user pairs this folder later.
 
 
     async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None):
@@ -901,10 +890,20 @@ class CanvasManager:
                     async with session.get(url) as response:
                         log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
                         if response.status == 200:
+                            # --- Atomic .part Pattern ---
+                            import streamlit as st
+                            part_path = filepath.parent / (filepath.name + '.part')
+                            download_interrupted = False
+                            
                             try:
-                                async with aiofiles.open(filepath, 'wb') as f:
+                                async with aiofiles.open(part_path, 'wb') as f:
                                     total_bytes = 0
                                     while True:
+                                        # Instant cancel check INSIDE the chunk loop
+                                        if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
+                                            download_interrupted = True
+                                            break
+                                        
                                         chunk = await response.content.read(1024*1024)
                                         if not chunk: break
                                         await f.write(chunk)
@@ -915,47 +914,67 @@ class CanvasManager:
                                             if progress_callback:
                                                 mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
                                                 progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
-                                    
-                                    # Verify download completeness
-                                    if file_size_bytes > 0 and total_bytes != file_size_bytes:
-                                        flexible_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v']
-                                        is_flexible_media = any(filename.lower().endswith(ext) for ext in flexible_extensions)
-                                        
-                                        if is_flexible_media and total_bytes > 0:
-                                            # Soft warning: Do not raise an exception. Mark as successful.
-                                            log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
-                                        else:
-                                            # Incomplete download
-                                            raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
-                                        
-                                    log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
-                                    
-                                    if progress_callback:
-                                        progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
-                                        
-                                    return (
-                                        CanvasFileInfo(
-                                            id=file_obj.id,
-                                            filename=getattr(file_obj, 'filename', ''),
-                                            display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
-                                            size=getattr(file_obj, 'size', 0),
-                                            modified_at=getattr(file_obj, 'modified_at', None),
-                                            md5=getattr(file_obj, 'md5', None),
-                                            url=getattr(file_obj, 'url', ''),
-                                            content_type=getattr(file_obj, 'content-type', ''),
-                                            folder_id=getattr(file_obj, 'folder_id', None)
-                                        ), filepath
-                                    )
-
-                            except Exception as e:
-                                # Cleanup partial file
-                                if filepath.exists():
+                            except Exception as write_err:
+                                download_interrupted = True
+                                # Clean up .part file on write error
+                                try:
+                                    if part_path.exists():
+                                        part_path.unlink()
+                                except OSError:
+                                    pass
+                                raise write_err
+                            
+                            # Handle interrupted download: delete partial .part file
+                            if download_interrupted:
+                                try:
+                                    if part_path.exists():
+                                        part_path.unlink()
+                                        log_debug(f"Cancelled: deleted partial {part_path.name}", debug_file)
+                                except OSError:
+                                    pass
+                                return  # Cancel — do not return file info
+                            
+                            # Verify download completeness BEFORE rename
+                            if file_size_bytes > 0 and total_bytes != file_size_bytes:
+                                flexible_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v']
+                                is_flexible_media = any(filename.lower().endswith(ext) for ext in flexible_extensions)
+                                
+                                if is_flexible_media and total_bytes > 0:
+                                    log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
+                                else:
+                                    # Incomplete download — delete .part and raise
                                     try:
-                                        filepath.unlink()
-                                        log_debug(f"Deleted partial file: {filepath}", debug_file)
-                                    except:
+                                        if part_path.exists():
+                                            part_path.unlink()
+                                    except OSError:
                                         pass
-                                raise e
+                                    raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
+                            
+                            # 100% success: atomic rename .part → final path
+                            try:
+                                part_path.rename(filepath)
+                            except OSError:
+                                import shutil as _shutil
+                                _shutil.move(str(part_path), str(filepath))
+                            
+                            log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
+                            
+                            if progress_callback:
+                                progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
+                                
+                            return (
+                                CanvasFileInfo(
+                                    id=file_obj.id,
+                                    filename=getattr(file_obj, 'filename', ''),
+                                    display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
+                                    size=getattr(file_obj, 'size', 0),
+                                    modified_at=getattr(file_obj, 'modified_at', None),
+                                    md5=getattr(file_obj, 'md5', None),
+                                    url=getattr(file_obj, 'url', ''),
+                                    content_type=getattr(file_obj, 'content-type', ''),
+                                    folder_id=getattr(file_obj, 'folder_id', None)
+                                ), filepath
+                            )
 
                         elif response.status == 429: # Rate Limit
                             wait = int(response.headers.get('Retry-After', RETRY_DELAY * (2 ** attempt)))
