@@ -1,7 +1,17 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Post-Processing Logging & UI Cleanup**: Wired up all 8 NotebookLM post-processing hooks to dual-log to `debug_log.txt` and `download_errors.txt`. Refactored the Step 2 NotebookLM sub-toggles into a collapsible `st.expander` and removed legacy CSS indentation hacks.
+- **Cancel Infrastructure Overhaul (Full App)**: Rebuilt the entire cancel infrastructure in both `sync_ui.py` and `app.py` — instant `on_click` callbacks, persistent cancel buttons across download + post-processing phases, cancel checks in all 8 conversion loops per file, unified red hover CSS, and premium styled cancelled screens.
+
+## Recent Changes (Session 2026-03-03)
+- **Cancel Infrastructure Overhaul**:
+  - **Instant Callback**: Added `cancel_process_callback()` module-level function using `on_click=` pattern instead of `if button():` return-value checking. This fires immediately even during heavy blocking loops.
+  - **Persistent Cancel Button**: The cancel button no longer disappears during post-processing. After clearing Phase 2 UI containers, a new "Cancel Post-Processing" button is rendered with `on_click` callback.
+  - **8-Loop Cancel Guards**: Every post-processing `for` loop (Archives, PPTX, HTML, Code, URLs, Word, Excel, Video) now checks `sync_cancelled` at the top of each iteration and breaks gracefully with a red cancellation log message.
+  - **Red Hover CSS**: Injected `button[data-testid="stBaseButton-secondary"]:hover` CSS in both Phase 2 and Post-Processing phases — red outline (#ef4444), dark red-gray bg (#2c1616).
+  - **Premium Cancelled Screen**: Redesigned `_show_sync_cancelled()` with a gradient card (linear-gradient from #2c1616 to #1a1a2e), red border, file count badge, and full-width "Go to front page" primary button.
+  - **State Management**: Added `sync_cancelled` to `_init_sync_session_state()` defaults and `_cleanup_sync_state()` cleanup list.
+
 
 ## Recent Changes (Session 2026-03-02)
 - **Post-Processing Dual Logging**:
