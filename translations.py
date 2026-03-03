@@ -80,6 +80,7 @@ TRANSLATIONS = {
         
         # Step 3: Progress
         'step3_header': 'Step 3: Downloading...',
+        'step4_download_header': 'Step 4: Complete!',
         'cancel_download': 'Cancel Download',
         'download_cancelled': 'Download Cancelled!',
         'processing': 'Processing ({current}/{total}): {course}',
@@ -400,6 +401,7 @@ TRANSLATIONS = {
         
         # Step 3: Progress
         'step3_header': 'Trin 3: Downloader...',
+        'step4_download_header': 'Trin 4: Færdig!',
         'cancel_download': 'Annullér Download',
         'download_cancelled': 'Download Annulleret!',
         'processing': 'Behandler ({current}/{total}): {course}',
