@@ -3,6 +3,15 @@
 ## Current Focus
 - **Atomic Symbiosis & Cancel UX Overhaul**: Concluded a massive restructuring of cancel safety across the app. Resolved the "Premature Commit" DB bug by implementing an atomic `.part` file download pattern and strictly gating manifest writes. Rebuilt the entire cancel UI infrastructure with instant callbacks, persistent buttons, and an 8-loop interruption system for Win32COM processors.
 
+## Recent Changes (Session 2026-03-03 - UI Polish)
+- **Dynamic Download Headers (`app.py` & `translations.py`)**:
+  - Replaced the hardcoded "Step 3: Downloading..." success header with conditional rendering tied to `st.session_state['download_status']`.
+  - Added new `step4_download_header` containing "Step 4: Complete!" to English and Danish translation dictionaries to accurately reflect the 'done' state.
+- **Sync Review Layout Finalization (`sync_ui.py`)**:
+  - **CSS Truncation**: Fixed the "Confirm Sync" dialog breaking vertical rhythm on single-course syncs by applying a flex layout with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` to the destination row, along with a hover `title` attribute for long course names.
+  - **Settings Relocation**: Moved the NotebookLM / File Format expander from the middle of the file selection UI down to the absolute bottom, immediately above the Action buttons.
+  - **Visual Hierarchy**: Prepended the "🛠️" emoji to the settings expanders in both `app.py` and `sync_ui.py` for cross-mode consistency. Injected a custom-styled `<hr>` separator and a strict `20px` height spacer `div` to enforce margin isolation above the final Action buttons, bypassing Streamlit's native collapsing margins.
+
 ## Recent Changes (Session 2026-03-03 - Atomic Symbiosis)
 - **Database Surgery (`sync_manager.py`)**:
   - Replaced bulk `DELETE FROM sync_manifest` query with iterative `INSERT OR REPLACE` upserts to prevent data loss on mid-sync crashes.
