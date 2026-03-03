@@ -1259,7 +1259,7 @@ with _main_content.container():
                             new_line = f"[{course.name}] {msg}"
                             log_deque.append(f"<span style='color: #8A91A6;'>[ℹ️] {new_line}</span>")
                             render_dashboard()
-                    except Exception:
+                    except BaseException:
                         # Silently catch Streamlit's StopException / RerunException during async teardown
                         pass
                 
@@ -1277,6 +1277,9 @@ with _main_content.container():
                 ))
                 
                 # --- Post-Processing: Setup ---
+                # Set explicitly when entering Phase 3
+                st.session_state['is_post_processing'] = True
+                
                 # Re-render cancel button for post-processing phase
                 cancel_placeholder.empty()
                 pp_cancel_placeholder = st.empty()
@@ -2439,16 +2442,14 @@ with _main_content.container():
             total_items_count = st.session_state.get('total_items', 0)
             
             # Dynamic text: "course" during scanning, "file" during download, post-processing status
-            is_file_phase = total_items_count > 0
-            if is_file_phase:
-                if downloaded_count >= total_items_count and total_items_count > 0:
-                    cancel_summary_msg = "Cancelled during post-processing."
-                else:
-                    cancel_summary_msg = f"Cancelled after {downloaded_count} of {total_items_count} file{'s' if total_items_count != 1 else ''}."
+            if st.session_state.get('is_post_processing', False):
+                cancel_summary_msg = "Cancelled during post-processing."
             else:
-                current_course = st.session_state.get('current_course_index', 0)
-                total_courses = len(st.session_state.get('courses_to_download', []))
-                cancel_summary_msg = f"Cancelled after {current_course} of {total_courses} course{'s' if total_courses != 1 else ''}."
+                is_file_phase = total_items_count > 0
+                if is_file_phase:
+                    cancel_summary_msg = f"Cancelled after {downloaded_count} of {total_items_count} file{'s' if total_items_count != 1 else ''}."
+                else:
+                    cancel_summary_msg = "Cancelled during Course Analysis."
             
             st.markdown(f"""
             <div style="
@@ -2482,7 +2483,7 @@ with _main_content.container():
             
             # Show errors if any
             download_errors = st.session_state.get('download_errors_list', [])
-            if download_errors:
+            if download_errors and st.session_state['download_status'] != 'cancelled':
                 with st.expander(f"Error Details ({len(download_errors)})", expanded=False):
                     for err in download_errors[:20]:
                         if hasattr(err, 'message'):
@@ -2499,7 +2500,7 @@ with _main_content.container():
             if st.button(button_text, type="primary", use_container_width=True):
                 keys_to_clear = ['download_status', 'current_course_index', 'total_items', 
                             'downloaded_items', 'failed_items', 'download_errors_list', 'log_content',
-                            'courses_to_download', 'download_cancelled',
+                            'courses_to_download', 'download_cancelled', 'is_post_processing',
                             'total_mb', 'start_time', 'log_deque', 'course_mb_downloaded',
                             'sync_manifest', 'sync_selections', 'sync_manager']
 
@@ -2512,6 +2513,12 @@ with _main_content.container():
                 st.session_state['download_cancelled'] = False
                 st.session_state['sync_cancelled'] = False
                 st.session_state['sync_cancel_requested'] = False
+                
+                # Nuclear cache clearing on reset to destroy dead aiohttp sessions
+                st.cache_data.clear()
+                st.session_state.pop('sync_manager', None)
+                st.session_state.pop('cm', None)
+                
                 st.rerun()
 
 

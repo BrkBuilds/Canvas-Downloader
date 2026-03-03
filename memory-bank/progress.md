@@ -44,6 +44,10 @@
     - [x] **Phase 1 Global Cancel**: Added a unified "Cancel Analysis" button to safely abort multi-course Canvas scanning.
     - [x] **Scoped Layout Refinements**: Fixed button row margins, tightened flush header padding, and added inter-course 20px spacing gaps.
     - [x] **Batch Tracking**: Injected blue numbered indices (`1.`, `2.`, etc.) into course headers for better orientation.
+- [x] **Microscopic Cancel UX Perfection** (2026-03-03):
+    - [x] **Phase 1 Parity**: Unified cancellation string to strictly read "Cancelled during Course Analysis." across both Standard and Sync modes.
+    - [x] **State Bleed**: Hard-guarded `_run_sync` with `st.rerun()` early-returns to prevent Phase 2 cancellations from triggering Phase 3 UI states.
+    - [x] **COM Render Lock Bypass**: Successfully forced the Post-Processing cancel button to render during heavy Excel/PPTX conversions by reusing an immune DOM placeholder and strictly enforcing a 300ms thread sleep.
 - [x] **Synthetic Shortcut & LTI Link Sync** (2026-02-27):
     - [x] **Manifest Tracking**: Support for Pages, ExternalUrls, and ExternalTools in `.canvas_sync.db`.
     - [x] **Negative ID Pattern**: Using negative integers for synthetic objects to prevent database PK collisions.

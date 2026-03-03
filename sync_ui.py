@@ -1235,17 +1235,22 @@ def _run_analysis(lang, sync_pairs):
         
         # Define the granular hook for this specific course
         def sync_progress_hook(current, total, status_text):
-            percent = int((current / total) * 100) if total > 0 else 0
-            analysis_ui_placeholder.markdown(f"""
-            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
-                <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                <p style="color: #8A91A6; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
-                <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
-                <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                    <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
+            try:
+                if st.session_state.get('cancel_requested') or st.session_state.get('sync_cancelled'):
+                    return
+                percent = int((current / total) * 100) if total > 0 else 0
+                analysis_ui_placeholder.markdown(f"""
+                <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    <p style="color: #8A91A6; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
+                    <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
+                    <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                        <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
+                    </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            except BaseException:
+                pass
 
         local_folder = pair['local_folder']
         course_id = pair['course_id']
@@ -1254,40 +1259,42 @@ def _run_analysis(lang, sync_pairs):
         try:
             sync_progress_hook(0, 1, "Connecting to Canvas API...")
             course = cm.canvas.get_course(course_id)
-        except Exception as e:
-            st.error(f"Error accessing course {display_name}: {e}")
-            continue
 
-        sync_mgr = SyncManager(str(local_folder), course_id, course_name, lang)
-        try:
+            sync_mgr = SyncManager(str(local_folder), course_id, course_name, lang)
+
             sync_progress_hook(0, 1, "Loading local sync manifest...")
             manifest = sync_mgr.load_manifest()
-        except sqlite3.Error as e:
-            st.error(get_text('sync_error_db_locked', lang, default=f"Database error for {display_name}: {e}. Please try again later."))
-            continue
+                
+            sync_progress_hook(0, 1, "Fetching files from Canvas...")
+            canvas_files = cm.get_course_files_metadata(course, progress_callback=sync_progress_hook)
             
-        sync_progress_hook(0, 1, "Fetching files from Canvas...")
-        canvas_files = cm.get_course_files_metadata(course, progress_callback=sync_progress_hook)
-        
-        sync_progress_hook(1, 1, "Healing local sync manifest...")
-        manifest = sync_mgr.heal_manifest(manifest)
-        
-        sync_progress_hook(1, 1, "Comparing files...")
-        detected = sync_mgr.detect_structure()
-        # Pass canvas manager to analyze_course for backend structure pre-calculation
-        result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm, download_mode=detected)
+            sync_progress_hook(1, 1, "Healing local sync manifest...")
+            manifest = sync_mgr.heal_manifest(manifest)
+            
+            sync_progress_hook(1, 1, "Comparing files...")
+            detected = sync_mgr.detect_structure()
+            # Pass canvas manager to analyze_course for backend structure pre-calculation
+            result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm, download_mode=detected)
 
-        # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
-        
-        all_results.append({
-            'pair': pair,
-            'result': result,
-            'manifest': manifest,
-            'sync_manager': sync_mgr,
-            'canvas_files': canvas_files,
-            'course': course,
-            'detected_structure': detected,
-        })
+            # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
+            
+            all_results.append({
+                'pair': pair,
+                'result': result,
+                'manifest': manifest,
+                'sync_manager': sync_mgr,
+                'canvas_files': canvas_files,
+                'course': course,
+                'detected_structure': detected,
+            })
+        except Exception as e:
+            import traceback
+            import logging
+            logger = logging.getLogger(__name__)
+            traceback.print_exc()
+            logger.error(f"Sync Analysis Error: {str(e)}")
+            st.error(f"Error accessing course {display_name}: {e}")
+            continue
 
     # Clean up the UI when all courses are done analyzing
     analysis_ui_placeholder.empty()
@@ -2573,6 +2580,12 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
 # ---- Sync execution ----
 
 def _run_sync(lang):
+    # Initialize phase flags explicitly at start of run — but ONLY if not already cancelled.
+    # If a Phase 3 cancel triggered the rerun, we must preserve is_post_processing=True
+    # so that _show_sync_cancelled can read it for the correct status message.
+    if not st.session_state.get('sync_cancel_requested', False) and not st.session_state.get('sync_cancelled', False):
+        st.session_state['is_post_processing'] = False
+
     # Step wizard
     render_sync_wizard(st, 3, lang)
 
@@ -3015,6 +3028,13 @@ def _run_sync(lang):
                 break
 
     # ==========================================
+    # HARD GUARD: Do NOT proceed to Phase 3 if cancelled during Phase 2
+    # ==========================================
+    if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+        st.session_state['download_status'] = 'sync_cancelled'
+        st.rerun()  # Force the UI to transition to the _show_sync_cancelled screen immediately!
+
+    # ==========================================
     # POST-PROCESSING UI SETUP
     # ==========================================
     import time as _time
@@ -3023,14 +3043,7 @@ def _run_sync(lang):
     cancel_placeholder.empty()
     active_file_placeholder.empty()
 
-    # 2. Re-render the cancel button for post-processing (it was cleared above)
-    pp_cancel_placeholder = st.empty()
-    pp_cancel_placeholder.button(
-        "Cancel Sync",
-        key="cancel_pp_btn",
-        type="secondary",
-        on_click=cancel_process_callback,
-    )
+    # 2. The cancel button will be rendered further down to prevent being overwritten
 
     # 3. Inject red hover CSS for cancel buttons (scoped)
     st.markdown("""
@@ -3038,7 +3051,8 @@ def _run_sync(lang):
     .st-key-cancel_download_btn button:hover,
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
-    .st-key-cancel_pp_btn button:hover {
+    .st-key-cancel_pp_btn button:hover,
+    .st-key-cancel_pp_btn_sync_phase3 button:hover {
         border-color: #ef4444 !important;
         background-color: #2c1616 !important;
         color: #ef4444 !important;
@@ -3052,10 +3066,15 @@ def _run_sync(lang):
 
     def pp_terminal(msg=None):
         """Append msg (if given) to the post-processing terminal, then render into the EXISTING log_container."""
-        if msg:
-            pp_log.append(msg)
-        log_container.markdown(render_terminal_html(pp_log), unsafe_allow_html=True)
-        _time.sleep(0.05)
+        try:
+            if st.session_state.get('sync_cancel_requested') or st.session_state.get('sync_cancelled'):
+                return
+            if msg:
+                pp_log.append(msg)
+            log_container.markdown(render_terminal_html(pp_log), unsafe_allow_html=True)
+            _time.sleep(0.05)
+        except BaseException:
+            pass
 
     # 3. Rich conversion dashboard — renders into the EXISTING Phase 2 containers
     #    Color map per conversion type for visual distinction
@@ -3071,43 +3090,62 @@ def _run_sync(lang):
 
     def render_conversion_dashboard(current, total, task_name):
         """Overwrite the Phase 2 progress bar and metrics dashboard with conversion-specific UI."""
-        accent = _COLOR_MAP.get(task_name, '#4ade80')
-        pct = int((current / total) * 100) if total > 0 else 0
-        pct = min(100, pct)
+        try:
+            if st.session_state.get('sync_cancel_requested') or st.session_state.get('sync_cancelled'):
+                return
+            accent = _COLOR_MAP.get(task_name, '#4ade80')
+            pct = int((current / total) * 100) if total > 0 else 0
+            pct = min(100, pct)
 
-        # Overwrite the Phase 1 status header
-        status_text.markdown(f"""
-        <div style="margin-bottom: 0.5rem;">
-            <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-            <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting {task_name}</h3>
-        </div>
-        """, unsafe_allow_html=True)
+            # Overwrite the Phase 1 status header
+            status_text.markdown(f"""
+            <div style="margin-bottom: 0.5rem;">
+                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
+                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting {task_name}</h3>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Overwrite the progress bar
-        progress_container.markdown(f"""
-        <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-            <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                {pct}%
+            # Overwrite the progress bar
+            progress_container.markdown(f"""
+            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+                    {pct}%
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-        # Overwrite the metrics dashboard
-        metrics_dashboard.markdown(f"""
-        <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
+            # Overwrite the metrics dashboard
+            metrics_dashboard.markdown(f"""
+            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                    <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{task_name}</span>
+                </div>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{task_name}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        _time.sleep(0.05)
+            """, unsafe_allow_html=True)
+            _time.sleep(0.05)
+        except BaseException:
+            pass
     # ==========================================
+    
+    st.session_state['is_post_processing'] = True
+
+    # 1. Reuse the immune cancel_placeholder from Phase 2 (it sits above the CSS marker in the DOM)
+    cancel_placeholder.button(
+        "Cancel Post-Processing",
+        key="cancel_pp_btn_sync_phase3",  # Unique key to avoid conflicts with Phase 2
+        type="secondary",
+        on_click=cancel_process_callback
+    )
+        
+    # 2. FORCE RENDER FLUSH before heavy COM operations
+    import time
+    time.sleep(0.3)  # Increased sleep to guarantee rendering before COM locks the thread
 
     # --- Post-Sync: Archive Extraction (Zip/Tar) ---
     if getattr(st.session_state, 'persistent_convert_zip', False):
@@ -3527,17 +3565,14 @@ def _show_sync_cancelled(lang):
     )
 
     # Dynamic text: "course" during scanning, "file" during download, post-processing status
-    is_file_phase = total_files > 0
-    if is_file_phase:
-        if cancelled_count >= total_files and total_files > 0:
-            cancel_summary_msg = "Cancelled during post-processing."
-        else:
-            cancel_summary_msg = f"Cancelled after {cancelled_count} of {total_files} {'file' if total_files == 1 else 'files'}."
+    if st.session_state.get('is_post_processing', False):
+        cancel_summary_msg = "Cancelled during post-processing."
     else:
-        # If total_files is 0, we cancelled during Phase 1 (Scanning)
-        courses_selected = len(st.session_state.get('sync_analysis_results', {}))
-        # Estimate based on progress text or default to 0
-        cancel_summary_msg = f"Cancelled during course scanning."
+        is_file_phase = total_files > 0
+        if is_file_phase:
+            cancel_summary_msg = f"Cancelled after {cancelled_count} of {total_files} {'file' if total_files == 1 else 'files'}."
+        else:
+            cancel_summary_msg = "Cancelled during Course Analysis."
 
     # Premium styled cancellation card
     st.markdown(f"""
@@ -3822,7 +3857,7 @@ def _cleanup_sync_state():
         'synced_count', 'synced_bytes', 'sync_cancel_requested', 'sync_cancelled_file_count',
         'sync_errors', 'sync_quick_mode', 'sync_single_pair_idx',
         'sync_confirm_count', 'sync_confirm_size', 'sync_confirm_folders',
-        'sync_cancelled',
+        'sync_cancelled', 'is_post_processing'
     ]:
         st.session_state.pop(key, None)
 
@@ -3831,6 +3866,11 @@ def _cleanup_sync_state():
     st.session_state['sync_cancel_requested'] = False
     st.session_state['cancel_requested'] = False
     st.session_state['download_cancelled'] = False
+    
+    # Nuclear cache clearing on reset to destroy dead aiohttp sessions
+    st.cache_data.clear()
+    st.session_state.pop('sync_manager', None)
+    st.session_state.pop('cm', None)
 
     # Also clean up any dynamic checkbox keys
     keys_to_remove = [k for k in st.session_state if k.startswith(('sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_'))]

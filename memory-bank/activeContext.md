@@ -11,7 +11,9 @@
   - **Red Hover CSS**: Injected `button[data-testid="stBaseButton-secondary"]:hover` CSS in both Phase 2 and Post-Processing phases — red outline (#ef4444), dark red-gray bg (#2c1616).
   - **Premium Cancelled Screen**: Redesigned `_show_sync_cancelled()` with a gradient card (linear-gradient from #2c1616 to #1a1a2e), red border, file count badge, and full-width "Go to front page" primary button.
   - **State Management**: Added `sync_cancelled` to `_init_sync_session_state()` defaults and `_cleanup_sync_state()` cleanup list.
-
+  - **Phase 2/3 Isolation Guard**: Added an explicit `if sync_cancelled: st.rerun()` guard between the Phase 2 async block and Phase 3 Post-Processing setup. This blocks the Python script from falling through and setting `is_post_processing = True` when a download is aborted.
+  - **COM Button Render Forcing**: Reused the Phase 2 `cancel_placeholder` for the Phase 3 button because its DOM position renders it immune to the CSS `display: none` cleanup rules. Increased the pre-COM `time.sleep()` to `0.3s` to guarantee Streamlit flushes the HTML button to the browser before the Win32COM thread locks.
+  - **Rerun Flag Protection**: Guarded the top-level `is_post_processing = False` initialization inside `_run_sync` so it doesn't wipe the flag during the final `on_click` cancel rerun, allowing the red cancellation card to accurately say "Cancelled during post-processing."
 
 ## Recent Changes (Session 2026-03-02)
 - **Post-Processing Dual Logging**:
