@@ -50,6 +50,15 @@ from ui_helpers import (
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Cancel callback (fires INSTANTLY via on_click, before Streamlit re-enters main loop)
+# ---------------------------------------------------------------------------
+
+def cancel_process_callback():
+    """Instant on_click callback — sets the cancel flag before the next loop iteration."""
+    st.session_state['sync_cancelled'] = True
+    st.session_state['sync_cancel_requested'] = True
+
+# ---------------------------------------------------------------------------
 # Session-state helpers
 # ---------------------------------------------------------------------------
 
@@ -63,6 +72,7 @@ def _init_sync_session_state():
         'sync_manifest': None,
         'sync_manager': None,
         'sync_mode': False,
+        'sync_cancelled': False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -2585,10 +2595,27 @@ def _run_sync(lang):
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
-    if cancel_placeholder.button(get_text('sync_cancel', lang), key="cancel_sync_btn"):
-        cancel_placeholder.empty()
-        st.session_state['sync_cancel_requested'] = True
-        st.session_state['download_status'] = 'sync_cancelled'
+    cancel_placeholder.button(
+        get_text('sync_cancel', lang),
+        key="cancel_sync_btn",
+        type="secondary",
+        on_click=cancel_process_callback,
+    )
+
+    # --- Inject red hover CSS for cancel buttons (scoped) ---
+    st.markdown("""
+    <style>
+    .st-key-cancel_download_btn button:hover,
+    .st-key-cancel_pp_download button:hover,
+    .st-key-cancel_sync_btn button:hover,
+    .st-key-cancel_pp_btn button:hover {
+        border-color: #ef4444 !important;
+        background-color: #2c1616 !important;
+        color: #ef4444 !important;
+        transition: all 0.2s ease-in-out;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     # --- Hide stale UI elements from previous step ---
     # During the blocking asyncio.run() download below, Streamlit cannot
@@ -2820,6 +2847,7 @@ def _run_sync(lang):
                                 rel_path = filepath.relative_to(local_path)
                                 sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
                                 synced_counter[0] += 1
+                                st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                 synced_details[pair_idx].append(display_file_name)
                                 terminal_log.append(f"<span style='color:#2ecc71'>[✅] Recreated: </span> {display_file_name}")
                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -2872,6 +2900,7 @@ def _run_sync(lang):
                                         rel_path = filepath.relative_to(local_path)
                                         sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
                                         synced_counter[0] += 1
+                                        st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                         
                                         # Track success for UI dropdown
                                         synced_details[pair_idx].append(display_file_name)
@@ -2993,8 +3022,32 @@ def _run_sync(lang):
     # 1. Clear the Phase 2 download UI to prevent stacking
     cancel_placeholder.empty()
     active_file_placeholder.empty()
-    
-    # 2. Inherit the terminal log history from the download phase (seamless continuity)
+
+    # 2. Re-render the cancel button for post-processing (it was cleared above)
+    pp_cancel_placeholder = st.empty()
+    pp_cancel_placeholder.button(
+        "Cancel Sync",
+        key="cancel_pp_btn",
+        type="secondary",
+        on_click=cancel_process_callback,
+    )
+
+    # 3. Inject red hover CSS for cancel buttons (scoped)
+    st.markdown("""
+    <style>
+    .st-key-cancel_download_btn button:hover,
+    .st-key-cancel_pp_download button:hover,
+    .st-key-cancel_sync_btn button:hover,
+    .st-key-cancel_pp_btn button:hover {
+        border-color: #ef4444 !important;
+        background-color: #2c1616 !important;
+        color: #ef4444 !important;
+        transition: all 0.2s ease-in-out;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 4. Inherit the terminal log history from the download phase (seamless continuity)
     pp_log = _download_log_history
 
     def pp_terminal(msg=None):
@@ -3084,6 +3137,9 @@ def _run_sync(lang):
             _time.sleep(0.2)
             
             for i, (archive_file, sm, pair_idx) in enumerate(archive_files_to_convert, 1):
+                if st.session_state.get('sync_cancelled', False):
+                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                    break
                 old_name = archive_file.name
                 render_conversion_dashboard(i, total_archives, "Archives")
                 new_stub_path_str = extract_and_stub(archive_file)
@@ -3126,6 +3182,9 @@ def _run_sync(lang):
             
             with PowerPointToPDF(error_log_path=all_pptx_files[0][1].local_path) as converter:
                 for i, (pptx_file, sync_mgr, pair_idx) in enumerate(all_pptx_files, 1):
+                    if st.session_state.get('sync_cancelled', False):
+                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                        break
                     old_name = pptx_file.name
                     render_conversion_dashboard(i, total_pptx, "PowerPoint files")
                     pdf_path_str = converter.convert(pptx_file)
@@ -3166,6 +3225,9 @@ def _run_sync(lang):
             _time.sleep(0.2)
             
             for i, (html_file, sm, pair_idx) in enumerate(html_files_to_convert, 1):
+                if st.session_state.get('sync_cancelled', False):
+                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                    break
                 old_name = html_file.name
                 render_conversion_dashboard(i, total_html, "HTML files")
                 md_path = convert_html_to_md(html_file)
@@ -3206,6 +3268,9 @@ def _run_sync(lang):
             _time.sleep(0.2)
             
             for i, (code_file, sm, pair_idx) in enumerate(code_files_to_convert, 1):
+                if st.session_state.get('sync_cancelled', False):
+                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                    break
                 old_name = code_file.name
                 render_conversion_dashboard(i, total_code, "Code files")
                 txt_path_str = convert_code_to_txt(code_file)
@@ -3241,6 +3306,9 @@ def _run_sync(lang):
         processed_roots = set()
         
         for sel in st.session_state.get('sync_selections', []):
+            if st.session_state.get('sync_cancelled', False):
+                pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                break
             sm = sel.get('res_data', {}).get('sync_manager')
             if sm and sm.local_path.exists():
                 course_root = sm.local_path
@@ -3269,6 +3337,9 @@ def _run_sync(lang):
             
             with WordToPDF() as converter:
                 for i, (word_file, sm, pair_idx) in enumerate(word_files_to_convert, 1):
+                    if st.session_state.get('sync_cancelled', False):
+                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                        break
                     old_name = word_file.name
                     render_conversion_dashboard(i, total_word, "Legacy Word files")
                     pdf_path_str = converter.convert(word_file)
@@ -3313,6 +3384,9 @@ def _run_sync(lang):
             
             with ExcelToPDF() as converter:
                 for i, (excel_file, sm, pair_idx) in enumerate(excel_files_to_convert, 1):
+                    if st.session_state.get('sync_cancelled', False):
+                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                        break
                     old_name = excel_file.name
                     render_conversion_dashboard(i, total_excel, "Excel files")
                     abs_path = str(excel_file.absolute())
@@ -3355,6 +3429,9 @@ def _run_sync(lang):
             _time.sleep(0.2)
             
             for i, (video_file, sm, pair_idx) in enumerate(video_files_to_convert, 1):
+                if st.session_state.get('sync_cancelled', False):
+                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                    break
                 old_name = video_file.name
                 render_conversion_dashboard(i, total_video, "Video files")
                 mp3_path_str = convert_video_to_mp3(video_file)
@@ -3428,7 +3505,7 @@ def _run_sync(lang):
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 
-    if st.session_state.get('sync_cancel_requested', False):
+    if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
         st.session_state['download_status'] = 'sync_cancelled'
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:
@@ -3443,18 +3520,60 @@ def _run_sync(lang):
 def _show_sync_cancelled(lang):
     render_sync_wizard(st, 3, lang)
 
-    st.warning(get_text('sync_cancelled', lang))
     cancelled_count = st.session_state.get('sync_cancelled_file_count', 0)
     total_files = sum(
         len(sel['new']) + len(sel['updates']) + len(sel['redownload'])
         for sel in st.session_state.get('sync_selections', [])
     )
-    st.info(get_text('sync_cancelled_after', lang, current=cancelled_count, total=total_files,
-                     file_word=pluralize(total_files, 'file', lang)))
+
+    # Dynamic text: "course" during scanning, "file" during download, post-processing status
+    is_file_phase = total_files > 0
+    if is_file_phase:
+        if cancelled_count >= total_files and total_files > 0:
+            cancel_summary_msg = "Cancelled during post-processing."
+        else:
+            cancel_summary_msg = f"Cancelled after {cancelled_count} of {total_files} {'file' if total_files == 1 else 'files'}."
+    else:
+        # If total_files is 0, we cancelled during Phase 1 (Scanning)
+        courses_selected = len(st.session_state.get('sync_analysis_results', {}))
+        # Estimate based on progress text or default to 0
+        cancel_summary_msg = f"Cancelled during course scanning."
+
+    # Premium styled cancellation card
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #2c1616 0%, #1a1a2e 100%);
+        border: 1px solid #ef4444;
+        border-radius: 12px;
+        padding: 28px 32px;
+        margin: 20px 0;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+    ">
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
+            <span style="font-size: 2rem;">🛑</span>
+            <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Sync Cancelled</h2>
+        </div>
+        <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
+            {get_text('sync_cancelled', lang)}
+        </p>
+        <div style="
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            display: inline-block;
+        ">
+            <span style="color: #f87171; font-size: 0.9rem; font-weight: 600;">
+                {cancel_summary_msg}
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     _show_sync_errors(lang)
 
-    if st.button(get_text('go_back', lang)):
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
+    if st.button("🏠 " + get_text('go_to_front_page', lang), type="primary", use_container_width=True):
         _cleanup_sync_state()
         st.rerun()
 
@@ -3703,8 +3822,15 @@ def _cleanup_sync_state():
         'synced_count', 'synced_bytes', 'sync_cancel_requested', 'sync_cancelled_file_count',
         'sync_errors', 'sync_quick_mode', 'sync_single_pair_idx',
         'sync_confirm_count', 'sync_confirm_size', 'sync_confirm_folders',
+        'sync_cancelled',
     ]:
         st.session_state.pop(key, None)
+
+    # Nuclear reset: force all cancel flags to False to prevent ghost aborts
+    st.session_state['sync_cancelled'] = False
+    st.session_state['sync_cancel_requested'] = False
+    st.session_state['cancel_requested'] = False
+    st.session_state['download_cancelled'] = False
 
     # Also clean up any dynamic checkbox keys
     keys_to_remove = [k for k in st.session_state if k.startswith(('sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_'))]

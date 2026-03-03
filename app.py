@@ -36,12 +36,20 @@ st.markdown("""
     
     /* Destructive buttons (Cancel / Remove) turn red on hover */
     [class*="st-key-remove_pair"] button:hover,
-    [class*="st-key-cancel_pair"] button:hover,
-    .st-key-cancel_download_btn button:hover,
-    .st-key-sync_cancel_btn button:hover {
+    [class*="st-key-cancel_pair"] button:hover {
         border-color: #ff4b4b !important;
         color: #ff4b4b !important;
         background-color: rgba(255, 75, 75, 0.1) !important;
+    }
+    /* Cancel buttons — scoped to specific cancel button keys only */
+    .st-key-cancel_download_btn button:hover,
+    .st-key-cancel_pp_download button:hover,
+    .st-key-cancel_sync_btn button:hover,
+    .st-key-cancel_pp_btn button:hover {
+        border-color: #ef4444 !important;
+        background-color: #2c1616 !important;
+        color: #ef4444 !important;
+        transition: all 0.2s ease-in-out;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -63,6 +71,8 @@ if 'download_mode' not in st.session_state:
     st.session_state['download_mode'] = "modules" # 'flat' or 'modules'
 if 'cancel_requested' not in st.session_state:
     st.session_state['cancel_requested'] = False
+if 'download_cancelled' not in st.session_state:
+    st.session_state['download_cancelled'] = False
 if 'user_name' not in st.session_state:
     st.session_state['user_name'] = ""
 if 'language' not in st.session_state:
@@ -125,7 +135,12 @@ def select_sync_folder():
         st.session_state['pending_sync_folder'] = folder_path
 
 def check_cancellation():
-    return st.session_state.get('cancel_requested', False)
+    return st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False)
+
+def cancel_download_callback():
+    """Instant on_click callback — fires before Streamlit re-enters the main loop."""
+    st.session_state['download_cancelled'] = True
+    st.session_state['cancel_requested'] = True
 
 @st.cache_data
 def fetch_courses(token, url, fav_only, language='en'):
@@ -976,10 +991,12 @@ with _main_content.container():
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             
             cancel_placeholder = st.empty()
-            if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
-                cancel_placeholder.empty() # Clear immediately
-                st.session_state['cancel_requested'] = True
-                st.session_state['download_status'] = 'cancelled'
+            cancel_placeholder.button(
+                get_text('cancel_download', lang),
+                type="secondary",
+                key="cancel_download_btn",
+                on_click=cancel_download_callback,
+            )
         else:
             status_text = st.empty()
             progress_container = st.empty()  # For custom progress bar with text
@@ -998,11 +1015,12 @@ with _main_content.container():
             cancel_placeholder = st.empty()
             
             # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP
-            if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_download_btn"):
-                cancel_placeholder.empty() # Clear immediately
-                st.session_state['cancel_requested'] = True
-                st.session_state['download_status'] = 'cancelled'
-                st.rerun()
+            cancel_placeholder.button(
+                get_text('cancel_download', lang),
+                type="secondary",
+                key="cancel_download_btn",
+                on_click=cancel_download_callback,
+            )
             
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
             total_items = 0
@@ -1030,11 +1048,8 @@ with _main_content.container():
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Also keep the cancel button alive
-                    if cancel_placeholder.button(get_text('cancel_download', lang), type="secondary", key=f"cancel_scan_{idx}_{current_mod}"):
-                        st.session_state['cancel_requested'] = True
-                        st.session_state['download_status'] = 'cancelled'
-                        st.rerun()
+                    # Cancel button is already rendered above with on_click callback
+                    # No need to re-render inside the hook — the callback fires instantly
 
                 # Render initial modern loading UI
                 analysis_ui_placeholder.markdown(f"""
@@ -1109,9 +1124,9 @@ with _main_content.container():
             st.rerun()
 
         elif st.session_state['download_status'] == 'running':
-            if st.session_state['cancel_requested']:
+            if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
                 st.session_state['download_status'] = 'cancelled'
-                st.warning(get_text('download_cancelled', lang))
+                st.rerun()
             elif current_idx < total:
                 import time
                 import collections
@@ -1203,42 +1218,50 @@ with _main_content.container():
                 render_dashboard()
                 
                 def update_ui(msg, progress_type='log', **kwargs):
-                    """Update UI with progress information."""
-                    if progress_type in ('download', 'page', 'link'):
-                        st.session_state['downloaded_items'] += 1
-                        if msg:
-                            log_deque.append(f"[✅] Finished: {msg}")
-                        render_dashboard()
+                    """Update UI with progress information. Wrapped in try/except for async safety."""
+                    try:
+                        # Exit silently if cancellation is in progress
+                        if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
+                            return
                         
-                    elif progress_type == 'error':
-                        st.session_state['failed_items'] += 1
-                        
-                        if msg:
-                            if isinstance(msg, DownloadError):
-                                error_obj = msg
-                            else:
-                                error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
+                        if progress_type in ('download', 'page', 'link'):
+                            st.session_state['downloaded_items'] += 1
+                            if msg:
+                                log_deque.append(f"[✅] Finished: {msg}")
+                            render_dashboard()
                             
-                            if 'download_errors_list' not in st.session_state:
-                                st.session_state['download_errors_list'] = []
-                            st.session_state['download_errors_list'].append(error_obj)
+                        elif progress_type == 'error':
+                            st.session_state['failed_items'] += 1
                             
-                            error_text = f"[{course.name}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                            log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {error_text}</span>")
-                            
-                        render_dashboard()
+                            if msg:
+                                if isinstance(msg, DownloadError):
+                                    error_obj = msg
+                                else:
+                                    error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
+                                
+                                if 'download_errors_list' not in st.session_state:
+                                    st.session_state['download_errors_list'] = []
+                                st.session_state['download_errors_list'].append(error_obj)
+                                
+                                error_text = f"[{course.name}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {error_text}</span>")
+                                
+                            render_dashboard()
 
-                    elif progress_type == 'mb_progress':
-                        mb_down_course = kwargs.get('mb_downloaded', 0)
-                        if 'course_mb_downloaded' not in st.session_state:
-                             st.session_state['course_mb_downloaded'] = {}
-                        st.session_state['course_mb_downloaded'][course.id] = mb_down_course
-                        render_dashboard()
-                    
-                    elif msg and progress_type == 'log':
-                        new_line = f"[{course.name}] {msg}"
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ℹ️] {new_line}</span>")
-                        render_dashboard()
+                        elif progress_type == 'mb_progress':
+                            mb_down_course = kwargs.get('mb_downloaded', 0)
+                            if 'course_mb_downloaded' not in st.session_state:
+                                 st.session_state['course_mb_downloaded'] = {}
+                            st.session_state['course_mb_downloaded'][course.id] = mb_down_course
+                            render_dashboard()
+                        
+                        elif msg and progress_type == 'log':
+                            new_line = f"[{course.name}] {msg}"
+                            log_deque.append(f"<span style='color: #8A91A6;'>[ℹ️] {new_line}</span>")
+                            render_dashboard()
+                    except Exception:
+                        # Silently catch Streamlit's StopException / RerunException during async teardown
+                        pass
                 
 
                 import asyncio
@@ -1253,6 +1276,17 @@ with _main_content.container():
                     debug_mode=st.session_state.get('debug_mode', False)
                 ))
                 
+                # --- Post-Processing: Setup ---
+                # Re-render cancel button for post-processing phase
+                cancel_placeholder.empty()
+                pp_cancel_placeholder = st.empty()
+                pp_cancel_placeholder.button(
+                    "Cancel Post-Processing",
+                    key="cancel_pp_download",
+                    type="secondary",
+                    on_click=cancel_download_callback,
+                )
+
                 # --- Post-Processing: Setup logging for NotebookLM hooks ---
                 from datetime import datetime
                 from canvas_debug import log_debug
@@ -1360,6 +1394,10 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, archive_file in enumerate(archive_files, 1):
+                            if st.session_state.get('download_cancelled', False):
+                                log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                                render_archive_dashboard(i - 1)
+                                break
                             _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>"
                             log_deque.append(_msg)
                             if '[ ❌ ]' in _msg:
@@ -1857,7 +1895,10 @@ with _main_content.container():
                         </div>
                         ''', unsafe_allow_html=True)
                         
-                        compiled_path = compile_urls_to_txt(course_folder, course.name)
+                        if not st.session_state.get('download_cancelled', False):
+                            compiled_path = compile_urls_to_txt(course_folder, course.name)
+                        else:
+                            compiled_path = None
                         
                         if compiled_path:
                             _msg = f"<span style='color: #4ade80;'>[ ✅ ] Links successfully compiled into: NotebookLM_External_Links.txt</span>"
@@ -2211,6 +2252,10 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, video_file in enumerate(video_files, 1):
+                            if st.session_state.get('download_cancelled', False):
+                                log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                                render_video_conversion_dashboard(i - 1)
+                                break
                             _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>"
                             log_deque.append(_msg)
                             if '[ ❌ ]' in _msg:
@@ -2279,7 +2324,11 @@ with _main_content.container():
                         render_video_conversion_dashboard(total_video)
                 # --- End Post-Download Conversion (Video) ---
                 
-                # Move to next course
+                # Move to next course (unless cancelled)
+                if st.session_state.get('download_cancelled', False):
+                    st.session_state['download_status'] = 'cancelled'
+                    st.rerun()
+                
                 st.session_state['current_course_index'] += 1
                 
                 # Check if we're done
@@ -2385,39 +2434,84 @@ with _main_content.container():
                          st.rerun()
         
         elif st.session_state['download_status'] == 'cancelled':
-            st.warning(get_text('download_was_cancelled', lang))
-            # Show partial progress
-            try:
-                progress_container.progress(current_idx / total if total > 0 else 0)
-                status_text.text(get_text('cancelled_after', lang, current=current_idx, total=total))
-            except Exception:
-                pass
+            # Premium styled cancellation card (matches sync_ui.py design)
+            downloaded_count = st.session_state.get('downloaded_items', 0)
+            total_items_count = st.session_state.get('total_items', 0)
+            
+            # Dynamic text: "course" during scanning, "file" during download, post-processing status
+            is_file_phase = total_items_count > 0
+            if is_file_phase:
+                if downloaded_count >= total_items_count and total_items_count > 0:
+                    cancel_summary_msg = "Cancelled during post-processing."
+                else:
+                    cancel_summary_msg = f"Cancelled after {downloaded_count} of {total_items_count} file{'s' if total_items_count != 1 else ''}."
+            else:
+                current_course = st.session_state.get('current_course_index', 0)
+                total_courses = len(st.session_state.get('courses_to_download', []))
+                cancel_summary_msg = f"Cancelled after {current_course} of {total_courses} course{'s' if total_courses != 1 else ''}."
+            
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #2c1616 0%, #1a1a2e 100%);
+                border: 1px solid #ef4444;
+                border-radius: 12px;
+                padding: 28px 32px;
+                margin: 20px 0;
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+            ">
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
+                    <span style="font-size: 2rem;">🛑</span>
+                    <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Download Cancelled</h2>
+                </div>
+                <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
+                    {get_text('download_was_cancelled', lang)}
+                </p>
+                <div style="
+                    background: rgba(239, 68, 68, 0.08);
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    margin-top: 12px;
+                    display: inline-block;
+                ">
+                    <span style="color: #f87171; font-size: 0.9rem; font-weight: 600;">
+                        {cancel_summary_msg}
+                    </span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show errors if any
+            download_errors = st.session_state.get('download_errors_list', [])
+            if download_errors:
+                with st.expander(f"Error Details ({len(download_errors)})", expanded=False):
+                    for err in download_errors[:20]:
+                        if hasattr(err, 'message'):
+                            st.markdown(f"\u274c {err.message}")
+                        else:
+                            st.markdown(f"\u274c {err}")
+                    if len(download_errors) > 20:
+                        st.caption(f"  ... and {len(download_errors) - 20} more")
         
-        # Start Over / Go back button (show when done or cancelled)
         if st.session_state['download_status'] in ['done', 'cancelled']:
-            # Use "Go back" for cancelled, "Go to front page" for done
-            button_text = get_text('go_back', lang) if st.session_state['download_status'] == 'cancelled' else get_text('go_to_front_page', lang)
-            if st.button(button_text):
-                # Determine target step: 2 if cancelled (back to settings), 1 if done (front page)
-                target_step = 2 if st.session_state['download_status'] == 'cancelled' else 1
-                
-                # Check if we should clean up ALL state (for step 1) or just download state (for step 2)
-                # If step 1, we want full reset. If step 2, we want to keep course selection.
-                
+            st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
+            # Use "Go to front page" for both done and cancelled
+            button_text = "🏠 " + get_text('go_to_front_page', lang)
+            if st.button(button_text, type="primary", use_container_width=True):
                 keys_to_clear = ['download_status', 'current_course_index', 'total_items', 
-                            'downloaded_items', 'failed_items', 'download_errors_list', 'log_content']
-                
-                if target_step == 1:
-                     keys_to_clear.append('courses_to_download') # Maybe keep selection if step 1? 
-                     # Actually standard flow is clear everything if going to front.
-                     pass 
+                            'downloaded_items', 'failed_items', 'download_errors_list', 'log_content',
+                            'courses_to_download', 'download_cancelled',
+                            'total_mb', 'start_time', 'log_deque', 'course_mb_downloaded',
+                            'sync_manifest', 'sync_selections', 'sync_manager']
 
                 for key in keys_to_clear:
                     if key in st.session_state:
                         del st.session_state[key]
                 
-                st.session_state['step'] = target_step
+                st.session_state['step'] = 1
                 st.session_state['cancel_requested'] = False
+                st.session_state['download_cancelled'] = False
+                st.session_state['sync_cancelled'] = False
+                st.session_state['sync_cancel_requested'] = False
                 st.rerun()
 
 
