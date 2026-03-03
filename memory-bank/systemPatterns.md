@@ -85,8 +85,13 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Manifest Translation**:
     - *Pattern*: When converting a file (e.g., `.pptx` to `.pdf`), the system updates the `local_path`, `original_size`, and `original_md5` in the database to match the new derivative file, but preserves the original `canvas_filename`. This effectively tricks the sync diffing engine into linking a remote PPTX to a local PDF for version control.
 
-## Synchronization Strategy
+## Synchronization Strategy & Data Integrity
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
+- **Atomic Symbiosis Pattern**:
+    - *Problem*: Crashes, immediate cancellations, or network failures during file downloads historically corrupted the SQLite manifest or left halfway-written files on disk, leading to "Cancel Ghosting" (0 files to sync on retry).
+    - *Solution 1 (Atomic Upserts)*: Replaced destructive `DELETE FROM` bulk sweeps with per-row `INSERT OR REPLACE` upserts in `save_manifest()`.
+    - *Solution 2 (The `.part` Pattern)*: All active downloads append a `.part` extension to the filename during streaming. Cancel checks fire every 1MB chunk. If interrupted or cancelled, the `.part` file is unlinked. The file is only atomically renamed to its final extension upon 100% byte verification.
+    - *Solution 3 (Semantic Purity Guards)*: DB commit loops (`save_manifest` and `_save_single_file_to_db`) strictly occur *after* all physical disk verification is complete, and are shielded by top-level execution guards (e.g., `if st.session_state.sync_cancelled: st.rerun()`) to ensure zero database mutations occur during a cancelled session.
 - **Negative ID Pattern**: Synthetic shortcuts (Pages, ExternalUrls, ExternalTools) are assigned `id = -int(item.id)`. This keeps them unique and prevents primary key collisions with physical Canvas `File` objects in SQLite.
 - **Shortcut Bypass Logic**: `_is_canvas_newer()` in `sync_manager.py` explicitly returns `False` for `id < 0`. This bypasses unreliable module timestamps and forces the engine to rely on local existence checks.
 - **Sync Restoration Interception**: The download pipeline in `sync_ui.py` intercepts negative IDs and recreates `.url` or `.html` files locally using static templates rather than performing an HTTP GET.

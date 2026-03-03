@@ -1,9 +1,21 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Cancel Infrastructure Overhaul (Full App)**: Rebuilt the entire cancel infrastructure in both `sync_ui.py` and `app.py` — instant `on_click` callbacks, persistent cancel buttons across download + post-processing phases, cancel checks in all 8 conversion loops per file, unified red hover CSS, and premium styled cancelled screens.
+- **Atomic Symbiosis & Cancel UX Overhaul**: Concluded a massive restructuring of cancel safety across the app. Resolved the "Premature Commit" DB bug by implementing an atomic `.part` file download pattern and strictly gating manifest writes. Rebuilt the entire cancel UI infrastructure with instant callbacks, persistent buttons, and an 8-loop interruption system for Win32COM processors.
 
-## Recent Changes (Session 2026-03-03)
+## Recent Changes (Session 2026-03-03 - Atomic Symbiosis)
+- **Database Surgery (`sync_manager.py`)**:
+  - Replaced bulk `DELETE FROM sync_manifest` query with iterative `INSERT OR REPLACE` upserts to prevent data loss on mid-sync crashes.
+  - Eliminated the defunct `create_initial_manifest()` function and transitioned entirely to active auto-discovery pipelines in `analyze_course()`.
+- **The `.part` File Pattern (`app.py` & `sync_ui.py`)**:
+  - Rewrote both `_download_file_async` loops to stream bytes exclusively to `filename.ext.part` files.
+  - Added instant cancel-flag evaluations directly inside the 1MB chunk `while` loops for immediate interruption.
+  - Handled interrupted state by actively `unlink()`ing the partial file and enforcing exact byte-size verification before `rename()`ing to the target extension.
+- **Semantic Purity Guards**:
+  - Fixed premature committing in `sync_ui.py` by filtering the pre-download DB dump to exclusively save `.is_ignored()` settings, preventing auto-discovered files from flashing into the DB before validation.
+  - Structurally shifted the final Phase 2 `sync_mgr.save_manifest()` cascade to execute strictly *after* the top-level Cancel evaluator, ensuring an aborted run triggers zero post-download state mutations.
+
+## Recent Changes (Session 2026-03-03 - Cancel UX Overhaul)
 - **Cancel Infrastructure Overhaul**:
   - **Instant Callback**: Added `cancel_process_callback()` module-level function using `on_click=` pattern instead of `if button():` return-value checking. This fires immediately even during heavy blocking loops.
   - **Persistent Cancel Button**: The cancel button no longer disappears during post-processing. After clearing Phase 2 UI containers, a new "Cancel Post-Processing" button is rendered with `on_click` callback.

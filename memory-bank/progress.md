@@ -6,6 +6,11 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Atomic Symbiosis & DB Integrity** (2026-03-03):
+    - [x] **Atomic Upserts**: Replaced destructive manifest DB overwrites with row-by-row `INSERT OR REPLACE`.
+    - [x] **`.part` File Streaming**: Files stream to `.part` and are atomically renamed strictly at 100% completion (deployed in both `app.py` and `sync_ui.py`).
+    - [x] **Mid-Chunk Cancellation**: Instant cancellation flags injected directly into the 1MB `async for` read loops for immediate file unlinking.
+    - [x] **Semantic Purity Guards**: Relocated final `save_manifest()` calls to fire *after* all cancel evaluations, assuring mathematical parity between disk and DB on aborted syncs.
 - [x] **Optimization & Performance**:
     - [x] `aiofiles` integration for non-blocking disk writes.
     - [x] Global concurrency settings and sidebar config modal.
