@@ -826,7 +826,7 @@ with _main_content.container():
             TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
             current_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
 
-            with st.expander("Additional Settings", expanded=False):
+            with st.expander("🛠️ Additional Settings", expanded=False):
                 # Master Toggle (always visible)
                 st.checkbox(
                     f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
@@ -960,7 +960,14 @@ with _main_content.container():
         wiz_step = 4 if st.session_state.get('download_status') == 'done' else 3
         render_download_wizard(st, wiz_step, lang)
         
-        st.markdown(f'<div class="step-header">{get_text("step3_header", lang)}</div>', unsafe_allow_html=True)
+        current_status = st.session_state.get('download_status', 'scanning')
+        
+        if current_status == 'done':
+            st.markdown(f'<div class="step-header">{get_text("step4_download_header", lang)}</div>', unsafe_allow_html=True)
+        elif current_status == 'cancelled':
+            pass
+        else:
+            st.markdown(f'<div class="step-header">{get_text("step3_header", lang)}</div>', unsafe_allow_html=True)
         
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:

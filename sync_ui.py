@@ -1648,119 +1648,7 @@ def _show_analysis_review(lang):
         # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
         TOTAL_NOTEBOOK_SUBS = 8
 
-        def _sync_master_toggle_changed():
-            st.session_state['convert_zip'] = st.session_state['notebooklm_master']
-            st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
-            st.session_state['convert_html'] = st.session_state['notebooklm_master']
-            st.session_state['convert_code'] = st.session_state['notebooklm_master']
-            st.session_state['convert_urls'] = st.session_state['notebooklm_master']
-            st.session_state['convert_word'] = st.session_state['notebooklm_master']
-            st.session_state['convert_video'] = st.session_state['notebooklm_master']
-            st.session_state['convert_excel'] = st.session_state['notebooklm_master']
-        
-        def _sync_sub_toggle_changed():
-            active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
-            st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
-        
-        # 1. Inject Borderless Expander + Tree-View CSS
-        st.markdown("""
-        <style>
-        /* 1. Target ONLY the specific expander containing the master checkbox */
-        [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
-            border-style: none !important;
-            background-color: transparent !important;
-        }
-        [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            background-color: transparent !important;
-        }
-        [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            padding-bottom: 0 !important;
-        }
-        [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
-            font-size: 1.75rem !important;
-            font-weight: 600 !important;
-        }
 
-        /* 2. Tree-view styling for nested sub-checkboxes */
-        .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
-        .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
-        .st-key-convert_urls, .st-key-convert_video {
-            margin-left: 28px !important;
-            padding-left: 15px !important;
-            border-left: 2px solid #3E4353 !important; 
-            margin-top: -12px !important; 
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
-        }
-        .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
-        .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
-        </style>
-        """, unsafe_allow_html=True)
-
-        with st.expander("File format - download settings", expanded=False):
-            current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
-
-            st.checkbox(
-                f"**NotebookLM Compatible Sync** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
-                key="notebooklm_master",
-                on_change=_sync_master_toggle_changed,
-                help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
-            )
-            
-            st.checkbox(
-                "Auto-Extract Archives (.zip, .tar.gz)",
-                key="convert_zip",
-                on_change=_sync_sub_toggle_changed,
-                help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
-            )
-            st.checkbox(
-                "Convert PowerPoints to PDF",
-                key="convert_pptx",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed."
-            )
-            st.checkbox(
-                "Convert Old Word Docs (.doc, .rtf) to PDF",
-                key="convert_word",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-            )
-            st.checkbox(
-                "Convert Excel Files (.xlsx, .xls) to PDF",
-                key="convert_excel",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
-            )
-            st.checkbox(
-                "Convert Canvas Pages (HTML) to Markdown",
-                key="convert_html",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts Canvas Pages from HTML to clean Markdown formats."
-            )
-            st.checkbox(
-                "Convert Code & Data Files to .txt",
-                key="convert_code",
-                on_change=_sync_sub_toggle_changed,
-                help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
-            )
-            st.checkbox(
-                "Compile Web Links (.url) into a single list",
-                key="convert_urls",
-                on_change=_sync_sub_toggle_changed,
-                help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
-            )
-            st.checkbox(
-                "Extract Audio (.mp3) from Videos (.mp4, .mov)",
-                key="convert_video",
-                on_change=_sync_sub_toggle_changed,
-                help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-            )
-        
-        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # Nothing to sync
     if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
@@ -2218,6 +2106,135 @@ def _show_analysis_review(lang):
             # Inject 20px gap BETWEEN courses, inside the loop but outside the course's content
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+    
+    TOTAL_NOTEBOOK_SUBS = 8
+
+    def _sync_master_toggle_changed():
+        st.session_state['convert_zip'] = st.session_state['notebooklm_master']
+        st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
+        st.session_state['convert_html'] = st.session_state['notebooklm_master']
+        st.session_state['convert_code'] = st.session_state['notebooklm_master']
+        st.session_state['convert_urls'] = st.session_state['notebooklm_master']
+        st.session_state['convert_word'] = st.session_state['notebooklm_master']
+        st.session_state['convert_video'] = st.session_state['notebooklm_master']
+        st.session_state['convert_excel'] = st.session_state['notebooklm_master']
+    
+    def _sync_sub_toggle_changed():
+        active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+        st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
+    
+    # 1. Inject Borderless Expander + Tree-View CSS
+    st.markdown("""
+    <style>
+    /* 1. Target ONLY the specific expander containing the master checkbox */
+    [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
+        border-style: none !important;
+        background-color: transparent !important;
+    }
+    [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        background-color: transparent !important;
+    }
+    [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
+        font-size: 1.75rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* 2. Tree-view styling for nested sub-checkboxes */
+    .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
+    .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
+    .st-key-convert_urls, .st-key-convert_video {
+        margin-left: 28px !important;
+        padding-left: 15px !important;
+        border-left: 2px solid #3E4353 !important; 
+        margin-top: -12px !important; 
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
+    .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Use the existing translation key but prepend the emoji
+    expander_title = "🛠️ File Format Sync Settings"
+    with st.expander(expander_title, expanded=False):
+        current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+
+        st.checkbox(
+            f"**NotebookLM Compatible Sync** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
+            key="notebooklm_master",
+            on_change=_sync_master_toggle_changed,
+            help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
+        )
+        
+        st.checkbox(
+            "Auto-Extract Archives (.zip, .tar.gz)",
+            key="convert_zip",
+            on_change=_sync_sub_toggle_changed,
+            help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
+        )
+        st.checkbox(
+            "Convert PowerPoints to PDF",
+            key="convert_pptx",
+            on_change=_sync_sub_toggle_changed,
+            help="Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed."
+        )
+        st.checkbox(
+            "Convert Old Word Docs (.doc, .rtf) to PDF",
+            key="convert_word",
+            on_change=_sync_sub_toggle_changed,
+            help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
+        )
+        st.checkbox(
+            "Convert Excel Files (.xlsx, .xls) to PDF",
+            key="convert_excel",
+            on_change=_sync_sub_toggle_changed,
+            help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
+        )
+        st.checkbox(
+            "Convert Canvas Pages (HTML) to Markdown",
+            key="convert_html",
+            on_change=_sync_sub_toggle_changed,
+            help="Converts Canvas Pages from HTML to clean Markdown formats."
+        )
+        st.checkbox(
+            "Convert Code & Data Files to .txt",
+            key="convert_code",
+            on_change=_sync_sub_toggle_changed,
+            help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
+        )
+        st.checkbox(
+            "Compile Web Links (.url) into a single list",
+            key="convert_urls",
+            on_change=_sync_sub_toggle_changed,
+            help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
+        )
+        st.checkbox(
+            "Extract Audio (.mp3) from Videos (.mp4, .mov)",
+            key="convert_video",
+            on_change=_sync_sub_toggle_changed,
+            help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
+        )
+
+    st.markdown("""
+        <hr style="
+            margin-top: 25px; 
+            margin-bottom: 30px; 
+            border: 0; 
+            border-top: 1px solid #475569;
+        ">
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
     # --- Action buttons (Sync left, Back right) ---
     total_active_files = sum(len(pd['result'].new_files) + len(pd['result'].updated_files) + len(pd['result'].missing_files) + len(pd['result'].locally_deleted_files) for pd in all_results)
     
@@ -2380,9 +2397,11 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
     else:
         # Single folder - static row showing friendly name
         dest_html = (
-            f'<div class="stat-row-static">'
-            f'<div class="stat-left">📁 <span class="stat-label">Destination:</span></div>'
-            f'<div class="stat-value">{sorted_folders[0]}</div>'
+            f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
+            f'<div style="font-weight: 600; color: #e2e8f0; white-space: nowrap;">📁 Destination:</div>'
+            f'<div title="{sorted_folders[0]}" style="text-align: right; font-weight: 600; color: #f8fafc; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'
+            f'{sorted_folders[0]}'
+            f'</div>'
             f'</div>'
         )
 
