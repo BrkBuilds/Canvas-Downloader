@@ -3,6 +3,10 @@ import tkinter as tk
 from tkinter import filedialog
 from canvas_logic import CanvasManager, DownloadError
 import os
+import logging
+import re
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 import time
 import re
@@ -1224,7 +1228,7 @@ with _main_content.container():
                     
                     if archive_files:
                         total_archives = len(archive_files)
-                        print(f"[Post-Download] Archive Extraction toggle is ON. Found {total_archives} archives.")
+                        logger.info(f"[Post-Download] Archive Extraction toggle is ON. Found {total_archives} archives.")
                         
                         # Set up UI
                         def render_archive_dashboard(current_idx):
@@ -1269,7 +1273,12 @@ with _main_content.container():
                             
                         render_archive_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting {total_archives} compressed archives...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting {total_archives} compressed archives...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_archive_dashboard(0)
                         
                         import time
@@ -1278,7 +1287,12 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, archive_file in enumerate(archive_files, 1):
-                            log_deque.append(f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>")
+                            _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>"
+                            log_deque.append(_msg)
+                            if '[ ❌ ]' in _msg:
+                                logger.error(re.sub(r'<[^>]+>', '', _msg))
+                            else:
+                                logger.info(re.sub(r'<[^>]+>', '', _msg))
                             render_archive_dashboard(i - 1)
                             
                             old_relative = archive_file.relative_to(course_folder)
@@ -1307,21 +1321,36 @@ with _main_content.container():
                                         except Exception:
                                             pass
                                 except Exception as e:
-                                    print(f"Failed DB update for {archive_file.name}: {e}")
+                                    logger.error(f"Failed DB update for {archive_file.name}: {e}")
 
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {archive_file.name}</span>")
+                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {archive_file.name}</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                             else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span>")
+                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                                 
                             render_archive_dashboard(i)
                             
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_archive_dashboard(total_archives)
                 # --- End Post-Download Conversion (Archive) ---
 
                 # --- Post-Download: PPTX → PDF Conversion ---
                 if st.session_state.get('persistent_convert_pptx', False):
-                    from pdf_converter import convert_pptx_to_pdf
+                    from pdf_converter import PowerPointToPDF
                     from sync_manager import SyncManager
                     
                     course_name = cm._sanitize_filename(course.name)
@@ -1336,7 +1365,7 @@ with _main_content.container():
                     
                     if pptx_files:
                         total_pptx = len(pptx_files)
-                        print(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files.")
+                        logger.info(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files.")
                         
                         # Custom render function to hijack the main UI placeholders
                         def render_conversion_dashboard(current_idx):
@@ -1383,7 +1412,12 @@ with _main_content.container():
                         # 1. Start with 0 progress
                         render_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_conversion_dashboard(0)
                         
                         import time
@@ -1391,33 +1425,47 @@ with _main_content.container():
                         
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
-                        for i, pptx_file in enumerate(pptx_files, 1):
-                            pdf_path = convert_pptx_to_pdf(
-                                pptx_file,
-                                error_log_path=Path(st.session_state['download_path'])
-                            )
-                            
-                            if pdf_path:
-                                manifest = sm.load_manifest()
-                                for file_id, info in manifest.get('files', {}).items():
-                                    local_p = info.get('local_path', '')
-                                    try:
-                                        original_rel = pptx_file.relative_to(course_folder)
-                                        if str(original_rel).replace('\\', '/') == local_p:
-                                            new_rel = pdf_path.relative_to(course_folder)
-                                            sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                            break
-                                    except (ValueError, KeyError):
-                                        pass
+                        with PowerPointToPDF(error_log_path=Path(st.session_state['download_path'])) as converter:
+                            for i, pptx_file in enumerate(pptx_files, 1):
+                                pdf_path = converter.convert(pptx_file)
                                 
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path.name}</span>")
-                            else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span>")
-                                
-                            # 2. Update progress mid-loop
-                            render_conversion_dashboard(i)
+                                if pdf_path:
+                                    pdf_path_obj = Path(pdf_path)
+                                    manifest = sm.load_manifest()
+                                    for file_id, info in manifest.get('files', {}).items():
+                                        local_p = info.get('local_path', '')
+                                        try:
+                                            original_rel = pptx_file.relative_to(course_folder)
+                                            if str(original_rel).replace('\\', '/') == local_p:
+                                                new_rel = pdf_path_obj.relative_to(course_folder)
+                                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
+                                                break
+                                        except (ValueError, KeyError):
+                                            pass
+                                    
+                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path_obj.name}</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    
+                                # 2. Update progress mid-loop
+                                render_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         # 3. Final 100% render
                         render_conversion_dashboard(total_pptx)
                         
@@ -1440,7 +1488,7 @@ with _main_content.container():
                     
                     if html_files:
                         total_html = len(html_files)
-                        print(f"[Post-Download] HTML Conversion toggle is ON. Found {total_html} files.")
+                        logger.info(f"[Post-Download] HTML Conversion toggle is ON. Found {total_html} files.")
                         
                         # Custom render function for HTML conversion
                         def render_html_conversion_dashboard(current_idx):
@@ -1485,7 +1533,12 @@ with _main_content.container():
                             
                         render_html_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_html} Canvas Pages to Markdown...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_html} Canvas Pages to Markdown...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_html_conversion_dashboard(0)
                         
                         import time
@@ -1522,15 +1575,30 @@ with _main_content.container():
                                         except Exception:
                                             pass
                                 except Exception as e:
-                                    print(f"Failed to cleanly query/update manifest for {html_file.name}: {e}")
+                                    logger.error(f"Failed to cleanly query/update manifest for {html_file.name}: {e}")
                                 
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>")
+                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                             else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span>")
+                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                                 
                             render_html_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_html_conversion_dashboard(total_html)
                 # --- End Post-Download Conversion ---
                 
@@ -1552,7 +1620,7 @@ with _main_content.container():
                     
                     if code_files:
                         total_code = len(code_files)
-                        print(f"[Post-Download] Code Conversion toggle is ON. Found {total_code} files.")
+                        logger.info(f"[Post-Download] Code Conversion toggle is ON. Found {total_code} files.")
                         
                         # Custom render function for Code conversion
                         def render_code_conversion_dashboard(current_idx):
@@ -1597,7 +1665,12 @@ with _main_content.container():
                             
                         render_code_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_code} Code & Data files to TXT...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_code} Code & Data files to TXT...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_code_conversion_dashboard(0)
                         
                         import time
@@ -1634,15 +1707,30 @@ with _main_content.container():
                                         except Exception:
                                             pass
                                 except Exception as e:
-                                    print(f"Failed to cleanly query/update manifest for {code_file.name}: {e}")
+                                    logger.error(f"Failed to cleanly query/update manifest for {code_file.name}: {e}")
                                 
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {code_file.name} -> TXT</span>")
+                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {code_file.name} -> TXT</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                             else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span>")
+                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                                 
                             render_code_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_code_conversion_dashboard(total_code)
                 # --- End Post-Download Conversion (Code) ---
                 
@@ -1661,7 +1749,12 @@ with _main_content.container():
                         </div>
                         ''', unsafe_allow_html=True)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Scouring '{course.name}' for .url shortcuts...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Scouring '{course.name}' for .url shortcuts...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         
                         log_content = "<br>".join(reversed(list(log_deque)))
                         log_placeholder.markdown(f'''
@@ -1673,7 +1766,12 @@ with _main_content.container():
                         compiled_path = compile_urls_to_txt(course_folder, course.name)
                         
                         if compiled_path:
-                            log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Links successfully compiled into: NotebookLM_External_Links.txt</span>")
+                            _msg = f"<span style='color: #4ade80;'>[ ✅ ] Links successfully compiled into: NotebookLM_External_Links.txt</span>"
+                            log_deque.append(_msg)
+                            if '[ ❌ ]' in _msg:
+                                logger.error(re.sub(r'<[^>]+>', '', _msg))
+                            else:
+                                logger.info(re.sub(r'<[^>]+>', '', _msg))
                         
                         # Trigger final UI refresh so log updates
                         log_content = "<br>".join(reversed(list(log_deque)))
@@ -1686,7 +1784,7 @@ with _main_content.container():
 
                 # --- Post-Download: Legacy Word → PDF Conversion ---
                 if st.session_state.get('persistent_convert_word', False):
-                    from word_converter import convert_word_to_pdf
+                    from word_converter import WordToPDF
                     import sqlite3
                     import os
                     
@@ -1702,7 +1800,7 @@ with _main_content.container():
                     
                     if word_files:
                         total_word = len(word_files)
-                        print(f"[Post-Download] Word Conversion toggle is ON. Found {total_word} legacy files.")
+                        logger.info(f"[Post-Download] Word Conversion toggle is ON. Found {total_word} legacy files.")
                         
                         # Custom render function for Word conversion
                         def render_word_conversion_dashboard(current_idx):
@@ -1747,7 +1845,12 @@ with _main_content.container():
                             
                         render_word_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_word} Legacy Word docs to PDF...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_word} Legacy Word docs to PDF...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_word_conversion_dashboard(0)
                         
                         import time
@@ -1755,50 +1858,66 @@ with _main_content.container():
                         
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
-                        for i, word_file in enumerate(word_files, 1):
-                            old_relative_word = word_file.relative_to(course_folder)
-                            
-                            pdf_path_str = convert_word_to_pdf(word_file)
-                            
-                            if pdf_path_str:
-                                pdf_path = Path(pdf_path_str)
-                                # Safe DB lookup
-                                try:
-                                    # Ensure DB is accessible
-                                    if os.name == 'nt':
-                                        sm._windows_unhide_file(sm.db_path)
+                        with WordToPDF() as converter:
+                            for i, word_file in enumerate(word_files, 1):
+                                old_relative_word = word_file.relative_to(course_folder)
+                                
+                                pdf_path_str = converter.convert(word_file)
+                                
+                                if pdf_path_str:
+                                    pdf_path = Path(pdf_path_str)
+                                    # Safe DB lookup
+                                    try:
+                                        # Ensure DB is accessible
+                                        if os.name == 'nt':
+                                            sm._windows_unhide_file(sm.db_path)
+                                            
+                                        with sqlite3.connect(sm.db_path) as conn:
+                                            c = conn.cursor()
+                                            c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_word).replace('\\', '/'),))
+                                            row = c.fetchone()
+                                            
+                                            if row:
+                                                canvas_file_id = row[0]
+                                                new_rel = pdf_path.relative_to(course_folder)
+                                                sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
                                         
-                                    with sqlite3.connect(sm.db_path) as conn:
-                                        c = conn.cursor()
-                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_word).replace('\\', '/'),))
-                                        row = c.fetchone()
-                                        
-                                        if row:
-                                            canvas_file_id = row[0]
-                                            new_rel = pdf_path.relative_to(course_folder)
-                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
+                                        if os.name == 'nt':
+                                            try:
+                                                sm._windows_hide_file(sm.db_path)
+                                            except Exception:
+                                                pass
+                                    except Exception as e:
+                                        logger.error(f"Failed to cleanly query/update manifest for {word_file.name}: {e}")
                                     
-                                    if os.name == 'nt':
-                                        try:
-                                            sm._windows_hide_file(sm.db_path)
-                                        except Exception:
-                                            pass
-                                except Exception as e:
-                                    print(f"Failed to cleanly query/update manifest for {word_file.name}: {e}")
-                                
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {word_file.name} -> PDF</span>")
-                            else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span>")
-                                
-                            render_word_conversion_dashboard(i)
+                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {word_file.name} -> PDF</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    
+                                render_word_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Word to PDF conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Word to PDF conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_word_conversion_dashboard(total_word)
                 # --- End Post-Download Conversion (Word) ---
                 
                 # --- Post-Download: Excel to PDF Conversion ---
                 if st.session_state.get('persistent_convert_excel', False):
-                    from excel_converter import convert_excel_to_pdf
+                    from excel_converter import ExcelToPDF
                     import sqlite3
                     import os
                     
@@ -1813,7 +1932,7 @@ with _main_content.container():
                     
                     if excel_files:
                         total_excel = len(excel_files)
-                        print(f"[Post-Download] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
+                        logger.info(f"[Post-Download] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
                         
                         def render_excel_conversion_dashboard(current_idx):
                             percent = int((current_idx / total_excel) * 100) if total_excel > 0 else 100
@@ -1857,34 +1976,55 @@ with _main_content.container():
                             
                         render_excel_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_excel_conversion_dashboard(0)
                         
-                        for i, excel_file in enumerate(excel_files, 1):
-                            abs_path = str(excel_file.absolute())
-                            new_pdf_path = convert_excel_to_pdf(abs_path)
-                            
-                            if new_pdf_path:
-                                old_rel_path = os.path.relpath(abs_path, st.session_state['download_path'])
-                                new_rel_path = os.path.relpath(new_pdf_path, st.session_state['download_path'])
+                        with ExcelToPDF() as converter:
+                            for i, excel_file in enumerate(excel_files, 1):
+                                abs_path = str(excel_file.absolute())
+                                new_pdf_path = converter.convert(abs_path)
                                 
-                                conn = sqlite3.connect(db_path)
-                                c = conn.cursor()
-                                c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (old_rel_path,))
-                                row = c.fetchone()
-                                if row:
-                                    # Update DB
-                                    c.execute("UPDATE sync_manifest SET local_path = ? WHERE canvas_file_id = ?", (new_rel_path, row[0]))
-                                    conn.commit()
-                                conn.close()
-                                
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {excel_file.name} -> PDF</span>")
-                            else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span>")
-                                
-                            render_excel_conversion_dashboard(i)
+                                if new_pdf_path:
+                                    old_rel_path = os.path.relpath(abs_path, st.session_state['download_path'])
+                                    new_rel_path = os.path.relpath(new_pdf_path, st.session_state['download_path'])
+                                    
+                                    conn = sqlite3.connect(db_path)
+                                    c = conn.cursor()
+                                    c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (old_rel_path,))
+                                    row = c.fetchone()
+                                    if row:
+                                        # Update DB
+                                        c.execute("UPDATE sync_manifest SET local_path = ? WHERE canvas_file_id = ?", (new_rel_path, row[0]))
+                                        conn.commit()
+                                    conn.close()
+                                    
+                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {excel_file.name} -> PDF</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span>"
+                                    log_deque.append(_msg)
+                                    if '[ ❌ ]' in _msg:
+                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                    else:
+                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
+                                    
+                                render_excel_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_excel_conversion_dashboard(total_excel)
                 # --- End Post-Download Conversion (Excel) ---
                 
@@ -1906,7 +2046,7 @@ with _main_content.container():
                     
                     if video_files:
                         total_video = len(video_files)
-                        print(f"[Post-Download] Video Conversion toggle is ON. Found {total_video} video files.")
+                        logger.info(f"[Post-Download] Video Conversion toggle is ON. Found {total_video} video files.")
                         
                         # Custom render function for Video conversion
                         def render_video_conversion_dashboard(current_idx):
@@ -1951,7 +2091,12 @@ with _main_content.container():
                             
                         render_video_conversion_dashboard(0)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting audio from {total_video} video files...</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting audio from {total_video} video files...</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_video_conversion_dashboard(0)
                         
                         import time
@@ -1960,7 +2105,12 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, video_file in enumerate(video_files, 1):
-                            log_deque.append(f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>")
+                            _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>"
+                            log_deque.append(_msg)
+                            if '[ ❌ ]' in _msg:
+                                logger.error(re.sub(r'<[^>]+>', '', _msg))
+                            else:
+                                logger.info(re.sub(r'<[^>]+>', '', _msg))
                             render_video_conversion_dashboard(i - 1)
                             
                             old_relative_video = video_file.relative_to(course_folder)
@@ -1991,15 +2141,30 @@ with _main_content.container():
                                         except Exception:
                                             pass
                                 except Exception as e:
-                                    print(f"Failed to cleanly query/update manifest for {video_file.name}: {e}")
+                                    logger.error(f"Failed to cleanly query/update manifest for {video_file.name}: {e}")
                                 
-                                log_deque.append(f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {video_file.name} -> MP3</span>")
+                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {video_file.name} -> MP3</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                             else:
-                                log_deque.append(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span>")
+                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span>"
+                                log_deque.append(_msg)
+                                if '[ ❌ ]' in _msg:
+                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
+                                else:
+                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
                                 
                             render_video_conversion_dashboard(i)
                         
-                        log_deque.append(f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>")
+                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>"
+                        log_deque.append(_msg)
+                        if '[ ❌ ]' in _msg:
+                            logger.error(re.sub(r'<[^>]+>', '', _msg))
+                        else:
+                            logger.info(re.sub(r'<[^>]+>', '', _msg))
                         render_video_conversion_dashboard(total_video)
                 # --- End Post-Download Conversion (Video) ---
                 
@@ -2030,7 +2195,7 @@ with _main_content.container():
                             for err in st.session_state['download_errors_list']:
                                 f.write(f"{err}\n")
                     except Exception as e:
-                        print(f"Failed to write session log: {e}")
+                        logger.error(f"Failed to write session log: {e}")
                 # -------------------------------------------------------------------
         
         elif st.session_state['download_status'] == 'done':
