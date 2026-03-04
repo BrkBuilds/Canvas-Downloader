@@ -1276,6 +1276,18 @@ with _main_content.container():
 
                 import asyncio
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+                # Build the Sync Contract — all settings for this download
+                _pp_settings = {
+                    'file_filter': st.session_state.get('file_filter', 'all'),
+                    'convert_zip': st.session_state.get('persistent_convert_zip', False),
+                    'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
+                    'convert_html': st.session_state.get('persistent_convert_html', False),
+                    'convert_code': st.session_state.get('persistent_convert_code', False),
+                    'convert_urls': st.session_state.get('persistent_convert_urls', False),
+                    'convert_word': st.session_state.get('persistent_convert_word', False),
+                    'convert_video': st.session_state.get('persistent_convert_video', False),
+                    'convert_excel': st.session_state.get('persistent_convert_excel', False),
+                }
                 asyncio.run(cm.download_course_async(
                     course,
                     st.session_state['download_mode'],
@@ -1283,7 +1295,8 @@ with _main_content.container():
                     progress_callback=update_ui,
                     check_cancellation=check_cancellation,
                     file_filter=st.session_state['file_filter'],
-                    debug_mode=st.session_state.get('debug_mode', False)
+                    debug_mode=st.session_state.get('debug_mode', False),
+                    post_processing_settings=_pp_settings
                 ))
                 
                 # --- Post-Processing: Setup ---

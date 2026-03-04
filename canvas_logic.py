@@ -365,7 +365,7 @@ class CanvasManager:
             pass
         return total_bytes / (1024 * 1024)
 
-    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False):
+    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False, post_processing_settings=None):
         """
         Downloads content for a single course asynchronously.
         """
@@ -390,6 +390,11 @@ class CanvasManager:
             if progress_callback: progress_callback(get_text('download_cancelled_msg', self.language))
             return
         
+        # --- Sync Run #0: Initialize the Sync DB during the very first download ---
+        # This creates .canvas_sync.db and the sync_manifest table so the Sync engine
+        # inherits a perfect state when the user later clicks the Sync tab.
+        sync_manager = SyncManager(base_path, course.id, course.name)
+        
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         if debug_mode:
             # Append course header (never wipe — one global log per session)
@@ -413,9 +418,9 @@ class CanvasManager:
             
             try:
                 if mode == 'flat':
-                    downloaded_files_info = await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file)
+                    downloaded_files_info = await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager)
                 elif mode == 'files':
-                    downloaded_files_info = await self._download_folders_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file)
+                    downloaded_files_info = await self._download_folders_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager)
                 else:
                     # Modules mode
                     # 1. Fetch Modules
@@ -470,7 +475,8 @@ class CanvasManager:
                                         log_debug(f"Module file tracked: {file_obj.filename} (ID: {file_obj.id})", debug_file)
                                         task = asyncio.create_task(self._download_file_async(
                                             sem, session, file_obj, target_path, progress_callback, mb_tracker, file_filter, 
-                                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file
+                                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
+                                            sync_manager=sync_manager, course_base_path=base_path
                                         ))
                                         tasks.append(task)
                                     
@@ -484,7 +490,7 @@ class CanvasManager:
                                             continue
                                         
                                         page_obj = course.get_page(item.page_url)
-                                        filepath = self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -505,7 +511,7 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -526,7 +532,7 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file)
+                                        filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -588,7 +594,8 @@ class CanvasManager:
                         # Download to course root
                         task = asyncio.create_task(self._download_file_async(
                             sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
-                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file
+                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager, course_base_path=base_path
                         ))
                         catch_all_tasks.append(task)
                     
@@ -628,17 +635,24 @@ class CanvasManager:
                      err = DownloadError(course.name, "Modules Access", "401 Unauthorized", "Modules locked, falling back to file scan.", raw_error=e)
                      self._log_error(save_dir, err)
                      
-                     downloaded_files_info.extend(await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file))
+                     downloaded_files_info.extend(await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager))
                  else:
                      err = DownloadError(course.name, "Course Download", "Processing Error", str(e), raw_error=e)
                      if progress_callback: progress_callback(err, progress_type='error')
                      self._log_error(save_dir, err)
             
-            # Manifest creation removed — analyze_course() auto-discovery handles
-            # the Download→Sync bridge implicitly when a user pairs this folder later.
+            # --- Sync Run #0: Save the download mode and sync contract ---
+            try:
+                sync_manager._save_metadata('download_mode', mode)
+                # Save the full "Sync Contract" — all settings used during this download
+                if post_processing_settings:
+                    import json
+                    sync_manager._save_metadata('sync_contract', json.dumps(post_processing_settings))
+            except Exception as e:
+                log_debug(f"Warning: Could not save sync metadata: {e}", debug_file)
 
 
-    async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None):
+    async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):
         """Downloads files preserving actual folder structure."""
         tasks = []
         downloaded = []
@@ -684,7 +698,8 @@ class CanvasManager:
                     
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, target_path, progress_callback, mb_tracker, file_filter, 
-                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
+                        sync_manager=sync_manager, course_base_path=base_path
                     ))
                     tasks.append(task)
                 except Exception as e:
@@ -710,7 +725,7 @@ class CanvasManager:
         
         return downloaded
 
-    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None):
+    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):
         """Downloads all files to the root folder."""
         tasks = []
         downloaded = []
@@ -749,7 +764,8 @@ class CanvasManager:
                 try:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
-                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
+                        sync_manager=sync_manager, course_base_path=base_path
                     ))
                     tasks.append(task)
                 except Exception as e:
@@ -793,14 +809,15 @@ class CanvasManager:
                                 seen_flat_paths.add(target_key)
                                 task = asyncio.create_task(self._download_file_async(
                                     sem, session, file_obj, base_path, progress_callback, mb_tracker, file_filter, 
-                                    error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
+                                    error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
+                                    sync_manager=sync_manager, course_base_path=base_path
                                 ))
                                 module_tasks.append(task)
                             elif item.type == 'Page':
                                 if file_filter == 'study': continue
                                 if not hasattr(item, 'page_url') or not item.page_url: continue
                                 page_obj = course.get_page(item.page_url)
-                                filepath = self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                filepath = self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
                                 if filepath and filepath.exists():
                                     info = CanvasFileInfo(
                                         id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -818,7 +835,7 @@ class CanvasManager:
                                 if item.type == 'ExternalTool':
                                      url = getattr(item, 'html_url', None) or url
                                 if url:
-                                    filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file)
+                                    filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
                                     if filepath and filepath.exists():
                                         info = CanvasFileInfo(
                                             id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -858,7 +875,7 @@ class CanvasManager:
         
         return downloaded
 
-    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None):
+    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None):
         async with sem:
             filename = self._sanitize_filename(file_obj.filename)
             filepath = folder_path / filename
@@ -878,6 +895,19 @@ class CanvasManager:
                         # User Request: Remove skipped files from Total MB count (they don't need downloading)
                         if progress_callback:
                              progress_callback("", progress_type='skipped', file_size=file_size_bytes)
+                        # Sync Run #0: Record skipped-but-existing files to the DB
+                        if sync_manager and course_base_path:
+                            try:
+                                rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                                sync_manager.record_downloaded_file(
+                                    canvas_file_id=file_obj.id,
+                                    canvas_filename=getattr(file_obj, 'filename', ''),
+                                    local_relative_path=rel_path,
+                                    canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
+                                    original_size=file_size_bytes
+                                )
+                            except Exception:
+                                pass  # Non-fatal: don't break download for DB issues
                         return (
                             CanvasFileInfo(
                                 id=file_obj.id,
@@ -989,6 +1019,23 @@ class CanvasManager:
                             
                             log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
                             
+                            # --- Sync Run #0: Record to DB AFTER successful atomic rename ---
+                            # This is the safety guard: only fully-downloaded files get recorded.
+                            # Cancelled/partial .part files never reach this point.
+                            if sync_manager and course_base_path:
+                                try:
+                                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                                    sync_manager.record_downloaded_file(
+                                        canvas_file_id=file_obj.id,
+                                        canvas_filename=getattr(file_obj, 'filename', ''),
+                                        local_relative_path=rel_path,
+                                        canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
+                                        original_size=getattr(file_obj, 'size', 0)
+                                    )
+                                except Exception as db_err:
+                                    log_debug(f"Warning: DB record failed for {filename}: {db_err}", debug_file)
+                                    # Non-fatal: download succeeded, DB write failed. File is on disk.
+                            
                             if progress_callback:
                                 progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
                                 
@@ -1034,7 +1081,7 @@ class CanvasManager:
                     self._log_error(error_root_path, err)
                     return
 
-    def _save_page(self, page_obj, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None):
+    def _save_page(self, page_obj, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
         safe_title = html.escape(page_obj.title) if hasattr(page_obj, 'title') else 'Untitled'
         filename = self._sanitize_filename(page_obj.title if hasattr(page_obj, 'title') else 'Untitled') + ".html"
         filepath = folder_path / filename
@@ -1050,6 +1097,19 @@ class CanvasManager:
             content = f"<html><head><title>{safe_title}</title></head><body><h1>{safe_title}</h1>{body_content}</body></html>"
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
+            # Sync Run #0: Record page file to DB using deterministic canvas_item_id
+            if sync_manager and course_base_path and canvas_item_id:
+                try:
+                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                    sync_manager.record_downloaded_file(
+                        canvas_file_id=canvas_item_id,
+                        canvas_filename=filepath.name,
+                        local_relative_path=rel_path,
+                        canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
+                        original_size=0
+                    )
+                except Exception:
+                    pass  # Non-fatal
             return filepath
         except Exception as e:
             err = DownloadError(course_name, safe_title, "Page Save Error", str(e), raw_error=e)
@@ -1058,7 +1118,7 @@ class CanvasManager:
             log_debug(f"Error saving page: {e}", debug_file)
             return None
 
-    def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None):
+    def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
         safe_title = self._sanitize_filename(title)
         
         if platform.system() == 'Darwin':
@@ -1088,6 +1148,19 @@ class CanvasManager:
         try:
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
+            # Sync Run #0: Record link/URL file to DB using deterministic canvas_item_id
+            if sync_manager and course_base_path and canvas_item_id:
+                try:
+                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                    sync_manager.record_downloaded_file(
+                        canvas_file_id=canvas_item_id,
+                        canvas_filename=filepath.name,
+                        local_relative_path=rel_path,
+                        canvas_updated_at=datetime.now(timezone.utc).isoformat(),
+                        original_size=0
+                    )
+                except Exception:
+                    pass  # Non-fatal
             return filepath
         except Exception as e:
             err = DownloadError(course_name, title, "Link Creation Error", str(e), raw_error=e)
