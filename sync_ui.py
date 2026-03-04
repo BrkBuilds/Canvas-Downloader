@@ -2850,10 +2850,12 @@ def _run_sync(lang):
                     current_file += 1
                     display_file_name = file.display_name or file.filename
                     
+                    # UNCONDITIONAL status text update — fires instantly for every file (no throttle)
+                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {display_file_name}...</div>", unsafe_allow_html=True)
+                    
                     # Throttled progress update (Prevent Streamlit from choking on rapid tiny files)
                     curr_time = time.time()
                     if curr_time - last_ui_update > 0.4:
-                        active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
                         pct = min(1.0, (current_file - 1) / total_files) if total_files > 0 else 0.0
                         progress_container.progress(pct, text=f"{int(pct * 100)}%")
                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -3040,9 +3042,7 @@ def _run_sync(lang):
                         terminal_log.append(f"<span style='color:#e74c3c'>[❌] Error: </span> {display_file_name} <span style='color:#666'>({str_err})</span>")
                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         
-                    # Final flush per file loop ensuring the log renders
-                    if time.time() - last_ui_update > 0.1:
-                        active_file_placeholder.markdown(f"<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Currently downloading: {display_file_name}...</p>", unsafe_allow_html=True)
+
                 
                 if failed_files_for_pair:
                     retry_selections.append({
@@ -3276,6 +3276,7 @@ def _run_sync(lang):
                     pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                     break
                 old_name = archive_file.name
+                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                 render_conversion_dashboard(i, total_archives, "Archives")
                 new_stub_path_str = extract_and_stub(archive_file)
                 
@@ -3321,6 +3322,7 @@ def _run_sync(lang):
                         pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                         break
                     old_name = pptx_file.name
+                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                     render_conversion_dashboard(i, total_pptx, "PowerPoint files")
                     pdf_path_str = converter.convert(pptx_file)
                     
@@ -3364,6 +3366,7 @@ def _run_sync(lang):
                     pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                     break
                 old_name = html_file.name
+                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                 render_conversion_dashboard(i, total_html, "HTML files")
                 md_path = convert_html_to_md(html_file)
                 
@@ -3407,6 +3410,7 @@ def _run_sync(lang):
                     pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                     break
                 old_name = code_file.name
+                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                 render_conversion_dashboard(i, total_code, "Code files")
                 txt_path_str = convert_code_to_txt(code_file)
                 
@@ -3476,6 +3480,7 @@ def _run_sync(lang):
                         pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                         break
                     old_name = word_file.name
+                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                     render_conversion_dashboard(i, total_word, "Legacy Word files")
                     pdf_path_str = converter.convert(word_file)
                     
@@ -3523,6 +3528,7 @@ def _run_sync(lang):
                         pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                         break
                     old_name = excel_file.name
+                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                     render_conversion_dashboard(i, total_excel, "Excel files")
                     abs_path = str(excel_file.absolute())
                     new_pdf_path, excel_error_msg = converter.convert(abs_path)
@@ -3568,6 +3574,7 @@ def _run_sync(lang):
                     pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                     break
                 old_name = video_file.name
+                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
                 render_conversion_dashboard(i, total_video, "Video files")
                 mp3_path_str = convert_video_to_mp3(video_file)
                 
@@ -3599,6 +3606,8 @@ def _run_sync(lang):
 
     # --- Organize files into module folders (if requested) ---
 
+    # Clear the blue status text so it doesn't linger on completion
+    active_file_placeholder.empty()
 
     st.session_state['synced_count'] = synced_counter[0]
     st.session_state['synced_bytes'] = synced_counter[1]
