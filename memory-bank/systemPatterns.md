@@ -52,6 +52,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Dynamic Master/Sub Syncing Pattern**:
     - *Problem*: Binary master toggles don't reflect how many sub-options are active.
     - *Solution*: Use a `TOTAL_SUBS` constant and calculate `active_subs = sum([...])` on every rerun. Use an f-string label for the master checkbox: `f"Master Label :gray[({active_subs}/{TOTAL_SUBS})]"` to provide real-time mathematical feedback.
+- **Sniper Retry UI Bypassing**:
+    - *Problem*: Retrying failed downloads forces a full multi-minute Canvas analysis phase.
+    - *Solution*: Manually bridge Streamlit states on button click (`download_status = 'running'`), zero out success/fail counters, but leave `courses_to_download` and `files_to_download` cached variables intact. This seamlessly fast-forwards the UI directly back into execution mode.
 
 ## Synchronous API Integration Patterns (Win32COM)
 - **COM Application Context Managers**:
@@ -96,7 +99,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Shortcut Bypass Logic**: `_is_canvas_newer()` in `sync_manager.py` explicitly returns `False` for `id < 0`. This bypasses unreliable module timestamps and forces the engine to rely on local existence checks.
 - **Sync Restoration Interception**: The download pipeline in `sync_ui.py` intercepts negative IDs and recreates `.url` or `.html` files locally using static templates rather than performing an HTTP GET.
 - **URL Extraction Priority**: For synthetic shortcuts, `html_url` is prioritized over `external_url` to ensure LTI tools route through the Canvas wrapper for authentication.
-- **Deduplication**: Files are deduplicated by calculated target path and size to handle identical items linked in multiple modules.
+- **Deduplication Strategy (Path vs API IDs)**:
+    - *Problem*: Relying solely on Canvas API IDs (`file.id`) fails because identically named duplicate module items, synthetic pages, and LTI tools can carry different DB IDs (or negative ones) but resolve to the identical local filepath. If they enter the `asyncio` task queue simultaneously, both workers write to `duplicate_file.pdf.part`, causing fatal `[WinError 32]` access crashes.
+    - *Solution*: Deduplication must *always* key off the computed, sanitized local path target (`target_folder / sanitize(filename)`) *before* generating async tasks.
 - **Analysis Engine**: Diffing Canvas vs Local Manifest vs Local Disk.
 - **Path Determination**: `detect_structure()` must precede analysis to correctly calculate relative paths for "Flat" vs "Folders" modes.
 
@@ -108,6 +113,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - `canvas_debug.log_debug(message, debug_file)` — writes timestamped plain text to `debug_log.txt` (gated by Debug Mode toggle). The `debug_file` is `Path(save_dir) / "debug_log.txt"` or `None`.
     - `log_post_process_error(directory, filename, error_msg)` — inline helper defined in `app.py` that appends `[Post-Processing]`-tagged entries to `download_errors.txt` (always active on failures).
     - Every post-processing log message is mirrored to three destinations: `log_deque` (Streamlit terminal UI), `logger.info/error` (Python logging), and `log_debug` (debug file).
+- **Two-Layer Error Deduplication**:
+    - *Problem*: A single problematic LTI link appearing across multiple modules fails multiple times during identical scanning passes, flooding the UI terminal and `.txt` log with duplicate entries.
+    - *Solution*: Implement unified signature verification (`f"{course}|{item}|{message}"`). 
+      - **Layer 1 (Disk)**: Inside the `CanvasManager._log_error` instance class to prevent duplicate file appends.
+      - **Layer 2 (State)**: Inside the Streamlit `update_ui` callback (`st.session_state['seen_error_sigs']`) to guard the accumulator list driving the frontend dashboard.
 
 ## UI Component Patterns
 - **Un-Throttled Per-File Status Indicator**:

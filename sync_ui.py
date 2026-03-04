@@ -2697,6 +2697,9 @@ def _run_sync(lang):
     synced_counter = [0, 0]  # [count, bytes]
     error_list = []
 
+    # --- Task 2 Fix: Wipe error state at start of every sync run ---
+    st.session_state['sync_errors'] = []
+
     # Format helpers for the injected HTML UI
     def format_time(seconds):
         if seconds < 0 or seconds > 86400: return "--:--"

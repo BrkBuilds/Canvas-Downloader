@@ -3,6 +3,21 @@
 ## Current Focus
 - **Unified Blue Status Indicator & Phase 2 UI Sync**: Successfully resolved the UI status desynchronization where filename text lagged behind the terminal log. Ported the real-time blue `#38bdf8` status indicator to all download and post-processing phases across the entire application.
 
+## Recent Changes (Session 2026-03-04 - Error Logging & Concurrency Fixes)
+- **Error Deduplication & Cleanup**:
+  - Truncated `download_errors.txt` at the start of each run via `clear_error_log()`.
+  - Removed redundant disk-fallback reader in `app.py` that extended in-memory session arrays.
+  - Eliminated the `session_errors.txt` force-write dump since `_log_error` handles real-time disk persistence.
+- **Sniper Retry Flow (`app.py`)**:
+  - Rewired the "Retry Failed Items" button to instantly bypass the scanning/analysis phase and jump straight into `download_status = 'running'` for surgical retries of failed links.
+- **Path-Based Concurrency Deduplication (`canvas_logic.py`)**:
+  - Discovered that relying on Canvas API file IDs fails to deduplicate LTI/synthetic shortcuts and multi-module inclusions, leading to `[WinError 32]` collisions when async workers attempt to write to the same `.part` file.
+  - Implemented hard path-based deduplication (`target_folder / sanitize(filename)`) guarded by `seen_target_paths` and `seen_flat_paths` sets across all 4 entry points (modules, flat scan, flat-fallback, catch-all).
+- **Universal Error Logger Deduplication**:
+  - Implemented a 2-layer signature-based deduplication (`course|item|message`) to prevent duplicate rendering of LTI/catch-all failure loops.
+  - Layer 1 (Disk): Checks `CanvasManager._logged_error_sigs` before appending to `download_errors.txt`.
+  - Layer 2 (UI): Checks `st.session_state['seen_error_sigs']` in the `update_ui` callback before updating the list.
+
 ## Recent Changes (Session 2026-03-04 - UI Polish & Status Sync)
 - **Unified Blue Status Indicator (`sync_ui.py` & `app.py`)**:
   - **Desync Fix (Phase 2 Download)**: Moved the `active_file_placeholder` update for current filenames **outside** the 0.4s UI throttle block in `sync_ui.py`. The status text now updates instantly for every file, ensuring it never lags behind the terminal output.

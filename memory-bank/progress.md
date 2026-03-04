@@ -9,6 +9,11 @@
 - [x] **Unified UI Status & Desync Fix** (2026-03-04):
     - [x] **Desync Resolution**: Segregated filename status updates from throttled UI blocks in Phase 2.
     - [x] **Universal Visibility**: Ported blue `#38bdf8` status text to all 14 post-processing loops cross-app.
+- [x] **Deduplication & Concurrency Safety** (2026-03-04):
+    - [x] **Unbound Error Logs**: `download_errors.txt` now accurately truncates on fresh runs to avoid append-only bloat.
+    - [x] **Sniper Retry**: Bypassing phase 1 scanning for direct surgical retry operations.
+    - [x] **WinError 32 Collision Fix**: Implemented hard path-based async task deduplication, overriding Canvas API IDs.
+    - [x] **Universal Deduplication**: Added signature-based two-layer suppression for resilient logging.
 - [x] **Atomic Symbiosis & DB Integrity** (2026-03-03):
     - [x] **Atomic Upserts**: Replaced destructive manifest DB overwrites with row-by-row `INSERT OR REPLACE`.
     - [x] **`.part` File Streaming**: Files stream to `.part` and are atomically renamed strictly at 100% completion (deployed in both `app.py` and `sync_ui.py`).
