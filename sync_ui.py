@@ -1772,6 +1772,9 @@ def _show_analysis_review(lang):
         
         if not hasattr(pair_data['result'], 'ignored_files'):
             pair_data['result'].ignored_files = []
+        
+        # Build lookup set of IDs being ignored (Fix: was undefined — NameError)
+        file_ids_to_ignore = {get_id(item) for item in items_to_ignore}
             
         # Rebuild origin list directly safely
         setattr(pair_data['result'], source_list_name, [x for x in source_list if get_id(x) not in file_ids_to_ignore])
@@ -3249,89 +3252,143 @@ def _run_sync(lang):
 
                         if download_url:
                             async with sem:
-                                async with session.get(download_url) as response:
-                                    if response.status == 200:
-                                        # --- Atomic .part Pattern ---
-                                        part_path = filepath.parent / (filepath.name + '.part')
-                                        download_interrupted = False
-                                        
-                                        try:
-                                            async with aiofiles.open(part_path, 'wb') as f:
-                                                while True:
-                                                    # Instant cancel check INSIDE the chunk loop
-                                                    if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
-                                                        download_interrupted = True
-                                                        break
-                                                    
-                                                    chunk = await response.content.read(1024 * 1024)
-                                                    if not chunk:
-                                                        break
-                                                    await f.write(chunk)
-                                                    chunk_size = len(chunk)
-                                                    downloaded_mb += chunk_size / (1024 * 1024)
-                                                    synced_counter[1] += chunk_size
+                                # --- Retry constants (mirrors canvas_logic.py) ---
+                                SYNC_MAX_RETRIES = 5
+                                SYNC_RETRY_DELAY = 2  # Base delay in seconds
+                                
+                                for attempt in range(SYNC_MAX_RETRIES):
+                                    if st.session_state.get('sync_cancel_requested', False):
+                                        break
+                                    
+                                    try:
+                                        async with session.get(download_url) as response:
+                                            if response.status == 200:
+                                                # --- Atomic .part Pattern ---
+                                                part_path = filepath.parent / (filepath.name + '.part')
+                                                download_interrupted = False
+                                                atomic_rename_done = False
                                                 
-                                                    # Throttled UI math update
-                                                    c_t = time.time()
-                                                    if c_t - last_ui_update > 0.4:
-                                                        # Calculate Speed & ETA
-                                                        elapsed = c_t - start_time
-                                                        speed = downloaded_mb / elapsed if elapsed > 0 else 0
-                                                        
-                                                        rem_mb = max(0, total_mb - downloaded_mb)
-                                                        eta_sec = rem_mb / speed if speed > 0 else 0
-                                                        
-                                                        # Apply to UI
-                                                        metrics_dashboard.markdown(render_metrics_html(
-                                                            current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
-                                                        ), unsafe_allow_html=True)
-                                                        
-                                                        pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
-                                                        progress_container.progress(pct, text=f"{int(pct * 100)}%")
-                                                        last_ui_update = c_t
-                                        except Exception as write_err:
-                                            download_interrupted = True
-                                            # Clean up .part file on write error
-                                            try:
-                                                if part_path.exists():
-                                                    part_path.unlink()
-                                            except OSError:
-                                                pass
-                                            raise write_err
-                                        
-                                        # Handle interrupted download: delete partial file
-                                        if download_interrupted:
-                                            try:
-                                                if part_path.exists():
-                                                    part_path.unlink()
-                                            except OSError:
-                                                pass
-                                            continue  # Skip to next file (outer cancel guard will catch)
-
-                                        # 100% success: atomic rename .part → final path
-                                        try:
-                                            part_path.rename(filepath)
-                                        except OSError:
-                                            # Fallback: If rename fails (cross-device), use replace
-                                            import shutil
-                                            shutil.move(str(part_path), str(filepath))
-
-                                        # Only commit to DB AFTER file is physically complete on disk
-                                        rel_path = filepath.relative_to(local_path)
-                                        sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
-                                        synced_counter[0] += 1
-                                        st.session_state['sync_cancelled_file_count'] = synced_counter[0]
-                                        
-                                        # Track success for UI dropdown
-                                        synced_details[pair_idx].append(display_file_name)
-                                        terminal_log.append(f"<span style='color:#2ecc71'>[✅] Finished: </span> {display_file_name}")
-                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                                    else:
-                                        failed_files_for_pair.append(file)
-                                        error_list.append(get_text('sync_error_file', lang,
-                                            filename=display_file_name, error=f"HTTP {response.status}"))
-                                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
-                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                try:
+                                                    try:
+                                                        async with aiofiles.open(part_path, 'wb') as f:
+                                                            while True:
+                                                                # Instant cancel check INSIDE the chunk loop
+                                                                if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
+                                                                    download_interrupted = True
+                                                                    break
+                                                                
+                                                                chunk = await response.content.read(1024 * 1024)
+                                                                if not chunk:
+                                                                    break
+                                                                await f.write(chunk)
+                                                                chunk_size = len(chunk)
+                                                                downloaded_mb += chunk_size / (1024 * 1024)
+                                                                synced_counter[1] += chunk_size
+                                                            
+                                                                # Throttled UI math update
+                                                                c_t = time.time()
+                                                                if c_t - last_ui_update > 0.4:
+                                                                    # Calculate Speed & ETA
+                                                                    elapsed = c_t - start_time
+                                                                    speed = downloaded_mb / elapsed if elapsed > 0 else 0
+                                                                    
+                                                                    rem_mb = max(0, total_mb - downloaded_mb)
+                                                                    eta_sec = rem_mb / speed if speed > 0 else 0
+                                                                    
+                                                                    # Apply to UI
+                                                                    metrics_dashboard.markdown(render_metrics_html(
+                                                                        current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
+                                                                    ), unsafe_allow_html=True)
+                                                                    
+                                                                    pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
+                                                                    progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                                                                    last_ui_update = c_t
+                                                    except Exception as write_err:
+                                                        download_interrupted = True
+                                                        raise write_err
+                                                    
+                                                    # Handle interrupted download: delete partial file
+                                                    if download_interrupted:
+                                                        continue  # Skip to next file (outer cancel guard will catch)
+                                                    
+                                                    # 100% success: atomic rename .part → final path
+                                                    try:
+                                                        part_path.rename(filepath)
+                                                    except OSError:
+                                                        # Fallback: If rename fails (cross-device), use replace
+                                                        import shutil
+                                                        shutil.move(str(part_path), str(filepath))
+                                                    atomic_rename_done = True
+                                                    
+                                                    # Only commit to DB AFTER file is physically complete on disk
+                                                    rel_path = filepath.relative_to(local_path)
+                                                    sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
+                                                    synced_counter[0] += 1
+                                                    st.session_state['sync_cancelled_file_count'] = synced_counter[0]
+                                                    
+                                                    # Track success for UI dropdown
+                                                    synced_details[pair_idx].append(display_file_name)
+                                                    terminal_log.append(f"<span style='color:#2ecc71'>[✅] Finished: </span> {display_file_name}")
+                                                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                finally:
+                                                    # GUARD: Always clean up .part if rename didn't complete
+                                                    # Catches: write errors, network drops, disk-full, any exception
+                                                    if not atomic_rename_done:
+                                                        try:
+                                                            if part_path.exists():
+                                                                part_path.unlink()
+                                                        except OSError:
+                                                            pass
+                                                
+                                                break  # Success — exit retry loop
+                                            
+                                            elif response.status == 429:
+                                                # Rate limited — respect Retry-After header
+                                                wait = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
+                                                terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Rate limited: </span> {display_file_name} <span style='color:#666'>(retry in {wait}s)</span>")
+                                                log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                await asyncio.sleep(wait)
+                                                continue  # Retry
+                                            
+                                            elif 500 <= response.status < 600:
+                                                # Server error — retry with exponential backoff
+                                                wait = SYNC_RETRY_DELAY * (2 ** attempt)
+                                                if attempt < SYNC_MAX_RETRIES - 1:
+                                                    terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Server error ({response.status}): </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                    await asyncio.sleep(wait)
+                                                    continue  # Retry
+                                                else:
+                                                    # Max retries exhausted for 5xx
+                                                    failed_files_for_pair.append(file)
+                                                    error_list.append(get_text('sync_error_file', lang,
+                                                        filename=display_file_name, error=f"HTTP {response.status} after {SYNC_MAX_RETRIES} retries"))
+                                                    terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
+                                                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                    break
+                                            
+                                            else:
+                                                # Non-retryable HTTP error (4xx except 429)
+                                                failed_files_for_pair.append(file)
+                                                error_list.append(get_text('sync_error_file', lang,
+                                                    filename=display_file_name, error=f"HTTP {response.status}"))
+                                                terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
+                                                log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                                break  # Don't retry client errors
+                                    
+                                    except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
+                                        # Network error — retry with backoff
+                                        if attempt < SYNC_MAX_RETRIES - 1:
+                                            wait = SYNC_RETRY_DELAY * (2 ** attempt)
+                                            terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Network error: </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                            await asyncio.sleep(wait)
+                                        else:
+                                            failed_files_for_pair.append(file)
+                                            error_list.append(get_text('sync_error_file', lang,
+                                                filename=display_file_name, error=f"Network error: {net_err}"))
+                                            terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
+                                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         else:
                             # Check for LTI/Media streams
                             ext_lower = filepath.suffix.lower()
