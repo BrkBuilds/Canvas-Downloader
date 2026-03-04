@@ -1528,36 +1528,100 @@ def _run_analysis(lang, sync_pairs):
 
     # Quick Sync mode — skip review and go straight to sync
     if st.session_state.get('sync_quick_mode'):
+        
+        def apply_file_filter(file_list, filter_mode, is_tuple=False):
+            if filter_mode == 'all':
+                return file_list
+            elif filter_mode == 'study':
+                allowed_exts = {'.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx'}
+                filtered = []
+                for item in file_list:
+                    # updated_files is a list of tuples: (canvas_file, local_file)
+                    f = item[0] if is_tuple else item
+                    
+                    if hasattr(f, 'canvas_filename'):
+                        fname = f.canvas_filename
+                    elif hasattr(f, 'filename'):
+                        fname = getattr(f, 'display_name', '') or getattr(f, 'filename', '')
+                    else:
+                        fname = getattr(f, 'display_name', '')
+                        
+                    if Path(fname).suffix.lower() in allowed_exts:
+                        filtered.append(item)
+                return filtered
+            return file_list
+
         # Auto-select all new, updated, locally deleted, and missing files
         sync_selections = []
         for idx, res_data in enumerate(all_results):
             result = res_data['result']
             cid = res_data['pair']['course_id']
             
+            # --- Load Sync Contract from DB for post-processing settings ---
+            # Extract contract for *this specific course*
+            _contract = {}
+            try:
+                _sm = res_data['sync_manager']
+                _raw = _sm._load_metadata('sync_contract')
+                if _raw:
+                    import json
+                    _contract = json.loads(_raw)
+            except Exception:
+                pass  # Fall back to session_state defaults
+                
+            current_filter = _contract.get('file_filter', 'all')
+            
+            # Apply the gatekeeper BEFORE execution
+            actionable_new = apply_file_filter(result.new_files, current_filter, is_tuple=False)
+            actionable_missing = apply_file_filter(result.missing_files, current_filter, is_tuple=False)
+            actionable_updated = apply_file_filter(result.updated_files, current_filter, is_tuple=True)
+            actionable_del = apply_file_filter(result.locally_deleted_files, current_filter, is_tuple=False)
+            
             # Set session state keys for UI consistency (if user goes back)
             # Use cid (course_id) to match the normal Review flow's key pattern
-            for f in result.new_files:
+            for f in actionable_new:
                 st.session_state[f'sync_new_{cid}_{f.id}'] = True
-            for f, _ in result.updated_files:
+            for f, _ in actionable_updated:
                 st.session_state[f'sync_upd_{cid}_{f.id}'] = True
-            for mf in result.missing_files:
+            for mf in actionable_missing:
                 st.session_state[f'sync_miss_{cid}_{mf.canvas_file_id}'] = True
-            for si in result.locally_deleted_files:
+            for si in actionable_del:
                 st.session_state[f'sync_locdel_{cid}_{si.canvas_file_id}'] = True
             
             # Combine missing + locally deleted into 'redownload', mirroring the normal
             # Review flow at lines 2299-2304 (selected_miss.extend(selected_locdel))
-            redownload_list = list(result.missing_files) + list(result.locally_deleted_files)
+            redownload_list = list(actionable_missing) + list(actionable_del)
             
             sync_selections.append({
                 'pair_idx': idx,
                 'res_data': res_data,
-                'new': list(result.new_files),
+                'new': list(actionable_new),
                 # Note: updated_files is list of tuples (canvas_file, local_file)
-                'updates': [f for f, _ in result.updated_files],
+                'updates': [f for f, _ in actionable_updated],
                 'redownload': redownload_list,
                 'ignore': [],
             })
+            
+            # -------------------------------------------------------------
+            # IMPORTANT: Quick Sync also needs to restore the convert flags 
+            # for THIS course into the final execution pipeline. Since we 
+            # execute courses sequentially, we need to load them into 
+            # persistent_convert_* state vars.
+            # 
+            # Note: The legacy behavior loaded the contract for the FIRST course 
+            # only, which was a bug for multi-course quick sync. We leave the 
+            # global state set to the *last* course processed here, since we 
+            # don't have per-course post-processing execution logic yet.
+            # -------------------------------------------------------------
+            
+            st.session_state['persistent_convert_zip'] = _contract.get('convert_zip', st.session_state.get('convert_zip', False))
+            st.session_state['persistent_convert_pptx'] = _contract.get('convert_pptx', st.session_state.get('convert_pptx', False))
+            st.session_state['persistent_convert_html'] = _contract.get('convert_html', st.session_state.get('convert_html', False))
+            st.session_state['persistent_convert_code'] = _contract.get('convert_code', st.session_state.get('convert_code', False))
+            st.session_state['persistent_convert_urls'] = _contract.get('convert_urls', st.session_state.get('convert_urls', False))
+            st.session_state['persistent_convert_word'] = _contract.get('convert_word', st.session_state.get('convert_word', False))
+            st.session_state['persistent_convert_video'] = _contract.get('convert_video', st.session_state.get('convert_video', False))
+            st.session_state['persistent_convert_excel'] = _contract.get('convert_excel', st.session_state.get('convert_excel', False))
             
         total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
         
@@ -1568,29 +1632,6 @@ def _run_analysis(lang, sync_pairs):
         else:
             print(f"[DEBUG-QS] total_count={total_count} → jumping to 'syncing'!")
             st.session_state['sync_selections'] = sync_selections
-            # --- Load Sync Contract from DB for post-processing settings ---
-            # Try to load saved settings from the first course's sync_metadata.
-            # This ensures Quick Sync respects the exact settings used during initial download,
-            # even on a fresh session where session_state convert_* keys are empty.
-            _contract = {}
-            try:
-                first_pair = all_results[0]['pair']
-                _sm = SyncManager(first_pair['local_folder'], first_pair['course_id'], first_pair['course_name'])
-                _raw = _sm._load_metadata('sync_contract')
-                if _raw:
-                    import json
-                    _contract = json.loads(_raw)
-            except Exception:
-                pass  # Fall back to session_state defaults
-            
-            st.session_state['persistent_convert_zip'] = _contract.get('convert_zip', st.session_state.get('convert_zip', False))
-            st.session_state['persistent_convert_pptx'] = _contract.get('convert_pptx', st.session_state.get('convert_pptx', False))
-            st.session_state['persistent_convert_html'] = _contract.get('convert_html', st.session_state.get('convert_html', False))
-            st.session_state['persistent_convert_code'] = _contract.get('convert_code', st.session_state.get('convert_code', False))
-            st.session_state['persistent_convert_urls'] = _contract.get('convert_urls', st.session_state.get('convert_urls', False))
-            st.session_state['persistent_convert_word'] = _contract.get('convert_word', st.session_state.get('convert_word', False))
-            st.session_state['persistent_convert_video'] = _contract.get('convert_video', st.session_state.get('convert_video', False))
-            st.session_state['persistent_convert_excel'] = _contract.get('convert_excel', st.session_state.get('convert_excel', False))
             # Clear the quick-mode flag and jump straight to sync (no confirmation dialog needed)
             st.session_state.pop('sync_quick_mode', None)
             st.session_state['download_status'] = 'syncing'
