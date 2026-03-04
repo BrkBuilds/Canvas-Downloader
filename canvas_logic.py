@@ -66,6 +66,7 @@ class CanvasManager:
             self.canvas = None
             
         self.user = None
+        self._logged_error_sigs = set()  # Dedup cache: prevents same error being logged twice in one run
 
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
@@ -396,6 +397,7 @@ class CanvasManager:
             log_debug(f"Save Dir: {save_dir}", debug_file)
 
         downloaded_file_ids = set()
+        seen_target_paths = set()  # Path-based dedup to prevent concurrent writes to same .part file
         mb_tracker = {'bytes_downloaded': 0}
         
         # Determine semaphore limit from session state if available, default to 5
@@ -455,7 +457,16 @@ class CanvasManager:
                                             continue
                                         
                                         file_obj = course.get_file(item.content_id)
+                                        if file_obj.id in downloaded_file_ids:
+                                            log_debug(f"Skipping duplicate module file: {file_obj.filename} (ID: {file_obj.id})", debug_file)
+                                            continue
                                         downloaded_file_ids.add(file_obj.id)
+                                        # Path-based dedup: prevent two async workers writing to the same local file
+                                        target_key = str(target_path / self._sanitize_filename(file_obj.filename)).lower()
+                                        if target_key in seen_target_paths:
+                                            log_debug(f"Skipping path-duplicate: {file_obj.filename} -> {target_key}", debug_file)
+                                            continue
+                                        seen_target_paths.add(target_key)
                                         log_debug(f"Module file tracked: {file_obj.filename} (ID: {file_obj.id})", debug_file)
                                         task = asyncio.create_task(self._download_file_async(
                                             sem, session, file_obj, target_path, progress_callback, mb_tracker, file_filter, 
@@ -566,6 +577,12 @@ class CanvasManager:
                             log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
                             continue # Already downloaded in a module
                         
+                        # Path-based dedup: prevent concurrent writes to the same local file
+                        target_key = str(base_path / self._sanitize_filename(file.filename)).lower()
+                        if target_key in seen_target_paths:
+                            log_debug(f"Catch-All skipping path-duplicate: {file.filename} -> {target_key}", debug_file)
+                            continue
+                        seen_target_paths.add(target_key)
                         log_debug(f"Catch-All found new file: {file.filename} (ID: {file.id})", debug_file)
                         
                         # Download to course root
@@ -718,10 +735,17 @@ class CanvasManager:
                         log_debug("Files tab restricted (401?), falling back to module scan.", debug_file)
 
             downloaded_ids = set()
+            seen_flat_paths = set()  # Path-based dedup for flat mode
             for file in files:
                 if check_cancellation and check_cancellation(): break
                 if getattr(file, 'id', None):
                     downloaded_ids.add(file.id)
+                # Path-based dedup
+                target_key = str(base_path / self._sanitize_filename(getattr(file, 'filename', 'unknown'))).lower()
+                if target_key in seen_flat_paths:
+                    log_debug(f"Flat: Skipping path-duplicate: {getattr(file, 'filename', 'unknown')}", debug_file)
+                    continue
+                seen_flat_paths.add(target_key)
                 try:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
@@ -761,6 +785,12 @@ class CanvasManager:
                             if item.type == 'File':
                                 if not hasattr(item, 'content_id') or not item.content_id: continue
                                 file_obj = course.get_file(item.content_id)
+                                # Path-based dedup for flat module fallback
+                                target_key = str(base_path / self._sanitize_filename(file_obj.filename)).lower()
+                                if target_key in seen_flat_paths:
+                                    log_debug(f"Flat fallback: Skipping path-duplicate: {file_obj.filename}", debug_file)
+                                    continue
+                                seen_flat_paths.add(target_key)
                                 task = asyncio.create_task(self._download_file_async(
                                     sem, session, file_obj, base_path, progress_callback, mb_tracker, file_filter, 
                                     error_root_path=error_root_path, course_name=course.name, debug_file=debug_file
@@ -1094,8 +1124,30 @@ class CanvasManager:
             else: sanitized = name[:(max_length - len(ext))] + ext
         return sanitized if sanitized else "untitled"
 
+    def clear_error_log(self, base_path):
+        """Wipe download_errors.txt to start fresh for a new run."""
+        self._logged_error_sigs = set()  # Reset dedup cache
+        if not base_path: return
+        path = Path(base_path)
+        log_file = path / "download_errors.txt"
+        if log_file.exists():
+            try:
+                with open(log_file, "w", encoding="utf-8") as f:
+                    f.write("")  # Truncate
+            except Exception:
+                pass
+
     def _log_error(self, base_path, error):
-        """Log structured error to a single file in the root path."""
+        """Log structured error to a single file in the root path. Deduplicates by signature."""
+        # Build a signature to prevent the same error being logged twice
+        if isinstance(error, DownloadError):
+            error_sig = f"{error.course_name}|{error.item_name}|{error.message}"
+        else:
+            error_sig = str(error)
+        if error_sig in self._logged_error_sigs:
+            return  # Already logged this exact error in this run
+        self._logged_error_sigs.add(error_sig)
+
         # 'error' can be a DownloadError object or a string (legacy support)
         if not base_path: return
         
