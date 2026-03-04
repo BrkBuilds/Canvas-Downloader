@@ -3,6 +3,16 @@
 ## Current Focus
 - **Unified Blue Status Indicator & Phase 2 UI Sync**: Successfully resolved the UI status desynchronization where filename text lagged behind the terminal log. Ported the real-time blue `#38bdf8` status indicator to all download and post-processing phases across the entire application.
 
+## Recent Changes (Session 2026-03-04 - Settings Redesign & Debug Persist)
+- **Settings Modal UI ("Card" Layout)**:
+  - Redesigned the global settings modal (`⚙️ Settings`) by leveraging Streamlit's `st.container(border=True)` to create discrete layout "Cards" for Download Settings and Sync Settings.
+  - Eliminated vertical dead space by consolidating headers and descriptions into custom HTML blocks with strictly controlled CSS margins.
+  - Capped `Max Concurrent Downloads` slider at 15 and explicitly warned users about Canvas rate limits causing crashes.
+  - Injected custom CSS to style the slider track a vibrant light blue (`#38bdf8`).
+- **Debug Mode Persistence**:
+  - Rewired the `debug_mode` state so that the `canvas_downloader_settings.json` backend logic permanently saves and automatically loads the troubleshooting toggle choice.
+  - The Settings Modal now maps the `Enable Troubleshooting Mode` checkbox value directly against the persistent config file variables.
+
 ## Recent Changes (Session 2026-03-04 - Error Logging & Concurrency Fixes)
 - **Error Deduplication & Cleanup**:
   - Truncated `download_errors.txt` at the start of each run via `clear_error_log()`.

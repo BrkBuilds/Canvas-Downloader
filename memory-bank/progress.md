@@ -6,6 +6,10 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Settings Modal Redesign & Debug Persistence** (2026-03-04):
+    - [x] **Card UI**: Refactored the `⚙️ Settings` modal into discrete, border-based Cards to eliminate vertical dead space.
+    - [x] **Pixel Perfection**: Consolidated subheaders/captions into custom HTML blocks, injected `-20px` bottom margins to physically pull the Streamlit slider upward against default padding, and styled the track `#38bdf8`.
+    - [x] **JSON Storage**: Wired `debug_mode` toggle state directly to `canvas_downloader_settings.json` for persistence across sessions.
 - [x] **Unified UI Status & Desync Fix** (2026-03-04):
     - [x] **Desync Resolution**: Segregated filename status updates from throttled UI blocks in Phase 2.
     - [x] **Universal Visibility**: Ported blue `#38bdf8` status text to all 14 post-processing loops cross-app.
