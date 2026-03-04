@@ -1234,6 +1234,7 @@ with _main_content.container():
                         if progress_type in ('download', 'page', 'link'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
+                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
                                 log_deque.append(f"[✅] Finished: {msg}")
                             render_dashboard()
                             
@@ -1408,6 +1409,7 @@ with _main_content.container():
                                 log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                                 render_archive_dashboard(i - 1)
                                 break
+                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {archive_file.name}</div>", unsafe_allow_html=True)
                             _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>"
                             log_deque.append(_msg)
                             if '[ ❌ ]' in _msg:
@@ -1554,6 +1556,7 @@ with _main_content.container():
                         
                         with PowerPointToPDF(error_log_path=Path(st.session_state['download_path'])) as converter:
                             for i, pptx_file in enumerate(pptx_files, 1):
+                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {pptx_file.name}</div>", unsafe_allow_html=True)
                                 pdf_path = converter.convert(pptx_file)
                                 
                                 if pdf_path:
@@ -1679,6 +1682,7 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, html_file in enumerate(html_files, 1):
+                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {html_file.name}</div>", unsafe_allow_html=True)
                             old_relative_html = html_file.relative_to(course_folder)
                             
                             md_path = convert_html_to_md(html_file)
@@ -1816,6 +1820,7 @@ with _main_content.container():
                         sm = SyncManager(course_folder, course.id, course.name, lang)
                         
                         for i, code_file in enumerate(code_files, 1):
+                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {code_file.name}</div>", unsafe_allow_html=True)
                             old_relative_code = code_file.relative_to(course_folder)
                             
                             txt_path_str = convert_code_to_txt(code_file)
@@ -2007,6 +2012,7 @@ with _main_content.container():
                         
                         with WordToPDF() as converter:
                             for i, word_file in enumerate(word_files, 1):
+                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {word_file.name}</div>", unsafe_allow_html=True)
                                 old_relative_word = word_file.relative_to(course_folder)
                                 
                                 pdf_path_str = converter.convert(word_file)
@@ -2138,6 +2144,7 @@ with _main_content.container():
                         
                         with ExcelToPDF() as converter:
                             for i, excel_file in enumerate(excel_files, 1):
+                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {excel_file.name}</div>", unsafe_allow_html=True)
                                 abs_path = str(excel_file.absolute())
                                 new_pdf_path, excel_error_msg = converter.convert(abs_path)
                                 
@@ -2266,6 +2273,7 @@ with _main_content.container():
                                 log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
                                 render_video_conversion_dashboard(i - 1)
                                 break
+                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {video_file.name}</div>", unsafe_allow_html=True)
                             _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>"
                             log_deque.append(_msg)
                             if '[ ❌ ]' in _msg:
@@ -2333,6 +2341,9 @@ with _main_content.container():
                         log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
                         render_video_conversion_dashboard(total_video)
                 # --- End Post-Download Conversion (Video) ---
+                
+                # Clear the blue status text so it doesn't linger on completion
+                active_file_placeholder.empty()
                 
                 # Move to next course (unless cancelled)
                 if st.session_state.get('download_cancelled', False):
