@@ -33,6 +33,7 @@
 - **The Sync Contract Architecture (`sync_metadata`)**:
   - Engineered a persistent configuration state. The Download pipeline now packages `file_filter` alongside all 8 `convert_*` post-processing booleans into a JSON blob and commits it to the SQLite `sync_metadata` table under the `sync_contract` key.
   - Quick Sync universally queries this DB contract before falling back to `session_state` defaults, guaranteeing perfect structural replication on 1-click runs.
+  - **Filter Gatekeeping (`sync_ui.py`)**: Upgraded the "Quick Sync All" flow to actively intercept and filter `actionable_new`, `actionable_missing`, and `actionable_upd` file lists against the `file_filter` (e.g. `study` extensions) retrieved from the DB contract before queuing them. Also resolved a critical Python namespace shadowing bug (`UnboundLocalError`) by hoisting the `from pathlib import Path` requirement out of the Quick Sync local scope and utilizing the global `Path` import.
 - **UI Contract Binding (`sync_ui.py`)**:
   - Overhauled `_show_analysis_review` to auto-load the course's Sync Contract and unconditionally overwrite the active `session_state` conversion keys on first render. 
   - Validated that downstream DB saves perfectly harvest user mutations from the checkboxes during the "Yes, Start Sync" execution phase.
