@@ -215,6 +215,9 @@ with st.sidebar:
                     if 'concurrent_downloads' in config:
                         st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
                         
+                    if 'debug_mode' in config:
+                        st.session_state['debug_mode'] = config.get('debug_mode', False)
+                        
                     if st.session_state['api_token']:
                         # Use default language 'en' here as session state might not be fully ready
                         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], st.session_state.get('language', 'en'))
@@ -283,6 +286,9 @@ with st.sidebar:
                     if 'concurrent_downloads' in st.session_state:
                         config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
                         
+                    if 'debug_mode' in st.session_state:
+                        config_data['debug_mode'] = st.session_state['debug_mode']
+                        
                     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                         json.dump(config_data, f)
                 except Exception as e:
@@ -345,9 +351,8 @@ with st.sidebar:
                 
         st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
         
-        @st.dialog("⚙️ Application Settings", width="large")
+        @st.dialog("⚙️ Settings", width="large")
         def _global_settings_dialog():
-            val = st.session_state.get('concurrent_downloads', 5)
             st.markdown("""
                 <style>
                     /* Maximize height of dialog content similar to course selector */
@@ -363,69 +368,65 @@ with st.sidebar:
             """, unsafe_allow_html=True)
             
             with st.container(border=False, key="settings_scroll_container"):
-                col_dl, col_sync = st.columns(2, gap="large")
+                col1, col2 = st.columns(2, gap="large")
                 
-                with col_dl:
-                    st.markdown("### 📥 Download Settings")
-                    st.markdown("---")
-                    st.markdown("#### Max Concurrent Downloads")
-                    st.markdown(
-                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
-                        "Controls how many files are downloaded simultaneously. <br><br>"
-                        "⚠️ <b>Warning:</b> Canvas has strict rate limits. Increasing this too high may cause "
-                        "the server to temporarily block your connection, resulting in failed downloads. "
-                        "Only increase if you have a very stable, high-speed connection."
-                        "</div>",
-                        unsafe_allow_html=True
-                    )
+                with col1:
+                    st.markdown("<h4 style='margin-bottom: 10px;'>📥 Download Settings</h4>", unsafe_allow_html=True)
                     
-                    if 'concurrent_downloads' not in st.session_state:
-                        st.session_state['concurrent_downloads'] = 5
+                    # Card 1: Concurrent Downloads
+                    with st.container(border=True):
+                        st.markdown("""
+                            <div style='margin-bottom: -20px;'>
+                                <h4 style='font-size: 1.05rem; margin: 0px 0px 2px 0px;'>Download Speed: Max Concurrent Downloads</h4>
+                                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 8px;'>Controls how many files are downloaded simultaneously.</p>
+                                <p style='font-size: 0.85rem; color: #fbbf24; margin-top: 0px; margin-bottom: 5px; line-height: 1.4;'>
+                                    ⚠️ <b>Warning:</b> Canvas has strict rate limits. Setting this too high (e.g., 15) may cause the download/sync to crash due to server blocks. If you experience crashes or failed downloads, reduce this number and try again.
+                                </p>
+                                <div style='margin-top: 12px; margin-bottom: 0px;'>
+                                    <span style='background-color: #1e293b; color: #94a3b8; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid #334155;'>Default: 5</span>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                    val = st.slider(
-                        "Simultaneous Files",
-                        min_value=2,
-                        max_value=20,
-                        value=st.session_state['concurrent_downloads'],
-                        step=1,
-                        key="slider_concurrent_dl"
-                    )
+                        # Inject CSS to make the slider a bright light blue
+                        st.markdown("""
+                            <style>
+                            div.stSlider > div[data-baseweb="slider"] > div > div > div {
+                                background-color: #38bdf8 !important;
+                            }
+                            div.stSlider > div[data-baseweb="slider"] > div > div[role="slider"] {
+                                background-color: #38bdf8 !important;
+                                border-color: #38bdf8 !important;
+                            }
+                            </style>
+                        """, unsafe_allow_html=True)
+                        
+                        temp_max = st.slider("Simultaneous Files", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
+                        
+                    # Card 2: Debug Mode
+                    with st.container(border=True):
+                        st.markdown("""
+                            <div style='margin-bottom: -10px;'>
+                                <h4 style='font-size: 1.05rem; margin-top: 0px; margin-bottom: 2px;'>Debug Mode</h4>
+                                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 10px;'>Enable advanced terminal logging for troubleshooting.</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        temp_debug = st.checkbox("Enable Troubleshooting Mode", value=st.session_state.get('debug_mode', False), key="temp_debug_mode")
+
+                with col2:
+                    st.markdown("<h4 style='margin-bottom: 10px;'>🔄 Sync Settings</h4>", unsafe_allow_html=True)
                     
-                    st.markdown("---")
-                    st.markdown("#### Debug Mode")
-                    st.markdown(
-                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
-                        "Enable advanced logging for troubleshooting."
-                        "</div>",
-                        unsafe_allow_html=True
-                    )
-                    if 'debug_mode' not in st.session_state:
-                        st.session_state['debug_mode'] = False
-
-                    def _toggle_debug():
-                        st.session_state['debug_mode'] = st.session_state['debug_checkbox']
-
-                    st.checkbox("Enable Troubleshooting Mode (Debug Log)",
-                                value=st.session_state['debug_mode'],
-                                key="debug_checkbox",
-                                on_change=_toggle_debug)
-                
-                with col_sync:
-                    st.markdown("### 🔄 Sync Settings")
-                    st.markdown("---")
-                    st.markdown(
-                        "<div style='font-size: 0.9em; color: #aaa; margin-bottom: 15px;'>"
-                        "<i>Future sync optimizations and configuration options will appear here.</i>"
-                        "</div>",
-                        unsafe_allow_html=True
-                    )
+                    # Card 3: Sync Settings Placeholder
+                    with st.container(border=True):
+                        st.info("Future sync optimizations and configuration options will appear here.")
 
             st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
             
             c_save, c_cancel = st.columns([1, 1])
             with c_save:
                 if st.button("Save Settings", type="primary", use_container_width=True):
-                    st.session_state['concurrent_downloads'] = val
+                    st.session_state['concurrent_downloads'] = temp_max
+                    st.session_state['debug_mode'] = temp_debug
                     
                     # Persist to config
                     if os.path.exists(CONFIG_FILE):
@@ -439,7 +440,8 @@ with st.sidebar:
                         
                     config_data['api_url'] = st.session_state.get('api_url', '')
                     config_data['api_token'] = st.session_state.get('api_token', '')
-                    config_data['concurrent_downloads'] = val
+                    config_data['concurrent_downloads'] = temp_max
+                    config_data['debug_mode'] = temp_debug
                     
                     try:
                         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
