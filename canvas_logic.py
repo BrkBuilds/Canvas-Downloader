@@ -1241,9 +1241,12 @@ class CanvasManager:
             # Last resort fallback if logging fails
             pass
 
-    def _check_disk_space(self, path, min_free_gb=1):
+    def _check_disk_space(self, path, min_free_gb=1, required_bytes=0):
+        """Check disk space dynamically: max(min_free_gb, required_bytes * 1.2)."""
         try:
             stat = shutil.disk_usage(path)
-            return (stat.free / (1024**3)) >= min_free_gb
+            # Dynamic threshold: at least 1GB, or the payload size + 20% buffer
+            min_required = max(min_free_gb * (1024**3), int(required_bytes * 1.2))
+            return stat.free >= min_required
         except:
             return True

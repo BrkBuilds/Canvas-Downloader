@@ -125,10 +125,14 @@ def save_sync_pairs(pairs: list[dict], config_dir: str = None):
 def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.0) -> tuple[bool, float, float]:
     """Check if there's enough disk space.
     
+    Uses dynamic threshold: max(min_free_gb, required_bytes * 1.2).
+    This ensures large downloads (e.g., 10GB course) are properly accounted for
+    instead of only checking against a static 1GB minimum.
+    
     Args:
         path: Path on the target volume
-        required_bytes: Additional bytes needed (on top of min_free_gb)
-        min_free_gb: Minimum free space in GB
+        required_bytes: Bytes needed for the download payload
+        min_free_gb: Minimum free space floor in GB
         
     Returns:
         Tuple of (has_enough_space, available_mb, total_mb)
@@ -137,8 +141,9 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
         stat = shutil.disk_usage(path)
         available_mb = stat.free / (1024 * 1024)
         total_mb = stat.total / (1024 * 1024)
-        required_total = (min_free_gb * 1024 * 1024 * 1024) + required_bytes
-        has_enough = stat.free >= required_total
+        # Dynamic threshold: at least min_free_gb, or payload + 20% buffer
+        min_required = max(min_free_gb * 1024 * 1024 * 1024, int(required_bytes * 1.2))
+        has_enough = stat.free >= min_required
         return has_enough, available_mb, total_mb
     except Exception:
         # If we can't check, assume OK
