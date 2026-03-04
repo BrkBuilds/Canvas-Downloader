@@ -3,6 +3,29 @@
 ## Current Focus
 - **Active Feature Fixes**: Continuing to refine user workflows, focusing on unifying state management between Sync engines and Download engines.
 
+## Recent Changes (Session 2026-03-04 - Ignored Files UI Polish)
+- **Bulk Selection Matrix Architecture**:
+  - Rewrote both the multi-course (`_ignored_files_dialog`) and single-course (`_show_course_ignored_files_inner`) dialogs to abandon "visibility filtering" in favor of remote-control bulk selection. All files are now constantly visible.
+  - Implemented smart `(selected/total)` filetype unit counters that elegantly disappear when selection matches 0 or the total amount.
+  - Wired explicit bidirectional state forcing `st.session_state[unit_key] = is_all_checked` before widgets render, ensuring manual file unchecking perfectly mimics the logical unit state without latency/ghosting.
+- **Ghost File Elimination (Data Freshness)**:
+  - Inside both dialog execution blocks, enforced top-of-routine database fresh fetches `files = sm.get_ignored_files()`. When files are restored, the dialog instantly reruns and recalculates the exact list seamlessly.
+- **Visual Polish & Bug Mitigation**:
+  - Resolved Streamlit Dark Mode dialog flashing by locking container max heights to `500px`.
+  - Tightened UI horizontal spacing using specific negative margin HTML fragments (`margin-top: -10px; margin-bottom: 15px`) around "Or" separators.
+  - Refined modal `Close` buttons exclusively to `type="secondary"` to differentiate from destructive/primary actions.
+  - Standardized "🗑️" emojis to "🚫" uniformly tracking ignored items globally.
+
+## Recent Changes (Session 2026-03-04 - V1.0 Architecture Audit Fixes)
+- **Eliminated `handle_sweep` NameError (`sync_ui.py`)**:
+  - Found and fixed a critical bug where `file_ids_to_ignore` was referenced but never defined. Instantiated it directly from `items_to_ignore` to prevent runtime crashes during bulk "Ignore unchecked" operations in the Review Phase.
+- **Orphaned `.part` File Cleanup (`sync_ui.py`)**:
+  - Refactored the sync download loop to use a strict `try/finally` block. If the `atomic_rename_done` flag fails to trigger, the temporary `.part` file is unconditionally unlinked, preventing disk bloat during network drops or disk full scenarios.
+- **Sync Download Resilience (`sync_ui.py`)**:
+  - Engineered parity with `canvas_logic.py`'s download engine by porting the 5-retry exponential backoff loop directly into Phase 3's download block. The Sync engine now transparently retries 429 Rate Limits (respecting `Retry-After`), 5xx server errors, and temporary network timeouts instead of permanently failing actionable files.
+- **Dynamic Disk Space Validation (`canvas_logic.py` & `ui_helpers.py`)**:
+  - Upgraded the legacy static 1GB floor to a responsive `max(1GB, payload_bytes * 1.2)` algorithm. This accurately calculates a 20% safety margin for massive downloads (e.g. 10GB courses), catching structural capacity issues immediately prior to execution.
+
 ## Recent Changes (Session 2026-03-04 - Sync Contract & Atomic Execution)
 - **Zero-Amnesia UPSERTs (`sync_manager.py`)**:
   - Replaced `INSERT OR REPLACE` with `INSERT INTO ... ON CONFLICT(canvas_file_id) DO UPDATE SET` across both the scalar `_save_single_file_to_db` and bulk `save_manifest` methods.

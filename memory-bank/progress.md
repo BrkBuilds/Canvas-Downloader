@@ -6,6 +6,15 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Ignored Files UI Polish** (2026-03-04):
+    - [x] **Bulk Selection Matrix**: Rewrote single and multi-course dialogs abandoning "visibility filters" for robust "remote control" selection checkboxes targeting permanent file lists.
+    - [x] **State Reactivity Fixes**: Enforced accurate pre-render logic tying individual file changes dynamically to visual filetype units and fixed "Ghost Files" post-removal by instituting an immediate DB fetch on dialog load.
+    - [x] **Component Styling**: Standardized '🚫' emojis across views, established specific modal height boundaries (`500px`) and HTML negative margins (`-10px`), and correctly separated 'Primary' Action states from 'Secondary' Close states.
+- [x] **V1.0 Architecture Audit Fixes** (2026-03-04):
+    - [x] **NameError Elimination**: Initialized `file_ids_to_ignore` inside `handle_sweep` to prevent runtime crashes during bulk "Ignore unchecked" operations in Phase 2.
+    - [x] **Orphaned `.part` Cleanup**: Enforced a strict `try/finally` block inside the Sync download loop to unconditionally unlink temporary `.part` files if the `atomic_rename_done` flag fails (e.g., during network drops or disk full scenarios).
+    - [x] **Sync Sync Download Resilience**: Ported the 5-retry exponential backoff loop from `canvas_logic.py` directly into `sync_ui.py`, guaranteeing that 429 Rate Limits (respecting `Retry-After`) and 5xx API errors are transparently retried instead of permanently failing files.
+    - [x] **Dynamic Disk Space Validation**: Upgraded the static 1GB floor in both `canvas_logic.py` and `ui_helpers.py` to a dynamic `max(1GB, payload_bytes * 1.2)` algorithm, securely accommodating massive 10GB+ downloads.
 - [x] **Settings Modal Redesign & Debug Persistence** (2026-03-04):
     - [x] **Card UI**: Refactored the `⚙️ Settings` modal into discrete, border-based Cards to eliminate vertical dead space.
     - [x] **Pixel Perfection**: Consolidated subheaders/captions into custom HTML blocks, injected `-20px` bottom margins to physically pull the Streamlit slider upward against default padding, and styled the track `#38bdf8`.

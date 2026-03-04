@@ -92,6 +92,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Pattern*: When converting a file (e.g., `.pptx` to `.pdf`), the system updates the `local_path`, `original_size`, and `original_md5` in the database to match the new derivative file, but preserves the original `canvas_filename`. This effectively tricks the sync diffing engine into linking a remote PPTX to a local PDF for version control.
 
 ## Synchronization Strategy & Data Integrity
+- **Dynamic Disk Space Validation**:
+    - *Problem*: Static disk space minimums (e.g., 1GB) allow massive 10GB+ sync payloads to pass validation and then crash midway through execution when the drive fills.
+    - *Solution*: Replaced all static `min_free_gb` floor additions with a dynamic algorithm: `max(min_free_gb * 1024**3, required_bytes * 1.2)`. This unconditionally guarantees a 20% safety margin scaled directly against the calculated active payload.
+- **Network Retry Resilience**:
+    - *Problem*: Synchronous or zero-retry download loops permanently fail actionable files on receipt of a single transient HTTP 429, 500, or `TimeoutError`.
+    - *Solution*: Wrapped all `aiohttp` download block core expressions (`session.get()`) in an explicit 5-retry loop. Implemented exponential backoff (`2^attempt` seconds) for 5xx and Network Errors, and explicitly extract and bind to the `Retry-After` header for 429 Rate Limits.
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
 - **Sync Run #0 (Download-to-Sync Handoff)**:
     - *Problem*: The initial Download engine (`canvas_logic.py`) merely wrote files to disk, bypassing the Sync DB. When the Sync tab later analyzed the folder, the manifest was empty, causing all files (even manually deleted ones) to appear as "New" rather than "Locally Deleted".
