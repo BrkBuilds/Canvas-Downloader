@@ -109,7 +109,10 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - `log_post_process_error(directory, filename, error_msg)` — inline helper defined in `app.py` that appends `[Post-Processing]`-tagged entries to `download_errors.txt` (always active on failures).
     - Every post-processing log message is mirrored to three destinations: `log_deque` (Streamlit terminal UI), `logger.info/error` (Python logging), and `log_debug` (debug file).
 
-## UI Collapsible Settings Pattern
+## UI Component Patterns
+- **Un-Throttled Per-File Status Indicator**:
+    - *Problem*: High-speed asynchronous download loops often exceed Streamlit's UI rerun budget (rerunning every 10ms for 100 small files would crash the browser). Throttling the *entire* UI block (e.g., `if time.time() - last_ui_update > 0.4:`) causes the "Currently downloading: filename" text to lag behind the terminal log.
+    - *Solution*: Segregate heavy UI updates (progress bars, terminal logs, metrics) into a throttled block, but keep the per-file status text (`active_file_placeholder`) **outside** the throttle. This ensures the user receives instantaneous feedback on precisely which file is active while preserving overall browser performance.
 - **Expander for Sub-Toggles**:
     - *Problem*: 8+ sub-checkboxes clutter the Step 2 UI and visually overwhelm the page.
     - *Solution*: Keep the master toggle (`notebooklm_master`) always visible, and nest all sub-checkboxes inside `st.expander(f"⚙️ Advanced Conversion Settings ({active}/{total})")`. The dynamic label updates on rerun. No custom CSS indentation needed — the expander provides natural visual hierarchy.

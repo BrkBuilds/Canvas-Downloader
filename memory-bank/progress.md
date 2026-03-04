@@ -6,6 +6,9 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Unified UI Status & Desync Fix** (2026-03-04):
+    - [x] **Desync Resolution**: Segregated filename status updates from throttled UI blocks in Phase 2.
+    - [x] **Universal Visibility**: Ported blue `#38bdf8` status text to all 14 post-processing loops cross-app.
 - [x] **Atomic Symbiosis & DB Integrity** (2026-03-03):
     - [x] **Atomic Upserts**: Replaced destructive manifest DB overwrites with row-by-row `INSERT OR REPLACE`.
     - [x] **`.part` File Streaming**: Files stream to `.part` and are atomically renamed strictly at 100% completion (deployed in both `app.py` and `sync_ui.py`).

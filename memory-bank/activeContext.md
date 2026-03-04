@@ -1,7 +1,14 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Atomic Symbiosis & Cancel UX Overhaul**: Concluded a massive restructuring of cancel safety across the app. Resolved the "Premature Commit" DB bug by implementing an atomic `.part` file download pattern and strictly gating manifest writes. Rebuilt the entire cancel UI infrastructure with instant callbacks, persistent buttons, and an 8-loop interruption system for Win32COM processors.
+- **Unified Blue Status Indicator & Phase 2 UI Sync**: Successfully resolved the UI status desynchronization where filename text lagged behind the terminal log. Ported the real-time blue `#38bdf8` status indicator to all download and post-processing phases across the entire application.
+
+## Recent Changes (Session 2026-03-04 - UI Polish & Status Sync)
+- **Unified Blue Status Indicator (`sync_ui.py` & `app.py`)**:
+  - **Desync Fix (Phase 2 Download)**: Moved the `active_file_placeholder` update for current filenames **outside** the 0.4s UI throttle block in `sync_ui.py`. The status text now updates instantly for every file, ensuring it never lags behind the terminal output.
+  - **Standardized Styling**: Implemented a consistent `#38bdf8` blue color with `font-weight: 500` for all "Currently downloading:" and "Currently processing:" status messages.
+  - **Post-Processing Visibility**: Injected the blue status indicator into all 7 conversion/extraction loops (Archives, PPTX, HTML, Code, Word, Excel, Video) in both `sync_ui.py` and `app.py`.
+  - **Cleanup Hooks**: Added `active_file_placeholder.empty()` calls after all post-processing completions to ensure the status text is cleared once the course/batch is finished.
 
 ## Recent Changes (Session 2026-03-03 - UI Polish)
 - **Quick Sync Flow Repair (`sync_ui.py`)**:
