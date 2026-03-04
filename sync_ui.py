@@ -291,6 +291,17 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     .st-key-sync_list_outline {
         min-height: 50vh !important;
     }
+
+    /* 12. Ignored Files toggle */
+    div[class*="st-key-ignored_btn_"] button {
+        border: 1px dashed rgba(255, 255, 255, 0.4) !important;
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    div[class*="st-key-ignored_btn_"] button:hover {
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        color: #fff !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -325,7 +336,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
                 # Use vertical_alignment="center" (Streamlit 1.32+) or rely on CSS above
                 # Adjusted ratios: Card takes space, but buttons need room for text now
-                col_card, col_open, col_edit, col_remove, col_ignored = st.columns([5, 1.5, 1.1, 1.2, 1.5], gap="small", vertical_alignment="center")
+                col_card, col_open, col_edit, col_ignored, col_remove = st.columns([5, 1.5, 1.1, 1.5, 1.2], gap="small", vertical_alignment="center")
 
                 with col_card:
                     folder_exists = Path(pair['local_folder']).exists()
@@ -370,20 +381,20 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                         st.session_state['sync_selected_course_id'] = pair['course_id']
                         st.rerun()
 
-                with col_remove:
-                    if st.button("🗑️ " + get_text('sync_remove_pair', lang), 
-                                 key=f"remove_pair_{idx}", use_container_width=True):
-                        pairs_to_remove.append(idx)
-
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
-                    if st.button(f"🚫 Ignored ({ignored_count})", key=f"ignored_btn_{idx}",
+                    if st.button(f"🚫 Ignored Files ({ignored_count})", key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True):
                         course_data = ignored_by_course[pair['course_id']]
                         _show_course_ignored_files(
                             friendly_course_name(pair['course_name']),
                             pair['course_id'], course_data, lang
                         )
+
+                with col_remove:
+                    if st.button("🗑️ " + get_text('sync_remove_pair', lang), 
+                                 key=f"remove_pair_{idx}", use_container_width=True):
+                        pairs_to_remove.append(idx)
                 
                 # Add vertical spacing between blocks
                 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
@@ -473,7 +484,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     # --- (5) Analyze + Quick Sync action buttons ---
     # ignored_by_course already computed above the course row loop
     if total_ignored > 0:
-        if st.button(f"🗑️ Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
+        if st.button(f"🚫 Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
             _ignored_files_dialog(ignored_by_course, lang)
 
     if sync_pairs:
@@ -663,170 +674,157 @@ def _render_sync_history(lang):
                 """, unsafe_allow_html=True)
 
 
-def _render_filetype_filter(all_files, filter_prefix):
-    """Shared filetype filter widget for ignored file dialogs.
+def _render_filetype_selector(all_files, prefix, file_key_fn):
+    """Bulk Selection Matrix — filetype unit checkboxes that act as remote controls.
+    
+    Each unit checkbox toggles ALL files of that extension on/off.
+    Shows dynamic (selected/total) counters next to each extension.
     
     Args:
-        all_files: List of SyncFileInfo objects to extract extensions from.
-        filter_prefix: Unique prefix for session-state keys (e.g. 'ign_all' or 'ign_course').
-    
-    Returns:
-        Set of active (selected) extensions, or None if no extensions found.
+        all_files: List of (key, SyncFileInfo) tuples.
+        prefix: Unique prefix for filetype unit session-state keys.
+        file_key_fn: Function that takes a file and returns its session_state key.
     """
-    # Extract unique extensions
-    ext_counts = defaultdict(int)
-    for f in all_files:
+    # Build extension → file keys mapping
+    ext_to_keys: dict[str, list[str]] = defaultdict(list)
+    for fkey, f in all_files:
         ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
-        ext_counts[ext] += 1
+        ext_to_keys[ext].append(fkey)
 
-    if not ext_counts:
-        return None
+    if not ext_to_keys:
+        return
 
-    all_exts_sorted = sorted(ext_counts.keys())
-    
-    # Initialize "all" toggle
-    all_key = f"{filter_prefix}_filter_all"
-    if all_key not in st.session_state:
-        st.session_state[all_key] = True
+    all_exts_sorted = sorted(ext_to_keys.keys())
 
-    # CSS for flex-wrap pills
+    # CSS for compact flex-wrap pills layout
     st.markdown(f"""
     <style>
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-{filter_prefix}_pills),
-    .st-key-{filter_prefix}_pills {{
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        background: transparent !important;
-    }}
-    .st-key-{filter_prefix}_pills div[data-testid="stHorizontalBlock"] {{
+    .st-key-{prefix}_units div[data-testid="stHorizontalBlock"] {{
         flex-wrap: wrap !important;
         row-gap: 5px !important;
         column-gap: 15px !important;
     }}
-    .st-key-{filter_prefix}_pills div[data-testid="stColumn"] {{
+    .st-key-{prefix}_units div[data-testid="stColumn"] {{
         width: auto !important;
         flex: 0 0 auto !important;
         min-width: 0 !important;
     }}
-    .st-key-{filter_prefix}_pills div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{
+    .st-key-{prefix}_units div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{
         gap: 0 !important;
     }}
-    .st-key-{filter_prefix}_pills label[data-baseweb="checkbox"] {{
+    .st-key-{prefix}_units label[data-baseweb="checkbox"] {{
         margin-bottom: 0 !important;
         padding-right: 0 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-    include_all = st.checkbox("All filetypes", key=all_key)
+    st.markdown('<p style="margin-bottom: -5px; font-size: 0.875rem; color: rgba(250,250,250,0.6);">Select by filetype:</p>', unsafe_allow_html=True)
 
-    if not include_all:
-        with st.container(border=True, key=f"{filter_prefix}_pills"):
-            safe_len = min(len(all_exts_sorted), 90)
-            cols = st.columns(safe_len)
-            for i, ext in enumerate(all_exts_sorted):
-                ext_key = f"{filter_prefix}_ext_{ext}"
-                if ext_key not in st.session_state:
-                    st.session_state[ext_key] = True
-                with cols[i % safe_len]:
-                    st.checkbox(f"{ext} ({ext_counts[ext]})", key=ext_key)
+    with st.container(key=f"{prefix}_units"):
+        cols = st.columns(min(len(all_exts_sorted), 90))
+        for i, ext in enumerate(all_exts_sorted):
+            unit_key = f"{prefix}_unit_{ext}"
+            file_keys_for_ext = ext_to_keys[ext]
+            total = len(file_keys_for_ext)
+            selected = sum(1 for k in file_keys_for_ext if st.session_state.get(k, False))
 
-        active_exts = set()
-        for ext in all_exts_sorted:
-            if st.session_state.get(f"{filter_prefix}_ext_{ext}", True):
-                active_exts.add(ext)
-        return active_exts
-    else:
-        return set(all_exts_sorted)
+            # Force the session state to match reality BEFORE rendering the widget
+            is_all_checked = (selected == total and total > 0)
+            st.session_state[unit_key] = is_all_checked
+
+            def _on_unit_change(ext=ext, unit_key=unit_key):
+                """When user toggles a filetype unit, set all files of that type to match."""
+                new_val = st.session_state[unit_key]
+                for fk in ext_to_keys[ext]:
+                    st.session_state[fk] = new_val
+
+            with cols[i % len(cols)]:
+                if 0 < selected < total:
+                    label = f"{ext} :grey[({selected}/{total})]"
+                else:
+                    label = ext
+                st.checkbox(
+                    label,
+                    key=unit_key,
+                    on_change=_on_unit_change,
+                )
+
+    return all_exts_sorted, ext_to_keys
 
 
-@st.dialog("All Ignored Files", width="large")
+@st.dialog("🚫 All Ignored Files", width="large")
 def _ignored_files_dialog(ignored_by_course, lang):
-    """Dialog to manage and restore files that were previously ignored."""
-    st.markdown("""
-        <style>
-            div.st-key-ignored_list_scroll_container {
-                height: 50vh !important;
-                min-height: 50vh !important;
-                max-height: 50vh !important;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-                padding-right: 5px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+    """Dialog to manage and restore files that were previously ignored.
+    
+    Architecture: Bulk Selection Matrix
+    - All files always visible (no filtering/hiding)
+    - Filetype unit checkboxes are remote controls that check/uncheck files
+    - Default state: all files unchecked
+    """
 
-    # Collect all files for filetype filter
-    all_ignored_files = [
-        f for data in ignored_by_course.values() for f in data['files']
-    ]
-
-    # Filetype filter
-    active_exts = _render_filetype_filter(all_ignored_files, "ign_all")
-
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 10px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
-
-    # Initialize state for all ignored files if not present
+    # --- Collect all files across all courses ---
+    all_items = []  # List of (session_key, cid, data, file)
     for cid, data in ignored_by_course.items():
-        for f in data['files']:
-            key = f"unignore_{cid}_{f.canvas_file_id}"
+        sm = data['sync_manager']
+        for f in sm.get_ignored_files():
+            key = f"ign_sel_{cid}_{f.canvas_file_id}"
             if key not in st.session_state:
                 st.session_state[key] = False
+            all_items.append((key, cid, data, f))
 
-    # Collect keys (only for visible files based on filter)
-    all_unignore_keys = []
-    visible_unignore_keys = []
-    for cid, data in ignored_by_course.items():
-        for f in data['files']:
-            k = f"unignore_{cid}_{f.canvas_file_id}"
-            all_unignore_keys.append(k)
-            ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
-            if active_exts and ext in active_exts:
-                visible_unignore_keys.append(k)
+    all_file_keys = [item[0] for item in all_items]
+    all_file_tuples = [(item[0], item[3]) for item in all_items]  # (key, file) for selector
 
-    # Global Controls
+    # --- 1. Filetype Selector (Bulk Selection Matrix) ---
+    _render_filetype_selector(all_file_tuples, "ign_all", lambda f: f)
+
+    st.markdown("<div style='margin-top: -10px; margin-bottom: 15px; color: gray; font-size: 14px;'>Or</div>", unsafe_allow_html=True)
+
+    # --- 2. Select All / Deselect All ---
     c1, c2, _ = st.columns([0.25, 0.25, 0.5])
     with c1:
-        if st.button("Select All", use_container_width=True, key="ign_sa"):
-            for k in visible_unignore_keys:
+        def _select_all():
+            for k in all_file_keys:
                 st.session_state[k] = True
-            st.rerun()
+            for ext in sorted(set(os.path.splitext(item[3].canvas_filename)[1].lower() or ".unknown" for item in all_items)):
+                st.session_state[f"ign_all_unit_{ext}"] = True
+        st.button("Select All", use_container_width=True, key="ign_sa", on_click=_select_all)
     with c2:
-        if st.button("Clear Selection", use_container_width=True, key="ign_ca"):
-            for k in visible_unignore_keys:
+        def _deselect_all():
+            for k in all_file_keys:
                 st.session_state[k] = False
-            st.rerun()
+            for ext in sorted(set(os.path.splitext(item[3].canvas_filename)[1].lower() or ".unknown" for item in all_items)):
+                st.session_state[f"ign_all_unit_{ext}"] = False
+        st.button("Deselect All", use_container_width=True, key="ign_da", on_click=_deselect_all)
 
-    # List items
-    with st.container(border=False, key="ignored_list_scroll_container"):
-        for cid, data in ignored_by_course.items():
-            pair = data['pair']
+    # --- 3. File list — ALL files, grouped by course in expanders ---
+    with st.container(height=500, border=True):
+        grouped: dict = {}
+        for key, cid, data, f in all_items:
+            if cid not in grouped:
+                grouped[cid] = {'data': data, 'items': []}
+            grouped[cid]['items'].append((key, f))
+
+        for cid, group in grouped.items():
+            pair = group['data']['pair']
             friendly = friendly_course_name(pair['course_name'])
-            
-            # Filter files by active extensions
-            visible_files = []
-            for f in data['files']:
-                ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
-                if active_exts and ext in active_exts:
-                    visible_files.append(f)
-
-            if not visible_files:
-                continue
-
-            with st.expander(f"📁 {friendly} ({len(visible_files)} files)", expanded=True):
-                for f in visible_files:
-                    key = f"unignore_{cid}_{f.canvas_file_id}"
+            items = group['items']
+            count = len(items)
+            file_word = 'file' if count == 1 else 'files'
+            with st.expander(f"📁 {friendly} :grey[({count} {file_word})]", expanded=True):
+                for key, f in items:
                     icon = get_file_icon(f.canvas_filename)
-                    friendly_name = urllib.parse.unquote(f.canvas_filename)
-                    st.checkbox(f"{icon} {friendly_name}", key=key)
+                    label = urllib.parse.unquote_plus(f.canvas_filename)
+                    st.checkbox(f"{icon} {label}", key=key)
 
-    # Count checked (across ALL files, not just visible)
-    checked_count = sum(1 for k in all_unignore_keys if st.session_state.get(k, False))
-    
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+    # --- 4. Count + success message ---
+    checked_count = sum(1 for k in all_file_keys if st.session_state.get(k, False))
 
-    # Dynamic button text
+    if st.session_state.get("ign_all_success"):
+        st.success(st.session_state.pop("ign_all_success"))
+
+    # --- 5. Dynamic button text ---
     if checked_count == 0:
         btn_text = "Remove files from ignored list"
     elif checked_count == 1:
@@ -834,114 +832,104 @@ def _ignored_files_dialog(ignored_by_course, lang):
     else:
         btn_text = f"Remove {checked_count} files from ignored list"
 
-    # Action Buttons — aligned horizontally
-    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="center")
+    # --- 6. Action buttons ---
+    st.markdown("""<style>
+        button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
+            background-color: #e74c3c !important;
+            border-color: #c0392b !important;
+            color: white !important;
+        }
+        button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")):hover {
+            background-color: #c0392b !important;
+        }
+    </style>""", unsafe_allow_html=True)
+
+    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
     with col_restore:
-        # Inject CSS to make primary button red if active
-        if checked_count > 0:
-            st.markdown("""<style>
-                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
-                    background-color: #e74c3c !important;
-                    border-color: #c0392b !important;
-                    color: white !important;
-                }
-                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")):hover {
-                    background-color: #c0392b !important;
-                }
-            </style>""", unsafe_allow_html=True)
-            
-        if st.button(btn_text, type="primary", disabled=(checked_count == 0), use_container_width=True):
-            # Process un-ignore
+        def _on_restore_all():
             files_restored = 0
-            for cid, data in ignored_by_course.items():
-                sm = data['sync_manager']
-                to_restore = []
-                for f in data['files']:
-                    if st.session_state.get(f"unignore_{cid}_{f.canvas_file_id}"):
-                        to_restore.append(f.canvas_file_id)
-                if to_restore:
-                    sm.bulk_restore_files(to_restore)
-                    files_restored += len(to_restore)
-                    
-            st.success(f"Successfully restored {files_restored} file(s)!")
-            # Clean state
-            for k in all_unignore_keys:
-                st.session_state.pop(k, None)
-            time.sleep(1)
-            st.rerun()
+            for key, cid, data, f in all_items:
+                if st.session_state.get(key):
+                    sm = data['sync_manager']
+                    sm.bulk_restore_files([f.canvas_file_id])
+                    files_restored += 1
+                    st.session_state.pop(key, None)
+            if files_restored:
+                file_word = 'file' if files_restored == 1 else 'files'
+                st.session_state["ign_all_success"] = f"Successfully restored {files_restored} {file_word}! They will appear in your next Sync Review."
+
+        st.button(btn_text, type="primary", disabled=(checked_count == 0),
+                  use_container_width=True, on_click=_on_restore_all)
 
     with col_cancel:
-        if st.button("Close", use_container_width=True, key="ign_close"):
-            for k in all_unignore_keys:
+        if st.button("Close", type="secondary", use_container_width=True, key="ign_close"):
+            for k in all_file_keys:
                 st.session_state.pop(k, None)
             st.rerun()
 
 
-@st.dialog("Ignored Files", width="large")
 def _show_course_ignored_files(course_name, course_id, course_data, lang):
     """Dialog to manage ignored files for a specific course."""
-    st.subheader(f"🚫 Ignored Files: {course_name}")
+    @st.dialog(f"🚫 Ignored Files: {course_name}", width="large")
+    def _dialog():
+        _show_course_ignored_files_inner(course_name, course_id, course_data, lang)
+    _dialog()
 
-    st.markdown("""
-        <style>
-            div.st-key-course_ignored_scroll {
-                height: 50vh !important;
-                min-height: 50vh !important;
-                max-height: 50vh !important;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-                padding-right: 5px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    files = course_data['files']
+def _show_course_ignored_files_inner(course_name, course_id, course_data, lang):
+    """Per-course ignored files dialog — Bulk Selection Matrix architecture.
+    
+    Same paradigm as All Ignored Files, but flat list (no course expanders).
+    """
     sm = course_data['sync_manager']
+    files = sm.get_ignored_files()
     prefix = f"cign_{course_id}"
 
-    # Filetype filter
-    active_exts = _render_filetype_filter(files, prefix)
-
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 10px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
-
-    # Initialize state
+    # --- Initialize session state for every file (default: unchecked) ---
     all_keys = []
-    visible_keys = []
+    all_file_tuples = []  # (key, file) for selector
     for f in files:
         key = f"{prefix}_{f.canvas_file_id}"
         if key not in st.session_state:
             st.session_state[key] = False
         all_keys.append(key)
-        ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
-        if active_exts and ext in active_exts:
-            visible_keys.append((key, f))
+        all_file_tuples.append((key, f))
 
-    # Controls
+    # --- 1. Filetype Selector (Bulk Selection Matrix) ---
+    _render_filetype_selector(all_file_tuples, prefix, lambda f: f)
+
+    st.markdown("<div style='margin-top: -10px; margin-bottom: 15px; color: gray; font-size: 14px;'>Or</div>", unsafe_allow_html=True)
+
+    # --- 2. Select All / Deselect All ---
     c1, c2, _ = st.columns([0.25, 0.25, 0.5])
     with c1:
-        if st.button("Select All", use_container_width=True, key=f"{prefix}_sa"):
-            for k, _ in visible_keys:
+        def _select_all():
+            for k in all_keys:
                 st.session_state[k] = True
-            st.rerun()
+            for ext in sorted(set(os.path.splitext(f.canvas_filename)[1].lower() or ".unknown" for f in files)):
+                st.session_state[f"{prefix}_unit_{ext}"] = True
+        st.button("Select All", use_container_width=True, key=f"{prefix}_sa", on_click=_select_all)
     with c2:
-        if st.button("Clear Selection", use_container_width=True, key=f"{prefix}_ca"):
-            for k, _ in visible_keys:
+        def _deselect_all():
+            for k in all_keys:
                 st.session_state[k] = False
-            st.rerun()
+            for ext in sorted(set(os.path.splitext(f.canvas_filename)[1].lower() or ".unknown" for f in files)):
+                st.session_state[f"{prefix}_unit_{ext}"] = False
+        st.button("Deselect All", use_container_width=True, key=f"{prefix}_da", on_click=_deselect_all)
 
-    # File list
-    with st.container(border=False, key="course_ignored_scroll"):
-        for key, f in visible_keys:
+    # --- 3. File list — ALL files, flat list ---
+    with st.container(height=500, border=True):
+        for key, f in all_file_tuples:
             icon = get_file_icon(f.canvas_filename)
-            friendly_name = urllib.parse.unquote(f.canvas_filename)
-            st.checkbox(f"{icon} {friendly_name}", key=key)
+            label = urllib.parse.unquote_plus(f.canvas_filename)
+            st.checkbox(f"{icon} {label}", key=key)
 
-    # Count checked
+    # --- 4. Count + success message ---
     checked_count = sum(1 for k in all_keys if st.session_state.get(k, False))
 
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+    if st.session_state.get(f"{prefix}_success"):
+        st.success(st.session_state.pop(f"{prefix}_success"))
 
-    # Dynamic button text
+    # --- 5. Dynamic button text ---
     if checked_count == 0:
         btn_text = "Remove files from ignored list"
     elif checked_count == 1:
@@ -949,36 +937,37 @@ def _show_course_ignored_files(course_name, course_id, course_data, lang):
     else:
         btn_text = f"Remove {checked_count} files from ignored list"
 
-    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="center")
-    with col_restore:
-        if checked_count > 0:
-            st.markdown("""<style>
-                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
-                    background-color: #e74c3c !important;
-                    border-color: #c0392b !important;
-                    color: white !important;
-                }
-                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")):hover {
-                    background-color: #c0392b !important;
-                }
-            </style>""", unsafe_allow_html=True)
+    # --- 6. Action buttons ---
+    st.markdown("""<style>
+        button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
+            background-color: #e74c3c !important;
+            border-color: #c0392b !important;
+            color: white !important;
+        }
+        button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")):hover {
+            background-color: #c0392b !important;
+        }
+    </style>""", unsafe_allow_html=True)
 
-        if st.button(btn_text, type="primary", disabled=(checked_count == 0),
-                     use_container_width=True, key=f"{prefix}_restore"):
-            to_restore = []
-            for f in files:
-                if st.session_state.get(f"{prefix}_{f.canvas_file_id}"):
-                    to_restore.append(f.canvas_file_id)
+    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
+    with col_restore:
+        def _on_restore_course():
+            to_restore = [
+                f.canvas_file_id for f in files
+                if st.session_state.get(f"{prefix}_{f.canvas_file_id}")
+            ]
             if to_restore:
                 sm.bulk_restore_files(to_restore)
-                st.success(f"Successfully restored {len(to_restore)} file(s)!")
-                for k in all_keys:
-                    st.session_state.pop(k, None)
-                time.sleep(1)
-                st.rerun()
+                file_word = 'file' if len(to_restore) == 1 else 'files'
+                st.session_state[f"{prefix}_success"] = f"Successfully restored {len(to_restore)} {file_word}! They will appear in your next Sync Review."
+                for fid in to_restore:
+                    st.session_state.pop(f"{prefix}_{fid}", None)
+
+        st.button(btn_text, type="primary", disabled=(checked_count == 0),
+                  use_container_width=True, key=f"{prefix}_restore", on_click=_on_restore_course)
 
     with col_cancel:
-        if st.button("Close", use_container_width=True, key=f"{prefix}_close"):
+        if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
             for k in all_keys:
                 st.session_state.pop(k, None)
             st.rerun()
@@ -2667,8 +2656,8 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
         
         # Helper to format filename friendly
         def get_friendly_name(name):
-            # Replace + with space and unquote
-            unquoted = urllib.parse.unquote(name).replace('+', ' ')
+            # Replace + with space using unquote_plus
+            unquoted = urllib.parse.unquote_plus(name)
             return unquoted
 
         # Collect files from all categories with emojis and friendly names
