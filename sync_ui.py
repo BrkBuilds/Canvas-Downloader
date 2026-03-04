@@ -294,6 +294,24 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     </style>
     """, unsafe_allow_html=True)
 
+    # --- Pre-compute ignored files per course (needed for per-course buttons AND global button) ---
+    total_ignored = 0
+    ignored_by_course = {}
+    if sync_pairs:
+        for pair in sync_pairs:
+            local_folder = pair.get('local_folder')
+            course_id = pair.get('course_id')
+            if local_folder and Path(local_folder).exists():
+                sm = SyncManager(local_folder, course_id, pair.get('course_name', ''), lang)
+                ignored = sm.get_ignored_files()
+                if ignored:
+                    ignored_by_course[pair['course_id']] = {
+                        'pair': pair,
+                        'files': ignored,
+                        'sync_manager': sm
+                    }
+                    total_ignored += len(ignored)
+
     with st.container(border=True, key="sync_list_outline"):
         if sync_pairs:
             editing_idx = st.session_state.get('editing_pair_idx')
@@ -307,7 +325,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
                 # Use vertical_alignment="center" (Streamlit 1.32+) or rely on CSS above
                 # Adjusted ratios: Card takes space, but buttons need room for text now
-                col_card, col_open, col_edit, col_remove = st.columns([5, 1.5, 1.1, 1.2], gap="small", vertical_alignment="center")
+                col_card, col_open, col_edit, col_remove, col_ignored = st.columns([5, 1.5, 1.1, 1.2, 1.5], gap="small", vertical_alignment="center")
 
                 with col_card:
                     folder_exists = Path(pair['local_folder']).exists()
@@ -356,6 +374,16 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     if st.button("🗑️ " + get_text('sync_remove_pair', lang), 
                                  key=f"remove_pair_{idx}", use_container_width=True):
                         pairs_to_remove.append(idx)
+
+                with col_ignored:
+                    ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
+                    if st.button(f"🚫 Ignored ({ignored_count})", key=f"ignored_btn_{idx}",
+                                 disabled=(ignored_count == 0), use_container_width=True):
+                        course_data = ignored_by_course[pair['course_id']]
+                        _show_course_ignored_files(
+                            friendly_course_name(pair['course_name']),
+                            pair['course_id'], course_data, lang
+                        )
                 
                 # Add vertical spacing between blocks
                 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
@@ -443,26 +471,9 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             )
 
     # --- (5) Analyze + Quick Sync action buttons ---
-    # Task 1: Check for ignored files
-    total_ignored = 0
-    ignored_by_course = {}
-    if sync_pairs:
-        for pair in sync_pairs:
-            local_folder = pair.get('local_folder')
-            course_id = pair.get('course_id')
-            if local_folder and Path(local_folder).exists():
-                sm = SyncManager(local_folder, course_id, pair.get('course_name', ''), lang)
-                ignored = sm.get_ignored_files()
-                if ignored:
-                    ignored_by_course[pair['course_id']] = {
-                        'pair': pair,
-                        'files': ignored,
-                        'sync_manager': sm
-                    }
-                    total_ignored += len(ignored)
-                    
+    # ignored_by_course already computed above the course row loop
     if total_ignored > 0:
-        if st.button(f"🗑️ Manage Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
+        if st.button(f"🗑️ Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
             _ignored_files_dialog(ignored_by_course, lang)
 
     if sync_pairs:
@@ -652,21 +663,109 @@ def _render_sync_history(lang):
                 """, unsafe_allow_html=True)
 
 
-@st.dialog("Ignored Files", width="large")
+def _render_filetype_filter(all_files, filter_prefix):
+    """Shared filetype filter widget for ignored file dialogs.
+    
+    Args:
+        all_files: List of SyncFileInfo objects to extract extensions from.
+        filter_prefix: Unique prefix for session-state keys (e.g. 'ign_all' or 'ign_course').
+    
+    Returns:
+        Set of active (selected) extensions, or None if no extensions found.
+    """
+    # Extract unique extensions
+    ext_counts = defaultdict(int)
+    for f in all_files:
+        ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
+        ext_counts[ext] += 1
+
+    if not ext_counts:
+        return None
+
+    all_exts_sorted = sorted(ext_counts.keys())
+    
+    # Initialize "all" toggle
+    all_key = f"{filter_prefix}_filter_all"
+    if all_key not in st.session_state:
+        st.session_state[all_key] = True
+
+    # CSS for flex-wrap pills
+    st.markdown(f"""
+    <style>
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-{filter_prefix}_pills),
+    .st-key-{filter_prefix}_pills {{
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }}
+    .st-key-{filter_prefix}_pills div[data-testid="stHorizontalBlock"] {{
+        flex-wrap: wrap !important;
+        row-gap: 5px !important;
+        column-gap: 15px !important;
+    }}
+    .st-key-{filter_prefix}_pills div[data-testid="stColumn"] {{
+        width: auto !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+    }}
+    .st-key-{filter_prefix}_pills div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{
+        gap: 0 !important;
+    }}
+    .st-key-{filter_prefix}_pills label[data-baseweb="checkbox"] {{
+        margin-bottom: 0 !important;
+        padding-right: 0 !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    include_all = st.checkbox("All filetypes", key=all_key)
+
+    if not include_all:
+        with st.container(border=True, key=f"{filter_prefix}_pills"):
+            safe_len = min(len(all_exts_sorted), 90)
+            cols = st.columns(safe_len)
+            for i, ext in enumerate(all_exts_sorted):
+                ext_key = f"{filter_prefix}_ext_{ext}"
+                if ext_key not in st.session_state:
+                    st.session_state[ext_key] = True
+                with cols[i % safe_len]:
+                    st.checkbox(f"{ext} ({ext_counts[ext]})", key=ext_key)
+
+        active_exts = set()
+        for ext in all_exts_sorted:
+            if st.session_state.get(f"{filter_prefix}_ext_{ext}", True):
+                active_exts.add(ext)
+        return active_exts
+    else:
+        return set(all_exts_sorted)
+
+
+@st.dialog("All Ignored Files", width="large")
 def _ignored_files_dialog(ignored_by_course, lang):
     """Dialog to manage and restore files that were previously ignored."""
     st.markdown("""
         <style>
             div.st-key-ignored_list_scroll_container {
-                height: 55vh !important;
-                min-height: 55vh !important;
-                max-height: 55vh !important;
+                height: 50vh !important;
+                min-height: 50vh !important;
+                max-height: 50vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 padding-right: 5px;
             }
         </style>
     """, unsafe_allow_html=True)
+
+    # Collect all files for filetype filter
+    all_ignored_files = [
+        f for data in ignored_by_course.values() for f in data['files']
+    ]
+
+    # Filetype filter
+    active_exts = _render_filetype_filter(all_ignored_files, "ign_all")
+
+    st.markdown('<hr style="margin-top: 5px; margin-bottom: 10px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
     # Initialize state for all ignored files if not present
     for cid, data in ignored_by_course.items():
@@ -675,52 +774,69 @@ def _ignored_files_dialog(ignored_by_course, lang):
             if key not in st.session_state:
                 st.session_state[key] = False
 
-    # Collect keys
-    all_unignore_keys = [
-        f"unignore_{cid}_{f.canvas_file_id}"
-        for cid, data in ignored_by_course.items()
-        for f in data['files']
-    ]
+    # Collect keys (only for visible files based on filter)
+    all_unignore_keys = []
+    visible_unignore_keys = []
+    for cid, data in ignored_by_course.items():
+        for f in data['files']:
+            k = f"unignore_{cid}_{f.canvas_file_id}"
+            all_unignore_keys.append(k)
+            ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
+            if active_exts and ext in active_exts:
+                visible_unignore_keys.append(k)
 
     # Global Controls
     c1, c2, _ = st.columns([0.25, 0.25, 0.5])
     with c1:
         if st.button("Select All", use_container_width=True, key="ign_sa"):
-            for k in all_unignore_keys:
+            for k in visible_unignore_keys:
                 st.session_state[k] = True
             st.rerun()
     with c2:
         if st.button("Clear Selection", use_container_width=True, key="ign_ca"):
-            for k in all_unignore_keys:
+            for k in visible_unignore_keys:
                 st.session_state[k] = False
             st.rerun()
-
-    st.markdown("---")
 
     # List items
     with st.container(border=False, key="ignored_list_scroll_container"):
         for cid, data in ignored_by_course.items():
             pair = data['pair']
             friendly = friendly_course_name(pair['course_name'])
-            raw_name = pair['course_name']
             
-            with st.expander(f"📁 {friendly} ({raw_name})", expanded=True):
-                for f in data['files']:
+            # Filter files by active extensions
+            visible_files = []
+            for f in data['files']:
+                ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
+                if active_exts and ext in active_exts:
+                    visible_files.append(f)
+
+            if not visible_files:
+                continue
+
+            with st.expander(f"📁 {friendly} ({len(visible_files)} files)", expanded=True):
+                for f in visible_files:
                     key = f"unignore_{cid}_{f.canvas_file_id}"
                     icon = get_file_icon(f.canvas_filename)
-                    st.checkbox(f"{icon} {f.canvas_filename}", key=key)
+                    friendly_name = urllib.parse.unquote(f.canvas_filename)
+                    st.checkbox(f"{icon} {friendly_name}", key=key)
 
-    # Count checked
+    # Count checked (across ALL files, not just visible)
     checked_count = sum(1 for k in all_unignore_keys if st.session_state.get(k, False))
     
     st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
-    # Action Button
-    col_restore, col_cancel = st.columns([1, 1])
+    # Dynamic button text
+    if checked_count == 0:
+        btn_text = "Remove files from ignored list"
+    elif checked_count == 1:
+        btn_text = "Remove 1 file from ignored list"
+    else:
+        btn_text = f"Remove {checked_count} files from ignored list"
+
+    # Action Buttons — aligned horizontally
+    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="center")
     with col_restore:
-        # Dynamic Red button
-        btn_text = f"Remove {checked_count} file(s) from ignored list"
-        
         # Inject CSS to make primary button red if active
         if checked_count > 0:
             st.markdown("""<style>
@@ -744,7 +860,7 @@ def _ignored_files_dialog(ignored_by_course, lang):
                     if st.session_state.get(f"unignore_{cid}_{f.canvas_file_id}"):
                         to_restore.append(f.canvas_file_id)
                 if to_restore:
-                    sm.unignore_files(to_restore)
+                    sm.bulk_restore_files(to_restore)
                     files_restored += len(to_restore)
                     
             st.success(f"Successfully restored {files_restored} file(s)!")
@@ -755,8 +871,115 @@ def _ignored_files_dialog(ignored_by_course, lang):
             st.rerun()
 
     with col_cancel:
-        if st.button("Close", use_container_width=True):
+        if st.button("Close", use_container_width=True, key="ign_close"):
             for k in all_unignore_keys:
+                st.session_state.pop(k, None)
+            st.rerun()
+
+
+@st.dialog("Ignored Files", width="large")
+def _show_course_ignored_files(course_name, course_id, course_data, lang):
+    """Dialog to manage ignored files for a specific course."""
+    st.subheader(f"🚫 Ignored Files: {course_name}")
+
+    st.markdown("""
+        <style>
+            div.st-key-course_ignored_scroll {
+                height: 50vh !important;
+                min-height: 50vh !important;
+                max-height: 50vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding-right: 5px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    files = course_data['files']
+    sm = course_data['sync_manager']
+    prefix = f"cign_{course_id}"
+
+    # Filetype filter
+    active_exts = _render_filetype_filter(files, prefix)
+
+    st.markdown('<hr style="margin-top: 5px; margin-bottom: 10px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+
+    # Initialize state
+    all_keys = []
+    visible_keys = []
+    for f in files:
+        key = f"{prefix}_{f.canvas_file_id}"
+        if key not in st.session_state:
+            st.session_state[key] = False
+        all_keys.append(key)
+        ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
+        if active_exts and ext in active_exts:
+            visible_keys.append((key, f))
+
+    # Controls
+    c1, c2, _ = st.columns([0.25, 0.25, 0.5])
+    with c1:
+        if st.button("Select All", use_container_width=True, key=f"{prefix}_sa"):
+            for k, _ in visible_keys:
+                st.session_state[k] = True
+            st.rerun()
+    with c2:
+        if st.button("Clear Selection", use_container_width=True, key=f"{prefix}_ca"):
+            for k, _ in visible_keys:
+                st.session_state[k] = False
+            st.rerun()
+
+    # File list
+    with st.container(border=False, key="course_ignored_scroll"):
+        for key, f in visible_keys:
+            icon = get_file_icon(f.canvas_filename)
+            friendly_name = urllib.parse.unquote(f.canvas_filename)
+            st.checkbox(f"{icon} {friendly_name}", key=key)
+
+    # Count checked
+    checked_count = sum(1 for k in all_keys if st.session_state.get(k, False))
+
+    st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+
+    # Dynamic button text
+    if checked_count == 0:
+        btn_text = "Remove files from ignored list"
+    elif checked_count == 1:
+        btn_text = "Remove 1 file from ignored list"
+    else:
+        btn_text = f"Remove {checked_count} files from ignored list"
+
+    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="center")
+    with col_restore:
+        if checked_count > 0:
+            st.markdown("""<style>
+                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
+                    background-color: #e74c3c !important;
+                    border-color: #c0392b !important;
+                    color: white !important;
+                }
+                button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")):hover {
+                    background-color: #c0392b !important;
+                }
+            </style>""", unsafe_allow_html=True)
+
+        if st.button(btn_text, type="primary", disabled=(checked_count == 0),
+                     use_container_width=True, key=f"{prefix}_restore"):
+            to_restore = []
+            for f in files:
+                if st.session_state.get(f"{prefix}_{f.canvas_file_id}"):
+                    to_restore.append(f.canvas_file_id)
+            if to_restore:
+                sm.bulk_restore_files(to_restore)
+                st.success(f"Successfully restored {len(to_restore)} file(s)!")
+                for k in all_keys:
+                    st.session_state.pop(k, None)
+                time.sleep(1)
+                st.rerun()
+
+    with col_cancel:
+        if st.button("Close", use_container_width=True, key=f"{prefix}_close"):
+            for k in all_keys:
                 st.session_state.pop(k, None)
             st.rerun()
 
@@ -1356,17 +1579,29 @@ def _run_analysis(lang, sync_pairs):
         else:
             print(f"[DEBUG-QS] total_count={total_count} → jumping to 'syncing'!")
             st.session_state['sync_selections'] = sync_selections
-            # Persist the user's format/conversion toggle settings so that _run_sync's
-            # post-processing hooks (which read persistent_convert_* keys) work correctly.
-            # This mirrors exactly what the "Yes, Start Sync" confirmation dialog does.
-            st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
-            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
-            st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
-            st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
-            st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
-            st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
-            st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
-            st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+            # --- Load Sync Contract from DB for post-processing settings ---
+            # Try to load saved settings from the first course's sync_metadata.
+            # This ensures Quick Sync respects the exact settings used during initial download,
+            # even on a fresh session where session_state convert_* keys are empty.
+            _contract = {}
+            try:
+                first_pair = all_results[0]['pair']
+                _sm = SyncManager(first_pair['local_folder'], first_pair['course_id'], first_pair['course_name'])
+                _raw = _sm._load_metadata('sync_contract')
+                if _raw:
+                    import json
+                    _contract = json.loads(_raw)
+            except Exception:
+                pass  # Fall back to session_state defaults
+            
+            st.session_state['persistent_convert_zip'] = _contract.get('convert_zip', st.session_state.get('convert_zip', False))
+            st.session_state['persistent_convert_pptx'] = _contract.get('convert_pptx', st.session_state.get('convert_pptx', False))
+            st.session_state['persistent_convert_html'] = _contract.get('convert_html', st.session_state.get('convert_html', False))
+            st.session_state['persistent_convert_code'] = _contract.get('convert_code', st.session_state.get('convert_code', False))
+            st.session_state['persistent_convert_urls'] = _contract.get('convert_urls', st.session_state.get('convert_urls', False))
+            st.session_state['persistent_convert_word'] = _contract.get('convert_word', st.session_state.get('convert_word', False))
+            st.session_state['persistent_convert_video'] = _contract.get('convert_video', st.session_state.get('convert_video', False))
+            st.session_state['persistent_convert_excel'] = _contract.get('convert_excel', st.session_state.get('convert_excel', False))
             # Clear the quick-mode flag and jump straight to sync (no confirmation dialog needed)
             st.session_state.pop('sync_quick_mode', None)
             st.session_state['download_status'] = 'syncing'
@@ -1389,7 +1624,16 @@ def _show_analysis_review(lang):
     def handle_ignore(pair_idx, canvas_file_id, source_list_name, item):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
         sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
-        sm.ignore_file(canvas_file_id)
+        # Extract filename for UPSERT (works for new files not yet in DB)
+        if isinstance(item, tuple):
+            fname = item[0].display_name or item[0].filename if hasattr(item[0], 'filename') else ''
+        elif hasattr(item, 'canvas_filename'):
+            fname = item.canvas_filename
+        elif hasattr(item, 'filename'):
+            fname = item.display_name or item.filename
+        else:
+            fname = ''
+        sm.ignore_file(canvas_file_id, fname)
         
         # 1. Safely remove from origin list
         source_list = getattr(pair_data['result'], source_list_name)
@@ -1500,22 +1744,31 @@ def _show_analysis_review(lang):
             if isinstance(x, tuple): return x[0].id
             elif hasattr(x, 'canvas_file_id'): return x.canvas_file_id
             return x.id
+
+        def get_fname(x):
+            if isinstance(x, tuple):
+                return x[0].display_name or x[0].filename if hasattr(x[0], 'filename') else ''
+            elif hasattr(x, 'canvas_filename'):
+                return x.canvas_filename
+            elif hasattr(x, 'filename'):
+                return x.display_name or x.filename
+            return ''
             
         items_to_ignore = []
-        file_ids_to_ignore = []
+        file_ids_and_names = []
         
         for item in list(source_list):
             fid = get_id(item)
             chk_key = f"{item_key_prefix}_{pair_data['pair']['course_id']}_{fid}"
             if not st.session_state.get(chk_key, True):
                 items_to_ignore.append(item)
-                file_ids_to_ignore.append(fid)
+                file_ids_and_names.append((fid, get_fname(item)))
                 
         if not items_to_ignore:
             return
             
         sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
-        sm.bulk_ignore_files(file_ids_to_ignore)
+        sm.bulk_ignore_files(file_ids_and_names)
         
         if not hasattr(pair_data['result'], 'ignored_files'):
             pair_data['result'].ignored_files = []
@@ -1919,7 +2172,9 @@ def _show_analysis_review(lang):
             has_changes = result.new_files or result.updated_files or result.missing_files or result.deleted_on_canvas or result.locally_deleted_files
             
             # Build up-to-date status
-            uptodate_count = len(result.uptodate_files) + getattr(result, 'untracked_shortcuts', 0)
+            # Strictly use uptodate_files only — do NOT add untracked_shortcuts
+            # as those are already counted in new_files or other actionable categories
+            uptodate_count = len(result.uptodate_files)
             status_pill = ""
             if uptodate_count:
                 uptodate_label = get_text('sync_files_uptodate_count', lang, count=uptodate_count,
@@ -2140,6 +2395,39 @@ def _show_analysis_review(lang):
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
+    # --- Load Sync Contract defaults for first render ---
+    # Only pre-fill if the convert_* keys haven't been set yet in this session.
+    # This ensures the checkboxes reflect the DB contract on first load,
+    # but user changes within the session are preserved across reruns.
+    if '_sync_contract_loaded' not in st.session_state:
+        _review_contract = {}
+        try:
+            if all_results:
+                _first_pair = all_results[0]['pair']
+                _sm = SyncManager(_first_pair['local_folder'], _first_pair['course_id'], _first_pair['course_name'])
+                _raw_contract = _sm._load_metadata('sync_contract')
+                if _raw_contract:
+                    import json
+                    _review_contract = json.loads(_raw_contract)
+        except Exception:
+            pass
+        if _review_contract:
+            for _key in ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
+                         'convert_urls', 'convert_word', 'convert_video', 'convert_excel']:
+                # Overwrite directly to wipe any leftover state from previous syncs
+                st.session_state[_key] = _review_contract.get(_key, False)
+            st.session_state['file_filter'] = _review_contract.get('file_filter', 'all')
+            # Also sync the master toggle
+            _any_active = any(st.session_state.get(k, False) for k in
+                              ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
+                               'convert_urls', 'convert_word', 'convert_video', 'convert_excel'])
+            st.session_state['notebooklm_master'] = all(
+                st.session_state.get(k, False) for k in
+                ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
+                 'convert_urls', 'convert_word', 'convert_video', 'convert_excel']
+            )
+        st.session_state['_sync_contract_loaded'] = True
+
     TOTAL_NOTEBOOK_SUBS = 8
 
     def _sync_master_toggle_changed():
@@ -2271,93 +2559,94 @@ def _show_analysis_review(lang):
     total_active_files = sum(len(pd['result'].new_files) + len(pd['result'].updated_files) + len(pd['result'].missing_files) + len(pd['result'].locally_deleted_files) for pd in all_results)
     
     if total_active_files == 0:
-        st.error("All files are currently ignored. Please restore files to sync them.")
-        sync_btn_disabled = True
-    else:
-        sync_btn_disabled = False
-
-    col_sync, col_back, _ = st.columns([1.2, 1, 5])
-    with col_sync:
-        if st.button(get_text('sync_selected', lang), type="primary", use_container_width=True, disabled=sync_btn_disabled):
-            # Collect selections
-            sync_selections = []
-            for idx, res_data in enumerate(all_results):
-                result = res_data['result']
-                cid = res_data['pair']['course_id']
-                selected_new = [
-                    f for f in result.new_files
-                    if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
-                ]
-                selected_upd = [
-                    f for f, _ in result.updated_files
-                    if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
-                ]
-                selected_miss = [
-                    si for si in result.missing_files
-                    if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
-                ]
-                selected_locdel = [
-                    si for si in result.locally_deleted_files
-                    if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
-                ]
-                # Combine both missing and locally deleted files that the user opted to redownload
-                selected_miss.extend(selected_locdel)
-                                   
-                sync_selections.append({
-                    'pair_idx': idx,
-                    'res_data': res_data,
-                    'new': selected_new,
-                    'updates': selected_upd,
-                    'redownload': selected_miss,
-                    'ignore': [], # Let it pass empty, ignore was handled by immediate DB updates
-                })
-
-            # Total count & size for confirmation
-            total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
-            # Compute total byte size — new and updated CanvasFileInfo have .size,
-            # redownload items are SyncInfo; look up their size from canvas_files
-            total_bytes = 0
-            for s in sync_selections:
-                total_bytes += sum(f.size for f in s['new'] if hasattr(f, 'size'))
-                total_bytes += sum(f[0].size for f in s['updates'] if hasattr(f[0], 'size'))
-                # redownload items are SyncInfo objects — look up size via canvas_files_map
-                canvas_files_map = {f.id: f for f in s['res_data']['canvas_files']}
-                for si in s['redownload']:
-                    cf = canvas_files_map.get(si.canvas_file_id)
-                    if cf:
-                        total_bytes += getattr(cf, 'size', 0) or 0
-
-            if total_count == 0:
-                st.info(get_text('nothing_to_sync', lang))
-                st.stop()
-
-            # Disk space check (use first pair's folder)
-            first_folder = sync_selections[0]['res_data']['pair']['local_folder']
-            has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
-            if not has_space:
-                st.error(get_text('sync_insufficient_space', lang))
-                st.stop()
-
-            folders_count = len(set(
-                s['res_data']['pair']['local_folder'] for s in sync_selections
-                if s['new'] or s['updates'] or s['redownload']
-            ))
-            
-            # Extract destination folder from the first selection
-            dest_folder = "Multiple folders"
-            if folders_count == 1:
-                # Find the single folder used
-                for s in sync_selections:
-                    if s['new'] or s['updates'] or s['redownload']:
-                        dest_folder = short_path(s['res_data']['pair']['local_folder'])
-                        break
-            
-            _show_sync_confirmation(lang, sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
-
-    with col_back:
-        if st.button(get_text('back_btn', lang), use_container_width=True):
+        st.success("All pending files have been addressed or ignored. You are fully up to date!")
+        if st.button("Done - Return to Front Page", type="primary", use_container_width=True):
             _cleanup_sync_state()
             st.rerun()
+    else:
+
+        col_sync, col_back, _ = st.columns([1.2, 1, 5])
+        with col_sync:
+            if st.button(get_text('sync_selected', lang), type="primary", use_container_width=True):
+                # Collect selections
+                sync_selections = []
+                for idx, res_data in enumerate(all_results):
+                    result = res_data['result']
+                    cid = res_data['pair']['course_id']
+                    selected_new = [
+                        f for f in result.new_files
+                        if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
+                    ]
+                    selected_upd = [
+                        f for f, _ in result.updated_files
+                        if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
+                    ]
+                    selected_miss = [
+                        si for si in result.missing_files
+                        if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
+                    ]
+                    selected_locdel = [
+                        si for si in result.locally_deleted_files
+                        if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
+                    ]
+                    # Combine both missing and locally deleted files that the user opted to redownload
+                    selected_miss.extend(selected_locdel)
+                                       
+                    sync_selections.append({
+                        'pair_idx': idx,
+                        'res_data': res_data,
+                        'new': selected_new,
+                        'updates': selected_upd,
+                        'redownload': selected_miss,
+                        'ignore': [], # Let it pass empty, ignore was handled by immediate DB updates
+                    })
+    
+                # Total count & size for confirmation
+                total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
+                # Compute total byte size — new and updated CanvasFileInfo have .size,
+                # redownload items are SyncInfo; look up their size from canvas_files
+                total_bytes = 0
+                for s in sync_selections:
+                    total_bytes += sum(f.size for f in s['new'] if hasattr(f, 'size'))
+                    total_bytes += sum(f[0].size for f in s['updates'] if hasattr(f[0], 'size'))
+                    # redownload items are SyncInfo objects — look up size via canvas_files_map
+                    canvas_files_map = {f.id: f for f in s['res_data']['canvas_files']}
+                    for si in s['redownload']:
+                        cf = canvas_files_map.get(si.canvas_file_id)
+                        if cf:
+                            total_bytes += getattr(cf, 'size', 0) or 0
+    
+                if total_count == 0:
+                    st.info(get_text('nothing_to_sync', lang))
+                    st.stop()
+    
+                # Disk space check (use first pair's folder)
+                first_folder = sync_selections[0]['res_data']['pair']['local_folder']
+                has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
+                if not has_space:
+                    st.error(get_text('sync_insufficient_space', lang))
+                    st.stop()
+    
+                folders_count = len(set(
+                    s['res_data']['pair']['local_folder'] for s in sync_selections
+                    if s['new'] or s['updates'] or s['redownload']
+                ))
+                
+                # Extract destination folder from the first selection
+                dest_folder = "Multiple folders"
+                if folders_count == 1:
+                    # Find the single folder used
+                    for s in sync_selections:
+                        if s['new'] or s['updates'] or s['redownload']:
+                            dest_folder = short_path(s['res_data']['pair']['local_folder'])
+                            break
+                
+                _show_sync_confirmation(lang, sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+
+            with col_back:
+                if st.button(get_text('back_btn', lang), use_container_width=True):
+                    _cleanup_sync_state()
+                    st.rerun()
 
 
 # ---- Confirmation dialog ----
@@ -2622,6 +2911,27 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
             st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
             st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
             st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+            # Save the updated Sync Contract back to ALL courses' sync_metadata
+            try:
+                import json
+                _updated_contract = json.dumps({
+                    'file_filter': st.session_state.get('file_filter', 'all'),
+                    'convert_zip': st.session_state.get('convert_zip', False),
+                    'convert_pptx': st.session_state.get('convert_pptx', False),
+                    'convert_html': st.session_state.get('convert_html', False),
+                    'convert_code': st.session_state.get('convert_code', False),
+                    'convert_urls': st.session_state.get('convert_urls', False),
+                    'convert_word': st.session_state.get('convert_word', False),
+                    'convert_video': st.session_state.get('convert_video', False),
+                    'convert_excel': st.session_state.get('convert_excel', False),
+                })
+                for _s in sync_selections:
+                    _p = _s['res_data']['pair']
+                    _sm = SyncManager(_p['local_folder'], _p['course_id'], _p['course_name'])
+                    _sm._save_metadata('sync_contract', _updated_contract)
+            except Exception:
+                pass  # Non-fatal
+            st.session_state.pop('_sync_contract_loaded', None)
             st.rerun()
     with col_no:
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
@@ -3966,7 +4276,7 @@ def _cleanup_sync_state():
         'synced_count', 'synced_bytes', 'sync_cancel_requested', 'sync_cancelled_file_count',
         'sync_errors', 'sync_quick_mode', 'sync_single_pair_idx',
         'sync_confirm_count', 'sync_confirm_size', 'sync_confirm_folders',
-        'sync_cancelled', 'is_post_processing'
+        'sync_cancelled', 'is_post_processing', '_sync_contract_loaded'
     ]:
         st.session_state.pop(key, None)
 

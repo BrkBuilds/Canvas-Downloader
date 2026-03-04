@@ -200,12 +200,19 @@ class SyncManager:
                     now_iso = datetime.now(timezone.utc).isoformat()
                     cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_sync', now_iso))
                     
-                    # Atomic upsert: INSERT OR REPLACE per row (no DELETE)
+                    # Atomic upsert: INSERT ON CONFLICT per row (preserves is_ignored)
                     for file_id_str, info in manifest.get('files', {}).items():
                         cursor.execute('''
-                            INSERT OR REPLACE INTO sync_manifest 
+                            INSERT INTO sync_manifest 
                             (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(canvas_file_id) DO UPDATE SET
+                                canvas_filename = excluded.canvas_filename,
+                                local_path = excluded.local_path,
+                                canvas_updated_at = excluded.canvas_updated_at,
+                                downloaded_at = excluded.downloaded_at,
+                                original_size = excluded.original_size,
+                                original_md5 = excluded.original_md5
                         ''', (
                             info.get('canvas_file_id', int(file_id_str)),
                             info.get('canvas_filename', ''),
@@ -600,7 +607,20 @@ class SyncManager:
         return result
 
     def detect_structure(self) -> str:
-        """Detect whether this course folder uses 'modules' (subfolders) or 'flat' structure."""
+        """Detect whether this course folder uses 'modules' (subfolders) or 'flat' structure.
+        
+        Priority:
+        1. Check sync_metadata for saved download_mode (set during initial download / Sync Run #0)
+        2. Inspect manifest paths for subdirectory separators
+        3. Fall back to filesystem scan
+        """
+        # 1. Check saved metadata first (authoritative if present)
+        saved_mode = self._load_metadata('download_mode')
+        if saved_mode in ('flat', 'modules', 'files'):
+            # 'files' (folder-structure) is treated as 'modules' for sync purposes
+            return 'modules' if saved_mode in ('modules', 'files') else 'flat'
+
+        # 2. Inspect manifest paths
         manifest = self.load_manifest()
         files_section = manifest.get('files', {})
         for file_id, entry in files_section.items():
@@ -610,11 +630,76 @@ class SyncManager:
                 if len(parts) > 1:
                     return 'modules'
         
+        # 3. Filesystem heuristic
         if self.local_path.exists():
             for item in self.local_path.iterdir():
                 if item.is_dir() and not item.name.startswith('.'):
                     return 'modules'
         return 'flat'
+
+    def _save_metadata(self, key: str, value: str) -> bool:
+        """Save a key-value pair to the sync_metadata table."""
+        if os.name == 'nt':
+            self._windows_unhide_file(self.db_path)
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute(
+                    'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
+                    (key, value)
+                )
+                conn.commit()
+            return True
+        except sqlite3.Error as e:
+            logger.warning(f"Error saving metadata '{key}': {e}")
+            return False
+        finally:
+            if os.name == 'nt':
+                self._windows_hide_file(self.db_path)
+
+    def _load_metadata(self, key: str) -> str | None:
+        """Load a value from the sync_metadata table. Returns None if not found."""
+        try:
+            if os.name == 'nt':
+                self._windows_unhide_file(self.db_path)
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(
+                    'SELECT value FROM sync_metadata WHERE key = ?', (key,)
+                )
+                row = cursor.fetchone()
+                return row[0] if row else None
+        except sqlite3.Error:
+            return None
+        finally:
+            if os.name == 'nt':
+                try:
+                    self._windows_hide_file(self.db_path)
+                except Exception:
+                    pass
+
+    def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
+                                local_relative_path: str, canvas_updated_at: str,
+                                original_size: int, local_md5: str = "") -> bool:
+        """Record a single downloaded file directly to the SQLite DB.
+        
+        This is the 'Sync Run #0' entry point — called from the Download engine
+        immediately after each successful file write. Bypasses the in-memory
+        manifest dict entirely to avoid race conditions in async/concurrent code.
+        
+        Uses INSERT OR REPLACE so re-downloads of the same file_id are idempotent.
+        The is_ignored flag is preserved via a sub-query to avoid overwriting
+        user ignore decisions from a prior partial download.
+        """
+        info = {
+            'canvas_file_id': canvas_file_id,
+            'canvas_filename': canvas_filename,
+            'local_path': local_relative_path,
+            'canvas_updated_at': canvas_updated_at or datetime.now(timezone.utc).isoformat(),
+            'downloaded_at': datetime.now(timezone.utc).isoformat(),
+            'original_size': original_size,
+            'is_ignored': False,
+            'original_md5': local_md5
+        }
+        return self._save_single_file_to_db(info)
 
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry."""
@@ -682,7 +767,12 @@ class SyncManager:
         return manifest
         
     def _save_single_file_to_db(self, info: dict) -> bool:
-        """Save a single file entry to the SQLite DB."""
+        """Save a single file entry to the SQLite DB.
+        
+        Uses INSERT ... ON CONFLICT to preserve is_ignored flag.
+        The UPDATE clause deliberately omits is_ignored so that
+        re-downloads and sync-run-0 writes never wipe user choices.
+        """
         import time
         max_retries = 3
         
@@ -694,9 +784,16 @@ class SyncManager:
                 with sqlite3.connect(self.db_path) as conn:
                     cursor = conn.cursor()
                     cursor.execute('''
-                        INSERT OR REPLACE INTO sync_manifest 
+                        INSERT INTO sync_manifest 
                         (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(canvas_file_id) DO UPDATE SET
+                            canvas_filename = excluded.canvas_filename,
+                            local_path = excluded.local_path,
+                            canvas_updated_at = excluded.canvas_updated_at,
+                            downloaded_at = excluded.downloaded_at,
+                            original_size = excluded.original_size,
+                            original_md5 = excluded.original_md5
                     ''', (
                         info.get('canvas_file_id'),
                         info.get('canvas_filename', ''),
@@ -782,8 +879,12 @@ class SyncManager:
             logger.warning(f"Error getting ignored files: {e}")
         return ignored
 
-    def ignore_file(self, canvas_file_id: int) -> bool:
-        """Mark a file as ignored directly in the SQLite DB."""
+    def ignore_file(self, canvas_file_id: int, canvas_filename: str = "") -> bool:
+        """Mark a file as ignored in the SQLite DB using UPSERT.
+        
+        If the file already exists in the manifest, UPDATE its is_ignored flag.
+        If the file is brand-new (not yet downloaded), INSERT a stub row with is_ignored=1.
+        """
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
             
@@ -791,8 +892,11 @@ class SyncManager:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
-                    'UPDATE sync_manifest SET is_ignored = 1 WHERE canvas_file_id = ?', 
-                    (canvas_file_id,)
+                    '''INSERT INTO sync_manifest 
+                       (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
+                       VALUES (?, ?, '', '', '', 0, 1, '')
+                       ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
+                    (canvas_file_id, canvas_filename)
                 )
                 conn.commit()
             success = True
@@ -826,20 +930,36 @@ class SyncManager:
                 
         return success
 
-    def bulk_ignore_files(self, file_ids: list[int]) -> bool:
-        """Mark multiple files as ignored directly in the SQLite DB within a transaction."""
-        if not file_ids:
+    def bulk_ignore_files(self, file_ids_and_names: list) -> bool:
+        """Mark multiple files as ignored in the SQLite DB using UPSERT.
+        
+        Args:
+            file_ids_and_names: List of (canvas_file_id, canvas_filename) tuples,
+                                OR list of plain ints (legacy compat — filename defaults to '').
+        """
+        if not file_ids_and_names:
             return True
             
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
+        
+        # Normalize input: accept both list[int] and list[tuple]
+        rows = []
+        for item in file_ids_and_names:
+            if isinstance(item, (list, tuple)):
+                rows.append((item[0], item[1] if len(item) > 1 else ''))
+            else:
+                rows.append((item, ''))
             
         success = False
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.executemany(
-                    'UPDATE sync_manifest SET is_ignored = 1 WHERE canvas_file_id = ?', 
-                    [(fid,) for fid in file_ids]
+                    '''INSERT INTO sync_manifest 
+                       (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
+                       VALUES (?, ?, '', '', '', 0, 1, '')
+                       ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
+                    rows
                 )
                 conn.commit()
             success = True
