@@ -43,7 +43,8 @@
     - [x] **Expander Persistence**: Fixed Trash expander collapse using `keep_ignored_open` state flag.
     - [x] **Analysis Progress**: Ported standard download progress bar to the analysis phase.
     - [x] **Terminal Clarity**: Real-time log rendering decoupled from UI throttling.
-- [x] **Sync Review UI Final Polish** (2026-02-28):
+- [x] **Sync Review UI Final Polish** (2026-02-28 & 2026-03-03):
+    - [x] **Quick Sync Interceptor Full Integration**: Fixed Quick Sync bypassing logic by including `locally_deleted_files` correctly in the `redownload` payload, persisting post-processing flags, and enforcing strict session state resets on invocation.
     - [x] **Dynamic Counters**: Live selection tracking (`selected / total`) in expander titles.
     - [x] **Batch Sync Crash Fix**: Resolved `StreamlitDuplicateElementKey` bug by implementing dynamic container keys (`cat_new_{course.id}`) and wildcard CSS pseudo-element injection.
     - [x] **Phase 1 Global Cancel**: Added a unified "Cancel Analysis" button to safely abort multi-course Canvas scanning.

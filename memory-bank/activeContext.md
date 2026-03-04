@@ -4,6 +4,11 @@
 - **Atomic Symbiosis & Cancel UX Overhaul**: Concluded a massive restructuring of cancel safety across the app. Resolved the "Premature Commit" DB bug by implementing an atomic `.part` file download pattern and strictly gating manifest writes. Rebuilt the entire cancel UI infrastructure with instant callbacks, persistent buttons, and an 8-loop interruption system for Win32COM processors.
 
 ## Recent Changes (Session 2026-03-03 - UI Polish)
+- **Quick Sync Flow Repair (`sync_ui.py`)**:
+  - **Payload Completion**: Fixed a bug where `AnalysisResult.locally_deleted_files` was fundamentally ignored by the Quick Sync interceptor, causing courses with only local deletions to incorrectly fall back to the Review page (reporting `total_count = 0`). Locally deleted files are now correctly merged into the `redownload` payload matching the normal flow.
+  - **State Key Consistency**: Synchronized session state checkbox keys in the Quick Sync flow to use `cid` (Course ID) rather than `idx` (loop index), matching the normal UI flow to prevent toggle desync on back-navigation.
+  - **Post-Processing Variables**: Added persistence hooks (`persistent_convert_*`) to the Quick Sync flow, ensuring background conversions (e.g., zip extraction, PDF rendering) aren't bypassed.
+  - **Cancel Guard Reset**: Enforced a nuclear reset of four `cancel_requested` permutations directly inside the "Analyze" and "Quick Sync" button triggers to prevent stale states from silently aborting the analysis loop on iteration 0.
 - **Dynamic Download Headers (`app.py` & `translations.py`)**:
   - Replaced the hardcoded "Step 3: Downloading..." success header with conditional rendering tied to `st.session_state['download_status']`.
   - Added new `step4_download_header` containing "Step 4: Complete!" to English and Danish translation dictionaries to accurately reflect the 'done' state.
