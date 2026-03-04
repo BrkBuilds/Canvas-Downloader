@@ -1,7 +1,30 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Unified Blue Status Indicator & Phase 2 UI Sync**: Successfully resolved the UI status desynchronization where filename text lagged behind the terminal log. Ported the real-time blue `#38bdf8` status indicator to all download and post-processing phases across the entire application.
+- **Active Feature Fixes**: Continuing to refine user workflows, focusing on unifying state management between Sync engines and Download engines.
+
+## Recent Changes (Session 2026-03-04 - Sync Contract & Atomic Execution)
+- **Zero-Amnesia UPSERTs (`sync_manager.py`)**:
+  - Replaced `INSERT OR REPLACE` with `INSERT INTO ... ON CONFLICT(canvas_file_id) DO UPDATE SET` across both the scalar `_save_single_file_to_db` and bulk `save_manifest` methods.
+  - Explicitly excluded the `is_ignored` column from the `UPDATE` payload, mathematically guaranteeing that a user's Review Phase ignore-decisions survive both Sync Run #0 pipeline writes and subsequent sync executions.
+- **The Sync Contract Architecture (`sync_metadata`)**:
+  - Engineered a persistent configuration state. The Download pipeline now packages `file_filter` alongside all 8 `convert_*` post-processing booleans into a JSON blob and commits it to the SQLite `sync_metadata` table under the `sync_contract` key.
+  - Quick Sync universally queries this DB contract before falling back to `session_state` defaults, guaranteeing perfect structural replication on 1-click runs.
+- **UI Contract Binding (`sync_ui.py`)**:
+  - Overhauled `_show_analysis_review` to auto-load the course's Sync Contract and unconditionally overwrite the active `session_state` conversion keys on first render. 
+  - Validated that downstream DB saves perfectly harvest user mutations from the checkboxes during the "Yes, Start Sync" execution phase.
+- **Zero-Files UX Revamp**:
+  - Eliminated the `st.error` dead-end that occurred when a user ignored the last actionable file in a payload. Replaced it with a positive `st.success` exit ramp and a "Done - Return to Front Page" button that cleans state and triggers `st.rerun()`.
+
+## Recent Changes (Session 2026-03-04 - Sync Run #0 Handoff Architecture)
+- **DB Population During Initial Download**:
+  - Bridged the disconnect between the Download Engine (`canvas_logic.py`) and Sync Engine (`sync_manager.py`). The Download Engine now instantiates the `SyncManager` and populates `.canvas_sync.db` in real-time as files download.
+  - Implemented `record_downloaded_file()` in `SyncManager` to perform direct, concurrent SQLite writes (bypassing the in-memory dict) immediately after atomic `.part` renames.
+- **Authoritative Structure Detection**:
+  - Created a `sync_metadata` table to persistently store the selected `download_mode` ('flat', 'modules', 'files') at the end of the initial download.
+  - Upgraded `detect_structure()` to query this metadata as the absolute source of truth before falling back to filesystem heuristics.
+- **Safety & Purity Guards**:
+  - Preserved cancellation purity by strictly recording DB entries *after* 100% byte verification and `.part` rename phase. Cancelled connections never reach the SQLite write phase.
 
 ## Recent Changes (Session 2026-03-04 - Settings Redesign & Debug Persist)
 - **Settings Modal UI ("Card" Layout)**:

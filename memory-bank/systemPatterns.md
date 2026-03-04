@@ -55,6 +55,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Sniper Retry UI Bypassing**:
     - *Problem*: Retrying failed downloads forces a full multi-minute Canvas analysis phase.
     - *Solution*: Manually bridge Streamlit states on button click (`download_status = 'running'`), zero out success/fail counters, but leave `courses_to_download` and `files_to_download` cached variables intact. This seamlessly fast-forwards the UI directly back into execution mode.
+- **Zero-Files UX Exit Ramp Pattern**:
+    - *Problem*: When a user manually ignores the remainder of an execution payload (or the engine naturally diffs out all files), rendering a red `st.error` alert and blocking progress creates a UX dead-end that feels like a failure.
+    - *Solution*: Intercept `total_active_files == 0` loops and render a celebratory `st.success` message. Replace the disabled actionable loops with a primary `st.button` ("Return to Front Page") that safely executes `_cleanup_sync_state()` and routes vertically via `st.rerun()`.
 
 ## Synchronous API Integration Patterns (Win32COM)
 - **COM Application Context Managers**:
@@ -90,9 +93,15 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 
 ## Synchronization Strategy & Data Integrity
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
+- **Sync Run #0 (Download-to-Sync Handoff)**:
+    - *Problem*: The initial Download engine (`canvas_logic.py`) merely wrote files to disk, bypassing the Sync DB. When the Sync tab later analyzed the folder, the manifest was empty, causing all files (even manually deleted ones) to appear as "New" rather than "Locally Deleted".
+    - *Solution*: Threaded the `SyncManager` directly into the `canvas_logic.py` async download loop. Immediately after an atomic download succeeds, `sm.record_downloaded_file()` performs a direct SQLite write (bypassing the in-memory dictionary for thread/async safety). The chosen `download_mode` ('flat' or 'modules') is saved to the new `sync_metadata` table, ensuring the Sync engine inherits a perfect state replication (Sync Run #0) perfectly synchronized with the user's initial choices.
+- **The Sync Contract (Persistent UI Configurations)**:
+    - *Problem*: File format tracking (NotebookLM toggles) previously lived in ephemeral `session_state`, forcing users to remember and re-click options every time they synced.
+    - *Solution*: Built a definitive UI/DB binding contract. The initial download dumps all `convert_*` flags and the `file_filter` array into a JSON text blob committed securely to the `sync_metadata` table under `sync_contract`. `Quick Sync All` flows universally query this SQLite blob before falling back to `session_state` defaults, mathematically guaranteeing deterministic post-processing environments from Run 1 to Run N.
 - **Atomic Symbiosis Pattern**:
-    - *Problem*: Crashes, immediate cancellations, or network failures during file downloads historically corrupted the SQLite manifest or left halfway-written files on disk, leading to "Cancel Ghosting" (0 files to sync on retry).
-    - *Solution 1 (Atomic Upserts)*: Replaced destructive `DELETE FROM` bulk sweeps with per-row `INSERT OR REPLACE` upserts in `save_manifest()`.
+    - *Problem*: Crashes, immediate cancellations, or network failures during file downloads historically corrupted the SQLite manifest or left halfway-written files on disk, leading to "Cancel Ghosting" (0 files to sync on retry). Furthermore, destructive DB re-writes regularly wiped the `is_ignored` flag selected by users during previous reviews.
+    - *Solution 1 (Zero-Amnesia Upserts)*: Eliminated bulk `DELETE FROM` query routines tracking the manifest. Reengineered scalar and bulk saves to exclusively utilize `INSERT INTO ... ON CONFLICT(canvas_file_id) DO UPDATE SET ...` while specifically excluding the `is_ignored` column from the excluded target block.
     - *Solution 2 (The `.part` Pattern)*: All active downloads append a `.part` extension to the filename during streaming. Cancel checks fire every 1MB chunk. If interrupted or cancelled, the `.part` file is unlinked. The file is only atomically renamed to its final extension upon 100% byte verification.
     - *Solution 3 (Semantic Purity Guards)*: DB commit loops (`save_manifest` and `_save_single_file_to_db`) strictly occur *after* all physical disk verification is complete, and are shielded by top-level execution guards (e.g., `if st.session_state.sync_cancelled: st.rerun()`) to ensure zero database mutations occur during a cancelled session.
 - **Negative ID Pattern**: Synthetic shortcuts (Pages, ExternalUrls, ExternalTools) are assigned `id = -int(item.id)`. This keeps them unique and prevents primary key collisions with physical Canvas `File` objects in SQLite.

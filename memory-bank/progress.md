@@ -10,6 +10,11 @@
     - [x] **Card UI**: Refactored the `⚙️ Settings` modal into discrete, border-based Cards to eliminate vertical dead space.
     - [x] **Pixel Perfection**: Consolidated subheaders/captions into custom HTML blocks, injected `-20px` bottom margins to physically pull the Streamlit slider upward against default padding, and styled the track `#38bdf8`.
     - [x] **JSON Storage**: Wired `debug_mode` toggle state directly to `canvas_downloader_settings.json` for persistence across sessions.
+- [x] **Sync Contract & Atomic Execution Fixes** (2026-03-04):
+    - [x] **Zero-Amnesia UPSERTs**: Secured `save_manifest` bulk writes and `_save_single_file_to_db` by switching from `INSERT OR REPLACE` to `INSERT ... ON CONFLICT DO UPDATE SET` explicitly excluding `is_ignored` to permanently preserve user Review phase decisions.
+    - [x] **The Sync Contract Architecture**: Instantiated a persistent JSON blob in `sync_metadata` capturing the precise `post_processing_settings` and `file_filter` array used during the initial download.
+    - [x] **Review UI Pre-filling**: Engineered `_show_analysis_review` to auto-load the Sync Contract on first frame render, perfectly aligning the Session State checkboxes with the course's historical conversion configuration.
+    - [x] **Zero Actionable Files UX**: Replaced the terminal `st.error` dead-end with a positive `st.success` exit ramp ("Return to Front Page") when a user manually ignores the remainder of a sync payload.
 - [x] **Unified UI Status & Desync Fix** (2026-03-04):
     - [x] **Desync Resolution**: Segregated filename status updates from throttled UI blocks in Phase 2.
     - [x] **Universal Visibility**: Ported blue `#38bdf8` status text to all 14 post-processing loops cross-app.
