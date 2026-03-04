@@ -525,6 +525,12 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                      key="btn_analyze",
                      use_container_width=True,
                      disabled=not bool(sync_pairs)):
+            # Nuclear reset of all cancel flags — stale flags from a previous download/sync
+            # would break the analysis loop on the very first iteration, producing zero results.
+            st.session_state['cancel_requested'] = False
+            st.session_state['sync_cancelled'] = False
+            st.session_state['sync_cancel_requested'] = False
+            st.session_state['download_cancelled'] = False
             st.session_state['step'] = 4
             st.session_state['download_status'] = 'analyzing'
             st.session_state.pop('sync_single_pair_idx', None)
@@ -543,6 +549,13 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                      type="primary",
                      use_container_width=True,
                      disabled=not bool(sync_pairs)):
+            # Nuclear reset of all cancel flags — stale flags from a previous download/sync
+            # would break the analysis loop on the very first iteration, producing zero results
+            # and causing Quick Sync to silently fall back to the Review page.
+            st.session_state['cancel_requested'] = False
+            st.session_state['sync_cancelled'] = False
+            st.session_state['sync_cancel_requested'] = False
+            st.session_state['download_cancelled'] = False
             st.session_state['step'] = 4
             st.session_state['download_status'] = 'analyzing'
             st.session_state['sync_quick_mode'] = True
@@ -1303,18 +1316,26 @@ def _run_analysis(lang, sync_pairs):
 
     # Quick Sync mode — skip review and go straight to sync
     if st.session_state.get('sync_quick_mode'):
-        # Auto-select all new, updated, and MISSING files
+        # Auto-select all new, updated, locally deleted, and missing files
         sync_selections = []
         for idx, res_data in enumerate(all_results):
             result = res_data['result']
+            cid = res_data['pair']['course_id']
             
             # Set session state keys for UI consistency (if user goes back)
+            # Use cid (course_id) to match the normal Review flow's key pattern
             for f in result.new_files:
-                st.session_state[f'sync_new_{idx}_{f.id}'] = True
+                st.session_state[f'sync_new_{cid}_{f.id}'] = True
             for f, _ in result.updated_files:
-                st.session_state[f'sync_upd_{idx}_{f.id}'] = True
+                st.session_state[f'sync_upd_{cid}_{f.id}'] = True
             for mf in result.missing_files:
-                st.session_state[f'sync_miss_{idx}_{mf.canvas_file_id}'] = True
+                st.session_state[f'sync_miss_{cid}_{mf.canvas_file_id}'] = True
+            for si in result.locally_deleted_files:
+                st.session_state[f'sync_locdel_{cid}_{si.canvas_file_id}'] = True
+            
+            # Combine missing + locally deleted into 'redownload', mirroring the normal
+            # Review flow at lines 2299-2304 (selected_miss.extend(selected_locdel))
+            redownload_list = list(result.missing_files) + list(result.locally_deleted_files)
             
             sync_selections.append({
                 'pair_idx': idx,
@@ -1322,7 +1343,7 @@ def _run_analysis(lang, sync_pairs):
                 'new': list(result.new_files),
                 # Note: updated_files is list of tuples (canvas_file, local_file)
                 'updates': [f for f, _ in result.updated_files],
-                'redownload': list(result.missing_files),
+                'redownload': redownload_list,
                 'ignore': [],
             })
             
@@ -1333,10 +1354,21 @@ def _run_analysis(lang, sync_pairs):
             st.session_state.pop('sync_quick_mode', None)
             st.session_state['download_status'] = 'analyzed'
         else:
+            print(f"[DEBUG-QS] total_count={total_count} → jumping to 'syncing'!")
             st.session_state['sync_selections'] = sync_selections
-            # Skip 'confirming' step too? 
-            # User said "then download progress bar comes up".
-            # So we skip confirm and go to 'syncing'.
+            # Persist the user's format/conversion toggle settings so that _run_sync's
+            # post-processing hooks (which read persistent_convert_* keys) work correctly.
+            # This mirrors exactly what the "Yes, Start Sync" confirmation dialog does.
+            st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
+            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
+            st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
+            st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
+            st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
+            st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
+            st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
+            st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+            # Clear the quick-mode flag and jump straight to sync (no confirmation dialog needed)
+            st.session_state.pop('sync_quick_mode', None)
             st.session_state['download_status'] = 'syncing'
     else:
         st.session_state['download_status'] = 'analyzed'
