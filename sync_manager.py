@@ -66,6 +66,7 @@ MANIFEST_FILENAME = ".canvas_sync_manifest.json"
 DB_FILENAME = ".canvas_sync.db"
 SYNC_PAIRS_FILENAME = "canvas_sync_pairs.json"
 SYNC_HISTORY_FILENAME = "canvas_sync_history.json"
+SAVED_GROUPS_FILENAME = "saved_sync_groups.json"
 
 
 class SyncManager:
@@ -1035,6 +1036,139 @@ class SyncHistoryManager:
                 json.dump(history, f, indent=2, ensure_ascii=False)
         except IOError as e:
             logger.warning(f"Error saving sync history: {e}")
+
+
+# --- Saved Sync Groups Manager ---
+
+class SavedGroupsManager:
+    """Manages saved sync groups (reusable sets of course/folder pairs).
+    
+    Persists groups to a JSON file so users can swap between semesters
+    without reconfiguring folders.
+    """
+    
+    def __init__(self, config_dir: str):
+        """
+        Args:
+            config_dir: Directory where config files are stored
+        """
+        self.groups_path = Path(config_dir) / SAVED_GROUPS_FILENAME
+    
+    def load_groups(self) -> list[dict]:
+        """Load all saved groups from disk.
+        
+        Returns:
+            List of group dicts with keys: group_id, group_name, pairs
+        """
+        if not self.groups_path.exists():
+            return []
+        try:
+            with open(self.groups_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            groups = data.get('groups', [])
+            if not isinstance(groups, list):
+                return []
+            return groups
+        except (json.JSONDecodeError, IOError):
+            return []
+    
+    def _save_all(self, groups: list[dict]):
+        """Write the full groups list to disk."""
+        try:
+            with open(self.groups_path, 'w', encoding='utf-8') as f:
+                json.dump({'groups': groups}, f, indent=2, ensure_ascii=False)
+        except IOError as e:
+            logger.warning(f"Error saving sync groups: {e}")
+    
+    def save_group(self, name: str, pairs: list[dict]) -> dict:
+        """Save a new group.
+        
+        Args:
+            name: Human-readable group name (e.g. 'Fall 2025')
+            pairs: List of pair dicts with keys: local_folder, course_id, course_name
+        
+        Returns:
+            The newly created group dict
+        """
+        import uuid
+        groups = self.load_groups()
+        new_group = {
+            'group_id': f"grp_{uuid.uuid4().hex}",
+            'group_name': name.strip(),
+            'pairs': [
+                {
+                    'local_folder': p.get('local_folder', ''),
+                    'course_id': p.get('course_id'),
+                    'course_name': p.get('course_name', ''),
+                }
+                for p in pairs
+            ],
+        }
+        groups.append(new_group)
+        self._save_all(groups)
+        return new_group
+    
+    def delete_group(self, group_id: str) -> bool:
+        """Delete a group by its ID.
+        
+        Returns:
+            True if found and deleted, False otherwise
+        """
+        groups = self.load_groups()
+        original_len = len(groups)
+        groups = [g for g in groups if g.get('group_id') != group_id]
+        if len(groups) == original_len:
+            return False
+        self._save_all(groups)
+        return True
+    
+    def update_group(self, group_id: str, new_data: dict) -> bool:
+        """Update an existing group's name and/or pairs.
+        
+        Args:
+            group_id: The ID of the group to update
+            new_data: Dict with optional keys 'group_name' and 'pairs'
+        
+        Returns:
+            True if found and updated, False otherwise
+        """
+        groups = self.load_groups()
+        for g in groups:
+            if g.get('group_id') == group_id:
+                if 'group_name' in new_data:
+                    g['group_name'] = new_data['group_name'].strip()
+                if 'pairs' in new_data:
+                    g['pairs'] = [
+                        {
+                            'local_folder': p.get('local_folder', ''),
+                            'course_id': p.get('course_id'),
+                            'course_name': p.get('course_name', ''),
+                        }
+                        for p in new_data['pairs']
+                    ]
+                self._save_all(groups)
+                return True
+        return False
+    
+    def matches_existing_group(self, pairs: list[dict]) -> bool:
+        """Check if the given pairs exactly match any saved group.
+        
+        Comparison is based on sorted (course_id, local_folder) tuples,
+        ignoring course_name and ordering.
+        """
+        current_sig = self._pairs_signature(pairs)
+        for group in self.load_groups():
+            if self._pairs_signature(group.get('pairs', [])) == current_sig:
+                return True
+        return False
+    
+    @staticmethod
+    def _pairs_signature(pairs: list[dict]) -> frozenset:
+        """Create a hashable signature from a pairs list for comparison."""
+        return frozenset(
+            (p.get('course_id'), p.get('local_folder', ''))
+            for p in pairs
+        )
 
 
 # --- Utility Functions ---
