@@ -44,7 +44,8 @@ Canvas_LMS_batch_file_downloader/
 ├── video_converter.py  # Zero-logger Video->MP3 extraction utility
 ├── archive_extractor.py# Extractor and 0-byte Stub-generator for .zip payloads
 ├── excel_converter.py  # Native Excel to PDF COM converter (Tabular Integrity logic)
-└── canvas_sync_pairs.json  # Persistent sync pair storage (runtime)
+├── canvas_sync_pairs.json  # Persistent sync pair storage (runtime)
+└── saved_sync_groups.json  # Persistent saved sync groups storage
 ```
 
 ## Sync Implementation Details
@@ -53,7 +54,9 @@ Canvas_LMS_batch_file_downloader/
     - **Tables**: `sync_manifest` (files) and `sync_metadata` (configuration k/v store).
     - **Attributes**: `canvas_file_id`, `canvas_filename`, `local_path`, `canvas_updated_at`, `downloaded_at`, `original_size`, `is_ignored`.
     - **Windows**: Hidden via `ctypes.windll.kernel32.SetFileAttributesW`.
-- **Sync Pairs File**: `canvas_sync_pairs.json` — stores `local_folder`, `course_id`, `course_name`, `last_synced`.
+- **Sync Pairs/Groups Files**: 
+    - `canvas_sync_pairs.json` — stores active `local_folder`, `course_id`, `course_name`, `last_synced`.
+    - `saved_sync_groups.json` — managed by `SavedGroupsManager`, stores reusable multi-course groups with unique `group_id`s.
 - **Sync History File**: `canvas_sync_history.json` — last 50 entries with timestamp, files_synced, courses, errors.
 
 ## Build System

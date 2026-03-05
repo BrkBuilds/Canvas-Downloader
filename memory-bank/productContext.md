@@ -10,6 +10,7 @@ Desktop application for university students to batch download and synchronize co
     - **Centralized Error Log**: Consolidates all download errors into a single `download_errors.txt` in the root folder, grouped by course.
     - **Resilient Progress**: Tracks successful and failed downloads, ensuring feedback even during network instability.
 - **Smart Sync**:
+    - **Saved Sync Groups**: Create, edit, and manage reusable multi-course sync profiles ("Groups") via a 3-layered interactive Hub dialog. Easily swap between full semesters of configured folders.
     - **Pop-up Course Selector**: Powerful dialog for selecting courses to sync, with search and filtering (Favorites, CBS filters) matching the main download page.
     - **Persistent Pairs**: Local folder ↔ Canvas course mapping saved to JSON, survives app restarts.
     - **Friendly Course Names**: Intelligently prioritizes "Friendly Names" (e.g., "Macroeconomics") over raw Canvas names to reduce clutter.

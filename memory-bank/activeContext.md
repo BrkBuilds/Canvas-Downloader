@@ -1,7 +1,40 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Active Feature Fixes**: Continuing to refine user workflows, focusing on unifying state management between Sync engines and Download engines.
+- **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-05 — Saved Sync Groups: Full Feature)
+
+### Phase 1: Backend Manager & Save Workflow
+- **`SavedGroupsManager` class (`sync_manager.py`)**: JSON-backed persistence (`saved_sync_groups.json`) with `load_groups()`, `save_group()`, `delete_group()`, `update_group()`, and `matches_existing_group()` (signature-based duplicate detection using `frozenset` of `(course_id, local_folder)` tuples). Uses `uuid.uuid4().hex` for IDs.
+- **Save Dialog (`sync_ui.py`)**: `@st.dialog("💾 Save as Group")` with text input, Create/Cancel buttons, and CSS overrides for disabled states. Uses `pending_toast` pattern to avoid ghost toasts.
+- **"Save List as Group" button**: Disabled when <2 pairs or exact match to an existing group. Columns: `[0.22, 0.22, 0.56]` layout for left alignment.
+
+### Phase 2: The Hub (3-Layered SPA Dialog)
+- **Architecture**: Single `@st.dialog("📚 Saved Groups", width="large")` with `st.session_state['hub_layer']` navigation (`layer_1`, `layer_2`, `layer_3`, `rescue_mode`).
+- **Dialog Persistence Pattern**: Uses `hub_dialog_open` session state flag to keep dialog alive across internal `st.rerun()` calls. The Hub button sets the flag; `_hub_cleanup()` clears it alongside all hub-specific keys.
+- **Layer 1 (Overview)**: Group cards with ➕ Add to Sync List, ✏️ Edit Group, 🗑️ Delete. Delete uses `pending_toast` pattern.
+- **Layer 2 (Group Details)**: Editable group name + pair cards. Each pair has 📂 Open Folder, ✏️ Edit Pair, and ⚙️ See Configuration expander. Config reads `sync_contract` JSON from `.canvas_sync.db` via `SyncManager._load_metadata('sync_contract')` and renders `convert_*` booleans.
+- **Layer 3 (Edit Pair)**: Inline `st.selectbox` for course selection (avoids nested `@st.dialog` crash). Tkinter folder picker uses isolated `hub_temp_folder` state to prevent bleeding into main UI.
+
+### Phase 3: Pre-Flight Merge Engine
+- **Duplicate Filtering**: Compares incoming `course_id`s against existing `sync_pairs`. Drops duplicates silently with count toast.
+- **Folder Existence Check**: `Path(pair['local_folder']).exists()` for each unique pair. If all exist → merge immediately + persist + close Hub. If any missing → `rescue_mode`.
+- **Rescue Mode**: Warning UI listing only missing pairs. Per-pair "📂 Locate folder" buttons using `_rescue_select_folder(pair_idx)` with isolated `rescue_paths` dict. "Confirm & Add Group" button disabled until all remapped. On confirm: updates group JSON + merges into session + persists.
+
+### Code Quality Audit Fixes (This Session)
+- **Ghost Toast Bug**: Fixed in 4 locations (delete, rename, edit pair, all-duplicates) — converted `st.toast()` + `st.rerun()` to `pending_toast` pattern consumed at top of `render_sync_step1`.
+- **Delete Button Danger Styling**: CSS targets `div[class*="st-key-hub_del_"] button:hover` for red (#7f1d1d bg, #ef4444 border).
+- **Cancel Button Red Hover**: CSS targets `hub_cancel_*` and `cancel_save_group` keys.
+- **Config Expander Spacing**: Changed from `"\n\n".join()` (double-spaced) to `"<br>".join()` (tight).
+- **Dialog Primary Buttons**: Full blue/disabled styling ported from Save dialog into Hub CSS.
+
+### Key Streamlit Patterns Learned
+1. **No Nested Dialogs**: Streamlit crashes on `@st.dialog` inside `@st.dialog`. Use inline widgets (`st.selectbox`) instead.
+2. **Dialog Persistence**: `@st.dialog` functions must be called on every rerun to stay open. Use a session state flag (`hub_dialog_open`) and call the dialog outside the button's `if` block.
+3. **Ghost Toast Pattern**: `st.toast()` + `st.rerun()` = invisible toast. Always use `st.session_state['pending_toast']` consumed at the top of the render function.
+4. **Isolated Tkinter State**: When using tkinter folder pickers inside dialogs, store results in dialog-specific session state keys (e.g., `hub_temp_folder`) to prevent contamination of the main UI state.
+5. **CSS Key Targeting**: Use `div[class*="st-key-{widget_key}"] button` selectors to style specific buttons by their session state key.
 
 ## Recent Changes (Session 2026-03-04 - Ignored Files UI Polish)
 - **Bulk Selection Matrix Architecture**:
