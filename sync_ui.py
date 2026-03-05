@@ -163,11 +163,12 @@ def _save_group_dialog(sync_pairs: list[dict]):
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
     }
-    /* 2. Hover State */
+    /* 2. Hover State (Ghost Danger) */
     div[data-testid="stDialog"] button[kind="secondary"]:hover {
-        background-color: #ef4444 !important; /* Red background */
-        border-color: #ef4444 !important; /* Red border */
+        background-color: #262730 !important; /* Dark gray */
         color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        transition: all 0.2s ease-in-out;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -228,6 +229,32 @@ def _rescue_select_folder(pair_idx: int):
         st.session_state['rescue_paths'] = rescue_paths
 
 
+def _change_hub_layer(target_layer, _pop_keys=None, **kwargs):
+    """Callback to instantly change dialog layers and pass variables before render."""
+    st.session_state['hub_layer'] = target_layer
+    for k, v in kwargs.items():
+        st.session_state[k] = v
+    if _pop_keys:
+        for k in _pop_keys:
+            st.session_state.pop(k, None)
+
+
+def _delete_group_callback(mgr, group_id, group_name):
+    """Callback to delete a group before the dialog re-renders."""
+    mgr.delete_group(group_id)
+    st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Group '{group_name}' deleted."
+
+
+def _remove_pair_from_group(mgr, group_id, pair_idx):
+    """Callback to remove a single course pair from a group."""
+    groups = mgr.load_groups()
+    group = next((g for g in groups if g.get('group_id') == group_id), None)
+    if group and 0 <= pair_idx < len(group.get('pairs', [])):
+        popped = group['pairs'].pop(pair_idx)
+        mgr.update_group(group_id, {'pairs': group['pairs']})
+        st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Removed '{popped.get('course_name', 'course')}' from group."
+
+
 @st.dialog("\U0001F4DA Saved Groups", width="large")
 def _saved_groups_hub_dialog(courses, course_names):
     """3-layered SPA dialog for managing saved sync groups."""
@@ -240,7 +267,6 @@ def _saved_groups_hub_dialog(courses, course_names):
     # --- Dialog-wide CSS ---
     st.markdown("""
     <style>
-    /* --- HUB DIALOG BUTTON STYLES --- */
     /* Primary button: blue */
     div[data-testid="stDialog"] button[kind="primary"] {
         background-color: #3b82f6 !important;
@@ -256,24 +282,166 @@ def _saved_groups_hub_dialog(courses, course_names):
         color: rgba(255, 255, 255, 0.5) !important;
         cursor: not-allowed !important;
     }
-    /* Secondary buttons: subtle blue hover by default */
-    div[data-testid="stDialog"] button[kind="secondary"]:hover {
-        background-color: #3a4a5a !important;
-        border-color: #6a9abb !important;
-        color: #fff !important;
-    }
-    /* Delete buttons: red danger hover */
-    div[data-testid="stDialog"] div[class*="st-key-hub_del_"] button:hover {
-        background-color: #7f1d1d !important;
-        border-color: #ef4444 !important;
-        color: #fca5a5 !important;
-    }
-    /* Cancel buttons inside dialog: red hover */
-    div[data-testid="stDialog"] div[class*="st-key-hub_cancel_"] button:hover,
+    
+    /* Cancel buttons inside dialog */
     div[data-testid="stDialog"] div[class*="st-key-cancel_save_group"] button:hover {
         background-color: #ef4444 !important;
         border-color: #ef4444 !important;
         color: white !important;
+    }
+
+    /* Close Button (Normal Hover - Lighter Border) */
+    div.st-key-btn_hub_close button {
+        background-color: #262730 !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    div.st-key-btn_hub_close button:hover {
+        background-color: #262730 !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Delete Button (Ghost Danger Hover - Red Border/Text) */
+    div[class*="st-key-btn_hub_delete_"] button {
+        background-color: #262730 !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    div[class*="st-key-btn_hub_delete_"] button:hover {
+        background-color: #262730 !important;
+        border-color: #ff4b4b !important;
+        color: #ff4b4b !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Remove Pair Button (Inherit default, Danger on Hover) */
+    div[class*="st-key-btn_hub_remove_pair_"] button {
+        background-color: transparent !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    div[class*="st-key-btn_hub_remove_pair_"] button:hover {
+        border-color: #ff4b4b !important;
+        color: #ff4b4b !important;
+        background-color: rgba(255, 75, 75, 0.1) !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Compact cards inside Layer 2 */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        padding: 12px 15px !important; 
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
+        gap: 0.3rem !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] button {
+        min-height: 35px !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+
+    /* Clean positioning for Back buttons (No negative margins needed without the separator) */
+    div.st-key-btn_back_to_groups, 
+    div.st-key-btn_cancel_add_pair,
+    div.st-key-hub_back_l3 {
+        margin-bottom: 10px !important; /* Just a little breathing room below them */
+        margin-top: -30px !important;
+    }
+
+    /* Clean Tertiary Buttons (Universal Lowkey Style) */
+    div[data-testid="stDialog"] button[kind="tertiary"] {
+        color: rgba(255, 255, 255, 0.75) !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding-left: 0px !important; /* Pull tight to left edge */
+    }
+    div[data-testid="stDialog"] button[kind="tertiary"]:hover {
+        color: rgba(255, 255, 255, 1) !important;
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+
+    /* Kill the massive margins on the Course Titles (h3) */
+    div[data-testid="stDialog"] h3 {
+        margin-top: 0px !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 0px !important;
+    }
+
+    /* Pull the folder path text closer to the title and buttons */
+    /* Targeting the paragraph that contains our colored span */
+    div[data-testid="stDialog"] p:has(span[style*="color: #a3a8b8"]) {
+        margin-top: 0px !important;
+        margin-bottom: 10px !important; /* Small gap before the action buttons */
+    }
+
+    /* Restore breathing room around Add New Course button */
+    div.st-key-btn_hub_add_new_pair {
+        margin-top: 25px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 1. Edit Group Meta Box: Subtle grey-yellow background to separate settings from content */
+    div.st-key-hub_edit_group_meta {
+        background-color: rgba(220, 210, 180, 0.08) !important; /* Soft grey-yellow tint */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        margin-bottom: 25px !important; /* Extra 10px spacing before the course cards start */
+        padding: 15px !important;
+    }
+
+    /* 2. Elevate Pair Cards: Slight lighter background and soft drop shadow */
+    div[class*="st-key-hub_pair_card_"] {
+        background-color: rgba(255, 255, 255, 0.03) !important; /* Slightly lighter than modal background */
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important; /* Soft depth shadow */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        margin-bottom: 15px !important; /* Consistent spacing between cards */
+    }
+
+    /* 3. Add New Course Button: Main theme style but highly transparent */
+    div.st-key-btn_hub_add_new_pair button {
+        background-color: rgba(59, 130, 246, 0.1) !important; /* Very faint blue/indigo */
+        border: 1px solid rgba(59, 130, 246, 0.3) !important;
+        color: #93c5fd !important; /* Light blue text */
+        margin-top: 10px !important;
+    }
+    div.st-key-btn_hub_add_new_pair button:hover {
+        background-color: rgba(59, 130, 246, 0.25) !important;
+        border-color: rgba(59, 130, 246, 0.6) !important;
+        color: #ffffff !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Shrink-wrap the View Mode columns for dynamic 10px spacing */
+    div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] {
+        align-items: flex-end !important; /* Bottom align for baseline matching */
+        gap: 15px !important; 
+    }
+    div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child {
+        width: auto !important;
+        flex: 0 1 auto !important; /* Fit to text width */
+    }
+    div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {
+        width: auto !important;
+        flex: 0 0 auto !important; /* Fit to button width */
+        margin-bottom: -16px !important; /* Push button down 16px to perfectly align with h1 text baseline */
+    }
+
+    /* Style the small View Mode Edit button */
+    div.st-key-btn_enable_edit_name button {
+        background-color: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+        padding: 2px 12px !important;
+        min-height: 0px !important;
+        height: 32px !important; 
+    }
+    div.st-key-btn_enable_edit_name button:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -290,73 +458,71 @@ def _saved_groups_hub_dialog(courses, course_names):
                 st.rerun()
             return
 
-        for g_idx, group in enumerate(groups):
-            with st.container(border=True):
-                pair_count = len(group.get('pairs', []))
-                course_word = 'course' if pair_count == 1 else 'courses'
-                st.markdown(
-                    f"<div style='font-weight:600; font-size:1.05rem;'>\U0001F4C1 {group['group_name']}</div>"
-                    f"<div style='font-size:0.85rem; color:#aaa; margin-top:2px;'>"
-                    f"{pair_count} {course_word}</div>",
-                    unsafe_allow_html=True,
-                )
-                c1, c2, c3 = st.columns([1, 1, 1], gap="small")
-                with c1:
-                    if st.button("\u2795 Add to Sync List", key=f"hub_add_{g_idx}",
-                                 use_container_width=True):
-                        # --- Phase 3: Pre-Flight Engine ---
-                        incoming = group.get('pairs', [])
-                        existing_ids = {p.get('course_id') for p in st.session_state.get('sync_pairs', [])}
+        # NEW: Scrollable fixed-height container for the groups
+        with st.container(height=500, border=False):
+            for g_idx, group in enumerate(groups):
+                with st.container(border=True):
+                    pair_count = len(group.get('pairs', []))
+                    course_word = 'course' if pair_count == 1 else 'courses'
+                    st.markdown(
+                        f"### 🗂️ {group['group_name']}\n"
+                        f"**{pair_count} {course_word}**",
+                        unsafe_allow_html=True,
+                    )
+                    c1, c2, c3 = st.columns([1, 1, 1], gap="small")
+                    with c1:
+                        if st.button("➕ Add to Sync List", key=f"hub_add_{g_idx}",
+                                     use_container_width=True):
+                            # --- Phase 3: Pre-Flight Engine ---
+                            incoming = group.get('pairs', [])
+                            existing_ids = {p.get('course_id') for p in st.session_state.get('sync_pairs', [])}
 
-                        # Task 1: Silent duplicate filtering
-                        unique_pairs = [p for p in incoming if p.get('course_id') not in existing_ids]
-                        skipped = len(incoming) - len(unique_pairs)
+                            # Task 1: Silent duplicate filtering
+                            unique_pairs = [p for p in incoming if p.get('course_id') not in existing_ids]
+                            skipped = len(incoming) - len(unique_pairs)
 
-                        if not unique_pairs:
-                            st.session_state['pending_toast'] = f"\u26a0\ufe0f All {len(incoming)} courses are already in your sync list."
-                            st.rerun()
-                        else:
-                            # Task 2: Folder existence pre-flight
-                            missing_indices = [
-                                i for i, p in enumerate(unique_pairs)
-                                if not Path(p.get('local_folder', '')).exists()
-                            ]
-
-                            if not missing_indices:
-                                # All folders exist — merge immediately
-                                st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + unique_pairs
-                                _persist_current_pairs()
-                                added = len(unique_pairs)
-                                msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
-                                if skipped:
-                                    msg += f" (Skipped {skipped} duplicate{'s' if skipped != 1 else ''}.)"
-                                st.session_state['pending_toast'] = msg
-                                _hub_cleanup()
+                            if not unique_pairs:
+                                st.session_state['pending_toast'] = f"⚠️ All {len(incoming)} courses are already in your sync list."
                                 st.rerun()
                             else:
-                                # Some folders missing — enter rescue mode
-                                st.session_state['hub_layer'] = 'rescue_mode'
-                                st.session_state['hub_rescue_group_id'] = group['group_id']
-                                st.session_state['hub_rescue_pairs'] = unique_pairs
-                                st.session_state['hub_rescue_missing'] = missing_indices
-                                st.session_state['hub_rescue_skipped'] = skipped
-                                st.session_state['rescue_paths'] = {}
-                                st.rerun()
-                with c2:
-                    if st.button("\u270f\ufe0f Edit Group", key=f"hub_edit_{g_idx}",
-                                 use_container_width=True):
-                        st.session_state['hub_active_group_id'] = group['group_id']
-                        st.session_state['hub_layer'] = 'layer_2'
-                        st.rerun()
-                with c3:
-                    if st.button("\U0001F5D1\ufe0f Delete", key=f"hub_del_{g_idx}",
-                                 use_container_width=True):
-                        mgr.delete_group(group['group_id'])
-                        st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Group '{group['group_name']}' deleted."
-                        st.rerun()
+                                # Task 2: Folder existence pre-flight
+                                missing_indices = [
+                                    i for i, p in enumerate(unique_pairs)
+                                    if not Path(p.get('local_folder', '')).exists()
+                                ]
 
-        st.markdown("")
-        if st.button("Close", type="secondary", use_container_width=True, key="hub_close_l1"):
+                                if not missing_indices:
+                                    # All folders exist — merge immediately
+                                    st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + unique_pairs
+                                    _persist_current_pairs()
+                                    added = len(unique_pairs)
+                                    msg = f"✅ Added {added} course{'s' if added != 1 else ''} to sync list!"
+                                    if skipped:
+                                        msg += f" (Skipped {skipped} duplicate{'s' if skipped != 1 else ''}.)"
+                                    st.session_state['pending_toast'] = msg
+                                    _hub_cleanup()
+                                    st.rerun()
+                                else:
+                                    # Some folders missing — enter rescue mode
+                                    st.session_state['hub_layer'] = 'rescue_mode'
+                                    st.session_state['hub_rescue_group_id'] = group['group_id']
+                                    st.session_state['hub_rescue_pairs'] = unique_pairs
+                                    st.session_state['hub_rescue_missing'] = missing_indices
+                                    st.session_state['hub_rescue_skipped'] = skipped
+                                    st.session_state['rescue_paths'] = {}
+                                    st.rerun()
+                    with c2:
+                        st.button("✏️ Edit Group", key=f"hub_edit_{g_idx}",
+                                  use_container_width=True,
+                                  on_click=_change_hub_layer,
+                                  kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
+                    with c3:
+                        st.button("🗑️ Delete", key=f"btn_hub_delete_{group['group_id']}",
+                                  use_container_width=True,
+                                  on_click=_delete_group_callback,
+                                  args=(mgr, group['group_id'], group['group_name']))
+
+        if st.button("Close", type="secondary", use_container_width=True, key="btn_hub_close"):
             _hub_cleanup()
             st.rerun()
 
@@ -369,63 +535,95 @@ def _saved_groups_hub_dialog(courses, course_names):
         group = next((g for g in groups if g.get('group_id') == gid), None)
         if not group:
             st.error("Group not found.")
-            if st.button("\u2b05\ufe0f Back", key="hub_back_l2_err"):
-                st.session_state['hub_layer'] = 'layer_1'
-                st.rerun()
+            st.button("\u2b05\ufe0f Back", key="hub_back_l2_err", type="tertiary",
+                      on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
             return
 
-        if st.button("\u2b05\ufe0f Back to Groups", key="hub_back_l2"):
-            st.session_state['hub_layer'] = 'layer_1'
-            st.rerun()
+        st.button("\u2b05\ufe0f Back to Groups", key="btn_back_to_groups", type="tertiary",
+                  on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
 
-        st.markdown("---")
+        # --- Dynamic Group Name (View/Edit Modes) ---
+        edit_mode_active = st.session_state.get('hub_edit_group_name_active', False)
+        
+        def _toggle_edit_name():
+            st.session_state['hub_edit_group_name_active'] = not st.session_state.get('hub_edit_group_name_active', False)
 
-        # --- Editable group name ---
-        col_name, col_save_name = st.columns([3, 1], vertical_alignment="bottom")
-        with col_name:
-            new_name = st.text_input("Group Name", value=group['group_name'],
-                                     key="hub_edit_name")
-        with col_save_name:
-            name_changed = new_name.strip() and new_name.strip() != group['group_name']
-            if st.button("\U0001F4BE Save Name", disabled=not name_changed,
-                         use_container_width=True, key="hub_save_name"):
-                mgr.update_group(gid, {'group_name': new_name.strip()})
-                st.session_state['pending_toast'] = f"\u2705 Group renamed to '{new_name.strip()}'"
-                st.rerun()
+        def _save_name_cb():
+            val = st.session_state.get("hub_edit_name_input", "").strip()
+            if val and val != group['group_name']:
+                mgr.update_group(gid, {'group_name': val})
+                st.session_state['pending_toast'] = f"✅ Group renamed to '{val}'"
+            st.session_state['hub_edit_group_name_active'] = False
+
+        if not edit_mode_active:
+            # VIEW MODE (Dominant H1 with tight label spacing)
+            with st.container(key="hub_group_name_view_row"):
+                cv1, cv2 = st.columns([0.8, 0.2], vertical_alignment="bottom")
+                with cv1:
+                    st.markdown(f"""
+                        <div style='margin-bottom: -5px;'>
+                            <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>Group name:</span>
+                        </div>
+                        <h1 style='margin: 0px; padding: 0px; font-size: 2.2rem; display: inline-block; line-height: 1;'>{group['group_name']}</h1>
+                    """, unsafe_allow_html=True)
+                with cv2:
+                    st.button("✏️ Edit", key="btn_enable_edit_name", on_click=_toggle_edit_name)
+            st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) # Spacing before cards
+        else:
+            # EDIT MODE (The yellow box)
+            with st.container(border=True, key="hub_edit_group_meta"):
+                st.markdown("### ✏️ Edit Group Name")
+                col_name, col_save_name = st.columns([0.75, 0.25], vertical_alignment="bottom")
+                with col_name:
+                    new_name = st.text_input("Group Name", value=group['group_name'],
+                                             key="hub_edit_name_input", label_visibility="collapsed")
+                with col_save_name:
+                    name_changed = new_name.strip() and new_name.strip() != group['group_name']
+                    # Using on_click callback instead of st.rerun() prevents the dialog from closing!
+                    st.button("💾 Save Name", disabled=not name_changed,
+                              use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
 
         st.markdown("")
 
         # --- Pair cards ---
         pairs = group.get('pairs', [])
         for p_idx, pair in enumerate(pairs):
-            with st.container(border=True):
+            with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
                 display_name = friendly_course_name(pair.get('course_name', 'Unknown'))
-                folder_display = short_path(pair.get('local_folder', ''))
                 folder_exists = Path(pair.get('local_folder', '')).exists()
-                st.markdown(
-                    f"<div style='font-weight:600;'>\U0001F393 {display_name}</div>"
-                    f"<div style='font-size:0.85rem; color:#ccc; margin-top:2px;'>\U0001F4C1 {folder_display}</div>",
-                    unsafe_allow_html=True,
-                )
-                bc1, bc2 = st.columns([1, 1], gap="small")
-                with bc1:
+                
+                st.markdown(f"### {display_name}")
+                st.markdown(f"<span style='color: #a3a8b8; font-size: 0.9em;'>\U0001F4C1 {pair.get('local_folder', '')}</span>", unsafe_allow_html=True)
+                
+                st.markdown("")
+                c1, c2, c3 = st.columns(3)
+                with c1:
                     if st.button("\U0001F4C2 Open Folder", key=f"hub_open_{p_idx}",
                                  disabled=not folder_exists,
                                  use_container_width=True):
                         open_folder(pair['local_folder'])
-                with bc2:
-                    if st.button("\u270f\ufe0f Edit Pair", key=f"hub_editp_{p_idx}",
-                                 use_container_width=True):
-                        st.session_state['hub_active_pair_idx'] = p_idx
-                        st.session_state['hub_layer'] = 'layer_3'
-                        # Pre-load temp values
-                        st.session_state['hub_temp_folder'] = pair.get('local_folder', '')
-                        st.session_state['hub_temp_course_id'] = pair.get('course_id')
-                        st.rerun()
+                with c2:
+                    st.button("\u270f\ufe0f Edit Pair", key=f"hub_editp_{p_idx}",
+                              use_container_width=True,
+                              on_click=_change_hub_layer,
+                              kwargs={'target_layer': 'layer_3',
+                                      'hub_active_pair_idx': p_idx,
+                                      'hub_temp_folder': pair.get('local_folder', ''),
+                                      'hub_temp_course_id': pair.get('course_id')})
+                with c3:
+                    st.button("\U0001F5D1\ufe0f Remove", key=f"btn_hub_remove_pair_{p_idx}",
+                              use_container_width=True,
+                              on_click=_remove_pair_from_group,
+                              args=(mgr, gid, p_idx))
 
                 # --- Config expander ---
                 with st.expander("\u2699\ufe0f See Configuration", expanded=False):
                     _render_hub_config(pair)
+
+        st.markdown("")
+        st.button("\u2795 Add a new course to the group", key="btn_hub_add_new_pair", use_container_width=True,
+                  on_click=_change_hub_layer,
+                  kwargs={'target_layer': 'layer_4_add_pair'})
 
     # =================================================================
     # LAYER 3 — Edit Pair
@@ -437,18 +635,16 @@ def _saved_groups_hub_dialog(courses, course_names):
         group = next((g for g in groups if g.get('group_id') == gid), None)
         if not group or p_idx >= len(group.get('pairs', [])):
             st.error("Pair not found.")
-            if st.button("\u2b05\ufe0f Back", key="hub_back_l3_err"):
-                st.session_state['hub_layer'] = 'layer_2'
-                st.rerun()
+            st.button("\u2b05\ufe0f Back", key="hub_back_l3_err", type="tertiary",
+                      on_click=_change_hub_layer, kwargs={'target_layer': 'layer_2'})
             return
 
         original_pair = group['pairs'][p_idx]
 
-        if st.button("\u2b05\ufe0f Back to Group Details", key="hub_back_l3"):
-            st.session_state['hub_layer'] = 'layer_2'
-            st.session_state.pop('hub_temp_folder', None)
-            st.session_state.pop('hub_temp_course_id', None)
-            st.rerun()
+        st.button("\u2b05\ufe0f Back to Group Details", key="hub_back_l3", type="tertiary",
+                  on_click=_change_hub_layer,
+                  kwargs={'target_layer': 'layer_2',
+                          '_pop_keys': ['hub_temp_folder', 'hub_temp_course_id']})
 
         st.markdown("---")
         st.markdown("##### Edit Pair")
@@ -507,14 +703,78 @@ def _saved_groups_hub_dialog(courses, course_names):
                 st.session_state['hub_layer'] = 'layer_2'
                 st.session_state.pop('hub_temp_folder', None)
                 st.session_state.pop('hub_temp_course_id', None)
-                st.rerun()
         with sc2:
-            if st.button("Cancel", type="secondary", use_container_width=True,
-                         key="hub_cancel_pair"):
-                st.session_state['hub_layer'] = 'layer_2'
+            st.button("Cancel", type="secondary", use_container_width=True,
+                     key="hub_cancel_pair",
+                     on_click=_change_hub_layer,
+                     kwargs={'target_layer': 'layer_2',
+                             '_pop_keys': ['hub_temp_folder', 'hub_temp_course_id']})
+
+    # =================================================================
+    # LAYER 4 — Add New Course Pair
+    # =================================================================
+    elif layer == 'layer_4_add_pair':
+        gid = st.session_state.get('hub_active_group_id')
+        groups = mgr.load_groups()
+        group = next((g for g in groups if g.get('group_id') == gid), None)
+        if not group:
+            st.error("Group not found.")
+            st.button("\u2b05\ufe0f Back", key="hub_back_l4_err", type="tertiary",
+                      on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
+            return
+
+        st.button("\u2b05\ufe0f Cancel & Go Back", key="btn_cancel_add_pair", type="tertiary",
+                  on_click=_change_hub_layer,
+                  kwargs={'target_layer': 'layer_2',
+                          '_pop_keys': ['hub_temp_add_folder']})
+
+        st.markdown("### \u2795 Add a New Course")
+        st.markdown(f"Adding to group: **{group['group_name']}**")
+        st.markdown("")
+
+        # --- Step 1: Select folder ---
+        temp_add_folder = st.session_state.get('hub_temp_add_folder', '')
+        if st.button("\U0001F4C1 Select Local Folder", key="hub_add_select_folder",
+                     use_container_width=True, type="secondary"):
+            _hub_select_folder()
+            # Store in the add-specific temp key
+            picked = st.session_state.get('hub_temp_folder', '')
+            if picked:
+                st.session_state['hub_temp_add_folder'] = picked
                 st.session_state.pop('hub_temp_folder', None)
-                st.session_state.pop('hub_temp_course_id', None)
-                st.rerun()
+
+        if temp_add_folder:
+            st.markdown(f"\u2705 **Selected:** `{temp_add_folder}`")
+            st.markdown("")
+
+            # --- Step 2: Select course ---
+            sorted_names = sorted(course_names.values(), key=lambda x: x.lower())
+            selected_name = st.selectbox("Select a Course", sorted_names, key="hub_add_course_select")
+
+            # Reverse-lookup course_id
+            selected_course_id = None
+            for cid, cname in course_names.items():
+                if cname == selected_name:
+                    selected_course_id = cid
+                    break
+
+            st.markdown("")
+
+            # --- Step 3: Add to group ---
+            if st.button("\U0001F4BE Add to Group", type="primary", use_container_width=True,
+                         key="hub_confirm_add_pair", disabled=(not selected_course_id)):
+                new_pair = {
+                    'local_folder': temp_add_folder,
+                    'course_id': selected_course_id,
+                    'course_name': selected_name,
+                }
+                updated_pairs = list(group.get('pairs', [])) + [new_pair]
+                mgr.update_group(gid, {'pairs': updated_pairs})
+                st.session_state['pending_toast'] = f"\u2705 Added '{selected_name}' to the group!"
+                st.session_state.pop('hub_temp_add_folder', None)
+                st.session_state['hub_layer'] = 'layer_2'
+        else:
+            st.info("\U0001F4C2 Select a local folder to get started.")
 
     # =================================================================
     # RESCUE MODE — Remap Missing Folders
@@ -526,13 +786,11 @@ def _saved_groups_hub_dialog(courses, course_names):
         skipped_count = st.session_state.get('hub_rescue_skipped', 0)
         rescue_gid = st.session_state.get('hub_rescue_group_id')
 
-        if st.button("\u2b05\ufe0f Back to Groups", key="hub_back_rescue"):
-            # Clean up rescue state and go back
-            for k in ['hub_rescue_group_id', 'hub_rescue_pairs',
-                      'hub_rescue_missing', 'hub_rescue_skipped', 'rescue_paths']:
-                st.session_state.pop(k, None)
-            st.session_state['hub_layer'] = 'layer_1'
-            st.rerun()
+        st.button("\u2b05\ufe0f Back to Groups", key="hub_back_rescue", type="tertiary",
+                  on_click=_change_hub_layer,
+                  kwargs={'target_layer': 'layer_1',
+                          '_pop_keys': ['hub_rescue_group_id', 'hub_rescue_pairs',
+                                        'hub_rescue_missing', 'hub_rescue_skipped', 'rescue_paths']})
 
         st.warning(
             "\u26a0\ufe0f Some folders could not be found. They may have been "
@@ -566,7 +824,6 @@ def _saved_groups_hub_dialog(courses, course_names):
                     if st.button(f"\U0001F4C2 Locate folder for {display_name}",
                                  key=f"rescue_locate_{mi}", use_container_width=True):
                         _rescue_select_folder(mi)
-                        st.rerun()
 
         st.markdown("")
         confirm_disabled = not all_remapped
@@ -657,7 +914,7 @@ def _render_hub_config(pair: dict):
 def _hub_cleanup():
     """Reset all hub-specific session state keys."""
     for k in ['hub_layer', 'hub_active_group_id', 'hub_active_pair_idx',
-              'hub_temp_folder', 'hub_temp_course_id', 'hub_dialog_open',
+              'hub_temp_folder', 'hub_temp_course_id',
               'hub_rescue_group_id', 'hub_rescue_pairs', 'hub_rescue_missing',
               'hub_rescue_skipped', 'rescue_paths']:
         st.session_state.pop(k, None)
@@ -683,6 +940,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
     # Step wizard
     render_sync_wizard(st, 1, lang)
+    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
     # (7) Removed "Select Folders to Sync" header — wizard is enough context.
 
@@ -737,21 +995,62 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     course_options = ["-- " + get_text('sync_select_course', lang) + " --"] + sorted_course_names
 
     # --- (8) Bigger subheading + Hub button ---
-    col_heading, col_hub = st.columns([3, 1], vertical_alignment="bottom")
+    col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="center")
     with col_heading:
         st.markdown(
-            f'<h3 style="margin:1em 0 -0.8rem 0;">{get_text("sync_courses_to_sync", lang)}</h3>',
+            f'<h3 style="margin-top: -10px; margin-bottom: 0px; padding-bottom: 0px;">{get_text("sync_courses_to_sync", lang)}</h3>',
             unsafe_allow_html=True,
         )
     with col_hub:
-        if st.button("\U0001F4DA Saved Groups", key="btn_open_hub",
-                     use_container_width=True):
-            st.session_state['hub_dialog_open'] = True
-            st.session_state.setdefault('hub_layer', 'layer_1')
+        st.markdown("""
+        <style>
+        /* 1. Strip default margins from the Hub button so it aligns with the <h3> heading */
+        div.st-key-btn_hub_main {
+            margin-top: 0px !important;
+            margin-bottom: 0px !important;
+        }
 
-    # Keep dialog alive across reruns via session state flag
-    if st.session_state.get('hub_dialog_open'):
-        _saved_groups_hub_dialog(courses, course_names)
+        /* 2. Target the specific row (stHorizontalBlock) containing the Hub button 
+              and kill its bottom margin/padding */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-btn_hub_main) {
+            margin-bottom: -15px !important;
+            padding-bottom: 0px !important;
+        }
+
+        /* 3. Pull the main sync list container UP towards the button/heading */
+        div.st-key-sync_list_outline {
+            margin-top: -10px !important; /* Tweaked to achieve the 2-5px visual gap */
+        }
+
+        /* Dusty Slate-Indigo theme for Group features */
+        div.st-key-btn_save_group_main button,
+        div.st-key-btn_hub_main button {
+            background-color: rgba(95, 100, 200, 0.35) !important; /* Desaturated indigo, higher base opacity */
+            color: #e0e7ff !important; 
+            border: 1px solid rgba(95, 100, 200, 0.6) !important; 
+        }
+
+        div.st-key-btn_save_group_main button:hover,
+        div.st-key-btn_hub_main button:hover {
+            background-color: rgba(95, 100, 200, 0.55) !important; /* Lighter on hover */
+            border-color: rgba(95, 100, 2000, 0.9) !important; 
+            color: #ffffff !important;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Disabled state for Save Group button */
+        div.st-key-btn_save_group_main button[disabled] {
+            background-color: rgba(95, 100, 200, 0.15) !important; /* Very dim when disabled */
+            border: 1px solid rgba(95, 100, 200, 0.3) !important;
+            color: rgba(255, 255, 255, 0.3) !important;
+            cursor: not-allowed !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        if st.button("\U0001F4DA Saved Groups", key="btn_hub_main",
+                     use_container_width=True):
+            st.session_state.setdefault('hub_layer', 'layer_1')
+            _saved_groups_hub_dialog(courses, course_names)
 
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []
@@ -863,11 +1162,30 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
         min-height: 50vh !important;
     }
 
-    /* 12. Ignored Files toggle */
-    div[class*="st-key-ignored_btn_"] button {
+    /* Enabled state (White text) */
+    div[class*="st-key-ignored_btn_"] button:not([disabled]) {
         border: 1px dashed rgba(255, 255, 255, 0.4) !important;
         background-color: transparent !important;
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    div[class*="st-key-ignored_btn_"] button:not([disabled]) p,
+    div[class*="st-key-ignored_btn_"] button:not([disabled]) span {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    /* Disabled state (Grey text) */
+    div[class*="st-key-ignored_btn_"] button[disabled] {
+        border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.4) !important; /* Dimmed grey text */
+        opacity: 0.7 !important;
+    }
+    div[class*="st-key-ignored_btn_"] button[disabled] p,
+    div[class*="st-key-ignored_btn_"] button[disabled] span {
+        color: rgba(255, 255, 255, 0.4) !important;
+        opacity: 0.7 !important;
     }
     div[class*="st-key-ignored_btn_"] button:hover {
         border-color: rgba(255, 255, 255, 0.6) !important;
@@ -978,26 +1296,26 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                 _render_pending_folder_ui(courses, course_names, course_options, lang)
             else:
                 # (9) "Add Course folder" + "Save List as Group" — full width
-                col_add, col_save, _ = st.columns([0.22, 0.22, 0.56], vertical_alignment="bottom") 
+                col_add, col_save, _ = st.columns([1.5, 1.5, 7], gap="small", vertical_alignment="bottom") 
                 with col_add:
-                    st.markdown("""<span id="add_folder_proxy"></span>
-                    <style>
-                    div:has(span#add_folder_proxy) ~ div button[data-testid="stBaseButton-secondary"] {
+                    # Clean, isolated CSS for "Add Course" using its Streamlit key
+                    st.markdown("""<style>
+                    div.st-key-btn_add_folder button {
                         border: 1px solid #4a7a9b !important;
                         background-color: #2a3a4a !important;
                         color: #cde !important;
-                        margin-top: -35px !important;
+                        margin-top: -45px !important;
                         position: relative;
                         z-index: 1;
                     }
-                    div:has(span#add_folder_proxy) ~ div button[data-testid="stBaseButton-secondary"]:hover {
+                    div.st-key-btn_add_folder button:hover {
                          background-color: #3a4a5a !important;
                          border-color: #6a9abb !important;
                          color: #fff !important;
                     }
                     </style>""", unsafe_allow_html=True)
-    
-                    if st.button("➕ " + get_text('sync_add_course_folder', lang), key="btn_add_folder"):
+                    
+                    if st.button("➕ " + get_text('sync_add_course_folder', lang), key="btn_add_folder", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -1008,8 +1326,29 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     from ui_helpers import get_config_dir
                     _gm = SavedGroupsManager(get_config_dir())
                     _save_disabled = len(sync_pairs) < 2 or _gm.matches_existing_group(sync_pairs)
-                    if st.button("💾 Save List as Group", key="btn_save_group",
-                                 disabled=_save_disabled, use_container_width=True):
+
+                    # Clean, isolated CSS for "Save List" using its Streamlit key
+                    st.markdown("""<style>
+                    div.st-key-btn_save_group_main button {
+                        background-color: rgba(95, 100, 200, 0.1) !important;
+                        color: #e0e7ff !important;
+                        border: 1px solid rgba(95, 100, 200, 0.75) !important;
+                    }
+                    div.st-key-btn_save_group_main button:hover {
+                        background-color: rgba(95, 100, 200, 0.4) !important;
+                        border-color: rgba(95, 100, 200, 1) !important;
+                        color: #ffffff !important;
+                        transition: all 0.2s ease-in-out;
+                    }
+                    div.st-key-btn_save_group_main button[disabled] {
+                        background-color: rgba(95, 100, 200, 0.1) !important;
+                        border: 1px solid rgba(95, 100, 200, 0.3) !important;
+                        color: rgba(255, 255, 255, 0.3) !important;
+                        cursor: not-allowed !important;
+                    }
+                    </style>""", unsafe_allow_html=True)
+
+                    if st.button("💾 Save List as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True):
                         _save_group_dialog(sync_pairs)
 
         else:
