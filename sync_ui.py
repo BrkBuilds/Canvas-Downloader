@@ -247,11 +247,27 @@ def _saved_groups_hub_dialog(courses, course_names):
                 with st.container(border=True, key=f"hub_overview_group_card_{g_idx}"):
                     pair_count = len(group.get('pairs', []))
                     course_word = 'course' if pair_count == 1 else 'courses'
-                    st.markdown(
-                        f"### 🗂️ {group['group_name']}\n"
-                        f"**{pair_count} {course_word}**",
-                        unsafe_allow_html=True,
-                    )
+                    
+                    # 1. Custom Title HTML (Fixed top margin to align centrally)
+                    st.markdown(f"""
+                        <div style='margin-top: 0px; margin-bottom: 10px;'>
+                            <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>🗂️ {group['group_name']}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 2. Borderless Expander for Courses
+                    with st.expander(f"{pair_count} {course_word}"):
+                        bullet_points = []
+                        for p in group.get('pairs', []):
+                            fname = friendly_course_name(p.get('course_name', 'Unknown'))
+                            bullet_points.append(f"- {fname}")
+                        
+                        if bullet_points:
+                            st.markdown("\n".join(bullet_points))
+                        else:
+                            st.markdown("*No courses in this group*")
+
+                    # Spacer removed to make buttons compact against the expander
                     c1, c2, c3 = st.columns([1, 1, 1], gap="small")
                     with c1:
                         if st.button("➕ Add to Sync List", key=f"hub_add_{g_idx}",
@@ -322,7 +338,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                       on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
             return
 
-        st.button("\u2b05\ufe0f Back to Groups", key="btn_back_to_groups", type="tertiary",
+        st.button("← Back to Groups", key="btn_back_to_groups", type="tertiary",
                   on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
 
         # --- Dynamic Group Name (View/Edit Modes) ---
@@ -427,7 +443,7 @@ def _saved_groups_hub_dialog(courses, course_names):
 
         original_pair = group['pairs'][p_idx]
 
-        st.button("\u2b05\ufe0f Back to Group Details", key="hub_back_l3", type="tertiary",
+        st.button("← Back to Group Details", key="hub_back_l3", type="tertiary",
                   on_click=_change_hub_layer,
                   kwargs={'target_layer': 'layer_2',
                           '_pop_keys': ['hub_temp_folder', 'hub_temp_course_id']})
@@ -505,11 +521,11 @@ def _saved_groups_hub_dialog(courses, course_names):
         group = next((g for g in groups if g.get('group_id') == gid), None)
         if not group:
             st.error("Group not found.")
-            st.button("\u2b05\ufe0f Back", key="hub_back_l4_err", type="tertiary",
+            st.button("← Back", key="hub_back_l4_err", type="tertiary",
                       on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
             return
 
-        st.button("\u2b05\ufe0f Cancel & Go Back", key="btn_cancel_add_pair", type="tertiary",
+        st.button("← Cancel & Go Back", key="btn_cancel_add_pair", type="tertiary",
                   on_click=_change_hub_layer,
                   kwargs={'target_layer': 'layer_2',
                           '_pop_keys': ['hub_temp_add_folder']})
@@ -572,7 +588,7 @@ def _saved_groups_hub_dialog(courses, course_names):
         skipped_count = st.session_state.get('hub_rescue_skipped', 0)
         rescue_gid = st.session_state.get('hub_rescue_group_id')
 
-        st.button("\u2b05\ufe0f Back to Groups", key="hub_back_rescue", type="tertiary",
+        st.button("← Back to Groups", key="hub_back_rescue", type="tertiary",
                   on_click=_change_hub_layer,
                   kwargs={'target_layer': 'layer_1',
                           '_pop_keys': ['hub_rescue_group_id', 'hub_rescue_pairs',
@@ -1037,6 +1053,67 @@ def _inject_hub_global_css():
         border: 1px solid rgba(255, 230, 150, 0.3) !important;
         margin-bottom: 15px !important; 
         border-radius: 8px !important; /* Slightly rounded corners for a modern look */
+    }
+
+    /* Layer 1 Group Cards Top Padding Fix */
+    div[class*="st-key-hub_overview_group_card_"] {
+        padding-top: 10px !important; 
+    }
+
+    /* =========================================
+       LAYER 1: BORDERLESS EXPANDER (Courses List)
+       ========================================= */
+    /* Remove borders and background from the expander wrapper */
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details {
+        border: none !important;
+        background: transparent !important;
+        margin-bottom: -5px !important; /* Pull buttons closer to expander */
+    }
+    
+    /* Perfect vertical alignment for arrow and text */
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary {
+        padding: 0px !important;
+        min-height: 0px !important;
+        background: transparent !important;
+        border: none !important;
+        display: flex !important;
+        align-items: center !important; 
+        gap: 5px !important; /* Tight 5px gap between arrow and text */
+    }
+    
+    /* Remove native margin that pushes text below the arrow */
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary p {
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        color: #e0e0e0 !important;
+        margin: 0px !important; /* Kills the misalignment */
+    }
+    
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary:hover p {
+        color: #ffffff !important;
+    }
+    
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details[open] summary {
+        border-bottom: none !important;
+    }
+    
+    /* Fix Expanded Content (Top-Left aligned, Solid White text) */
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
+        padding-left: 0px !important; 
+        padding-top: 5px !important;  /* Tighten space below 'x courses' */
+        padding-bottom: 15px !important;
+    }
+    
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details div[data-testid="stMarkdownContainer"] {
+        color: #ffffff !important; /* Force solid white text */
+        font-size: 0.9rem !important;
+    }
+    
+    /* Pull bullets left and remove vertical margins */
+    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details ul {
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+        padding-left: 18px !important; /* Just enough indent to show the bullet */
     }
     </style>
     """, unsafe_allow_html=True)
