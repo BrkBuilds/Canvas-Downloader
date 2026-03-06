@@ -215,6 +215,96 @@ def _remove_pair_from_group(mgr, group_id, pair_idx):
         popped = group['pairs'].pop(pair_idx)
         mgr.update_group(group_id, {'pairs': group['pairs']})
         st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Removed '{popped.get('course_name', 'course')}' from group."
+    # Clear any active edit state that might reference stale indices
+    st.session_state.pop('hub_editing_pair_idx', None)
+    st.session_state.pop('hub_is_adding_new_pair', None)
+
+
+def _hub_start_edit_pair(p_idx, pair):
+    """Callback to enter inline edit mode for a pair."""
+    st.session_state['hub_editing_pair_idx'] = p_idx
+    st.session_state['hub_edit_temp_folder'] = pair.get('local_folder', '')
+    st.session_state['hub_edit_temp_course_id'] = pair.get('course_id')
+    st.session_state['hub_edit_temp_course_name'] = pair.get('course_name', '')
+    st.session_state.pop('hub_is_adding_new_pair', None)
+
+
+def _hub_cancel_edit():
+    """Callback to cancel inline editing or adding."""
+    st.session_state.pop('hub_editing_pair_idx', None)
+    st.session_state.pop('hub_edit_temp_folder', None)
+    st.session_state.pop('hub_edit_temp_course_id', None)
+    st.session_state.pop('hub_edit_temp_course_name', None)
+    st.session_state.pop('hub_is_adding_new_pair', None)
+
+
+def _hub_pick_folder_cb():
+    """Callback to open native folder picker and store result directly in edit temp state."""
+    import tkinter as tk
+    from tkinter import filedialog
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    try:
+        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+    except Exception:
+        pass
+    folder_path = filedialog.askdirectory(master=root)
+    root.destroy()
+    if folder_path:
+        st.session_state['hub_edit_temp_folder'] = folder_path
+
+
+def _save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
+    """Callback to save an inline-edited pair without closing the dialog."""
+    groups = mgr.load_groups()
+    group = next((g for g in groups if g.get('group_id') == gid), None)
+    if group:
+        updated_pairs = list(group['pairs'])
+        updated_pairs[p_idx] = {
+            'local_folder': new_folder,
+            'course_id': new_cid,
+            'course_name': new_cname,
+        }
+        mgr.update_group(gid, {'pairs': updated_pairs})
+        st.session_state['pending_toast'] = "\u2705 Pair updated successfully!"
+    # Clear edit state
+    _hub_cancel_edit()
+
+
+def _save_inline_add_cb(mgr, gid, new_folder, new_cid, new_cname):
+    """Callback to add a new pair to the group without closing the dialog."""
+    groups = mgr.load_groups()
+    group = next((g for g in groups if g.get('group_id') == gid), None)
+    if group:
+        updated_pairs = list(group.get('pairs', []))
+        updated_pairs.append({
+            'local_folder': new_folder,
+            'course_id': new_cid,
+            'course_name': new_cname,
+        })
+        mgr.update_group(gid, {'pairs': updated_pairs})
+        st.session_state['pending_toast'] = f"\u2705 Added '{new_cname}' to the group!"
+    # Clear add state
+    _hub_cancel_edit()
+
+
+def _confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
+    """Callback when confirming course selection in the SPA course selector."""
+    if cid:
+        st.session_state['hub_edit_temp_course_id'] = cid
+        if cid in course_names_map:
+            st.session_state['hub_edit_temp_course_name'] = course_names_map[cid]
+        else:
+            c_obj = next((c for c in courses_list if c.id == cid), None)
+            if c_obj:
+                st.session_state['hub_edit_temp_course_name'] = friendly_course_name(c_obj.name)
+    # Clean up course selector state
+    for k in list(st.session_state.keys()):
+        if k.startswith('hub_cs_'):
+            st.session_state.pop(k, None)
+    # Navigate back to Layer 2
+    st.session_state['hub_layer'] = 'layer_2'
 
 
 @st.dialog("\U0001F4DA Saved Groups", width="large")
@@ -227,6 +317,31 @@ def _saved_groups_hub_dialog(courses, course_names):
     layer = st.session_state.get('hub_layer', 'layer_1')
 
     # --- Dialog-wide CSS ---
+    st.markdown("""
+        <style>
+            /* Flexbox Left-Align for Inline Edit/Add Rows */
+            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] {
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 10px !important;
+            }
+            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+                width: auto !important;
+                flex: 0 1 auto !important;
+            }
+            /* Reduce vertical space between Folder row and Course row */
+            div[class*="st-key-hub_inline_edit_row_folder"],
+            div[class*="st-key-hub_inline_edit_row_add_folder"] {
+                margin-bottom: -6px !important;
+            }
+
+            /* Pull back buttons up to sit flush with dialog top */
+            div.st-key-btn_back_to_groups,
+            div.st-key-btn_hub_back_from_course_sel {
+                margin-top: -30px !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
 
     # =================================================================
@@ -242,7 +357,7 @@ def _saved_groups_hub_dialog(courses, course_names):
             return
 
         # NEW: Scrollable fixed-height container for the groups
-        with st.container(height=500, border=False):
+        with st.container(height=600, border=False):
             for g_idx, group in enumerate(groups):
                 with st.container(border=True, key=f"hub_overview_group_card_{g_idx}"):
                     pair_count = len(group.get('pairs', []))
@@ -360,14 +475,14 @@ def _saved_groups_hub_dialog(courses, course_names):
                 cv1, cv2 = st.columns([0.8, 0.2], vertical_alignment="bottom")
                 with cv1:
                     st.markdown(f"""
-                        <div style='margin-bottom: -5px;'>
+                        <div style='margin-bottom: -5px; margin-top: -20px;'>
                             <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>Group name:</span>
                         </div>
                         <h1 style='margin: 0px; padding: 0px; font-size: 2.2rem; display: inline-block; line-height: 1;'>{group['group_name']}</h1>
                     """, unsafe_allow_html=True)
                 with cv2:
                     st.button("✏️ Edit", key="btn_enable_edit_name", on_click=_toggle_edit_name)
-            st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True) # Spacing before cards
+            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # Spacing before cards
         else:
             # EDIT MODE (The yellow box)
             with st.container(border=True, key="hub_edit_group_meta"):
@@ -384,199 +499,304 @@ def _saved_groups_hub_dialog(courses, course_names):
 
         st.markdown("")
 
-        # --- Pair cards ---
-        pairs = group.get('pairs', [])
-        for p_idx, pair in enumerate(pairs):
-            with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
-                display_name = friendly_course_name(pair.get('course_name', 'Unknown'))
-                folder_exists = Path(pair.get('local_folder', '')).exists()
-                
-                st.markdown(f"""
-                    <div style='margin-bottom: 12px; margin-top: 6px;'>
-                        <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
-                        <div style='color: #a3a8b8; font-size: 14px;'>\U0001F4C1 {pair.get('local_folder', '')}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-                
+        # --- Pair cards (Wrapped in a scrollable container matching Layer 1) ---
+        with st.container(height=480, border=False):
+            pairs = group.get('pairs', [])
+            editing_idx = st.session_state.get('hub_editing_pair_idx')
+            is_adding = st.session_state.get('hub_is_adding_new_pair', False)
+
+            if not pairs and not is_adding:
+                st.info("No courses in this group yet. Add one below.")
+
+            for p_idx, pair in enumerate(pairs):
+                # === INLINE EDIT MODE ===
+                if editing_idx is not None and editing_idx == p_idx:
+                    with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
+                        st.markdown("<div style='font-size: 1.25rem; font-weight: 600; margin-top: 5px; margin-bottom: -10px;'>\u270f\ufe0f Editing Pair</div>", unsafe_allow_html=True)
+
+                        # --- Folder row ---
+                        temp_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
+                        folder_display = Path(temp_folder).name if temp_folder else 'No folder selected'
+                        with st.container(key=f"hub_inline_edit_row_folder_{p_idx}"):
+                            col_f_info, col_f_btn = st.columns(2, vertical_alignment="center", gap="small")
+                            with col_f_info:
+                                st.markdown(
+                                    f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                                    f'Folder:</span>'
+                                    f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
+                                    unsafe_allow_html=True,
+                                )
+                            with col_f_btn:
+                                st.button("Change Folder", key=f"hub_edit_change_folder_{p_idx}",
+                                          on_click=_hub_pick_folder_cb)
+
+                        # --- Course row ---
+                        temp_course_id = st.session_state.get('hub_edit_temp_course_id')
+                        temp_course_name = st.session_state.get('hub_edit_temp_course_name', '')
+                        course_disp = temp_course_name or 'No course selected'
+                        if temp_course_id and temp_course_id in course_names:
+                            course_disp = course_names[temp_course_id]
+
+                        with st.container(key=f"hub_inline_edit_row_course_{p_idx}"):
+                            col_c_info, col_c_btn = st.columns(2, vertical_alignment="center", gap="small")
+                            with col_c_info:
+                                st.markdown(
+                                    f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                                    f'Course:</span>'
+                                    f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{course_disp}</span>',
+                                    unsafe_allow_html=True,
+                                )
+                            with col_c_btn:
+                                st.button("Change Course", key=f"hub_edit_change_course_{p_idx}",
+                                          on_click=_change_hub_layer,
+                                          kwargs={'target_layer': 'layer_course_selector'})
+
+                        # --- Save / Cancel ---
+                        col_save, col_cancel, _ = st.columns([1, 1, 3])
+                        with col_save:
+                            final_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
+                            final_cid = st.session_state.get('hub_edit_temp_course_id', pair.get('course_id'))
+                            final_cname = st.session_state.get('hub_edit_temp_course_name', pair.get('course_name', ''))
+                            has_changes = (
+                                final_folder != pair.get('local_folder', '')
+                                or final_cid != pair.get('course_id')
+                            )
+                            st.button("💾 Save Changes", type="primary", use_container_width=True,
+                                      key=f"hub_save_edit_{p_idx}", disabled=not has_changes,
+                                      on_click=_save_inline_edit_cb,
+                                      args=(mgr, gid, p_idx, final_folder, final_cid, final_cname))
+                        with col_cancel:
+                            st.button("Cancel", key=f"hub_cancel_edit_{p_idx}",
+                                      use_container_width=True, on_click=_hub_cancel_edit)
+
+                # === NORMAL VIEW MODE ===
+                else:
+                    with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
+                        display_name = friendly_course_name(pair.get('course_name', 'Unknown'))
+                        folder_exists = Path(pair.get('local_folder', '')).exists()
+
+                        st.markdown(f"""
+                            <div style='margin-bottom: 12px; margin-top: 6px;'>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
+                                <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+                        c1, c2, c3 = st.columns(3)
+                        with c1:
+                            if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
+                                open_folder(pair['local_folder'])
+                        with c2:
+                            st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
+                                      on_click=_hub_start_edit_pair, args=(p_idx, pair))
+                        with c3:
+                            st.button("🗑️ Remove", key=f"btn_hub_remove_pair_{p_idx}", use_container_width=True,
+                                      on_click=_remove_pair_from_group, args=(mgr, gid, p_idx))
+
+                        # --- Config expander ---
+                        with st.expander("⚙️ See Configuration", expanded=False):
+                            _render_hub_config(pair)
+
+            # === INLINE ADD NEW PAIR ===
+            if is_adding:
+                with st.container(border=True, key="hub_add_new_pair_card"):
+                    st.markdown("<div style='font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;'>\u2795 Add a New Course/Folder Pair</div>", unsafe_allow_html=True)
+
+                    # --- Folder row ---
+                    add_folder = st.session_state.get('hub_edit_temp_folder', '')
+                    add_folder_display = Path(add_folder).name if add_folder else 'No folder selected'
+                    with st.container(key="hub_inline_edit_row_add_folder"):
+                        col_af_info, col_af_btn = st.columns(2, vertical_alignment="center", gap="small")
+                        with col_af_info:
+                            st.markdown(
+                                f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                                f'Folder:</span>'
+                                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
+                                unsafe_allow_html=True,
+                            )
+                        with col_af_btn:
+                            st.button("Select Folder", key="hub_add_select_folder",
+                                      on_click=_hub_pick_folder_cb)
+
+                    # --- Course row ---
+                    add_course_id = st.session_state.get('hub_edit_temp_course_id')
+                    add_course_name = st.session_state.get('hub_edit_temp_course_name', '')
+                    add_course_disp = add_course_name or 'No course selected'
+                    if add_course_id and add_course_id in course_names:
+                        add_course_disp = course_names[add_course_id]
+
+                    with st.container(key="hub_inline_edit_row_add_course"):
+                        col_ac_info, col_ac_btn = st.columns(2, vertical_alignment="center", gap="small")
+                        with col_ac_info:
+                            st.markdown(
+                                f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                                f'Course:</span>'
+                                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{add_course_disp}</span>',
+                                unsafe_allow_html=True,
+                            )
+                        with col_ac_btn:
+                            st.button("Select Course", key="hub_add_select_course",
+                                      on_click=_change_hub_layer,
+                                      kwargs={'target_layer': 'layer_course_selector'})
+
+                    # --- Add / Cancel ---
+                    can_add = bool(add_folder) and bool(add_course_id)
+                    add_cname_final = add_course_name if add_course_name else course_names.get(add_course_id, '')
+                    col_add, col_cancel_add, _ = st.columns([1, 1, 3])
+                    with col_add:
+                        st.button("💾 Add to Group", type="primary", use_container_width=True,
+                                  key="hub_confirm_add_pair", disabled=not can_add,
+                                  on_click=_save_inline_add_cb,
+                                  args=(mgr, gid, add_folder, add_course_id, add_cname_final))
+                    with col_cancel_add:
+                        st.button("Cancel", key="hub_cancel_add_pair",
+                                  use_container_width=True, on_click=_hub_cancel_edit)
+
+            # --- "Add a new course" button (only when not already adding) ---
+            if not is_adding:
+                st.markdown("")
+                def _start_adding():
+                    st.session_state['hub_is_adding_new_pair'] = True
+                    st.session_state.pop('hub_editing_pair_idx', None)
+                    st.session_state.pop('hub_edit_temp_folder', None)
+                    st.session_state.pop('hub_edit_temp_course_id', None)
+                    st.session_state.pop('hub_edit_temp_course_name', None)
+                st.button("➕ Add a new course to the group", key="btn_hub_add_new_pair",
+                          use_container_width=True, on_click=_start_adding)
+
+    # =================================================================
+    # LAYER: COURSE SELECTOR (Premium SPA page)
+    # =================================================================
+    elif layer == 'layer_course_selector':
+        # Determine current selection from the edit/add temp state
+        current_selected_id = st.session_state.get('hub_edit_temp_course_id')
+
+        st.button("\u2190 Back to Edit", key="btn_hub_back_from_course_sel", type="tertiary",
+                  on_click=_change_hub_layer, kwargs={'target_layer': 'layer_2'})
+        st.markdown("<h3 style='font-size: 1.5rem; margin-top: 0px;'>Select Course</h3>", unsafe_allow_html=True)
+
+        # --- Filters (Favorites / All) ---
+        col_filters, _ = st.columns([0.7, 0.3])
+        with col_filters:
+            filter_mode = st.radio(
+                "Filter Mode",
+                ["Favorites", "All Courses"],
+                index=0 if st.session_state.get('hub_cs_filter_favorites', True) else 1,
+                horizontal=True,
+                label_visibility="collapsed",
+                key="hub_cs_filter_mode"
+            )
+        st.session_state['hub_cs_filter_favorites'] = (filter_mode == "Favorites")
+
+        visible_courses = courses
+        if st.session_state['hub_cs_filter_favorites']:
+            visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
+
+        if not visible_courses:
+            st.warning("No courses found with the current filter.")
+            return
+
+        # --- CBS Filters ---
+        show_filters = st.toggle("Enable CBS Filters", key="hub_cs_show_cbs")
+
+        filtered_courses = visible_courses
+
+        if show_filters:
+            course_meta = {}
+            all_types = set()
+            all_semesters = set()
+            all_years = set()
+
+            for c in visible_courses:
+                full_name_str = f"{c.name} ({c.course_code})" if hasattr(c, 'course_code') else c.name
+                meta = parse_cbs_metadata(full_name_str)
+                course_meta[c.id] = meta
+                if meta['type']: all_types.add(meta['type'])
+                if meta['semester']: all_semesters.add(meta['semester'])
+                if meta['year_full']: all_years.add(meta['year_full'])
+
+            with st.container(border=True, key="hub_cs_cbs_container"):
+                st.markdown("**Filter Criteria**")
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    if st.button("\U0001F4C2 Open Folder", key=f"hub_open_{p_idx}",
-                                 disabled=not folder_exists,
-                                 use_container_width=True):
-                        open_folder(pair['local_folder'])
+                    sel_types = st.multiselect("Class Type", options=sorted(list(all_types)), key="hub_cs_type")
                 with c2:
-                    st.button("\u270f\ufe0f Edit Pair", key=f"hub_editp_{p_idx}",
-                              use_container_width=True,
-                              on_click=_change_hub_layer,
-                              kwargs={'target_layer': 'layer_3',
-                                      'hub_active_pair_idx': p_idx,
-                                      'hub_temp_folder': pair.get('local_folder', ''),
-                                      'hub_temp_course_id': pair.get('course_id')})
+                    sel_sem = st.multiselect("Semester", options=sorted(list(all_semesters)), key="hub_cs_sem")
                 with c3:
-                    st.button("\U0001F5D1\ufe0f Remove", key=f"btn_hub_remove_pair_{p_idx}",
-                              use_container_width=True,
-                              on_click=_remove_pair_from_group,
-                              args=(mgr, gid, p_idx))
+                    sel_years = st.multiselect("Year", options=sorted(list(all_years), reverse=True), key="hub_cs_year")
 
-                # --- Config expander ---
-                with st.expander("\u2699\ufe0f See Configuration", expanded=False):
-                    _render_hub_config(pair)
+            if sel_types or sel_sem or sel_years:
+                temp_filtered = []
+                for c in visible_courses:
+                    meta = course_meta[c.id]
+                    match_type = meta['type'] in sel_types if sel_types else True
+                    match_sem = meta['semester'] in sel_sem if sel_sem else True
+                    match_year = meta['year_full'] in sel_years if sel_years else True
+                    if match_type and match_sem and match_year:
+                        temp_filtered.append(c)
+                filtered_courses = temp_filtered
+                if not filtered_courses:
+                    st.info("No courses match the selected filters.")
 
-        st.markdown("")
-        st.button("\u2795 Add a new course to the group", key="btn_hub_add_new_pair", use_container_width=True,
-                  on_click=_change_hub_layer,
-                  kwargs={'target_layer': 'layer_4_add_pair'})
+        # --- Sorting: selected first, then alphabetical ---
+        active_selection = st.session_state.get('hub_cs_selected_id', current_selected_id)
+        filtered_courses.sort(key=lambda c: (0 if c.id == active_selection else 1, (c.name or "").lower()))
 
-    # =================================================================
-    # LAYER 3 — Edit Pair
-    # =================================================================
-    elif layer == 'layer_3':
-        gid = st.session_state.get('hub_active_group_id')
-        p_idx = st.session_state.get('hub_active_pair_idx', 0)
-        groups = mgr.load_groups()
-        group = next((g for g in groups if g.get('group_id') == gid), None)
-        if not group or p_idx >= len(group.get('pairs', [])):
-            st.error("Pair not found.")
-            st.button("\u2b05\ufe0f Back", key="hub_back_l3_err", type="tertiary",
-                      on_click=_change_hub_layer, kwargs={'target_layer': 'layer_2'})
-            return
+        st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
-        original_pair = group['pairs'][p_idx]
+        # --- Initialize single-select state ---
+        if 'hub_cs_selected_id' not in st.session_state:
+            st.session_state['hub_cs_selected_id'] = current_selected_id
 
-        st.button("← Back to Group Details", key="hub_back_l3", type="tertiary",
-                  on_click=_change_hub_layer,
-                  kwargs={'target_layer': 'layer_2',
-                          '_pop_keys': ['hub_temp_folder', 'hub_temp_course_id']})
+        # --- Scrollable course list ---
+        with st.container(height=400, border=False, key="hub_cs_scroll_container"):
+            for course in filtered_courses:
+                full_name_str = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
+                friendly = friendly_course_name(full_name_str)
+                is_checked = (st.session_state['hub_cs_selected_id'] == course.id)
 
-        st.markdown("---")
-        st.markdown("##### Edit Pair")
+                c1, c2 = st.columns([0.05, 0.95])
+                with c1:
+                    st.session_state[f"hub_cs_chk_{course.id}"] = is_checked
 
-        # --- Folder selection (isolated state) ---
-        temp_folder = st.session_state.get('hub_temp_folder', original_pair.get('local_folder', ''))
-        st.markdown(f"**Current Folder:** `{temp_folder}`")
-        if st.button("\U0001F4C1 Change Folder", key="hub_change_folder"):
-            _hub_select_folder()
-            st.rerun()
+                    def _hub_course_toggled(cid):
+                        if st.session_state.get(f"hub_cs_chk_{cid}"):
+                            st.session_state['hub_cs_selected_id'] = cid
+                        elif st.session_state.get('hub_cs_selected_id') == cid:
+                            st.session_state['hub_cs_selected_id'] = None
 
-        st.markdown("")
+                    st.checkbox(
+                        "Select",
+                        key=f"hub_cs_chk_{course.id}",
+                        on_change=_hub_course_toggled,
+                        args=(course.id,),
+                        label_visibility="collapsed"
+                    )
 
-        # --- Course selection (inline selectbox, no nested dialog) ---
-        # Build options from the passed-in course_names dict
-        sorted_names = sorted(course_names.values(), key=lambda x: x.lower())
-        # Find current selection index
-        current_course_id = st.session_state.get('hub_temp_course_id', original_pair.get('course_id'))
-        current_name = course_names.get(current_course_id, original_pair.get('course_name', ''))
-        try:
-            default_idx = sorted_names.index(current_name)
-        except ValueError:
-            default_idx = 0
+                with c2:
+                    st.markdown(
+                        f'<div style="margin-top: -2px; width: 100%;">'
+                        f'<strong>{friendly}</strong> '
+                        f'<br><span style="color:#888; font-size:0.85em;">{full_name_str}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
 
-        selected_name = st.selectbox("Course", sorted_names, index=default_idx,
-                                      key="hub_course_select")
-        # Reverse-lookup course_id from name
-        selected_course_id = current_course_id
-        for cid, cname in course_names.items():
-            if cname == selected_name:
-                selected_course_id = cid
-                break
-
-        st.markdown("")
-
-        # --- Save / Cancel ---
-        sc1, sc2 = st.columns([1, 1], vertical_alignment="bottom")
-        final_folder = st.session_state.get('hub_temp_folder', original_pair.get('local_folder', ''))
-        final_course_name = selected_name
-        has_changes = (
-            final_folder != original_pair.get('local_folder', '')
-            or selected_course_id != original_pair.get('course_id')
-        )
-        with sc1:
-            if st.button("\U0001F4BE Save Changes", type="primary", use_container_width=True,
-                         key="hub_save_pair", disabled=not has_changes):
-                # Update the pair in the group
-                updated_pairs = list(group['pairs'])
-                updated_pairs[p_idx] = {
-                    'local_folder': final_folder,
-                    'course_id': selected_course_id,
-                    'course_name': final_course_name,
-                }
-                mgr.update_group(gid, {'pairs': updated_pairs})
-                st.session_state['pending_toast'] = "\u2705 Pair updated successfully!"
-                st.session_state['hub_layer'] = 'layer_2'
-                st.session_state.pop('hub_temp_folder', None)
-                st.session_state.pop('hub_temp_course_id', None)
-        with sc2:
-            st.button("Cancel", type="secondary", use_container_width=True,
-                     key="hub_cancel_pair",
-                     on_click=_change_hub_layer,
-                     kwargs={'target_layer': 'layer_2',
-                             '_pop_keys': ['hub_temp_folder', 'hub_temp_course_id']})
-
-    # =================================================================
-    # LAYER 4 — Add New Course Pair
-    # =================================================================
-    elif layer == 'layer_4_add_pair':
-        gid = st.session_state.get('hub_active_group_id')
-        groups = mgr.load_groups()
-        group = next((g for g in groups if g.get('group_id') == gid), None)
-        if not group:
-            st.error("Group not found.")
-            st.button("← Back", key="hub_back_l4_err", type="tertiary",
-                      on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
-            return
-
-        st.button("← Cancel & Go Back", key="btn_cancel_add_pair", type="tertiary",
-                  on_click=_change_hub_layer,
-                  kwargs={'target_layer': 'layer_2',
-                          '_pop_keys': ['hub_temp_add_folder']})
-
-        st.markdown("### \u2795 Add a New Course")
-        st.markdown(f"Adding to group: **{group['group_name']}**")
-        st.markdown("")
-
-        # --- Step 1: Select folder ---
-        temp_add_folder = st.session_state.get('hub_temp_add_folder', '')
-        if st.button("\U0001F4C1 Select Local Folder", key="hub_add_select_folder",
-                     use_container_width=True, type="secondary"):
-            _hub_select_folder()
-            # Store in the add-specific temp key
-            picked = st.session_state.get('hub_temp_folder', '')
-            if picked:
-                st.session_state['hub_temp_add_folder'] = picked
-                st.session_state.pop('hub_temp_folder', None)
-
-        if temp_add_folder:
-            st.markdown(f"\u2705 **Selected:** `{temp_add_folder}`")
-            st.markdown("")
-
-            # --- Step 2: Select course ---
-            sorted_names = sorted(course_names.values(), key=lambda x: x.lower())
-            selected_name = st.selectbox("Select a Course", sorted_names, key="hub_add_course_select")
-
-            # Reverse-lookup course_id
-            selected_course_id = None
-            for cid, cname in course_names.items():
-                if cname == selected_name:
-                    selected_course_id = cid
-                    break
-
-            st.markdown("")
-
-            # --- Step 3: Add to group ---
-            if st.button("\U0001F4BE Add to Group", type="primary", use_container_width=True,
-                         key="hub_confirm_add_pair", disabled=(not selected_course_id)):
-                new_pair = {
-                    'local_folder': temp_add_folder,
-                    'course_id': selected_course_id,
-                    'course_name': selected_name,
-                }
-                updated_pairs = list(group.get('pairs', [])) + [new_pair]
-                mgr.update_group(gid, {'pairs': updated_pairs})
-                st.session_state['pending_toast'] = f"\u2705 Added '{selected_name}' to the group!"
-                st.session_state.pop('hub_temp_add_folder', None)
-                st.session_state['hub_layer'] = 'layer_2'
-        else:
-            st.info("\U0001F4C2 Select a local folder to get started.")
+        # --- Confirm Selection ---
+        st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+        selected_cid = st.session_state.get('hub_cs_selected_id')
+        selected_cname = ''
+        if selected_cid:
+            if selected_cid in course_names:
+                selected_cname = course_names[selected_cid]
+            else:
+                c_obj = next((c for c in courses if c.id == selected_cid), None)
+                if c_obj:
+                    selected_cname = friendly_course_name(c_obj.name)
+        st.button("Confirm Selection", key="hub_cs_confirm_btn", type="primary",
+                  use_container_width=True, disabled=not bool(selected_cid),
+                  on_click=_confirm_course_selection_cb,
+                  args=(selected_cid, selected_cname, course_names, courses))
 
     # =================================================================
     # RESCUE MODE — Remap Missing Folders
@@ -715,8 +935,11 @@ def _render_hub_config(pair: dict):
 
 def _hub_cleanup():
     """Reset all hub-specific session state keys."""
-    for k in ['hub_layer', 'hub_active_group_id', 'hub_active_pair_idx',
+    for k in ['hub_layer', 'hub_active_group_id',
               'hub_temp_folder', 'hub_temp_course_id',
+              'hub_editing_pair_idx', 'hub_edit_temp_folder',
+              'hub_edit_temp_course_id', 'hub_edit_temp_course_name',
+              'hub_is_adding_new_pair',
               'hub_rescue_group_id', 'hub_rescue_pairs', 'hub_rescue_missing',
               'hub_rescue_skipped', 'rescue_paths']:
         st.session_state.pop(k, None)
@@ -779,6 +1002,7 @@ def _inject_hub_global_css():
        IMPORTANT: All button selectors MUST include
        div[data-testid="stDialog"] to beat Streamlit's defaults.
        --------------------------------------------------------- */
+       
     /* Primary button: blue */
     div[data-testid="stDialog"] button[kind="primary"] {
         background-color: #3b82f6 !important;
