@@ -115,21 +115,36 @@ def _select_sync_folder():
 
 
 # ===================================================================
-# Save Group Dialog
+# Save Group / Pair Dialog (Dual-Wrapper Pattern)
 # ===================================================================
 
-@st.dialog("💾 Save as Group")
-def _save_group_dialog(sync_pairs: list[dict]):
-    """Dialog to save the current sync pairs as a reusable group."""
+def _save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair_data: dict = None):
+    """Shared inner logic for the Save Group/Pair dialog."""
+    if is_pair:
+        desc_text = (
+            'Save your selected course/folder pair, to store it, '
+            'enabling quick-adding to the sync list.'
+        )
+        input_label = "Give your pair a name:"
+        input_placeholder = "e.g., Programming (for NotebookLM)"
+        entity = "Pair"
+    else:
+        desc_text = (
+            'Save your current list of course/folder pairs as a group so you can '
+            'quickly switch between semesters.'
+        )
+        input_label = "Give your group a name:"
+        input_placeholder = "e.g., 1st Semester"
+        entity = "Group"
+
     st.markdown(
-        '<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'
-        'Save your current list of course/folder pairs as a group so you can '
-        'quickly switch between semesters.</p>',
+        f'<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'
+        f'{desc_text}</p>',
         unsafe_allow_html=True,
     )
-    group_name = st.text_input(
-        "Give your group a name:",
-        placeholder="e.g., 1st Semester",
+    item_name = st.text_input(
+        input_label,
+        placeholder=input_placeholder,
         key="save_group_name_input",
     )
 
@@ -138,17 +153,33 @@ def _save_group_dialog(sync_pairs: list[dict]):
     # Action buttons — Create left, Cancel right
     col_create, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
     with col_create:
-        create_disabled = not group_name or not group_name.strip()
+        create_disabled = not item_name or not item_name.strip()
         if st.button("Create", type="primary", use_container_width=True,
                      key="save_group_create", disabled=create_disabled):
             from ui_helpers import get_config_dir
             mgr = SavedGroupsManager(get_config_dir())
-            mgr.save_group(group_name.strip(), sync_pairs)
-            st.session_state['pending_toast'] = f"\u2705 Group '{group_name.strip()}' saved successfully!"
+            if is_pair and pair_data:
+                mgr.save_group(item_name.strip(), [pair_data], is_single_pair=True)
+            else:
+                mgr.save_group(item_name.strip(), sync_pairs)
+            st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
             st.rerun()
     with col_cancel:
         if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
             st.rerun()
+
+
+@st.dialog("\U0001F4BE Save as Group")
+def _save_group_dialog(sync_pairs: list[dict]):
+    """Dialog to save the current sync pairs as a reusable group."""
+    _save_group_or_pair_inner(sync_pairs, is_pair=False)
+
+
+@st.dialog("\U0001F4BE Save as Pair")
+def _save_pair_dialog(pair_data: dict):
+    """Dialog to save a single course/folder pair."""
+    _save_group_or_pair_inner([], is_pair=True, pair_data=pair_data)
+
 
 
 # ===================================================================
@@ -307,7 +338,7 @@ def _confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
     st.session_state['hub_layer'] = 'layer_2'
 
 
-@st.dialog("\U0001F4DA Saved Groups", width="large")
+@st.dialog("\U0001F4DA Saved Groups & Pairs", width="large")
 def _saved_groups_hub_dialog(courses, course_names):
     """3-layered SPA dialog for managing saved sync groups."""
     from ui_helpers import get_config_dir
@@ -390,91 +421,208 @@ def _saved_groups_hub_dialog(courses, course_names):
     if layer == 'layer_1':
         groups = mgr.load_groups()
         if not groups:
-            st.info("No saved groups yet. Use the \"\U0001F4BE Save List as Group\" button to create one.")
+            st.info("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
             if st.button("Close", type="secondary", use_container_width=True, key="hub_close_empty"):
                 _hub_cleanup()
                 st.rerun()
             return
 
+        # --- Tab Buttons (View All / Groups / Pairs) ---
+        if 'hub_view_mode' not in st.session_state:
+            st.session_state.hub_view_mode = "View All"
+        _vm = st.session_state.hub_view_mode
+        t1, t2, t3 = st.columns(3)
+        with t1:
+            if st.button("View All", key="hub_tab_all",
+                         type="primary" if _vm == "View All" else "secondary",
+                         use_container_width=True):
+                st.session_state.hub_view_mode = "View All"
+                st.rerun()
+        with t2:
+            if st.button("Groups", key="hub_tab_groups",
+                         type="primary" if _vm == "Groups" else "secondary",
+                         use_container_width=True):
+                st.session_state.hub_view_mode = "Groups"
+                st.rerun()
+        with t3:
+            if st.button("Pairs", key="hub_tab_pairs",
+                         type="primary" if _vm == "Pairs" else "secondary",
+                         use_container_width=True):
+                st.session_state.hub_view_mode = "Pairs"
+                st.rerun()
+
+        # --- Filter Logic ---
+        if _vm == "Groups":
+            filtered_groups = [g for g in groups if not g.get('is_single_pair')]
+        elif _vm == "Pairs":
+            filtered_groups = [g for g in groups if g.get('is_single_pair')]
+        else:
+            filtered_groups = groups
+
+        if not filtered_groups:
+            st.info(f"No {'pairs' if _vm == 'Pairs' else 'groups'} saved yet.")
+
         # NEW: Scrollable fixed-height container for the groups
-        with st.container(height=600, border=False):
-            for g_idx, group in enumerate(groups):
-                with st.container(border=True, key=f"hub_overview_group_card_{g_idx}"):
-                    pair_count = len(group.get('pairs', []))
-                    course_word = 'course' if pair_count == 1 else 'courses'
-                    
-                    # 1. Custom Title HTML (Fixed top margin to align centrally)
-                    st.markdown(f"""
-                        <div style='margin-top: 0px; margin-bottom: 10px;'>
-                            <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>🗂️ {group['group_name']}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # 2. Borderless Expander for Courses
-                    with st.expander(f"{pair_count} {course_word}"):
-                        bullet_points = []
-                        for p in group.get('pairs', []):
-                            fname = friendly_course_name(p.get('course_name', 'Unknown'))
-                            bullet_points.append(f"- {fname}")
-                        
-                        if bullet_points:
-                            st.markdown("\n".join(bullet_points))
-                        else:
-                            st.markdown("*No courses in this group*")
+        with st.container(height=560, border=False):
+            for g_idx, group in enumerate(filtered_groups):
+                is_sp = group.get('is_single_pair', False)
 
-                    # Spacer removed to make buttons compact against the expander
-                    c1, c2, c3 = st.columns([1, 1, 1], gap="small")
-                    with c1:
-                        if st.button("➕ Add to Sync List", key=f"hub_add_{g_idx}",
-                                     use_container_width=True):
-                            # --- Phase 3: Pre-Flight Engine ---
-                            incoming = group.get('pairs', [])
-                            existing_ids = {p.get('course_id') for p in st.session_state.get('sync_pairs', [])}
+                if is_sp:
+                    # === PAIR CARD (Single Pair) ===
+                    with st.container(border=True, key=f"hub_pair_item_{g_idx}"):
+                        pair = group.get('pairs', [{}])[0] if group.get('pairs') else {}
+                        display_name = friendly_course_name(pair.get('course_name', group['group_name']))
 
-                            # Task 1: Silent duplicate filtering
-                            unique_pairs = [p for p in incoming if p.get('course_id') not in existing_ids]
-                            skipped = len(incoming) - len(unique_pairs)
+                        # Title: 🏷️ with same font size/weight as group expander summaries
+                        st.markdown(f"""
+                            <div style='margin-top: 0px; margin-bottom: 10px;'>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>\U0001F3F7\ufe0f {group['group_name']}</div>
+                                <div style='color: #a3a8b8; font-size: 0.85rem; margin-top: 3px;'>\U0001F393 {display_name}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
 
-                            if not unique_pairs:
-                                st.session_state['pending_toast'] = f"⚠️ All {len(incoming)} courses are already in your sync list."
+                        # Smart disable check: is this pair already on the sync list?
+                        _current_sync = st.session_state.get('sync_pairs', [])
+                        _pair_on_list = any(
+                            sp.get('course_id') == pair.get('course_id')
+                            and sp.get('local_folder') == pair.get('local_folder')
+                            for sp in _current_sync
+                        )
+                        _add_help_sp = "This pair is already on the sync list." if _pair_on_list else None
+
+                        # Pair action buttons (same as groups)
+                        c1, c2, c3 = st.columns([1, 1, 1], gap="small")
+                        with c1:
+                            if st.button("\u2795 Add to Sync List", key=f"hub_add_{g_idx}",
+                                         use_container_width=True,
+                                         disabled=_pair_on_list, help=_add_help_sp):
+                                # --- Single Pair Append Logic (Step 5) ---
+                                incoming_pair = pair
+                                current_list = _current_sync
+
+                                # Rule A: Prevent exact duplicates (Same course_id AND local_folder)
+                                for existing in current_list:
+                                    if (existing.get('course_id') == incoming_pair.get('course_id')
+                                            and existing.get('local_folder') == incoming_pair.get('local_folder')):
+                                        st.session_state['pending_toast'] = "\u26a0\ufe0f This exact pair is already in your sync list."
+                                        st.rerun()
+                                        return
+
+                                # Rule B: Prevent folder collision (Same local_folder path)
+                                for existing in current_list:
+                                    if existing.get('local_folder') == incoming_pair.get('local_folder'):
+                                        st.session_state['pending_toast'] = "\u26a0\ufe0f Folder collision: this folder is already used by another pair in your sync list."
+                                        st.rerun()
+                                        return
+
+                                # Validation passed — append
+                                st.session_state['sync_pairs'].append(incoming_pair)
+                                _persist_current_pairs()
+                                st.session_state['pending_toast'] = f"\u2705 Added '{display_name}' to sync list!"
+                                _hub_cleanup()
                                 st.rerun()
-                            else:
-                                # Task 2: Folder existence pre-flight
-                                missing_indices = [
-                                    i for i, p in enumerate(unique_pairs)
-                                    if not Path(p.get('local_folder', '')).exists()
-                                ]
+                        with c2:
+                            st.button("\u270f\ufe0f Edit Pair", key=f"hub_edit_{g_idx}",
+                                      use_container_width=True,
+                                      on_click=_change_hub_layer,
+                                      kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
+                        with c3:
+                            st.button("\U0001F5D1\ufe0f Delete", key=f"btn_hub_delete_{group['group_id']}",
+                                      use_container_width=True,
+                                      on_click=_delete_group_callback,
+                                      args=(mgr, group['group_id'], group['group_name']))
 
-                                if not missing_indices:
-                                    # All folders exist — merge immediately
-                                    st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + unique_pairs
-                                    _persist_current_pairs()
-                                    added = len(unique_pairs)
-                                    msg = f"✅ Added {added} course{'s' if added != 1 else ''} to sync list!"
-                                    if skipped:
-                                        msg += f" (Skipped {skipped} duplicate{'s' if skipped != 1 else ''}.)"
-                                    st.session_state['pending_toast'] = msg
-                                    _hub_cleanup()
+                else:
+                    # === GROUP CARD (Multi-pair group) ===
+                    with st.container(border=True, key=f"hub_overview_group_card_{g_idx}"):
+                        pair_count = len(group.get('pairs', []))
+                        course_word = 'course' if pair_count == 1 else 'courses'
+                        
+                        # 1. Custom Title HTML (Fixed top margin to align centrally)
+                        st.markdown(f"""
+                            <div style='margin-top: 0px; margin-bottom: 10px;'>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>\U0001F5C2\ufe0f {group['group_name']}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # 2. Borderless Expander for Courses
+                        with st.expander(f"{pair_count} {course_word}"):
+                            bullet_points = []
+                            for p in group.get('pairs', []):
+                                fname = friendly_course_name(p.get('course_name', 'Unknown'))
+                                bullet_points.append(f"- {fname}")
+                            
+                            if bullet_points:
+                                st.markdown("\n".join(bullet_points))
+                            else:
+                                st.markdown("*No courses in this group*")
+
+                        # Smart disable check: are ALL pairs already on the sync list?
+                        _current_sync_g = st.session_state.get('sync_pairs', [])
+                        _current_sigs = {
+                            (sp.get('course_id'), sp.get('local_folder'))
+                            for sp in _current_sync_g
+                        }
+                        _group_on_list = all(
+                            (gp.get('course_id'), gp.get('local_folder')) in _current_sigs
+                            for gp in group.get('pairs', [])
+                        ) if group.get('pairs') else False
+                        _add_help_g = "All pairs in this group are already on the sync list." if _group_on_list else None
+
+                        # Spacer removed to make buttons compact against the expander
+                        c1, c2, c3 = st.columns([1, 1, 1], gap="small")
+                        with c1:
+                            if st.button("\u2795 Add to Sync List", key=f"hub_add_{g_idx}",
+                                         use_container_width=True,
+                                         disabled=_group_on_list, help=_add_help_g):
+                                # --- Phase 3: Pre-Flight Engine ---
+                                incoming = group.get('pairs', [])
+                                existing_ids = {p.get('course_id') for p in st.session_state.get('sync_pairs', [])}
+
+                                # Task 1: Silent duplicate filtering
+                                unique_pairs = [p for p in incoming if p.get('course_id') not in existing_ids]
+                                skipped = len(incoming) - len(unique_pairs)
+
+                                if not unique_pairs:
+                                    st.session_state['pending_toast'] = f"\u26a0\ufe0f All {len(incoming)} courses are already in your sync list."
                                     st.rerun()
                                 else:
-                                    # Some folders missing — enter rescue mode
-                                    st.session_state['hub_layer'] = 'rescue_mode'
-                                    st.session_state['hub_rescue_group_id'] = group['group_id']
-                                    st.session_state['hub_rescue_pairs'] = unique_pairs
-                                    st.session_state['hub_rescue_missing'] = missing_indices
-                                    st.session_state['hub_rescue_skipped'] = skipped
-                                    st.session_state['rescue_paths'] = {}
-                                    st.rerun()
-                    with c2:
-                        st.button("✏️ Edit Group", key=f"hub_edit_{g_idx}",
-                                  use_container_width=True,
-                                  on_click=_change_hub_layer,
-                                  kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
-                    with c3:
-                        st.button("🗑️ Delete", key=f"btn_hub_delete_{group['group_id']}",
-                                  use_container_width=True,
-                                  on_click=_delete_group_callback,
-                                  args=(mgr, group['group_id'], group['group_name']))
+                                    # Task 2: Folder existence pre-flight
+                                    missing_indices = [
+                                        i for i, p in enumerate(unique_pairs)
+                                        if not Path(p.get('local_folder', '')).exists()
+                                    ]
+
+                                    if not missing_indices:
+                                        # All folders exist — merge immediately
+                                        st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + unique_pairs
+                                        _persist_current_pairs()
+                                        added = len(unique_pairs)
+                                        msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
+                                        if skipped:
+                                            msg += f" (Skipped {skipped} duplicate{'s' if skipped != 1 else ''}.)"
+                                        st.session_state['pending_toast'] = msg
+                                        _hub_cleanup()
+                                        st.rerun()
+                                    else:
+                                        # Some folders missing — enter rescue mode
+                                        st.session_state['hub_layer'] = 'rescue_mode'
+                                        st.session_state['hub_rescue_group_id'] = group['group_id']
+                                        st.session_state['hub_rescue_pairs'] = unique_pairs
+                                        st.session_state['hub_rescue_missing'] = missing_indices
+                                        st.session_state['hub_rescue_skipped'] = skipped
+                                        st.session_state['rescue_paths'] = {}
+                                        st.rerun()
+                        with c2:
+                            st.button("\u270f\ufe0f Edit Group", key=f"hub_edit_{g_idx}",
+                                      use_container_width=True,
+                                      on_click=_change_hub_layer,
+                                      kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
+                        with c3:
+                            st.button("\U0001F5D1\ufe0f Delete", key=f"btn_hub_delete_{group['group_id']}",
+                                      use_container_width=True,
+                                      on_click=_delete_group_callback,
+                                      args=(mgr, group['group_id'], group['group_name']))
 
         if st.button("Close", type="secondary", use_container_width=True, key="btn_hub_close"):
             _hub_cleanup()
@@ -496,7 +644,11 @@ def _saved_groups_hub_dialog(courses, course_names):
         st.button("← Back to Groups", key="btn_back_to_groups", type="tertiary",
                   on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
 
-        # --- Dynamic Group Name (View/Edit Modes) ---
+        # Detect single pair for conditional UI
+        is_sp = group.get('is_single_pair', False)
+        entity_label = "Pair" if is_sp else "Group"
+
+        # --- Dynamic Group/Pair Name (View/Edit Modes) ---
         edit_mode_active = st.session_state.get('hub_edit_group_name_active', False)
         
         def _toggle_edit_name():
@@ -509,7 +661,7 @@ def _saved_groups_hub_dialog(courses, course_names):
             val = st.session_state.get("hub_edit_name_input", "").strip()
             if val and val != group['group_name']:
                 mgr.update_group(gid, {'group_name': val})
-                st.session_state['pending_toast'] = f"✅ Group renamed to '{val}'"
+                st.session_state['pending_toast'] = f"✅ {entity_label} renamed to '{val}'"
             st.session_state['hub_edit_group_name_active'] = False
 
         if not edit_mode_active:
@@ -517,9 +669,10 @@ def _saved_groups_hub_dialog(courses, course_names):
             with st.container(key="hub_group_name_view_row"):
                 cv1, cv2 = st.columns([0.8, 0.2], vertical_alignment="bottom")
                 with cv1:
+                    name_label = "Pair name:" if is_sp else "Group name:"
                     st.markdown(f"""
                         <div style='margin-bottom: -5px; margin-top: -20px;'>
-                            <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>Group name:</span>
+                            <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>{name_label}</span>
                         </div>
                         <h1 style='margin: 0px; padding: 0px; font-size: 2.2rem; display: inline-block; line-height: 1;'>{group['group_name']}</h1>
                     """, unsafe_allow_html=True)
@@ -531,7 +684,7 @@ def _saved_groups_hub_dialog(courses, course_names):
             with st.container(border=True, key="hub_edit_group_meta"):
                 col_name, col_save, col_cancel = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
-                    new_name = st.text_input("Group Name", value=group['group_name'],
+                    new_name = st.text_input(f"{entity_label} Name", value=group['group_name'],
                                              key="hub_edit_name_input", label_visibility="collapsed")
                 with col_save:
                     name_changed = new_name.strip() and new_name.strip() != group['group_name']
@@ -625,23 +778,33 @@ def _saved_groups_hub_dialog(courses, course_names):
                             </div>
                         """, unsafe_allow_html=True)
 
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
-                                open_folder(pair['local_folder'])
-                        with c2:
-                            st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
-                                      on_click=_hub_start_edit_pair, args=(p_idx, pair))
-                        with c3:
-                            st.button("🗑️ Remove", key=f"btn_hub_remove_pair_{p_idx}", use_container_width=True,
-                                      on_click=_remove_pair_from_group, args=(mgr, gid, p_idx))
+                        if is_sp:
+                            # Single pair: 2 columns (no Remove button)
+                            c1, c2 = st.columns([0.5, 0.5])
+                            with c1:
+                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
+                                    open_folder(pair['local_folder'])
+                            with c2:
+                                st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
+                                          on_click=_hub_start_edit_pair, args=(p_idx, pair))
+                        else:
+                            c1, c2, c3 = st.columns(3)
+                            with c1:
+                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
+                                    open_folder(pair['local_folder'])
+                            with c2:
+                                st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
+                                          on_click=_hub_start_edit_pair, args=(p_idx, pair))
+                            with c3:
+                                st.button("🗑️ Remove", key=f"btn_hub_remove_pair_{p_idx}", use_container_width=True,
+                                          on_click=_remove_pair_from_group, args=(mgr, gid, p_idx))
 
                         # --- Config expander ---
                         with st.expander("⚙️ See Configuration", expanded=False):
                             _render_hub_config(pair)
 
-            # === INLINE ADD NEW PAIR ===
-            if is_adding:
+            # === INLINE ADD NEW PAIR (Hidden for single pairs) ===
+            if not is_sp and is_adding:
                 with st.container(border=True, key="hub_add_new_pair_card"):
                     st.markdown("<div style='font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;'>\u2795 Add a New Course/Folder Pair</div>", unsafe_allow_html=True)
 
@@ -695,8 +858,8 @@ def _saved_groups_hub_dialog(courses, course_names):
                         st.button("Cancel", key="btn_inline_new_cancel",
                                   use_container_width=True, on_click=_hub_cancel_edit)
 
-            # --- "Add a new course" button (only when not already adding) ---
-            if not is_adding:
+            # --- "Add a new course" button (only when not already adding, hidden for single pairs) ---
+            if not is_sp and not is_adding:
                 st.markdown("")
                 def _start_adding():
                     st.session_state['hub_is_adding_new_pair'] = True
@@ -1486,6 +1649,45 @@ def _inject_hub_global_css():
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         color: rgba(255, 255, 255, 0.3) !important;
     }
+
+    /* (Segmented control CSS removed — replaced by native tab buttons) */
+
+    /* =========================================
+       LAYER 1: PAIR CARDS (Single Pairs)
+       ========================================= */
+    /* Desaturated cool-gray tint (distinct from warm group cards) */
+    div[class*="st-key-hub_pair_item_"] {
+        background-color: rgba(180, 200, 220, 0.08) !important;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        margin-bottom: 15px !important;
+        border-radius: 8px !important;
+        padding-top: 10px !important;
+    }
+
+    /* =========================================
+       INLINE SAVE PAIR BUTTON (Main Sync List)
+       ========================================= */
+    div[class*="st-key-save_pair_"] button {
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        min-height: 38px !important;
+        padding: 4px 8px !important;
+        font-size: 1.1em !important;
+    }
+    div[class*="st-key-save_pair_"] button:hover {
+        background-color: rgba(59, 130, 246, 0.2) !important;
+        border-color: rgba(59, 130, 246, 0.5) !important;
+        color: #93c5fd !important;
+        transition: all 0.2s ease-in-out;
+    }
+    div[class*="st-key-save_pair_"] button[disabled] {
+        background-color: rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: rgba(255, 255, 255, 0.25) !important;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -1571,13 +1773,22 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             unsafe_allow_html=True,
         )
     with col_hub:
-        if st.button("\U0001F4DA Saved Groups", key="btn_hub_main",
+        if st.button("\U0001F4DA Saved Groups & Pairs", key="btn_hub_main",
                      use_container_width=True):
             st.session_state.setdefault('hub_layer', 'layer_1')
             _saved_groups_hub_dialog(courses, course_names)
 
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []
+
+    # Pre-compute set of already-saved (course_id, local_folder) tuples for inline 💾 button
+    from ui_helpers import get_config_dir as _get_config_dir
+    _saved_mgr = SavedGroupsManager(_get_config_dir())
+    _all_saved_groups = _saved_mgr.load_groups()
+    _saved_pair_sigs = set()
+    for _sg in _all_saved_groups:
+        for _sp in _sg.get('pairs', []):
+            _saved_pair_sigs.add((_sp.get('course_id'), _sp.get('local_folder', '')))
 
     # --- (4) Pair action-button CSS: Remove fixed height, let flex align handle it ---
     st.markdown("""
@@ -1763,20 +1974,36 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     # Simplified card content
                     display_name = friendly_course_name(pair['course_name'])
                     folder_display = short_path(pair['local_folder'])
-                    
-                    st.markdown(f"""
-                    <div style="background-color:#2d2d2d;border:1px solid {border_color};border-radius:8px;padding:8px 12px;">
-                        <div style="font-weight:600;font-size:1em;color:#fff;">
-                            {get_text('sync_course_prefix', lang)} {display_name}
+
+                    # Pre-compute save state for inline button
+                    _pair_sig = (pair.get('course_id'), pair.get('local_folder', ''))
+                    _pair_already_saved = _pair_sig in _saved_pair_sigs
+                    _save_help = (
+                        "This pair is saved \u2014 go to Saved Groups & Pairs to see, rename, or edit."
+                        if _pair_already_saved
+                        else "Save Pair: Go to 'Saved Groups & Pairs' to quickly add this pair to the sync list in the future"
+                    )
+
+                    # Card with 💾 button inside (right-aligned)
+                    c_title, c_save = st.columns([0.9, 0.1], vertical_alignment="center")
+                    with c_title:
+                        st.markdown(f"""
+                        <div style="background-color:#2d2d2d;border:1px solid {border_color};border-radius:8px;padding:8px 12px;">
+                            <div style="font-weight:600;font-size:1em;color:#fff;">
+                                {get_text('sync_course_prefix', lang)} {display_name}
+                            </div>
+                            <div style="font-size:0.85em;color:#ccc;margin-top:2px;">
+                                 \U0001F4C1 {folder_display}
+                            </div>
+                            <div style="font-size:0.75em;color:#888;margin-top:2px;">
+                                 \U0001F553 {ts_str}
+                            </div>
                         </div>
-                        <div style="font-size:0.85em;color:#ccc;margin-top:2px;">
-                             📁 {folder_display}
-                        </div>
-                        <div style="font-size:0.75em;color:#888;margin-top:2px;">
-                             🕓 {ts_str}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+                    with c_save:
+                        if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
+                                     use_container_width=True, help=_save_help):
+                            _save_pair_dialog(pair)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
