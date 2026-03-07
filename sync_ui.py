@@ -340,6 +340,46 @@ def _saved_groups_hub_dialog(courses, course_names):
             div.st-key-btn_hub_back_from_course_sel {
                 margin-top: -30px !important;
             }
+
+            /* =========================================
+               COMPACT PAIR CARDS & ACTION BUTTONS
+               ========================================= */
+            /* Shrink the Action Buttons (Open, Edit, Remove) to 32px height */
+            div[class*="st-key-hub_open_"] button,
+            div[class*="st-key-hub_editp_"] button,
+            div[class*="st-key-btn_hub_remove_pair_"] button {
+                min-height: 32px !important;
+                height: 32px !important;
+                padding-top: 2px !important;
+                padding-bottom: 2px !important;
+                font-size: 0.9rem !important;
+            }
+
+            /* Reduce vertical padding inside the Pair Cards */
+            div[class*="st-key-hub_pair_card_"] {
+                padding-top: 8px !important;
+                padding-bottom: 12px !important; 
+                margin-bottom: 10px !important; /* Tighter gap between cards */
+            }
+
+            /* Compact the "See Configuration" expander summary */
+            div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {
+                padding-top: 4px !important;
+                padding-bottom: 4px !important;
+                min-height: 0px !important;
+            }
+
+            /* Pull the action buttons closer to the text above them */
+            div[class*="st-key-hub_pair_card_"] div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
+                margin-top: -5px !important;
+                margin-bottom: 2px !important;
+            }
+
+            /* Fix Group Name Edit Box padding to prevent height jumps */
+            div.st-key-hub_edit_group_meta {
+                padding: 8px 12px !important;
+                margin-bottom: 5px !important;
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -462,6 +502,9 @@ def _saved_groups_hub_dialog(courses, course_names):
         def _toggle_edit_name():
             st.session_state['hub_edit_group_name_active'] = not st.session_state.get('hub_edit_group_name_active', False)
 
+        def _cancel_edit_name_cb():
+            st.session_state['hub_edit_group_name_active'] = False
+
         def _save_name_cb():
             val = st.session_state.get("hub_edit_name_input", "").strip()
             if val and val != group['group_name']:
@@ -484,23 +527,23 @@ def _saved_groups_hub_dialog(courses, course_names):
                     st.button("✏️ Edit", key="btn_enable_edit_name", on_click=_toggle_edit_name)
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # Spacing before cards
         else:
-            # EDIT MODE (The yellow box)
+            # EDIT MODE (Ultra-compact to prevent dialog height jump)
             with st.container(border=True, key="hub_edit_group_meta"):
-                st.markdown("### ✏️ Edit Group Name")
-                col_name, col_save_name = st.columns([0.75, 0.25], vertical_alignment="bottom")
+                col_name, col_save, col_cancel = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
                     new_name = st.text_input("Group Name", value=group['group_name'],
                                              key="hub_edit_name_input", label_visibility="collapsed")
-                with col_save_name:
+                with col_save:
                     name_changed = new_name.strip() and new_name.strip() != group['group_name']
-                    # Using on_click callback instead of st.rerun() prevents the dialog from closing!
-                    st.button("💾 Save Name", disabled=not name_changed,
+                    st.button("💾 Save", disabled=not name_changed,
                               use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
+                with col_cancel:
+                    st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
 
         st.markdown("")
 
         # --- Pair cards (Wrapped in a scrollable container matching Layer 1) ---
-        with st.container(height=480, border=False):
+        with st.container(height=580, border=False):
             pairs = group.get('pairs', [])
             editing_idx = st.session_state.get('hub_editing_pair_idx')
             is_adding = st.session_state.get('hub_is_adding_new_pair', False)
@@ -615,7 +658,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                                 unsafe_allow_html=True,
                             )
                         with col_af_btn:
-                            st.button("Select Folder", key="hub_add_select_folder",
+                            st.button("Select Folder", key="btn_inline_new_folder",
                                       on_click=_hub_pick_folder_cb)
 
                     # --- Course row ---
@@ -635,7 +678,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                                 unsafe_allow_html=True,
                             )
                         with col_ac_btn:
-                            st.button("Select Course", key="hub_add_select_course",
+                            st.button("Select Course", key="btn_inline_new_course",
                                       on_click=_change_hub_layer,
                                       kwargs={'target_layer': 'layer_course_selector'})
 
@@ -644,12 +687,12 @@ def _saved_groups_hub_dialog(courses, course_names):
                     add_cname_final = add_course_name if add_course_name else course_names.get(add_course_id, '')
                     col_add, col_cancel_add, _ = st.columns([1, 1, 3])
                     with col_add:
-                        st.button("💾 Add to Group", type="primary", use_container_width=True,
-                                  key="hub_confirm_add_pair", disabled=not can_add,
+                        st.button("💾 Add to Group", use_container_width=True,
+                                  key="btn_inline_new_confirm", disabled=not can_add,
                                   on_click=_save_inline_add_cb,
                                   args=(mgr, gid, add_folder, add_course_id, add_cname_final))
                     with col_cancel_add:
-                        st.button("Cancel", key="hub_cancel_add_pair",
+                        st.button("Cancel", key="btn_inline_new_cancel",
                                   use_container_width=True, on_click=_hub_cancel_edit)
 
             # --- "Add a new course" button (only when not already adding) ---
@@ -898,39 +941,75 @@ def _render_hub_config(pair: dict):
     db_path = Path(local_folder) / '.canvas_sync.db'
 
     if not db_path.exists():
-        st.info("\u2139\ufe0f Not synced yet / No configuration found.")
+        st.warning("⚠️ Not synced yet / No configuration found.")
         return
 
     try:
         sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
         raw = sm._load_metadata('sync_contract')
         if not raw:
-            st.info("\u2139\ufe0f No sync contract stored. Run a sync to save settings.")
+            st.warning("⚠️ No sync contract stored. Run a sync to save settings.")
             return
         contract = _json.loads(raw)
     except Exception:
-        st.info("\u2139\ufe0f Could not read configuration.")
+        st.warning("⚠️ Could not read configuration.")
         return
 
-    # Render settings as a nice list
-    labels = {
-        'convert_zip': '\U0001F4E6 Extract Archives (ZIP)',
-        'convert_pptx': '\U0001F4CA Convert PowerPoints to PDF',
-        'convert_html': '\U0001F310 Convert HTML to Markdown',
-        'convert_code': '\U0001F40D Convert Code to .txt',
-        'convert_urls': '\U0001F517 Compile URLs',
-        'convert_word': '\U0001F4DD Convert Word docs to PDF',
-        'convert_video': '\U0001F3AC Convert Video to Audio',
-        'convert_excel': '\U0001F4C8 Convert Excel to PDF',
-    }
-    file_filter = contract.get('file_filter', 'all')
-    st.markdown(f"**File Filter:** `{file_filter}`")
-    lines = []
-    for key, label in labels.items():
-        val = contract.get(key, False)
-        icon = '\u2705' if val else '\u274c'
-        lines.append(f"{icon} {label}")
-    st.markdown("<br>".join(lines), unsafe_allow_html=True)
+    # --- PERFECTED HTML/CSS RENDERING ---
+    st.markdown("""
+    <style>
+    .cfg-header { font-weight: 600; color: #ffffff; margin-bottom: 8px; font-size: 1.05rem; }
+    /* pointer-events: none makes them unclickable without needing the 'disabled' attribute */
+    .cfg-cb { display: flex; align-items: flex-start; margin-bottom: 6px; font-size: 0.95rem; line-height: 1.3; pointer-events: none; }
+    .cfg-cb input { margin-right: 8px; margin-top: 4px; accent-color: #3b82f6; width: 15px; height: 15px; }
+    .cfg-cb.checked { opacity: 1.0; color: #ffffff; }
+    .cfg-cb.unchecked { opacity: 0.55; color: #a3a8b8; }
+    .cfg-indent { margin-left: 22px; } /* Indentation for sub-settings */
+    </style>
+    """, unsafe_allow_html=True)
+
+    def cb(label, is_checked, indent=False):
+        state = "checked" if is_checked else "unchecked"
+        chk = "checked" if is_checked else ""
+        indent_cls = "cfg-indent" if indent else ""
+        # Notice: 'disabled' attribute is removed to allow accent-color to work natively
+        return f"<div class='cfg-cb {state} {indent_cls}'><input type='checkbox' {chk}><span>{label}</span></div>"
+
+    c1, c2, c3 = st.columns([1, 1.1, 1.1], gap="small")
+
+    is_flat = contract.get('flat_folder', False)
+    is_all = contract.get('file_filter', 'all') == 'all'
+
+    with c1:
+        # Negative top margin pulls the content up, removing excess expander padding
+        st.markdown("<div class='cfg-header' style='margin-top: -10px;'>Folder Download Structure:</div>", unsafe_allow_html=True)
+        st.markdown(cb("With subfolders (matches Canvas Modules)", not is_flat), unsafe_allow_html=True)
+        st.markdown(cb("Flat (All files in one folder)", is_flat), unsafe_allow_html=True)
+
+        st.markdown("<div class='cfg-header' style='margin-top: 15px;'>File types downloaded:</div>", unsafe_allow_html=True)
+        st.markdown(cb("All Files", is_all), unsafe_allow_html=True)
+        st.markdown(cb("Pdf & Powerpoint only", not is_all), unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("<div class='cfg-header' style='margin-top: -10px;'>Additional settings:</div>", unsafe_allow_html=True)
+        st.markdown(cb("NotebookLM Compatible Download", contract.get('notebook_lm', False)), unsafe_allow_html=True)
+        # Indented sub-settings
+        st.markdown(cb("Auto-extract Archives (.zip, .tar.gz)", contract.get('convert_zip', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Powerpoints (pptx.) to PDF", contract.get('convert_pptx', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Old Word Docs (.doc, .rtf) to PDF", contract.get('convert_word', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
+
+    with c3:
+        st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -10px;'>Spacer</div>", unsafe_allow_html=True) 
+        st.markdown("<div class='cfg-cb' style='visibility: hidden;'><input type='checkbox'><span>Spacer</span></div>", unsafe_allow_html=True)
+        # Indented sub-settings
+        st.markdown(cb("Convert Canvas Pages (HTML) to Markdown", contract.get('convert_html', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Code & Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Compile Web Links (.url) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
+
+    # Halved bottom spacer
+    st.markdown("<div style='margin-bottom: 0px;'></div>", unsafe_allow_html=True)
 
 
 def _hub_cleanup():
@@ -1002,6 +1081,36 @@ def _inject_hub_global_css():
        IMPORTANT: All button selectors MUST include
        div[data-testid="stDialog"] to beat Streamlit's defaults.
        --------------------------------------------------------- */
+       
+    /* =========================================
+       LAYER 1: EXPANDER BULLET LIST ALIGNMENT (V2)
+       ========================================= */
+    /* Target the specific Markdown containers to kill Streamlit's native offsets */
+    div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] div[data-testid="stMarkdownContainer"] ul,
+    div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] .stMarkdown ul {
+        padding-left: 1.5rem !important; /* Increased from 1.2rem to nudge right */
+        margin-left: 0px !important;
+        margin-inline-start: 0px !important; /* Kills the browser's native text indent */
+        margin-top: -5px !important;     
+        margin-bottom: 5px !important;
+    }
+    
+    div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] div[data-testid="stMarkdownContainer"] ul li,
+    div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] .stMarkdown ul li {
+        padding-left: 0.2rem !important;
+        margin-left: 0px !important;
+    }
+       
+    /* =========================================
+       LAYER 1: EXPANDER TITLE STYLING
+       ========================================= */
+    /* Target the paragraph/span inside the summary to bold the text without breaking the arrow icon */
+    div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p,
+    div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important; 
+    }
        
     /* Primary button: blue */
     div[data-testid="stDialog"] button[kind="primary"] {
@@ -1259,8 +1368,9 @@ def _inject_hub_global_css():
     /* Style the small View Mode Edit button */
     div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button {
         background-color: transparent !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
         padding: 2px 12px !important;
         min-height: 0px !important;
         height: 32px !important; 
@@ -1338,6 +1448,41 @@ def _inject_hub_global_css():
         margin-top: 0px !important;
         margin-bottom: 0px !important;
         padding-left: 18px !important; /* Just enough indent to show the bullet */
+    }
+    /* =========================================
+       INLINE ADD CARD BUTTONS (Fixing CSS Specificity)
+       ========================================= */
+    /* 1. Folder, Course, and Cancel Buttons: Gray default, light gray hover */
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button,
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_course button,
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button:hover,
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_course button:hover,
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button:hover {
+        background-color: rgba(255, 255, 255, 0.16) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* 2. Add to Group Button: Gray default, Solid Blue hover */
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {
+        background-color: #3b82f6 !important; /* Solid Blue */
+        border-color: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
     }
     </style>
     """, unsafe_allow_html=True)
