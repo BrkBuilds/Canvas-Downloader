@@ -153,27 +153,34 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
 # --- Folder Opener ---
 
 def open_folder(path: str):
-    """Open a folder in the system file explorer and bring to foreground.
-    
-    Args:
-        path: Path to the folder to open
     """
-    try:
-        path = str(Path(path).resolve())
-        if not Path(path).exists():
-            return False
+    Opens a folder in the native file explorer and forces it to the foreground.
+    """
+    import time  # Ensure time is available for the sleep
+    path = os.path.normpath(path)
+    if not os.path.exists(path):
+        return
+
+    sys_platform = platform.system()
+    
+    if sys_platform == "Windows":
+        os.startfile(path)
         
-        system = platform.system()
-        if system == 'Windows':
-            # Use explorer /select to force foreground window
-            subprocess.Popen(['explorer', path])
-        elif system == 'Darwin':  # macOS
-            subprocess.Popen(['open', path])
-        else:  # Linux
-            subprocess.Popen(['xdg-open', path])
-        return True
-    except Exception:
-        return False
+        # --- HACK: Bypass Windows Focus Stealing Prevention ---
+        # Windows prevents background processes (like the Streamlit backend) from 
+        # stealing focus. Simulating an Alt-key press tricks the OS into allowing it.
+        try:
+            import ctypes
+            time.sleep(0.15) # Give File Explorer a tiny fraction of a second to initialize
+            ctypes.windll.user32.keybd_event(0x12, 0, 0, 0) # Alt key down
+            ctypes.windll.user32.keybd_event(0x12, 0, 2, 0) # Alt key up
+        except Exception:
+            pass
+            
+    elif sys_platform == "Darwin":  # macOS
+        subprocess.Popen(["open", path])
+    else:  # Linux
+        subprocess.Popen(["xdg-open", path])
 
 
 # --- Friendly Course Name ---
