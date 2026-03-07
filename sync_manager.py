@@ -1080,12 +1080,13 @@ class SavedGroupsManager:
         except IOError as e:
             logger.warning(f"Error saving sync groups: {e}")
     
-    def save_group(self, name: str, pairs: list[dict]) -> dict:
-        """Save a new group.
+    def save_group(self, name: str, pairs: list[dict], is_single_pair: bool = False) -> dict:
+        """Save a new group (or single pair).
         
         Args:
             name: Human-readable group name (e.g. 'Fall 2025')
             pairs: List of pair dicts with keys: local_folder, course_id, course_name
+            is_single_pair: If True, flags this as a saved single pair (not a multi-course group)
         
         Returns:
             The newly created group dict
@@ -1104,6 +1105,8 @@ class SavedGroupsManager:
                 for p in pairs
             ],
         }
+        if is_single_pair:
+            new_group['is_single_pair'] = True
         groups.append(new_group)
         self._save_all(groups)
         return new_group
@@ -1127,7 +1130,7 @@ class SavedGroupsManager:
         
         Args:
             group_id: The ID of the group to update
-            new_data: Dict with optional keys 'group_name' and 'pairs'
+            new_data: Dict with optional keys 'group_name', 'pairs', 'is_single_pair'
         
         Returns:
             True if found and updated, False otherwise
@@ -1146,6 +1149,8 @@ class SavedGroupsManager:
                         }
                         for p in new_data['pairs']
                     ]
+                if 'is_single_pair' in new_data:
+                    g['is_single_pair'] = new_data['is_single_pair']
                 self._save_all(groups)
                 return True
         return False
