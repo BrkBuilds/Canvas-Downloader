@@ -934,8 +934,8 @@ def _saved_groups_hub_dialog(courses, course_names):
 
 
 def _render_hub_config(pair: dict):
-    """Render the sync contract configuration for a pair inside an expander."""
     import json as _json
+    from pathlib import Path
     local_folder = pair.get('local_folder', '')
     course_id = pair.get('course_id', 0)
     db_path = Path(local_folder) / '.canvas_sync.db'
@@ -946,11 +946,13 @@ def _render_hub_config(pair: dict):
 
     try:
         sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
-        raw = sm._load_metadata('sync_contract')
-        if not raw:
+        raw_contract = sm._load_metadata('sync_contract')
+        raw_mode = sm._load_metadata('download_mode') # Load download_mode directly
+        
+        if not raw_contract:
             st.warning("⚠️ No sync contract stored. Run a sync to save settings.")
             return
-        contract = _json.loads(raw)
+        contract = _json.loads(raw_contract)
     except Exception:
         st.warning("⚠️ Could not read configuration.")
         return
@@ -958,13 +960,12 @@ def _render_hub_config(pair: dict):
     # --- PERFECTED HTML/CSS RENDERING ---
     st.markdown("""
     <style>
-    .cfg-header { font-weight: 600; color: #ffffff; margin-bottom: 8px; font-size: 1.05rem; }
-    /* pointer-events: none makes them unclickable without needing the 'disabled' attribute */
-    .cfg-cb { display: flex; align-items: flex-start; margin-bottom: 6px; font-size: 0.95rem; line-height: 1.3; pointer-events: none; }
+    .cfg-header { font-weight: 600; color: #ffffff; margin-bottom: 8px; font-size: 1.05rem; margin-left: 15px; }
+    .cfg-cb { display: flex; align-items: flex-start; margin-bottom: 6px; font-size: 0.95rem; line-height: 1.3; pointer-events: none; margin-left: 15px; }
     .cfg-cb input { margin-right: 8px; margin-top: 4px; accent-color: #3b82f6; width: 15px; height: 15px; }
     .cfg-cb.checked { opacity: 1.0; color: #ffffff; }
-    .cfg-cb.unchecked { opacity: 0.55; color: #a3a8b8; }
-    .cfg-indent { margin-left: 22px; } /* Indentation for sub-settings */
+    .cfg-cb.unchecked { opacity: 0.65; color: #a3a8b8; }
+    .cfg-indent { margin-left: 37px; } 
     </style>
     """, unsafe_allow_html=True)
 
@@ -972,17 +973,21 @@ def _render_hub_config(pair: dict):
         state = "checked" if is_checked else "unchecked"
         chk = "checked" if is_checked else ""
         indent_cls = "cfg-indent" if indent else ""
-        # Notice: 'disabled' attribute is removed to allow accent-color to work natively
         return f"<div class='cfg-cb {state} {indent_cls}'><input type='checkbox' {chk}><span>{label}</span></div>"
 
     c1, c2, c3 = st.columns([1, 1.1, 1.1], gap="small")
 
-    is_flat = contract.get('flat_folder', False)
+    # LOGIC FIX 1: Evaluate flat vs subfolders from raw_mode
+    is_flat = (raw_mode == 'flat')
     is_all = contract.get('file_filter', 'all') == 'all'
 
+    # LOGIC FIX 2: Evaluate NotebookLM status based on all sub-settings being true
+    conversion_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel', 
+                       'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+    is_notebook_lm = all(contract.get(k, False) for k in conversion_keys)
+
     with c1:
-        # Negative top margin pulls the content up, removing excess expander padding
-        st.markdown("<div class='cfg-header' style='margin-top: -10px;'>Folder Download Structure:</div>", unsafe_allow_html=True)
+        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Folder Download Structure:</div>", unsafe_allow_html=True)
         st.markdown(cb("With subfolders (matches Canvas Modules)", not is_flat), unsafe_allow_html=True)
         st.markdown(cb("Flat (All files in one folder)", is_flat), unsafe_allow_html=True)
 
@@ -991,25 +996,22 @@ def _render_hub_config(pair: dict):
         st.markdown(cb("Pdf & Powerpoint only", not is_all), unsafe_allow_html=True)
 
     with c2:
-        st.markdown("<div class='cfg-header' style='margin-top: -10px;'>Additional settings:</div>", unsafe_allow_html=True)
-        st.markdown(cb("NotebookLM Compatible Download", contract.get('notebook_lm', False)), unsafe_allow_html=True)
-        # Indented sub-settings
+        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Additional settings:</div>", unsafe_allow_html=True)
+        st.markdown(cb("NotebookLM Compatible Download", is_notebook_lm), unsafe_allow_html=True) # Uses derived boolean
         st.markdown(cb("Auto-extract Archives (.zip, .tar.gz)", contract.get('convert_zip', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Powerpoints (pptx.) to PDF", contract.get('convert_pptx', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Old Word Docs (.doc, .rtf) to PDF", contract.get('convert_word', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
 
     with c3:
-        st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -10px;'>Spacer</div>", unsafe_allow_html=True) 
+        st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -15px;'>Spacer</div>", unsafe_allow_html=True) 
         st.markdown("<div class='cfg-cb' style='visibility: hidden;'><input type='checkbox'><span>Spacer</span></div>", unsafe_allow_html=True)
-        # Indented sub-settings
         st.markdown(cb("Convert Canvas Pages (HTML) to Markdown", contract.get('convert_html', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Code & Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Compile Web Links (.url) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
 
-    # Halved bottom spacer
-    st.markdown("<div style='margin-bottom: 0px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: -10px;'></div>", unsafe_allow_html=True)
 
 
 def _hub_cleanup():
