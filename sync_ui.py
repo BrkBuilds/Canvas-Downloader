@@ -431,25 +431,25 @@ def _saved_groups_hub_dialog(courses, course_names):
         if 'hub_view_mode' not in st.session_state:
             st.session_state.hub_view_mode = "View All"
         _vm = st.session_state.hub_view_mode
-        t1, t2, t3 = st.columns(3)
-        with t1:
-            if st.button("View All", key="hub_tab_all",
-                         type="primary" if _vm == "View All" else "secondary",
-                         use_container_width=True):
-                st.session_state.hub_view_mode = "View All"
-                st.rerun()
-        with t2:
-            if st.button("Groups", key="hub_tab_groups",
-                         type="primary" if _vm == "Groups" else "secondary",
-                         use_container_width=True):
-                st.session_state.hub_view_mode = "Groups"
-                st.rerun()
-        with t3:
-            if st.button("Pairs", key="hub_tab_pairs",
-                         type="primary" if _vm == "Pairs" else "secondary",
-                         use_container_width=True):
-                st.session_state.hub_view_mode = "Pairs"
-                st.rerun()
+        # Wrap in a container with a specific key for CSS targeting
+        with st.container(key="hub_tabs_container"):
+            t1, t2, t3 = st.columns(3)
+            with t1:
+                if st.button("View All", key="hub_tab_all",
+                             type="primary" if _vm == "View All" else "secondary",
+                             use_container_width=True):
+                    st.session_state.hub_view_mode = "View All"
+                    # Removed st.rerun() - button clicks natively refresh dialogs
+            with t2:
+                if st.button("Groups", key="hub_tab_groups",
+                             type="primary" if _vm == "Groups" else "secondary",
+                             use_container_width=True):
+                    st.session_state.hub_view_mode = "Groups"
+            with t3:
+                if st.button("Pairs", key="hub_tab_pairs",
+                             type="primary" if _vm == "Pairs" else "secondary",
+                             use_container_width=True):
+                    st.session_state.hub_view_mode = "Pairs"
 
         # --- Filter Logic ---
         if _vm == "Groups":
@@ -1666,26 +1666,87 @@ def _inject_hub_global_css():
     }
 
     /* =========================================
-       INLINE SAVE PAIR BUTTON (Main Sync List)
+       INLINE SAVE PAIR BUTTON (ABSOLUTE POSITION)
        ========================================= */
+    /* Rip the button out of the layout flow and pin it top-right */
+    div[class*="st-key-save_pair_"] {
+        position: absolute !important;
+        top: 15px !important;
+        right: 16px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+        height: 0 !important;          /* Collapse the flex slot */
+        overflow: visible !important;   /* But keep the emoji visible */
+        z-index: 99;
+    }
+    
+    /* Strip all Streamlit chrome to leave just the emoji */
     div[class*="st-key-save_pair_"] button {
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #ffffff !important;
-        min-height: 38px !important;
-        padding: 4px 8px !important;
-        font-size: 1.1em !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        font-size: 1.3rem !important;
+        line-height: 1 !important;
+        transition: transform 0.2s ease;
     }
+    
     div[class*="st-key-save_pair_"] button:hover {
-        background-color: rgba(59, 130, 246, 0.2) !important;
-        border-color: rgba(59, 130, 246, 0.5) !important;
-        color: #93c5fd !important;
-        transition: all 0.2s ease-in-out;
+        transform: scale(1.15);
+        background-color: transparent !important;
+        border: none !important;
+        color: inherit !important;
     }
-    div[class*="st-key-save_pair_"] button[disabled] {
-        background-color: rgba(0, 0, 0, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        color: rgba(255, 255, 255, 0.25) !important;
+    
+    div[class*="st-key-save_pair_"] button:disabled {
+        opacity: 0.3 !important;
+        filter: grayscale(100%);
+    }
+
+    /* =========================================
+       TAB NAVIGATION STYLING
+       ========================================= */
+    div.st-key-hub_tabs_container button {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        background-color: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 6px !important;
+    }
+    div.st-key-hub_tabs_container button p {
+        font-size: 0.95rem !important;
+    }
+    div.st-key-hub_tabs_container button[kind="primary"] {
+        background-color: rgba(59, 130, 246, 0.15) !important; /* Soft blue tint */
+        border-bottom: 3px solid #3b82f6 !important; /* Classic tab underline */
+        color: #ffffff !important;
+    }
+
+    /* =========================================
+       MAIN SYNC LIST: PAIR CARD CONTAINERS
+       ========================================= */
+    div[class*="st-key-sync_pair_card_"] {
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+        border-radius: 8px !important;
+        padding: 5px 12px 20px 12px !important; /* 5px top, 20px bottom for room */
+        overflow: visible !important;     /* Prevent text clipping at border */
+        position: relative;               /* Anchor for absolute-positioned save button */
+    }
+    /* Small gap between title and folder/sync text */
+    div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {
+        gap: 10px !important;
+        justify-content: flex-start !important;  /* Push content to top */
+        align-items: stretch !important;
+    }
+    /* Missing folder: red border override */
+    div[class*="st-key-sync_pair_card_missing_"] {
+        border-color: #c0392b !important;
     }
 
     </style>
@@ -1964,7 +2025,6 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
                 with col_card:
                     folder_exists = Path(pair['local_folder']).exists()
-                    border_color = "#444" if folder_exists else "#c0392b"
                     last_synced = pair.get('last_synced')
                     ts_str = (
                         get_text('sync_last_synced', lang, time=last_synced) if last_synced
@@ -1984,26 +2044,18 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                         else "Save Pair: Go to 'Saved Groups & Pairs' to quickly add this pair to the sync list in the future"
                     )
 
-                    # Card with 💾 button inside (right-aligned)
-                    c_title, c_save = st.columns([0.9, 0.1], vertical_alignment="center")
-                    with c_title:
-                        st.markdown(f"""
-                        <div style="background-color:#2d2d2d;border:1px solid {border_color};border-radius:8px;padding:8px 12px;">
-                            <div style="font-weight:600;font-size:1em;color:#fff;">
-                                {get_text('sync_course_prefix', lang)} {display_name}
-                            </div>
-                            <div style="font-size:0.85em;color:#ccc;margin-top:2px;">
-                                 \U0001F4C1 {folder_display}
-                            </div>
-                            <div style="font-size:0.75em;color:#888;margin-top:2px;">
-                                 \U0001F553 {ts_str}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    with c_save:
+                    # Card container with 💾 button INSIDE
+                    # Use a different key suffix for missing-folder cards so CSS can apply red border
+                    _card_key = f"sync_pair_card_missing_{idx}" if not folder_exists else f"sync_pair_card_{idx}"
+                    with st.container(border=True, key=_card_key):
+                        # Title rendered first, naturally
+                        st.markdown(f"**{get_text('sync_course_prefix', lang)} {display_name}**")
+                        # Save button rendered after — CSS absolute-positions it to top-right
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
-                                     use_container_width=True, help=_save_help):
+                                     help=_save_help):
                             _save_pair_dialog(pair)
+                        st.markdown(f"""<div style="font-size:0.85em;color:#ccc;margin-top:-5px;">\U0001F4C1 {folder_display}</div>
+                            <div style="font-size:0.75em;color:#888;margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
