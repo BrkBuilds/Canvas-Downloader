@@ -3,6 +3,14 @@
 ## Current Focus
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
 
+## Recent Changes (Session 2026-03-08 — Saved Groups UI Polish & Card Layout)
+- **Layer 2 Pair Card Layout Restructure**: Fixed a persistent visual clipping bug caused by Streamlit's native nested column containers `st.columns` conflicting with border-bottom padding. Reverted the `c_title, c_save` layout to a pure sequential Markdown rendering flow, preserving the card's native vertical flexbox rhythm.
+- **Save Button Absolute Positioning**: Transitioned the inline `💾` button to `position: absolute` pinned to the top-right corner (`top: 15px`, `right: 16px`) of the `st.container`. Collapsed the button's flex block using `height: 0` while keeping `overflow: visible`, completely preventing the button from displacing the card's folder path text.
+- **Card Vertical Padding and Gap Control**: Injected precise padding rules (`padding: 5px 12px 20px 12px`) into the course cards to accommodate the absolutely positioned button while preventing bottom clip. Enforced a `gap: 10px` and `justify-content: flex-start` on the internal text to align content to the top edge seamlessly.
+- **Ghost Emoji Styling**: Stripped all Streamlit background, border, and padding chrome from the `st-key-save_pair_` buttons, transforming them into floating emojis with scaling hover states without disrupting layout geometry.
+- **Tab Navigation Revision**: Replaced the chunky segmented control navigation in the Hub dialog with native button tabs wrapped in a scoped container (`hub_tabs_container`), styled to mimic a slim macOS tab-bar.
+- **Streamlit Dialog State Stability**: Removed `st.rerun()` calls from the Hub dialog layer navigation callbacks (`_change_hub_layer`), relying strictly on `on_click` state mutations to prevent the entire SPA dialog from closing unexpectedly.
+
 ## Recent Changes (Session 2026-03-05 — Saved Sync Groups: Full Feature)
 
 ### Phase 1: Backend Manager & Save Workflow

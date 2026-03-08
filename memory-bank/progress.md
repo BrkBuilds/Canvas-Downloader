@@ -6,12 +6,12 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Saved Groups UI Polish & Card Layout** (2026-03-08):
+    - [x] **Card Layout Restructure**: Reverted to pure Markdown flow (no `st.columns`) for course cards to fix bottom clipping and restore native flexbox geometry.
+    - [x] **Absolute Button Positioning**: Pinned the save pair `💾` button to the top-right (`top: 15px`, `right: 16px`) using absolute positioning and stripped all Streamlit chrome to create a ghost emoji.
+    - [x] **Precision Spacing**: Applied specific padding (`5px 12px 20px 12px`) and `gap: 10px` to the pair cards, aligning content perfectly to the top while ensuring no text is cut off at the bottom.
+    - [x] **Tabs Navigation**: Replaced the segmented control native widget with custom-styled, macOS-like tab buttons within a scoped container.
 - [x] **Saved Sync Groups UI Polish** (2026-03-05):
-    - [x] **Inline Edit UX Refactor**: Replaced nested layers with inline edit components (`hub_editing_pair_idx`) for modifying group structures without jarring visual re-renders.
-    - [x] **Focus Stealing Bypass**: Integrated a `ctypes` low-level ALT-key release into the Windows folder-opening utility to force spawned File Explorer windows aggressively into the visual foreground.
-    - [x] **Configuration Settings Expander**: Translated the visual layout of course sub-settings out of simple emojis into a nested, interactive 3-column HTML checkbox layout.
-    - [x] **Dialog Specificity Engineering**: Upgraded Streamlit Dialog CSS specificity (`div[data-testid="stDialog"]`) to prevent button styling leaks and aligned Markdown `<ul>` containers natively inside the Layer 1 component tree via strict `.stMarkdownContainer` overrides.
-- [x] **Ignored Files UI Polish** (2026-03-04):
     - [x] **Bulk Selection Matrix**: Rewrote single and multi-course dialogs abandoning "visibility filters" for robust "remote control" selection checkboxes targeting permanent file lists.
     - [x] **State Reactivity Fixes**: Enforced accurate pre-render logic tying individual file changes dynamically to visual filetype units and fixed "Ghost Files" post-removal by instituting an immediate DB fetch on dialog load.
     - [x] **Component Styling**: Standardized '🚫' emojis across views, established specific modal height boundaries (`500px`) and HTML negative margins (`-10px`), and correctly separated 'Primary' Action states from 'Secondary' Close states.
