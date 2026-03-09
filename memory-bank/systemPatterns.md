@@ -58,6 +58,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Zero-Files UX Exit Ramp Pattern**:
     - *Problem*: When a user manually ignores the remainder of an execution payload (or the engine naturally diffs out all files), rendering a red `st.error` alert and blocking progress creates a UX dead-end that feels like a failure.
     - *Solution*: Intercept `total_active_files == 0` loops and render a celebratory `st.success` message. Replace the disabled actionable loops with a primary `st.button` ("Return to Front Page") that safely executes `_cleanup_sync_state()` and routes vertically via `st.rerun()`.
+- **Safe Fragment Toast Pattern**:
+    - *Problem*: Calling `st.toast()` or rendering other UI elements directly inside an `on_click` callback attached to an `@st.dialog` (fragment) causes Streamlit to crash and wipe the DOM, throwing a `Fragment rerun was triggered with a callback that displays elements` warning.
+    - *Solution*: Extract UI commands from the callback. Instead, set a scoped session state string (e.g., `st.session_state['pending_dialog_toast'] = "Success"`). Consume that state variable by running `if 'pending_dialog_toast' in st.session_state: st.toast(st.session_state.pop(...))` at the exact top of the dialog's python function body so the toast fires naturally during the fragment's refresh cycle.
+- **Supercharged Fragment Close Pattern & Native Hiding**:
+    - *Problem*: Closing a `@st.dialog` fragment (either natively or via standard `st.rerun()`) only unmounts the modal context; the main application UI behind the modal remains completely frozen in its previous state until the user interacts with it, leaving things like save buttons stale.
+    - *Solution*: Upgrade custom routing "Close" buttons inside the dialog to execute `st.rerun(scope="app")`. This tears down the fragment and forces a top-to-bottom paint of the main application. To ensure users don't bypass this fix, universally inject `div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }` in CSS to hide the native Streamlit 'X', forcing interaction with the state-aware button.
 
 ## Synchronous API Integration Patterns (Win32COM)
 - **COM Application Context Managers**:
@@ -78,6 +84,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Headless COM Throttling**:
     - *Problem*: Sequential high-speed COM operations (`Open` -> `Export` -> `Close`) outpace the physical hardware spooler or thread release, destabilizing batch loops.
     - *Solution*: Explicitly inject small `time.sleep(0.3)` pauses between massive synchronous milestones (e.g., ExportAsFixedFormat) to give the application time to stabilize the thread.
+
+## Database & Entity Organization Patterns
+- **ID-Based Entity Isolation**:
+    - *Pattern*: Never use human-readable Names (like Group Name or Course Name) as primary keys for editing or state mutation, as users frequently duplicate them (e.g., saving "Programming" as both a Group and a Standalone Pair).
+    - *Implementation*: Utilize underlying system IDs (like `group_id` UUIDs or Canvas API `course_id`s) universally across all UI edit callbacks (e.g., `_save_inline_edit_cb`). This strictly scopes JSON database mutations mapping 1:1 to the exact container block manipulated, completely protecting sibling items sharing identical human-facing metadata from cross-contamination.
 
 ## NotebookLM Data Pipeline Patterns
   - **Excel to PDF (Tabular Integrity & Global Export)**:

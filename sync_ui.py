@@ -235,7 +235,7 @@ def _change_hub_layer(target_layer, _pop_keys=None, **kwargs):
 def _delete_group_callback(mgr, group_id, group_name):
     """Callback to delete a group before the dialog re-renders."""
     mgr.delete_group(group_id)
-    st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Group '{group_name}' deleted."
+    st.session_state['hub_toast'] = f"🗑️ Group '{group_name}' deleted."
 
 
 def _remove_pair_from_group(mgr, group_id, pair_idx):
@@ -245,7 +245,7 @@ def _remove_pair_from_group(mgr, group_id, pair_idx):
     if group and 0 <= pair_idx < len(group.get('pairs', [])):
         popped = group['pairs'].pop(pair_idx)
         mgr.update_group(group_id, {'pairs': group['pairs']})
-        st.session_state['pending_toast'] = f"\U0001F5D1\ufe0f Removed '{popped.get('course_name', 'course')}' from group."
+        st.session_state['hub_toast'] = f"🗑️ Removed '{popped.get('course_name', 'course')}' from group."
     # Clear any active edit state that might reference stale indices
     st.session_state.pop('hub_editing_pair_idx', None)
     st.session_state.pop('hub_is_adding_new_pair', None)
@@ -298,7 +298,7 @@ def _save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
             'course_name': new_cname,
         }
         mgr.update_group(gid, {'pairs': updated_pairs})
-        st.session_state['pending_toast'] = "\u2705 Pair updated successfully!"
+        st.session_state['hub_toast'] = "✅ Pair updated successfully!"
     # Clear edit state
     _hub_cancel_edit()
 
@@ -315,7 +315,7 @@ def _save_inline_add_cb(mgr, gid, new_folder, new_cid, new_cname):
             'course_name': new_cname,
         })
         mgr.update_group(gid, {'pairs': updated_pairs})
-        st.session_state['pending_toast'] = f"\u2705 Added '{new_cname}' to the group!"
+        st.session_state['hub_toast'] = f"✅ Added '{new_cname}' to the group!"
     # Clear add state
     _hub_cancel_edit()
 
@@ -346,6 +346,10 @@ def _saved_groups_hub_dialog(courses, course_names):
 
     mgr = SavedGroupsManager(get_config_dir())
     layer = st.session_state.get('hub_layer', 'layer_1')
+
+    # 1. Safely consume and display any pending dialog toasts
+    if 'hub_toast' in st.session_state:
+        st.toast(st.session_state.pop('hub_toast'))
 
     # --- Dialog-wide CSS ---
     st.markdown("""
@@ -424,32 +428,37 @@ def _saved_groups_hub_dialog(courses, course_names):
             st.info("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
             if st.button("Close", type="secondary", use_container_width=True, key="hub_close_empty"):
                 _hub_cleanup()
-                st.rerun()
+                try:
+                    st.rerun(scope="app")
+                except TypeError:
+                    st.rerun()
             return
 
         # --- Tab Buttons (View All / Groups / Pairs) ---
         if 'hub_view_mode' not in st.session_state:
             st.session_state.hub_view_mode = "View All"
         _vm = st.session_state.hub_view_mode
-        # Wrap in a container with a specific key for CSS targeting
+        # Callback to update state BEFORE rendering
+        def set_view_mode(mode):
+            st.session_state.hub_view_mode = mode
+
         with st.container(key="hub_tabs_container"):
             t1, t2, t3 = st.columns(3)
             with t1:
-                if st.button("View All", key="hub_tab_all",
-                             type="primary" if _vm == "View All" else "secondary",
-                             use_container_width=True):
-                    st.session_state.hub_view_mode = "View All"
-                    # Removed st.rerun() - button clicks natively refresh dialogs
+                st.button("View All", 
+                          type="primary" if st.session_state.hub_view_mode == "View All" else "secondary", 
+                          use_container_width=True, 
+                          on_click=set_view_mode, args=("View All",))
             with t2:
-                if st.button("Groups", key="hub_tab_groups",
-                             type="primary" if _vm == "Groups" else "secondary",
-                             use_container_width=True):
-                    st.session_state.hub_view_mode = "Groups"
+                st.button("Groups", 
+                          type="primary" if st.session_state.hub_view_mode == "Groups" else "secondary", 
+                          use_container_width=True, 
+                          on_click=set_view_mode, args=("Groups",))
             with t3:
-                if st.button("Pairs", key="hub_tab_pairs",
-                             type="primary" if _vm == "Pairs" else "secondary",
-                             use_container_width=True):
-                    st.session_state.hub_view_mode = "Pairs"
+                st.button("Pairs", 
+                          type="primary" if st.session_state.hub_view_mode == "Pairs" else "secondary", 
+                          use_container_width=True, 
+                          on_click=set_view_mode, args=("Pairs",))
 
         # --- Filter Logic ---
         if _vm == "Groups":
@@ -476,8 +485,8 @@ def _saved_groups_hub_dialog(courses, course_names):
                         # Title: 🏷️ with same font size/weight as group expander summaries
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>\U0001F3F7\ufe0f {group['group_name']}</div>
-                                <div style='color: #a3a8b8; font-size: 0.85rem; margin-top: 3px;'>\U0001F393 {display_name}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2; margin-bottom: 8px;'>\U0001F3F7\ufe0f {group['group_name']}</div>
+                                <div class='pair-course-subtitle'>Course: {display_name}</div>
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -534,7 +543,7 @@ def _saved_groups_hub_dialog(courses, course_names):
 
                 else:
                     # === GROUP CARD (Multi-pair group) ===
-                    with st.container(border=True, key=f"hub_overview_group_card_{g_idx}"):
+                    with st.container(border=True, key=f"hub_group_item_{g_idx}"):
                         pair_count = len(group.get('pairs', []))
                         course_word = 'course' if pair_count == 1 else 'courses'
                         
@@ -626,7 +635,10 @@ def _saved_groups_hub_dialog(courses, course_names):
 
         if st.button("Close", type="secondary", use_container_width=True, key="btn_hub_close"):
             _hub_cleanup()
-            st.rerun()
+            try:
+                st.rerun(scope="app")
+            except TypeError:
+                st.rerun()
 
     # =================================================================
     # LAYER 2 — Group Details
@@ -641,7 +653,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                       on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
             return
 
-        st.button("← Back to Groups", key="btn_back_to_groups", type="tertiary",
+        st.button("← Back to overview", key="btn_back_to_groups", type="tertiary",
                   on_click=_change_hub_layer, kwargs={'target_layer': 'layer_1'})
 
         # Detect single pair for conditional UI
@@ -867,8 +879,9 @@ def _saved_groups_hub_dialog(courses, course_names):
                     st.session_state.pop('hub_edit_temp_folder', None)
                     st.session_state.pop('hub_edit_temp_course_id', None)
                     st.session_state.pop('hub_edit_temp_course_name', None)
-                st.button("➕ Add a new course to the group", key="btn_hub_add_new_pair",
-                          use_container_width=True, on_click=_start_adding)
+                with st.container(key="hub_layer2_add_btn_wrapper"):
+                    st.button("➕ Add a new course to the group", key="btn_hub_add_new_pair",
+                              use_container_width=True, on_click=_start_adding)
 
     # =================================================================
     # LAYER: COURSE SELECTOR (Premium SPA page)
@@ -1014,7 +1027,7 @@ def _saved_groups_hub_dialog(courses, course_names):
         skipped_count = st.session_state.get('hub_rescue_skipped', 0)
         rescue_gid = st.session_state.get('hub_rescue_group_id')
 
-        st.button("← Back to Groups", key="hub_back_rescue", type="tertiary",
+        st.button("← Back to overview", key="hub_back_rescue", type="tertiary",
                   on_click=_change_hub_layer,
                   kwargs={'target_layer': 'layer_1',
                           '_pop_keys': ['hub_rescue_group_id', 'hub_rescue_pairs',
@@ -1175,6 +1188,13 @@ def _render_hub_config(pair: dict):
         st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
 
     st.markdown("<div style='margin-bottom: -10px;'></div>", unsafe_allow_html=True)
+
+def _reset_hub_state():
+    """Wipes all Hub SPA state to guarantee a fresh Layer 1 start."""
+    keys_to_clear = [k for k in st.session_state.keys() if k.startswith('hub_')]
+    for k in keys_to_clear:
+        del st.session_state[k]
+    st.session_state.pop('rescue_paths', None)
 
 
 def _hub_cleanup():
@@ -1546,7 +1566,7 @@ def _inject_hub_global_css():
     }
 
     /* Elevate Layer 1 Group Cards: Subtle yellowish tint and soft drop shadow */
-    div[class*="st-key-hub_overview_group_card_"] {
+    div[class*="st-key-hub_group_item_"] {
         background-color: rgba(255, 230, 150, 0.1) !important; /* Warm, subtle yellow tint */
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important; /* Soft depth shadow */
         border: 1px solid rgba(255, 230, 150, 0.3) !important;
@@ -1555,7 +1575,7 @@ def _inject_hub_global_css():
     }
 
     /* Layer 1 Group Cards Top Padding Fix */
-    div[class*="st-key-hub_overview_group_card_"] {
+    div[class*="st-key-hub_group_item_"] {
         padding-top: 10px !important; 
     }
 
@@ -1563,14 +1583,14 @@ def _inject_hub_global_css():
        LAYER 1: BORDERLESS EXPANDER (Courses List)
        ========================================= */
     /* Remove borders and background from the expander wrapper */
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details {
         border: none !important;
         background: transparent !important;
         margin-bottom: -5px !important; /* Pull buttons closer to expander */
     }
     
     /* Perfect vertical alignment for arrow and text */
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary {
         padding: 0px !important;
         min-height: 0px !important;
         background: transparent !important;
@@ -1581,38 +1601,64 @@ def _inject_hub_global_css():
     }
     
     /* Remove native margin that pushes text below the arrow */
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary p {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary p {
         font-weight: 600 !important;
         font-size: 0.95rem !important;
         color: #e0e0e0 !important;
         margin: 0px !important; /* Kills the misalignment */
     }
     
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details summary:hover p {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary:hover p {
         color: #ffffff !important;
     }
     
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details[open] summary {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details[open] summary {
         border-bottom: none !important;
+    }
+
+    /* =========================================
+       HUB LIST CARD SPACING
+       ========================================= */
+    /* Pull the cards closer together by counteracting Streamlit's default flex gap */
+    div[class*="st-key-hub_group_item_"],
+    div[class*="st-key-hub_pair_item_"] {
+        margin-bottom: -2px !important; 
     }
     
     /* Fix Expanded Content (Top-Left aligned, Solid White text) */
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
         padding-left: 0px !important; 
         padding-top: 5px !important;  /* Tighten space below 'x courses' */
         padding-bottom: 15px !important;
     }
     
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details div[data-testid="stMarkdownContainer"] {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details div[data-testid="stMarkdownContainer"] {
         color: #ffffff !important; /* Force solid white text */
         font-size: 0.9rem !important;
     }
     
     /* Pull bullets left and remove vertical margins */
-    div[class*="st-key-hub_overview_group_card_"] div[data-testid="stExpander"] details ul {
+    div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details ul {
         margin-top: 0px !important;
         margin-bottom: 0px !important;
         padding-left: 18px !important; /* Just enough indent to show the bullet */
+    }
+
+    /* =========================================
+       LAYER 1: EXPANDER TITLE & BULLET STYLING (RESTORED)
+       ========================================= */
+    /* Make the expander title bolder and slightly larger */
+    div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p,
+    div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important; 
+    }
+
+    /* Nudge the bullet points right to perfectly align with the expander arrow */
+    div[data-testid="stDialog"] div[data-testid="stExpander"] ul {
+        padding-left: 1.5rem !important;
+        margin-bottom: 0px !important;
     }
     /* =========================================
        INLINE ADD CARD BUTTONS (Fixing CSS Specificity)
@@ -1660,7 +1706,7 @@ def _inject_hub_global_css():
         background-color: rgba(180, 200, 220, 0.08) !important;
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        margin-bottom: 15px !important;
+        margin-bottom: -2px !important;
         border-radius: 8px !important;
         padding-top: 10px !important;
     }
@@ -1706,24 +1752,44 @@ def _inject_hub_global_css():
         filter: grayscale(100%);
     }
 
-    /* =========================================
+  /* =========================================
        TAB NAVIGATION STYLING
        ========================================= */
+    /* Base button styling */
     div.st-key-hub_tabs_container button {
         min-height: 32px !important;
         height: 32px !important;
         padding-top: 2px !important;
         padding-bottom: 2px !important;
         background-color: transparent !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 6px !important;
+        transition: background-color 0.2s ease, border-color 0.2s ease !important;
     }
     div.st-key-hub_tabs_container button p {
         font-size: 0.95rem !important;
     }
+    
+    /* --- ACTIVE TAB (PRIMARY) --- */
     div.st-key-hub_tabs_container button[kind="primary"] {
         background-color: rgba(59, 130, 246, 0.15) !important; /* Soft blue tint */
-        border-bottom: 3px solid #3b82f6 !important; /* Classic tab underline */
+        border-bottom: 4px solid #3b82f6 !important; /* Classic tab underline */
+        color: #ffffff !important;
+    }
+    
+    /* Kill the solid bright blue Streamlit default hover */
+    div.st-key-hub_tabs_container button[kind="primary"]:hover {
+        background-color: rgba(59, 130, 246, 0.25) !important; /* Just a tiny bit lighter */
+        border-color: rgba(255, 255, 255, 0.15) !important; /* Keep borders stable */
+        border-bottom: 4px solid #3b82f6 !important; /* Keep underline */
+        color: #ffffff !important;
+    }
+    
+    /* --- INACTIVE TABS (SECONDARY) HOVER --- */
+    /* Muted blue hover instead of default light gray */
+    div.st-key-hub_tabs_container button:not([kind="primary"]):hover {
+        background-color: rgba(59, 130, 246, 1) !important; /* Very subtle muted blue */
+        border: 1px solid rgba(59, 130, 246, 0.15) !important; /* Subtle blue border glow */
         color: #ffffff !important;
     }
 
@@ -1745,8 +1811,41 @@ def _inject_hub_global_css():
         align-items: stretch !important;
     }
     /* Missing folder: red border override */
-    div[class*="st-key-sync_pair_card_missing_"] {
-        border-color: #c0392b !important;
+    /* =========================================
+       PAIR COURSE TEXT STYLING
+       ========================================= */
+    div.pair-course-subtitle {
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin-bottom: 15px !important; /* Adds some breathing room above the buttons */
+    }
+
+    /* =========================================
+       LAYER 2: PIN ADD BUTTON TO BOTTOM
+       ========================================= */
+    /* 2. Force the main stVerticalBlock inside the scroll area to stretch and act as a flex column */
+    div[data-testid="stDialog"] div[role="dialog"] > div:first-child > div {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-grow: 1 !important;
+        min-height: 100% !important; /* Forces stretching when content is short */
+        height: auto !important;     /* Allows container to grow seamlessly when content is long */
+    }
+    
+    /* Push the button wrapper to the bottom of the available empty space */
+    div[class*="st-key-hub_layer2_add_btn_wrapper"] {
+        margin-top: auto !important;
+        padding-top: 25px !important; /* Ensure it doesn't collide with pairs if the list is full */
+        padding-bottom: 5px !important;
+    }
+
+    /* =========================================
+       HIDE NATIVE DIALOG CLOSE BUTTON ('X')
+       ========================================= */
+    /* Force users to use our custom Close button so we can trigger scope="app" reruns */
+    div[data-testid="stDialog"] button[aria-label="Close"] {
+        display: none !important;
     }
 
     </style>
@@ -1755,6 +1854,7 @@ def _inject_hub_global_css():
 
 def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     """Render Sync Step 1: folder pairing UI."""
+
     # Guard clause: double check that we are in step 1.
     # This prevents ghost UI elements if app.py logic somehow leaks.
     if st.session_state.get('step') != 1:
@@ -1836,7 +1936,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     with col_hub:
         if st.button("\U0001F4DA Saved Groups & Pairs", key="btn_hub_main",
                      use_container_width=True):
-            st.session_state.setdefault('hub_layer', 'layer_1')
+            _reset_hub_state()
             _saved_groups_hub_dialog(courses, course_names)
 
     sync_pairs = st.session_state.get('sync_pairs', [])
@@ -1848,6 +1948,9 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     _all_saved_groups = _saved_mgr.load_groups()
     _saved_pair_sigs = set()
     for _sg in _all_saved_groups:
+        # ONLY look at standalone pairs, ignore pairs nested inside groups
+        if not _sg.get('is_single_pair', False):
+            continue
         for _sp in _sg.get('pairs', []):
             _saved_pair_sigs.add((_sp.get('course_id'), _sp.get('local_folder', '')))
 
@@ -2041,7 +2144,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     _save_help = (
                         "This pair is saved \u2014 go to Saved Groups & Pairs to see, rename, or edit."
                         if _pair_already_saved
-                        else "Save Pair: Go to 'Saved Groups & Pairs' to quickly add this pair to the sync list in the future"
+                        else "Save as Pair"
                     )
 
                     # Card container with 💾 button INSIDE
@@ -2126,9 +2229,8 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
                 with col_save:
                     # Disable if < 2 pairs or current list matches an already saved group
-                    from ui_helpers import get_config_dir
-                    _gm = SavedGroupsManager(get_config_dir())
-                    _save_disabled = len(sync_pairs) < 2 or _gm.matches_existing_group(sync_pairs)
+                    # Reusing the existing _saved_mgr instance from the top of the render loop
+                    _save_disabled = len(sync_pairs) < 2 or _saved_mgr.matches_existing_group(sync_pairs)
 
                     # Clean, isolated CSS for "Save List" using its Streamlit key
                     st.markdown("""<style>
@@ -2279,6 +2381,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             st.session_state['download_cancelled'] = False
             st.session_state['step'] = 4
             st.session_state['download_status'] = 'analyzing'
+            st.session_state['analysis_pass'] = 1
             st.session_state.pop('sync_single_pair_idx', None)
             if main_placeholder:
                 main_placeholder.empty()
@@ -2305,6 +2408,8 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             st.session_state['step'] = 4
             st.session_state['download_status'] = 'analyzing'
             st.session_state['sync_quick_mode'] = True
+            st.session_state['qs_cancel_route'] = True
+            st.session_state['analysis_pass'] = 1
             st.session_state.pop('sync_single_pair_idx', None)
             if main_placeholder:
                 main_placeholder.empty()
@@ -3093,7 +3198,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
 # STEP 4 — Analysis + Syncing + Completion
 # ===================================================================
 
-def render_sync_step4(lang: str):
+def render_sync_step4(lang: str, main_placeholder=None):
     """Render the entire sync Step 4: analysis → review → sync → done."""
     sync_pairs = st.session_state.get('sync_pairs', [])
     if not sync_pairs:
@@ -3106,7 +3211,53 @@ def render_sync_step4(lang: str):
     status = st.session_state.get('download_status', '')
 
     if status == 'analyzing':
-        _run_analysis(lang, sync_pairs)
+        current_pass = st.session_state.get('analysis_pass', 1)
+        
+        if current_pass == 1:
+            # 1. ALWAYS DRAW THE BASE UI FIRST
+            st.markdown(f"""
+            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
+                <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                <p style="color: #8A91A6; font-size: 0.9rem;">Please wait a moment while Canvas is queried.</p>
+                <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                    <div style="background-color: #4DA8DA; width: 5%; height: 100%;"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # The target button
+            if st.button("START_PASS_2_NOW", key="hidden_pass2_trigger"):
+                st.session_state['analysis_pass'] = 2
+                st.rerun()
+                
+            # JS Auto-hider and clicker
+            import streamlit.components.v1 as components
+            components.html("""
+            <script>
+            var doc = window.parent.document;
+            var buttons = Array.from(doc.querySelectorAll('button'));
+            var target = buttons.find(b => b.innerText.includes('START_PASS_2_NOW'));
+            if(target) {
+                // Find Streamlit's outer button wrapper and hide it instantly
+                var wrapper = target.closest('div[data-testid="stButton"]');
+                if(wrapper) { wrapper.style.display = 'none'; }
+                
+                // Click after a brief paint delay
+                setTimeout(() => target.click(), 100);
+            }
+            </script>
+            """, height=0)
+        else:
+            # Pass 2: The browser has successfully painted the clean UI. 
+            # Safe to lock the main thread with heavy synchronous work.
+            _run_analysis(lang, sync_pairs, main_placeholder)
+            
+            # Optional: cleanup the flag when done
+            if 'analysis_pass' in st.session_state:
+                del st.session_state['analysis_pass']
+                
+            # CRITICAL FIX: Force rerun to transition to 'analyzed' or 'pre_sync'
+            st.rerun()
     elif status == 'analyzed':
         _show_analysis_review(lang)
     elif status == 'pre_sync':
@@ -3146,7 +3297,7 @@ def render_sync_step4(lang: str):
 
 # ---- Analysis phase ----
 
-def _run_analysis(lang, sync_pairs):
+def _run_analysis(lang, sync_pairs, main_placeholder=None):
     # Step wizard
     render_sync_wizard(st, 2, lang)
 
@@ -3158,6 +3309,10 @@ def _run_analysis(lang, sync_pairs):
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
     all_results = []
     total_pairs = len(sync_pairs)
+
+    # Completely wipe the Step 1 / Main UI container before blocking on analysis
+    if main_placeholder:
+        main_placeholder.empty()
 
     # Clean progress display — no stale cards
     analysis_ui_placeholder = st.empty()
@@ -3198,6 +3353,8 @@ def _run_analysis(lang, sync_pairs):
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+                import time
+                time.sleep(0.05)
             except BaseException:
                 pass
 
@@ -3292,6 +3449,9 @@ def _run_analysis(lang, sync_pairs):
                     _contract = json.loads(_raw)
             except Exception:
                 pass  # Fall back to session_state defaults
+            
+            # Store contract in res_data so the sync backend can apply per-course post-processing
+            res_data['contract'] = _contract
                 
             current_filter = _contract.get('file_filter', 'all')
             
@@ -3314,7 +3474,8 @@ def _run_analysis(lang, sync_pairs):
             
             # Combine missing + locally deleted into 'redownload', mirroring the normal
             # Review flow at lines 2299-2304 (selected_miss.extend(selected_locdel))
-            redownload_list = list(actionable_missing) + list(actionable_del)
+            # FIX: Quick Sync explicitly only takes true missing files!
+            true_missing = list(actionable_missing)
             
             sync_selections.append({
                 'pair_idx': idx,
@@ -3322,47 +3483,73 @@ def _run_analysis(lang, sync_pairs):
                 'new': list(actionable_new),
                 # Note: updated_files is list of tuples (canvas_file, local_file)
                 'updates': [f for f, _ in actionable_updated],
-                'redownload': redownload_list,
+                'redownload': true_missing,
                 'ignore': [],
             })
             
-            # -------------------------------------------------------------
-            # IMPORTANT: Quick Sync also needs to restore the convert flags 
-            # for THIS course into the final execution pipeline. Since we 
-            # execute courses sequentially, we need to load them into 
-            # persistent_convert_* state vars.
-            # 
-            # Note: The legacy behavior loaded the contract for the FIRST course 
-            # only, which was a bug for multi-course quick sync. We leave the 
-            # global state set to the *last* course processed here, since we 
-            # don't have per-course post-processing execution logic yet.
-            # -------------------------------------------------------------
-            
-            st.session_state['persistent_convert_zip'] = _contract.get('convert_zip', st.session_state.get('convert_zip', False))
-            st.session_state['persistent_convert_pptx'] = _contract.get('convert_pptx', st.session_state.get('convert_pptx', False))
-            st.session_state['persistent_convert_html'] = _contract.get('convert_html', st.session_state.get('convert_html', False))
-            st.session_state['persistent_convert_code'] = _contract.get('convert_code', st.session_state.get('convert_code', False))
-            st.session_state['persistent_convert_urls'] = _contract.get('convert_urls', st.session_state.get('convert_urls', False))
-            st.session_state['persistent_convert_word'] = _contract.get('convert_word', st.session_state.get('convert_word', False))
-            st.session_state['persistent_convert_video'] = _contract.get('convert_video', st.session_state.get('convert_video', False))
-            st.session_state['persistent_convert_excel'] = _contract.get('convert_excel', st.session_state.get('convert_excel', False))
-            
         total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
         
+        # 1. Tally skipped files globally using a bulletproof net
+        total_locdel = 0
+        total_canvasdel = 0
+        
+        for pair_res in all_results:
+            if not isinstance(pair_res, dict):
+                continue
+                
+            # A. Check root level dictionary keys first (fallback from Step 2 logic)
+            if 'locdel' in pair_res:
+                total_locdel += len(pair_res['locdel'])
+            if 'canvasdel' in pair_res: # Adjust if your root key is different
+                total_canvasdel += len(pair_res['canvasdel'])
+            
+            # B. Check the 'result' object/dict
+            res_obj = pair_res.get('result')
+            if res_obj:
+                # If it's an object with attributes:
+                if hasattr(res_obj, 'locally_deleted_files') and res_obj.locally_deleted_files is not None:
+                    total_locdel += len(res_obj.locally_deleted_files)
+                if hasattr(res_obj, 'deleted_on_canvas') and res_obj.deleted_on_canvas is not None:
+                    total_canvasdel += len(res_obj.deleted_on_canvas)
+                
+                # If it's a dictionary:
+                if isinstance(res_obj, dict):
+                    if 'locally_deleted_files' in res_obj and res_obj['locally_deleted_files'] is not None:
+                        total_locdel += len(res_obj['locally_deleted_files'])
+                    if 'deleted_on_canvas' in res_obj and res_obj['deleted_on_canvas'] is not None:
+                        total_canvasdel += len(res_obj['deleted_on_canvas'])
+                        
+        st.session_state['qs_skipped'] = {'local_del': total_locdel, 'canvas_del': total_canvasdel}
+        print(f"[DEBUG] Quick Sync Skipped Payload: {st.session_state['qs_skipped']}") # Print to terminal for debugging
+        
         if total_count == 0:
-            # If nothing to sync, just go to analyzed (review) screen to show "Nothing to sync" message
+            # 2. Bypass directly to completion
+            st.session_state['synced_count'] = 0
+            st.session_state['download_status'] = 'sync_complete'
             st.session_state.pop('sync_quick_mode', None)
-            st.session_state['download_status'] = 'analyzed'
+            
+            # 3. Force rerun to instantly show the success screen
+            st.rerun()
         else:
-            print(f"[DEBUG-QS] total_count={total_count} → jumping to 'syncing'!")
+            print(f"[DEBUG-QS] total_count={total_count} → jumping to 'pre_sync'!")
             st.session_state['sync_selections'] = sync_selections
-            # Clear the quick-mode flag and jump straight to sync (no confirmation dialog needed)
-            st.session_state.pop('sync_quick_mode', None)
-            st.session_state['download_status'] = 'syncing'
+            st.session_state['download_status'] = 'pre_sync'
+            st.session_state['qs_cancel_route'] = True # INDESTRUCTIBLE CANCEL FLAG
+            
+            # Inject "Start Sync" variables so Step 3 starts executing immediately
+            st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
+            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
+            st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
+            st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
+            st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
+            st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
+            st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
+            st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+
+            # Do NOT pop `sync_quick_mode` here so the cancel routing knows we are in Quick Sync!
+            st.rerun()
     else:
         st.session_state['download_status'] = 'analyzed'
-
-    st.rerun()
 
 
 # ---- Analysis review ----
@@ -4726,12 +4913,20 @@ def _run_sync(lang):
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
-    cancel_placeholder.button(
-        get_text('sync_cancel', lang),
-        key="cancel_sync_btn",
-        type="secondary",
-        on_click=cancel_process_callback,
-    )
+    if cancel_placeholder.button(get_text('sync_cancel', lang), key="cancel_sync_btn", type="secondary"):
+        st.session_state['sync_cancelled'] = True
+        st.session_state['sync_cancel_requested'] = True
+        
+        # Smart routing:
+        if st.session_state.get('qs_cancel_route', False):
+            st.session_state['step'] = 1
+            st.session_state['download_status'] = 'select'
+            st.session_state.pop('qs_cancel_route', None)
+        else:
+            st.session_state['step'] = 2
+            st.session_state['download_status'] = 'review'
+            
+        st.rerun()
 
     # --- Inject red hover CSS for cancel buttons (scoped) ---
     st.markdown("""
@@ -5225,10 +5420,18 @@ def _run_sync(lang):
     synced_details, retry_selections, _download_log_history = asyncio.run(download_sync_files_batch())
 
     # --- Shared post-processing helpers ---
-    def get_synced_file_paths(target_exts):
-        """Return list of (Path, sync_mgr, pair_idx) for synced files matching target_exts."""
+    def get_synced_file_paths(target_exts, conversion_key=None):
+        """Return list of (Path, sync_mgr, pair_idx) for synced files matching target_exts.
+           If conversion_key is provided, evaluates the pair's contract first."""
         results = []
         for sel in sync_selections:
+            if conversion_key:
+                contract = sel.get('res_data', {}).get('contract', {})
+                # For Quick Sync, 'contract' exists. For Manual Sync, fallback to global persistent state.
+                should_convert = contract.get(conversion_key.replace('persistent_', ''), st.session_state.get(conversion_key, False))
+                if not should_convert:
+                    continue  # Skip this pair's files
+                    
             pair_idx = sel['pair_idx']
             res_data = sel['res_data']
             sm = res_data['sync_manager']
@@ -5369,14 +5572,17 @@ def _run_sync(lang):
     time.sleep(0.3)  # Increased sleep to guarantee rendering before COM locks the thread
 
     # --- Post-Sync: Archive Extraction (Zip/Tar) ---
-    if getattr(st.session_state, 'persistent_convert_zip', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from archive_extractor import extract_and_stub
         import sqlite3
         import os
         
-        archive_files_to_convert = get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'})
+        archive_files_to_convert = get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'}, 'persistent_convert_zip')
         extra_targz = []
         for sel in sync_selections:
+            contract = sel.get('res_data', {}).get('contract', {})
+            if not contract.get('convert_zip', st.session_state.get('persistent_convert_zip', False)):
+                continue
             pair_idx = sel['pair_idx']
             sm = sel['res_data']['sync_manager']
             for fname in synced_details.get(pair_idx, []):
@@ -5427,10 +5633,10 @@ def _run_sync(lang):
     # --- End Post-Sync Conversion (Archive) ---
 
     # --- Post-Download: PPTX → PDF Conversion ---
-    if st.session_state.get('persistent_convert_pptx', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from pdf_converter import PowerPointToPDF
         
-        all_pptx_files = get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'})
+        all_pptx_files = get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx')
         
         if all_pptx_files:
             total_pptx = len(all_pptx_files)
@@ -5472,10 +5678,10 @@ def _run_sync(lang):
             pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
         
     # --- Post-Sync: HTML → MD Conversion ---
-    if getattr(st.session_state, 'persistent_convert_html', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from md_converter import convert_html_to_md
         
-        html_files_to_convert = get_synced_file_paths({'.html'})
+        html_files_to_convert = get_synced_file_paths({'.html'}, 'persistent_convert_html')
         
         if html_files_to_convert:
             total_html = len(html_files_to_convert)
@@ -5516,10 +5722,10 @@ def _run_sync(lang):
     # --- End Post-Sync Conversion ---
     
     # --- Post-Sync: Code → TXT Conversion ---
-    if getattr(st.session_state, 'persistent_convert_code', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from code_converter import convert_code_to_txt, CODE_EXTENSIONS
         
-        code_files_to_convert = get_synced_file_paths(CODE_EXTENSIONS)
+        code_files_to_convert = get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code')
         
         if code_files_to_convert:
             total_code = len(code_files_to_convert)
@@ -5561,34 +5767,47 @@ def _run_sync(lang):
     # --- End Post-Sync Conversion (Code) ---
     
     # --- Post-Sync: NotebookLM Link Compiler ---
-    if getattr(st.session_state, 'persistent_convert_urls', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from url_compiler import compile_urls_to_txt
         
-        pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
-        
-        processed_roots = set()
-        
+        # Determine if any course needs URLs compiled before showing the terminal message
+        urls_needed = False
         for sel in st.session_state.get('sync_selections', []):
-            if st.session_state.get('sync_cancelled', False):
-                pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            contract = sel.get('res_data', {}).get('contract', {})
+            if contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False)):
+                urls_needed = True
                 break
-            sm = sel.get('res_data', {}).get('sync_manager')
-            if sm and sm.local_path.exists():
-                course_root = sm.local_path
-                if course_root not in processed_roots:
-                    processed_roots.add(course_root)
+                
+        if urls_needed:
+            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
+            
+            processed_roots = set()
+            
+            for sel in st.session_state.get('sync_selections', []):
+                contract = sel.get('res_data', {}).get('contract', {})
+                if not contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False)):
+                    continue
                     
-                    compiled_path = compile_urls_to_txt(course_root, sm.course_name)
-                    if compiled_path:
-                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Compiled links for '{sm.course_name}' into: NotebookLM_External_Links.txt</span>")
+                if st.session_state.get('sync_cancelled', False):
+                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                    break
+                sm = sel.get('res_data', {}).get('sync_manager')
+                if sm and sm.local_path.exists():
+                    course_root = sm.local_path
+                    if course_root not in processed_roots:
+                        processed_roots.add(course_root)
                         
+                        compiled_path = compile_urls_to_txt(course_root, sm.course_name)
+                        if compiled_path:
+                            pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Compiled links for '{sm.course_name}' into: NotebookLM_External_Links.txt</span>")
+                            
     # --- End Post-Sync Link Compiler ---
     
     # --- Post-Sync: Legacy Word → PDF Conversion ---
-    if getattr(st.session_state, 'persistent_convert_word', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from word_converter import WordToPDF
         
-        word_files_to_convert = get_synced_file_paths({'.doc', '.rtf', '.odt'})
+        word_files_to_convert = get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word')
         
         if word_files_to_convert:
             total_word = len(word_files_to_convert)
@@ -5631,12 +5850,12 @@ def _run_sync(lang):
     # --- End Post-Sync Conversion (Word) ---
     
     # --- Post-Sync: Excel to PDF Conversion ---
-    if getattr(st.session_state, 'persistent_convert_excel', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from excel_converter import ExcelToPDF
         import sqlite3
         import os
         
-        excel_files_to_convert = get_synced_file_paths({'.xlsx', '.xls', '.xlsm'})
+        excel_files_to_convert = get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel')
         
         if excel_files_to_convert:
             total_excel = len(excel_files_to_convert)
@@ -5680,10 +5899,10 @@ def _run_sync(lang):
     # --- End Post-Sync Conversion (Excel) ---
     
     # --- Post-Sync: Video to MP3 Conversion ---
-    if getattr(st.session_state, 'persistent_convert_video', False):
+    if True: # Global gate removed, relying on per-course evaluation
         from video_converter import convert_video_to_mp3
         
-        video_files_to_convert = get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'})
+        video_files_to_convert = get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video')
         
         if video_files_to_convert:
             total_video = len(video_files_to_convert)
@@ -5935,6 +6154,25 @@ def _show_sync_complete(lang):
     else:
         # synced_count == 0 and no errors? (Nothing to sync?)
         st.info("Nothing was synced.")
+
+    # UN-TRAPPED QUICK SYNC WARNING:
+    skipped_data = st.session_state.get('qs_skipped', {})
+    local_del = skipped_data.get('local_del', 0)
+    canvas_del = skipped_data.get('canvas_del', 0)
+
+    if local_del > 0 or canvas_del > 0:
+        parts = []
+        if local_del > 0:
+            parts.append(f"{local_del} locally deleted files")
+        if canvas_del > 0:
+            parts.append(f"{canvas_del} files deleted on Canvas")
+            
+        joined_parts = " and ".join(parts)
+        st.warning(f"⚠️ Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
+        
+        # Cleanup
+        if 'qs_skipped' in st.session_state:
+            del st.session_state['qs_skipped']
 
     retry_selections = st.session_state.get('retry_selections', [])
 

@@ -6,6 +6,12 @@
 - [x] **Smart Sync Feature**:
     - [x] `SyncManager` class implementation and SQLite migration.
     - [x] UI for folder-course pairing and confirmed sync loops.
+- [x] **Quick Sync Architecture Refactor** (2026-03-09):
+    - [x] **Zero-Download Bypass**: Eliminated the unnecessary Step 2 manual Review screen when Quick Sync discovers 0 actionable files (e.g. only contains remotely or locally deleted items), routing users cleanly straight to the 'Sync Complete' summary screen.
+    - [x] **Per-Course Batch Conversions**: Refactored the `_run_sync` post-processing engine to evaluate `convert_*` flags on a strict per-course basis using data from each pair's distinct payload (`res_data['contract']`). Fixed a severe bug where Quick Sync would overwrite global Conversion toggles iteratively, causing the entire batch to blindly execute or ignore conversions based on the final course analyzed.
+    - [x] **Ghost UI Fix**: Reimplemented a silent Streamlit-specific HTML/JS hook inside `render_sync_step4` to forcefully hide the un-rendered `START_PASS_2_NOW` ghost button during quick pass rendering loops.
+    - [x] **Un-Trapped Warning Modal**: Redesigned the Quick Sync Success screen to globally display skipped files (ignored, locally deleted, canvas deleted) at the bottom, detaching this warning from the green "success" cards so users are always notified of skipped items even if some files were successfully downloaded.
+    - [x] **Indestructible Cancel Routing**: Implemented `st.session_state['qs_cancel_route']` on the Quick Sync execution button, allowing the user's cancel trigger dynamically inside the Download phase to correctly jump back to Step 1 (Hub) instead of erroneously falling back to Step 2 (Review).
 - [x] **Saved Groups UI Polish & Card Layout** (2026-03-08):
     - [x] **Card Layout Restructure**: Reverted to pure Markdown flow (no `st.columns`) for course cards to fix bottom clipping and restore native flexbox geometry.
     - [x] **Absolute Button Positioning**: Pinned the save pair `💾` button to the top-right (`top: 15px`, `right: 16px`) using absolute positioning and stripped all Streamlit chrome to create a ghost emoji.
