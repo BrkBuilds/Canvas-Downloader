@@ -2531,27 +2531,27 @@ with _main_content.container():
             # Use "Go to front page" for both done and cancelled
             button_text = "🏠 " + get_text('go_to_front_page', lang)
             if st.button(button_text, type="primary", use_container_width=True):
-                keys_to_clear = ['download_status', 'current_course_index', 'total_items', 
-                            'downloaded_items', 'failed_items', 'download_errors_list', 'log_content',
-                            'courses_to_download', 'download_cancelled', 'is_post_processing',
-                            'total_mb', 'start_time', 'log_deque', 'course_mb_downloaded',
-                            'sync_manifest', 'sync_selections', 'sync_manager']
+                # We want to preserve heavy network caches to prevent the 1-3 second hang
+                # when returning to the front page
+                keys_to_keep = {
+                    'courses', 'course_names', 'api_token', 'api_url', 'api_configured',
+                    'sync_pairs', 'sync_pairs_loaded', 'ui_lang', 'language'
+                }
 
-                for key in keys_to_clear:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                
-                st.session_state['step'] = 1
-                st.session_state['cancel_requested'] = False
-                st.session_state['download_cancelled'] = False
                 st.session_state['sync_cancelled'] = False
                 st.session_state['sync_cancel_requested'] = False
-                
+                st.session_state['cancel_requested'] = False
+                st.session_state['download_cancelled'] = False
+
                 # Nuclear cache clearing on reset to destroy dead aiohttp sessions
                 st.cache_data.clear()
-                st.session_state.pop('sync_manager', None)
-                st.session_state.pop('cm', None)
-                
+
+                # Iterate over a list of keys to allow modifying the dictionary
+                for key in list(st.session_state.keys()):
+                    if key not in keys_to_keep and not key.startswith('FormSubmitter:'):
+                        del st.session_state[key]
+
+                st.session_state['step'] = 1
                 st.rerun()
 
 
