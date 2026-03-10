@@ -6,7 +6,6 @@ import webbrowser
 import tkinter as tk
 from tkinter import ttk
 from streamlit.web import cli as stcli
-from translations import get_text
 import logging
 
 # Logging disabled - no debug log file needed
@@ -38,7 +37,7 @@ class CanvasLauncher:
         except Exception as e:
             logging.warning(f"Could not load icon: {e}")
 
-        self.lang = 'en' # Default to English
+
         
         self.style = ttk.Style()
         self.style.configure("TLabel", font=("Segoe UI", 10))
@@ -160,7 +159,7 @@ class CanvasLauncher:
         self.server_started = True
         logging.info(f"Server ready at {url}")
         
-        self.status_var.set(get_text('launcher_running', self.lang, url=url))
+        self.status_var.set(f'Application running, visit {url}')
         self.progress.stop()
         self.progress.pack_forget()
         
