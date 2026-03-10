@@ -30,7 +30,6 @@ import sqlite3
 import aiofiles
 
 
-from translations import get_text
 from canvas_logic import CanvasManager
 from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon, format_file_size
 from ui_helpers import (
@@ -42,7 +41,6 @@ from ui_helpers import (
     render_sync_wizard,
     friendly_course_name,
     short_path,
-    pluralize,
     robust_filename_normalize,
     parse_cbs_metadata,
 )
@@ -122,16 +120,16 @@ def _save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pai
     """Shared inner logic for the Save Group/Pair dialog."""
     if is_pair:
         desc_text = (
-            'Save your selected course/folder pair, to store it, '
-            'enabling quick-adding to the sync list.'
+            'Save your selected course/folder pair to the "Saved Groups & Pairs" tab, '
+            'so you can quickly add it to the sync list later.'
         )
         input_label = "Give your pair a name:"
         input_placeholder = "e.g., Programming (for NotebookLM)"
         entity = "Pair"
     else:
         desc_text = (
-            'Save your current list of course/folder pairs as a group so you can '
-            'quickly switch between semesters.'
+            'Save your current list of course/folder pairs as a group, so you can '
+            'quickly bulk-add them to the sync list from "Saved Groups & Pairs".'
         )
         input_label = "Give your group a name:"
         input_placeholder = "e.g., 1st Semester"
@@ -1852,7 +1850,7 @@ def _inject_hub_global_css():
     """, unsafe_allow_html=True)
 
 
-def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
+def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     """Render Sync Step 1: folder pairing UI."""
 
     # Guard clause: double check that we are in step 1.
@@ -1871,7 +1869,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
         st.toast(st.session_state.pop('pending_toast'))
 
     # Step wizard
-    render_sync_wizard(st, 1, lang)
+    render_sync_wizard(st, 1)
     st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
     # (7) Removed "Select Folders to Sync" header — wizard is enough context.
@@ -1880,8 +1878,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     courses = fetch_courses_fn(
         st.session_state['api_token'],
         st.session_state['api_url'],
-        False,
-        lang,
+        False
     )
     
     # Pre-fetch and flag favorites to fix "Favorites Only" modal filter
@@ -1889,8 +1886,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
         fav_courses = fetch_courses_fn(
             st.session_state['api_token'],
             st.session_state['api_url'],
-            True,
-            lang,
+            True
         )
         fav_ids = {c.id for c in fav_courses}
     except Exception:
@@ -1924,13 +1920,13 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
     # Sort solely by the display name for the dropdown
     sorted_course_names = sorted(course_names.values(), key=lambda x: x.lower())
-    course_options = ["-- " + get_text('sync_select_course', lang) + " --"] + sorted_course_names
+    course_options = ["-- " + 'Select Canvas Course' + " --"] + sorted_course_names
 
     # --- (8) Bigger subheading + Hub button ---
     col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="center")
     with col_heading:
         st.markdown(
-            f'<h3 style="margin-top: -10px; margin-bottom: 0px; padding-bottom: 0px;">{get_text("sync_courses_to_sync", lang)}</h3>',
+            f'<h3 style="margin-top: -10px; margin-bottom: 0px; padding-bottom: 0px;">{'Canvas Courses to Sync'}</h3>',
             unsafe_allow_html=True,
         )
     with col_hub:
@@ -2101,7 +2097,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             local_folder = pair.get('local_folder')
             course_id = pair.get('course_id')
             if local_folder and Path(local_folder).exists():
-                sm = SyncManager(local_folder, course_id, pair.get('course_name', ''), lang)
+                sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
                 ignored = sm.get_ignored_files()
                 if ignored:
                     ignored_by_course[pair['course_id']] = {
@@ -2118,7 +2114,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
             for idx, pair in enumerate(sync_pairs):
                 # --- If this pair is being edited, render the edit form inline ---
                 if editing_idx is not None and editing_idx == idx and st.session_state.get('pending_sync_folder'):
-                    _render_pending_folder_ui(courses, course_names, course_options, lang)
+                    _render_pending_folder_ui(courses, course_names, course_options)
                     # Removed explicit spacer to match list gap via CSS margin-bottom on container
                     continue
 
@@ -2130,8 +2126,8 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     folder_exists = Path(pair['local_folder']).exists()
                     last_synced = pair.get('last_synced')
                     ts_str = (
-                        get_text('sync_last_synced', lang, time=last_synced) if last_synced
-                        else get_text('sync_never_synced', lang)
+                        f'Last synced: {last_synced}' if last_synced
+                        else 'Never synced'
                     )
                     
                     # Simplified card content
@@ -2152,7 +2148,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     _card_key = f"sync_pair_card_missing_{idx}" if not folder_exists else f"sync_pair_card_{idx}"
                     with st.container(border=True, key=_card_key):
                         # Title rendered first, naturally
-                        st.markdown(f"**{get_text('sync_course_prefix', lang)} {display_name}**")
+                        st.markdown(f"**{'Course: '} {display_name}**")
                         # Save button rendered after — CSS absolute-positions it to top-right
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
                                      help=_save_help):
@@ -2163,12 +2159,12 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                 # (4) Action buttons with text labels restored
                 with col_open:
                     if folder_exists:
-                        if st.button("📂 " + get_text('sync_open_folder_action', lang),
+                        if st.button("📂 " + 'Open Folder',
                                      key=f"open_folder_{idx}", use_container_width=True):
                             open_folder(pair['local_folder'])
 
                 with col_edit:
-                    if st.button("✏️ " + get_text('sync_edit_pair', lang), 
+                    if st.button("✏️ " + 'Edit', 
                                  key=f"edit_pair_{idx}", use_container_width=True):
                         st.session_state['pending_sync_folder'] = pair['local_folder']
                         st.session_state['editing_pair_idx'] = idx
@@ -2183,23 +2179,19 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                         course_data = ignored_by_course[pair['course_id']]
                         _show_course_ignored_files(
                             friendly_course_name(pair['course_name']),
-                            pair['course_id'], course_data, lang
-                        )
+                            pair['course_id'], course_data)
 
                 with col_remove:
-                    if st.button("🗑️ " + get_text('sync_remove_pair', lang), 
+                    if st.button("🗑️ " + 'Remove', 
                                  key=f"remove_pair_{idx}", use_container_width=True):
                         pairs_to_remove.append(idx)
                 
-                # Add vertical spacing between blocks
-                st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-
             if pairs_to_remove:
                 st.session_state['sync_pairs'] = [p for i, p in enumerate(sync_pairs) if i not in pairs_to_remove]
                 _persist_current_pairs()
                 st.rerun()
             if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
-                _render_pending_folder_ui(courses, course_names, course_options, lang)
+                _render_pending_folder_ui(courses, course_names, course_options)
             else:
                 # (9) "Add Course folder" + "Save List as Group" — full width
                 col_add, col_save, _ = st.columns([1.5, 1.5, 7], gap="small", vertical_alignment="bottom") 
@@ -2210,7 +2202,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                         border: 1px solid #4a7a9b !important;
                         background-color: #2a3a4a !important;
                         color: #cde !important;
-                        margin-top: -45px !important;
+                        margin-top: -35px !important;
                         position: relative;
                         z-index: 1;
                     }
@@ -2221,7 +2213,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
                     
-                    if st.button("➕ " + get_text('sync_add_course_folder', lang), key="btn_add_folder", use_container_width=True):
+                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -2238,6 +2230,9 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                         background-color: rgba(95, 100, 200, 0.1) !important;
                         color: #e0e7ff !important;
                         border: 1px solid rgba(95, 100, 200, 0.75) !important;
+                        margin-top: -35px !important;
+                        position: relative;
+                        z-index: 1;
                     }
                     div.st-key-btn_save_group_main button:hover {
                         background-color: rgba(95, 100, 200, 0.4) !important;
@@ -2259,7 +2254,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
         else:
             # EMPTY STATE Logic (if not sync_pairs)
             if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
-                _render_pending_folder_ui(courses, course_names, course_options, lang)
+                _render_pending_folder_ui(courses, course_names, course_options)
             else:
                 col_add, _ = st.columns([0.25, 0.75]) 
                 with col_add:
@@ -2279,7 +2274,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
     
-                    if st.button("➕ " + get_text('sync_add_course_folder', lang), key="btn_add_folder_empty"):
+                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder_empty"):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -2311,12 +2306,12 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     # ignored_by_course already computed above the course row loop
     if total_ignored > 0:
         if st.button(f"🚫 Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
-            _ignored_files_dialog(ignored_by_course, lang)
+            _ignored_files_dialog(ignored_by_course)
 
     if sync_pairs:
         invalid = [p for p in sync_pairs if not Path(p['local_folder']).exists()]
         if invalid:
-            st.warning(get_text('sync_folder_not_found', lang, path=invalid[0]['local_folder']))
+            st.warning(f"❌ Folder not found: {invalid[0]['local_folder']}. It may have been deleted, renamed, or the drive is disconnected.")
 
     # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
     # gap="small" brings the OR closer
@@ -2369,7 +2364,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
     
     with col_analyze:
         # Added key for symmetry and potential state stability
-        if st.button("🔍" + get_text('sync_start_analysis', lang), type="primary",
+        if st.button("🔍" + 'Analyze, Review & Sync', type="primary",
                      key="btn_analyze",
                      use_container_width=True,
                      disabled=not bool(sync_pairs)):
@@ -2393,7 +2388,7 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
     with col_quick:
         # Removed help=... to prevent tooltip wrapper from breaking layout parity with the other button
-        if st.button("⚡" + get_text('sync_quick_sync', lang),
+        if st.button("⚡" + 'Quick Sync All',
                      key="btn_quick_sync",
                      type="primary",
                      use_container_width=True,
@@ -2417,12 +2412,12 @@ def render_sync_step1(lang: str, fetch_courses_fn, main_placeholder=None):
 
     # --- (6) Tutorial + Sync History — grouped at bottom below separator ---
     st.markdown("---")
-    with st.expander(get_text('sync_tutorial_title', lang), expanded=False):
-        st.markdown(get_text('sync_tutorial_text', lang))
-    _render_sync_history(lang)
+    with st.expander('📖 How Smart Sync Works', expanded=False):
+        st.markdown("**Smart Sync keeps your local folders up-to-date without overwriting your work.**\n\n1. **Add a Folder**: Select an existing course folder on your computer and pair it with the corresponding Canvas course.\n2. **Analyze**: We compare your local files with Canvas.\n3. **Review**: You'll see exactly what changed:\n   - 🆕 **New Files**: Downloaded to your folder.\n   - 🔄 **Updated Files**: Saved as a copy (e.g., `file_NewVersion.pdf`) so your notes aren't overwritten.\n   - 📦 **Missing Files**: Re-download files you accidentally deleted, or ignore them forever.\n   - 🗑️ **Deleted on Canvas**: Files removed by the teacher are preserved safely on your computer.\n\n*Tip: Use **⚡ Quick Sync All** to skip the review and instantly download all new and updated files across all your courses!*")
+    _render_sync_history()
 
 
-def _render_sync_history(lang):
+def _render_sync_history():
     """Render sync history in an expander at the bottom of step 1."""
     try:
         from ui_helpers import get_config_dir
@@ -2432,9 +2427,9 @@ def _render_sync_history(lang):
         history = []
 
     if history:
-        with st.expander(get_text('sync_history_title', lang), expanded=False):
+        with st.expander('📜 Sync History', expanded=False):
             if not history:
-                st.write(get_text('sync_history_empty', lang))
+                st.write('No sync history yet.')
                 return
                 
             # Show most recent first, limit to 10
@@ -2583,7 +2578,7 @@ def _render_filetype_selector(all_files, prefix, file_key_fn):
 
 
 @st.dialog("🚫 All Ignored Files", width="large")
-def _ignored_files_dialog(ignored_by_course, lang):
+def _ignored_files_dialog(ignored_by_course, ):
     """Dialog to manage and restore files that were previously ignored.
     
     Architecture: Bulk Selection Matrix
@@ -2697,14 +2692,14 @@ def _ignored_files_dialog(ignored_by_course, lang):
             st.rerun()
 
 
-def _show_course_ignored_files(course_name, course_id, course_data, lang):
+def _show_course_ignored_files(course_name, course_id, course_data, ):
     """Dialog to manage ignored files for a specific course."""
     @st.dialog(f"🚫 Ignored Files: {course_name}", width="large")
     def _dialog():
-        _show_course_ignored_files_inner(course_name, course_id, course_data, lang)
+        _show_course_ignored_files_inner(course_name, course_id, course_data)
     _dialog()
 
-def _show_course_ignored_files_inner(course_name, course_id, course_data, lang):
+def _show_course_ignored_files_inner(course_name, course_id, course_data, ):
     """Per-course ignored files dialog — Bulk Selection Matrix architecture.
     
     Same paradigm as All Ignored Files, but flat list (no course expanders).
@@ -2803,7 +2798,7 @@ def _show_course_ignored_files_inner(course_name, course_id, course_data, lang):
 
 
 @st.dialog("Select Course to sync", width="large")
-def select_course_dialog(courses, current_selected_id, lang):
+def select_course_dialog(courses, current_selected_id, ):
     # We use a purely static CSS string so React NEVER unmounts it during re-renders.
     # Instead, we use the CSS `:has()` pseudo-class to sniff the native HTML checkbox state 
     # of the Streamlit toggle and shift the height instantly, completely bypassing the Python backend rendering lag.
@@ -2843,7 +2838,7 @@ def select_course_dialog(courses, current_selected_id, lang):
     with col_filters:
         filter_mode = st.radio(
             "Filter Mode",
-            [get_text('show_favorites', lang), get_text('show_all', lang)],
+            ['Favorites Only', 'All Courses'],
             index=1 if not st.session_state.get('sync_filter_favorites', True) else 0,
             horizontal=True,
             label_visibility="collapsed",
@@ -2851,7 +2846,7 @@ def select_course_dialog(courses, current_selected_id, lang):
         )
     
     # Update preference
-    st.session_state['sync_filter_favorites'] = (filter_mode == get_text('show_favorites', lang))
+    st.session_state['sync_filter_favorites'] = (filter_mode == 'Favorites Only')
     
     # Filter by favorites
     visible_courses = courses
@@ -2859,13 +2854,13 @@ def select_course_dialog(courses, current_selected_id, lang):
         visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
         
     if not visible_courses:
-        st.warning(get_text('no_courses', lang))
+        st.warning('No courses found.')
         if st.button("Close"):
              st.rerun()
         return
 
     # CBS Filters
-    show_filters = st.toggle(get_text('enable_cbs_filters', lang, default="Enable CBS Filters"), key="sync_dialog_show_cbs")
+    show_filters = st.toggle(f'Enable CBS Filters', key="sync_dialog_show_cbs")
     
     filtered_courses = visible_courses
     
@@ -2886,14 +2881,14 @@ def select_course_dialog(courses, current_selected_id, lang):
 
         # Render Widgets
         with st.container(border=True, key="sync_dialog_cbs_container"):
-             st.markdown(f"**{get_text('filter_criteria', lang, default='Filter Criteria')}**")
+             st.markdown(f"**{f'Filter Criteria'}**")
              c1, c2, c3 = st.columns(3)
              with c1:
-                 sel_types = st.multiselect(get_text('filter_type', lang, default="Class Type"), options=sorted(list(all_types)), key="sync_d_type")
+                 sel_types = st.multiselect(f'Class Type', options=sorted(list(all_types)), key="sync_d_type")
              with c2:
-                 sel_sem = st.multiselect(get_text('filter_semester', lang, default="Semester"), options=sorted(list(all_semesters)), key="sync_d_sem")
+                 sel_sem = st.multiselect(f'Semester', options=sorted(list(all_semesters)), key="sync_d_sem")
              with c3:
-                 sel_years = st.multiselect(get_text('filter_year', lang, default="Year"), options=sorted(list(all_years), reverse=True), key="sync_d_year")
+                 sel_years = st.multiselect(f'Year', options=sorted(list(all_years), reverse=True), key="sync_d_year")
         
         # Apply Logic
         if sel_types or sel_sem or sel_years:
@@ -2909,7 +2904,7 @@ def select_course_dialog(courses, current_selected_id, lang):
              filtered_courses = temp_filtered
              
              if not filtered_courses:
-                 st.info(get_text('no_courses_match_filters', lang, default="No courses match."))
+                 st.info(f'No courses match the selected filters.')
 
     # Sorting
     # current selection first (weight 0), then alphabetical (weight 1)
@@ -2979,7 +2974,7 @@ def select_course_dialog(courses, current_selected_id, lang):
         st.rerun()
 
 
-def _render_pending_folder_ui(courses, course_names, course_options, lang):
+def _render_pending_folder_ui(courses, course_names, course_options, ):
     """Inline UI shown while adding/editing a sync-pair — unified card."""
     pending_folder = st.session_state['pending_sync_folder']
     folder_name = Path(pending_folder).name
@@ -2998,12 +2993,12 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         with col_folder_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{get_text("sync_adding_folder", lang)}</span>'
+                f'{'Added Folder:'}</span>'
                 f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
                 unsafe_allow_html=True,
             )
         with col_change_btn:
-            if st.button(get_text('sync_change_folder', lang), key="btn_change_folder"):
+            if st.button('Change Folder', key="btn_change_folder"):
                 _select_sync_folder()
                 st.rerun()
         with col_spacer:
@@ -3012,7 +3007,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         # --- Course Selection (Pop-up Dialog) ---
         
         # Determine current display
-        current_disp = get_text('sync_select_course', lang) # Default "Select Canvas Course"
+        current_disp = 'Select Canvas Course' # Default "Select Canvas Course"
         
         # Get current selected course ID from session state (for editing or new)
         selected_course_id = st.session_state.get('sync_selected_course_id')
@@ -3029,9 +3024,9 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         
         # Determine button label based on mode
         if editing_idx is not None:
-             btn_label = get_text('sync_change_course', lang, default="Change Course")
+             btn_label = f'Change Course'
         else:
-             btn_label = get_text('sync_select_course_btn', lang, default="Select Course")
+             btn_label = f'Select Course'
         
         # Two columns like folder row: [1, 1, 1] to keep it left-aligned
         # REVISED: [1, 1, 1] — relying on CSS flex auto-width to handle content size
@@ -3040,7 +3035,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         with col_c_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{get_text("sync_course_prefix", lang)}</span>'
+                f'{'Course: '}</span>'
                 f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{current_disp}</span>',
                 unsafe_allow_html=True
             )
@@ -3048,7 +3043,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         with col_c_btn:
             if st.button(btn_label, key="btn_open_course_dialog"):
                 st.session_state["sync_dialog_selected_id"] = selected_course_id
-                select_course_dialog(courses, selected_course_id, lang)
+                select_course_dialog(courses, selected_course_id)
         
         with col_c_spacer:
             st.empty()
@@ -3104,7 +3099,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
             
             # Mismatch warning: Only if not the original selection (user changed it)
             if not has_match and not is_same_as_original:
-                st.warning(get_text('sync_mismatch_warning', lang))
+                st.warning("⚠️ Warning: The folder name doesn't seem to match the selected course. Are you sure this is the correct folder for this course?")
 
             # Duplicate pair detection
             existing = st.session_state.get('sync_pairs', [])
@@ -3116,7 +3111,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
             for cid, cname in course_names.items():
                 if cname == selected_course_name:
                     if any(p['local_folder'] == pending_folder and p['course_id'] == cid for p in candidates):
-                        st.warning(get_text('sync_duplicate_pair', lang))
+                        st.warning('⚠️ This folder is already paired with this course.')
                     break
 
 
@@ -3128,7 +3123,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
         # Made columns narrower (10% each) to reduce button width significantly (per user request)
         col_add, col_cancel, _ = st.columns([1, 1, 8])
         with col_add:
-            if st.button("✓ " + get_text('sync_confirm_add', lang), key="confirm_pair",
+            if st.button("✓ " + 'Confirm and Add', key="confirm_pair",
                          type="primary", use_container_width=True):
                 if selected_course_name and selected_course_name != course_options[0]:
                     selected_course_id = None
@@ -3164,7 +3159,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
                         st.rerun()
                 else:
                     # Custom error message with lower height (compact)
-                    error_msg = get_text('sync_error_no_course', lang)
+                    error_msg = 'Please select a course.'
                     error_container.markdown(
                         f"""
                         <div style="
@@ -3186,7 +3181,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
                         unsafe_allow_html=True
                     )
         with col_cancel:
-            if st.button(get_text('cancel', lang), key="cancel_pair",
+            if st.button('Cancel', key="cancel_pair",
                          use_container_width=True):
                 st.session_state['pending_sync_folder'] = None
                 st.session_state.pop('editing_pair_idx', None)
@@ -3198,12 +3193,12 @@ def _render_pending_folder_ui(courses, course_names, course_options, lang):
 # STEP 4 — Analysis + Syncing + Completion
 # ===================================================================
 
-def render_sync_step4(lang: str, main_placeholder=None):
+def render_sync_step4( main_placeholder=None):
     """Render the entire sync Step 4: analysis → review → sync → done."""
     sync_pairs = st.session_state.get('sync_pairs', [])
     if not sync_pairs:
-        st.error(get_text('sync_no_pairs', lang))
-        if st.button(get_text('back_btn', lang)):
+        st.error('No folders added yet. Click "Add Course folder" to get started.')
+        if st.button('Back'):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
@@ -3250,7 +3245,7 @@ def render_sync_step4(lang: str, main_placeholder=None):
         else:
             # Pass 2: The browser has successfully painted the clean UI. 
             # Safe to lock the main thread with heavy synchronous work.
-            _run_analysis(lang, sync_pairs, main_placeholder)
+            _run_analysis(sync_pairs, main_placeholder)
             
             # Optional: cleanup the flag when done
             if 'analysis_pass' in st.session_state:
@@ -3259,7 +3254,7 @@ def render_sync_step4(lang: str, main_placeholder=None):
             # CRITICAL FIX: Force rerun to transition to 'analyzed' or 'pre_sync'
             st.rerun()
     elif status == 'analyzed':
-        _show_analysis_review(lang)
+        _show_analysis_review()
     elif status == 'pre_sync':
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
         # We must let this render loop FINISH completely so the frontend can tear down the `st.dialog` DOM elements.
@@ -3288,25 +3283,25 @@ def render_sync_step4(lang: str, main_placeholder=None):
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif status == 'syncing':
-        _run_sync(lang)
+        _run_sync()
     elif status == 'sync_cancelled':
-        _show_sync_cancelled(lang)
+        _show_sync_cancelled()
     elif status == 'sync_complete':
-        _show_sync_complete(lang)
+        _show_sync_complete()
 
 
 # ---- Analysis phase ----
 
-def _run_analysis(lang, sync_pairs, main_placeholder=None):
+def _run_analysis(sync_pairs, main_placeholder=None):
     # Step wizard
-    render_sync_wizard(st, 2, lang)
+    render_sync_wizard(st, 2)
 
     # Check if only syncing a single pair
     single_idx = st.session_state.get('sync_single_pair_idx')
     if single_idx is not None:
         sync_pairs = [sync_pairs[single_idx]]
 
-    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
     all_results = []
     total_pairs = len(sync_pairs)
 
@@ -3319,7 +3314,7 @@ def _run_analysis(lang, sync_pairs, main_placeholder=None):
     
     # RENDER GLOBAL CANCEL ABOVE THE ANALYSIS LOOP
     cancel_analysis_placeholder = st.empty()
-    if cancel_analysis_placeholder.button(get_text('cancel_download', lang), type="secondary", key="cancel_analysis_btn"):
+    if cancel_analysis_placeholder.button('Cancel Download', type="secondary", key="cancel_analysis_btn"):
         cancel_analysis_placeholder.empty()
         st.session_state['cancel_requested'] = True
         st.session_state['download_status'] = 'sync_cancelled'
@@ -3332,7 +3327,7 @@ def _run_analysis(lang, sync_pairs, main_placeholder=None):
             
         # Folder-not-found guard
         if not Path(pair['local_folder']).exists():
-            st.error(get_text('sync_folder_not_found', lang, path=pair['local_folder']))
+            st.error(f"❌ Folder not found: {pair['local_folder']}. It may have been deleted, renamed, or the drive is disconnected.")
             continue
 
         display_name = friendly_course_name(pair['course_name'])
@@ -3366,7 +3361,7 @@ def _run_analysis(lang, sync_pairs, main_placeholder=None):
             sync_progress_hook(0, 1, "Connecting to Canvas API...")
             course = cm.canvas.get_course(course_id)
 
-            sync_mgr = SyncManager(str(local_folder), course_id, course_name, lang)
+            sync_mgr = SyncManager(str(local_folder), course_id, course_name)
 
             sync_progress_hook(0, 1, "Loading local sync manifest...")
             manifest = sync_mgr.load_manifest()
@@ -3554,11 +3549,11 @@ def _run_analysis(lang, sync_pairs, main_placeholder=None):
 
 # ---- Analysis review ----
 
-def _show_analysis_review(lang):
+def _show_analysis_review():
     # Step wizard
-    render_sync_wizard(st, 2, lang)
+    render_sync_wizard(st, 2)
 
-    st.markdown(f"<h3 style='margin-bottom: -15px; margin-top: 10px;'>🔍 {get_text('step4_header', lang)}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='margin-bottom: -15px; margin-top: 10px;'>🔍 {'Review Changes'}</h3>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -3786,7 +3781,7 @@ def _show_analysis_review(lang):
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
         st.error("Analysis failed. Please try again.")
-        if st.button(get_text('back_btn', lang)):
+        if st.button('Back'):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
@@ -3830,11 +3825,11 @@ def _show_analysis_review(lang):
             c1, c2, c3, c4, c5 = st.columns(5)
             
             # Determine labels safely based on lang
-            lbl_new = get_text('new_files', lang) if 'new_files' in get_text.__code__.co_consts else ("Nye filer" if lang == 'da' else "New files")
-            lbl_upd = "Opdateringer" if lang == 'da' else "Updates available"
-            lbl_miss = "Manglende filer" if lang == 'da' else "Missing files"
-            lbl_loc_del = "Slettet lokalt" if lang == 'da' else "Deleted locally"
-            lbl_del = "Slettet på Canvas" if lang == 'da' else "Deleted on Canvas"
+            lbl_new = "New files"
+            lbl_upd = "Updates available"
+            lbl_miss = "Missing files"
+            lbl_loc_del = "Deleted locally"
+            lbl_del = "Deleted on Canvas"
 
             def _render_metric_card(val, lbl, icon, hex_start, hex_end, shadow_color):
                 base_card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px; transition: all 0.2s ease-in-out;"
@@ -3882,10 +3877,9 @@ def _show_analysis_review(lang):
     # Nothing to sync
     if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
         if total_uptodate:
-            st.info(get_text('sync_files_uptodate_count', lang, count=total_uptodate,
-                             file_word=pluralize(total_uptodate, 'file', lang)))
-        st.success(get_text('nothing_to_sync', lang))
-        if st.button(get_text('go_to_front_page', lang), type="primary"):
+            st.info(f"All selected folders are up to date! ({total_uptodate} files already downloaded)")
+        st.success('Nothing to sync - all files are up to date!')
+        if st.button('Go to front page', type="primary"):
             _cleanup_sync_state()
             st.rerun()
         st.stop()
@@ -4121,8 +4115,7 @@ def _show_analysis_review(lang):
             uptodate_count = len(result.uptodate_files)
             status_pill = ""
             if uptodate_count:
-                uptodate_label = get_text('sync_files_uptodate_count', lang, count=uptodate_count,
-                                          file_word=pluralize(uptodate_count, 'file', lang))
+                uptodate_label = f"Up to date ({uptodate_count} {('file' if uptodate_count == 1 else 'files')})"
                 uptodate_label = uptodate_label.lstrip('✅ ')
                 status_pill = f'<span style="font-size: 0.75rem; color: #4ade80; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
 
@@ -4152,7 +4145,7 @@ def _show_analysis_review(lang):
             has_ignored = hasattr(result, 'ignored_files') and bool(result.ignored_files)
 
             if not any([has_new, has_updated, has_missing, has_locally_deleted]) and not has_ignored:
-                st.success(get_text('sync_no_changes_course', lang))
+                st.success('All files up-to-date')
                 continue
 
 
@@ -4174,7 +4167,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
 
                 with st.container(key=f"cat_new_{pair['course_id']}"):
-                    with st.expander(f"🆕 {get_text('new_files', lang)}"):
+                    with st.expander(f"🆕 {'New Files'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
@@ -4208,7 +4201,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
 
                 with st.container(key=f"cat_update_{pair['course_id']}"):
-                    with st.expander(f"🔄 {get_text('updated_files', lang)}"):
+                    with st.expander(f"🔄 {'Updates Available'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
@@ -4242,7 +4235,7 @@ def _show_analysis_review(lang):
                 """, unsafe_allow_html=True)
 
                 with st.container(key=f"cat_missing_{pair['course_id']}"):
-                    with st.expander(f"📦 {get_text('missing_files', lang)}"):
+                    with st.expander(f"📦 {'Missing Files'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_miss"):
@@ -4295,7 +4288,7 @@ def _show_analysis_review(lang):
 
             # Deleted files — always starts OPEN
             if result.deleted_on_canvas:
-                lbl_del = "Slettet på Canvas (Ignoreret)" if lang == 'da' else "Deleted on Canvas (Ignored)"
+                lbl_del = "Deleted on Canvas (Ignored)"
                 total_del_canvas = len(result.deleted_on_canvas)
                 
                 st.markdown(f"""
@@ -4511,7 +4504,7 @@ def _show_analysis_review(lang):
 
         col_sync, col_back, _ = st.columns([1.2, 1, 5])
         with col_sync:
-            if st.button(get_text('sync_selected', lang), type="primary", use_container_width=True):
+            if st.button('Sync (Download) Selected Files', type="primary", use_container_width=True):
                 # Collect selections
                 sync_selections = []
                 for idx, res_data in enumerate(all_results):
@@ -4561,14 +4554,14 @@ def _show_analysis_review(lang):
                             total_bytes += getattr(cf, 'size', 0) or 0
     
                 if total_count == 0:
-                    st.info(get_text('nothing_to_sync', lang))
+                    st.info('Nothing to sync - all files are up to date!')
                     st.stop()
     
                 # Disk space check (use first pair's folder)
                 first_folder = sync_selections[0]['res_data']['pair']['local_folder']
                 has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
                 if not has_space:
-                    st.error(get_text('sync_insufficient_space', lang))
+                    st.error('Insufficient disk space on the target drive. Need at least 1 GB free to proceed safely.')
                     st.stop()
     
                 folders_count = len(set(
@@ -4585,10 +4578,10 @@ def _show_analysis_review(lang):
                             dest_folder = short_path(s['res_data']['pair']['local_folder'])
                             break
                 
-                _show_sync_confirmation(lang, sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+                _show_sync_confirmation( sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
 
             with col_back:
-                if st.button(get_text('back_btn', lang), use_container_width=True):
+                if st.button('Back', use_container_width=True):
                     _cleanup_sync_state()
                     st.rerun()
 
@@ -4596,7 +4589,7 @@ def _show_analysis_review(lang):
 # ---- Confirmation dialog ----
 
 @st.dialog("Confirm Sync")
-def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes):
+def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes):
     # --- Data Collection for Dropdowns ---
     file_items = []
     folder_set = set()
@@ -4884,7 +4877,7 @@ def _show_sync_confirmation(lang, sync_selections, count, size, folders, avail_m
 
 # ---- Sync execution ----
 
-def _run_sync(lang):
+def _run_sync():
     # Initialize phase flags explicitly at start of run — but ONLY if not already cancelled.
     # If a Phase 3 cancel triggered the rerun, we must preserve is_post_processing=True
     # so that _show_sync_cancelled can read it for the correct status message.
@@ -4892,10 +4885,10 @@ def _run_sync(lang):
         st.session_state['is_post_processing'] = False
 
     # Step wizard
-    render_sync_wizard(st, 3, lang)
+    render_sync_wizard(st, 3)
 
     st.markdown(
-        f'<div class="step-header">{get_text("sync_progress_header", lang)}</div>',
+        f'<div class="step-header">{"Syncing..."}</div>',
         unsafe_allow_html=True,
     )
 
@@ -4913,7 +4906,7 @@ def _run_sync(lang):
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
-    if cancel_placeholder.button(get_text('sync_cancel', lang), key="cancel_sync_btn", type="secondary"):
+    if cancel_placeholder.button('Cancel Sync', key="cancel_sync_btn", type="secondary"):
         st.session_state['sync_cancelled'] = True
         st.session_state['sync_cancel_requested'] = True
         
@@ -4999,7 +4992,7 @@ def _run_sync(lang):
         """
 
     async def download_sync_files_batch():
-        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
         timeout = aiohttp.ClientTimeout(total=300)
         
         # Respect global concurrency limit from session state
@@ -5033,7 +5026,7 @@ def _run_sync(lang):
             downloaded_mb = 0.0
             total_pairs = len(sync_selections)
 
-            render_progress_bar(progress_container, 0, total_files, lang)
+            render_progress_bar(progress_container, 0, total_files)
             
             # Setup Tracking Variables
             import time
@@ -5102,8 +5095,7 @@ def _run_sync(lang):
                                 all_files.append(found_file)
                         else:
                             # Log error if file is truly gone
-                            error_list.append(get_text('sync_file_removed_from_canvas', lang,
-                                                       filename=sync_info.canvas_filename))
+                            error_list.append(f"File removed from Canvas before download: {sync_info.canvas_filename}")
 
                 local_path = sync_mgr.local_path
                 local_path.mkdir(parents=True, exist_ok=True)
@@ -5159,7 +5151,7 @@ def _run_sync(lang):
                         if is_update and filepath.exists():
                             base = filepath.stem
                             ext = filepath.suffix
-                            filepath = local_path / f"{base}{get_text('new_version_suffix', lang)}{ext}"
+                            filepath = local_path / f"{base}{'_NewVersion'}{ext}"
                             filepath = cm._handle_conflict(filepath)
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
@@ -5310,8 +5302,7 @@ def _run_sync(lang):
                                                 else:
                                                     # Max retries exhausted for 5xx
                                                     failed_files_for_pair.append(file)
-                                                    error_list.append(get_text('sync_error_file', lang,
-                                                        filename=display_file_name, error=f"HTTP {response.status} after {SYNC_MAX_RETRIES} retries"))
+                                                    error_list.append(f"Error syncing {display_file_name}: HTTP {response.status} after {SYNC_MAX_RETRIES} retries")
                                                     terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                     break
@@ -5319,8 +5310,7 @@ def _run_sync(lang):
                                             else:
                                                 # Non-retryable HTTP error (4xx except 429)
                                                 failed_files_for_pair.append(file)
-                                                error_list.append(get_text('sync_error_file', lang,
-                                                    filename=display_file_name, error=f"HTTP {response.status}"))
+                                                error_list.append(f"Error syncing {display_file_name}: HTTP {response.status}")
                                                 terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
                                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 break  # Don't retry client errors
@@ -5334,8 +5324,7 @@ def _run_sync(lang):
                                             await asyncio.sleep(wait)
                                         else:
                                             failed_files_for_pair.append(file)
-                                            error_list.append(get_text('sync_error_file', lang,
-                                                filename=display_file_name, error=f"Network error: {net_err}"))
+                                            error_list.append(f"Error syncing {display_file_name}: Network error: {net_err}")
                                             terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
                                             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         else:
@@ -5348,15 +5337,13 @@ def _run_sync(lang):
                                 err_msg = "No download URL"
                             
                             failed_files_for_pair.append(file)
-                            error_list.append(get_text('sync_error_file', lang,
-                                filename=display_file_name, error=err_msg))
+                            error_list.append(f"Error syncing {display_file_name}: {err_msg}")
                             terminal_log.append(f"<span style='color:#e74c3c'>[❌] Skipped: </span> {display_file_name} <span style='color:#666'>({err_msg})</span>")
                             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
-                        error_list.append(get_text('sync_error_file', lang,
-                            filename=display_file_name, error=str(e)))
+                        error_list.append(f"Error syncing {display_file_name}: {str(e)}")
                         str_err = str(e).replace('<', '&lt;').replace('>', '&gt;')
                         terminal_log.append(f"<span style='color:#e74c3c'>[❌] Error: </span> {display_file_name} <span style='color:#666'>({str_err})</span>")
                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -5376,7 +5363,7 @@ def _run_sync(lang):
             # Final 100% UI Paint after the loop
             elapsed_final = time.time() - start_time
             speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
-            render_progress_bar(progress_container, total_files, total_files, lang)
+            render_progress_bar(progress_container, total_files, total_files)
             metrics_dashboard.markdown(render_metrics_html(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
             active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -6004,8 +5991,8 @@ def _run_sync(lang):
 
 # ---- Cancelled ----
 
-def _show_sync_cancelled(lang):
-    render_sync_wizard(st, 3, lang)
+def _show_sync_cancelled():
+    render_sync_wizard(st, 3)
 
     cancelled_count = st.session_state.get('sync_cancelled_file_count', 0)
     total_files = sum(
@@ -6038,7 +6025,7 @@ def _show_sync_cancelled(lang):
             <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Sync Cancelled</h2>
         </div>
         <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
-            {get_text('sync_cancelled', lang)}
+            {'Sync was cancelled.'}
         </p>
         <div style="
             background: rgba(239, 68, 68, 0.08);
@@ -6054,19 +6041,19 @@ def _show_sync_cancelled(lang):
     </div>
     """, unsafe_allow_html=True)
 
-    _show_sync_errors(lang)
+    _show_sync_errors()
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🏠 " + get_text('go_to_front_page', lang), type="primary", use_container_width=True):
+    if st.button("🏠 " + 'Go to front page', type="primary", use_container_width=True):
         _cleanup_sync_state()
         st.rerun()
 
 
 # ---- Complete ----
 
-def _show_sync_complete(lang):
+def _show_sync_complete():
     # Step wizard
-    render_sync_wizard(st, 4, lang)
+    render_sync_wizard(st, 4)
 
     synced_count = st.session_state.get('synced_count', 0)
     sync_errors = st.session_state.get('sync_errors', [])
@@ -6081,9 +6068,9 @@ def _show_sync_complete(lang):
         mode = 'complete_warning'
     else:
         mode = 'complete'
-        custom_text = get_text('sync_complete_bar', lang)
+        custom_text = 'Sync Complete'
 
-    render_progress_bar(st, 1, 1, lang, mode=mode, custom_text=custom_text)
+    render_progress_bar(st, 1, 1, mode=mode, custom_text=custom_text)
 
     # Summary card logic
     # We want to be very clear about what happened.
@@ -6102,22 +6089,19 @@ def _show_sync_complete(lang):
     # Heuristic: We don't know exactly which files failed (update vs new), so we'll just display totals if possible,
     # or simplify the message.
     
-    file_word = pluralize(synced_count, 'file', lang)
-    error_word = pluralize(len(sync_errors), 'error', lang)
+    file_word = ("file" if synced_count == 1 else "files")
+    error_word = ("error" if len(sync_errors) == 1 else "errors")
 
     if synced_count == 0 and sync_errors:
         # Scenario 1: Full Failure
-        st.error(get_text('sync_all_failed', lang))
+        st.error('Sync failed for all files.')
         # No green card.
     
     elif synced_count > 0 and sync_errors:
         # Scenario 2: Partial Success
         # Yellow card
-        success_title = get_text('sync_partial_title', lang, 
-                                count=synced_count, 
-                                file_word=file_word, 
-                                error_count=len(sync_errors))
-        summary_text = get_text('sync_partial_desc', lang, size=format_file_size(total_bytes))
+        success_title = f"Partial Success! Synced {synced_count} {file_word} with {len(sync_errors)} {error_word}"
+        summary_text = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.'
         
         st.markdown(f"""
         <div style="background-color:#3a2a1a;border:1px solid #f1c40f;border-radius:8px;padding:12px 16px;margin:8px 0;">
@@ -6134,7 +6118,7 @@ def _show_sync_complete(lang):
     elif synced_count > 0:
         # Scenario 3: Success
         # Green card
-        success_title = get_text('sync_success_title', lang, count=synced_count, file_word=file_word)
+        success_title = f'Sync Success! Synced {synced_count} {file_word}'
         summary_text = f"{format_file_size(total_bytes)} downloaded."
 
         st.markdown(f"""
@@ -6176,7 +6160,7 @@ def _show_sync_complete(lang):
 
     retry_selections = st.session_state.get('retry_selections', [])
 
-    _show_sync_errors(lang)
+    _show_sync_errors()
 
     if sync_errors and retry_selections:
         st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
@@ -6202,7 +6186,7 @@ def _show_sync_complete(lang):
     has_synced_files = any(len(files) > 0 for files in synced_details.values())
 
     if sync_selections and has_synced_files:
-        st.markdown("#### 📁 " + get_text('sync_folders_updated', lang))
+        st.markdown("#### 📁 " + 'Folders Updated')
 
         for sel in sync_selections:
             pair_idx = sel['pair_idx']
@@ -6287,31 +6271,31 @@ def _show_sync_complete(lang):
                     st.markdown(f'<span id="folder_row_{pair_idx}"></span>**📁 {folder_display}**', unsafe_allow_html=True)
                 with c2:
                     if Path(pair['local_folder']).exists():
-                        if st.button(get_text('sync_open_folder_btn', lang), key=f"open_complete_{pair_idx}"):
+                        if st.button('📂 Open folder', key=f"open_complete_{pair_idx}"):
                             open_folder(pair['local_folder'])
                 with c3:
                     st.empty()
 
-                with st.expander(get_text('sync_see_synced_files', lang, count=len(files_synced))):
+                with st.expander(f'See {len(files_synced)} synced files'):
                     for fname in files_synced:
                         st.markdown(f"<div style='font-size:0.85em;color:#ccc;'>✅ {fname}</div>", unsafe_allow_html=True)
                     st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🏠 " + get_text('go_to_front_page', lang), type="primary", use_container_width=True):
+    if st.button("🏠 " + 'Go to front page', type="primary", use_container_width=True):
         _cleanup_sync_state()
         st.rerun()
 
 
 # ---- Shared helpers ----
 
-def _show_sync_errors(lang):
+def _show_sync_errors():
     sync_errors = st.session_state.get('sync_errors', [])
     if sync_errors:
         # The summary card handles the warning/error banner.
         # Here we just show the details expander.
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        with st.expander("📋 " + get_text('view_error_details', lang), expanded=True):
+        with st.expander("📋 " + 'View Error Details', expanded=True):
             for err in sync_errors[:20]:
                 st.markdown(f"❌ {err}")
             if len(sync_errors) > 20:

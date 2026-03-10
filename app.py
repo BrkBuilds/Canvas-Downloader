@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 from pathlib import Path
 import time
 import re
-from translations import get_text
 from sync_ui import render_sync_step1, render_sync_step4
 from ui_helpers import friendly_course_name, parse_cbs_metadata, render_download_wizard
 
@@ -75,8 +74,6 @@ if 'download_cancelled' not in st.session_state:
     st.session_state['download_cancelled'] = False
 if 'user_name' not in st.session_state:
     st.session_state['user_name'] = ""
-if 'language' not in st.session_state:
-    st.session_state['language'] = 'en'  # Default to English
 if 'course_mb_downloaded' not in st.session_state:
     st.session_state['course_mb_downloaded'] = {}
 if 'file_filter' not in st.session_state:
@@ -143,8 +140,8 @@ def cancel_download_callback():
     st.session_state['cancel_requested'] = True
 
 @st.cache_data
-def fetch_courses(token, url, fav_only, language='en'):
-    mgr = CanvasManager(token, url, language)
+def fetch_courses(token, url, fav_only):
+    mgr = CanvasManager(token, url)
     try:
         courses = list(mgr.get_courses(fav_only))
         # Global Alphabetical Sort
@@ -160,32 +157,8 @@ def fetch_courses(token, url, fav_only, language='en'):
 
 # --- Sidebar: Authentication ---
 with st.sidebar:
-    # Language Switcher at top of sidebar
-    lang = st.session_state['language']
-    
-    # Language selector
-    col_lang1, col_lang2 = st.columns([1, 3])
-    with col_lang1:
-        st.write("🌐")
-    with col_lang2:
-        language_options = [get_text('english', lang), get_text('danish', lang)]
-        current_lang_index = 0 if st.session_state['language'] == 'en' else 1
-        selected_lang = st.selectbox(
-            get_text('language', lang),
-            language_options,
-            index=current_lang_index,
-            key="language_selector",
-            label_visibility="collapsed"
-        )
-    
-    # Update language if changed
-    new_lang = 'en' if selected_lang == language_options[0] else 'da'
-    if new_lang != st.session_state['language']:
-        st.session_state['language'] = new_lang
-        st.rerun()
-
     st.markdown("---")
-    st.title(get_text('sidebar_title', lang))
+    st.title('🎓 Canvas Tool')
     
     # Auth Logic
     import sys
@@ -219,8 +192,7 @@ with st.sidebar:
                         st.session_state['debug_mode'] = config.get('debug_mode', False)
                         
                     if st.session_state['api_token']:
-                        # Use default language 'en' here as session state might not be fully ready
-                        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], st.session_state.get('language', 'en'))
+                        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                         valid, msg = cm.validate_token()
                         if valid:
                             st.session_state['is_authenticated'] = True
@@ -229,7 +201,7 @@ with st.sidebar:
                 pass
 
     if not st.session_state['is_authenticated']:
-        st.subheader(get_text('auth_header', lang))
+        st.subheader('Authentication')
         
         # Example text removed as per user request (placeholder is sufficient)
         
@@ -245,20 +217,20 @@ with st.sidebar:
             # By only using `key=`, Streamlit will use the browser's autofill value if present,
             # or fall back to the session state if it exists from a previous interaction.
             url_input = st.text_input(
-                get_text('enter_url', lang),
+                'Enter Canvas URL',
                 key="url_input",
                 placeholder="https://your-school.instructure.com"
             )
 
             # API Token Input (same logic - no value= parameter)
             token_input = st.text_input(
-                get_text('enter_token', lang), 
+                'Enter Canvas API Token', 
                 type="password", 
                 key="token_input"
             )
             
             # Log In Button
-            submitted = st.form_submit_button(get_text('validate_save', lang), type="primary", use_container_width=True)
+            submitted = st.form_submit_button('Log In', type="primary", use_container_width=True)
 
         if submitted:
             input_url = st.session_state.url_input.strip()
@@ -268,7 +240,7 @@ with st.sidebar:
             st.session_state['api_url'] = input_url
             st.session_state['api_token'] = input_token
             
-            manager = CanvasManager(input_token, input_url, lang)
+            manager = CanvasManager(input_token, input_url)
             is_valid, message = manager.validate_token()
             
             if is_valid:
@@ -299,13 +271,13 @@ with st.sidebar:
                 st.error(message)
         
         # Help Section
-        with st.expander(get_text('how_to_token', lang)):
-            st.markdown(get_text('token_instructions', lang))
+        with st.expander('How to get a Token?'):
+            st.markdown('\n1. Go to **Account** -> **Settings** on Canvas.\n2. Scroll to **Approved Integrations**.\n3. Click **+ New Access Token**.\n4. Copy the long string and paste it here.\n')
         
-        with st.expander(get_text('how_to_url', lang)):
+        with st.expander('How to find your Canvas URL?'):
             # Use code block to prevent overflow and keep fixed width
             # Splitting instructions to ensure better rendering based on user feedback
-            st.markdown(get_text('url_instructions', lang))
+            st.markdown("\n**Crucial Step:** You must input the *actual* Canvas URL, not your university's login portal.\n\n**How to find it:**\n1. Log in to Canvas in your browser.\n2. Look at the address bar **after** you have logged in.\n3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n4. Copy that URL and paste it here.\n")
     else:
         st.success(st.session_state['user_name'])
         
@@ -314,7 +286,7 @@ with st.sidebar:
         mode = st.session_state.get('current_mode', 'download')
         
         # Download mode button
-        download_label = "📥 " + get_text('nav_download', lang)
+        download_label = "📥 " + 'Download Courses'
         if mode == 'download':
             # Active state - light grey background, outlined style
             st.markdown(f"""
@@ -332,7 +304,7 @@ with st.sidebar:
                 st.rerun()
         
         # Sync mode button
-        sync_label = "🔄 " + get_text('nav_sync', lang)
+        sync_label = "🔄 " + 'Sync Local Folders'
         if mode == 'sync':
             # Active state - light grey background, outlined style
             st.markdown(f"""
@@ -462,7 +434,7 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("")  # Spacer
         st.markdown("")
-        if st.button(get_text('logout_edit', lang), use_container_width=True):
+        if st.button('Log Out / Edit Token', use_container_width=True):
             st.session_state['is_authenticated'] = False
             st.session_state['api_token'] = ""
             st.session_state['step'] = 1
@@ -474,11 +446,10 @@ with st.sidebar:
             st.rerun()
 
 # --- Main Content ---
-lang = st.session_state['language']
-st.title(get_text('app_title', lang))
+st.title('Canvas LMS Course Material Downloader')
 
 if not st.session_state['is_authenticated']:
-    st.info(get_text('please_authenticate', lang))
+    st.info('👈 Please authenticate in the sidebar to continue.')
     st.stop()
 
 # --- Wizard Steps ---
@@ -492,29 +463,29 @@ with _main_content.container():
         
         # ========== SYNC MODE - STEP 1 ==========
         if st.session_state['current_mode'] == 'sync':
-            render_sync_step1(lang, fetch_courses, _main_content)
+            render_sync_step1(fetch_courses, _main_content)
         
             # ========== DOWNLOAD MODE - STEP 1 ==========
         else:
-            render_download_wizard(st, 1, lang)
-            st.markdown(f'<div class="step-header">{get_text("step1_header", lang)}</div>', unsafe_allow_html=True)
+            render_download_wizard(st, 1)
+            st.markdown(f'<div class="step-header">{'Step 1: Select Courses'}</div>', unsafe_allow_html=True)
             
             filter_mode = st.radio(
-                get_text('show_label', lang),
-                [get_text('show_favorites', lang), get_text('show_all', lang)],
+                'Show:',
+                ['Favorites Only', 'All Courses'],
                 horizontal=True
             )
-            favorites_only = (filter_mode == get_text('show_favorites', lang))
+            favorites_only = (filter_mode == 'Favorites Only')
             
-            courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], favorites_only, lang)
+            courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], favorites_only)
             
             if not courses:
-                st.warning(get_text('no_courses', lang))
+                st.warning('No courses found.')
             else:
                 # --- CBS Filters Feature ---
                 
                 # Filter Toggle
-                show_filters = st.toggle(get_text('enable_cbs_filters', lang, default="Enable CBS Filters"))
+                show_filters = st.toggle('Enable CBS Filters')
                 
                 filtered_courses = courses
                 
@@ -539,24 +510,24 @@ with _main_content.container():
                     
                     # 2. Render Filter Widgets
                     with st.container(border=True):
-                        st.markdown(f"**{get_text('filter_criteria', lang, default='Filter Criteria')}**")
+                        st.markdown(f"**{'Filter Criteria'}**")
                         col_f1, col_f2, col_f3 = st.columns(3)
                         
                         with col_f1:
                             sel_types = st.multiselect(
-                                get_text('filter_type', lang, default="Class Type"),
+                                'Class Type',
                                 options=sorted(list(all_types)),
-                                format_func=lambda x: get_text(f"type_{x.lower()}", lang, default=x)
+                                format_func=lambda x: x
                             )
                         with col_f2:
                             sel_sem = st.multiselect(
-                                get_text('filter_semester', lang, default="Semester"),
+                                'Semester',
                                 options=sorted(list(all_semesters)),
-                                format_func=lambda x: get_text(f"sem_{x.lower()}", lang, default=x)
+                                format_func=lambda x: x
                             )
                         with col_f3:
                             sel_years = st.multiselect(
-                                get_text('filter_year', lang, default="Year"),
+                                'Year',
                                 options=sorted(list(all_years), reverse=True)
                             )
                     
@@ -586,12 +557,12 @@ with _main_content.container():
                                 filtered_courses.append(c)
                         
                         if not filtered_courses:
-                            st.info(get_text('no_courses_match_filters', lang, default="No courses match the selected filters."))
+                            st.info('No courses match the selected filters.')
 
                 # "Select All" buttons - operate on FILTERED list
                 col_sa1, col_sa2, _ = st.columns([1.3, 1.3, 10], gap="small")
-                select_all_clicked = col_sa1.button(get_text('select_all', lang), key="btn_select_all", use_container_width=True)
-                clear_sel_clicked = col_sa2.button(get_text('clear_selection', lang), key="btn_clear_sel", use_container_width=True)
+                select_all_clicked = col_sa1.button('Select All', key="btn_select_all", use_container_width=True)
+                clear_sel_clicked = col_sa2.button('Clear Selection', key="btn_clear_sel", use_container_width=True)
                 
                 # Handle button clicks - Update session state keys directly
                 # IMPORTANT: Select All now only selects visible (filtered) courses!
@@ -712,25 +683,25 @@ with _main_content.container():
                 st.session_state['selected_course_ids'] = new_selected_ids
 
                 st.markdown("---")
-                if st.button(get_text('continue_btn', lang), type="primary"):
+                if st.button('Continue', type="primary"):
                     if not st.session_state['selected_course_ids']:
-                        error_container.error(get_text('select_one_course', lang))
+                        error_container.error('Please select at least one course.')
                     else:
                         st.session_state['step'] = 2
                         st.rerun()
 
     # STEP 2: DOWNLOAD SETTINGS
     elif st.session_state['step'] == 2:
-        render_download_wizard(st, 2, lang)
+        render_download_wizard(st, 2)
         # 1. Squeeze the Main "Step 2" Header
         st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
         step2_container = st.empty()
         with step2_container.container():
             # Removed "Download Structure" per request
             mode_options = [
-                get_text('with_subfolders', lang), 
-                # get_text('mode_files', lang), # Removed per user request
-                get_text('flat_structure', lang)
+                'With subfolders (Matches Canvas Modules)', 
+                # 'Files (Course Folders)', # Removed per user request
+                'Flat (All files in one folder)'
             ]
             
             # Determine current index
@@ -740,14 +711,14 @@ with _main_content.container():
                 current_mode_idx = 1
                 
             mode_choice = st.radio(
-                get_text('structure_question', lang),
+                'Choose how files should be organized:',
                 mode_options,
                 index=current_mode_idx
             )
             
-            if mode_choice == get_text('with_subfolders', lang):
+            if mode_choice == 'With subfolders (Matches Canvas Modules)':
                 st.session_state['download_mode'] = 'modules'
-            # elif mode_choice == get_text('mode_files', lang):
+            # elif mode_choice == 'Files (Course Folders)':
             #     st.session_state['download_mode'] = 'files'
             else:
                 st.session_state['download_mode'] = 'flat'
@@ -755,12 +726,12 @@ with _main_content.container():
             # 2. File Types (Radio buttons have standard padding)
             st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>File Types</h3>", unsafe_allow_html=True)
             filter_choice = st.radio(
-                get_text('file_filter_label', lang), # Hidden label via label_visibility if needed, but subheader is fine
-                [get_text('filter_all', lang), get_text('filter_study', lang)],
+                'File Types', # Hidden label via label_visibility if needed, but subheader is fine
+                ['All Files', 'Pdf & Powerpoint only'],
                 index=0 if st.session_state['file_filter'] == 'all' else 1,
                 label_visibility="collapsed"
             )
-            st.session_state['file_filter'] = 'all' if filter_choice == get_text('filter_all', lang) else 'study'
+            st.session_state['file_filter'] = 'all' if filter_choice == 'All Files' else 'study'
             
             # --- NotebookLM Compatible Download ---
             TOTAL_NOTEBOOK_SUBS = 8 # Update this number when adding more features later
@@ -896,20 +867,20 @@ with _main_content.container():
             with col1:
                 # 28px spacer pushes the button down to align with the text box (ignoring the "Path" label)
                 st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                if st.button(get_text('select_folder', lang)):
+                if st.button('📂 Select Folder'):
                     select_folder()
             with col2:
-                st.text_input(get_text('path_label', lang), value=st.session_state['download_path'], disabled=True)
+                st.text_input('Path', value=st.session_state['download_path'], disabled=True)
 
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             col_conf, col_back, _ = st.columns([1.2, 1, 5])
             with col_conf:
                 # Button label changes based on mode
-                button_label = get_text('sync_selected', lang) if st.session_state['current_mode'] == 'sync' else get_text('confirm_download', lang)
+                button_label = 'Sync (Download) Selected Files' if st.session_state['current_mode'] == 'sync' else 'Confirm and Download'
                 if st.button(button_label, type="primary", use_container_width=True):
                     try:
                         # Initialize download state
-                        all_courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False, lang)
+                        all_courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False)
                         course_map = {c.id: c for c in all_courses}
                         courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
                         
@@ -953,28 +924,28 @@ with _main_content.container():
                         st.error(f"Error initializing: {e}")
 
             with col_back:
-                if st.button(get_text('back_btn', lang), use_container_width=True):
+                if st.button('Back', use_container_width=True):
                     st.session_state['step'] = 1
                     st.rerun()
 
 
     elif st.session_state['step'] == 3:
         wiz_step = 4 if st.session_state.get('download_status') == 'done' else 3
-        render_download_wizard(st, wiz_step, lang)
+        render_download_wizard(st, wiz_step)
         
         current_status = st.session_state.get('download_status', 'scanning')
         
         if current_status == 'done':
-            st.markdown(f'<div class="step-header">{get_text("step4_download_header", lang)}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="step-header">{'Step 4: Complete!'}</div>', unsafe_allow_html=True)
         elif current_status == 'cancelled':
             pass
         else:
-            st.markdown(f'<div class="step-header">{get_text("step3_header", lang)}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="step-header">{'Step 3: Downloading...'}</div>', unsafe_allow_html=True)
         
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
-            st.error(get_text('download_state_error', lang))
-            if st.button(get_text('go_back_settings', lang)):
+            st.error('Download state not initialized. Please go back and try again.')
+            if st.button('Go Back to Settings'):
                 st.session_state['step'] = 2
                 st.rerun()
             st.stop()
@@ -1001,7 +972,7 @@ with _main_content.container():
             
             cancel_placeholder = st.empty()
             cancel_placeholder.button(
-                get_text('cancel_download', lang),
+                'Cancel Download',
                 type="secondary",
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
@@ -1025,13 +996,13 @@ with _main_content.container():
             
             # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP
             cancel_placeholder.button(
-                get_text('cancel_download', lang),
+                'Cancel Download',
                 type="secondary",
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
             )
             
-            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
             total_items = 0
             total_mb = 0
             
@@ -1275,7 +1246,7 @@ with _main_content.container():
                 
 
                 import asyncio
-                cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+                cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 # Build the Sync Contract — all settings for this download
                 _pp_settings = {
                     'file_filter': st.session_state.get('file_filter', 'all'),
@@ -1417,7 +1388,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         for i, archive_file in enumerate(archive_files, 1):
                             if st.session_state.get('download_cancelled', False):
@@ -1567,7 +1538,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         with PowerPointToPDF(error_log_path=Path(st.session_state['download_path'])) as converter:
                             for i, pptx_file in enumerate(pptx_files, 1):
@@ -1694,7 +1665,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         for i, html_file in enumerate(html_files, 1):
                             active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {html_file.name}</div>", unsafe_allow_html=True)
@@ -1832,7 +1803,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         for i, code_file in enumerate(code_files, 1):
                             active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {code_file.name}</div>", unsafe_allow_html=True)
@@ -2023,7 +1994,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         with WordToPDF() as converter:
                             for i, word_file in enumerate(word_files, 1):
@@ -2281,7 +2252,7 @@ with _main_content.container():
                         import time
                         time.sleep(0.2)
                         
-                        sm = SyncManager(course_folder, course.id, course.name, lang)
+                        sm = SyncManager(course_folder, course.id, course.name)
                         
                         for i, video_file in enumerate(video_files, 1):
                             if st.session_state.get('download_cancelled', False):
@@ -2395,18 +2366,18 @@ with _main_content.container():
                 # -------------------------------------------------------------------
         
         elif st.session_state['download_status'] == 'done':
-            st.success(get_text('download_complete', lang))
+            st.success('Download Completed Successfully!')
             # Show download location (no background color)
-            st.markdown(f"**{get_text('download_location', lang, path=st.session_state['download_path'])}**")
+            st.markdown(f"**{f"You can find the downloaded files here: {st.session_state['download_path']}"}**")
             # Show final progress bar at 100%
             try:
                 progress_container.markdown(f"""
                     <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
                         <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{get_text('complete_text', lang)}</div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{'Complete!'}</div>
                     </div>
                 """, unsafe_allow_html=True)
-                status_text.text(get_text('downloaded_courses', lang, total=total))
+                status_text.text(f'Downloaded {total} course(s).')
             except Exception:
                 pass
             
@@ -2420,7 +2391,7 @@ with _main_content.container():
                 
                 # Collect errors from all course folders
                 for course in st.session_state['courses_to_download']:
-                    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'], lang)
+                    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                     course_name = cm._sanitize_filename(course.name)
                     error_file = download_path / course_name / "download_errors.txt"
                     if error_file.exists():
@@ -2434,9 +2405,9 @@ with _main_content.container():
             
             # Display error summary if there are errors
             if error_messages:
-                st.warning(get_text('errors_occurred', lang, count=len(error_messages)))
+                st.warning(f'⚠️ {len(error_messages)} error(s) occurred during download')
                 
-                with st.expander(get_text('view_error_details', lang), expanded=True):
+                with st.expander('View Error Details', expanded=True):
                     # Group by course
                     errors_by_course = {}
                     for err in error_messages:
@@ -2453,11 +2424,11 @@ with _main_content.container():
                             else:
                                 st.text(f"  • {err}")
                     
-                    st.caption(get_text('full_error_details', lang))
+                    st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
 
                 # Retry Button
                 st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
-                retry_label = "Retry Failed Items" if lang == 'en' else "Prøv fejlslagne elementer igen"
+                retry_label = "Retry Failed Items"
                 col_retry, _ = st.columns([0.25, 0.75])
                 with col_retry:
                     if st.button(f"🔄 {retry_label}", type="secondary", key="retry_failed_btn", use_container_width=True):
@@ -2498,7 +2469,7 @@ with _main_content.container():
                     <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Download Cancelled</h2>
                 </div>
                 <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
-                    {get_text('download_was_cancelled', lang)}
+                    {'Download was cancelled.'}
                 </p>
                 <div style="
                     background: rgba(239, 68, 68, 0.08);
@@ -2529,13 +2500,13 @@ with _main_content.container():
         if st.session_state['download_status'] in ['done', 'cancelled']:
             st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
             # Use "Go to front page" for both done and cancelled
-            button_text = "🏠 " + get_text('go_to_front_page', lang)
+            button_text = "🏠 " + 'Go to front page'
             if st.button(button_text, type="primary", use_container_width=True):
                 # We want to preserve heavy network caches to prevent the 1-3 second hang
                 # when returning to the front page
                 keys_to_keep = {
                     'courses', 'course_names', 'api_token', 'api_url', 'api_configured',
-                    'sync_pairs', 'sync_pairs_loaded', 'ui_lang', 'language'
+                    'sync_pairs', 'sync_pairs_loaded'
                 }
 
                 st.session_state['sync_cancelled'] = False
@@ -2557,4 +2528,4 @@ with _main_content.container():
 
     # STEP 4: SYNC ANALYSIS (Only shown when current_mode is 'sync')
     elif st.session_state['step'] == 4:
-        render_sync_step4(lang)
+        render_sync_step4()
