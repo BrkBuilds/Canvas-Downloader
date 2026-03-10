@@ -12,7 +12,6 @@ from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
 import aiohttp
-from translations import get_text
 from canvas_debug import log_debug, clear_debug_log
 import logging
 
@@ -45,7 +44,7 @@ class DownloadError:
         return f"[{ts}] [{self.course_name}] [{self.error_type}] {self.item_name}: {self.message}"
 
 class CanvasManager:
-    def __init__(self, api_key, api_url, language='en'):
+    def __init__(self, api_key, api_url):
         self.api_key = api_key
         # Clean and validate URL
         api_url = api_url.strip()
@@ -57,7 +56,6 @@ class CanvasManager:
             # Remove trailing slash for consistency
             self.api_url = api_url.rstrip("/")
             
-        self.language = language
         # Initialize Canvas object
         try:
             self.canvas = Canvas(self.api_url, self.api_key)
@@ -71,15 +69,15 @@ class CanvasManager:
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
         if not self.api_url or not self.canvas:
-            return False, get_text('login_failed', self.language)
+            return False, 'Login failed. Please check that your Canvas URL and API Token are correct.'
 
         try:
             # We attempt to fetch the user. This validates both the URL and Token.
             self.user = self.canvas.get_current_user()
-            return True, get_text('logged_in_as', self.language, name=self.user.name)
+            return True, f'Logged in as: {self.user.name}'
         except Exception as e:
             # Return specific message if possible, else generic
-            msg = str(e) if str(e) else get_text('login_failed', self.language)
+            msg = str(e) if str(e) else 'Login failed. Please check that your Canvas URL and API Token are correct.'
             return False, msg
 
     def get_courses(self, favorites_only=True):
@@ -378,7 +376,7 @@ class CanvasManager:
                 course.name, 
                 "Disk Check", 
                 "Disk Full", 
-                get_text('insufficient_space', self.language)
+                'Insufficient disk space. Need at least 1GB free.'
             )
             if progress_callback: progress_callback(error, progress_type='error')
             self._log_error(save_dir, error)
@@ -387,7 +385,7 @@ class CanvasManager:
         base_path.mkdir(parents=True, exist_ok=True)
 
         if check_cancellation and check_cancellation():
-            if progress_callback: progress_callback(get_text('download_cancelled_msg', self.language))
+            if progress_callback: progress_callback('Download cancelled.')
             return
         
         # --- Sync Run #0: Initialize the Sync DB during the very first download ---
@@ -456,7 +454,7 @@ class CanvasManager:
                                     if item.type == 'File':
                                         if not hasattr(item, 'content_id') or not item.content_id:
                                             # Create Error
-                                            err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Content ID", get_text('missing_content_id', self.language, title=getattr(item, 'title', 'unknown')))
+                                            err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Content ID", f"Item {getattr(item, 'title', 'unknown')} missing content_id")
                                             if progress_callback: progress_callback(err, progress_type='error')
                                             self._log_error(save_dir, err)
                                             continue
@@ -570,7 +568,7 @@ class CanvasManager:
                 # ---- HYBRID MODE CATCH-ALL STARTED ----
                 try:
                     log_debug("Starting Catch-All Phase for non-module files...", debug_file)
-                    if progress_callback: progress_callback(get_text('scanning_remaining_files', self.language), progress_type='log')
+                    if progress_callback: progress_callback('Scanning remaining files...', progress_type='log')
                     
                     all_files = course.get_files()
                     all_files = list(all_files)
@@ -629,7 +627,7 @@ class CanvasManager:
                  is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)
                  if is_unauthorized and mode != 'flat':
                      # Fallback to flat
-                     msg = get_text('modules_unauthorized_fallback', self.language)
+                     msg = 'Modules tab is hidden/unauthorized. Attempting to download files directly...'
                      if progress_callback: progress_callback(msg, progress_type='log')
                      # Log the partial failure
                      err = DownloadError(course.name, "Modules Access", "401 Unauthorized", "Modules locked, falling back to file scan.", raw_error=e)
@@ -661,7 +659,7 @@ class CanvasManager:
 
         # 1. Fetch Folders
         try:
-            if progress_callback: progress_callback(get_text('fetching_folders', self.language))
+            if progress_callback: progress_callback('Fetching folder structure...')
             all_folders = course.get_folders()
             for folder in all_folders:
                 full_name = getattr(folder, 'full_name', '')
@@ -680,7 +678,7 @@ class CanvasManager:
 
         # 2. Fetch and Download Files
         try:
-            if progress_callback: progress_callback(get_text('fetching_files_list', self.language))
+            if progress_callback: progress_callback('Fetching file list...')
             files = course.get_files()
             files = list(files)
             
@@ -1037,7 +1035,7 @@ class CanvasManager:
                                     # Non-fatal: download succeeded, DB write failed. File is on disk.
                             
                             if progress_callback:
-                                progress_callback(get_text('downloading_file', self.language, filename=filename), progress_type='download')
+                                progress_callback(f'Downloading file: {filename}', progress_type='download')
                                 
                             return (
                                 CanvasFileInfo(
@@ -1088,7 +1086,7 @@ class CanvasManager:
         filepath = self._handle_conflict(filepath)
 
         if progress_callback:
-            progress_callback(get_text('saving_page', self.language, title=safe_title), progress_type='page')
+            progress_callback(f'Saving page: {safe_title}', progress_type='page')
         
         log_debug(f"Saving Page: {safe_title} -> {filepath}", debug_file)
 
@@ -1141,7 +1139,7 @@ class CanvasManager:
             content = f'[InternetShortcut]\nURL={url}'
 
         if progress_callback:
-            progress_callback(get_text('creating_link', self.language, title=title), progress_type='link')
+            progress_callback(f'Creating link: {title}', progress_type='link')
 
         log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
 

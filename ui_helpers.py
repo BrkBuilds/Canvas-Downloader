@@ -10,7 +10,6 @@ import shutil
 import platform
 import subprocess
 from pathlib import Path
-from translations import get_text
 
 import urllib.parse
 from sync_manager import format_file_size
@@ -28,41 +27,6 @@ def robust_filename_normalize(name: str) -> str:
 
 
 # --- Pluralization ---
-
-# Word forms: (singular, plural) per language
-_PLURAL_FORMS = {
-    'en': {
-        'file': ('file', 'files'),
-        'folder': ('folder', 'folders'),
-        'course': ('course', 'courses'),
-        'update': ('update', 'updates'),
-        'error': ('error', 'errors'),
-    },
-    'da': {
-        'file': ('fil', 'filer'),
-        'folder': ('mappe', 'mapper'),
-        'course': ('kursus', 'kurser'),
-        'update': ('opdatering', 'opdateringer'),
-        'error': ('fejl', 'fejl'),
-    },
-}
-
-
-def pluralize(count: int, word: str, lang: str = 'en') -> str:
-    """Return the correct singular/plural form of a word.
-
-    Args:
-        count: The number to decide singular vs plural.
-        word:  The word key (e.g. 'file', 'folder', 'course', 'update').
-        lang:  Language code ('en' or 'da').
-
-    Returns:
-        The correct form, e.g. ``pluralize(1, 'file', 'en')`` → ``'file'``,
-        ``pluralize(3, 'file', 'en')`` → ``'files'``.
-    """
-    forms = _PLURAL_FORMS.get(lang, _PLURAL_FORMS['en'])
-    singular, plural = forms.get(word, (word, word + 's'))
-    return singular if count == 1 else plural
 
 
 # --- Config Paths ---
@@ -273,7 +237,7 @@ def short_path(full_path: str) -> str:
 
 # --- Progress Bar Helper ---
 
-def render_progress_bar(container, current: int, total: int, lang: str, 
+def render_progress_bar(container, current: int, total: int,
                         mode: str = 'files', mb_current: float = 0, mb_total: float = 0,
                         custom_text: str = None):
     """Render a styled progress bar using Streamlit's st.markdown.
@@ -282,7 +246,6 @@ def render_progress_bar(container, current: int, total: int, lang: str,
         container: Streamlit container to render into
         current: Current count (files downloaded)
         total: Total count (files to download)
-        lang: Language code
         mode: 'files' for file count, 'mb' for MB, 'complete' for finished
         mb_current: Current MB downloaded (for 'mb' mode)
         mb_total: Total MB to download (for 'mb' mode)
@@ -290,29 +253,29 @@ def render_progress_bar(container, current: int, total: int, lang: str,
     """
     if mode == 'complete':
         progress_pct = 100
-        display_text = custom_text if custom_text else get_text('sync_complete_text', lang)
+        display_text = custom_text if custom_text else 'Done!'
         bar_color = '#2ecc71'
     elif mode == 'complete_warning':
         progress_pct = 100
-        display_text = custom_text if custom_text else get_text('sync_complete_with_errors', lang)
+        display_text = custom_text if custom_text else 'Sync completed with errors.'
         bar_color = '#f1c40f'  # Yellow/Orange for warnings
     elif mode == 'complete_error':
         progress_pct = 100
-        display_text = custom_text if custom_text else get_text('sync_all_failed', lang)
+        display_text = custom_text if custom_text else 'Sync failed for all files.'
         bar_color = '#e74c3c'  # Red for errors
     elif mode == 'mb':
         if mb_total <= 0:
             progress_pct = 0
         else:
             progress_pct = min(100, int((mb_current / mb_total) * 100))
-        display_text = get_text('sync_mb_progress', lang, current=mb_current, total=mb_total)
+        display_text = f'Downloading: {mb_current:.1f} / {mb_total:.1f} MB'
         bar_color = '#3498db'
     else:  # files
         if total <= 0:
             progress_pct = 0
         else:
             progress_pct = min(100, int((current / total) * 100))
-        display_text = custom_text if custom_text else get_text('sync_progress_text', lang, current=current, total=total)
+        display_text = custom_text if custom_text else f'Syncing: File {current} of {total}'
         bar_color = '#3498db'
     
     progress_html = f"""
@@ -384,23 +347,23 @@ def render_wizard_step(container, current_step: int, steps: list):
             unsafe_allow_html=True,
         )
 
-def render_sync_wizard(container, current_step: int, lang: str):
+def render_sync_wizard(container, current_step: int):
     """Render the wizard specifically for the Sync flow."""
     steps = [
-        (1, get_text('sync_step_select_folders', lang)),
-        (2, get_text('sync_step_review', lang)),
-        (3, get_text('sync_step_syncing', lang)),
-        (4, get_text('sync_step_complete', lang)),
+        (1, '📁 Select Folders'),
+        (2, '🔍 Review Changes'),
+        (3, '⬇️ Syncing'),
+        (4, '✅ Complete'),
     ]
     render_wizard_step(container, current_step, steps)
 
-def render_download_wizard(container, current_step: int, lang: str):
+def render_download_wizard(container, current_step: int):
     """Render the wizard specifically for the Download flow."""
     steps = [
-        (1, "📝 " + get_text('step1_header', lang).replace('Trin 1: ', '').replace('Step 1: ', '')),
-        (2, "⚙️ " + get_text('step2_header', lang).replace('Trin 2: ', '').replace('Step 2: ', '')),
-        (3, "⬇️ " + get_text('step3_header', lang).replace('Trin 3: ', '').replace('Step 3: ', '')),
-        (4, "✅ " + get_text('complete_text', lang)),
+        (1, '📝 Select Courses'),
+        (2, '⚙️ Download Settings'),
+        (3, '⬇️ Downloading...'),
+        (4, '✅ Complete!'),
     ]
     render_wizard_step(container, current_step, steps)
 

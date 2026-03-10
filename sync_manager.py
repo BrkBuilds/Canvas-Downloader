@@ -12,8 +12,6 @@ from pathlib import Path
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional, Callable
-from translations import get_text
-
 # Module-level logger
 logger = logging.getLogger(__name__)
 
@@ -72,7 +70,7 @@ SAVED_GROUPS_FILENAME = "saved_sync_groups.json"
 class SyncManager:
     """Manages synchronization between Canvas and local files using a SQLite database."""
     
-    def __init__(self, local_path: str, course_id: int, course_name: str, language: str = 'en'):
+    def __init__(self, local_path: str, course_id: int, course_name: str):
         """
         Initialize SyncManager.
         
@@ -80,12 +78,10 @@ class SyncManager:
             local_path: Path to the local sync folder (course folder)
             course_id: Canvas course ID
             course_name: Canvas course name (for display)
-            language: Language code for translations ('en' or 'da')
         """
         self.local_path = Path(local_path)
         self.course_id = course_id
         self.course_name = course_name
-        self.language = language
         self.manifest_path = self.local_path / MANIFEST_FILENAME
         self.db_path = self.local_path / DB_FILENAME
         self._init_db()
@@ -306,7 +302,7 @@ class SyncManager:
             return manifest
             
         if progress_callback:
-            progress_callback(get_text('healing_manifest', self.language))
+            progress_callback('Looking for moved/renamed files...')
             
         # 2. Gather ALL existing orphaned local files (files not currently tracked)
         # We need to build a pool of candidates to test our missing entries against.
