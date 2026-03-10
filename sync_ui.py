@@ -4332,79 +4332,211 @@ def _show_analysis_review():
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
-    # --- Load Sync Contract defaults for first render ---
-    # Only pre-fill if the convert_* keys haven't been set yet in this session.
-    # This ensures the checkboxes reflect the DB contract on first load,
-    # but user changes within the session are preserved across reruns.
+    # --- 3-Tier Batch Configuration: Initialization Sweep ---
+    # Scan ALL courses in the batch, store their individual contracts in
+    # _batch_contracts, detect uniform vs mixed state, and pre-populate
+    # both the global (Mode 1) and per-course (Mode 2) session state keys.
+    _CONVERT_KEYS = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                     'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+
     if '_sync_contract_loaded' not in st.session_state:
-        _review_contract = {}
-        try:
-            if all_results:
-                _first_pair = all_results[0]['pair']
-                _sm = SyncManager(_first_pair['local_folder'], _first_pair['course_id'], _first_pair['course_name'])
+        import json
+        _batch_settings_map = {k: set() for k in _CONVERT_KEYS}
+        _batch_settings_map['file_filter'] = set()  # Also sweep file_filter
+        _batch_contracts = {}  # {course_id: {name, contract}}
+        _first_contract = {}
+
+        for i, res_data in enumerate(all_results):
+            try:
+                _p = res_data['pair']
+                _cid = _p['course_id']
+                _cname = friendly_course_name(_p.get('course_name', 'Unknown'))
+                _sm = SyncManager(_p['local_folder'], _cid, _p.get('course_name', ''))
                 _raw_contract = _sm._load_metadata('sync_contract')
+                _c = {}
                 if _raw_contract:
-                    import json
-                    _review_contract = json.loads(_raw_contract)
-        except Exception:
-            pass
-        if _review_contract:
-            for _key in ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
-                         'convert_urls', 'convert_word', 'convert_video', 'convert_excel']:
-                # Overwrite directly to wipe any leftover state from previous syncs
-                st.session_state[_key] = _review_contract.get(_key, False)
-            st.session_state['file_filter'] = _review_contract.get('file_filter', 'all')
-            # Also sync the master toggle
-            _any_active = any(st.session_state.get(k, False) for k in
-                              ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
-                               'convert_urls', 'convert_word', 'convert_video', 'convert_excel'])
+                    _c = json.loads(_raw_contract)
+
+                if i == 0:
+                    _first_contract = _c
+
+                # Store per-course contract for Diff Table & Mode 2
+                _batch_contracts[_cid] = {'name': _cname, 'contract': _c}
+
+                # Accumulate per-key sets for uniform detection
+                for _key in _CONVERT_KEYS:
+                    _batch_settings_map[_key].add(_c.get(_key, False))
+                _batch_settings_map['file_filter'].add(_c.get('file_filter', 'all'))
+            except Exception:
+                # One corrupted contract must not poison the entire sweep
+                _batch_contracts[res_data['pair'].get('course_id', f'unknown_{i}')] = {
+                    'name': friendly_course_name(res_data['pair'].get('course_name', 'Unknown')),
+                    'contract': {}
+                }
+                # CRITICAL: Still populate settings map with defaults so
+                # uniform detection and Diff Table work correctly
+                for _key in _CONVERT_KEYS:
+                    _batch_settings_map[_key].add(False)
+                _batch_settings_map['file_filter'].add('all')
+
+        st.session_state['_batch_contracts'] = _batch_contracts
+
+        # Mathematical uniformity: every key must have exactly 1 unique value
+        _is_uniform = all(len(v) <= 1 for v in _batch_settings_map.values())
+        st.session_state['_sync_settings_uniform'] = _is_uniform
+
+        # Pre-populate GLOBAL keys (Mode 1) — from first contract if uniform, else False
+        if _is_uniform:
+            for _key in _CONVERT_KEYS:
+                st.session_state[_key] = _first_contract.get(_key, False)
+            st.session_state['file_filter'] = _first_contract.get('file_filter', 'all')
             st.session_state['notebooklm_master'] = all(
-                st.session_state.get(k, False) for k in
-                ['convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
-                 'convert_urls', 'convert_word', 'convert_video', 'convert_excel']
+                st.session_state.get(k, False) for k in _CONVERT_KEYS
             )
+        else:
+            for _key in _CONVERT_KEYS:
+                st.session_state[_key] = False
+            st.session_state['notebooklm_master'] = False
+            st.session_state['file_filter'] = 'all'
+
+        # Derive file_filter UI checkboxes from the canonical string value
+        st.session_state['ff_all'] = (st.session_state['file_filter'] == 'all')
+        st.session_state['ff_pdf_only'] = (st.session_state['file_filter'] != 'all')
+
+        # Pre-populate PER-COURSE keys (Mode 2) from each course's SQLite contract
+        for _cid, _data in _batch_contracts.items():
+            _c = _data['contract']
+            for _key in _CONVERT_KEYS:
+                st.session_state[f'ind_{_key}_{_cid}'] = _c.get(_key, False)
+            _ff = _c.get('file_filter', 'all')
+            st.session_state[f'ind_file_filter_{_cid}'] = _ff
+            st.session_state[f'ind_ff_all_{_cid}'] = (_ff == 'all')
+            st.session_state[f'ind_ff_pdf_only_{_cid}'] = (_ff != 'all')
+            # Pre-populate master toggle from children
+            _all_on = all(_c.get(k, False) for k in _CONVERT_KEYS)
+            st.session_state[f'ind_notebooklm_master_{_cid}'] = _all_on
+
         st.session_state['_sync_contract_loaded'] = True
 
     TOTAL_NOTEBOOK_SUBS = 8
 
-    def _sync_master_toggle_changed():
-        st.session_state['convert_zip'] = st.session_state['notebooklm_master']
-        st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
-        st.session_state['convert_html'] = st.session_state['notebooklm_master']
-        st.session_state['convert_code'] = st.session_state['notebooklm_master']
-        st.session_state['convert_urls'] = st.session_state['notebooklm_master']
-        st.session_state['convert_word'] = st.session_state['notebooklm_master']
-        st.session_state['convert_video'] = st.session_state['notebooklm_master']
-        st.session_state['convert_excel'] = st.session_state['notebooklm_master']
-    
-    def _sync_sub_toggle_changed():
-        active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
-        st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
-    
-    # 1. Inject Borderless Expander + Tree-View CSS
-    st.markdown("""
-    <style>
-    /* 1. Target ONLY the specific expander containing the master checkbox */
-    [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
-        border-style: none !important;
-        background-color: transparent !important;
-    }
-    [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        background-color: transparent !important;
-    }
-    [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
-        font-size: 1.75rem !important;
-        font-weight: 600 !important;
+    # --- Checkbox label map (shared between Mode 1 global + Mode 2 per-course) ---
+    _CHECKBOX_LABELS = {
+        'convert_zip':   ('Auto-Extract Archives (.zip, .tar.gz)',
+                          'Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync.'),
+        'convert_pptx':  ('Convert PowerPoints to PDF',
+                          'Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed.'),
+        'convert_word':  ('Convert Old Word Docs (.doc, .rtf) to PDF',
+                          'Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored.'),
+        'convert_excel': ('Convert Excel Files (.xlsx, .xls) to PDF',
+                          'Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall.'),
+        'convert_html':  ('Convert Canvas Pages (HTML) to Markdown',
+                          'Converts Canvas Pages from HTML to clean Markdown formats.'),
+        'convert_code':  ('Convert Code & Data Files to .txt',
+                          'Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM.'),
+        'convert_urls':  ('Compile Web links (.url) into a single list',
+                          'Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file.'),
+        'convert_video': ('Extract Audio (.mp3) from Videos (.mp4, .mov)',
+                          'Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size.'),
     }
 
-    /* 2. Tree-view styling for nested sub-checkboxes */
+    # ── Mode 1 (Global) master/sub toggle callbacks ──
+    # Matches the exact working pattern from app.py Download Page
+    def _sync_master_toggle_changed():
+        for k in _CONVERT_KEYS:
+            st.session_state[k] = st.session_state['notebooklm_master']
+
+    def _sync_sub_toggle_changed():
+        active_subs = sum(st.session_state.get(k, False) for k in _CONVERT_KEYS)
+        st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
+
+    # ── Mode 2 (Per-course) master/sub toggle callbacks ──
+    def _ind_master_toggle_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            _val = st.session_state.get(f'ind_notebooklm_master_{_sel_cid}', False)
+            for k in _CONVERT_KEYS:
+                st.session_state[f'ind_{k}_{_sel_cid}'] = _val
+
+    def _ind_sub_toggle_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            _active = sum(st.session_state.get(f'ind_{k}_{_sel_cid}', False) for k in _CONVERT_KEYS)
+            st.session_state[f'ind_notebooklm_master_{_sel_cid}'] = (_active == TOTAL_NOTEBOOK_SUBS)
+
+    # ── File filter mutually-exclusive callbacks (Mode 1 global) ──
+    def _ff_all_changed():
+        if st.session_state.get('ff_all', False):
+            st.session_state['file_filter'] = 'all'
+            st.session_state['ff_pdf_only'] = False
+        else:
+            st.session_state['file_filter'] = 'Pdf & Powerpoint Only'
+            st.session_state['ff_pdf_only'] = True
+
+    def _ff_pdf_changed():
+        if st.session_state.get('ff_pdf_only', False):
+            st.session_state['file_filter'] = 'Pdf & Powerpoint Only'
+            st.session_state['ff_all'] = False
+        else:
+            st.session_state['file_filter'] = 'all'
+            st.session_state['ff_all'] = True
+
+    # ── File filter mutually-exclusive callbacks (Mode 2 per-course) ──
+    def _ind_ff_all_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            if st.session_state.get(f'ind_ff_all_{_sel_cid}', False):
+                st.session_state[f'ind_file_filter_{_sel_cid}'] = 'all'
+                st.session_state[f'ind_ff_pdf_only_{_sel_cid}'] = False
+            else:
+                st.session_state[f'ind_file_filter_{_sel_cid}'] = 'Pdf & Powerpoint Only'
+                st.session_state[f'ind_ff_pdf_only_{_sel_cid}'] = True
+
+    def _ind_ff_pdf_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            if st.session_state.get(f'ind_ff_pdf_only_{_sel_cid}', False):
+                st.session_state[f'ind_file_filter_{_sel_cid}'] = 'Pdf & Powerpoint Only'
+                st.session_state[f'ind_ff_all_{_sel_cid}'] = False
+            else:
+                st.session_state[f'ind_file_filter_{_sel_cid}'] = 'all'
+                st.session_state[f'ind_ff_all_{_sel_cid}'] = True
+
+    def _render_conversion_checkboxes(key_prefix='', key_suffix='',
+                                       master_on_change=None, sub_on_change=None):
+        """Render master toggle + 8 conversion checkboxes.
+        CRITICAL: value= parameter is required on every checkbox to ensure
+        the widget picks up session state values on its first render, even
+        if those values were set in a previous script run."""
+        _m_on = master_on_change or _sync_master_toggle_changed
+        _s_on = sub_on_change or _sync_sub_toggle_changed
+        _m_key = f'{key_prefix}notebooklm_master{key_suffix}'
+        _active = sum(st.session_state.get(f'{key_prefix}{k}{key_suffix}', False) for k in _CONVERT_KEYS)
+
+        # Master toggle
+        st.checkbox(
+            f"**NotebookLM Compatible Sync** &nbsp; :gray[({_active}/{TOTAL_NOTEBOOK_SUBS})]",
+            value=st.session_state.get(_m_key, False),
+            key=_m_key,
+            on_change=_m_on,
+            help='Automatically converts downloaded files to formats compatible with Google NotebookLM.'
+        )
+        # Sub-toggles
+        for _key in _CONVERT_KEYS:
+            _label, _help = _CHECKBOX_LABELS[_key]
+            _full_key = f'{key_prefix}{_key}{key_suffix}'
+            st.checkbox(
+                _label,
+                value=st.session_state.get(_full_key, False),
+                key=_full_key,
+                on_change=_s_on,
+                help=_help
+            )
+
+    # 1. Inject Tree-View CSS for nested sub-checkboxes + Diff Table
+    st.markdown("""
+    <style>
+    /* 1. Tree-view styling for nested sub-checkboxes (Global Mode 1) */
     .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
     .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
     .st-key-convert_urls, .st-key-convert_video {
@@ -4417,69 +4549,163 @@ def _show_analysis_review():
     }
     .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
     .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+
+    /* 2. Tree-view styling for per-course checkboxes (Mode 2) */
+    [class*="st-key-ind_convert_zip_"], [class*="st-key-ind_convert_pptx_"],
+    [class*="st-key-ind_convert_word_"], [class*="st-key-ind_convert_excel_"],
+    [class*="st-key-ind_convert_html_"], [class*="st-key-ind_convert_code_"],
+    [class*="st-key-ind_convert_urls_"], [class*="st-key-ind_convert_video_"] {
+        margin-left: 28px !important;
+        padding-left: 15px !important;
+        border-left: 2px solid #3E4353 !important;
+        margin-top: -12px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    [class*="st-key-ind_convert_zip_"] { margin-top: 0px !important; padding-top: 8px !important; }
+    [class*="st-key-ind_convert_video_"] { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+
+    /* 3. Diff table styling */
+    .diff-table { width: 100%; border-collapse: collapse; margin: 10px 0 15px 0; font-size: 0.85rem; }
+    .diff-table th { background: #1a1d27; color: #8A91A6; padding: 8px 12px; text-align: center;
+                     border-bottom: 2px solid #3E4353; font-weight: 600; font-size: 0.75rem;
+                     text-transform: uppercase; letter-spacing: 0.5px; }
+    .diff-table th:first-child { text-align: left; }
+    .diff-table td { padding: 6px 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);
+                     color: #e2e8f0; }
+    .diff-table td:first-child { text-align: left; color: #8A91A6; font-weight: 500; }
+    .diff-table tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* 4. Selectbox dropdown popover border */
+    [data-testid="stSelectbox"] [data-baseweb="popover"] {
+        border: 1px solid #3E4353 !important;
+        border-radius: 8px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # Use the existing translation key but prepend the emoji
-    expander_title = "🛠️ File Format Sync Settings"
-    with st.expander(expander_title, expanded=False):
-        current_active = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
+    # ========================================================
+    # THE SWITCHBOARD: 3-Tier Sync Configuration
+    # ========================================================
+    st.markdown("### ⚙️ Sync Mode & Settings")
 
-        st.checkbox(
-            f"**NotebookLM Compatible Sync** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
-            key="notebooklm_master",
-            on_change=_sync_master_toggle_changed,
-            help="Automatically converts downloaded files to formats compatible with Google NotebookLM."
+    _is_uniform = st.session_state.get('_sync_settings_uniform', True)
+    _batch_contracts = st.session_state.get('_batch_contracts', {})
+
+    # Initialize mode if not set
+    if '_sync_config_mode' not in st.session_state:
+        st.session_state['_sync_config_mode'] = 0
+    _config_mode = st.session_state['_sync_config_mode']
+
+    # Button-Tab Row
+    _tab1, _tab2, _tab3 = st.columns(3)
+    with _tab1:
+        if st.button('📦  Default Sync (Keep Saved Settings)',
+                     type='primary' if _config_mode == 0 else 'secondary',
+                     use_container_width=True, key='_tab_btn_0'):
+            st.session_state['_sync_config_mode'] = 0
+            st.rerun()
+    with _tab2:
+        if st.button('🔄  Custom Sync (Apply to All Courses)',
+                     type='primary' if _config_mode == 1 else 'secondary',
+                     use_container_width=True, key='_tab_btn_1'):
+            st.session_state['_sync_config_mode'] = 1
+            st.rerun()
+    with _tab3:
+        if st.button('✏️  Custom Sync (Per-Course Editing)',
+                     type='primary' if _config_mode == 2 else 'secondary',
+                     use_container_width=True, key='_tab_btn_2'):
+            st.session_state['_sync_config_mode'] = 2
+            st.rerun()
+
+    st.markdown("<hr style='margin: 10px 0 15px 0; border-color: #3E4353;' />", unsafe_allow_html=True)
+
+    # ---- MODE 0: Default Sync ----
+    if _config_mode == 0:
+        st.info('📦 Each course will sync using its individual saved download configuration. No settings will be changed.')
+
+    # ---- MODE 1: Global Override ----
+    elif _config_mode == 1:
+        st.info('🔄 **Custom Sync — All Courses:** Choose the download and conversion settings below. These settings will be applied identically to every course in this sync batch, overriding each course\u2019s individual saved configuration.')
+
+        # Show Diff Table for 2+ courses (always, regardless of uniform/mixed)
+        if len(_batch_contracts) > 1:
+            if not _is_uniform:
+                st.warning('⚠️ **Mixed Settings Detected:** The courses in this batch currently have different saved configurations. Review the table below to see the differences.')
+            # Build HTML diff table
+            _short_labels = {
+                'convert_zip': 'Extract Archives', 'convert_pptx': 'PPTX → PDF',
+                'convert_word': 'Word → PDF', 'convert_excel': 'Excel → PDF',
+                'convert_html': 'HTML → Markdown', 'convert_code': 'Code → .txt',
+                'convert_urls': 'URLs → List', 'convert_video': 'Video → MP3',
+                'file_filter': 'File Filter',
+            }
+            _thead = '<tr><th>Setting</th>' + ''.join(
+                f'<th>{d["name"]}</th>' for d in _batch_contracts.values()
+            ) + '</tr>'
+            _rows = []
+            for _key, _short in _short_labels.items():
+                _cells = ''
+                for _cid, _data in _batch_contracts.items():
+                    _val = _data['contract'].get(_key, False if _key != 'file_filter' else 'all')
+                    if _key == 'file_filter':
+                        _cells += f'<td style="color:#8A91A6;">{_val}</td>'
+                    else:
+                        _icon = '✅' if _val else '❌'
+                        _cells += f'<td>{_icon}</td>'
+                _rows.append(f'<tr><td>{_short}</td>{_cells}</tr>')
+            _table_html = f'<table class="diff-table"><thead>{_thead}</thead><tbody>{chr(10).join(_rows)}</tbody></table>'
+            st.markdown(_table_html, unsafe_allow_html=True)
+
+        # File Type Filter — vertical, no emojis
+        st.caption('File Type Filter')
+        st.checkbox('All Files', value=st.session_state.get('ff_all', False),
+                    key='ff_all', on_change=_ff_all_changed)
+        st.checkbox('PDF & PowerPoint Only', value=st.session_state.get('ff_pdf_only', False),
+                    key='ff_pdf_only', on_change=_ff_pdf_changed)
+
+        # Render global conversion checkboxes
+        st.caption('Additional settings:')
+        _render_conversion_checkboxes(
+            master_on_change=_sync_master_toggle_changed,
+            sub_on_change=_sync_sub_toggle_changed
         )
-        
-        st.checkbox(
-            "Auto-Extract Archives (.zip, .tar.gz)",
-            key="convert_zip",
-            on_change=_sync_sub_toggle_changed,
-            help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
-        )
-        st.checkbox(
-            "Convert PowerPoints to PDF",
-            key="convert_pptx",
-            on_change=_sync_sub_toggle_changed,
-            help="Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed."
-        )
-        st.checkbox(
-            "Convert Old Word Docs (.doc, .rtf) to PDF",
-            key="convert_word",
-            on_change=_sync_sub_toggle_changed,
-            help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-        )
-        st.checkbox(
-            "Convert Excel Files (.xlsx, .xls) to PDF",
-            key="convert_excel",
-            on_change=_sync_sub_toggle_changed,
-            help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
-        )
-        st.checkbox(
-            "Convert Canvas Pages (HTML) to Markdown",
-            key="convert_html",
-            on_change=_sync_sub_toggle_changed,
-            help="Converts Canvas Pages from HTML to clean Markdown formats."
-        )
-        st.checkbox(
-            "Convert Code & Data Files to .txt",
-            key="convert_code",
-            on_change=_sync_sub_toggle_changed,
-            help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
-        )
-        st.checkbox(
-            "Compile Web Links (.url) into a single list",
-            key="convert_urls",
-            on_change=_sync_sub_toggle_changed,
-            help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
-        )
-        st.checkbox(
-            "Extract Audio (.mp3) from Videos (.mp4, .mov)",
-            key="convert_video",
-            on_change=_sync_sub_toggle_changed,
-            help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-        )
+
+    # ---- MODE 2: Individual Course Tweaks ----
+    elif _config_mode == 2:
+        st.info('✏️ **Custom Sync — Per-Course Editing:** Select a course from the dropdown below to view and edit its individual download and conversion settings. Changes will only affect the selected course.')
+
+        _course_options = {cid: d['name'] for cid, d in _batch_contracts.items()}
+        if _course_options:
+            # Course selector
+            _selected_cid = st.selectbox(
+                'Select course to configure:',
+                options=list(_course_options.keys()),
+                format_func=lambda cid: _course_options[cid],
+                key='_ind_selected_course',
+            )
+
+            # File Type Filter — vertical, no emojis, below selector
+            st.caption('File Type Filter')
+            st.checkbox('All Files', value=st.session_state.get(f'ind_ff_all_{_selected_cid}', False),
+                        key=f'ind_ff_all_{_selected_cid}',
+                        on_change=_ind_ff_all_changed)
+            st.checkbox('PDF & PowerPoint Only', value=st.session_state.get(f'ind_ff_pdf_only_{_selected_cid}', False),
+                        key=f'ind_ff_pdf_only_{_selected_cid}',
+                        on_change=_ind_ff_pdf_changed)
+
+            # Render per-course conversion checkboxes
+            # NOTE: _render_conversion_checkboxes uses value=st.session_state.get(master_key)
+            # to handle first-render initialization, so no need to pre-set the master key here.
+            st.caption('Additional settings:')
+            _render_conversion_checkboxes(
+                key_prefix='ind_',
+                key_suffix=f'_{_selected_cid}',
+                master_on_change=_ind_master_toggle_changed,
+                sub_on_change=_ind_sub_toggle_changed,
+            )
+        else:
+            st.info('No courses available to configure.')
 
     st.markdown("""
         <hr style="
@@ -4837,38 +5063,101 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
     col_yes, col_no = st.columns([1, 1], gap="medium")
     with col_yes:
         if st.button("Yes, Start Sync", type="primary", use_container_width=True):
+            import json
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
-            # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
-            st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
-            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
-            st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
-            st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
-            st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
-            st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
-            st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
-            st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
-            # Save the updated Sync Contract back to ALL courses' sync_metadata
-            try:
-                import json
-                _updated_contract = json.dumps({
-                    'file_filter': st.session_state.get('file_filter', 'all'),
-                    'convert_zip': st.session_state.get('convert_zip', False),
-                    'convert_pptx': st.session_state.get('convert_pptx', False),
-                    'convert_html': st.session_state.get('convert_html', False),
-                    'convert_code': st.session_state.get('convert_code', False),
-                    'convert_urls': st.session_state.get('convert_urls', False),
-                    'convert_word': st.session_state.get('convert_word', False),
-                    'convert_video': st.session_state.get('convert_video', False),
-                    'convert_excel': st.session_state.get('convert_excel', False),
-                })
+
+            _CONVERT_KEYS_HANDOFF = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+            _config_mode = st.session_state.get('_sync_config_mode', 0)
+
+            # ========================================================
+            # MODE 0: Default Sync — load each course's individual contract from SQLite
+            # ========================================================
+            if _config_mode == 0:
                 for _s in sync_selections:
-                    _p = _s['res_data']['pair']
-                    _sm = SyncManager(_p['local_folder'], _p['course_id'], _p['course_name'])
-                    _sm._save_metadata('sync_contract', _updated_contract)
-            except Exception:
-                pass  # Non-fatal
-            st.session_state.pop('_sync_contract_loaded', None)
+                    try:
+                        _p = _s['res_data']['pair']
+                        _sm = SyncManager(_p['local_folder'], _p['course_id'], _p.get('course_name', ''))
+                        _raw = _sm._load_metadata('sync_contract')
+                        _s['res_data']['contract'] = json.loads(_raw) if _raw else {}
+                    except Exception:
+                        _s['res_data']['contract'] = {}
+
+            # ========================================================
+            # MODE 1: Global Override — build one contract from global session state, apply to ALL
+            # ========================================================
+            elif _config_mode == 1:
+                _global_contract = {
+                    'file_filter': st.session_state.get('file_filter', 'all'),
+                }
+                for k in _CONVERT_KEYS_HANDOFF:
+                    _global_contract[k] = st.session_state.get(k, False)
+
+                _global_json = json.dumps(_global_contract)
+                for _s in sync_selections:
+                    try:
+                        _p = _s['res_data']['pair']
+                        _sm = SyncManager(_p['local_folder'], _p['course_id'], _p.get('course_name', ''))
+                        _sm._save_metadata('sync_contract', _global_json)
+                        _s['res_data']['contract'] = _global_contract.copy()
+                    except Exception:
+                        _s['res_data']['contract'] = _global_contract.copy()
+
+            # ========================================================
+            # MODE 2: Individual Tweaks — build per-course from ind_* keys, save individually
+            # ========================================================
+            elif _config_mode == 2:
+                for _s in sync_selections:
+                    try:
+                        _cid = _s['res_data']['pair']['course_id']
+                        _p = _s['res_data']['pair']
+                        _ind_contract = {
+                            'file_filter': st.session_state.get(f'ind_file_filter_{_cid}', 'all'),
+                        }
+                        for k in _CONVERT_KEYS_HANDOFF:
+                            _ind_contract[k] = st.session_state.get(f'ind_{k}_{_cid}', False)
+
+                        _sm = SyncManager(_p['local_folder'], _cid, _p.get('course_name', ''))
+                        _sm._save_metadata('sync_contract', json.dumps(_ind_contract))
+                        _s['res_data']['contract'] = _ind_contract
+                    except Exception:
+                        _s['res_data']['contract'] = {}
+
+            # Set persistent_convert_* fallback — only authoritative for Mode 1
+            if _config_mode == 1:
+                _first_c = sync_selections[0]['res_data'].get('contract', {}) if sync_selections else {}
+                for k in _CONVERT_KEYS_HANDOFF:
+                    st.session_state[f'persistent_{k}'] = _first_c.get(k, False)
+            else:
+                # Mode 0/2: per-course contracts are authoritative; set safe defaults
+                for k in _CONVERT_KEYS_HANDOFF:
+                    st.session_state[f'persistent_{k}'] = False
+
+            # Cleanup global Mode 1 keys (prevent bleeding into Download Page)
+            for k in _CONVERT_KEYS_HANDOFF:
+                st.session_state.pop(k, None)
+            st.session_state.pop('notebooklm_master', None)
+            st.session_state.pop('file_filter', None)
+
+            # Save batch_contracts ref BEFORE popping for per-course cleanup
+            _bc = st.session_state.get('_batch_contracts', {})
+
+            # Cleanup all 3-Tier state keys
+            for _cleanup_key in ['_sync_contract_loaded', '_sync_settings_uniform',
+                                  '_batch_contracts', '_sync_config_mode',
+                                  '_ind_selected_course', '_ind_contracts_loaded',
+                                  'ff_all', 'ff_pdf_only']:
+                st.session_state.pop(_cleanup_key, None)
+            # Cleanup per-course ind_* keys (using saved ref)
+            if isinstance(_bc, dict):
+                for _cid in _bc.keys():
+                    for k in _CONVERT_KEYS_HANDOFF:
+                        st.session_state.pop(f'ind_{k}_{_cid}', None)
+                    st.session_state.pop(f'ind_file_filter_{_cid}', None)
+                    st.session_state.pop(f'ind_notebooklm_master_{_cid}', None)
+                    st.session_state.pop(f'ind_ff_all_{_cid}', None)
+                    st.session_state.pop(f'ind_ff_pdf_only_{_cid}', None)
             st.rerun()
     with col_no:
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
@@ -6309,7 +6598,10 @@ def _cleanup_sync_state():
         'synced_count', 'synced_bytes', 'sync_cancel_requested', 'sync_cancelled_file_count',
         'sync_errors', 'sync_quick_mode', 'sync_single_pair_idx',
         'sync_confirm_count', 'sync_confirm_size', 'sync_confirm_folders',
-        'sync_cancelled', 'is_post_processing', '_sync_contract_loaded'
+        'sync_cancelled', 'is_post_processing', '_sync_contract_loaded',
+        '_sync_settings_uniform', '_batch_contracts', '_sync_config_mode',
+        '_ind_selected_course', '_ind_contracts_loaded',
+        'ff_all', 'ff_pdf_only',
     ]:
         st.session_state.pop(key, None)
 
@@ -6324,8 +6616,12 @@ def _cleanup_sync_state():
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
-    # Also clean up any dynamic checkbox keys
-    keys_to_remove = [k for k in st.session_state if k.startswith(('sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_'))]
+    # Also clean up any dynamic checkbox keys (sync + per-course ind_ keys)
+    keys_to_remove = [k for k in st.session_state if k.startswith((
+        'sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_',
+        'ind_convert_', 'ind_file_filter_', 'ind_notebooklm_master_',
+        'ind_ff_all_', 'ind_ff_pdf_only_',
+    ))]
     for k in keys_to_remove:
         st.session_state.pop(k, None)
 
