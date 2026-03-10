@@ -34,7 +34,6 @@ Canvas_LMS_batch_file_downloader/
 ├── ui_helpers.py       # Shared utilities (185 lines)
 ├── canvas_logic.py     # Canvas API wrapper + sanitization
 ├── sync_manager.py     # Sync backend — Manifest Logic (SQLite, Levenshtein)
-├── translations.py     # EN/DA translations
 ├── assets/             # Icons, images
 ├── pdf_converter.py    # Native PPTX/PPT to PDF COM converter
 ├── word_converter.py   # Native DOC/RTF to PDF COM converter

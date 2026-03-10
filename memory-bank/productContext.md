@@ -21,7 +21,6 @@ Desktop application for university students to batch download and synchronize co
     - **Duplicate Detection**: Prevents pairing the same folder+course twice.
     - **Detailed History**: Logs past sync operations.
 - **Offline Access**: Materials available without internet after download/sync.
-- **Internationalization**: Full English and Danish support (53+ sync keys).
 - **NotebookLM Compatible Content Generation**:
     - Extends the core downloaded assets by dynamically converting or extracting them into formats optimized for LLM ingestion (like Google NotebookLM).
     - Features native PDF conversion for modern/legacy PowerPoints, Word Docs, and Excel spreadsheets via COM automation (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`).

@@ -1,7 +1,35 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Active Feature: English-Only Architecture (Complete)**: Fully eradicated the legacy `translations.py` system. The application is now 100% hardcoded in English for improved readability, maintainability, and simplified Streamlit rendering logic.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-10 — Translation System Eradication)
+- **Pure English Architecture**: Completely deleted `translations.py`. Purged all `get_text()`, `pluralize()`, and `language` parameters from 6 core source files (`app.py`, `sync_ui.py`, `ui_helpers.py`, `canvas_logic.py`, `sync_manager.py`, `start.py`).
+- **Standardized String Formatting**: Replaced translation-key lookups with direct English strings or f-strings. Replaced the `pluralize()` utility with inline Python ternary operators (e.g., `f"{count} file{'s' if count != 1 else ''}"`) for zero-dependency rendering.
+- **Simplified Class Constructors**: Stripped the `language` parameter from `CanvasManager` and `SyncManager` constructors. All backend logic now operates without language-state awareness.
+- **UI Decoupling**: Removed the sidebar language selector and purged all `language` and `ui_lang` keys from `st.session_state`.
+- **Sync Review HTML Fix**: Resolved an HTML rendering bug in `sync_ui.py` where literal tags were visible; ensured all headers use `st.markdown(..., unsafe_allow_html=True)` and corrected emoji corruption.
+
+## Recent Changes (Session 2026-03-10 — 3-Tier Batch Sync Configuration UX)
+- **Complete UX Paradigm Shift**: Replaced the single "Context-Aware Override" checkbox with a 3-mode `st.radio` switchboard: Mode 0 (Keep Existing), Mode 1 (Global Override), Mode 2 (Individual Course Tweaks).
+- **Settings Diff Table**: Mode 1 renders an HTML diff table showing ✅/❌ per course per setting when a batch has mixed configs — solves the "blind spot" problem.
+- **Per-Course Editing**: Mode 2 uses a `st.selectbox` course picker with dynamically-keyed checkboxes (`ind_convert_*_{cid}`). Streamlit auto-persists all edits per course.
+- **Backend Handoff Parity**: `_show_sync_confirmation` branches on `_sync_config_mode`. Mode 0 loads SQLite, Mode 1 writes global, Mode 2 writes per-course. All paths bind `res_data['contract']` for Phase 3.
+- **Initialization Sweep Bug Fix from Audit**: Moved `try/except` inside the `for` loop so one corrupted JSON contract can't abort the entire sweep. Also now sweeps `file_filter` for mixed-state detection.
+
+## Recent Changes (Session 2026-03-10 — 3-Tier Sync Audit Refinements)
+- **Diff Table Context**: The HTML settings diff table in Mode 1 now renders unconditionally for batches of 2+ courses (regardless of uniform/mixed state). Uniform batches must also display the table to provide users visual confirmation of their identical baseline settings before applying global overrides.
+- **Handoff Exception Silencing**: Pushed `try/except` blocks deep inside the `for` loops across all three Modes (0, 1, and 2) in `_show_sync_confirmation`. This prevents a single malformed SQLite contract from implicitly zeroing out the payloads of all subsequent healthy courses in the batch.
+- **`_CONVERT_KEYS` Unification**: Eliminated the redundant `_CONVERT_KEYS_LOCAL` list in the handoff function, explicitly passing `_CONVERT_KEYS_HANDOFF = ['convert_zip', ...]` inline to ensure identical index mapping with the upstream init sweep.
+- **Global Key Cleanup**: Appended exhaustive `.pop()` commands at the end of the `Sync Now` handoff sequence to aggressively wipe `st.session_state` global conversion keys (`convert_*`, `notebooklm_master`, `file_filter`). This guarantees Zero-Bleed if the user navigates directly back to the `Download Page`.
+
+## Recent Changes (Session 2026-03-10 — Truthful Batch Settings UI Paradigm)
+- **Context-Aware Settings Override**: Completely overhauled how the Manual Sync (Step 2) Review screen handles global conversion settings during a multi-course batch sync.
+- **Mixed State Detection**: Built a logic sweep into `_show_analysis_review` initialization that scans the `sync_contract` of every selected course. It mathematically detects if `len(set(_batch_settings_map[key])) > 1` (i.e. Course A converts PPTX but Course B does not).
+- **Truthful UI Locking**: If a mixed batch is detected, the 8 conversion checkboxes are correctly forced to an unchecked `disabled=True` state, and a warning `⚠️ Mixed Settings Detected` is rendered. This explicitly prevents Course A from visually dictating the state of Course B, an anti-pattern caused by Streamlit's lack of "indeterminate" checkboxes.
+- **Master Override Toggle**: Introduced a `🔄 Override settings for all selected courses` checkbox. Checking it enables the conversion checkboxes, providing pure user intent that they wish to destructively override the historically saved individual contracts with a new, uniform setting for the batch.
+- **Backend Execution Parity**: Modified the `"Yes, Start Sync"` execution handoff. If a batch is mixed AND the user opts out of overriding it, the execution loop explicitly extracts each course's unique `sync_contract` from SQLite and passes it into `_s['res_data']['contract']`. This completely solves the memory-state failure point and aligns the Manual Sync architecture 1:1 with Quick Sync, allowing `get_synced_file_paths(target_exts, conversion_key)` in Phase 3 to read individual course truths rather than falling back to the mutated global `st.session_state`.
 
 ## Recent Changes (Session 2026-03-09 — Quick Sync Architecture Refactor)
 - **Per-Course Batch Conversions Fix**: Discovered and resolved a major architectural flaw in `sync_ui.py` (`_run_sync`) post-processing where the iterative Quick Sync loop would overwrite the `persistent_convert_*` global flags. Refactored the `get_synced_file_paths(target_exts, conversion_key)` helper to extract `convert_*` settings strictly from each individual course's payload contract (`res_data['contract']`). This ensures that during a multi-course batch sync, Course A can be converted to PDF while Course B is skipped, rather than the final course blindly dictating the entire batch.

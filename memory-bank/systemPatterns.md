@@ -6,10 +6,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 ### File Structure
 - **`app.py`**: Main entry point, UI controller.
 - **`sync_ui.py`**: All sync-related UI logic.
-- **`ui_helpers.py`**: Shared UI utilities (disk check, plurals, path utils).
+- **`ui_helpers.py`**: Shared UI utilities (disk check, path utils).
 - **`canvas_logic.py`**: Canvas API interactions.
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).
-- **`translations.py`**: Centralized i18n dictionary.
 - **`excel_converter.py`**: Excel to PDF conversion utility using Win32COM.
 
 ## UI Architecture & Patterns
@@ -46,6 +45,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.
+- **First-Render Checkbox Hydration Pattern**:
+    - *Problem*: In Streamlit, manually stuffing values into `st.session_state["my_checkbox"]` *before* the script reaches the `st.checkbox("Label", key="my_checkbox")` declaration often fails to visually check the box on its very first render. The UI appears unchecked (flashing), even though the underlying state dictionary reads `True`.
+    - *Solution*: For dynamically populated configurations (like loading saved JSON settings from SQLite), always explicitly define the `value=` parameter falling back to the state key: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))`. This guarantees 100% visual parity on the initial draw frame without triggering duplicate state assignment warnings.
 - **Extreme Column Ratio Alignment Pattern**:
     - *Problem*: Default `st.columns(2)` splits are too wide for small buttons, pushing dependent content too far right.
     - *Solution*: Use extreme ratios like `[1, 6]` or `[1.2, 8.8]` to crush the trigger-widget's column, pulling the main input field horizontally into a tight layout.

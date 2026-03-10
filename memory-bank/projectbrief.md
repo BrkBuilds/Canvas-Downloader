@@ -12,6 +12,7 @@ Recently, the application has evolved beyond simple downloading to include a **N
 2. **Smart Synchronization Engine**:
    - Matches local folders with Canvas courses and tracks them via a hidden SQLite manifest (`.canvas_sync.db`).
    - Intelligently downloads only new or altered files, skipping unchanged content (utilizing `sync_manager.py`).
+   - **3-Tier Batch Sync Configuration**: Offers a sophisticated UI for multi-course syncs, allowing users to execute a "Default Sync" (keeping historically saved per-course settings), apply a "Global Override" to all courses simultaneously, or perform "Per-Course Editing" with real-time settings diff tables.
    - Safely renames local edits (e.g., `_NewVersion.pdf`) to avoid overwriting user notes.
 3. **Synthetic Shortcut Sync**:
    - Downloads Canvas Pages (`.html`) and External Links/Tools (`.url`) securely, using a "Negative ID" pattern.

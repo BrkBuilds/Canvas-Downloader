@@ -1,6 +1,15 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **V1.0 Master Audit Report** (2026-03-10): Conducted a 360-degree codebase audit assessing architecture, state management, and edge cases. Generated a comprehensive Release Readiness report and Actionable Roadmap.
+- [x] **English-Only Architecture Transition** (2026-03-10): Successfully eradicated the `translations.py` system, removed `get_text()`/`pluralize()` dependencies, and purged the language selector UI to simplify the codebase.
+- [x] **3-Tier Batch Sync Configuration UX** (2026-03-10):
+    - [x] **Button-Tab UI Switchboard**: Replaced the legacy checkbox override with a 3-mode (Mode 0: Default, Mode 1: Global Override, Mode 2: Per-Course) layout using `st.columns` and `primary`/`secondary` button states.
+    - [x] **Diff Table Context**: Engineered an HTML-based settings diff table (`✅/❌`) that always renders in Mode 1 for multi-course batches, eliminating the "Ghost State" blind spot so users instantly see their batch's historical uniformity or deviation.
+    - [x] **State Initialization & Checkbox Hydration**: Fixed a critical initialization bug where checkboxes appeared unchecked despite being `True` in `st.session_state`. Explicitly enforced the `value=` parameter horizontally across all `st.checkbox` instantiations to guarantee initial render parity with historical SQLite contracts.
+    - [x] **Master Toggle State Parity**: Replicated the `app.py` Master Toggle reactivity pattern inside Mode 1/2. Wired `_CONVERT_KEYS` iteration to ensure parent/child syncing functions flawlessly. 
+    - [x] **Bulletproof Handoff Routing**: Refactored the Confirmation Dialog's pre-execution loop. Mode 0 loads SQLite fresh, Mode 1 snapshots the global dictionary, and Mode 2 extracts dynamically-keyed `ind_*` state variables, completely isolating the 3 states to eliminate Pre-Save cross-contamination.
+    - [x] **Exception Silencing Fixes**: Moved `try/except` handlers inside the `for` loops during both Initialization Sweeps and Handoff Routing, guaranteeing that one corrupted JSON `sync_contract` cannot silently break the data pipeline for the remaining healthy courses.
 - [x] **Project Initialization**: Repository setup and initial architecture.
 - [x] **Core Downloader**: Bulk downloading of course files/modules.
 - [x] **Smart Sync Feature**:
