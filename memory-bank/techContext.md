@@ -17,7 +17,8 @@
 - `streamlit`: UI rendering (heavily using **`st.dialog`** for modals and `st.container` for layout).
 - `canvasapi`: REST API interaction.
 - `aiohttp`: Async HTTP requests.
-- `keyring`: OS-native secure credential vault for storing API tokens.
+- `keyring`: OS-native secure credential vault for storing API tokens (Windows).
+- `base64`: Explicit macOS `keyring` permission bypass (used to encode token directly into settings JSON).
 - `urllib.parse`: URL handling for robust filename decoding.
 - `shutil`: Disk space checking (`disk_usage`).
 - `sqlite3`: Robust manifest database management.
@@ -63,5 +64,6 @@ Canvas_LMS_batch_file_downloader/
 - **Sync History File**: `canvas_sync_history.json` — last 50 entries with timestamp, files_synced, courses, errors.
 
 ## Build System
-- **PyInstaller**: Standalone `.exe` compilation.
+- **PyInstaller**: Standalone `.exe` and macOS bundle `.app` compilation.
 - **Optimization**: Specific excludes to reduce binary size.
+- **macOS Entitlements**: Specifically requires `entitlements.plist` enabling `com.apple.security.automation.apple-events` bound to the `.spec` file to prevent OS-level blocks when driving Office conversions.

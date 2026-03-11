@@ -15,6 +15,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Dual-Engine Automation Bridge**:
     - *Policy*: Achieve 100% feature parity between Windows and macOS without disabling features on UNIX.
     - *Implementation*: Office converters (`word`, `excel`, `pdf`) use a dynamic `if sys.platform == 'darwin':` branch inside their `convert()` methods. Windows uses `win32com` with self-healing. macOS uses `subprocess.run(['osascript'])` to inject AppleScript payloads directly into the local Mac Office applications.
+- **Native Cocoa Rendering Parity**:
+    - *Policy*: Where Tkinter's cross-platform bridges fail to mimic native macOS expectations (crashes, ugly UI), bypass Tkinter entirely via subprocess AppleScript execution.
+    - *Implementation*: `native_folder_picker()` on macOS pipes straight to `osascript -e POSIX path of (choose folder)` to leverage the actual macOS Finder dialog. Also, `open_folder()` leverages `open -R {path}` and an explicit `tell application "Finder" to activate` to guarantee the explorer window punches through Streamlit to seize the foreground.
 - **AppleScript Defensive Execution**:
     - *Pattern*: `osascript` subprocesses are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
     - *Path Formatting*: AppleScript blocks natively accept `POSIX file "/Users/..."` strings. Paths are escaped (`path.replace('"', '\\"')`) for injection defense-in-depth.
@@ -25,9 +28,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Pattern*: Windows-exclusive wheels like `pywin32` are constrained in `requirements.txt` via environment markers (`pywin32==308; sys_platform == 'win32'`), allowing a single universal requirements file to build cleanly on both operating systems.
 
 ## Security & State Patterns
-- **OS-Native Credential Storage (`keyring`)**: 
-    - *Policy*: Never store sensitive API tokens in plaintext files (JSON/YAML).
-    - *Implementation*: Use Python's `keyring` module to delegate token storage to the OS-native credential manager (Windows Credential Manager / macOS Keychain). Settings JSON should only store non-sensitive config like the Canvas API URL and UI preferences.
+- **Hybrid OS-Native Credential Storage (`keyring` & Obfuscated JSON)**: 
+    - *Policy*: Never store sensitive API tokens in plaintext files (JSON/YAML) unless operating system UX constraints demand an explicit fallback.
+    - *Implementation*: On Windows (`nt`), use Python's `keyring` module to securely delegate token storage to the Windows Credential Manager. On macOS (`Darwin`), `keyring` triggers repeated blocking "Keychain Access" UI modals for unsigned Python apps. Therefore, macOS explicitly pivots to Base64-encoded token storage alongside standard settings in JSON to guarantee a seamless, zero-prompt UX.
 - **Defensive Exception Handling**:
     - *Policy*: Never use bare `except:` clauses.
     - *Implementation*: Always catch `Exception` explicitly (`except Exception as e:`) to prevent silently dropping vital OS-level interrupts like `KeyboardInterrupt` or `SystemExit`.

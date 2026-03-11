@@ -80,6 +80,7 @@ class PowerPointToPDF:
         posix_dst = str(dst.resolve()).replace('"', '\\"')
         script = f'''
             tell application "Microsoft PowerPoint"
+                set display alerts to false
                 open POSIX file "{posix_src}"
                 set theDoc to active presentation
                 save theDoc in POSIX file "{posix_dst}" as save as PDF

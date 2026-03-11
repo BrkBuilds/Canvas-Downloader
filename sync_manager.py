@@ -272,6 +272,8 @@ class SyncManager:
     @staticmethod
     def _windows_unhide_file(filepath: Path):
         """Remove hidden attribute from a file on Windows."""
+        if os.name != 'nt':
+            return
         if not filepath.exists():
             return
         try:
@@ -286,6 +288,8 @@ class SyncManager:
     @staticmethod
     def _windows_hide_file(filepath: Path):
         """Set hidden attribute on a file on Windows."""
+        if os.name != 'nt':
+            return
         if not filepath.exists():
             return
         try:

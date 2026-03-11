@@ -123,6 +123,7 @@ class ExcelToPDF:
         posix_dst = str(dst.resolve()).replace('"', '\\"')
         script = f'''
             tell application "Microsoft Excel"
+                set display alerts to false
                 open POSIX file "{posix_src}"
                 set theBook to active workbook
                 try
