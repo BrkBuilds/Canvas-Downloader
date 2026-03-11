@@ -160,13 +160,31 @@ def native_folder_picker() -> str | None:
     Returns:
         Absolute path to selected folder as string, or None if cancelled.
     """
+    import platform
+    if platform.system() == 'Darwin':
+        import subprocess
+        try:
+            result = subprocess.run(
+                ['osascript', '-e', 'POSIX path of (choose folder)'],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+            return None
+        except Exception:
+            return None
+
     import tkinter as tk
     from tkinter import filedialog
     root = tk.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     try:
-        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+        if platform.system() == 'Darwin':
+            icon_img = tk.PhotoImage(file=os.path.join(os.path.dirname(__file__), 'assets', 'icon.png'))
+            root.iconphoto(True, icon_img)
+        else:
+            root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
     except Exception:
         pass
     folder_path = filedialog.askdirectory(master=root)
@@ -199,7 +217,8 @@ def open_folder(path: str):
             pass
             
     elif sys_platform == "Darwin":  # macOS
-        subprocess.Popen(["open", path])
+        subprocess.Popen(["open", "-R", path])
+        subprocess.Popen(["osascript", "-e", 'tell application "Finder" to activate'])
     else:  # Linux
         subprocess.Popen(["xdg-open", path])
 

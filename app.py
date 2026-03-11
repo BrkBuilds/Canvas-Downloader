@@ -1,6 +1,4 @@
 import streamlit as st
-import tkinter as tk
-from tkinter import filedialog
 from canvas_logic import CanvasManager, DownloadError
 import asyncio
 import collections
@@ -210,27 +208,38 @@ with st.sidebar:
                         
                     if 'debug_mode' in config:
                         st.session_state['debug_mode'] = config.get('debug_mode', False)
+                    import platform
+                    import base64
                     
-                    # Load token from OS keyring (secure)
                     loaded_token = ''
-                    try:
-                        keyring_user = st.session_state['api_url'] or 'default'
-                        loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
-                    except Exception:
-                        pass  # Keyring unavailable, fall through to legacy check
-                    
-                    # Legacy migration: if token still in JSON, migrate it to keyring
-                    if not loaded_token and config.get('api_token', ''):
-                        loaded_token = config['api_token']
-                        # Migrate to keyring and strip from JSON
+                    if platform.system() == 'Darwin':
+                        # macOS: Avoid keychain permission prompts by loading from config json via base64
+                        encoded_token = config.get('mac_api_token', '')
+                        if encoded_token:
+                            try:
+                                loaded_token = base64.b64decode(encoded_token.encode('utf-8')).decode('utf-8')
+                            except Exception:
+                                pass
+                    else:
+                        # Windows: Load token from OS keyring (secure)
                         try:
                             keyring_user = st.session_state['api_url'] or 'default'
-                            keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
-                            config.pop('api_token', None)
-                            with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
-                                json.dump(config, fw)
+                            loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
                         except Exception:
-                            pass  # Migration failed, will work from RAM this session
+                            pass  # Keyring unavailable, fall through to legacy check
+                        
+                        # Legacy migration: if token still in JSON, migrate it to keyring
+                        if not loaded_token and config.get('api_token', ''):
+                            loaded_token = config['api_token']
+                            # Migrate to keyring and strip from JSON
+                            try:
+                                keyring_user = st.session_state['api_url'] or 'default'
+                                keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                                config.pop('api_token', None)
+                                with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
+                                    json.dump(config, fw)
+                            except Exception:
+                                pass  # Migration failed, will work from RAM this session
                     
                     st.session_state['api_token'] = loaded_token
                         
@@ -292,23 +301,41 @@ with st.sidebar:
                 st.session_state['is_authenticated'] = True
                 st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
                 
-                # Save token to OS keyring (secure) and config to JSON
-                try:
-                    keyring_user = st.session_state['api_url'] or 'default'
-                    keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
-                except Exception as e:
-                    st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
+                import platform
+                import base64
+                
+                # Setup base config data
+                config_data = {}
+                if os.path.exists(CONFIG_FILE):
+                    try:
+                        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                            config_data = json.load(f)
+                    except Exception:
+                        pass
+                        
+                config_data['api_url'] = st.session_state['api_url']
+                if 'concurrent_downloads' in st.session_state:
+                    config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
+                if 'debug_mode' in st.session_state:
+                    config_data['debug_mode'] = st.session_state['debug_mode']
+                
+                # Save token tracking macOS vs Windows
+                if platform.system() == 'Darwin':
+                    # macOS: Save to JSON obfuscated to avoid keychain prompts
+                    try:
+                        encoded = base64.b64encode(st.session_state['api_token'].encode('utf-8')).decode('utf-8')
+                        config_data['mac_api_token'] = encoded
+                    except Exception as e:
+                        st.warning(f"Could not obfuscate token: {e}")
+                else:
+                    # Windows: Save to OS keyring (secure)
+                    try:
+                        keyring_user = st.session_state['api_url'] or 'default'
+                        keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
+                    except Exception as e:
+                        st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
                 
                 try:
-                    config_data = {
-                        'api_url': st.session_state['api_url']
-                    }
-                    if 'concurrent_downloads' in st.session_state:
-                        config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
-                        
-                    if 'debug_mode' in st.session_state:
-                        config_data['debug_mode'] = st.session_state['debug_mode']
-                        
                     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                         json.dump(config_data, f)
                 except Exception as e:
@@ -483,12 +510,15 @@ with st.sidebar:
         st.markdown("")  # Spacer
         st.markdown("")
         if st.button('Log Out / Edit Token', use_container_width=True):
+            import platform
+            
             # Wipe token from OS keyring
-            try:
-                keyring_user = st.session_state.get('api_url', '') or 'default'
-                keyring.delete_password(KEYRING_SERVICE, keyring_user)
-            except Exception:
-                pass  # Token may not exist in keyring yet
+            if platform.system() != 'Darwin':
+                try:
+                    keyring_user = st.session_state.get('api_url', '') or 'default'
+                    keyring.delete_password(KEYRING_SERVICE, keyring_user)
+                except Exception:
+                    pass  # Token may not exist in keyring yet
             
             st.session_state['is_authenticated'] = False
             st.session_state['api_token'] = ""
@@ -501,6 +531,7 @@ with st.sidebar:
                     with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                         config_data = json.load(f)
                     config_data.pop('api_token', None)
+                    config_data.pop('mac_api_token', None)  # Remove macOS token
                     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                         json.dump(config_data, f)
                 except Exception as e:
@@ -915,7 +946,7 @@ with _main_content.container():
                     help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
                 )
                 st.checkbox(
-                    "Compile Web Links (.url) into a single list",
+                    "Compile Web Links (.url/.webloc) into a single list",
                     key="convert_urls",
                     on_change=_sub_toggle_changed,
                     help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
