@@ -11,6 +11,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).
 - **`excel_converter.py`**: Excel to PDF conversion utility using Win32COM.
 
+## Security & State Patterns
+- **OS-Native Credential Storage (`keyring`)**: 
+    - *Policy*: Never store sensitive API tokens in plaintext files (JSON/YAML).
+    - *Implementation*: Use Python's `keyring` module to delegate token storage to the OS-native credential manager (Windows Credential Manager / macOS Keychain). Settings JSON should only store non-sensitive config like the Canvas API URL and UI preferences.
+
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
 - **Interactive Lists**: Use HTML `<details>` and `<summary>` inside modals to handle large file lists without overwhelming the main view.

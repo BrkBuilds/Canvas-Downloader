@@ -1,8 +1,10 @@
 import os
-import time
+import logging
 import pythoncom
 import win32com.client
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class ExcelToPDF:
@@ -44,7 +46,7 @@ class ExcelToPDF:
             except Exception:
                 pass
         except Exception as e:
-            print(f"[COM] Excel init failed: {e}")
+            logger.error(f"[COM] Excel init failed: {e}")
             self.app = None
 
     def _kill_app(self):

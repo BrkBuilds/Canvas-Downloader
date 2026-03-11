@@ -16,6 +16,7 @@ from canvas_debug import log_debug, clear_debug_log
 import logging
 
 from sync_manager import SyncManager, CanvasFileInfo
+from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
 
@@ -400,7 +401,7 @@ class CanvasManager:
             log_debug(f"Save Dir: {save_dir}", debug_file)
 
         downloaded_file_ids = set()
-        seen_target_paths = set()  # Path-based dedup to prevent concurrent writes to same .part file
+        seen_target_paths = set()  # Path-based collision tracking
         mb_tracker = {'bytes_downloaded': 0}
         
         # Determine semaphore limit from session state if available, default to 5
@@ -409,7 +410,7 @@ class CanvasManager:
         sem = asyncio.Semaphore(concurrent_limit)
         
         tasks = []
-        timeout = aiohttp.ClientTimeout(total=TIMEOUT_SECONDS)
+        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
 
         async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
             downloaded_files_info = []
@@ -460,21 +461,32 @@ class CanvasManager:
                                             continue
                                         
                                         file_obj = course.get_file(item.content_id)
-                                        if file_obj.id in downloaded_file_ids:
-                                            log_debug(f"Skipping duplicate module file: {file_obj.filename} (ID: {file_obj.id})", debug_file)
-                                            continue
+                                        # Track the ID for the catch-all phase, but DO NOT skip it here 
+                                        # so files appearing in multiple modules get their respective copies.
                                         downloaded_file_ids.add(file_obj.id)
-                                        # Path-based dedup: prevent two async workers writing to the same local file
-                                        target_key = str(target_path / self._sanitize_filename(file_obj.filename)).lower()
+                                        
+                                        # Synchronous conflict resolution to prevent data loss
+                                        base_filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                                        filepath = target_path / base_filename
+                                        target_key = str(filepath).lower()
+
                                         if target_key in seen_target_paths:
-                                            log_debug(f"Skipping path-duplicate: {file_obj.filename} -> {target_key}", debug_file)
-                                            continue
+                                            counter = 1
+                                            while True:
+                                                new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
+                                                new_filepath = target_path / new_name
+                                                if str(new_filepath).lower() not in seen_target_paths:
+                                                    filepath = new_filepath
+                                                    target_key = str(new_filepath).lower()
+                                                    break
+                                                counter += 1
+                                                
                                         seen_target_paths.add(target_key)
-                                        log_debug(f"Module file tracked: {file_obj.filename} (ID: {file_obj.id})", debug_file)
+                                        log_debug(f"Module file tracked: {filepath.name} (ID: {file_obj.id})", debug_file)
                                         task = asyncio.create_task(self._download_file_async(
                                             sem, session, file_obj, target_path, progress_callback, mb_tracker, file_filter, 
                                             error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
-                                            sync_manager=sync_manager, course_base_path=base_path
+                                            sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath
                                         ))
                                         tasks.append(task)
                                     
@@ -581,19 +593,30 @@ class CanvasManager:
                             log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
                             continue # Already downloaded in a module
                         
-                        # Path-based dedup: prevent concurrent writes to the same local file
-                        target_key = str(base_path / self._sanitize_filename(file.filename)).lower()
+                        # Synchronous conflict resolution to prevent data loss
+                        base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                        filepath = base_path / base_filename
+                        target_key = str(filepath).lower()
+
                         if target_key in seen_target_paths:
-                            log_debug(f"Catch-All skipping path-duplicate: {file.filename} -> {target_key}", debug_file)
-                            continue
+                            counter = 1
+                            while True:
+                                new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
+                                new_filepath = base_path / new_name
+                                if str(new_filepath).lower() not in seen_target_paths:
+                                    filepath = new_filepath
+                                    target_key = str(new_filepath).lower()
+                                    break
+                                counter += 1
+                                
                         seen_target_paths.add(target_key)
-                        log_debug(f"Catch-All found new file: {file.filename} (ID: {file.id})", debug_file)
+                        log_debug(f"Catch-All found new file: {filepath.name} (ID: {file.id})", debug_file)
                         
                         # Download to course root
                         task = asyncio.create_task(self._download_file_async(
                             sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
                             error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
-                            sync_manager=sync_manager, course_base_path=base_path
+                            sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath
                         ))
                         catch_all_tasks.append(task)
                     
@@ -692,7 +715,7 @@ class CanvasManager:
                     target_path = base_path
                     for part in path_parts:
                         target_path = target_path / part
-                    target_path.mkdir(parents=True, exist_ok=True)
+                    Path(make_long_path(target_path)).mkdir(parents=True, exist_ok=True)
                     
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, target_path, progress_callback, mb_tracker, file_filter, 
@@ -753,17 +776,29 @@ class CanvasManager:
                 if check_cancellation and check_cancellation(): break
                 if getattr(file, 'id', None):
                     downloaded_ids.add(file.id)
-                # Path-based dedup
-                target_key = str(base_path / self._sanitize_filename(getattr(file, 'filename', 'unknown'))).lower()
+                
+                # Synchronous conflict resolution to prevent data loss
+                base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                filepath = base_path / base_filename
+                target_key = str(filepath).lower()
+
                 if target_key in seen_flat_paths:
-                    log_debug(f"Flat: Skipping path-duplicate: {getattr(file, 'filename', 'unknown')}", debug_file)
-                    continue
+                    counter = 1
+                    while True:
+                        new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
+                        new_filepath = base_path / new_name
+                        if str(new_filepath).lower() not in seen_flat_paths:
+                            filepath = new_filepath
+                            target_key = str(new_filepath).lower()
+                            break
+                        counter += 1
+
                 seen_flat_paths.add(target_key)
                 try:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
                         error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                        sync_manager=sync_manager, course_base_path=base_path
+                        sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath
                     ))
                     tasks.append(task)
                 except Exception as e:
@@ -799,16 +834,27 @@ class CanvasManager:
                             if item.type == 'File':
                                 if not hasattr(item, 'content_id') or not item.content_id: continue
                                 file_obj = course.get_file(item.content_id)
-                                # Path-based dedup for flat module fallback
-                                target_key = str(base_path / self._sanitize_filename(file_obj.filename)).lower()
+                                # Synchronous conflict resolution to prevent data loss
+                                base_filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                                filepath = base_path / base_filename
+                                target_key = str(filepath).lower()
+
                                 if target_key in seen_flat_paths:
-                                    log_debug(f"Flat fallback: Skipping path-duplicate: {file_obj.filename}", debug_file)
-                                    continue
+                                    counter = 1
+                                    while True:
+                                        new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
+                                        new_filepath = base_path / new_name
+                                        if str(new_filepath).lower() not in seen_flat_paths:
+                                            filepath = new_filepath
+                                            target_key = str(new_filepath).lower()
+                                            break
+                                        counter += 1
+
                                 seen_flat_paths.add(target_key)
                                 task = asyncio.create_task(self._download_file_async(
                                     sem, session, file_obj, base_path, progress_callback, mb_tracker, file_filter, 
                                     error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                                    sync_manager=sync_manager, course_base_path=base_path
+                                    sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath
                                 ))
                                 module_tasks.append(task)
                             elif item.type == 'Page':
@@ -873,10 +919,14 @@ class CanvasManager:
         
         return downloaded
 
-    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None):
+    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, explicit_filepath=None):
         async with sem:
-            filename = self._sanitize_filename(file_obj.filename)
-            filepath = folder_path / filename
+            if explicit_filepath:
+                filepath = explicit_filepath
+                filename = filepath.name
+            else:
+                filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                filepath = folder_path / filename
 
             if file_filter == 'study':
                 ext = filepath.suffix.lower()
@@ -954,7 +1004,7 @@ class CanvasManager:
                             download_interrupted = False
                             
                             try:
-                                async with aiofiles.open(part_path, 'wb') as f:
+                                async with aiofiles.open(make_long_path(part_path), 'wb') as f:
                                     total_bytes = 0
                                     while True:
                                         # Instant cancel check INSIDE the chunk loop
@@ -976,8 +1026,8 @@ class CanvasManager:
                                 download_interrupted = True
                                 # Clean up .part file on write error
                                 try:
-                                    if part_path.exists():
-                                        part_path.unlink()
+                                    if Path(make_long_path(part_path)).exists():
+                                        Path(make_long_path(part_path)).unlink()
                                 except OSError:
                                     pass
                                 raise write_err
@@ -985,8 +1035,8 @@ class CanvasManager:
                             # Handle interrupted download: delete partial .part file
                             if download_interrupted:
                                 try:
-                                    if part_path.exists():
-                                        part_path.unlink()
+                                    if Path(make_long_path(part_path)).exists():
+                                        Path(make_long_path(part_path)).unlink()
                                         log_debug(f"Cancelled: deleted partial {part_path.name}", debug_file)
                                 except OSError:
                                     pass
@@ -1002,18 +1052,18 @@ class CanvasManager:
                                 else:
                                     # Incomplete download — delete .part and raise
                                     try:
-                                        if part_path.exists():
-                                            part_path.unlink()
+                                        if Path(make_long_path(part_path)).exists():
+                                            Path(make_long_path(part_path)).unlink()
                                     except OSError:
                                         pass
                                     raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
                             
                             # 100% success: atomic rename .part → final path
                             try:
-                                part_path.rename(filepath)
+                                os.rename(make_long_path(part_path), make_long_path(filepath))
                             except OSError:
                                 import shutil as _shutil
-                                _shutil.move(str(part_path), str(filepath))
+                                _shutil.move(make_long_path(part_path), make_long_path(filepath))
                             
                             log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
                             
@@ -1093,7 +1143,7 @@ class CanvasManager:
         try:
             body_content = page_obj.body if hasattr(page_obj, 'body') else ''
             content = f"<html><head><title>{safe_title}</title></head><body><h1>{safe_title}</h1>{body_content}</body></html>"
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
                 f.write(content)
             # Sync Run #0: Record page file to DB using deterministic canvas_item_id
             if sync_manager and course_base_path and canvas_item_id:
@@ -1144,7 +1194,7 @@ class CanvasManager:
         log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
 
         try:
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
                 f.write(content)
             # Sync Run #0: Record link/URL file to DB using deterministic canvas_item_id
             if sync_manager and course_base_path and canvas_item_id:

@@ -1,7 +1,18 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **V3.0 Architecture Audit Fixes Implementation** (2026-03-10):
+    - [x] **"Modules Mode" Data Loss Fix**: Eradicated the global `downloaded_file_ids` tracker that incorrectly forced the system to skip files present in multiple modules.
+    - [x] **Path Conflict Data Loss Fix**: Replaced aggressive `seen_target_paths` skipping with a robust synchronous renaming mechanism `(1)`, `(2)` to safely queue identical filenames crashing into the same directory without `[WinError 32]` or data loss.
+    - [x] **Global Timeout Starvation Fix**: Scaled up massive payload resilience by trading the rigid 5-minute `total=300` aiohttp ceiling for an infinitely patient `sock_read=60` data-stream timeout. 
+    - [x] **Semaphore Rate-Limit Freezing Fix**: Extracted the `asyncio.sleep(wait)` exponential backoff execution outside the HTTP concurrency lock (`async with sem:`), guaranteeing parallel file downloads can eagerly continue while a single rate-limited thread peacefully waits out its 429 penalty.
+    - [x] **SQLite Parallelism Contention Fix**: Stabilized `sync_manager.py` by natively wrapping `sqlite3.connect(timeout=30.0)` around atomic DB writes, explicitly defending against concurrent file-write avalanches locking the DB.
 - [x] **V1.0 Master Audit Report** (2026-03-10): Conducted a 360-degree codebase audit assessing architecture, state management, and edge cases. Generated a comprehensive Release Readiness report and Actionable Roadmap.
+- [x] **V1.0 Audit Fixes Implementation** (2026-03-10):
+    - [x] **Token Encryption**: Eradicated plaintext Canvas API token storage in `canvas_downloader_settings.json`. Integrated the `keyring` library to securely store and retrieve tokens using the OS-native credential vault.
+    - [x] **DB Corruption Rescue**: Fortified `sync_manager.py`'s SQLite initialization. Added a `PRAGMA quick_check` and a `sqlite3.DatabaseError` rescue block that automatically renames corrupted `.canvas_sync.db` files and spins up a fresh database, preventing the Sync tab from permanently bricking.
+    - [x] **In-App Error Viewer**: Eliminated the UX dead-end of requiring users to hunt down `download_errors.txt` in the OS file explorer. Added a `st.dialog` viewer directly accessible via a new button on both the Download and Sync completion/cancellation screens.
+    - [x] **Settings Write Validation**: Replaced silent `pass` blocks with explicit `st.error()` toasts when `canvas_downloader_settings.json` fails to save (e.g., due to file permissions), preventing sudden token amnesia.
 - [x] **English-Only Architecture Transition** (2026-03-10): Successfully eradicated the `translations.py` system, removed `get_text()`/`pluralize()` dependencies, and purged the language selector UI to simplify the codebase.
 - [x] **3-Tier Batch Sync Configuration UX** (2026-03-10):
     - [x] **Button-Tab UI Switchboard**: Replaced the legacy checkbox override with a 3-mode (Mode 0: Default, Mode 1: Global Override, Mode 2: Per-Course) layout using `st.columns` and `primary`/`secondary` button states.
@@ -128,6 +139,9 @@
 - Post-processing pipeline now has complete observability via dual logging to `debug_log.txt` and `download_errors.txt`.
 
 ## Pending Tasks
+- [ ] Refactor `sync_ui.py` to break up the monolith into logical sub-modules (e.g. `dialogs.py`, `ui_render_helpers.py`).
+- [ ] Centralize injected custom CSS into an `assets/theme.css` file for long-term maintainability.
+- [ ] Add a mechanism to export a Saved Group's `sync_contract` JSON to a shareable file.
 - [ ] Manual end-to-end testing with live multisession Canvas instances.
 - [ ] Package updated version with PyInstaller.
 - [x] Documentation updates and user walkthrough finalization.

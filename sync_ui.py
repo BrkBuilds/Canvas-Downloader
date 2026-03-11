@@ -43,6 +43,7 @@ from ui_helpers import (
     short_path,
     robust_filename_normalize,
     parse_cbs_metadata,
+    make_long_path,
 )
 
 logger = logging.getLogger(__name__)
@@ -3876,13 +3877,16 @@ def _show_analysis_review():
 
     # Nothing to sync
     if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
-        if total_uptodate:
-            st.info(f"All selected folders are up to date! ({total_uptodate} files already downloaded)")
-        st.success('Nothing to sync - all files are up to date!')
-        if st.button('Go to front page', type="primary"):
-            _cleanup_sync_state()
-            st.rerun()
-        st.stop()
+        # Advance to the completion screen (step 4) with zero-file success state
+        st.session_state['synced_count'] = 0
+        st.session_state['synced_bytes'] = 0
+        st.session_state['sync_errors'] = []
+        st.session_state['synced_details'] = {}
+        st.session_state['retry_selections'] = []
+        st.session_state['up_to_date_file_count'] = total_uptodate
+        st.session_state['download_status'] = 'sync_complete'
+        st.session_state['step'] = 4
+        st.rerun()
 
 
     # Feature 1: Advanced filtering & Global Selection
@@ -5282,7 +5286,7 @@ def _run_sync():
 
     async def download_sync_files_batch():
         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-        timeout = aiohttp.ClientTimeout(total=300)
+        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
@@ -5387,7 +5391,7 @@ def _run_sync():
                             error_list.append(f"File removed from Canvas before download: {sync_info.canvas_filename}")
 
                 local_path = sync_mgr.local_path
-                local_path.mkdir(parents=True, exist_ok=True)
+                Path(make_long_path(local_path)).mkdir(parents=True, exist_ok=True)
 
                 for file in all_files:
                     if st.session_state.get('sync_cancel_requested', False):
@@ -5432,7 +5436,7 @@ def _run_sync():
                             if str(calc_dir) != '.':
                                 target_dir = local_path / calc_dir
                                 
-                        target_dir.mkdir(parents=True, exist_ok=True)
+                        Path(make_long_path(target_dir)).mkdir(parents=True, exist_ok=True)
                         
                         filepath = target_dir / filename
 
@@ -5447,17 +5451,17 @@ def _run_sync():
 
                         if getattr(file, 'id', 0) < 0:
                             # It's a synthetic shortcut. Recreate it directly
-                            filepath.parent.mkdir(parents=True, exist_ok=True)
+                            Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
                             
                             is_url_ext = filepath.name.lower().endswith('.url')
                             is_html_ext = filepath.name.lower().endswith('.html')
                             
                             if is_url_ext:
                                 shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
-                                filepath.write_text(shortcut_content, encoding='utf-8')
+                                Path(make_long_path(filepath)).write_text(shortcut_content, encoding='utf-8')
                             elif is_html_ext:
                                 html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
-                                filepath.write_text(html_content, encoding='utf-8')
+                                Path(make_long_path(filepath)).write_text(html_content, encoding='utf-8')
                             
                             if is_url_ext or is_html_ext:
                                 rel_path = filepath.relative_to(local_path)
@@ -5481,16 +5485,18 @@ def _run_sync():
                             pass  # Keep original URL as fallback
 
                         if download_url:
-                            async with sem:
-                                # --- Retry constants (mirrors canvas_logic.py) ---
-                                SYNC_MAX_RETRIES = 5
-                                SYNC_RETRY_DELAY = 2  # Base delay in seconds
+                            # --- Retry constants (mirrors canvas_logic.py) ---
+                            SYNC_MAX_RETRIES = 5
+                            SYNC_RETRY_DELAY = 2  # Base delay in seconds
+                            
+                            for attempt in range(SYNC_MAX_RETRIES):
+                                if st.session_state.get('sync_cancel_requested', False):
+                                    break
                                 
-                                for attempt in range(SYNC_MAX_RETRIES):
-                                    if st.session_state.get('sync_cancel_requested', False):
-                                        break
-                                    
-                                    try:
+                                should_sleep_duration = 0
+                                
+                                try:
+                                    async with sem:
                                         async with session.get(download_url) as response:
                                             if response.status == 200:
                                                 # --- Atomic .part Pattern ---
@@ -5500,7 +5506,7 @@ def _run_sync():
                                                 
                                                 try:
                                                     try:
-                                                        async with aiofiles.open(part_path, 'wb') as f:
+                                                        async with aiofiles.open(make_long_path(part_path), 'wb') as f:
                                                             while True:
                                                                 # Instant cancel check INSIDE the chunk loop
                                                                 if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
@@ -5543,11 +5549,11 @@ def _run_sync():
                                                     
                                                     # 100% success: atomic rename .part → final path
                                                     try:
-                                                        part_path.rename(filepath)
+                                                        os.rename(make_long_path(part_path), make_long_path(filepath))
                                                     except OSError:
                                                         # Fallback: If rename fails (cross-device), use replace
                                                         import shutil
-                                                        shutil.move(str(part_path), str(filepath))
+                                                        shutil.move(make_long_path(part_path), make_long_path(filepath))
                                                     atomic_rename_done = True
                                                     
                                                     # Only commit to DB AFTER file is physically complete on disk
@@ -5565,8 +5571,8 @@ def _run_sync():
                                                     # Catches: write errors, network drops, disk-full, any exception
                                                     if not atomic_rename_done:
                                                         try:
-                                                            if part_path.exists():
-                                                                part_path.unlink()
+                                                            if Path(make_long_path(part_path)).exists():
+                                                                Path(make_long_path(part_path)).unlink()
                                                         except OSError:
                                                             pass
                                                 
@@ -5574,20 +5580,16 @@ def _run_sync():
                                             
                                             elif response.status == 429:
                                                 # Rate limited — respect Retry-After header
-                                                wait = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
-                                                terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Rate limited: </span> {display_file_name} <span style='color:#666'>(retry in {wait}s)</span>")
+                                                should_sleep_duration = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
+                                                terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Rate limited: </span> {display_file_name} <span style='color:#666'>(retry in {should_sleep_duration}s)</span>")
                                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                                                await asyncio.sleep(wait)
-                                                continue  # Retry
                                             
                                             elif 500 <= response.status < 600:
                                                 # Server error — retry with exponential backoff
-                                                wait = SYNC_RETRY_DELAY * (2 ** attempt)
+                                                should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 if attempt < SYNC_MAX_RETRIES - 1:
                                                     terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Server error ({response.status}): </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                                                    await asyncio.sleep(wait)
-                                                    continue  # Retry
                                                 else:
                                                     # Max retries exhausted for 5xx
                                                     failed_files_for_pair.append(file)
@@ -5603,19 +5605,24 @@ def _run_sync():
                                                 terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
                                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 break  # Don't retry client errors
-                                    
-                                    except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
-                                        # Network error — retry with backoff
-                                        if attempt < SYNC_MAX_RETRIES - 1:
-                                            wait = SYNC_RETRY_DELAY * (2 ** attempt)
-                                            terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Network error: </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
-                                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
-                                            await asyncio.sleep(wait)
-                                        else:
-                                            failed_files_for_pair.append(file)
-                                            error_list.append(f"Error syncing {display_file_name}: Network error: {net_err}")
-                                            terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
-                                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                
+                                except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
+                                    # Network error — retry with backoff
+                                    if attempt < SYNC_MAX_RETRIES - 1:
+                                        should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
+                                        terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Network error: </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                    else:
+                                        failed_files_for_pair.append(file)
+                                        error_list.append(f"Error syncing {display_file_name}: Network error: {net_err}")
+                                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
+                                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                        break
+                                        
+                                # WE ARE NOW OUTSIDE THE SEMAPHORE LOCK
+                                if should_sleep_duration > 0:
+                                    await asyncio.sleep(should_sleep_duration)
+                                    continue # Retry
                         else:
                             # Check for LTI/Media streams
                             ext_lower = filepath.suffix.lower()
@@ -5676,7 +5683,7 @@ def _run_sync():
                 if updates or deletions:
                     log_file_path = local_path / "☁️ Canvas Updates & Deletions.txt"
                     try:
-                        with open(log_file_path, "a", encoding="utf-8") as lf:
+                        with open(make_long_path(log_file_path), "a", encoding="utf-8") as lf:
                             lf.write(f"\n--- Sync on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                             if updates:
                                 lf.write("UPDATED FILES (New versions downloaded, check local folder for numbered copies):\n")
@@ -5735,17 +5742,20 @@ def _run_sync():
         st.rerun()
 
     # ==========================================
-    # POST-PROCESSING UI SETUP
+    # POST-PROCESSING PIPELINE (Shared Module)
     # ==========================================
     import time as _time
+    from post_processing import (
+        UIBridge, run_archive_extraction, run_pptx_conversion,
+        run_html_conversion, run_code_conversion, run_url_compilation,
+        run_word_conversion, run_excel_conversion, run_video_conversion,
+    )
 
-    # 1. Clear the Phase 2 download UI to prevent stacking
+    # 1. Clear Phase 2 download UI to prevent stacking
     cancel_placeholder.empty()
     active_file_placeholder.empty()
 
-    # 2. The cancel button will be rendered further down to prevent being overwritten
-
-    # 3. Inject red hover CSS for cancel buttons (scoped)
+    # 2. Inject cancel button hover CSS
     st.markdown("""
     <style>
     .st-key-cancel_download_btn button:hover,
@@ -5761,469 +5771,85 @@ def _run_sync():
     </style>
     """, unsafe_allow_html=True)
 
-    # 4. Inherit the terminal log history from the download phase (seamless continuity)
-    pp_log = _download_log_history
-
-    def pp_terminal(msg=None):
-        """Append msg (if given) to the post-processing terminal, then render into the EXISTING log_container."""
-        try:
-            if st.session_state.get('sync_cancel_requested') or st.session_state.get('sync_cancelled'):
-                return
-            if msg:
-                pp_log.append(msg)
-            log_container.markdown(render_terminal_html(pp_log), unsafe_allow_html=True)
-            _time.sleep(0.05)
-        except BaseException:
-            pass
-
-    # 3. Rich conversion dashboard — renders into the EXISTING Phase 2 containers
-    #    Color map per conversion type for visual distinction
-    _COLOR_MAP = {
-        'Archives':           '#a78bfa',  # violet
-        'PowerPoint files':   '#f97316',  # orange
-        'HTML files':         '#34D399',  # emerald
-        'Code files':         '#FBBF24',  # amber
-        'Legacy Word files':  '#3b82f6',  # blue
-        'Excel files':        '#22c55e',  # green
-        'Video files':        '#f59e0b',  # amber-orange
-    }
-
-    def render_conversion_dashboard(current, total, task_name):
-        """Overwrite the Phase 2 progress bar and metrics dashboard with conversion-specific UI."""
-        try:
-            if st.session_state.get('sync_cancel_requested') or st.session_state.get('sync_cancelled'):
-                return
-            accent = _COLOR_MAP.get(task_name, '#4ade80')
-            pct = int((current / total) * 100) if total > 0 else 0
-            pct = min(100, pct)
-
-            # Overwrite the Phase 1 status header
-            status_text.markdown(f"""
-            <div style="margin-bottom: 0.5rem;">
-                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting {task_name}</h3>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Overwrite the progress bar
-            progress_container.markdown(f"""
-            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                    {pct}%
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Overwrite the metrics dashboard
-            metrics_dashboard.markdown(f"""
-            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                    <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{task_name}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            _time.sleep(0.05)
-        except BaseException:
-            pass
-    # ==========================================
-    
     st.session_state['is_post_processing'] = True
 
-    # 1. Reuse the immune cancel_placeholder from Phase 2 (it sits above the CSS marker in the DOM)
+    # 3. Render cancel button
     cancel_placeholder.button(
         "Cancel Post-Processing",
-        key="cancel_pp_btn_sync_phase3",  # Unique key to avoid conflicts with Phase 2
+        key="cancel_pp_btn_sync_phase3",
         type="secondary",
         on_click=cancel_process_callback
     )
-        
-    # 2. FORCE RENDER FLUSH before heavy COM operations
-    import time
-    time.sleep(0.3)  # Increased sleep to guarantee rendering before COM locks the thread
 
-    # --- Post-Sync: Archive Extraction (Zip/Tar) ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from archive_extractor import extract_and_stub
-        import sqlite3
-        import os
-        
-        archive_files_to_convert = get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'}, 'persistent_convert_zip')
-        extra_targz = []
-        for sel in sync_selections:
-            contract = sel.get('res_data', {}).get('contract', {})
-            if not contract.get('convert_zip', st.session_state.get('persistent_convert_zip', False)):
-                continue
-            pair_idx = sel['pair_idx']
-            sm = sel['res_data']['sync_manager']
-            for fname in synced_details.get(pair_idx, []):
-                if fname.lower().endswith('.tar.gz'):
-                    matches = list(sm.local_path.rglob(fname))
-                    for m in matches:
-                        if m.is_file() and (m, sm, pair_idx) not in archive_files_to_convert:
-                            extra_targz.append((m, sm, pair_idx))
-        archive_files_to_convert.extend(extra_targz)
-        
-        if archive_files_to_convert:
-            total_archives = len(archive_files_to_convert)
-            print(f"[Post-Sync] Archive Extraction toggle is ON. Found {total_archives} Archive files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_archives} Archive files for extraction...</span>")
-            render_conversion_dashboard(0, total_archives, "Archives")
-            _time.sleep(0.2)
-            
-            for i, (archive_file, sm, pair_idx) in enumerate(archive_files_to_convert, 1):
-                if st.session_state.get('sync_cancelled', False):
-                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                    break
-                old_name = archive_file.name
-                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                render_conversion_dashboard(i, total_archives, "Archives")
-                new_stub_path_str = extract_and_stub(archive_file)
-                
-                if new_stub_path_str:
-                    new_stub_path = Path(new_stub_path_str)
-                    manifest = sm.load_manifest()
-                    for file_id, info in manifest.get('files', {}).items():
-                        local_p = info.get('local_path', '')
-                        try:
-                            original_rel = archive_file.relative_to(sm.local_path)
-                            if str(original_rel).replace('\\', '/') == local_p:
-                                new_rel = new_stub_path.relative_to(sm.local_path)
-                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                break
-                        except (ValueError, KeyError):
-                            pass
-                    
-                    update_synced_detail(pair_idx, old_name, new_stub_path.name)
-                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {old_name}</span>")
-                else:
-                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Extraction failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>")
-    # --- End Post-Sync Conversion (Archive) ---
+    # 4. Force render flush before heavy COM operations
+    _time.sleep(0.3)
 
-    # --- Post-Download: PPTX → PDF Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from pdf_converter import PowerPointToPDF
-        
-        all_pptx_files = get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx')
-        
-        if all_pptx_files:
-            total_pptx = len(all_pptx_files)
-            print(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files in Sync mode.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Converting {total_pptx} PowerPoint files to PDF...</span>")
-            render_conversion_dashboard(0, total_pptx, "PowerPoint files")
-            _time.sleep(0.2)
-            
-            with PowerPointToPDF(error_log_path=all_pptx_files[0][1].local_path) as converter:
-                for i, (pptx_file, sync_mgr, pair_idx) in enumerate(all_pptx_files, 1):
-                    if st.session_state.get('sync_cancelled', False):
-                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                        break
-                    old_name = pptx_file.name
-                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                    render_conversion_dashboard(i, total_pptx, "PowerPoint files")
-                    pdf_path_str = converter.convert(pptx_file)
-                    
-                    if pdf_path_str:
-                        pdf_path = Path(pdf_path_str)
-                        manifest = sync_mgr.load_manifest()
-                        for file_id, info in manifest.get('files', {}).items():
-                            local_p = info.get('local_path', '')
-                            try:
-                                original_rel = pptx_file.relative_to(sync_mgr.local_path)
-                                if str(original_rel).replace('\\', '/') == local_p:
-                                    new_rel = pdf_path.relative_to(sync_mgr.local_path)
-                                    sync_mgr.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                    break
-                            except (ValueError, KeyError):
-                                pass
-                        
-                        update_synced_detail(pair_idx, old_name, pdf_path.name)
-                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
-                    else:
-                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
-        
-    # --- Post-Sync: HTML → MD Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from md_converter import convert_html_to_md
-        
-        html_files_to_convert = get_synced_file_paths({'.html'}, 'persistent_convert_html')
-        
-        if html_files_to_convert:
-            total_html = len(html_files_to_convert)
-            print(f"[Post-Sync] HTML Conversion toggle is ON. Found {total_html} HTML files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_html} HTML files for Markdown conversion...</span>")
-            render_conversion_dashboard(0, total_html, "HTML files")
-            _time.sleep(0.2)
-            
-            for i, (html_file, sm, pair_idx) in enumerate(html_files_to_convert, 1):
-                if st.session_state.get('sync_cancelled', False):
-                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                    break
-                old_name = html_file.name
-                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                render_conversion_dashboard(i, total_html, "HTML files")
-                md_path = convert_html_to_md(html_file)
-                
-                if md_path:
-                    manifest = sm.load_manifest()
-                    for file_id, info in manifest.get('files', {}).items():
-                        local_p = info.get('local_path', '')
-                        try:
-                            original_rel = html_file.relative_to(sm.local_path)
-                            if str(original_rel).replace('\\', '/') == local_p:
-                                new_rel = md_path.relative_to(sm.local_path)
-                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                break
-                        except (ValueError, KeyError):
-                            pass
-                    
-                    update_synced_detail(pair_idx, old_name, md_path.name)
-                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>")
-                else:
-                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>")
-    # --- End Post-Sync Conversion ---
-    
-    # --- Post-Sync: Code → TXT Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from code_converter import convert_code_to_txt, CODE_EXTENSIONS
-        
-        code_files_to_convert = get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code')
-        
-        if code_files_to_convert:
-            total_code = len(code_files_to_convert)
-            print(f"[Post-Sync] Code Conversion toggle is ON. Found {total_code} Code files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_code} Code & Data files for TXT conversion...</span>")
-            render_conversion_dashboard(0, total_code, "Code files")
-            _time.sleep(0.2)
-            
-            for i, (code_file, sm, pair_idx) in enumerate(code_files_to_convert, 1):
-                if st.session_state.get('sync_cancelled', False):
-                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                    break
-                old_name = code_file.name
-                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                render_conversion_dashboard(i, total_code, "Code files")
-                txt_path_str = convert_code_to_txt(code_file)
-                
-                if txt_path_str:
-                    txt_path = Path(txt_path_str)
-                    manifest = sm.load_manifest()
-                    for file_id, info in manifest.get('files', {}).items():
-                        local_p = info.get('local_path', '')
-                        try:
-                            original_rel = code_file.relative_to(sm.local_path)
-                            if str(original_rel).replace('\\', '/') == local_p:
-                                new_rel = txt_path.relative_to(sm.local_path)
-                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                break
-                        except (ValueError, KeyError):
-                            pass
-                    
-                    update_synced_detail(pair_idx, old_name, txt_path.name)
-                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> TXT</span>")
-                else:
-                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>")
-    # --- End Post-Sync Conversion (Code) ---
-    
-    # --- Post-Sync: NotebookLM Link Compiler ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from url_compiler import compile_urls_to_txt
-        
-        # Determine if any course needs URLs compiled before showing the terminal message
-        urls_needed = False
-        for sel in st.session_state.get('sync_selections', []):
-            contract = sel.get('res_data', {}).get('contract', {})
-            if contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False)):
-                urls_needed = True
-                break
-                
-        if urls_needed:
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
-            
-            processed_roots = set()
-            
-            for sel in st.session_state.get('sync_selections', []):
-                contract = sel.get('res_data', {}).get('contract', {})
-                if not contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False)):
-                    continue
-                    
-                if st.session_state.get('sync_cancelled', False):
-                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                    break
-                sm = sel.get('res_data', {}).get('sync_manager')
-                if sm and sm.local_path.exists():
-                    course_root = sm.local_path
-                    if course_root not in processed_roots:
-                        processed_roots.add(course_root)
-                        
-                        compiled_path = compile_urls_to_txt(course_root, sm.course_name)
-                        if compiled_path:
-                            pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Compiled links for '{sm.course_name}' into: NotebookLM_External_Links.txt</span>")
-                            
-    # --- End Post-Sync Link Compiler ---
-    
-    # --- Post-Sync: Legacy Word → PDF Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from word_converter import WordToPDF
-        
-        word_files_to_convert = get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word')
-        
-        if word_files_to_convert:
-            total_word = len(word_files_to_convert)
-            print(f"[Post-Sync] Word Conversion toggle is ON. Found {total_word} Legacy Word files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_word} Legacy Word files for PDF conversion...</span>")
-            render_conversion_dashboard(0, total_word, "Legacy Word files")
-            _time.sleep(0.2)
-            
-            with WordToPDF() as converter:
-                for i, (word_file, sm, pair_idx) in enumerate(word_files_to_convert, 1):
-                    if st.session_state.get('sync_cancelled', False):
-                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                        break
-                    old_name = word_file.name
-                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                    render_conversion_dashboard(i, total_word, "Legacy Word files")
-                    pdf_path_str = converter.convert(word_file)
-                    
-                    if pdf_path_str:
-                        pdf_path = Path(pdf_path_str)
-                        manifest = sm.load_manifest()
-                        for file_id, info in manifest.get('files', {}).items():
-                            local_p = info.get('local_path', '')
-                            try:
-                                original_rel = word_file.relative_to(sm.local_path)
-                                if str(original_rel).replace('\\', '/') == local_p:
-                                    new_rel = pdf_path.relative_to(sm.local_path)
-                                    sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                    break
-                            except (ValueError, KeyError):
-                                pass
-                        
-                        update_synced_detail(pair_idx, old_name, pdf_path.name)
-                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
-                    else:
-                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Legacy Word to PDF conversion complete!</span>")
-    # --- End Post-Sync Conversion (Word) ---
-    
-    # --- Post-Sync: Excel to PDF Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from excel_converter import ExcelToPDF
-        import sqlite3
-        import os
-        
-        excel_files_to_convert = get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel')
-        
-        if excel_files_to_convert:
-            total_excel = len(excel_files_to_convert)
-            print(f"[Post-Sync] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>")
-            render_conversion_dashboard(0, total_excel, "Excel files")
-            _time.sleep(0.2)
-            
-            with ExcelToPDF() as converter:
-                for i, (excel_file, sm, pair_idx) in enumerate(excel_files_to_convert, 1):
-                    if st.session_state.get('sync_cancelled', False):
-                        pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                        break
-                    old_name = excel_file.name
-                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                    render_conversion_dashboard(i, total_excel, "Excel files")
-                    abs_path = str(excel_file.absolute())
-                    new_pdf_path, excel_error_msg = converter.convert(abs_path)
-                    
-                    if new_pdf_path:
-                        old_rel_path = os.path.relpath(abs_path, sm.local_path)
-                        new_rel_path = os.path.relpath(new_pdf_path, sm.local_path)
-                        
-                        db_path = sm.db_path
-                        if db_path.exists():
-                            conn = sqlite3.connect(db_path)
-                            c = conn.cursor()
-                            c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (old_rel_path,))
-                            row = c.fetchone()
-                            if row:
-                                sm.update_converted_file(row[0], new_rel_path)
-                            conn.close()
-                        
-                        update_synced_detail(pair_idx, old_name, Path(new_pdf_path).name)
-                        pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
-                    else:
-                        pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} ({excel_error_msg})</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>")
-    # --- End Post-Sync Conversion (Excel) ---
-    
-    # --- Post-Sync: Video to MP3 Conversion ---
-    if True: # Global gate removed, relying on per-course evaluation
-        from video_converter import convert_video_to_mp3
-        
-        video_files_to_convert = get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video')
-        
-        if video_files_to_convert:
-            total_video = len(video_files_to_convert)
-            print(f"[Post-Sync] Video Conversion toggle is ON. Found {total_video} Video files.")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_video} Video files for audio extraction...</span>")
-            render_conversion_dashboard(0, total_video, "Video files")
-            _time.sleep(0.2)
-            
-            for i, (video_file, sm, pair_idx) in enumerate(video_files_to_convert, 1):
-                if st.session_state.get('sync_cancelled', False):
-                    pp_terminal("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                    break
-                old_name = video_file.name
-                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {old_name}</div>", unsafe_allow_html=True)
-                render_conversion_dashboard(i, total_video, "Video files")
-                mp3_path_str = convert_video_to_mp3(video_file)
-                
-                if mp3_path_str:
-                    mp3_path = Path(mp3_path_str)
-                    manifest = sm.load_manifest()
-                    for file_id, info in manifest.get('files', {}).items():
-                        local_p = info.get('local_path', '')
-                        try:
-                            original_rel = video_file.relative_to(sm.local_path)
-                            if str(original_rel).replace('\\', '/') == local_p:
-                                new_rel = mp3_path.relative_to(sm.local_path)
-                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                break
-                        except (ValueError, KeyError):
-                            pass
-                    
-                    update_synced_detail(pair_idx, old_name, mp3_path.name)
-                    pp_terminal(f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {old_name} -> MP3</span>")
-                else:
-                    pp_terminal(f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Audio extraction failed)</span>")
-            
-            pp_terminal(f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>")
-    # --- End Post-Sync Conversion (Video) ---
-    # --- End Post-Download Conversion ---
+    # 5. Build UIBridge for shared module
+    def _on_detail_update(ctx, old_name, new_name):
+        update_synced_detail(ctx, old_name, new_name)
 
+    pp_ui = UIBridge(
+        header_placeholder=status_text,
+        progress_placeholder=progress_container,
+        metrics_placeholder=metrics_dashboard,
+        log_placeholder=log_container,
+        active_file_placeholder=active_file_placeholder,
+        log_lines=_download_log_history,
+        is_cancelled=lambda: st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False),
+        on_detail_update=_on_detail_update,
+    )
 
+    # 6. Run each converter with per-course contract evaluation via get_synced_file_paths
 
+    # Archive Extraction
+    run_archive_extraction(
+        get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'}, 'persistent_convert_zip'), pp_ui
+    )
 
-    # --- Organize files into module folders (if requested) ---
+    # PPTX -> PDF
+    run_pptx_conversion(
+        get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx'), pp_ui
+    )
+
+    # HTML -> Markdown
+    run_html_conversion(
+        get_synced_file_paths({'.html'}, 'persistent_convert_html'), pp_ui
+    )
+
+    # Code -> TXT
+    from code_converter import CODE_EXTENSIONS
+    run_code_conversion(
+        get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code'), pp_ui
+    )
+
+    # URL Compilation (requires folder-level iteration, not file-level)
+    _url_folders = []
+    _processed_roots = set()
+    for sel in sync_selections:
+        _contract = sel.get('res_data', {}).get('contract', {})
+        _should_compile = _contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False))
+        if _should_compile:
+            _sm = sel.get('res_data', {}).get('sync_manager')
+            if _sm and _sm.local_path.exists() and _sm.local_path not in _processed_roots:
+                _processed_roots.add(_sm.local_path)
+                _url_folders.append((_sm.local_path, _sm.course_name))
+    run_url_compilation(_url_folders, pp_ui)
+
+    # Legacy Word -> PDF
+    run_word_conversion(
+        get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word'), pp_ui
+    )
+
+    # Excel -> PDF
+    run_excel_conversion(
+        get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel'), pp_ui
+    )
+
+    # Video -> MP3
+    run_video_conversion(
+        get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video'), pp_ui
+    )
+
 
     # Clear the blue status text so it doesn't linger on completion
     active_file_placeholder.empty()
@@ -6425,8 +6051,12 @@ def _show_sync_complete():
 
     
     else:
-        # synced_count == 0 and no errors? (Nothing to sync?)
-        st.info("Nothing was synced.")
+        # synced_count == 0 and no errors — all files are already up to date
+        up_to_date_count = st.session_state.get('up_to_date_file_count', 0)
+        if up_to_date_count:
+            st.success(f"All selected folders are up to date! ({up_to_date_count} files already downloaded)")
+        else:
+            st.success("Nothing to sync — all files are up to date!")
 
     # UN-TRAPPED QUICK SYNC WARNING:
     skipped_data = st.session_state.get('qs_skipped', {})
@@ -6578,6 +6208,39 @@ def _show_sync_complete():
 
 # ---- Shared helpers ----
 
+@st.dialog("📄 Error Log", width="large")
+def _view_error_log_dialog(log_paths):
+    """Display the contents of download_errors.txt files in a modal dialog."""
+    st.markdown("""
+        <style>
+            div.st-key-error_log_scroll {
+                height: 55vh !important;
+                min-height: 55vh !important;
+                max-height: 55vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    with st.container(border=False, key="error_log_scroll"):
+        found_any = False
+        for log_path in log_paths:
+            if log_path.exists():
+                try:
+                    content = log_path.read_text(encoding='utf-8').strip()
+                    if content:
+                        found_any = True
+                        st.markdown(f"**📁 {log_path.parent.name}**")
+                        st.code(content, language="text")
+                except Exception as e:
+                    st.warning(f"Could not read {log_path}: {e}")
+        
+        if not found_any:
+            st.info("No error log files found on disk.")
+    
+    if st.button("Close", type="primary", use_container_width=True):
+        st.rerun()
 def _show_sync_errors():
     sync_errors = st.session_state.get('sync_errors', [])
     if sync_errors:
@@ -6589,6 +6252,27 @@ def _show_sync_errors():
                 st.markdown(f"❌ {err}")
             if len(sync_errors) > 20:
                 st.caption(f"  ... and {len(sync_errors) - 20} more")
+            
+            st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
+        
+        # In-App Error Log Viewer button
+        sync_selections = st.session_state.get('sync_selections', [])
+        error_log_paths = []
+        for sel in sync_selections:
+            try:
+                sm = sel.get('res_data', {}).get('sync_manager')
+                if sm and sm.local_path.exists():
+                    log_file = sm.local_path / 'download_errors.txt'
+                    if log_file.exists():
+                        error_log_paths.append(log_file)
+            except Exception:
+                pass
+        
+        if error_log_paths:
+            col_log, _ = st.columns([0.3, 0.7])
+            with col_log:
+                if st.button("📄 View Full Error Log", key="sync_view_error_log", use_container_width=True):
+                    _view_error_log_dialog(error_log_paths)
 
 
 def _cleanup_sync_state():

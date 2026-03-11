@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 
 try:
@@ -7,6 +8,8 @@ try:
 except ImportError:
     # Fallback for MoviePy v1.x (just in case)
     from moviepy.editor import VideoFileClip
+
+logger = logging.getLogger(__name__)
 
 def convert_video_to_mp3(video_path: str | Path) -> str | None:
     abs_video = str(Path(video_path).resolve().absolute())
@@ -35,7 +38,7 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
         return abs_mp3
         
     except Exception as e:
-        print(f"Failed to convert video {abs_video}: {e}")
+        logger.error(f"Failed to convert video {abs_video}: {e}")
         if video_clip is not None:
             try:
                 video_clip.close()

@@ -1,5 +1,9 @@
 import os
+import shutil
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Top 50 code/data extensions for students (EXCLUDING .html, which is handled by the MD converter)
 CODE_EXTENSIONS = {
@@ -48,5 +52,5 @@ def convert_code_to_txt(file_path: str | Path) -> str | None:
         
         return str(txt_path)
     except Exception as e:
-        print(f"Failed to convert code file {original_path.name}: {e}")
+        logger.error(f"Failed to convert code file {original_path.name}: {e}")
         return None

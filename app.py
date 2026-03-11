@@ -5,6 +5,7 @@ from canvas_logic import CanvasManager, DownloadError
 import os
 import logging
 import re
+import keyring
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -139,6 +140,40 @@ def cancel_download_callback():
     st.session_state['download_cancelled'] = True
     st.session_state['cancel_requested'] = True
 
+@st.dialog("📄 Error Log", width="large")
+def _download_error_log_dialog(log_paths):
+    """Display the contents of download_errors.txt files in a modal dialog."""
+    st.markdown("""
+        <style>
+            div.st-key-error_log_scroll_dl {
+                height: 55vh !important;
+                min-height: 55vh !important;
+                max-height: 55vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    with st.container(border=False, key="error_log_scroll_dl"):
+        found_any = False
+        for log_path in log_paths:
+            if log_path.exists():
+                try:
+                    content = log_path.read_text(encoding='utf-8').strip()
+                    if content:
+                        found_any = True
+                        st.markdown(f"**📁 {log_path.parent.name}**")
+                        st.code(content, language="text")
+                except Exception as e:
+                    st.warning(f"Could not read {log_path}: {e}")
+        
+        if not found_any:
+            st.info("No error log files found on disk.")
+    
+    if st.button("Close", type="primary", use_container_width=True):
+        st.rerun()
+
 @st.cache_data
 def fetch_courses(token, url, fav_only):
     mgr = CanvasManager(token, url)
@@ -174,6 +209,7 @@ with st.sidebar:
         return os.path.join(application_path, 'canvas_downloader_settings.json')
 
     CONFIG_FILE = get_config_path()
+    KEYRING_SERVICE = "CanvasDownloader"
     
     # Auto-load token (only once)
     if 'token_loaded' not in st.session_state:
@@ -183,13 +219,35 @@ with st.sidebar:
                 with open(CONFIG_FILE, "r", encoding='utf-8') as f:
                     config = json.load(f)
                     st.session_state['api_url'] = config.get('api_url', '')
-                    st.session_state['api_token'] = config.get('api_token', '')
                     
                     if 'concurrent_downloads' in config:
                         st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
                         
                     if 'debug_mode' in config:
                         st.session_state['debug_mode'] = config.get('debug_mode', False)
+                    
+                    # Load token from OS keyring (secure)
+                    loaded_token = ''
+                    try:
+                        keyring_user = st.session_state['api_url'] or 'default'
+                        loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
+                    except Exception:
+                        pass  # Keyring unavailable, fall through to legacy check
+                    
+                    # Legacy migration: if token still in JSON, migrate it to keyring
+                    if not loaded_token and config.get('api_token', ''):
+                        loaded_token = config['api_token']
+                        # Migrate to keyring and strip from JSON
+                        try:
+                            keyring_user = st.session_state['api_url'] or 'default'
+                            keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                            config.pop('api_token', None)
+                            with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
+                                json.dump(config, fw)
+                        except Exception:
+                            pass  # Migration failed, will work from RAM this session
+                    
+                    st.session_state['api_token'] = loaded_token
                         
                     if st.session_state['api_token']:
                         cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
@@ -249,11 +307,16 @@ with st.sidebar:
                 st.session_state['is_authenticated'] = True
                 st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
                 
-                # Save to config (JSON)
+                # Save token to OS keyring (secure) and config to JSON
+                try:
+                    keyring_user = st.session_state['api_url'] or 'default'
+                    keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
+                except Exception as e:
+                    st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
+                
                 try:
                     config_data = {
-                        'api_url': st.session_state['api_url'],
-                        'api_token': st.session_state['api_token']
+                        'api_url': st.session_state['api_url']
                     }
                     if 'concurrent_downloads' in st.session_state:
                         config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
@@ -411,7 +474,7 @@ with st.sidebar:
                         config_data = {}
                         
                     config_data['api_url'] = st.session_state.get('api_url', '')
-                    config_data['api_token'] = st.session_state.get('api_token', '')
+                    config_data.pop('api_token', None)  # Never write token to JSON
                     config_data['concurrent_downloads'] = temp_max
                     config_data['debug_mode'] = temp_debug
                     
@@ -419,7 +482,7 @@ with st.sidebar:
                         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                             json.dump(config_data, f)
                     except Exception as e:
-                        pass
+                        st.error(f"⚠️ Could not save settings to disk: {e}")
                         
                     st.rerun()
             with c_cancel:
@@ -435,6 +498,13 @@ with st.sidebar:
         st.markdown("")  # Spacer
         st.markdown("")
         if st.button('Log Out / Edit Token', use_container_width=True):
+            # Wipe token from OS keyring
+            try:
+                keyring_user = st.session_state.get('api_url', '') or 'default'
+                keyring.delete_password(KEYRING_SERVICE, keyring_user)
+            except Exception:
+                pass  # Token may not exist in keyring yet
+            
             st.session_state['is_authenticated'] = False
             st.session_state['api_token'] = ""
             st.session_state['step'] = 1
@@ -1304,1030 +1374,38 @@ with _main_content.container():
                     except Exception:
                         pass
 
-                def log_post_process_error(directory, filename, error_msg):
-                    err_file = root_dir / "download_errors.txt"
-                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    try:
-                        with open(err_file, "a", encoding="utf-8") as f:
-                            f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
-                    except Exception:
-                        pass
+                # --- Post-Download Conversion Pipeline (Shared Module) ---
+                from post_processing import run_all_conversions, UIBridge
+                from sync_manager import SyncManager
 
-                # --- Post-Download: Archive Extraction (Zip/Tar) ---
-                if st.session_state.get('persistent_convert_zip', False):
-                    from archive_extractor import extract_and_stub
-                    from sync_manager import SyncManager
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    archive_exts = {'.zip', '.tar', '.tar.gz'}
-                    archive_files = [
-                        f for f in course_folder.rglob("*") 
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and (f.suffix.lower() in archive_exts or f.name.lower().endswith('.tar.gz'))
-                    ] if course_folder.exists() else []
-                    
-                    if archive_files:
-                        total_archives = len(archive_files)
-                        logger.info(f"[Post-Download] Archive Extraction toggle is ON. Found {total_archives} archives.")
-                        
-                        # Set up UI
-                        def render_archive_dashboard(current_idx):
-                            percent = int((current_idx / total_archives) * 100) if total_archives > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting Archives for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
+                course_name_sanitized = cm._sanitize_filename(course.name)
+                course_folder = Path(st.session_state['download_path']) / course_name_sanitized
 
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #8b5cf6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #8b5cf6;">/ {total_archives}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                                    <span style="color: #8b5cf6; font-size: 1.2rem; font-weight: bold;">Archive → .extracted</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_archive_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting {total_archives} compressed archives...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_archive_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        for i, archive_file in enumerate(archive_files, 1):
-                            if st.session_state.get('download_cancelled', False):
-                                log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                                render_archive_dashboard(i - 1)
-                                break
-                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {archive_file.name}</div>", unsafe_allow_html=True)
-                            _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {archive_file.name}...</span>"
-                            log_deque.append(_msg)
-                            if '[ ❌ ]' in _msg:
-                                logger.error(re.sub(r'<[^>]+>', '', _msg))
-                            else:
-                                logger.info(re.sub(r'<[^>]+>', '', _msg))
-                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            render_archive_dashboard(i - 1)
-                            
-                            old_relative = archive_file.relative_to(course_folder)
-                            
-                            new_stub_path_str = extract_and_stub(archive_file)
-                            
-                            if new_stub_path_str:
-                                new_stub_path = Path(new_stub_path_str)
-                                # DB Update
-                                try:
-                                    if os.name == 'nt':
-                                        sm._windows_unhide_file(sm.db_path)
-                                        
-                                    with sqlite3.connect(sm.db_path) as conn:
-                                        c = conn.cursor()
-                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative).replace('\\', '/'),))
-                                        row = c.fetchone()
-                                        
-                                        if row:
-                                            new_rel = new_stub_path.relative_to(course_folder)
-                                            sm.update_converted_file(row[0], str(new_rel).replace('\\', '/'))
-                                            
-                                    if os.name == 'nt':
-                                        try:
-                                            sm._windows_hide_file(sm.db_path)
-                                        except Exception:
-                                            pass
-                                except Exception as e:
-                                    logger.error(f"Failed DB update for {archive_file.name}: {e}")
+                if course_folder.exists():
+                    _convert_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                                     'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+                    contract = {k: st.session_state.get(f'persistent_{k}', False) for k in _convert_keys}
 
-                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {archive_file.name}</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            else:
-                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {archive_file.name} (Extraction failed)</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                log_post_process_error(save_dir, archive_file.name, "Archive extraction failed")
-                                
-                            render_archive_dashboard(i)
-                            
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_archive_dashboard(total_archives)
-                # --- End Post-Download Conversion (Archive) ---
-
-                # --- Post-Download: PPTX → PDF Conversion ---
-                if st.session_state.get('persistent_convert_pptx', False):
-                    from pdf_converter import PowerPointToPDF
-                    from sync_manager import SyncManager
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    # Gather all supported PowerPoint files in the course folder
-                    supported_ppt_exts = {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}
-                    pptx_files = [
-                        f for f in course_folder.rglob('*')
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in supported_ppt_exts
-                    ] if course_folder.exists() else []
-                    
-                    if pptx_files:
-                        total_pptx = len(pptx_files)
-                        logger.info(f"[Post-Download] PPTX Conversion toggle is ON. Found {total_pptx} files.")
-                        
-                        # Custom render function to hijack the main UI placeholders
-                        def render_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_pptx) * 100) if total_pptx > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting PowerPoint Files for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #A5B4FC; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #A5B4FC;">/ {total_pptx}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
-                                    <span style="color: #A5B4FC; font-size: 1.2rem; font-weight: bold;">Processing PDF(s)</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            # Also re-render log
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        # 1. Start with 0 progress
-                        render_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_pptx} PowerPoint files to PDF for NotebookLM...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_conversion_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        with PowerPointToPDF(error_log_path=Path(st.session_state['download_path'])) as converter:
-                            for i, pptx_file in enumerate(pptx_files, 1):
-                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {pptx_file.name}</div>", unsafe_allow_html=True)
-                                pdf_path = converter.convert(pptx_file)
-                                
-                                if pdf_path:
-                                    pdf_path_obj = Path(pdf_path)
-                                    manifest = sm.load_manifest()
-                                    for file_id, info in manifest.get('files', {}).items():
-                                        local_p = info.get('local_path', '')
-                                        try:
-                                            original_rel = pptx_file.relative_to(course_folder)
-                                            if str(original_rel).replace('\\', '/') == local_p:
-                                                new_rel = pdf_path_obj.relative_to(course_folder)
-                                                sm.update_converted_file(int(file_id), str(new_rel).replace('\\', '/'))
-                                                break
-                                        except (ValueError, KeyError):
-                                            pass
-                                    
-                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {pdf_path_obj.name}</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                else:
-                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {pptx_file.name} (Conversion failed)</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                    log_post_process_error(save_dir, pptx_file.name, "PDF conversion failed")
-                                    
-                                # 2. Update progress mid-loop
-                                render_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        # 3. Final 100% render
-                        render_conversion_dashboard(total_pptx)
-                        
-                # --- Post-Download: HTML → MD Conversion ---
-                if st.session_state.get('persistent_convert_html', False):
-                    from md_converter import convert_html_to_md
-                    from sync_manager import SyncManager
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    # Gather all .html files in the course folder
-                    html_files = []
-                    if course_folder.exists():
-                        for f in course_folder.rglob('*'):
-                            if f.suffix.lower() == '.html' and f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts:
-                                html_files.append(f)
-                    
-                    if html_files:
-                        total_html = len(html_files)
-                        logger.info(f"[Post-Download] HTML Conversion toggle is ON. Found {total_html} files.")
-                        
-                        # Custom render function for HTML conversion
-                        def render_html_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_html) * 100) if total_html > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Canvas Pages for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #34D399; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #34D399;">/ {total_html}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
-                                    <span style="color: #34D399; font-size: 1.2rem; font-weight: bold;">Processing Markdown</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_html_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_html} Canvas Pages to Markdown...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_html_conversion_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        for i, html_file in enumerate(html_files, 1):
-                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {html_file.name}</div>", unsafe_allow_html=True)
-                            old_relative_html = html_file.relative_to(course_folder)
-                            
-                            md_path = convert_html_to_md(html_file)
-                            
-                            if md_path:
-                                # Safe DB lookup
-                                try:
-                                    # Ensure DB is accessible
-                                    if os.name == 'nt':
-                                        sm._windows_unhide_file(sm.db_path)
-                                        
-                                    with sqlite3.connect(sm.db_path) as conn:
-                                        c = conn.cursor()
-                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_html).replace('\\', '/'),))
-                                        row = c.fetchone()
-                                        
-                                        if row:
-                                            canvas_file_id = row[0]
-                                            new_rel = md_path.relative_to(course_folder)
-                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
-                                            db_updated = True
-                                    
-                                    if os.name == 'nt':
-                                        try:
-                                            sm._windows_hide_file(sm.db_path)
-                                        except Exception:
-                                            pass
-                                except Exception as e:
-                                    logger.error(f"Failed to cleanly query/update manifest for {html_file.name}: {e}")
-                                
-                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            else:
-                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {html_file.name} (Conversion failed)</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                log_post_process_error(save_dir, html_file.name, "Markdown conversion failed")
-                                
-                            render_html_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_html_conversion_dashboard(total_html)
-                # --- End Post-Download Conversion ---
-                
-                # --- Post-Download: Code → TXT Conversion ---
-                if st.session_state.get('persistent_convert_code', False):
-                    from code_converter import convert_code_to_txt, CODE_EXTENSIONS
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    # Gather all supported code files in the course folder
-                    code_files = []
-                    if course_folder.exists():
-                        for f in course_folder.rglob('*'):
-                            if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in CODE_EXTENSIONS:
-                                code_files.append(f)
-                    
-                    if code_files:
-                        total_code = len(code_files)
-                        logger.info(f"[Post-Download] Code Conversion toggle is ON. Found {total_code} files.")
-                        
-                        # Custom render function for Code conversion
-                        def render_code_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_code) * 100) if total_code > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Optimizing Code Files for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #FBBF24; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #1E293B; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(255,255,255,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #FBBF24;">/ {total_code}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Status</span>
-                                    <span style="color: #FBBF24; font-size: 1.2rem; font-weight: bold;">Processing .txt</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_code_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_code} Code & Data files to TXT...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_code_conversion_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        for i, code_file in enumerate(code_files, 1):
-                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {code_file.name}</div>", unsafe_allow_html=True)
-                            old_relative_code = code_file.relative_to(course_folder)
-                            
-                            txt_path_str = convert_code_to_txt(code_file)
-                            
-                            if txt_path_str:
-                                txt_path = Path(txt_path_str)
-                                # Safe DB lookup
-                                try:
-                                    # Ensure DB is accessible
-                                    if os.name == 'nt':
-                                        sm._windows_unhide_file(sm.db_path)
-                                        
-                                    with sqlite3.connect(sm.db_path) as conn:
-                                        c = conn.cursor()
-                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_code).replace('\\', '/'),))
-                                        row = c.fetchone()
-                                        
-                                        if row:
-                                            canvas_file_id = row[0]
-                                            new_rel = txt_path.relative_to(course_folder)
-                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
-                                    
-                                    if os.name == 'nt':
-                                        try:
-                                            sm._windows_hide_file(sm.db_path)
-                                        except Exception:
-                                            pass
-                                except Exception as e:
-                                    logger.error(f"Failed to cleanly query/update manifest for {code_file.name}: {e}")
-                                
-                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {code_file.name} -> TXT</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            else:
-                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {code_file.name} (Conversion failed)</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                log_post_process_error(save_dir, code_file.name, "Code to TXT conversion failed")
-                                
-                            render_code_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_code_conversion_dashboard(total_code)
-                # --- End Post-Download Conversion (Code) ---
-                
-                # --- Post-Download: NotebookLM Link Compiler ---
-                if st.session_state.get('persistent_convert_urls', False):
-                    from url_compiler import compile_urls_to_txt
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    if course_folder.exists():
-                        # Briefly hijack the dashboard UI logic to show the log
-                        header_placeholder.markdown(f'''
-                        <div style="margin-bottom: 0.5rem;">
-                            <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                            <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Compiling Web Links for {course.name}</h3>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Scouring '{course.name}' for .url shortcuts...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        
-                        log_content = "<br>".join(reversed(list(log_deque)))
-                        log_placeholder.markdown(f'''
-                        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                            {log_content}
-                        </div>
-                        ''', unsafe_allow_html=True)
-                        
-                        if not st.session_state.get('download_cancelled', False):
-                            compiled_path = compile_urls_to_txt(course_folder, course.name)
-                        else:
-                            compiled_path = None
-                        
-                        if compiled_path:
-                            _msg = f"<span style='color: #4ade80;'>[ ✅ ] Links successfully compiled into: NotebookLM_External_Links.txt</span>"
-                            log_deque.append(_msg)
-                            if '[ ❌ ]' in _msg:
-                                logger.error(re.sub(r'<[^>]+>', '', _msg))
-                            else:
-                                logger.info(re.sub(r'<[^>]+>', '', _msg))
-                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        
-                        # Trigger final UI refresh so log updates
-                        log_content = "<br>".join(reversed(list(log_deque)))
-                        log_placeholder.markdown(f'''
-                        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                            {log_content}
-                        </div>
-                        ''', unsafe_allow_html=True)
-                # --- End Post-Download Link Compiler ---
-
-                # --- Post-Download: Legacy Word → PDF Conversion ---
-                if st.session_state.get('persistent_convert_word', False):
-                    from word_converter import WordToPDF
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    # Gather all legacy word files in the course folder
-                    legacy_word_exts = {'.doc', '.rtf', '.odt'}
-                    word_files = [
-                        f for f in course_folder.rglob('*')
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in legacy_word_exts
-                    ] if course_folder.exists() else []
-                    
-                    if word_files:
-                        total_word = len(word_files)
-                        logger.info(f"[Post-Download] Word Conversion toggle is ON. Found {total_word} legacy files.")
-                        
-                        # Custom render function for Word conversion
-                        def render_word_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_word) * 100) if total_word > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Legacy Word Docs for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #3b82f6; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #3b82f6;">/ {total_word}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                                    <span style="color: #3b82f6; font-size: 1.2rem; font-weight: bold;">Legacy Doc → .pdf</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_word_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Converting {total_word} Legacy Word docs to PDF...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_word_conversion_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        with WordToPDF() as converter:
-                            for i, word_file in enumerate(word_files, 1):
-                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {word_file.name}</div>", unsafe_allow_html=True)
-                                old_relative_word = word_file.relative_to(course_folder)
-                                
-                                pdf_path_str = converter.convert(word_file)
-                                
-                                if pdf_path_str:
-                                    pdf_path = Path(pdf_path_str)
-                                    # Safe DB lookup
-                                    try:
-                                        # Ensure DB is accessible
-                                        if os.name == 'nt':
-                                            sm._windows_unhide_file(sm.db_path)
-                                            
-                                        with sqlite3.connect(sm.db_path) as conn:
-                                            c = conn.cursor()
-                                            c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_word).replace('\\', '/'),))
-                                            row = c.fetchone()
-                                            
-                                            if row:
-                                                canvas_file_id = row[0]
-                                                new_rel = pdf_path.relative_to(course_folder)
-                                                sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
-                                        
-                                        if os.name == 'nt':
-                                            try:
-                                                sm._windows_hide_file(sm.db_path)
-                                            except Exception:
-                                                pass
-                                    except Exception as e:
-                                        logger.error(f"Failed to cleanly query/update manifest for {word_file.name}: {e}")
-                                    
-                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {word_file.name} -> PDF</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                else:
-                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {word_file.name} (Conversion failed)</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                    log_post_process_error(save_dir, word_file.name, "Word to PDF conversion failed")
-                                    
-                                render_word_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Word to PDF conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_word_conversion_dashboard(total_word)
-                # --- End Post-Download Conversion (Word) ---
-                
-                # --- Post-Download: Excel to PDF Conversion ---
-                if st.session_state.get('persistent_convert_excel', False):
-                    from excel_converter import ExcelToPDF
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    excel_exts = {'.xlsx', '.xls', '.xlsm'}
-                    excel_files = [
-                        f for f in course_folder.rglob('*')
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in excel_exts and not f.name.startswith('~$')
-                    ] if course_folder.exists() else []
-                    
-                    if excel_files:
-                        total_excel = len(excel_files)
-                        logger.info(f"[Post-Download] Excel Conversion toggle is ON. Found {total_excel} Excel files.")
-                        
-                        def render_excel_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_excel) * 100) if total_excel > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting Excel to PDF for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #22c55e; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #22c55e;">/ {total_excel}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                                    <span style="color: #22c55e; font-size: 1.2rem; font-weight: bold;">Excel → .pdf</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_excel_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total_excel} Excel files for PDF conversion...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_excel_conversion_dashboard(0)
-                        
-                        with ExcelToPDF() as converter:
-                            for i, excel_file in enumerate(excel_files, 1):
-                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {excel_file.name}</div>", unsafe_allow_html=True)
-                                abs_path = str(excel_file.absolute())
-                                new_pdf_path, excel_error_msg = converter.convert(abs_path)
-                                
-                                if new_pdf_path:
-                                    old_rel_path = os.path.relpath(abs_path, st.session_state['download_path'])
-                                    new_rel_path = os.path.relpath(new_pdf_path, st.session_state['download_path'])
-                                    
-                                    conn = sqlite3.connect(db_path)
-                                    c = conn.cursor()
-                                    c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (old_rel_path,))
-                                    row = c.fetchone()
-                                    if row:
-                                        # Update DB
-                                        c.execute("UPDATE sync_manifest SET local_path = ? WHERE canvas_file_id = ?", (new_rel_path, row[0]))
-                                        conn.commit()
-                                    conn.close()
-                                    
-                                    _msg = f"<span style='color: #4ade80;'>[ ✅ ] Converted: {excel_file.name} -> PDF</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                else:
-                                    _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {excel_file.name} (Conversion failed or empty)</span>"
-                                    log_deque.append(_msg)
-                                    if '[ ❌ ]' in _msg:
-                                        logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                    else:
-                                        logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                    log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                    log_post_process_error(save_dir, excel_file.name, excel_error_msg if excel_error_msg else "Excel to PDF conversion failed")
-                                    
-                                render_excel_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_excel_conversion_dashboard(total_excel)
-                # --- End Post-Download Conversion (Excel) ---
-                
-                # --- Post-Download: Video to MP3 Conversion ---
-                if st.session_state.get('persistent_convert_video', False):
-                    from video_converter import convert_video_to_mp3
-                    import sqlite3
-                    import os
-                    
-                    course_name = cm._sanitize_filename(course.name)
-                    course_folder = Path(st.session_state['download_path']) / course_name
-                    
-                    # Gather all video files in the course folder
-                    video_exts = {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}
-                    video_files = [
-                        f for f in course_folder.rglob('*')
-                        if f.is_file() and not f.name.startswith('._') and "__MACOSX" not in f.parts and f.suffix.lower() in video_exts
-                    ] if course_folder.exists() else []
-                    
-                    if video_files:
-                        total_video = len(video_files)
-                        logger.info(f"[Post-Download] Video Conversion toggle is ON. Found {total_video} video files.")
-                        
-                        # Custom render function for Video conversion
-                        def render_video_conversion_dashboard(current_idx):
-                            percent = int((current_idx / total_video) * 100) if total_video > 0 else 100
-                            percent = min(100, percent)
-                            
-                            header_placeholder.markdown(f'''
-                            <div style="margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-                                <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Extracting Audio from Videos for {course.name}</h3>
-                            </div>
-                            ''', unsafe_allow_html=True)
-
-                            progress_placeholder.markdown(f'''
-                            <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                                <div style="background-color: #f59e0b; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                                    {percent}%
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            metrics_placeholder.markdown(f'''
-                            <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Extracted</span>
-                                    <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_idx} <span style="font-size: 0.9rem; color: #f59e0b;">/ {total_video}</span></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                                    <span style="color: #f59e0b; font-size: 1.2rem; font-weight: bold;">Video → .mp3</span>
-                                </div>
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                            log_content = "<br>".join(reversed(list(log_deque)))
-                            log_placeholder.markdown(f'''
-                            <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                                {log_content}
-                            </div>
-                            ''', unsafe_allow_html=True)
-                            
-                        render_video_conversion_dashboard(0)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ 🪄 ] Post-Processing: Extracting audio from {total_video} video files...</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_video_conversion_dashboard(0)
-                        
-                        import time
-                        time.sleep(0.2)
-                        
-                        sm = SyncManager(course_folder, course.id, course.name)
-                        
-                        for i, video_file in enumerate(video_files, 1):
-                            if st.session_state.get('download_cancelled', False):
-                                log_deque.append("<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
-                                render_video_conversion_dashboard(i - 1)
-                                break
-                            active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {video_file.name}</div>", unsafe_allow_html=True)
-                            _msg = f"<span style='color: #fbbf24;'>[ ⏳ ] Extracting: {video_file.name}...</span>"
-                            log_deque.append(_msg)
-                            if '[ ❌ ]' in _msg:
-                                logger.error(re.sub(r'<[^>]+>', '', _msg))
-                            else:
-                                logger.info(re.sub(r'<[^>]+>', '', _msg))
-                            log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            render_video_conversion_dashboard(i - 1)
-                            
-                            old_relative_video = video_file.relative_to(course_folder)
-                            
-                            mp3_path_str = convert_video_to_mp3(video_file)
-                            
-                            if mp3_path_str:
-                                mp3_path = Path(mp3_path_str)
-                                # Safe DB lookup
-                                try:
-                                    # Ensure DB is accessible
-                                    if os.name == 'nt':
-                                        sm._windows_unhide_file(sm.db_path)
-                                        
-                                    with sqlite3.connect(sm.db_path) as conn:
-                                        c = conn.cursor()
-                                        c.execute("SELECT canvas_file_id FROM sync_manifest WHERE local_path = ?", (str(old_relative_video).replace('\\', '/'),))
-                                        row = c.fetchone()
-                                        
-                                        if row:
-                                            canvas_file_id = row[0]
-                                            new_rel = mp3_path.relative_to(course_folder)
-                                            sm.update_converted_file(canvas_file_id, str(new_rel).replace('\\', '/'))
-                                    
-                                    if os.name == 'nt':
-                                        try:
-                                            sm._windows_hide_file(sm.db_path)
-                                        except Exception:
-                                            pass
-                                except Exception as e:
-                                    logger.error(f"Failed to cleanly query/update manifest for {video_file.name}: {e}")
-                                
-                                _msg = f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {video_file.name} -> MP3</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                            else:
-                                _msg = f"<span style='color: #f87171;'>[ ❌ ] Skipped: {video_file.name} (Audio extraction failed)</span>"
-                                log_deque.append(_msg)
-                                if '[ ❌ ]' in _msg:
-                                    logger.error(re.sub(r'<[^>]+>', '', _msg))
-                                else:
-                                    logger.info(re.sub(r'<[^>]+>', '', _msg))
-                                log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                                log_post_process_error(save_dir, video_file.name, "Video to MP3 extraction failed")
-                                
-                            render_video_conversion_dashboard(i)
-                        
-                        _msg = f"<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>"
-                        log_deque.append(_msg)
-                        if '[ ❌ ]' in _msg:
-                            logger.error(re.sub(r'<[^>]+>', '', _msg))
-                        else:
-                            logger.info(re.sub(r'<[^>]+>', '', _msg))
-                        log_debug(re.sub(r'<[^>]+>', '', _msg), debug_file)
-                        render_video_conversion_dashboard(total_video)
-                # --- End Post-Download Conversion (Video) ---
-                
+                    if any(contract.values()):
+                        pp_sm = SyncManager(course_folder, course.id, course.name)
+                        pp_ui = UIBridge(
+                            header_placeholder=header_placeholder,
+                            progress_placeholder=progress_placeholder,
+                            metrics_placeholder=metrics_placeholder,
+                            log_placeholder=log_placeholder,
+                            active_file_placeholder=active_file_placeholder,
+                            log_lines=log_deque,
+                            is_cancelled=lambda: st.session_state.get('download_cancelled', False),
+                            error_log_path=Path(st.session_state['download_path']),
+                        )
+                        run_all_conversions(
+                            course_folder=course_folder,
+                            sm=pp_sm,
+                            contract=contract,
+                            ui=pp_ui,
+                            course_name=course.name,
+                        )
+                # --- End Post-Download Conversion Pipeline ---
                 # Clear the blue status text so it doesn't linger on completion
                 active_file_placeholder.empty()
                 
@@ -2426,6 +1504,22 @@ with _main_content.container():
                     
                     st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
 
+                # In-App Error Log Viewer — collect error log paths from course folders
+                download_path = Path(st.session_state['download_path'])
+                error_log_paths = []
+                for course in st.session_state.get('courses_to_download', []):
+                    cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                    course_folder = download_path / cm_temp._sanitize_filename(course.name)
+                    log_file = course_folder / "download_errors.txt"
+                    if log_file.exists():
+                        error_log_paths.append(log_file)
+                
+                if error_log_paths:
+                    col_log_dl, _ = st.columns([0.3, 0.7])
+                    with col_log_dl:
+                        if st.button("📄 View Full Error Log", key="dl_view_error_log", use_container_width=True):
+                            _download_error_log_dialog(error_log_paths)
+
                 # Retry Button
                 st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
                 retry_label = "Retry Failed Items"
@@ -2487,7 +1581,7 @@ with _main_content.container():
             
             # Show errors if any
             download_errors = st.session_state.get('download_errors_list', [])
-            if download_errors and st.session_state['download_status'] != 'cancelled':
+            if download_errors:
                 with st.expander(f"Error Details ({len(download_errors)})", expanded=False):
                     for err in download_errors[:20]:
                         if hasattr(err, 'message'):

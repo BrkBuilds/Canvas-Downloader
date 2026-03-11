@@ -1,8 +1,23 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
+- **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: English-Only Architecture (Complete)**: Fully eradicated the legacy `translations.py` system. The application is now 100% hardcoded in English for improved readability, maintainability, and simplified Streamlit rendering logic.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-10 — V3.0 Architecture Audit Fixes)
+- **Resolved "Modules Mode" Silent Data Loss (`canvas_logic.py`)**: Deleted the `downloaded_file_ids` ID-based deduplication tracker that was incorrectly skipping files present in multiple Canvas modules. Replaced it with a system that only tracks module files for Catch-All exclusion, ensuring every module link is processed.
+- **Synchronous Path Conflict Resolution (`canvas_logic.py`)**: Fixed a concurrency bug where exact duplicate filenames crashing into the same local folder were being quietly discarded by the `seen_target_paths` and `seen_flat_paths` sets. Implemented synchronous `(1)`, `(2)` suffix generation before dispatching the `asyncio` file download task, guaranteeing 100% data preservation and zero `[WinError 32]` collisions.
+- **Prevented Global Timeout Starvation (`canvas_logic.py` & `sync_ui.py`)**: Replaced the rigid `aiohttp.ClientTimeout(total=300)` with an adaptive timeout structure (`total=None, sock_read=60, sock_connect=15`). This ensures massive video files downloading over slow connections are no longer killed unconditionally at the 5-minute mark.
+- **Eliminated Semaphore Freezing (`sync_ui.py`)**: Restructured the HTTP `429 Too Many Requests` rate limit handler. The `asyncio.sleep(wait)` backoff penalty is now mathematically pushed completely *outside* of the active `async with sem:` block. This immediately releases the slot back to the concurrency pool, allowing other files to download while the rate-limited task awaits its timeout.
+- **Fortified SQLite Volatility (`sync_manager.py`)**: Injected `timeout=30.0` into the `sqlite3.connect` call within `_save_single_file_to_db` to gracefully handle extreme parallel insert flooding at the end of high-concurrency download batches, eliminating fatal `database is locked` crashes.
+
+## Recent Changes (Session 2026-03-10 — V1.0 Audit Fixes)
+- **Token Encryption (Keyring)**: Replaced plaintext token storage in JSON with OS-native credential vault storage via the `keyring` Python package. Includes auto-migration for legacy JSON tokens and secure wipe on logout.
+- **DB Corruption Rescue**: Fortified `SyncManager._init_db` against SQLite corruption crashes. Added `PRAGMA quick_check` and an auto-rescue mechanism that renames corrupted `.canvas_sync.db` files and cleanly re-initializes.
+- **In-App Error Viewer**: Implemented `_view_error_log_dialog()` and `_download_error_log_dialog()` using `@st.dialog` to display the contents of `download_errors.txt` inside the app. Wired into the Done/Cancelled screens for both standard Download and Sync modes.
+- **Write Validation**: Ensured failed disk writes to `canvas_downloader_settings.json` now explicitly alert the user via `st.error()` rather than failing silently.
 
 ## Recent Changes (Session 2026-03-10 — Translation System Eradication)
 - **Pure English Architecture**: Completely deleted `translations.py`. Purged all `get_text()`, `pluralize()`, and `language` parameters from 6 core source files (`app.py`, `sync_ui.py`, `ui_helpers.py`, `canvas_logic.py`, `sync_manager.py`, `start.py`).
