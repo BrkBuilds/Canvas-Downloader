@@ -147,7 +147,12 @@
 - Post-processing pipeline now has complete observability via dual logging to `debug_log.txt` and `download_errors.txt`.
 
 ## Pending Tasks
-- [ ] Refactor `sync_ui.py` to break up the monolith into logical sub-modules (e.g. `dialogs.py`, `ui_render_helpers.py`).
+- [x] **CRITICAL**: Fix `excel_converter.py` missing `import time` (Line 96).
+- [x] **CRITICAL**: Fix `word_converter.py` unconditional COM imports (Move inside `__enter__`).
+- [ ] **CRITICAL**: Establish an automated test suite (unit + integration tests) to prevent silent regressions.
+- [x] **MAJOR**: Add `tarfile` path traversal protection (`filter='data'`) in `archive_extractor.py`.
+- [x] **MAJOR**: Pin `requirements.txt` dependencies and remove unused ones (`watchdog`, `requests`).
+- [x] Refactor `sync_ui.py` to break up the monolith into logical sub-modules (e.g. `dialogs.py`, `ui_render_helpers.py` via `ui_helpers.py`).
 - [ ] Centralize injected custom CSS into an `assets/theme.css` file for long-term maintainability.
 - [ ] Add a mechanism to export a Saved Group's `sync_contract` JSON to a shareable file.
 - [ ] Manual end-to-end testing with live multisession Canvas instances.

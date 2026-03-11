@@ -1167,6 +1167,7 @@ class CanvasManager:
             return None
 
     def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
+        import xml.sax.saxutils as saxutils
         safe_title = self._sanitize_filename(title)
         
         if platform.system() == 'Darwin':
@@ -1178,7 +1179,7 @@ class CanvasManager:
 <plist version="1.0">
 <dict>
 	<key>URL</key>
-	<string>{url}</string>
+	<string>{saxutils.escape(url)}</string>
 </dict>
 </plist>
 '''
@@ -1214,6 +1215,8 @@ class CanvasManager:
             err = DownloadError(course_name, title, "Link Creation Error", str(e), raw_error=e)
             if progress_callback: progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
+            import logging
+            logging.getLogger(__name__).error(f"Error creating link: {e}")
             log_debug(f"Error creating link: {e}", debug_file)
             return None
 
