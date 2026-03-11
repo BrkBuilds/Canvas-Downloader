@@ -25,7 +25,8 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> Path | None
                         compiled_links.append(f"📌 {url_file.stem}\n🔗 {link}\n")
                         break
         except Exception as e:
-            print(f"Failed to read {url_file.name}: {e}")
+            import logging
+            logging.getLogger(__name__).error(f"Failed to read {url_file.name}: {e}")
             
     if not compiled_links:
         return None

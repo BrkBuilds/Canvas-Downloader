@@ -112,29 +112,15 @@ if 'convert_pptx' not in st.session_state:
 
 # --- Helper Functions ---
 def select_folder():
-    root = tk.Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-    try:
-        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
-    except Exception:
-        pass
-    folder_path = filedialog.askdirectory(master=root)
-    root.destroy()
+    from ui_helpers import native_folder_picker
+    folder_path = native_folder_picker()
     if folder_path:
         st.session_state['download_path'] = folder_path
 
 def select_sync_folder():
     """Open folder picker for sync mode and store in pending_sync_folder."""
-    root = tk.Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-    try:
-        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
-    except Exception:
-        pass
-    folder_path = filedialog.askdirectory(master=root)
-    root.destroy()
+    from ui_helpers import native_folder_picker
+    folder_path = native_folder_picker()
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
 
@@ -516,7 +502,14 @@ with st.sidebar:
             # Clear the course cache to prevent showing old user's courses
             fetch_courses.clear()
             if os.path.exists(CONFIG_FILE):
-                os.remove(CONFIG_FILE)
+                try:
+                    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                        config_data = json.load(f)
+                    config_data.pop('api_token', None)
+                    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(config_data, f)
+                except Exception as e:
+                    logger.warning(f"Could not update config on logout: {e}")
             st.rerun()
 
         # Version badge
