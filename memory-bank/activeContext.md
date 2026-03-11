@@ -1,10 +1,19 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Active Feature: V1.0 Polish Sweep (Complete)**: Executed the remaining Tier 2 and Tier 3 findings from the Master Audit Report. Centralized design tokens, added strict HTML escaping, hoisted inline imports, eliminated bare except clauses, and instituted a formal `version.py` tracker.
 - **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
-- **Active Feature: English-Only Architecture (Complete)**: Fully eradicated the legacy `translations.py` system. The application is now 100% hardcoded in English for improved readability, maintainability, and simplified Streamlit rendering logic.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-11 — V1.0 Polish Sweep & Final Audit Items)
+- **Item 3: Dead Error UI Fix**: Fixed a logical contradiction in `app.py`'s cancellation handler that prevented error messages from correctly displaying after an aborted download loop.
+- **Item 5: Centralized Logging**: Purged amateur `print()` statements from all 7 converter loops (`pdf`, `word`, `excel`, `video`, `code`, etc.) and replaced them with standard Python `logging` for persistent disk traceability.
+- **Item 8: Centralized Versioning**: Created `version.py` (`__version__ = "2.0.0"`) and injected a styled version badge `Canvas Downloader v2.0.0` dynamically into the bottom of the Streamlit sidebar.
+- **Item 9: Import Hoisting**: Eradicated 26 inline imports (e.g., `import time`, `import json`) buried deep inside functions/loops across `app.py`, `sync_ui.py`, `sync_manager.py`, and `ui_helpers.py`, hoisting them cleanly to the top-level module scope for performance and PEP-8 compliance. Deferred imports were intentionally kept for highly specific scopes (e.g. `win32com`, `tkinter`).
+- **Item 10: Strict Exception Defensive Coding**: Scanned the entire workspace and upgraded 9 dangerous bare `except:` clauses to explicit `except Exception:` blocks across `app.py`, `canvas_logic.py`, and `video_converter.py` to prevent silencing vital system interrupts (like `KeyboardInterrupt`).
+- **Item 13: Aggressive CSS Token Centralization**: Extracted 20+ hardcoded hex colors into a unified `theme.py` design system. Executed a massive workspace-wide sweep replacing 249 raw hex string occurrences across `app.py`, `sync_ui.py`, and `post_processing.py` with dynamic f-string references (e.g., `theme.TEXT_PRIMARY`, `theme.ERROR_ALT`), establishing a single source of truth for the app's visual identity.
+- **Item 14: Strict UI String Validation (HTML Escaping)**: Engineered an `esc()` utility inside `ui_helpers.py` wrapping the standard `html.escape`. Deployed this function uniformly to wrap 46 instances of user-controlled variables (like Course Names and File Names) injected into HTML spans across the entire application, neutralizing XSS and DOM-corruption attack surfaces.
 
 ## Recent Changes (Session 2026-03-10 — V3.0 Architecture Audit Fixes)
 - **Resolved "Modules Mode" Silent Data Loss (`canvas_logic.py`)**: Deleted the `downloaded_file_ids` ID-based deduplication tracker that was incorrectly skipping files present in multiple Canvas modules. Replaced it with a system that only tracks module files for Catch-All exclusion, ensuring every module link is processed.

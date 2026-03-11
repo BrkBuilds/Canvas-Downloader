@@ -5,8 +5,11 @@ Handles synchronization between Canvas courses and local files.
 
 import os
 import json
+import hashlib
 import logging
 import sqlite3
+import time
+import uuid
 import difflib
 from pathlib import Path
 from datetime import datetime, timezone
@@ -163,7 +166,6 @@ class SyncManager:
             'files': {}
         }
         
-        import time
         max_retries = 3
         
         for attempt in range(max_retries):
@@ -205,7 +207,6 @@ class SyncManager:
         This ensures that a crash at any point leaves all previously-committed
         rows intact — no data loss scenario.
         """
-        import time
         max_retries = 3
         
         for attempt in range(max_retries):
@@ -791,7 +792,6 @@ class SyncManager:
         The UPDATE clause deliberately omits is_ignored so that
         re-downloads and sync-run-0 writes never wipe user choices.
         """
-        import time
         max_retries = 3
         
         for attempt in range(max_retries):
@@ -844,7 +844,6 @@ class SyncManager:
         Leaves canvas_filename untouched so the sync engine can still
         match by canvas_file_id against the Canvas API's original filename.
         """
-        import time
         
         full_new_path = self.local_path / new_file_path
         if not full_new_path.exists():
@@ -1108,7 +1107,6 @@ class SavedGroupsManager:
         Returns:
             The newly created group dict
         """
-        import uuid
         groups = self.load_groups()
         new_group = {
             'group_id': f"grp_{uuid.uuid4().hex}",
@@ -1220,7 +1218,6 @@ def get_file_icon(filename: str) -> str:
 
 def compute_local_md5(filepath: Path) -> str:
     """Compute MD5 hash of a file efficiently by reading in chunks."""
-    import hashlib
     if not filepath.exists():
         return ""
     h = hashlib.md5()

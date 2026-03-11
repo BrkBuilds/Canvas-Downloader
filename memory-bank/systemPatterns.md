@@ -15,11 +15,20 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **OS-Native Credential Storage (`keyring`)**: 
     - *Policy*: Never store sensitive API tokens in plaintext files (JSON/YAML).
     - *Implementation*: Use Python's `keyring` module to delegate token storage to the OS-native credential manager (Windows Credential Manager / macOS Keychain). Settings JSON should only store non-sensitive config like the Canvas API URL and UI preferences.
+- **Defensive Exception Handling**:
+    - *Policy*: Never use bare `except:` clauses.
+    - *Implementation*: Always catch `Exception` explicitly (`except Exception as e:`) to prevent silently dropping vital OS-level interrupts like `KeyboardInterrupt` or `SystemExit`.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
 - **Interactive Lists**: Use HTML `<details>` and `<summary>` inside modals to handle large file lists without overwhelming the main view.
 - **Component Constriction**: Use fractional columns to limit component width on large screens.
+- **Design Token Centralization (`theme.py`)**:
+    - *Problem*: Hardcoded hex colors (e.g., `#ffffff`, `#8A91A6`) scattered across UI files create maintenance debt and brittle aesthetic updates.
+    - *Solution*: Extract all colors into a centralized `theme.py` module as semantic tokens (e.g., `theme.TEXT_PRIMARY`, `theme.BG_CARD`). Inject them into CSS blocks and HTML spans using standard f-strings (`f"color: {theme.ERROR};"`).
+- **Strict HTML Escaping (`esc()`)**:
+    - *Problem*: Passing raw user-controlled variables (Course Names, File Names, Error Messages) into `st.markdown(unsafe_allow_html=True)` immediately opens the application to XSS and DOM-corruption if a Canvas server returns payload strings containing `<script>` or unclosed HTML tags `</div>`.
+    - *Solution*: Universally wrap all interpolated variables inside HTML structures with the custom `esc()` utility (from `ui_helpers.py`), which safely standardizes `html.escape` behavior across the codebase.
 - **Zero-Indentation HTML String Pattern**:
     - Streamlit's markdown parser converts indented HTML strings into `<pre><code>` blocks.
     - *Robust Pattern*: Construct long HTML/CSS strings in Python without any leading indentation on the multi-line closing quotes/content to ensure they render as raw HTML.

@@ -3,10 +3,13 @@ UI Helper utilities for Canvas LMS Batch File Downloader.
 Shared helpers used by both download and sync modes.
 """
 
+import html
+import logging
 import os
 import re
 import json
 import shutil
+import time
 import platform
 import subprocess
 from pathlib import Path
@@ -21,6 +24,11 @@ def make_long_path(p: str | Path) -> str:
     if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
         return '\\\\?\\' + s
     return s
+
+
+def esc(value) -> str:
+    """HTML-escape a value for safe interpolation into unsafe_allow_html markup."""
+    return html.escape(str(value), quote=True)
 
 def robust_filename_normalize(name: str) -> str:
     """Normalize filename for robust comparison (unquote, strip, lower)."""
@@ -87,7 +95,6 @@ def save_sync_pairs(pairs: list[dict], config_dir: str = None):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(pairs, f, indent=2, ensure_ascii=False)
     except IOError as e:
-        import logging
         logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
 
 
@@ -127,7 +134,7 @@ def open_folder(path: str):
     """
     Opens a folder in the native file explorer and forces it to the foreground.
     """
-    import time  # Ensure time is available for the sleep
+
     path = os.path.normpath(path)
     if not os.path.exists(path):
         return

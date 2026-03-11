@@ -1,6 +1,14 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **V1.0 Polish Sweep (Tier 2 & 3 Audit Items)** (2026-03-11):
+    - [x] **Item 3 (Dead Error UI)**: Fixed the cancellation loop overriding the display of persistent download errors.
+    - [x] **Item 5 (Centralized Logging)**: Ripped out all `print()` streams across the converter modules, wiring them securely into Python's `logging` system.
+    - [x] **Item 8 (Versioning)**: Built `version.py` (`v2.0.0`) and added an elegant UI tracker to the sidebar.
+    - [x] **Item 9 (Import Hoisting)**: Relocated 26 inline function imports to module headers.
+    - [x] **Item 10 (Strict Exceptions)**: Eradicated 9 bare `except:` blocks, shielding vital OS interrupts.
+    - [x] **Item 13 (Design Token Centralization)**: Stripped 249 raw hex color strings out of the UI files, centralizing all aesthetics into `theme.py`.
+    - [x] **Item 14 (HTML Sanitization)**: Developed an `esc()` utility and blanketed 46 user-controlled strings inside `st.markdown()` blocks to guarantee safety against payload-based XSS injection.
 - [x] **V3.0 Architecture Audit Fixes Implementation** (2026-03-10):
     - [x] **"Modules Mode" Data Loss Fix**: Eradicated the global `downloaded_file_ids` tracker that incorrectly forced the system to skip files present in multiple modules.
     - [x] **Path Conflict Data Loss Fix**: Replaced aggressive `seen_target_paths` skipping with a robust synchronous renaming mechanism `(1)`, `(2)` to safely queue identical filenames crashing into the same directory without `[WinError 32]` or data loss.

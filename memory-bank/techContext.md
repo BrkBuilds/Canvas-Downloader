@@ -17,6 +17,7 @@
 - `streamlit`: UI rendering (heavily using **`st.dialog`** for modals and `st.container` for layout).
 - `canvasapi`: REST API interaction.
 - `aiohttp`: Async HTTP requests.
+- `keyring`: OS-native secure credential vault for storing API tokens.
 - `urllib.parse`: URL handling for robust filename decoding.
 - `shutil`: Disk space checking (`disk_usage`).
 - `sqlite3`: Robust manifest database management.
@@ -31,10 +32,13 @@
 Canvas_LMS_batch_file_downloader/
 ├── app.py              # Main Streamlit app (~1400 lines)
 ├── sync_ui.py          # Sync mode UI (~4000 lines) — Step 1 & Step 4
-├── ui_helpers.py       # Shared utilities (185 lines)
+├── ui_helpers.py       # Shared utilities (disk check, path utils, HTML escape)
 ├── canvas_logic.py     # Canvas API wrapper + sanitization
 ├── sync_manager.py     # Sync backend — Manifest Logic (SQLite, Levenshtein)
+├── version.py          # Global version tracker (e.g., __version__)
+├── theme.py            # Centralized design tokens and CSS variables
 ├── assets/             # Icons, images
+├── post_processing.py  # Unified translation/conversion runner pipeline
 ├── pdf_converter.py    # Native PPTX/PPT to PDF COM converter
 ├── word_converter.py   # Native DOC/RTF to PDF COM converter
 ├── code_converter.py   # Code & Data raw file format preservation logic
