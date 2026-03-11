@@ -358,7 +358,7 @@ class CanvasManager:
                                     if ext not in allowed_exts:
                                         continue
                                 total_bytes += getattr(file_obj, 'size', 0)
-                            except:
+                            except Exception:
                                 pass
         except Exception:
             pass
@@ -971,7 +971,7 @@ class CanvasManager:
                         ) # Skip
                     else:
                         log_debug(f"File exists but size mismatch. Canvas: {file_size_bytes}, Local: {filepath.stat().st_size}. Re-downloading.", debug_file)
-                except:
+                except Exception:
                     pass
 
             filepath = self._handle_conflict(filepath)
@@ -1235,7 +1235,7 @@ class CanvasManager:
     def _sanitize_filename(self, filename, replace_spaces=False, max_length=120):
         if not filename: return "untitled"
         try: filename = urllib.parse.unquote_plus(filename)
-        except: pass
+        except Exception: pass
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
         if replace_spaces: sanitized = sanitized.replace(' ', '_')
         sanitized = sanitized.strip('. _')
@@ -1285,7 +1285,7 @@ class CanvasManager:
                 
             with open(log_file, "a", encoding="utf-8") as f:
                 f.write(entry + "\n")
-        except:
+        except Exception:
             # Last resort fallback if logging fails
             pass
 
@@ -1296,5 +1296,5 @@ class CanvasManager:
             # Dynamic threshold: at least 1GB, or the payload size + 20% buffer
             min_required = max(min_free_gb * (1024**3), int(required_bytes * 1.2))
             return stat.free >= min_required
-        except:
+        except Exception:
             return True
