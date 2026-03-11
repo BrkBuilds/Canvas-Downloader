@@ -10,7 +10,8 @@ Requirements:
 Graceful degradation: If Office or pywin32 is missing, conversion silently fails
 and the original PowerPoint file is preserved.
 """
-
+import os
+import shutil
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -47,10 +48,10 @@ class PowerPointToPDF:
             
         pptx_path = Path(pptx_path)
         abs_pptx = str(pptx_path.resolve().absolute())
-        abs_pdf = str(pptx_path.with_suffix('.pdf').resolve().absolute())
-        pdf_path = Path(abs_pdf)
+        pdf_path = pptx_path.with_suffix('.pdf')
+        abs_pdf = str(pdf_path.resolve().absolute())
         
-        print(f"[COM Converter] Attempting to convert: {abs_pptx}")
+        logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
         presentation = None
         
         try:
@@ -95,7 +96,7 @@ class PowerPointToPDF:
             else:
                 friendly_msg = f"COM conversion failed: {error_msg}"
 
-            print(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
+            logger.error(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
             
             _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
 

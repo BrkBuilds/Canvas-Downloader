@@ -91,41 +91,62 @@ class SyncManager:
         self.local_path.mkdir(parents=True, exist_ok=True)
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
-            
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            
-            # Enable WAL mode for better concurrency and synchronous=NORMAL for speed/safety
-            cursor.execute('PRAGMA journal_mode=WAL;')
-            cursor.execute('PRAGMA synchronous=NORMAL;')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS sync_manifest (
-                    canvas_file_id INTEGER PRIMARY KEY,
-                    canvas_filename TEXT,
-                    local_path TEXT,
-                    canvas_updated_at TEXT,
-                    downloaded_at TEXT,
-                    original_size INTEGER,
-                    is_ignored INTEGER DEFAULT 0,
-                    original_md5 TEXT DEFAULT ""
-                )
-            ''')
-            # Handle migration for existing DBs to add original_md5
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Enable WAL mode for better concurrency and synchronous=NORMAL for speed/safety
+                cursor.execute('PRAGMA journal_mode=WAL;')
+                cursor.execute('PRAGMA synchronous=NORMAL;')
+                
+                # Quick integrity check to catch corruption early
+                result = cursor.execute('PRAGMA quick_check;').fetchone()
+                if result and result[0] != 'ok':
+                    raise sqlite3.DatabaseError(f"Integrity check failed: {result[0]}")
+                
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS sync_manifest (
+                        canvas_file_id INTEGER PRIMARY KEY,
+                        canvas_filename TEXT,
+                        local_path TEXT,
+                        canvas_updated_at TEXT,
+                        downloaded_at TEXT,
+                        original_size INTEGER,
+                        is_ignored INTEGER DEFAULT 0,
+                        original_md5 TEXT DEFAULT ""
+                    )
+                ''')
+                # Handle migration for existing DBs to add original_md5
+                try:
+                    cursor.execute('ALTER TABLE sync_manifest ADD COLUMN original_md5 TEXT DEFAULT ""')
+                except sqlite3.OperationalError:
+                    pass  # Column already exists
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS sync_metadata (
+                        key TEXT PRIMARY KEY,
+                        value TEXT
+                    )
+                ''')
+                
+                cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_id', str(self.course_id)))
+                cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_name', self.course_name))
+                conn.commit()
+        except sqlite3.DatabaseError as e:
+            # Database is corrupted — rescue by renaming and re-initializing
+            logger.error(f"Database corrupted at {self.db_path}: {e}. Resetting to fresh database.")
             try:
-                cursor.execute('ALTER TABLE sync_manifest ADD COLUMN original_md5 TEXT DEFAULT ""')
-            except sqlite3.OperationalError:
-                pass  # Column already exists
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS sync_metadata (
-                    key TEXT PRIMARY KEY,
-                    value TEXT
-                )
-            ''')
-            
-            cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_id', str(self.course_id)))
-            cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_name', self.course_name))
-            conn.commit()
+                corrupted_path = self.db_path.with_name('.canvas_sync_corrupted.db')
+                if corrupted_path.exists():
+                    corrupted_path.unlink()
+                self.db_path.rename(corrupted_path)
+                logger.info(f"Corrupted database backed up to {corrupted_path}")
+            except OSError as rename_err:
+                logger.warning(f"Could not rename corrupted DB: {rename_err}. Deleting instead.")
+                self.db_path.unlink(missing_ok=True)
+            # Recursively re-init with a clean slate
+            self._init_db()
+            return
             
         if os.name == 'nt':
             self._windows_hide_file(self.db_path)
@@ -778,7 +799,7 @@ class SyncManager:
                 if os.name == 'nt':
                     self._windows_unhide_file(self.db_path)
                     
-                with sqlite3.connect(self.db_path) as conn:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     cursor = conn.cursor()
                     cursor.execute('''
                         INSERT INTO sync_manifest 
