@@ -41,7 +41,12 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
                 uncompressed_size = sum(info.size for info in tar_ref.getmembers() if info.isfile())
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                     raise Exception(f"Archive bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
-                tar_ref.extractall(extract_dir)
+                
+                # Mitigation for CVE-2007-4559 (tarfile path traversal)
+                if hasattr(tarfile, 'data_filter'):
+                    tar_ref.extractall(extract_dir, filter='data')
+                else:
+                    tar_ref.extractall(extract_dir)
         else:
             return None
             
@@ -54,5 +59,6 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
         return str(stub_path)
         
     except Exception as e:
-        print(f"Failed to extract {abs_archive.name}: {e}")
+        import logging
+        logging.getLogger(__name__).error(f"Failed to extract {abs_archive.name}: {e}")
         return None

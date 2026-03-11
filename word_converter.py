@@ -1,7 +1,5 @@
 import os
 import logging
-import pythoncom
-import win32com.client
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -21,6 +19,8 @@ class WordToPDF:
             except Exception:
                 pass
             self.app.DisplayAlerts = False
+        except ImportError:
+            logger.warning("pywin32 not installed or not on Windows. Word conversion disabled.")
         except Exception as e:
             logger.error(f"COM Initialization failed for Word: {e}")
         return self

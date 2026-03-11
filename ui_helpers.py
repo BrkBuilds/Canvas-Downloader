@@ -130,6 +130,27 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
 
 # --- Folder Opener ---
 
+def native_folder_picker() -> str | None:
+    """Open native folder picker dialog safely across threads inside Streamlit.
+    Builds the Tkinter root with correct attributes, destroys it on close,
+    and handles missing assets gracefully.
+    
+    Returns:
+        Absolute path to selected folder as string, or None if cancelled.
+    """
+    import tkinter as tk
+    from tkinter import filedialog
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    try:
+        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+    except Exception:
+        pass
+    folder_path = filedialog.askdirectory(master=root)
+    root.destroy()
+    return folder_path if folder_path else None
+
 def open_folder(path: str):
     """
     Opens a folder in the native file explorer and forces it to the foreground.

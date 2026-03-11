@@ -23,5 +23,5 @@ def clear_debug_log(debug_file=None):
     try:
         with open(debug_file, "w", encoding="utf-8") as f:
             f.write(f"--- Debug Log Started: {datetime.now()} ---\n")
-    except:
+    except Exception:
         pass
