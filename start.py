@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 import threading
 import time
 import webbrowser
@@ -31,17 +32,25 @@ class CanvasLauncher:
         self.root.geometry("400x250")
         self.root.resizable(False, False)
         
-        # Set icon if available
+        # Set icon if available (macOS rejects .ico — use .png via iconphoto)
         try:
-            self.root.iconbitmap(resolve_path("assets/icon.ico"))
+            if platform.system() == 'Darwin':
+                icon_img = tk.PhotoImage(file=resolve_path("assets/icon.png"))
+                try:
+                    self.root.iconphoto(True, icon_img)
+                except Exception as inner_e:
+                    logging.warning(f"macOS TclError bypassed: {inner_e}")
+            else:
+                self.root.iconbitmap(resolve_path("assets/icon.ico"))
         except Exception as e:
             logging.warning(f"Could not load icon: {e}")
 
 
         
         self.style = ttk.Style()
-        self.style.configure("TLabel", font=("Segoe UI", 10))
-        self.style.configure("Header.TLabel", font=("Segoe UI", 12, "bold"))
+        _font_family = "Helvetica Neue" if platform.system() == 'Darwin' else "Segoe UI"
+        self.style.configure("TLabel", font=(_font_family, 10))
+        self.style.configure("Header.TLabel", font=(_font_family, 12, "bold"))
         
         self.main_frame = ttk.Frame(self.root, padding="20")
         self.main_frame.pack(fill=tk.BOTH, expand=True)

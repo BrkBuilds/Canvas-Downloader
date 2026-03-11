@@ -17,6 +17,7 @@ Comprehensive overhaul with:
 import base64
 import json
 import os
+import platform
 import shutil
 import time
 import asyncio
@@ -1154,7 +1155,7 @@ def _render_hub_config(pair: dict):
         st.markdown("<div class='cfg-cb' style='visibility: hidden;'><input type='checkbox'><span>Spacer</span></div>", unsafe_allow_html=True)
         st.markdown(cb("Convert Canvas Pages (HTML) to Markdown", contract.get('convert_html', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Code & Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Compile Web Links (.url) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Compile Web Links (.url/.webloc) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
 
     st.markdown("<div style='margin-bottom: -10px;'></div>", unsafe_allow_html=True)
@@ -4403,7 +4404,7 @@ def _show_analysis_review():
                           'Converts Canvas Pages from HTML to clean Markdown formats.'),
         'convert_code':  ('Convert Code & Data Files to .txt',
                           'Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM.'),
-        'convert_urls':  ('Compile Web links (.url) into a single list',
+        'convert_urls':  ('Compile Web links (.url/.webloc) into a single list',
                           'Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file.'),
         'convert_video': ('Extract Audio (.mp3) from Videos (.mp4, .mov)',
                           'Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size.'),
@@ -5416,12 +5417,19 @@ def _run_sync():
                             # It's a synthetic shortcut. Recreate it directly
                             Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
                             
-                            is_url_ext = filepath.name.lower().endswith('.url')
+                            is_url_ext = filepath.name.lower().endswith('.url') or filepath.name.lower().endswith('.webloc')
                             is_html_ext = filepath.name.lower().endswith('.html')
                             
                             if is_url_ext:
-                                shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
-                                Path(make_long_path(filepath)).write_text(shortcut_content, encoding='utf-8')
+                                if platform.system() == 'Darwin':
+                                    import plistlib
+                                    plist_data = {'URL': file.url}
+                                    Path(make_long_path(filepath)).write_bytes(
+                                        plistlib.dumps(plist_data, fmt=plistlib.FMT_XML)
+                                    )
+                                else:
+                                    shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
+                                    Path(make_long_path(filepath)).write_text(shortcut_content, encoding='utf-8')
                             elif is_html_ext:
                                 html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
                                 Path(make_long_path(filepath)).write_text(html_content, encoding='utf-8')
