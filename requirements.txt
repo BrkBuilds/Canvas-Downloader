@@ -6,4 +6,4 @@ beautifulsoup4==4.12.3
 markdownify==0.14.1
 moviepy==2.1.2
 keyring==25.6.0
-pywin32==308
+pywin32==308; sys_platform == 'win32'

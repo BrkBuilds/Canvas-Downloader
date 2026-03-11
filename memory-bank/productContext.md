@@ -23,7 +23,7 @@ Desktop application for university students to batch download and synchronize co
 - **Offline Access**: Materials available without internet after download/sync.
 - **NotebookLM Compatible Content Generation**:
     - Extends the core downloaded assets by dynamically converting or extracting them into formats optimized for LLM ingestion (like Google NotebookLM).
-    - Features native PDF conversion for modern/legacy PowerPoints, Word Docs, and Excel spreadsheets via COM automation (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`).
+    - Features native PDF conversion for PowerPoints, Word Docs, and Excel spreadsheets. Uses Win32 COM automation on Windows, and native AppleScript (`osascript`) on macOS to control the local Office applications (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`).
     - Compiles URL shortcuts into a single master TXT file (`url_compiler.py`).
     - Strips HTML Canvas pages down to pristine Markdown (`md_converter.py`).
     - Appends `.txt` extensions to raw programming/data files to survive AI ingestion checks (`code_converter.py`).

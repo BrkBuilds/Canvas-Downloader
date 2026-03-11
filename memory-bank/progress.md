@@ -1,6 +1,12 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **macOS V1.0 Native Release Implementation** (2026-03-11):
+    - [x] **Top-level Crash Resolution**: Rewrote `excel_converter.py` to eradicate unconditional COM imports (`pythoncom`, `win32com.client`) that were throwing `ModuleNotFoundError` on UNIX. All Office modules now utilize lazy-loading encapsulated within structural context managers.
+    - [x] **AppleScript Automation Bridge**: Engineered a zero-dependency macOS fallback pipeline for PowerPoint, Word, and Excel converters. `osascript` subprocess calls forcefully boot local Mac Office applications, process payload documents, export to PDF, and clean up silently, achieving 100% format-shifting feature parity with Windows.
+    - [x] **Application Support Read/Write Saftey**: Upgraded system pathing to natively detect Apple `.app` binary execution (`sys.frozen + Darwin`). Writable JSON and credential databases are dynamically mapped to `~/Library/Application Support/CanvasDownloader` to bypass code-signing locks.
+    - [x] **Cross-Platform Synthetics**: Rewired `url_compiler.py` to recursively glob and parse native macOS `.webloc` XML binary bookmarks via `plistlib`, mirroring the legacy `.url` Windows INI compiler.
+    - [x] **Architectural Guardrails**: Shielded `requirements.txt` with `sys_platform == 'win32'` markers to prevent macOS pip cascade failure. Re-linked `difflib` in PyInstaller manifests to resolve Windows/Mac executable crashes during complex DB sync diffs.
 - [x] **V1.0 Polish Sweep (Tier 2 & 3 Audit Items)** (2026-03-11):
     - [x] **Item 3 (Dead Error UI)**: Fixed the cancellation loop overriding the display of persistent download errors.
     - [x] **Item 5 (Centralized Logging)**: Ripped out all `print()` streams across the converter modules, wiring them securely into Python's `logging` system.

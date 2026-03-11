@@ -7,6 +7,23 @@
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
 
+## Recent Changes (Session 2026-03-11 — macOS V1.0 Native Release)
+- **P0 CRITICAL: Excel Converter Crash Fix (`excel_converter.py`)**: Removed top-level `import pythoncom` / `import win32com.client` that caused `ModuleNotFoundError` on macOS. All COM imports are now lazy (inside `__enter__` and `_init_app`) with `try/except ImportError`, matching the pattern already used by `word_converter.py`.
+- **P0: Platform-Guarded Dependencies (`requirements.txt`)**: Added `; sys_platform == 'win32'` marker to `pywin32==308` so `pip install` no longer fails on macOS/Linux.
+- **P0: Cross-Platform .spec Fix (`Canvas_Downloader.spec`)**: Removed `'difflib'` from excludes (it was breaking `sync_manager.py`'s heal manifest on BOTH platforms). Also removed stale `'translations.py'` reference from datas.
+- **P1: Config Path Safety (`ui_helpers.py` + `app.py`)**: Unified `get_config_dir()` to route config files to `~/Library/Application Support/CanvasDownloader/` on frozen macOS bundles (preventing `PermissionError` from writing inside read-only `.app` bundles). `app.py`'s `get_config_path()` now delegates to this unified function.
+- **P2: AppleScript Office Bridge (`excel_converter.py`, `word_converter.py`, `pdf_converter.py`)**: Implemented full AppleScript (`osascript`) fallbacks inside each converter's `convert()` method. When `sys.platform == 'darwin'`, the converters bypass COM and use `subprocess.run(['osascript', '-e', ...])` to control Microsoft Excel, Word, and PowerPoint natively on macOS. Features: 120s timeout, `POSIX file` path format, quote escaping for defense-in-depth, stateless per-invocation (no self-healing needed).
+- **P2: `.webloc` Support (`url_compiler.py`)**: Added platform-aware globbing (`*.webloc` on Darwin, `*.url` on Windows) and a `plistlib`-based parser for macOS bookmark files. The NotebookLM URL compilation feature now works identically on both platforms.
+
+## Architectural Decisions — macOS
+- **AppleScript helpers are duplicated** (~15 lines each) as `@staticmethod` in each of the 3 converter classes rather than shared in a module. Keeps converters self-contained.
+- **No UI warnings** for missing Mac Office. Silent graceful failure (returns `None` + logs error), matching Windows behavior.
+- **Config path routing**: `sys.frozen + Darwin → ~/Library/Application Support/`. `sys.frozen + Windows → exe directory`. `Script mode → __file__ parent`.
+
+## Recent Changes (Session 2026-03-11 — V1.0 Final Action Plan Execution)
+- **COM Self-Healing (`word_converter.py`)**: Ported the robust self-healing architecture from `excel_converter.py` into the legacy Word document converter. Added `_ensure_app()` to perform a lightweight health check before every single conversion. If a corrupted document crashes the COM channel, the converter forcefully kills the dead Word instance and re-initializes it, preventing cascading batch failures.
+- **Disk Space Hardening (`ui_helpers.py`)**: Fixed a vulnerability in `check_disk_space()` where nested, non-existent target paths (e.g. `X:\future_folder`) caused `shutil.disk_usage()` to throw an exception, silently returning a false-positive `True`. It now iteratively walks up the path tree until it finds the closest existing parent directory (e.g. `X:\`) to accurately evaluate available drive space.
+
 ## Recent Changes (Session 2026-03-11 — V1.0 Polish Sweep & Final Audit Items)
 - **Item 3: Dead Error UI Fix**: Fixed a logical contradiction in `app.py`'s cancellation handler that prevented error messages from correctly displaying after an aborted download loop.
 - **Item 5: Centralized Logging**: Purged amateur `print()` statements from all 7 converter loops (`pdf`, `word`, `excel`, `video`, `code`, etc.) and replaced them with standard Python `logging` for persistent disk traceability.

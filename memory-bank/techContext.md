@@ -9,7 +9,7 @@
 - **SQLite3**: Robust local database management for sync manifests.
 
 ## Development Environment
-- **OS**: Windows (primary target).
+- **OS**: Windows and macOS (100% native feature parity).
 - **Package Management**: `requirements.txt`.
 - **Run Command**: `streamlit run app.py`
 
@@ -22,7 +22,7 @@
 - `shutil`: Disk space checking (`disk_usage`).
 - `sqlite3`: Robust manifest database management.
 - `difflib`: Levenshtein string matching for collision resolution (`SequenceMatcher`).
-- `pywin32` (`win32com.client`, `pythoncom`): Windows COM automation natively converting legacy Docs (`.doc/.rtf`), Presentations (`.pptx/.ppt`), and Excel workbooks (`.xlsx/.xls/.xlsm`) to PDF, utilizing high-performance batch Context Managers.
+- **pywin32 / osascript**: Dual-engine architecture for Office-to-PDF conversions. Windows uses `win32com.client` COM automation. macOS uses native `osascript` (AppleScript) subprocess execution to achieve exact feature parity for `.doc`, `.pptx`, and `.xlsx` files without heavy dependencies.
 - `beautifulsoup4` / `markdownify`: Cleaning HTML Canvas Pages and converting them to Markdown.
 - `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
 - `zipfile` / `tarfile`: Native extraction of compressed payloads.

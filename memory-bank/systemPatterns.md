@@ -9,7 +9,20 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **`ui_helpers.py`**: Shared UI utilities (disk check, path utils).
 - **`canvas_logic.py`**: Canvas API interactions.
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).
-- **`excel_converter.py`**: Excel to PDF conversion utility using Win32COM.
+- **`excel_converter.py`**: Excel to PDF conversion utility (Win32COM + AppleScript).
+
+## Cross-Platform Architecture
+- **Dual-Engine Automation Bridge**:
+    - *Policy*: Achieve 100% feature parity between Windows and macOS without disabling features on UNIX.
+    - *Implementation*: Office converters (`word`, `excel`, `pdf`) use a dynamic `if sys.platform == 'darwin':` branch inside their `convert()` methods. Windows uses `win32com` with self-healing. macOS uses `subprocess.run(['osascript'])` to inject AppleScript payloads directly into the local Mac Office applications.
+- **AppleScript Defensive Execution**:
+    - *Pattern*: `osascript` subprocesses are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
+    - *Path Formatting*: AppleScript blocks natively accept `POSIX file "/Users/..."` strings. Paths are escaped (`path.replace('"', '\\"')`) for injection defense-in-depth.
+- **Code-Signing Bundle Safety**:
+    - *Policy*: Persistent settings files (`.json`) must never be written relative to `app.py` when compiled as a macOS `.app` bundle, as the `Contents/MacOS/` directory is code-signed and read-only.
+    - *Implementation*: `ui_helpers.get_config_dir()` detects `sys.frozen` + `Darwin` and automatically routes database/JSON writes to the strictly writable `~/Library/Application Support/CanvasDownloader/` user domain.
+- **Platform-Guarded Dependencies**:
+    - *Pattern*: Windows-exclusive wheels like `pywin32` are constrained in `requirements.txt` via environment markers (`pywin32==308; sys_platform == 'win32'`), allowing a single universal requirements file to build cleanly on both operating systems.
 
 ## Security & State Patterns
 - **OS-Native Credential Storage (`keyring`)**: 
@@ -125,6 +138,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Network Retry Resilience**:
     - *Problem*: Synchronous or zero-retry download loops permanently fail actionable files on receipt of a single transient HTTP 429, 500, or `TimeoutError`.
     - *Solution*: Wrapped all `aiohttp` download block core expressions (`session.get()`) in an explicit 5-retry loop. Implemented exponential backoff (`2^attempt` seconds) for 5xx and Network Errors, and explicitly extract and bind to the `Retry-After` header for 429 Rate Limits.
+- **Format-Agnostic Shortcut Extraction**:
+    - *Pattern*: Windows shortcut formats (`.url` INI files) and macOS shortcut formats (`.webloc` binary/XML plists) require radically different parsing engines.
+    - *Implementation*: `url_compiler.py` uses branch-dependent `rglob` scanning (`*.url` vs `*.webloc`) and parses macOS plists natively via Python's `plistlib.load()`, merging both arbitrary OS formats into an identical NotebookLM text payload.
 - **SQLite Manifest Tracking**: Stores metadata (ID, path, size, date) for 1:1 mapping.
 - **Sync Run #0 (Download-to-Sync Handoff)**:
     - *Problem*: The initial Download engine (`canvas_logic.py`) merely wrote files to disk, bypassing the Sync DB. When the Sync tab later analyzed the folder, the manifest was empty, causing all files (even manually deleted ones) to appear as "New" rather than "Locally Deleted".
