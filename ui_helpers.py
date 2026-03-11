@@ -9,6 +9,7 @@ import os
 import re
 import json
 import shutil
+import sys
 import time
 import platform
 import subprocess
@@ -50,8 +51,20 @@ SYNC_PAIRS_FILENAME = "canvas_sync_pairs.json"
 
 
 def get_config_dir() -> str:
-    """Get the directory where config files are stored (same as app.py location)."""
-    return str(Path(__file__).parent)
+    """Get the directory where config files are stored.
+
+    On macOS frozen bundles:  ~/Library/Application Support/CanvasDownloader/
+    On Windows frozen EXEs:   same directory as the executable
+    When running as script:   same directory as this source file
+    """
+    if getattr(sys, 'frozen', False) and platform.system() == 'Darwin':
+        base = Path.home() / 'Library' / 'Application Support' / 'CanvasDownloader'
+        base.mkdir(parents=True, exist_ok=True)
+        return str(base)
+    elif getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    else:
+        return str(Path(__file__).parent)
 
 
 # --- Persistent Sync Pairs ---
@@ -116,7 +129,16 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
         Tuple of (has_enough_space, available_mb, total_mb)
     """
     try:
-        stat = shutil.disk_usage(path)
+        check_path = Path(path).resolve()
+        # Find the first existing parent directory
+        while not check_path.exists() and check_path.parent != check_path:
+            check_path = check_path.parent
+            
+        if not check_path.exists():
+            # If we still can't find an existing path (e.g. invalid drive), assume okay
+            return True, -1, -1
+            
+        stat = shutil.disk_usage(str(check_path))
         available_mb = stat.free / (1024 * 1024)
         total_mb = stat.total / (1024 * 1024)
         # Dynamic threshold: at least min_free_gb, or payload + 20% buffer

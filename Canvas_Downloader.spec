@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_all
 import sys
 import os
 
-datas = [('app.py', '.'), ('canvas_logic.py', '.'), ('translations.py', '.'), ('assets', 'assets')]
+datas = [('app.py', '.'), ('canvas_logic.py', '.'), ('assets', 'assets')]
 binaries = []
 hiddenimports = []
 
@@ -45,7 +45,7 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 
-              'tkinter.test', 'doctest', 'pdb', 'unittest', 'difflib', 'pydoc', 'curses',
+              'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses',
               'sqlalchemy',
               # Heavy packages not used by this app
               'pyarrow', 'altair', 'pydeck', 'pandas', 'numpy',

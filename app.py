@@ -190,13 +190,8 @@ with st.sidebar:
     # Auth Logic
     
     def get_config_path():
-        if getattr(sys, 'frozen', False):
-            # Running as compiled exe
-            application_path = os.path.dirname(sys.executable)
-        else:
-            # Running as script
-            application_path = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(application_path, 'canvas_downloader_settings.json')
+        from ui_helpers import get_config_dir
+        return os.path.join(get_config_dir(), 'canvas_downloader_settings.json')
 
     CONFIG_FILE = get_config_path()
     KEYRING_SERVICE = "CanvasDownloader"
