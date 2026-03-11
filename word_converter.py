@@ -1,7 +1,10 @@
 import os
+import logging
 import pythoncom
 import win32com.client
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 class WordToPDF:
     def __init__(self):
@@ -19,7 +22,7 @@ class WordToPDF:
                 pass
             self.app.DisplayAlerts = False
         except Exception as e:
-            print(f"COM Initialization failed for Word: {e}")
+            logger.error(f"COM Initialization failed for Word: {e}")
         return self
         
     def convert(self, doc_path: str | Path) -> str | None:
@@ -36,7 +39,7 @@ class WordToPDF:
         doc = None
         
         try:
-            print(f"[COM Converter] Attempting to convert: {abs_doc}")
+            logger.debug(f"[COM Converter] Attempting to convert: {abs_doc}")
             
             # Open the legacy document
             doc = self.app.Documents.Open(abs_doc, ReadOnly=True, Visible=False)
@@ -53,7 +56,7 @@ class WordToPDF:
             return abs_pdf
             
         except Exception as e:
-            print(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
+            logger.error(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
             return None
         finally:
             if doc is not None:

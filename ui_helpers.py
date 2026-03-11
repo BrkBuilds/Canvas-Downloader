@@ -15,6 +15,13 @@ import urllib.parse
 from sync_manager import format_file_size
 
 
+def make_long_path(p: str | Path) -> str:
+    """Prepend Windows long path prefix to absolute paths to prevent WinError 206."""
+    s = str(p)
+    if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
+        return '\\\\?\\' + s
+    return s
+
 def robust_filename_normalize(name: str) -> str:
     """Normalize filename for robust comparison (unquote, strip, lower)."""
     if not name:

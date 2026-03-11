@@ -7,3 +7,4 @@ aiofiles
 beautifulsoup4
 markdownify
 moviepy
+keyring
