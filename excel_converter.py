@@ -1,15 +1,18 @@
 import os
+import sys
 import time
 import logging
-import pythoncom
-import win32com.client
+import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
 class ExcelToPDF:
-    """Context manager for batch Excel-to-PDF conversion via COM.
+    """Context manager for batch Excel-to-PDF conversion.
+
+    Windows:  Uses COM automation (win32com) with self-healing.
+    macOS:    Uses AppleScript via osascript to control Microsoft Excel.
 
     Design: One COM instance is shared across the batch for speed, but
     self-heals (Quit + re-init) if any individual file crashes the RPC
@@ -22,18 +25,31 @@ class ExcelToPDF:
 
     # ── lifecycle ──────────────────────────────────────────────────
     def __enter__(self):
-        pythoncom.CoInitialize()
+        if sys.platform == 'darwin':
+            return self  # AppleScript path, no COM needed
+        try:
+            import pythoncom
+            pythoncom.CoInitialize()
+        except ImportError:
+            pass
+        except Exception:
+            pass
         self._init_app()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._kill_app()
-        pythoncom.CoUninitialize()
+        try:
+            import pythoncom
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
 
     # ── COM management ─────────────────────────────────────────────
     def _init_app(self):
         """Spin up a fresh, locked-down Excel instance."""
         try:
+            import win32com.client
             self.app = win32com.client.DispatchEx("Excel.Application")
             self.app.Visible = False
             self.app.DisplayAlerts = False
@@ -46,6 +62,9 @@ class ExcelToPDF:
                 self.app.Interactive = False        # suppress "Publishing…" dialog
             except Exception:
                 pass
+        except ImportError:
+            logger.warning("pywin32 not installed or not on Windows. Excel conversion disabled.")
+            self.app = None
         except Exception as e:
             logger.error(f"[COM] Excel init failed: {e}")
             self.app = None
@@ -75,19 +94,72 @@ class ExcelToPDF:
             self._kill_app()
             self._init_app()
 
+    # ── AppleScript bridge (macOS) ─────────────────────────────────
+    @staticmethod
+    def _convert_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
+        """Run an AppleScript via osascript to convert a file to PDF."""
+        try:
+            result = subprocess.run(
+                ['osascript', '-e', script],
+                capture_output=True, text=True, timeout=120
+            )
+            if result.returncode != 0:
+                logger.error(f"[AppleScript] {app_name} failed: {result.stderr.strip()}")
+                return False
+            return dst.exists()
+        except FileNotFoundError:
+            logger.error("[AppleScript] osascript not found (not on macOS?)")
+            return False
+        except subprocess.TimeoutExpired:
+            logger.error(f"[AppleScript] {app_name} conversion timed out after 120s")
+            return False
+        except Exception as e:
+            logger.error(f"[AppleScript] {app_name} error: {e}")
+            return False
+
+    def _convert_applescript_excel(self, src: Path, dst: Path) -> bool:
+        """Convert an Excel file to PDF via AppleScript on macOS."""
+        posix_src = str(src.resolve()).replace('"', '\\"')
+        posix_dst = str(dst.resolve()).replace('"', '\\"')
+        script = f'''
+            tell application "Microsoft Excel"
+                open POSIX file "{posix_src}"
+                set theBook to active workbook
+                try
+                    tell page setup of active sheet
+                        set orientation to landscape
+                        set (fit to pages wide) to 1
+                        set (fit to pages tall) to false
+                    end tell
+                end try
+                save as theBook filename POSIX file "{posix_dst}" file format PDF file format
+                close theBook saving no
+            end tell
+        '''
+        return self._convert_applescript(src, dst, "Excel", script)
+
     # ── conversion ─────────────────────────────────────────────────
     def convert(self, excel_path: str | Path) -> tuple[str | None, str]:
         """Convert *excel_path* to PDF.  Returns ``(pdf_path, "")`` on
         success or ``(None, error_string)`` on failure."""
 
+        src = Path(excel_path).resolve()
+        dst = src.with_suffix(".pdf")
+
+        # macOS: AppleScript bridge
+        if sys.platform == 'darwin':
+            if self._convert_applescript_excel(src, dst):
+                src.unlink(missing_ok=True)
+                return str(dst), ""
+            return None, "AppleScript conversion failed (is Microsoft Excel installed?)"
+
+        # Windows: COM automation
         # Proactive health check — catches the "alternating failure" pattern
         # where the PREVIOUS export silently corrupted the COM channel.
         self._ensure_app()
         if not self.app:
             return None, "Excel COM application could not be initialized."
 
-        src = Path(excel_path).resolve()
-        dst = src.with_suffix(".pdf")
         abs_excel = str(src)
         abs_pdf = str(dst)
         wb = None

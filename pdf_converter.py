@@ -1,18 +1,23 @@
 """
 PDF Converter Utility for Canvas Downloader
-Converts PowerPoint files (.pptx, .ppt) to PDF using Win32COM (Microsoft Office).
+Converts PowerPoint files (.pptx, .ppt) to PDF.
+
+Windows:  Uses Win32COM (Microsoft Office PowerPoint).
+macOS:    Uses AppleScript via osascript to control Microsoft PowerPoint.
 
 Requirements:
-  - Windows OS
   - Microsoft Office (PowerPoint) installed
-  - pywin32 package (win32com.client, pythoncom)
+  - Windows: pywin32 package (win32com.client, pythoncom)
+  - macOS:   osascript (built-in)
 
-Graceful degradation: If Office or pywin32 is missing, conversion silently fails
-and the original PowerPoint file is preserved.
+Graceful degradation: If Office or pywin32/osascript is missing, conversion
+silently fails and the original PowerPoint file is preserved.
 """
 import os
+import sys
 import shutil
 import logging
+import subprocess
 from pathlib import Path
 from datetime import datetime
 
@@ -28,6 +33,8 @@ class PowerPointToPDF:
         self.app = None
 
     def __enter__(self):
+        if sys.platform == 'darwin':
+            return self  # AppleScript path, no COM needed
         try:
             import pythoncom
             import win32com.client
@@ -37,20 +44,75 @@ class PowerPointToPDF:
                 self.app.Visible = False
                 self.app.DisplayAlerts = False
             except Exception:
-                pass # Ignore Office 365 restriction
+                pass  # Ignore Office 365 restriction
+        except ImportError:
+            logger.warning("pywin32 not installed or not on Windows. PowerPoint conversion disabled.")
         except Exception as e:
             logger.warning(f"COM Initialization failed: {e}")
         return self
 
+    # ── AppleScript bridge (macOS) ─────────────────────────────────
+    @staticmethod
+    def _convert_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
+        """Run an AppleScript via osascript to convert a file to PDF."""
+        try:
+            result = subprocess.run(
+                ['osascript', '-e', script],
+                capture_output=True, text=True, timeout=120
+            )
+            if result.returncode != 0:
+                logger.error(f"[AppleScript] {app_name} failed: {result.stderr.strip()}")
+                return False
+            return dst.exists()
+        except FileNotFoundError:
+            logger.error("[AppleScript] osascript not found (not on macOS?)")
+            return False
+        except subprocess.TimeoutExpired:
+            logger.error(f"[AppleScript] {app_name} conversion timed out after 120s")
+            return False
+        except Exception as e:
+            logger.error(f"[AppleScript] {app_name} error: {e}")
+            return False
+
+    def _convert_applescript_pptx(self, src: Path, dst: Path) -> bool:
+        """Convert a PowerPoint file to PDF via AppleScript on macOS."""
+        posix_src = str(src.resolve()).replace('"', '\\"')
+        posix_dst = str(dst.resolve()).replace('"', '\\"')
+        script = f'''
+            tell application "Microsoft PowerPoint"
+                open POSIX file "{posix_src}"
+                set theDoc to active presentation
+                save theDoc in POSIX file "{posix_dst}" as save as PDF
+                close theDoc saving no
+            end tell
+        '''
+        return self._convert_applescript(src, dst, "PowerPoint", script)
+
     def convert(self, pptx_path: str | Path) -> str | None:
-        if self.app is None:
-            return None
-            
         pptx_path = Path(pptx_path)
         abs_pptx = str(pptx_path.resolve().absolute())
         pdf_path = pptx_path.with_suffix('.pdf')
         abs_pdf = str(pdf_path.resolve().absolute())
-        
+
+        # macOS: AppleScript bridge
+        if sys.platform == 'darwin':
+            if self._convert_applescript_pptx(pptx_path, pdf_path):
+                try:
+                    pptx_path.unlink()
+                except OSError as e:
+                    logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
+                logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
+                return abs_pdf
+            _log_conversion_error(
+                self.error_log_path, pptx_path.name,
+                "AppleScript conversion failed (is Microsoft PowerPoint installed?)"
+            )
+            return None
+
+        # Windows: COM automation
+        if self.app is None:
+            return None
+            
         logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
         presentation = None
         
