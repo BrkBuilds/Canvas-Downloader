@@ -2,17 +2,23 @@ import streamlit as st
 import tkinter as tk
 from tkinter import filedialog
 from canvas_logic import CanvasManager, DownloadError
+import asyncio
+import collections
+import json
 import os
 import logging
 import re
+import sys
+import time
 import keyring
+
+import theme
+from version import __version__
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
-import time
-import re
 from sync_ui import render_sync_step1, render_sync_step4
-from ui_helpers import friendly_course_name, parse_cbs_metadata, render_download_wizard
+from ui_helpers import esc, friendly_course_name, parse_cbs_metadata, render_download_wizard
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
@@ -46,9 +52,9 @@ st.markdown("""
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
     .st-key-cancel_pp_btn button:hover {
-        border-color: #ef4444 !important;
-        background-color: #2c1616 !important;
-        color: #ef4444 !important;
+        border-color: {theme.ERROR} !important;
+        background-color: {theme.ERROR_BG} !important;
+        color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
     }
     </style>
@@ -111,7 +117,7 @@ def select_folder():
     root.wm_attributes('-topmost', 1)
     try:
         root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
-    except:
+    except Exception:
         pass
     folder_path = filedialog.askdirectory(master=root)
     root.destroy()
@@ -125,7 +131,7 @@ def select_sync_folder():
     root.wm_attributes('-topmost', 1)
     try:
         root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
-    except:
+    except Exception:
         pass
     folder_path = filedialog.askdirectory(master=root)
     root.destroy()
@@ -196,8 +202,6 @@ with st.sidebar:
     st.title('🎓 Canvas Tool')
     
     # Auth Logic
-    import sys
-    import json
     
     def get_config_path():
         if getattr(sys, 'frozen', False):
@@ -355,7 +359,7 @@ with st.sidebar:
             st.markdown(f"""
             <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
                         padding: 8px 16px; text-align: center; margin-bottom: 8px;">
-                <span style="color: #fff; font-weight: 500;">{download_label}</span>
+                <span style="color: {theme.WHITE}; font-weight: 500;">{download_label}</span>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -373,7 +377,7 @@ with st.sidebar:
             st.markdown(f"""
             <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
                         padding: 8px 16px; text-align: center; margin-bottom: 8px;">
-                <span style="color: #fff; font-weight: 500;">{sync_label}</span>
+                <span style="color: {theme.WHITE}; font-weight: 500;">{sync_label}</span>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -427,11 +431,11 @@ with st.sidebar:
                         st.markdown("""
                             <style>
                             div.stSlider > div[data-baseweb="slider"] > div > div > div {
-                                background-color: #38bdf8 !important;
+                                background-color: {theme.ACCENT_LINK} !important;
                             }
                             div.stSlider > div[data-baseweb="slider"] > div > div[role="slider"] {
-                                background-color: #38bdf8 !important;
-                                border-color: #38bdf8 !important;
+                                background-color: {theme.ACCENT_LINK} !important;
+                                border-color: {theme.ACCENT_LINK} !important;
                             }
                             </style>
                         """, unsafe_allow_html=True)
@@ -514,6 +518,13 @@ with st.sidebar:
             if os.path.exists(CONFIG_FILE):
                 os.remove(CONFIG_FILE)
             st.rerun()
+
+        # Version badge
+        st.markdown(
+            f"<div style='text-align:center;color:{theme.TEXT_MUTED};font-size:0.75rem;"
+            f"padding:20px 0 5px 0;'>Canvas Downloader v{__version__}</div>",
+            unsafe_allow_html=True,
+        )
 
 # --- Main Content ---
 st.title('Canvas LMS Course Material Downloader')
@@ -686,7 +697,7 @@ with _main_content.container():
 
                 for course in filtered_courses:
                     # Logic for names
-                    full_name_str = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
+                    full_name_str = f"{esc(course.name)} ({course.course_code})" if hasattr(course, 'course_code') else course.name
                     friendly = friendly_course_name(full_name_str)
                     
                     # If friendly is same as full, don't show duplicate in parens?
@@ -742,7 +753,7 @@ with _main_content.container():
                         st.markdown(
                             f'<div style="margin-top: 8px;">'
                             f'<strong>{friendly}</strong> '
-                            f'<span style="color:#888; font-size:0.9em;">({full_name_str})</span>'
+                            f'<span style="color:{theme.TEXT_DIM}; font-size:0.9em;">({full_name_str})</span>'
                             f'</div>',
                             unsafe_allow_html=True
                         )
@@ -852,7 +863,7 @@ with _main_content.container():
             .st-key-convert_urls, .st-key-convert_video {
                 margin-left: 28px !important;
                 padding-left: 15px !important;
-                border-left: 2px solid #3E4353 !important; 
+                border-left: 2px solid {theme.BG_CARD_HOVER} !important; 
                 margin-top: -12px !important; 
                 padding-top: 4px !important;
                 padding-bottom: 4px !important;
@@ -1025,8 +1036,6 @@ with _main_content.container():
         
         # UI elements in correct order
         if st.session_state['download_status'] == 'running':
-            import time
-            import collections
             if 'start_time' not in st.session_state:
                 st.session_state['start_time'] = time.time()
             if 'log_deque' not in st.session_state:
@@ -1088,12 +1097,12 @@ with _main_content.container():
                 def analysis_progress_hook(current_mod, total_mods, mod_status_text):
                     mod_percent = int((current_mod / total_mods) * 100) if total_mods > 0 else 0
                     analysis_ui_placeholder.markdown(f"""
-                    <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
-                        <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                        <p style="color: #8A91A6; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{course.name}</b></p>
-                        <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{mod_status_text}</p>
-                        <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                            <div style="background-color: #4DA8DA; width: {mod_percent}%; height: 100%; transition: width 0.1s ease;"></div>
+                    <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
+                        <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                        <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
+                        <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{mod_status_text}</p>
+                        <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                            <div style="background-color: {theme.ACCENT_BLUE}; width: {mod_percent}%; height: 100%; transition: width 0.1s ease;"></div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1103,11 +1112,11 @@ with _main_content.container():
 
                 # Render initial modern loading UI
                 analysis_ui_placeholder.markdown(f"""
-                <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-bottom: 20px;">
-                    <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                    <p style="color: #8A91A6; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{course.name}</b></p>
-                    <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; margin-top: 10px; overflow: hidden;">
-                        <div style="background-color: #4DA8DA; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
+                <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
+                    <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
+                    <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; margin-top: 10px; overflow: hidden;">
+                        <div style="background-color: {theme.ACCENT_BLUE}; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1168,7 +1177,6 @@ with _main_content.container():
             st.session_state['total_mb'] = total_mb
             st.session_state['download_status'] = 'running'
             
-            import time
             st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
             
             st.rerun()
@@ -1178,8 +1186,6 @@ with _main_content.container():
                 st.session_state['download_status'] = 'cancelled'
                 st.rerun()
             elif current_idx < total:
-                import time
-                import collections
                 
                 # Fetch state variables initialized up top
                 start_time = st.session_state.get('start_time', time.time())
@@ -1222,14 +1228,14 @@ with _main_content.container():
                     
                     header_placeholder.markdown(f'''
                     <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">📦 Downloading Courses</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">{course.name}</h3>
+                        <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Downloading Courses</p>
+                        <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(course.name)}</h3>
                     </div>
                     ''', unsafe_allow_html=True)
 
                     progress_placeholder.markdown(f'''
-                    <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                    <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                        <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
                             {percent}%
                         </div>
@@ -1237,21 +1243,21 @@ with _main_content.container():
                     ''', unsafe_allow_html=True)
                     
                     metrics_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_mb:.1f} MB</span></span>
+                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
+                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_mb:.1f} MB</span></span>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
+                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
                             <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-                            <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_items}</span></span>
+                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
+                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_items}</span></span>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
+                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
                             <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
                         </div>
                     </div>
@@ -1259,7 +1265,7 @@ with _main_content.container():
                     
                     log_content = "<br>".join(reversed(list(log_deque)))
                     log_placeholder.markdown(f'''
-                    <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
                         {log_content}
                     </div>
                     ''', unsafe_allow_html=True)
@@ -1277,7 +1283,7 @@ with _main_content.container():
                         if progress_type in ('download', 'page', 'link'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
-                                active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
+                                active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
                                 log_deque.append(f"[✅] Finished: {msg}")
                             render_dashboard()
                             
@@ -1294,8 +1300,8 @@ with _main_content.container():
                                     st.session_state['download_errors_list'] = []
                                 st.session_state['download_errors_list'].append(error_obj)
                                 
-                                error_text = f"[{course.name}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {error_text}</span>")
+                                error_text = f"[{esc(course.name)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {esc(error_text)}</span>")
                                 
                             render_dashboard()
 
@@ -1307,15 +1313,14 @@ with _main_content.container():
                             render_dashboard()
                         
                         elif msg and progress_type == 'log':
-                            new_line = f"[{course.name}] {msg}"
-                            log_deque.append(f"<span style='color: #8A91A6;'>[ℹ️] {new_line}</span>")
+                            new_line = f"[{esc(course.name)}] {msg}"
+                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[ℹ️] {new_line}</span>")
                             render_dashboard()
                     except BaseException:
                         # Silently catch Streamlit's StopException / RerunException during async teardown
                         pass
                 
 
-                import asyncio
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 # Build the Sync Contract — all settings for this download
                 _pp_settings = {
@@ -1370,7 +1375,7 @@ with _main_content.container():
                 if debug_file:
                     try:
                         with open(debug_file, "a", encoding="utf-8") as f:
-                            f.write(f"\n{'='*50}\n--- Post-Processing: {course.name} ---\n{'='*50}\n")
+                            f.write(f"\n{'='*50}\n--- Post-Processing: {esc(course.name)} ---\n{'='*50}\n")
                     except Exception:
                         pass
 
@@ -1478,7 +1483,7 @@ with _main_content.container():
                                 errors = f.read().strip()
                                 if errors:
                                     error_messages.extend(errors.split('\n'))
-                        except:
+                        except Exception:
                             pass
             
             # Display error summary if there are errors
@@ -1551,8 +1556,8 @@ with _main_content.container():
             
             st.markdown(f"""
             <div style="
-                background: linear-gradient(135deg, #2c1616 0%, #1a1a2e 100%);
-                border: 1px solid #ef4444;
+                background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
+                border: 1px solid {theme.ERROR};
                 border-radius: 12px;
                 padding: 28px 32px;
                 margin: 20px 0;
@@ -1560,9 +1565,9 @@ with _main_content.container():
             ">
                 <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
                     <span style="font-size: 2rem;">🛑</span>
-                    <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Download Cancelled</h2>
+                    <h2 style="margin: 0; color: {theme.ERROR}; font-size: 1.5rem; font-weight: 700;">Download Cancelled</h2>
                 </div>
-                <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
+                <p style="color: {theme.TEXT_LIGHT}; font-size: 1rem; margin: 0 0 8px 0;">
                     {'Download was cancelled.'}
                 </p>
                 <div style="
@@ -1572,7 +1577,7 @@ with _main_content.container():
                     margin-top: 12px;
                     display: inline-block;
                 ">
-                    <span style="color: #f87171; font-size: 0.9rem; font-weight: 600;">
+                    <span style="color: {theme.ERROR_LIGHT}; font-size: 0.9rem; font-weight: 600;">
                         {cancel_summary_msg}
                     </span>
                 </div>

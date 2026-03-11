@@ -14,10 +14,14 @@ Comprehensive overhaul with:
   - Consistent card design throughout
 """
 
+import base64
+import json
 import os
+import shutil
 import time
 import asyncio
 import logging
+import traceback
 from pathlib import Path
 from datetime import datetime
 from urllib.parse import unquote_plus
@@ -29,10 +33,13 @@ from collections import defaultdict
 import sqlite3
 import aiofiles
 
+import theme
+
 
 from canvas_logic import CanvasManager
 from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon, format_file_size
 from ui_helpers import (
+    esc,
     load_sync_pairs,
     save_sync_pairs,
     check_disk_space,
@@ -484,7 +491,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                         # Title: 🏷️ with same font size/weight as group expander summaries
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2; margin-bottom: 8px;'>\U0001F3F7\ufe0f {group['group_name']}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2; margin-bottom: 8px;'>\U0001F3F7\ufe0f {group['group_name']}</div>
                                 <div class='pair-course-subtitle'>Course: {display_name}</div>
                             </div>
                         """, unsafe_allow_html=True)
@@ -549,7 +556,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                         # 1. Custom Title HTML (Fixed top margin to align centrally)
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.2;'>\U0001F5C2\ufe0f {group['group_name']}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>\U0001F5C2\ufe0f {group['group_name']}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -730,7 +737,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                                 st.markdown(
                                     f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                     f'Folder:</span>'
-                                    f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
+                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
                                     unsafe_allow_html=True,
                                 )
                             with col_f_btn:
@@ -750,7 +757,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                                 st.markdown(
                                     f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                     f'Course:</span>'
-                                    f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{course_disp}</span>',
+                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{esc(course_disp)}</span>',
                                     unsafe_allow_html=True,
                                 )
                             with col_c_btn:
@@ -784,7 +791,7 @@ def _saved_groups_hub_dialog(courses, course_names):
 
                         st.markdown(f"""
                             <div style='margin-bottom: 12px; margin-top: 6px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: #ffffff; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
                                 <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div>
                             </div>
                         """, unsafe_allow_html=True)
@@ -828,7 +835,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                 f'Folder:</span>'
-                                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
+                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
                                 unsafe_allow_html=True,
                             )
                         with col_af_btn:
@@ -848,7 +855,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                 f'Course:</span>'
-                                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{add_course_disp}</span>',
+                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{add_course_disp}</span>',
                                 unsafe_allow_html=True,
                             )
                         with col_ac_btn:
@@ -995,7 +1002,7 @@ def _saved_groups_hub_dialog(courses, course_names):
                     st.markdown(
                         f'<div style="margin-top: -2px; width: 100%;">'
                         f'<strong>{friendly}</strong> '
-                        f'<br><span style="color:#888; font-size:0.85em;">{full_name_str}</span>'
+                        f'<br><span style="color:{theme.TEXT_DIM}; font-size:0.85em;">{full_name_str}</span>'
                         f'</div>',
                         unsafe_allow_html=True
                     )
@@ -1049,13 +1056,13 @@ def _saved_groups_hub_dialog(courses, course_names):
             with st.container(border=True):
                 st.markdown(
                     f"<div style='font-weight:600;'>\U0001F393 {display_name}</div>"
-                    f"<div style='font-size:0.82rem; color:#f87171; margin-top:2px;'>"
+                    f"<div style='font-size:0.82rem; color:{theme.ERROR_LIGHT}; margin-top:2px;'>"
                     f"\u274c Missing: <code>{old_folder}</code></div>",
                     unsafe_allow_html=True,
                 )
                 if new_folder:
                     st.markdown(
-                        f"<div style='font-size:0.85rem; color:#4ade80; margin-top:4px;'>"
+                        f"<div style='font-size:0.85rem; color:{theme.SUCCESS}; margin-top:4px;'>"
                         f"\u2705 Remapped to: <code>{new_folder}</code></div>",
                         unsafe_allow_html=True,
                     )
@@ -1135,10 +1142,10 @@ def _render_hub_config(pair: dict):
     # --- PERFECTED HTML/CSS RENDERING ---
     st.markdown("""
     <style>
-    .cfg-header { font-weight: 600; color: #ffffff; margin-bottom: 8px; font-size: 1.05rem; margin-left: 15px; }
+    .cfg-header { font-weight: 600; color: {theme.WHITE}; margin-bottom: 8px; font-size: 1.05rem; margin-left: 15px; }
     .cfg-cb { display: flex; align-items: flex-start; margin-bottom: 6px; font-size: 0.95rem; line-height: 1.3; pointer-events: none; margin-left: 15px; }
-    .cfg-cb input { margin-right: 8px; margin-top: 4px; accent-color: #3b82f6; width: 15px; height: 15px; }
-    .cfg-cb.checked { opacity: 1.0; color: #ffffff; }
+    .cfg-cb input { margin-right: 8px; margin-top: 4px; accent-color: {theme.BLUE_PRIMARY}; width: 15px; height: 15px; }
+    .cfg-cb.checked { opacity: 1.0; color: {theme.WHITE}; }
     .cfg-cb.unchecked { opacity: 0.65; color: #a3a8b8; }
     .cfg-indent { margin-left: 37px; } 
     </style>
@@ -1248,7 +1255,7 @@ def _inject_hub_global_css():
     div.st-key-btn_hub_main button:hover {
         background-color: rgba(95, 100, 200, 0.55) !important; /* Lighter on hover */
         border-color: rgba(95, 100, 2000, 0.9) !important; 
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         transition: all 0.2s ease-in-out;
     }
 
@@ -1293,12 +1300,12 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
         font-size: 1.05rem !important;
         font-weight: 600 !important;
-        color: #ffffff !important; 
+        color: {theme.WHITE} !important; 
     }
        
     /* Primary button: blue */
     div[data-testid="stDialog"] button[kind="primary"] {
-        background-color: #3b82f6 !important;
+        background-color: {theme.BLUE_PRIMARY} !important;
         color: white !important;
         border: none !important;
     }
@@ -1326,8 +1333,8 @@ def _inject_hub_global_css():
 
     /* Cancel buttons inside dialog */
     div[data-testid="stDialog"] div[class*="st-key-cancel_save_group"] button:hover {
-        background-color: #ef4444 !important;
-        border-color: #ef4444 !important;
+        background-color: {theme.ERROR} !important;
+        border-color: {theme.ERROR} !important;
         color: white !important;
     }
 
@@ -1355,7 +1362,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div[class*="st-key-hub_edit_"] button {
         background-color: rgba(255, 255, 255, 0.1) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
 
     /* 2. Hover state for "Edit Group" (Lighter Grey) */
@@ -1369,7 +1376,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
         background-color: rgba(95, 100, 200, 0.4) !important; 
         border-color: rgba(95, 100, 200, 1) !important; 
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         transition: all 0.2s ease-in-out;
     }
 
@@ -1469,7 +1476,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button {
         background-color: rgba(255, 255, 255, 0.08) !important; /* Pops slightly from the 0.05 card */
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
     div[data-testid="stDialog"] div[class*="st-key-hub_open_"] button:hover,
     div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button:hover {
@@ -1491,7 +1498,7 @@ def _inject_hub_global_css():
     /* The clickable header gets the button background color, but no outer border */
     div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {
         background-color: rgba(255, 255, 255, 0.09) !important; /* Matches Open/Edit */
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         border: none !important; /* Outer details handles the border */
         border-radius: 6px !important;
     }
@@ -1530,7 +1537,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button:hover {
         background-color: rgba(59, 130, 246, 0.25) !important;
         border-color: rgba(59, 130, 246, 0.6) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         transition: all 0.2s ease-in-out;
     }
 
@@ -1553,7 +1560,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button {
         background-color: transparent !important;
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         opacity: 1 !important;
         padding: 2px 12px !important;
         min-height: 0px !important;
@@ -1561,7 +1568,7 @@ def _inject_hub_global_css():
     }
     div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button:hover {
         background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
 
     /* Elevate Layer 1 Group Cards: Subtle yellowish tint and soft drop shadow */
@@ -1608,7 +1615,7 @@ def _inject_hub_global_css():
     }
     
     div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary:hover p {
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
     
     div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details[open] summary {
@@ -1632,7 +1639,7 @@ def _inject_hub_global_css():
     }
     
     div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details div[data-testid="stMarkdownContainer"] {
-        color: #ffffff !important; /* Force solid white text */
+        color: {theme.WHITE} !important; /* Force solid white text */
         font-size: 0.9rem !important;
     }
     
@@ -1651,7 +1658,7 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
         font-size: 0.95rem !important;
         font-weight: 600 !important;
-        color: #ffffff !important; 
+        color: {theme.WHITE} !important; 
     }
 
     /* Nudge the bullet points right to perfectly align with the expander arrow */
@@ -1668,26 +1675,26 @@ def _inject_hub_global_css():
     div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button {
         background-color: rgba(255, 255, 255, 0.08) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
     div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button:hover,
     div[data-testid="stDialog"] div.st-key-btn_inline_new_course button:hover,
     div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button:hover {
         background-color: rgba(255, 255, 255, 0.16) !important;
         border-color: rgba(255, 255, 255, 0.4) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
 
     /* 2. Add to Group Button: Gray default, Solid Blue hover */
     div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button {
         background-color: rgba(255, 255, 255, 0.1) !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
     div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {
-        background-color: #3b82f6 !important; /* Solid Blue */
-        border-color: #3b82f6 !important;
-        color: #ffffff !important;
+        background-color: {theme.BLUE_PRIMARY} !important; /* Solid Blue */
+        border-color: {theme.BLUE_PRIMARY} !important;
+        color: {theme.WHITE} !important;
     }
     div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
         background-color: rgba(0, 0, 0, 0.3) !important;
@@ -1772,16 +1779,16 @@ def _inject_hub_global_css():
     /* --- ACTIVE TAB (PRIMARY) --- */
     div.st-key-hub_tabs_container button[kind="primary"] {
         background-color: rgba(59, 130, 246, 0.15) !important; /* Soft blue tint */
-        border-bottom: 4px solid #3b82f6 !important; /* Classic tab underline */
-        color: #ffffff !important;
+        border-bottom: 4px solid {theme.BLUE_PRIMARY} !important; /* Classic tab underline */
+        color: {theme.WHITE} !important;
     }
     
     /* Kill the solid bright blue Streamlit default hover */
     div.st-key-hub_tabs_container button[kind="primary"]:hover {
         background-color: rgba(59, 130, 246, 0.25) !important; /* Just a tiny bit lighter */
         border-color: rgba(255, 255, 255, 0.15) !important; /* Keep borders stable */
-        border-bottom: 4px solid #3b82f6 !important; /* Keep underline */
-        color: #ffffff !important;
+        border-bottom: 4px solid {theme.BLUE_PRIMARY} !important; /* Keep underline */
+        color: {theme.WHITE} !important;
     }
     
     /* --- INACTIVE TABS (SECONDARY) HOVER --- */
@@ -1789,7 +1796,7 @@ def _inject_hub_global_css():
     div.st-key-hub_tabs_container button:not([kind="primary"]):hover {
         background-color: rgba(59, 130, 246, 1) !important; /* Very subtle muted blue */
         border: 1px solid rgba(59, 130, 246, 0.15) !important; /* Subtle blue border glow */
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
     }
 
     /* =========================================
@@ -1816,7 +1823,7 @@ def _inject_hub_global_css():
     div.pair-course-subtitle {
         font-size: 0.95rem !important;
         font-weight: 600 !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         margin-bottom: 15px !important; /* Adds some breathing room above the buttons */
     }
 
@@ -2062,12 +2069,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     div[class*="st-key-ignored_btn_"] button:not([disabled]) {
         border: 1px dashed rgba(255, 255, 255, 0.4) !important;
         background-color: transparent !important;
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         opacity: 1 !important;
     }
     div[class*="st-key-ignored_btn_"] button:not([disabled]) p,
     div[class*="st-key-ignored_btn_"] button:not([disabled]) span {
-        color: #ffffff !important;
+        color: {theme.WHITE} !important;
         opacity: 1 !important;
     }
 
@@ -2085,7 +2092,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     }
     div[class*="st-key-ignored_btn_"] button:hover {
         border-color: rgba(255, 255, 255, 0.6) !important;
-        color: #fff !important;
+        color: {theme.WHITE} !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -2155,7 +2162,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                                      help=_save_help):
                             _save_pair_dialog(pair)
                         st.markdown(f"""<div style="font-size:0.85em;color:#ccc;margin-top:-5px;">\U0001F4C1 {folder_display}</div>
-                            <div style="font-size:0.75em;color:#888;margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
+                            <div style="font-size:0.75em;color:{theme.TEXT_DIM};margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
@@ -2210,7 +2217,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     div.st-key-btn_add_folder button:hover {
                          background-color: #3a4a5a !important;
                          border-color: #6a9abb !important;
-                         color: #fff !important;
+                         color: {theme.WHITE} !important;
                     }
                     </style>""", unsafe_allow_html=True)
                     
@@ -2238,7 +2245,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     div.st-key-btn_save_group_main button:hover {
                         background-color: rgba(95, 100, 200, 0.4) !important;
                         border-color: rgba(95, 100, 200, 1) !important;
-                        color: #ffffff !important;
+                        color: {theme.WHITE} !important;
                         transition: all 0.2s ease-in-out;
                     }
                     div.st-key-btn_save_group_main button[disabled] {
@@ -2271,7 +2278,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     div.st-key-btn_add_folder_empty button:hover {
                          background-color: #3a4a5a !important;
                          border-color: #6a9abb !important;
-                         color: #fff !important;
+                         color: {theme.WHITE} !important;
                     }
                     </style>""", unsafe_allow_html=True)
     
@@ -2281,7 +2288,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         st.session_state.pop('editing_pair_idx', None)
                         st.rerun()
     
-            import base64
             
             # Helper to optionally load icon
             logo_html = ""
@@ -2385,7 +2391,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     with col_or:
         # Removed manual margin-top hack, relying on vertical_alignment="center" and flex CSS above
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:#888; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
         # Removed help=... to prevent tooltip wrapper from breaking layout parity with the other button
@@ -2490,7 +2496,7 @@ def _render_sync_history():
                 # Render HTML card inside the expander (Vertical stack layout)
                 st.markdown(f"""
                 <div style="background-color:#2a2b30;border-left:3px solid #3498db;border-radius:4px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:2px;">
-                    <div style="color:#888;font-size:0.85em;">{time_display}</div>
+                    <div style="color:{theme.TEXT_DIM};font-size:0.85em;">{time_display}</div>
                     <div style="color:#ddd;font-weight:600;font-size:0.95em;margin-top:2px;">
                         ✅ Synced {count} file{'s' if count != 1 else ''}
                     </div>
@@ -2660,7 +2666,7 @@ def _ignored_files_dialog(ignored_by_course, ):
     # --- 6. Action buttons ---
     st.markdown("""<style>
         button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
-            background-color: #e74c3c !important;
+            background-color: {theme.ERROR_ALT} !important;
             border-color: #c0392b !important;
             color: white !important;
         }
@@ -2695,7 +2701,7 @@ def _ignored_files_dialog(ignored_by_course, ):
 
 def _show_course_ignored_files(course_name, course_id, course_data, ):
     """Dialog to manage ignored files for a specific course."""
-    @st.dialog(f"🚫 Ignored Files: {course_name}", width="large")
+    @st.dialog(f"🚫 Ignored Files: {esc(course_name)}", width="large")
     def _dialog():
         _show_course_ignored_files_inner(course_name, course_id, course_data)
     _dialog()
@@ -2765,7 +2771,7 @@ def _show_course_ignored_files_inner(course_name, course_id, course_data, ):
     # --- 6. Action buttons ---
     st.markdown("""<style>
         button[data-testid="stBaseButton-primary"]:has(p:contains("Remove")) {
-            background-color: #e74c3c !important;
+            background-color: {theme.ERROR_ALT} !important;
             border-color: #c0392b !important;
             color: white !important;
         }
@@ -2962,7 +2968,7 @@ def select_course_dialog(courses, current_selected_id, ):
                  st.markdown(
                      f'<div style="margin-top: -2px; width: 100%;">'
                      f'<strong>{friendly}</strong> '
-                     f'<br><span style="color:#888; font-size:0.85em;">{full_name_str}</span>'
+                     f'<br><span style="color:{theme.TEXT_DIM}; font-size:0.85em;">{full_name_str}</span>'
                      f'</div>',
                      unsafe_allow_html=True
                  )
@@ -2995,7 +3001,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, ):
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                 f'{'Added Folder:'}</span>'
-                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
                 unsafe_allow_html=True,
             )
         with col_change_btn:
@@ -3037,7 +3043,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, ):
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                 f'{'Course: '}</span>'
-                f'<span style="color:#fff;font-weight:600;font-size:0.95rem;white-space:nowrap;">{current_disp}</span>',
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{current_disp}</span>',
                 unsafe_allow_html=True
             )
             
@@ -3212,11 +3218,11 @@ def render_sync_step4( main_placeholder=None):
         if current_pass == 1:
             # 1. ALWAYS DRAW THE BASE UI FIRST
             st.markdown(f"""
-            <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
-                <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                <p style="color: #8A91A6; font-size: 0.9rem;">Please wait a moment while Canvas is queried.</p>
-                <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                    <div style="background-color: #4DA8DA; width: 5%; height: 100%;"></div>
+            <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
+                <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Please wait a moment while Canvas is queried.</p>
+                <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                    <div style="background-color: {theme.ACCENT_BLUE}; width: 5%; height: 100%;"></div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -3340,16 +3346,15 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                     return
                 percent = int((current / total) * 100) if total > 0 else 0
                 analysis_ui_placeholder.markdown(f"""
-                <div style="background-color: #1A1D27; padding: 20px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 20px; margin-bottom: 20px;">
-                    <h4 style="color: #FFFFFF; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                    <p style="color: #8A91A6; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
-                    <p style="color: #4DA8DA; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
-                    <div style="background-color: #2D3248; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                        <div style="background-color: #4DA8DA; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
+                <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
+                    <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
+                    <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
+                    <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
+                        <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                import time
                 time.sleep(0.05)
             except BaseException:
                 pass
@@ -3390,8 +3395,6 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                 'detected_structure': detected,
             })
         except Exception as e:
-            import traceback
-            import logging
             logger = logging.getLogger(__name__)
             traceback.print_exc()
             logger.error(f"Sync Analysis Error: {str(e)}")
@@ -3441,7 +3444,6 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                 _sm = res_data['sync_manager']
                 _raw = _sm._load_metadata('sync_contract')
                 if _raw:
-                    import json
                     _contract = json.loads(_raw)
             except Exception:
                 pass  # Fall back to session_state defaults
@@ -3860,13 +3862,13 @@ def _show_analysis_review():
             with c1:
                 st.markdown(_render_metric_card(total_new, lbl_new, "📄", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
             with c2:
-                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", "#2ecc71", "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", "{theme.SUCCESS_ALT}", "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", "#f1c40f", "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", "{theme.WARNING_ALT}", "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
                 st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "✂️", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
-                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", "#e74c3c", "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", "{theme.ERROR_ALT}", "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
@@ -4045,7 +4047,7 @@ def _show_analysis_review():
                 include_all = st.checkbox("Include ALL filetypes", key="sync_filter_all_exts", on_change=toggle_all_exts)
                 
                 if all_exts_sorted:
-                    st.markdown("<hr style='margin-top: 10px; margin-bottom: 15px; border-color: #2D3248;' />", unsafe_allow_html=True)
+                    st.markdown("<hr style='margin-top: 10px; margin-bottom: 15px; border-color: {theme.BG_CARD};' />", unsafe_allow_html=True)
                     st.markdown("<div style='font-size: 0.95em; padding-bottom: 10px; margin-top: 12px; font-weight: bold;'>Or select specific types:</div>", unsafe_allow_html=True)
                     
                     with st.container(border=True, key="filetypes_flex_box"):
@@ -4121,7 +4123,7 @@ def _show_analysis_review():
             if uptodate_count:
                 uptodate_label = f"Up to date ({uptodate_count} {('file' if uptodate_count == 1 else 'files')})"
                 uptodate_label = uptodate_label.lstrip('✅ ')
-                status_pill = f'<span style="font-size: 0.75rem; color: #4ade80; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
+                status_pill = f'<span style="font-size: 0.75rem; color: {theme.SUCCESS}; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
 
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
             header_html = f"""
@@ -4133,11 +4135,11 @@ def _show_analysis_review():
                 border-bottom: 1px solid #4B5563; 
                 border-radius: 8px 8px 0 0;
             ">
-                <h4 style="margin: 0px 0px 2px 0px; font-weight: 600; font-size: 1.05rem; color: #ffffff;">
+                <h4 style="margin: 0px 0px 2px 0px; font-weight: 600; font-size: 1.05rem; color: {theme.WHITE};">
                     <span style="color: #60A5FA; margin-right: 4px;">{idx + 1}.</span>📁 {display_name} 
                     {status_pill}
                 </h4>
-                <p style="margin: 0px; color: #8A91A6; font-size: 0.8rem;">{folder_display}</p>
+                <p style="margin: 0px; color: {theme.TEXT_SECONDARY}; font-size: 0.8rem;">{folder_display}</p>
             </div>
             """
             st.markdown(header_html, unsafe_allow_html=True)
@@ -4163,7 +4165,7 @@ def _show_analysis_review():
                 <style>
                 div[class*="st-key-cat_new_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
                     content: "\\00a0\\00a0 {selected_new} / {total_new} selected";
-                    color: #8A91A6;
+                    color: {theme.TEXT_SECONDARY};
                     font-weight: normal;
                     font-size: 0.9rem;
                 }}
@@ -4197,7 +4199,7 @@ def _show_analysis_review():
                 <style>
                 div[class*="st-key-cat_update_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
                     content: "\\00a0\\00a0 {selected_upd} / {total_upd} selected";
-                    color: #8A91A6;
+                    color: {theme.TEXT_SECONDARY};
                     font-weight: normal;
                     font-size: 0.9rem;
                 }}
@@ -4231,7 +4233,7 @@ def _show_analysis_review():
                 <style>
                 div[class*="st-key-cat_missing_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
                     content: "\\00a0\\00a0 {selected_miss} / {total_miss} selected";
-                    color: #8A91A6;
+                    color: {theme.TEXT_SECONDARY};
                     font-weight: normal;
                     font-size: 0.9rem;
                 }}
@@ -4264,7 +4266,7 @@ def _show_analysis_review():
                 <style>
                 div[class*="st-key-cat_deleted_local_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
                     content: "\\00a0\\00a0 {selected_locdel} / {total_locdel} selected";
-                    color: #8A91A6;
+                    color: {theme.TEXT_SECONDARY};
                     font-weight: normal;
                     font-size: 0.9rem;
                 }}
@@ -4299,7 +4301,7 @@ def _show_analysis_review():
                 <style>
                 div[class*="st-key-cat_deleted_canvas_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
                     content: "\\00a0\\00a0 ({total_del_canvas})";
-                    color: #8A91A6;
+                    color: {theme.TEXT_SECONDARY};
                     font-weight: normal;
                     font-size: 0.9rem;
                 }}
@@ -4311,7 +4313,7 @@ def _show_analysis_review():
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
                             icon = get_file_icon(sync_info.canvas_filename)
-                            st.markdown(f"<div style='color:#8A91A6; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color:{theme.TEXT_SECONDARY}; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
 
             # Ignored files Bucket
             if hasattr(result, 'ignored_files') and result.ignored_files:
@@ -4327,7 +4329,7 @@ def _show_analysis_review():
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.markdown(f"<div style='color:#8A91A6; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                                    st.markdown(f"<div style='color:{theme.TEXT_SECONDARY}; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
                                 with col2:
                                     st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
             
@@ -4344,7 +4346,6 @@ def _show_analysis_review():
                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
 
     if '_sync_contract_loaded' not in st.session_state:
-        import json
         _batch_settings_map = {k: set() for k in _CONVERT_KEYS}
         _batch_settings_map['file_filter'] = set()  # Also sweep file_filter
         _batch_contracts = {}  # {course_id: {name, contract}}
@@ -4546,7 +4547,7 @@ def _show_analysis_review():
     .st-key-convert_urls, .st-key-convert_video {
         margin-left: 28px !important;
         padding-left: 15px !important;
-        border-left: 2px solid #3E4353 !important; 
+        border-left: 2px solid {theme.BG_CARD_HOVER} !important; 
         margin-top: -12px !important; 
         padding-top: 4px !important;
         padding-bottom: 4px !important;
@@ -4561,7 +4562,7 @@ def _show_analysis_review():
     [class*="st-key-ind_convert_urls_"], [class*="st-key-ind_convert_video_"] {
         margin-left: 28px !important;
         padding-left: 15px !important;
-        border-left: 2px solid #3E4353 !important;
+        border-left: 2px solid {theme.BG_CARD_HOVER} !important;
         margin-top: -12px !important;
         padding-top: 4px !important;
         padding-bottom: 4px !important;
@@ -4571,18 +4572,18 @@ def _show_analysis_review():
 
     /* 3. Diff table styling */
     .diff-table { width: 100%; border-collapse: collapse; margin: 10px 0 15px 0; font-size: 0.85rem; }
-    .diff-table th { background: #1a1d27; color: #8A91A6; padding: 8px 12px; text-align: center;
-                     border-bottom: 2px solid #3E4353; font-weight: 600; font-size: 0.75rem;
+    .diff-table th { background: #1a1d27; color: {theme.TEXT_SECONDARY}; padding: 8px 12px; text-align: center;
+                     border-bottom: 2px solid {theme.BG_CARD_HOVER}; font-weight: 600; font-size: 0.75rem;
                      text-transform: uppercase; letter-spacing: 0.5px; }
     .diff-table th:first-child { text-align: left; }
     .diff-table td { padding: 6px 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);
                      color: #e2e8f0; }
-    .diff-table td:first-child { text-align: left; color: #8A91A6; font-weight: 500; }
+    .diff-table td:first-child { text-align: left; color: {theme.TEXT_SECONDARY}; font-weight: 500; }
     .diff-table tr:hover { background: rgba(255,255,255,0.02); }
 
     /* 4. Selectbox dropdown popover border */
     [data-testid="stSelectbox"] [data-baseweb="popover"] {
-        border: 1px solid #3E4353 !important;
+        border: 1px solid {theme.BG_CARD_HOVER} !important;
         border-radius: 8px !important;
     }
     </style>
@@ -4622,7 +4623,7 @@ def _show_analysis_review():
             st.session_state['_sync_config_mode'] = 2
             st.rerun()
 
-    st.markdown("<hr style='margin: 10px 0 15px 0; border-color: #3E4353;' />", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 10px 0 15px 0; border-color: {theme.BG_CARD_HOVER};' />", unsafe_allow_html=True)
 
     # ---- MODE 0: Default Sync ----
     if _config_mode == 0:
@@ -4653,7 +4654,7 @@ def _show_analysis_review():
                 for _cid, _data in _batch_contracts.items():
                     _val = _data['contract'].get(_key, False if _key != 'file_filter' else 'all')
                     if _key == 'file_filter':
-                        _cells += f'<td style="color:#8A91A6;">{_val}</td>'
+                        _cells += f'<td style="color:{theme.TEXT_SECONDARY};">{_val}</td>'
                     else:
                         _icon = '✅' if _val else '❌'
                         _cells += f'<td>{_icon}</td>'
@@ -4904,7 +4905,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
         f'margin: 0 0 12px 0 !important;'
         f'font-size: 1.6rem !important;'
         f'font-weight: 700 !important;'
-        f'color: #ffffff !important;'
+        f'color: {theme.WHITE} !important;'
         f'}}'
         f'.sync-subtitle {{'
         f'color: rgba(255, 255, 255, 0.6);'
@@ -4933,7 +4934,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
         f'outline: none;'
         f'transition: color 0.2s;'
         f'}}'
-        f'details summary:hover {{ color: #ffffff; }}'
+        f'details summary:hover {{ color: {theme.WHITE}; }}'
         f'details summary::-webkit-details-marker {{ display: none; }}'
         f'.stat-left {{'
         f'display: flex;'
@@ -4944,7 +4945,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
         f'font-weight: 500;'
         f'}}'
         f'.stat-value {{'
-        f'color: #ffffff;'
+        f'color: {theme.WHITE};'
         f'font-weight: 600;'
         f'text-align: right;'
         f'font-size: 0.95rem;'
@@ -4958,7 +4959,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
         f'margin-left: 2px;'
         f'}}'
         f'.arrow-icon::before {{ content: "▸"; }}'
-        f'details[open] summary .arrow-icon::before {{ content: "▾"; color: #ffffff; }}'
+        f'details[open] summary .arrow-icon::before {{ content: "▾"; color: {theme.WHITE}; }}'
         f'.dropdown-list {{'
         f'background: rgba(0, 0, 0, 0.3);'
         f'border-radius: 8px;'
@@ -5011,7 +5012,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
         f'button[data-testid="stBaseButton-secondary"] {{'
         f'background-color: #262730 !important;'
         f'border: 1px solid rgba(255, 255, 255, 0.1) !important;'
-        f'color: #ffffff !important;'
+        f'color: {theme.WHITE} !important;'
         f'}}'
         f'/* Direct Left alignment and hanging indent for dropdown lists */'
         f'.dropdown-list ul li {{'
@@ -5067,7 +5068,6 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
     col_yes, col_no = st.columns([1, 1], gap="medium")
     with col_yes:
         if st.button("Yes, Start Sync", type="primary", use_container_width=True):
-            import json
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
 
@@ -5221,9 +5221,9 @@ def _run_sync():
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
     .st-key-cancel_pp_btn button:hover {
-        border-color: #ef4444 !important;
-        background-color: #2c1616 !important;
-        color: #ef4444 !important;
+        border-color: {theme.ERROR} !important;
+        background-color: {theme.ERROR_BG} !important;
+        color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
     }
     </style>
@@ -5256,28 +5256,28 @@ def _run_sync():
 
     def render_metrics_html(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string):
         return f"""
-        <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{d_mb:.1f} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {t_mb:.1f} MB</span></span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
+                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{d_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {t_mb:.1f} MB</span></span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
                 <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current_file_idx} <span style="font-size: 0.9rem; color: #4DA8DA;">/ {total_files}</span></span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
+                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_file_idx} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_files}</span></span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
                 <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
             </div>
         </div>
         """
         
     def render_terminal_html(lines):
-        joined = "<br>".join(reversed(lines)) if lines else "<span style='color: #666;'>Waiting for files...</span>"
+        joined = "<br>".join(reversed(lines)) if lines else "<span style='color: {theme.TEXT_MUTED};'>Waiting for files...</span>"
         return f"""
         <div style="background: #0e1117; border: 1px solid #222; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: #bbb; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
             {joined}
@@ -5322,7 +5322,6 @@ def _run_sync():
             render_progress_bar(progress_container, 0, total_files)
             
             # Setup Tracking Variables
-            import time
             from collections import deque
             start_time = time.time()
             last_ui_update = 0
@@ -5330,7 +5329,7 @@ def _run_sync():
             
             # Initial UI Draw
             metrics_dashboard.markdown(render_metrics_html(0, total_files, 0.0, total_mb, 0.0, "--:--"), unsafe_allow_html=True)
-            active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>🔄 Preparing sync...</p>", unsafe_allow_html=True)
+            active_file_placeholder.markdown("<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>🔄 Preparing sync...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
             progress_container.progress(0, text="0%")
 
@@ -5349,8 +5348,8 @@ def _run_sync():
                 course_name = friendly_course_name(pair['course_name'])
                 header_html = f"""
                 <div style="margin-bottom: 0.5rem;">
-                    <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">📦 Course {pair_idx + 1} of {total_pairs}</p>
-                    <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">{course_name}</h3>
+                    <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Course {pair_idx + 1} of {total_pairs}</p>
+                    <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(course_name)}</h3>
                 </div>
                 """
                 status_text.markdown(header_html, unsafe_allow_html=True)
@@ -5401,7 +5400,7 @@ def _run_sync():
                     display_file_name = file.display_name or file.filename
                     
                     # UNCONDITIONAL status text update — fires instantly for every file (no throttle)
-                    active_file_placeholder.markdown(f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {display_file_name}...</div>", unsafe_allow_html=True)
+                    active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {esc(display_file_name)}...</div>", unsafe_allow_html=True)
                     
                     # Throttled progress update (Prevent Streamlit from choking on rapid tiny files)
                     curr_time = time.time()
@@ -5469,7 +5468,7 @@ def _run_sync():
                                 synced_counter[0] += 1
                                 st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                 synced_details[pair_idx].append(display_file_name)
-                                terminal_log.append(f"<span style='color:#2ecc71'>[✅] Recreated: </span> {display_file_name}")
+                                terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Recreated: </span> {esc(display_file_name)}")
                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                 continue
 
@@ -5552,7 +5551,6 @@ def _run_sync():
                                                         os.rename(make_long_path(part_path), make_long_path(filepath))
                                                     except OSError:
                                                         # Fallback: If rename fails (cross-device), use replace
-                                                        import shutil
                                                         shutil.move(make_long_path(part_path), make_long_path(filepath))
                                                     atomic_rename_done = True
                                                     
@@ -5564,7 +5562,7 @@ def _run_sync():
                                                     
                                                     # Track success for UI dropdown
                                                     synced_details[pair_idx].append(display_file_name)
-                                                    terminal_log.append(f"<span style='color:#2ecc71'>[✅] Finished: </span> {display_file_name}")
+                                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Finished: </span> {esc(display_file_name)}")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 finally:
                                                     # GUARD: Always clean up .part if rename didn't complete
@@ -5581,28 +5579,28 @@ def _run_sync():
                                             elif response.status == 429:
                                                 # Rate limited — respect Retry-After header
                                                 should_sleep_duration = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
-                                                terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Rate limited: </span> {display_file_name} <span style='color:#666'>(retry in {should_sleep_duration}s)</span>")
+                                                terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Rate limited: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry in {should_sleep_duration}s)</span>")
                                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                             
                                             elif 500 <= response.status < 600:
                                                 # Server error — retry with exponential backoff
                                                 should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 if attempt < SYNC_MAX_RETRIES - 1:
-                                                    terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Server error ({response.status}): </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                                    terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Server error ({response.status}): </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 else:
                                                     # Max retries exhausted for 5xx
                                                     failed_files_for_pair.append(file)
-                                                    error_list.append(f"Error syncing {display_file_name}: HTTP {response.status} after {SYNC_MAX_RETRIES} retries")
-                                                    terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
+                                                    error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status} after {SYNC_MAX_RETRIES} retries")
+                                                    terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Failed: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                     break
                                             
                                             else:
                                                 # Non-retryable HTTP error (4xx except 429)
                                                 failed_files_for_pair.append(file)
-                                                error_list.append(f"Error syncing {display_file_name}: HTTP {response.status}")
-                                                terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(HTTP {response.status})</span>")
+                                                error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status}")
+                                                terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Failed: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status})</span>")
                                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 break  # Don't retry client errors
                                 
@@ -5610,12 +5608,12 @@ def _run_sync():
                                     # Network error — retry with backoff
                                     if attempt < SYNC_MAX_RETRIES - 1:
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
-                                        terminal_log.append(f"<span style='color:#f59e0b'>[⏳] Network error: </span> {display_file_name} <span style='color:#666'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                        terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Network error: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
                                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                     else:
                                         failed_files_for_pair.append(file)
-                                        error_list.append(f"Error syncing {display_file_name}: Network error: {net_err}")
-                                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Failed: </span> {display_file_name} <span style='color:#666'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
+                                        error_list.append(f"Error syncing {esc(display_file_name)}: Network error: {net_err}")
+                                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Failed: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
                                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                         break
                                         
@@ -5633,15 +5631,15 @@ def _run_sync():
                                 err_msg = "No download URL"
                             
                             failed_files_for_pair.append(file)
-                            error_list.append(f"Error syncing {display_file_name}: {err_msg}")
-                            terminal_log.append(f"<span style='color:#e74c3c'>[❌] Skipped: </span> {display_file_name} <span style='color:#666'>({err_msg})</span>")
+                            error_list.append(f"Error syncing {esc(display_file_name)}: {esc(err_msg)}")
+                            terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Skipped: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(err_msg)})</span>")
                             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
-                        error_list.append(f"Error syncing {display_file_name}: {str(e)}")
+                        error_list.append(f"Error syncing {esc(display_file_name)}: {str(e)}")
                         str_err = str(e).replace('<', '&lt;').replace('>', '&gt;')
-                        terminal_log.append(f"<span style='color:#e74c3c'>[❌] Error: </span> {display_file_name} <span style='color:#666'>({str_err})</span>")
+                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Error: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({str_err})</span>")
                         log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                         
 
@@ -5661,7 +5659,7 @@ def _run_sync():
             speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
             render_progress_bar(progress_container, total_files, total_files)
             metrics_dashboard.markdown(render_metrics_html(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
-            active_file_placeholder.markdown("<p style='color: #A5D6FF; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
+            active_file_placeholder.markdown("<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
             # CANCEL GUARD: Skip all post-download state mutations if cancelled
@@ -5695,7 +5693,6 @@ def _run_sync():
                                     lf.write(f"  - {si.canvas_filename}\n")
                             lf.write("\n")
                     except Exception as e:
-                        import logging
                         logging.warning(f"Failed to write updates log: {e}")
                 
         return synced_details, retry_selections, list(terminal_log)
@@ -5763,9 +5760,9 @@ def _run_sync():
     .st-key-cancel_sync_btn button:hover,
     .st-key-cancel_pp_btn button:hover,
     .st-key-cancel_pp_btn_sync_phase3 button:hover {
-        border-color: #ef4444 !important;
-        background-color: #2c1616 !important;
-        color: #ef4444 !important;
+        border-color: {theme.ERROR} !important;
+        background-color: {theme.ERROR_BG} !important;
+        color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
     }
     </style>
@@ -5928,8 +5925,8 @@ def _show_sync_cancelled():
     # Premium styled cancellation card
     st.markdown(f"""
     <div style="
-        background: linear-gradient(135deg, #2c1616 0%, #1a1a2e 100%);
-        border: 1px solid #ef4444;
+        background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
+        border: 1px solid {theme.ERROR};
         border-radius: 12px;
         padding: 28px 32px;
         margin: 20px 0;
@@ -5937,9 +5934,9 @@ def _show_sync_cancelled():
     ">
         <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
             <span style="font-size: 2rem;">🛑</span>
-            <h2 style="margin: 0; color: #ef4444; font-size: 1.5rem; font-weight: 700;">Sync Cancelled</h2>
+            <h2 style="margin: 0; color: {theme.ERROR}; font-size: 1.5rem; font-weight: 700;">Sync Cancelled</h2>
         </div>
-        <p style="color: #d1d5db; font-size: 1rem; margin: 0 0 8px 0;">
+        <p style="color: {theme.TEXT_LIGHT}; font-size: 1rem; margin: 0 0 8px 0;">
             {'Sync was cancelled.'}
         </p>
         <div style="
@@ -5949,7 +5946,7 @@ def _show_sync_cancelled():
             margin-top: 12px;
             display: inline-block;
         ">
-            <span style="color: #f87171; font-size: 0.9rem; font-weight: 600;">
+            <span style="color: {theme.ERROR_LIGHT}; font-size: 0.9rem; font-weight: 600;">
                 {cancel_summary_msg}
             </span>
         </div>
@@ -6019,8 +6016,8 @@ def _show_sync_complete():
         summary_text = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.'
         
         st.markdown(f"""
-        <div style="background-color:#3a2a1a;border:1px solid #f1c40f;border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:#f1c40f;font-weight:600;font-size:1.05em;">
+        <div style="background-color:#3a2a1a;border:1px solid {theme.WARNING_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
+            <div style="color:{theme.WARNING_ALT};font-weight:600;font-size:1.05em;">
                 ⚠️ {success_title}
             </div>
             <div style="color:#ccc;font-size:0.85em;margin-top:4px;">
@@ -6037,8 +6034,8 @@ def _show_sync_complete():
         summary_text = f"{format_file_size(total_bytes)} downloaded."
 
         st.markdown(f"""
-        <div style="background-color:#1a3a2a;border:1px solid #2ecc71;border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:#2ecc71;font-weight:600;font-size:1.05em;">
+        <div style="background-color:#1a3a2a;border:1px solid {theme.SUCCESS_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
+            <div style="color:{theme.SUCCESS_ALT};font-weight:600;font-size:1.05em;">
                 🎉 {success_title}
             </div>
             <div style="color:#aaa;font-size:0.85em;margin-top:4px;">

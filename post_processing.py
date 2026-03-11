@@ -16,6 +16,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+import theme
+from ui_helpers import esc
+
 logger = logging.getLogger(__name__)
 
 # ── Color map per conversion type for dashboard accent ──
@@ -24,9 +27,9 @@ _COLOR_MAP = {
     'PowerPoint files':   '#f97316',
     'HTML files':         '#34D399',
     'Code files':         '#FBBF24',
-    'Legacy Word files':  '#3b82f6',
+    'Legacy Word files':  '{theme.BLUE_PRIMARY}',
     'Excel files':        '#22c55e',
-    'Video files':        '#f59e0b',
+    'Video files':        '{theme.WARNING}',
 }
 
 
@@ -58,34 +61,34 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
     try:
         if ui.is_cancelled():
             return
-        accent = _COLOR_MAP.get(task_name, '#4ade80')
+        accent = _COLOR_MAP.get(task_name, '{theme.SUCCESS}')
         pct = min(100, int((current / total) * 100) if total > 0 else 0)
 
         ui.header_placeholder.markdown(f'''
         <div style="margin-bottom: 0.5rem;">
-            <p style="margin: 0; font-size: 0.8rem; color: #8A91A6; text-transform: uppercase;">🪄 Post-Processing</p>
-            <h3 style="margin: 0; padding-top: 0.1rem; color: #FFFFFF;">Converting {task_name}</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">🪄 Post-Processing</p>
+            <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">Converting {esc(task_name)}</h3>
         </div>
         ''', unsafe_allow_html=True)
 
         ui.progress_placeholder.markdown(f'''
-        <div style="background-color: #2D3248; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+        <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
             <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: {theme.WHITE}; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
                 {pct}%
             </div>
         </div>
         ''', unsafe_allow_html=True)
 
         ui.metrics_placeholder.markdown(f'''
-        <div style="display: flex; justify-content: center; gap: 4rem; background-color: #1A1D27; padding: 15px 25px; border-radius: 8px; border: 1px solid #2D3248; margin-top: 5px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                <span style="color: #FFFFFF; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
+                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: #8A91A6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{task_name}</span>
+                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
+                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{esc(task_name)}</span>
             </div>
         </div>
         ''', unsafe_allow_html=True)
@@ -93,7 +96,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         # Re-render log so it stays in sync with progress/metrics
         log_content = "<br>".join(reversed(list(ui.log_lines)))
         ui.log_placeholder.markdown(f'''
-        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+        <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
             {log_content}
         </div>
         ''', unsafe_allow_html=True)
@@ -118,7 +121,7 @@ def _log_msg(ui: UIBridge, msg: str):
 
         log_content = "<br>".join(reversed(list(ui.log_lines)))
         ui.log_placeholder.markdown(f'''
-        <div style="background-color: #0D1117; color: #A5D6FF; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid #30363D; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+        <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
             {log_content}
         </div>
         ''', unsafe_allow_html=True)
@@ -131,7 +134,7 @@ def _show_active_file(ui: UIBridge, filename: str):
     """Update the 'Currently processing' status line."""
     try:
         ui.active_file_placeholder.markdown(
-            f"<div style='color: #38bdf8; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {filename}</div>",
+            f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>⚙️ Currently processing: {esc(filename)}</div>",
             unsafe_allow_html=True,
         )
     except BaseException:
@@ -170,7 +173,7 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
         error_log_path.mkdir(parents=True, exist_ok=True)
         with open(err_file, "a", encoding="utf-8") as f:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
+            f.write(f"[{timestamp}] [Post-Processing] {esc(filename)}: {error_msg}\n")
     except OSError:
         pass
 
@@ -192,13 +195,13 @@ def run_archive_extraction(files, ui: UIBridge):
     from archive_extractor import extract_and_stub
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} Archive files for extraction...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Archive files for extraction...</span>")
     _render_dashboard(ui, 0, total, "Archives")
     time.sleep(0.2)
 
     for i, (archive_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
             break
         old_name = archive_file.name
         _show_active_file(ui, old_name)
@@ -211,12 +214,12 @@ def run_archive_extraction(files, ui: UIBridge):
             _update_manifest_path(sm, archive_file, new_stub_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, new_stub_path.name)
-            _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Extracted: {old_name}</span>")
+            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)}</span>")
         else:
-            _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Extraction failed)</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Extraction failed)</span>")
             _log_error_to_file(ui.error_log_path, old_name, "Archive extraction failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Archive extraction complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Archive extraction complete!</span>")
 
 
 def run_pptx_conversion(files, ui: UIBridge):
@@ -228,14 +231,14 @@ def run_pptx_conversion(files, ui: UIBridge):
     total = len(files)
     pptx_error_log = ui.error_log_path or files[0][1].local_path
 
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Converting {total} PowerPoint files to PDF...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Converting {total} PowerPoint files to PDF...</span>")
     _render_dashboard(ui, 0, total, "PowerPoint files")
     time.sleep(0.2)
 
     with PowerPointToPDF(error_log_path=pptx_error_log) as converter:
         for i, (pptx_file, sm, ctx) in enumerate(files, 1):
             if ui.is_cancelled():
-                _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
                 break
             old_name = pptx_file.name
             _show_active_file(ui, old_name)
@@ -248,12 +251,12 @@ def run_pptx_conversion(files, ui: UIBridge):
                 _update_manifest_path(sm, pptx_file, pdf_path)
                 if ui.on_detail_update:
                     ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Converted: {esc(old_name)} -> PDF</span>")
             else:
-                _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Conversion failed)</span>")
                 _log_error_to_file(ui.error_log_path, old_name, "PDF conversion failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] PDF conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] PDF conversion complete!</span>")
 
 
 def run_html_conversion(files, ui: UIBridge):
@@ -263,13 +266,13 @@ def run_html_conversion(files, ui: UIBridge):
     from md_converter import convert_html_to_md
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} HTML files for Markdown conversion...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} HTML files for Markdown conversion...</span>")
     _render_dashboard(ui, 0, total, "HTML files")
     time.sleep(0.2)
 
     for i, (html_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
             break
         old_name = html_file.name
         _show_active_file(ui, old_name)
@@ -281,12 +284,12 @@ def run_html_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, html_file, md_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, md_path.name)
-            _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Converted: {md_path.name}</span>")
+            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Converted: {md_path.name}</span>")
         else:
-            _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Conversion failed)</span>")
             _log_error_to_file(ui.error_log_path, old_name, "Markdown conversion failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Markdown conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Markdown conversion complete!</span>")
 
 
 def run_code_conversion(files, ui: UIBridge):
@@ -296,13 +299,13 @@ def run_code_conversion(files, ui: UIBridge):
     from code_converter import convert_code_to_txt
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} Code & Data files for TXT conversion...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Code & Data files for TXT conversion...</span>")
     _render_dashboard(ui, 0, total, "Code files")
     time.sleep(0.2)
 
     for i, (code_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
             break
         old_name = code_file.name
         _show_active_file(ui, old_name)
@@ -315,12 +318,12 @@ def run_code_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, code_file, txt_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, txt_path.name)
-            _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> TXT</span>")
+            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Converted: {esc(old_name)} -> TXT</span>")
         else:
-            _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Conversion failed)</span>")
             _log_error_to_file(ui.error_log_path, old_name, "Code to TXT conversion failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Code to TXT conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Code to TXT conversion complete!</span>")
 
 
 def run_url_compilation(folders, ui: UIBridge):
@@ -332,17 +335,17 @@ def run_url_compilation(folders, ui: UIBridge):
         return
     from url_compiler import compile_urls_to_txt
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Scanning downloaded modules for .url shortcuts...</span>")
 
     for course_folder, course_name in folders:
         if ui.is_cancelled():
-            _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
             break
 
         if course_folder.exists():
             compiled_path = compile_urls_to_txt(course_folder, course_name)
             if compiled_path:
-                _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Compiled links for '{course_name}' into: NotebookLM_External_Links.txt</span>")
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{course_name}' into: NotebookLM_External_Links.txt</span>")
 
 
 def run_word_conversion(files, ui: UIBridge):
@@ -352,14 +355,14 @@ def run_word_conversion(files, ui: UIBridge):
     from word_converter import WordToPDF
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} Legacy Word files for PDF conversion...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Legacy Word files for PDF conversion...</span>")
     _render_dashboard(ui, 0, total, "Legacy Word files")
     time.sleep(0.2)
 
     with WordToPDF() as converter:
         for i, (word_file, sm, ctx) in enumerate(files, 1):
             if ui.is_cancelled():
-                _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
                 break
             old_name = word_file.name
             _show_active_file(ui, old_name)
@@ -372,12 +375,12 @@ def run_word_conversion(files, ui: UIBridge):
                 _update_manifest_path(sm, word_file, pdf_path)
                 if ui.on_detail_update:
                     ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Converted: {esc(old_name)} -> PDF</span>")
             else:
-                _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Conversion failed)</span>")
+                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Conversion failed)</span>")
                 _log_error_to_file(ui.error_log_path, old_name, "Word to PDF conversion failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Legacy Word to PDF conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Legacy Word to PDF conversion complete!</span>")
 
 
 def run_excel_conversion(files, ui: UIBridge):
@@ -390,14 +393,14 @@ def run_excel_conversion(files, ui: UIBridge):
     from excel_converter import ExcelToPDF
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} Excel files for PDF conversion...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Excel files for PDF conversion...</span>")
     _render_dashboard(ui, 0, total, "Excel files")
     time.sleep(0.2)
 
     with ExcelToPDF() as converter:
         for i, (excel_file, sm, ctx) in enumerate(files, 1):
             if ui.is_cancelled():
-                _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+                _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
                 break
             old_name = excel_file.name
             _show_active_file(ui, old_name)
@@ -411,13 +414,13 @@ def run_excel_conversion(files, ui: UIBridge):
                 _update_manifest_path(sm, excel_file, pdf_path)
                 if ui.on_detail_update:
                     ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Converted: {old_name} -> PDF</span>")
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Converted: {esc(old_name)} -> PDF</span>")
             else:
                 err_detail = excel_error_msg if excel_error_msg else "Excel to PDF conversion failed"
-                _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} ({err_detail})</span>")
+                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} ({err_detail})</span>")
                 _log_error_to_file(ui.error_log_path, old_name, err_detail)
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Excel to PDF conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Excel to PDF conversion complete!</span>")
 
 
 def run_video_conversion(files, ui: UIBridge):
@@ -427,13 +430,13 @@ def run_video_conversion(files, ui: UIBridge):
     from video_converter import convert_video_to_mp3
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: #8A91A6;'>[ 🪄 ] Queueing {total} Video files for audio extraction...</span>")
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Video files for audio extraction...</span>")
     _render_dashboard(ui, 0, total, "Video files")
     time.sleep(0.2)
 
     for i, (video_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, "<span style='color: #ef4444;'>[ 🛑 ] Process cancelled by user.</span>")
+            _log_msg(ui, "<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
             break
         old_name = video_file.name
         _show_active_file(ui, old_name)
@@ -446,12 +449,12 @@ def run_video_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, video_file, mp3_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, mp3_path.name)
-            _log_msg(ui, f"<span style='color: #4ade80;'>[ ✅ ] Extracted Audio: {old_name} -> MP3</span>")
+            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted Audio: {esc(old_name)} -> MP3</span>")
         else:
-            _log_msg(ui, f"<span style='color: #f87171;'>[ ❌ ] Skipped: {old_name} (Audio extraction failed)</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (Audio extraction failed)</span>")
             _log_error_to_file(ui.error_log_path, old_name, "Video to MP3 extraction failed")
 
-    _log_msg(ui, "<span style='color: #8A91A6;'>[ ✨ ] Video to MP3 conversion complete!</span>")
+    _log_msg(ui, "<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Video to MP3 conversion complete!</span>")
 
 
 # ─────────────────────────────────────────────────────

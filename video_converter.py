@@ -42,6 +42,6 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
         if video_clip is not None:
             try:
                 video_clip.close()
-            except:
+            except Exception:
                 pass
         return None
