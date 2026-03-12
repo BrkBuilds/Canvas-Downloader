@@ -1,6 +1,7 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- [x] **Active Feature: Phase 4 Secondary Content Engine UI (Complete)**: Executed a comprehensive UI pass refining the user experience of toggling and organizing Canvas secondary entities. Fixed layout overlap, corrected missing CSS tree-lines, built dynamic conditional widgets, injected custom radio component tooltips, and securely aligned backend default variables with the "In Course Folder" paradigm.
 - [x] **Active Feature: Phase 3 Secondary Content Engine Backend (Complete)**: Architected and verified the full backend engine (`canvas_logic.py`, `sync_manager.py`) for downloading Assignments, Syllabus, Announcements, Discussions, Quizzes, and Rubrics using dynamically generated HTML artifacts and a Negative ID Offset Registry.
 - [x] **Active Feature: Phase 2 Deferred Issues (Complete)**: Evaluated and implemented the deferred major/minor issues from the V1 Master Audit. Addressed JSON atomic writes, FFmpeg subprocess stalls, post-processing failure UI surfacing, and import hoisting. Dropped architectural monolith splitting for V2.0.
 - [x] **Active Feature: V1.0 Master Audit Refinements (Complete)**: Executed the final 10 codebase fixes addressing edge cases, data concurrency, URL injection, and UX state persistence based on the final audit report.
@@ -9,6 +10,14 @@
 - **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-13 — Phase 4 Secondary Content Engine UI)
+- **UI Architecture Sequencing (`app.py`, `sync_ui.py`)**: Restructured the visual flow of the secondary content configuration block. Checkboxes ("Select what to include") now deliberately precede structural routing decisions ("Organize by:"), aligning the UI with standard user intent models.
+- **Dynamic UX Condensing**: Engineered the structural radio buttons ("In Course Folder" vs "In Subfolders") to collapse entirely into a null state if `_active == 0` (no secondary checkboxes selected), eliminating extraneous cognitive load.
+- **Component Limitation Bypassing**: Streamlit's `st.radio` lacks granular `help=""` tooltips per option. Engineered a seamless workaround by injecting a custom HTML `div` below the radio group with grayed-out `ⓘ` instructional text matching standard Streamlit aesthetics.
+- **Initialization State Alignment**: Purged 8 instances of `True` (In Subfolders) defaulting for `isolate_secondary_content` / `dl_isolate_secondary` scattered across SQLite handoffs, session states, and initial renders, unifying the application around the safer `False` ("In Course Folder/Modules") baseline.
+- **CSS Variable Injection Repair**: Traced and fixed a CSS rendering bug where the vertical tree-lines disappeared. Replaced broken literal `{theme.BG_CARD_HOVER}` enclosed in triple quotes with active Python string concatenation to ensure the `bg_card_hover` hex correctly interpolated into the style block.
+- **Precision Hitbox Padding (`margin-bottom`)**: Resolved a Streamlit layout engine defect where negative margins (`margin-bottom: -15px`) on text labels caused transparent hitboxes to overlap and physically block clicks on checkboxes directly beneath them. Margins were carefully audited and relaxed to `margin-bottom: 0px` combined with dynamic `margin-top` adjustments to preserve tight visuals without sacrificing interactive integrity.
 
 ## Recent Changes (Session 2026-03-12 — Phase 3 Secondary Content Engine Backend)
 - **Negative ID Offset Registry (`sync_manager.py`)**: Designed a 10-million wide integer range registry (`SECONDARY_ID_OFFSETS`) per synthetic entity. This safely records HTML-wrapped Canvas entities (like Assignments `-10M` or Quizzes `-50M`) in the SQLite database without risking primary key collisions with real Canvas file IDs.

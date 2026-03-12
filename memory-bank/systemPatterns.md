@@ -42,6 +42,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
 - **Interactive Lists**: Use HTML `<details>` and `<summary>` inside modals to handle large file lists without overwhelming the main view.
 - **Component Constriction**: Use fractional columns to limit component width on large screens.
+- **Radio Widget Granular Tooltips Pattern**:
+    - *Problem*: Streamlit's native `st.radio` component supports a single global `help` parameter, but does not allow tooltips on individual radio options, limiting complex contextual choices.
+    - *Solution*: Avoid writing custom React components. Instead, inject a styled `st.markdown` HTML block directly beneath the radio component utilizing `ⓘ` icons, `font-size: 0.78rem`, `color: #6b7280`, and `line-height: 1.5` to visually mimic native Streamlit granular hint text per option.
+- **Hitbox Margin Defeat Pattern**:
+    - *Problem*: Pulling text labels tight against active UI widgets (checkboxes, radios) using aggressive `margin-bottom: -15px` causes the transparent DOM bounding box of the text `<p>` to overlay on top of the widget, physically blocking mouse clicks and creating "dead" unresponsive UI zones.
+    - *Solution*: Never push negative bottom margins into interactive hitboxes. Instead, use a zero-bottom margin (`margin-bottom: 0px`) on the text label and construct tightness by actively pulling the *container* upward or utilizing negative top margins (`margin-top: -5px`) on non-interactive adjacent elements.
 - **Design Token Centralization (`theme.py`)**:
     - *Problem*: Hardcoded hex colors (e.g., `#ffffff`, `#8A91A6`) scattered across UI files create maintenance debt and brittle aesthetic updates.
     - *Solution*: Extract all colors into a centralized `theme.py` module as semantic tokens (e.g., `theme.TEXT_PRIMARY`, `theme.BG_CARD`). Inject them into CSS blocks and HTML spans using standard f-strings (`f"color: {theme.ERROR};"`).

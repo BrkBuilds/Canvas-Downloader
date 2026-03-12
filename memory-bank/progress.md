@@ -1,6 +1,13 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 4: Secondary Content Engine UI Refinements & Bug Fixes** (2026-03-13):
+    - [x] **UI Layout Restructuring**: Reordered the Settings and Sync Review setup pages (across `app.py` and `sync_ui.py`) to intuitively prioritize the selection of content types ("Select what to include") before presentation of structural options ("Organize Additional Course Content by").
+    - [x] **Conditional Formatting & Ghost State Eviction**: The radio button organization choices now dynamically mount/unmount from the DOM based on active secondary content checkboxes, strictly maintaining declarative UI focus.
+    - [x] **Native Component Augmentation**: Bypassed Streamlit's lack of `help` tooltips on individual `st.radio` options by injecting meticulously styled custom HTML hint blocks (`ⓘ`) directly below the widget.
+    - [x] **State Bleed Immunity**: Audited and corrected `isolate_secondary_content` and `dl_isolate_secondary` default boolean states across 8 discrete runtime initialization points to unify behavior around the "In Course Folder/Modules" default pathing.
+    - [x] **CSS Tree-Line Restoration**: Systematically replaced 9 broken literal string `{theme}` references inside CSS blocks with concatenated strings, resurrecting the vertical tree-view indentation lines for NotebookLM and Secondary Content clusters.
+    - [x] **Margin Defeat Mechanisms**: Perfected nested vertical rhythm by tweaking negative `margin-bottom` limits from `-15px` to `0px` on UI text labels, resolving CSS hitbox overlap clipping with adjacent checkboxes and radio buttons.
 - [x] **Phase 3: Secondary Content Engine Backend Implementation** (2026-03-12):
     - [x] **Negative ID Offset Registry**: Engineered a collision-free SQLite ID allocation system (`SECONDARY_ID_OFFSETS`) to track 6 new synthetic Canvas entity types (Assignments, Quizzes, etc.) without mutating real file primary keys.
     - [x] **Universal Routing Architecture**: Developed Mode A (Inline/Prefixed) and Mode B (Isolated Subfolder) routing logic to dynamically construct and place HTML/MD artifacts without cluttering primary course materials.
