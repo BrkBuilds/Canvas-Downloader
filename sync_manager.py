@@ -69,6 +69,55 @@ SYNC_PAIRS_FILENAME = "canvas_sync_pairs.json"
 SYNC_HISTORY_FILENAME = "canvas_sync_history.json"
 SAVED_GROUPS_FILENAME = "saved_sync_groups.json"
 
+# --- Negative ID Offset Registry for Synthetic Content ---
+# Real Canvas Files have positive IDs.  Synthetic entities (Pages saved as
+# .html, Assignments serialised to HTML, etc.) are tracked with *negative*
+# IDs to avoid collisions.  Each content category lives in its own 10 M
+# range so they can never overlap.
+SECONDARY_ID_OFFSETS = {
+    'module_item':   0,           # -1 to -9,999,999  (existing Pages/URLs)
+    'assignment':    10_000_000,  # -10,000,001 to -19,999,999
+    'syllabus':      20_000_000,  # -20,000,001 to -29,999,999
+    'announcement':  30_000_000,  # -30,000,001 to -39,999,999
+    'discussion':    40_000_000,  # -40,000,001 to -49,999,999
+    'quiz':          50_000_000,  # -50,000,001 to -59,999,999
+    'rubric':        60_000_000,  # -60,000,001 to -69,999,999
+    'calendar':      70_000_000,  # -70,000,001 to -79,999,999
+    'submission':    80_000_000,  # -80,000,001 to -89,999,999
+}
+
+
+def make_secondary_id(entity_type: str, raw_id: int) -> int:
+    """Generate a unique negative canvas_file_id for a synthetic entity.
+
+    >>> make_secondary_id('assignment', 42)
+    -10000042
+    """
+    offset = SECONDARY_ID_OFFSETS.get(entity_type, 0)
+    return -(abs(raw_id) + offset)
+
+
+def is_secondary_id(canvas_file_id: int) -> bool:
+    """Return True if *canvas_file_id* belongs to any synthetic content type."""
+    return canvas_file_id < 0
+
+
+def secondary_id_type(canvas_file_id: int) -> str:
+    """Return the entity type string for a given negative synthetic ID.
+
+    Returns 'module_item' for legacy synthetics or 'unknown' if the ID is
+    positive / does not fall into any known range.
+    """
+    if canvas_file_id >= 0:
+        return 'unknown'
+    abs_id = abs(canvas_file_id)
+    # Walk offsets in descending order so the first match wins.
+    for etype, offset in sorted(SECONDARY_ID_OFFSETS.items(),
+                                key=lambda x: x[1], reverse=True):
+        if abs_id > offset:
+            return etype
+    return 'module_item'
+
 
 class SyncManager:
     """Manages synchronization between Canvas and local files using a SQLite database."""
@@ -725,19 +774,31 @@ class SyncManager:
         return self._save_single_file_to_db(info)
 
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
-        """Check if Canvas version is strictly newer than manifest entry."""
+        """Check if Canvas version is strictly newer than manifest entry.
+
+        For *legacy* module-item synthetics (Pages, External URLs — IDs in
+        the -1 to -9,999,999 range) we return False because these objects
+        have no reliable ``updated_at`` timestamp.  The sync engine falls
+        back to a local-existence check for them.
+
+        For the *new* secondary-content entities (Assignments, Quizzes …)
+        whose negative IDs fall outside that legacy range, we have genuine
+        ``updated_at`` values from the Canvas API, so we run the normal
+        timestamp comparison.
+        """
         if canvas_file.id < 0:
-            # Synthetic shortcuts (Pages, URLs) do not have reliable update timestamps.
-            # Return False to force the sync engine to check local existence (Missing vs Up-to-date)
-            return False
-            
+            # Legacy module-item synthetics: -1 to -9,999,999
+            if canvas_file.id > -(SECONDARY_ID_OFFSETS['assignment']):
+                return False
+            # New secondary entities — fall through to timestamp check
+
         if not canvas_file.modified_at:
             return False
-        
+
         manifest_date_str = manifest_entry.get('canvas_updated_at')
         if not manifest_date_str:
             return True
-        
+
         try:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
