@@ -405,7 +405,7 @@ class CanvasManager:
         mb_tracker = {'bytes_downloaded': 0}
         
         # Determine semaphore limit from session state if available, default to 5
-        import streamlit as st
+        import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit dependency
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
         sem = asyncio.Semaphore(concurrent_limit)
         
@@ -892,12 +892,7 @@ class CanvasManager:
                                         )
                                         downloaded.append((info, filepath))
                         except Exception as e:
-                             pass # Logging every single item error in fallback scan might spam? 
-                             # Let's log unique ones? 
-                             # For flat scan, we want to know failures.
-                             # err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Fallback Scan Error", str(e))
-                             # if progress_callback: progress_callback(err, progress_type='error')
-                             # self._log_error(error_root_path, err)
+                             log_debug(f"Fallback scan item error: {getattr(item, 'title', 'unknown')}: {e}", debug_file)
 
                 if module_tasks:
                    module_results = await asyncio.gather(*module_tasks, return_exceptions=True)
@@ -909,8 +904,8 @@ class CanvasManager:
                        elif result:
                            downloaded.append(result)
 
-            except Exception:
-                pass # Module scan failed
+            except Exception as e:
+                log_debug(f"Fallback module scan failed: {e}", debug_file)
 
         except Exception as e:
              err = DownloadError(course.name, "Flat Download", "Fatal Error", str(e), raw_error=e)
@@ -974,7 +969,10 @@ class CanvasManager:
                 except Exception:
                     pass
 
-            filepath = self._handle_conflict(filepath)
+            # Only run disk-conflict resolution when the caller hasn't already
+            # resolved naming via seen_flat_paths / seen_target_paths.
+            if not explicit_filepath:
+                filepath = self._handle_conflict(filepath)
 
             url = file_obj.url
             if not url:
@@ -990,7 +988,7 @@ class CanvasManager:
                 self._log_error(error_root_path, err)
                 return
 
-            import aiofiles
+            # aiofiles is imported at module level; reference is used below
 
             for attempt in range(MAX_RETRIES):
                 try:
@@ -999,7 +997,7 @@ class CanvasManager:
                         log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
                         if response.status == 200:
                             # --- Atomic .part Pattern ---
-                            import streamlit as st
+                            import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit
                             part_path = filepath.parent / (filepath.name + '.part')
                             download_interrupted = False
                             
@@ -1062,8 +1060,17 @@ class CanvasManager:
                             try:
                                 os.rename(make_long_path(part_path), make_long_path(filepath))
                             except OSError:
-                                import shutil as _shutil
-                                _shutil.move(make_long_path(part_path), make_long_path(filepath))
+                                _shutil = shutil  # shutil imported at module level; alias for local clarity
+                                try:
+                                    _shutil.move(make_long_path(part_path), make_long_path(filepath))
+                                except Exception:
+                                    # Clean up partial destination file from failed cross-FS copy
+                                    try:
+                                        if Path(make_long_path(filepath)).exists():
+                                            Path(make_long_path(filepath)).unlink()
+                                    except OSError:
+                                        pass
+                                    raise  # Re-raise to trigger retry loop
                             
                             log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
                             
@@ -1187,7 +1194,8 @@ class CanvasManager:
             filename = f"{safe_title}.url"
             filepath = folder_path / filename
             filepath = self._handle_conflict(filepath)
-            content = f'[InternetShortcut]\nURL={url}'
+            safe_url = url.replace('\r', '').replace('\n', '')
+            content = f'[InternetShortcut]\nURL={safe_url}'
 
         if progress_callback:
             progress_callback(f'Creating link: {title}', progress_type='link')
@@ -1241,7 +1249,7 @@ class CanvasManager:
         except Exception: pass
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
         if replace_spaces: sanitized = sanitized.replace(' ', '_')
-        sanitized = sanitized.strip('. _')
+        sanitized = sanitized.lstrip(' _').rstrip('. _')
         if len(sanitized) > max_length:
             name, ext = os.path.splitext(sanitized)
             if len(ext) > 10: sanitized = sanitized[:max_length]

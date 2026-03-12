@@ -18,6 +18,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Native Cocoa Rendering Parity**:
     - *Policy*: Where Tkinter's cross-platform bridges fail to mimic native macOS expectations (crashes, ugly UI), bypass Tkinter entirely via subprocess AppleScript execution.
     - *Implementation*: `native_folder_picker()` on macOS pipes straight to `osascript -e POSIX path of (choose folder)` to leverage the actual macOS Finder dialog. Also, `open_folder()` leverages `open -R {path}` and an explicit `tell application "Finder" to activate` to guarantee the explorer window punches through Streamlit to seize the foreground.
+- **AppleScript Lifecycle Controller Parity (macOS)**:
+    - *Policy*: Avoid terminal-bound infinite loops or unstable Tkinter root windows to manage the application lifecycle on macOS.
+    - *Implementation*: The `start.py` launcher uses a synchronous `osascript` dialog ("Open Browser", "Stop Server") executed via `subprocess.run()`. This acts as a native blocking controller for the `os.urandom` daemon thread, keeping the Streamlit server alive while allowing a graceful, user-friendly shutdown without zombie processes.
 - **AppleScript Defensive Execution**:
     - *Pattern*: `osascript` subprocesses are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
     - *Path Formatting*: AppleScript blocks natively accept `POSIX file "/Users/..."` strings. Paths are escaped (`path.replace('"', '\\"')`) for injection defense-in-depth.

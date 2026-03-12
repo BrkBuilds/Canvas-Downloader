@@ -1,11 +1,31 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 2: Deferred Issues Implementation** (2026-03-12):
+    - [x] **JSON Atomic Writes**: Fortified `SyncHistoryManager` to use a `.tmp` file and `os.replace()`, preventing history json corruption during abrupt process termination.
+    - [x] **Subprocess Hang Protection**: Wrapped `moviepy.close()` in an asynchronous thread executor with a 10s maximum timeout to prevent the main download pipeline from permanently stalling on corrupted `.mp4` payloads.
+    - [x] **UI Conversion Failure Surfacing**: Enriched the `UIBridge` with success/failure counters and wired them into all post-processing loops. The Sync and Download completion screens now proactively display a Streamlit warning banner if any file conversions fail post-download.
+    - [x] **Import Optimization**: Hoisted safe stdlib modules (`platform`, `base64`) to module level in `app.py`, stripped redundant re-imports from `canvas_logic.py`, and explicitly commented the architectural reason for dynamically deferring Streamlit.
+- [x] **V1.0 Final Blockers & Polish** (2026-03-12):
+    - [x] **Atomic Data Integrity**: Hardened `shutil.move` fallbacks traversing filesystem boundaries; partial/failed destination files are now actively cleaned up rather than leaving corrupted fragments behind (`canvas_logic.py`).
+    - [x] **Path Collisions**: Fixed a logic bug where pre-resolved file paths (`explicit_filepath`) were unnecessarily subjected to a secondary conflict resolution check, causing structural path divergence.
+    - [x] **Database Concurrency**: Replicated the `timeout=30.0` combined with a 3-retry backoff loop into `SyncManager`'s `ignore_file()` and `restore_file()` methods to protect against `database is locked` states during rapid UI clicking.
+    - [x] **Cross-Platform Payload Security**: Hardened `.url` synthesis to actively strip unexpected `\r` and `\n` characters embedded in Canvas `external_url` targets, neutralizing INI-injection vulnerabilities.
+    - [x] **Cache Memory Protection**: Injected a 10-minute TTL (`ttl=600`) into the global `fetch_courses` Streamlit cache to prevent prolonged sessions from masking newly published (or newly deleted) Canvas courses.
+    - [x] **UI State Persistence**: Expanded the `keys_to_keep` whitelist inside the download cleanup sequence (`app.py`) to actively preserve user authentication tokens and customized target paths, terminating a UX flow where the UI "flickered" back to the login screen post-download.
+    - [x] **Filesystem Sanitization**: Adjusted `_sanitize_filename` to preserve functional leading dots (`.gitignore`, `.env`) while continuing to strip dangerous traversal characters.
+    - [x] **Technical Debt**: Removed defunct debug `print()` calls in `sync_ui.py` (replaced with `logging.debug`) and purged dead variable declarations in the module parser.
+- [x] **V1.0 Final Clearance Execution** (2026-03-11):
+    - [x] **macOS AppleScript Lifecycle Controller**: Rewrote `start.py` to use a native, blocking `osascript` dialog ("Open Browser" / "Stop Server") for macOS lifecycle management instead of a terminal-bound infinite loop or Tkinter.
+    - [x] **Path Traversal Guard**: Secured `archive_extractor.py` against malicious tarballs on Python < 3.12 by manually validating member paths.
+    - [x] **Theme Interpolation Fixes**: Corrected 19 broken literal string references to `theme` colors in `post_processing.py` to use evaluated f-strings.
+    - [x] **Subprocess Leak Prevention**: Added `try/finally` blocks to `video_converter.py` to unconditionally close moviepy/FFmpeg file handles.
+    - [x] **Database & Error Hardening**: Added connection timeouts to SQLite, narrowed overarching `BaseException` handlers, and improved debug visibility across `canvas_logic.py` and `app.py`.
 - [x] **macOS V1.0 Native Release Implementation** (2026-03-11):
     - [x] **Top-level Crash Resolution**: Rewrote `excel_converter.py` to eradicate unconditional COM imports (`pythoncom`, `win32com.client`) that were throwing `ModuleNotFoundError` on UNIX. All Office modules now utilize lazy-loading encapsulated within structural context managers.
     - [x] **AppleScript Automation Bridge**: Engineered a zero-dependency macOS fallback pipeline for PowerPoint, Word, and Excel converters. `osascript` subprocess calls forcefully boot local Mac Office applications, process payload documents, export to PDF, and clean up silently, achieving 100% format-shifting feature parity with Windows.
     - [x] **GUI Bridge Hardening**: Eradicated `TclError` macOS crashes by dynamically pivoting Tkinter away from `.ico` (Windows) toward `.png` via `iconphoto()` (Darwin).
-    - **Native Cocoa File Picker (`ui_helpers.py`)**: Completely bypassed Tkinter's rudimentary file dialog on macOS, routing requests through an `osascript POSIX path of (choose folder)` subprocess to invoke the true, native macOS Finder UI.
+    - [x] **Native Cocoa File Picker & UX Freeze Protection (`ui_helpers.py`)**: Completely bypassed Tkinter's rudimentary file dialog on macOS, routing requests through an `osascript POSIX path of (choose folder)` subprocess to invoke the true, native macOS Finder UI. Engineered a focus-stealing AppleScript payload paired with a 60-second `subprocess` timeout to protect the Streamlit background thread from hanging indefinitely if the prompt spawned out-of-sight behind the browser window.
     - [x] **Application Support Read/Write Saftey**: Upgraded system pathing to natively detect Apple `.app` binary execution (`sys.frozen + Darwin`). Writable JSON and credential databases are dynamically mapped to `~/Library/Application Support/CanvasDownloader` to bypass code-signing locks.
     - [x] **Cross-Platform Synthetics**: Rewired both `url_compiler.py` and the `sync_ui.py` engine to read/write native macOS `.webloc` XML binary bookmarks via `plistlib`, achieving perfect OS parity with the legacy `.url` Windows INI pipelines.
     - [x] **Keychain Prompt Suppression (`app.py`)**: Designed a sophisticated bypass for macOS `keyring` permission loops. On Darwin, API tokens are structurally encoded via Base64 and merged into the active `settings.json` payload, providing seamless, persistent authentication without triggering Apple's OS-level credential dialogs.

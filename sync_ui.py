@@ -28,6 +28,8 @@ from datetime import datetime
 from urllib.parse import unquote_plus
 import urllib.parse
 
+logger = logging.getLogger(__name__)
+
 import streamlit as st
 import aiohttp
 from collections import defaultdict
@@ -3483,7 +3485,7 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                         total_canvasdel += len(res_obj['deleted_on_canvas'])
                         
         st.session_state['qs_skipped'] = {'local_del': total_locdel, 'canvas_del': total_canvasdel}
-        print(f"[DEBUG] Quick Sync Skipped Payload: {st.session_state['qs_skipped']}") # Print to terminal for debugging
+        logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
         
         if total_count == 0:
             # 2. Bypass directly to completion
@@ -3494,7 +3496,7 @@ def _run_analysis(sync_pairs, main_placeholder=None):
             # 3. Force rerun to instantly show the success screen
             st.rerun()
         else:
-            print(f"[DEBUG-QS] total_count={total_count} → jumping to 'pre_sync'!")
+            logger.debug(f"Quick Sync total_count={total_count} → jumping to 'pre_sync'")
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
             st.session_state['qs_cancel_route'] = True # INDESTRUCTIBLE CANCEL FLAG
@@ -5826,6 +5828,7 @@ def _run_sync():
     st.session_state['synced_count'] = synced_counter[0]
     st.session_state['synced_bytes'] = synced_counter[1]
     st.session_state['sync_errors'] = error_list
+    st.session_state['pp_failure_count'] = pp_ui.pp_failure_count
     # Store detailed synced files for the completion screen dropdowns
     # synced_details is a dict: { pair_idx: [ "filename1", "filename2", ... ] }
     st.session_state['synced_details'] = dict(synced_details)
@@ -6045,6 +6048,12 @@ def _show_sync_complete():
         # Cleanup
         if 'qs_skipped' in st.session_state:
             del st.session_state['qs_skipped']
+
+    # Post-processing failure warning (M-7)
+    pp_failures = st.session_state.get('pp_failure_count', 0)
+    if pp_failures > 0:
+        _pp_word = "file" if pp_failures == 1 else "files"
+        st.warning(f"⚠️ {pp_failures} {_pp_word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
 
     retry_selections = st.session_state.get('retry_selections', [])
 
