@@ -165,11 +165,14 @@ def native_folder_picker() -> str | None:
         import subprocess
         try:
             result = subprocess.run(
-                ['osascript', '-e', 'POSIX path of (choose folder)'],
-                capture_output=True, text=True
+                ['osascript', '-e', 'tell application (path to frontmost application as text) to POSIX path of (choose folder)'],
+                capture_output=True, text=True, timeout=60
             )
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip()
+            return None
+        except subprocess.TimeoutExpired:
+            logging.warning("AppleScript folder picker timed out after 60 seconds.")
             return None
         except Exception:
             return None
@@ -180,11 +183,7 @@ def native_folder_picker() -> str | None:
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     try:
-        if platform.system() == 'Darwin':
-            icon_img = tk.PhotoImage(file=os.path.join(os.path.dirname(__file__), 'assets', 'icon.png'))
-            root.iconphoto(True, icon_img)
-        else:
-            root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
     except Exception:
         pass
     folder_path = filedialog.askdirectory(master=root)

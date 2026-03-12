@@ -1,13 +1,16 @@
 import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
 import asyncio
+import base64
 import collections
 import json
 import os
 import logging
+import platform
 import re
 import sys
 import time
+from datetime import datetime
 import keyring
 
 import theme
@@ -164,7 +167,7 @@ def _download_error_log_dialog(log_paths):
     if st.button("Close", type="primary", use_container_width=True):
         st.rerun()
 
-@st.cache_data
+@st.cache_data(ttl=600)  # 10-minute TTL — new courses appear after brief wait
 def fetch_courses(token, url, fav_only):
     mgr = CanvasManager(token, url)
     try:
@@ -208,8 +211,7 @@ with st.sidebar:
                         
                     if 'debug_mode' in config:
                         st.session_state['debug_mode'] = config.get('debug_mode', False)
-                    import platform
-                    import base64
+                    # platform and base64 imported at module level
                     
                     loaded_token = ''
                     if platform.system() == 'Darwin':
@@ -301,8 +303,7 @@ with st.sidebar:
                 st.session_state['is_authenticated'] = True
                 st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
                 
-                import platform
-                import base64
+                # platform and base64 imported at module level
                 
                 # Setup base config data
                 config_data = {}
@@ -510,7 +511,7 @@ with st.sidebar:
         st.markdown("")  # Spacer
         st.markdown("")
         if st.button('Log Out / Edit Token', use_container_width=True):
-            import platform
+            # platform imported at module level
             
             # Wipe token from OS keyring
             if platform.system() != 'Darwin':
@@ -834,7 +835,7 @@ with _main_content.container():
             st.session_state['file_filter'] = 'all' if filter_choice == 'All Files' else 'study'
             
             # --- NotebookLM Compatible Download ---
-            TOTAL_NOTEBOOK_SUBS = 8 # Update this number when adding more features later
+
 
             def _master_toggle_changed():
                 # Force all sub-checkboxes to match the master toggle's new state
@@ -1335,8 +1336,12 @@ with _main_content.container():
                             new_line = f"[{esc(course.name)}] {msg}"
                             log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[ℹ️] {new_line}</span>")
                             render_dashboard()
+                    except (KeyboardInterrupt, SystemExit):
+                        raise
                     except BaseException:
-                        # Silently catch Streamlit's StopException / RerunException during async teardown
+                        # Catch Streamlit's StopException / RerunException during async
+                        # teardown without killing the download event loop. Cancellation
+                        # flows via st.session_state['cancel_requested'] instead.
                         pass
                 
 
@@ -1379,7 +1384,6 @@ with _main_content.container():
                 )
 
                 # --- Post-Processing: Setup logging for NotebookLM hooks ---
-                from datetime import datetime
                 from canvas_debug import log_debug
 
                 save_dir = st.session_state['download_path']
@@ -1429,6 +1433,8 @@ with _main_content.container():
                             ui=pp_ui,
                             course_name=course.name,
                         )
+                        # Track post-processing failures for the completion screen (M-7)
+                        st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
                 # --- End Post-Download Conversion Pipeline ---
                 # Clear the blue status text so it doesn't linger on completion
                 active_file_placeholder.empty()
@@ -1462,7 +1468,7 @@ with _main_content.container():
                             f.write(f"Session Error Log - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                             f.write("===================================================\n")
                             for err in st.session_state['download_errors_list']:
-                                f.write(f"{err}\n")
+                                f.write(f"{err.to_log_entry()}\n")
                     except Exception as e:
                         logger.error(f"Failed to write session log: {e}")
                 # -------------------------------------------------------------------
@@ -1483,6 +1489,12 @@ with _main_content.container():
             except Exception:
                 pass
             
+            # Post-processing failure warning (M-7)
+            pp_failures = st.session_state.get('pp_failure_count', 0)
+            if pp_failures > 0:
+                _pp_word = "file" if pp_failures == 1 else "files"
+                st.warning(f"⚠️ {pp_failures} {_pp_word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
+
             # Check for download errors (In-Memory first, fallback to disk)
             error_messages = st.session_state.get('download_errors_list', [])
             
@@ -1624,7 +1636,9 @@ with _main_content.container():
                 # when returning to the front page
                 keys_to_keep = {
                     'courses', 'course_names', 'api_token', 'api_url', 'api_configured',
-                    'sync_pairs', 'sync_pairs_loaded'
+                    'sync_pairs', 'sync_pairs_loaded',
+                    'is_authenticated', 'user_name', 'token_loaded',
+                    'download_path', 'current_mode',
                 }
 
                 st.session_state['sync_cancelled'] = False

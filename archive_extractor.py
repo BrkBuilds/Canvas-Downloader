@@ -46,6 +46,12 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
                 if hasattr(tarfile, 'data_filter'):
                     tar_ref.extractall(extract_dir, filter='data')
                 else:
+                    # Manual path traversal guard for Python < 3.12
+                    resolved_target = str(extract_dir.resolve())
+                    for member in tar_ref.getmembers():
+                        member_path = str((extract_dir / member.name).resolve())
+                        if not member_path.startswith(resolved_target):
+                            raise Exception(f"Blocked path traversal attempt in tar: {member.name}")
                     tar_ref.extractall(extract_dir)
         else:
             return None
