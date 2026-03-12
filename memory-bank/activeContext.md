@@ -1,6 +1,7 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- [x] **Active Feature: Phase 3 Secondary Content Engine Backend (Complete)**: Architected and verified the full backend engine (`canvas_logic.py`, `sync_manager.py`) for downloading Assignments, Syllabus, Announcements, Discussions, Quizzes, and Rubrics using dynamically generated HTML artifacts and a Negative ID Offset Registry.
 - [x] **Active Feature: Phase 2 Deferred Issues (Complete)**: Evaluated and implemented the deferred major/minor issues from the V1 Master Audit. Addressed JSON atomic writes, FFmpeg subprocess stalls, post-processing failure UI surfacing, and import hoisting. Dropped architectural monolith splitting for V2.0.
 - [x] **Active Feature: V1.0 Master Audit Refinements (Complete)**: Executed the final 10 codebase fixes addressing edge cases, data concurrency, URL injection, and UX state persistence based on the final audit report.
 - [x] **Active Feature: V1.0 Master Audit Roadmap (Complete)**: Executed the final critical blockers identified in the Master Audit Report (missing `time` import in `excel_converter`, unconditional COM imports in `word_converter`, XML `.webloc` string escaping, `tarfile` zip-bomb/traversal protection, and UI duplication extraction). The only remaining task is establishing a baseline test suite.
@@ -8,6 +9,13 @@
 - **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-12 — Phase 3 Secondary Content Engine Backend)
+- **Negative ID Offset Registry (`sync_manager.py`)**: Designed a 10-million wide integer range registry (`SECONDARY_ID_OFFSETS`) per synthetic entity. This safely records HTML-wrapped Canvas entities (like Assignments `-10M` or Quizzes `-50M`) in the SQLite database without risking primary key collisions with real Canvas file IDs.
+- **Universal HTML Construction (`canvas_logic.py`)**: Centralized the payload conversion logic into `_build_entity_html()` and `_save_secondary_entity()`, guaranteeing all 6 new Canvas entities receive consistent, styled HTML bodies embedding metadata (due dates, total points).
+- **Mode A/B Routing System (`canvas_logic.py`)**: Implemented `_resolve_secondary_path()` to support two physical layouts: Mode A (Inline injection using prefixed names like `Assignment: Homework.html`) and Mode B (Isolated subfolders like `Assignments/Homework.html`).
+- **True Positive ID Attachment Handling (`canvas_logic.py`)**: Resolved a critical architectural flaw by strictly tracking Assignment and Announcement attachments via their true Canvas `file.id`. This ensures perfect SQLite deduplication if the exact same file exists natively in the instructor's 'Files' tab.
+- **Sync Plane Integration (`canvas_logic.py`)**: Expanded `_get_files_from_modules()` to emit mock `CanvasFileInfo` objects for secondary items found directly inside modules. Added `get_secondary_content_metadata()` to fetch and merge standalone entities into the main diffing pipeline, granting full visibility to the Sync UI.
 
 ## Recent Changes (Session 2026-03-12 — Phase 2 Deferred Issues)
 - **JSON Atomic Writes (`sync_manager.py`)**: Migrated the non-atomic `add_entry` logic in `SyncHistoryManager` to write payload data sequentially to a `.tmp` file before executing a secure `os.replace()`, preventing unrecoverable `.json` corruption if the thread crashes mid-save.

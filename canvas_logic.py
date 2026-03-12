@@ -15,7 +15,7 @@ import aiohttp
 from canvas_debug import log_debug, clear_debug_log
 import logging
 
-from sync_manager import SyncManager, CanvasFileInfo
+from sync_manager import SyncManager, CanvasFileInfo, make_secondary_id, is_secondary_id
 from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,31 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 5
 TIMEOUT_SECONDS = 300
 RETRY_DELAY = 1
+
+# --- Secondary Content Configuration Defaults ---
+# These are the settings that the UI will eventually expose as checkboxes.
+# The backend operates on whatever dict it receives; defaults ensure safety.
+SECONDARY_CONTENT_DEFAULTS = {
+    'download_assignments': False,
+    'download_syllabus': False,
+    'download_announcements': False,
+    'download_discussions': False,
+    'download_quizzes': False,
+    'download_rubrics': False,
+    'download_submissions': False,
+    'isolate_secondary_content': True,   # True = Mode B (subfolder), False = Mode A (inline)
+}
+
+# Maps entity types to their subfolder names (Mode B) and prefixes (Mode A)
+_ENTITY_ROUTING = {
+    'assignment':   {'folder': 'Assignments',   'prefix': 'Assignment'},
+    'syllabus':     {'folder': 'Syllabus',      'prefix': 'Syllabus'},
+    'announcement': {'folder': 'Announcements', 'prefix': 'Announcement'},
+    'discussion':   {'folder': 'Discussions',   'prefix': 'Discussion'},
+    'quiz':         {'folder': 'Quizzes',       'prefix': 'Quiz'},
+    'rubric':       {'folder': 'Rubrics',       'prefix': 'Rubric'},
+    'submission':   {'folder': 'Submissions',   'prefix': 'Submission'},
+}
 
 class DownloadError:
     """Structured error object for UI display and logging."""
@@ -105,7 +130,7 @@ class CanvasManager:
                     course_list.append(course)
         return course_list
 
-    def get_course_files_metadata(self, course, progress_callback=None):
+    def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -115,6 +140,7 @@ class CanvasManager:
         2. Always run a secondary scan of Modules to find files that might be locked/hidden 
            or were missed due to the error in step 1.
         3. Deduplicate by File ID.
+        4. Optionally merge metadata for secondary content entities (Assignments, etc.).
         
         Returns:
             List of CanvasFileInfo objects (unique by ID).
@@ -151,7 +177,8 @@ class CanvasManager:
             
         # --- Phase 2: Module Scan (Supplement) ---
         try:
-            module_files = self._get_files_from_modules(course, progress_callback=progress_callback)
+            module_files = self._get_files_from_modules(course, progress_callback=progress_callback,
+                                                        secondary_content_settings=secondary_content_settings)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -167,13 +194,29 @@ class CanvasManager:
                     
         except Exception as e:
             logger.error(f"Error during module scan fallback: {e}")
-            # If BOTH failed and wfe have 0 files, we might want to raise, 
-            # but usually returning empty list is safer for UI than crashing.
+
+        # --- Phase 3: Secondary Content Metadata ---
+        if secondary_content_settings:
+            try:
+                secondary_items = self.get_secondary_content_metadata(
+                    course, secondary_content_settings,
+                )
+                for s_info in secondary_items:
+                    if s_info.id not in all_files_map:
+                        all_files_map[s_info.id] = s_info
+            except Exception as e:
+                logger.error(f"Error fetching secondary content metadata: {e}")
             
         return list(all_files_map.values())
     
-    def _get_files_from_modules(self, course, progress_callback=None):
-        """Fallback: Get files by iterating through modules."""
+    def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None):
+        """Fallback: Get files by iterating through modules.
+
+        Also emits mock CanvasFileInfo for secondary entity types
+        (Assignment, Quiz, Discussion) when *secondary_content_settings*
+        enables them.  This allows the sync analysis engine to see these
+        entities without additional API calls.
+        """
         from sync_manager import CanvasFileInfo
         
         files = []
@@ -223,7 +266,174 @@ class CanvasManager:
                         content_type="text/html" if item.type == 'Page' else "application/x-url"
                     )
                     files.append(mock_info)
+
+                # --- Secondary entities found in modules ---
+                elif item.type == 'Assignment' and secondary_content_settings and secondary_content_settings.get('download_assignments'):
+                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    content_id = getattr(item, 'content_id', 0) or 0
+                    files.append(CanvasFileInfo(
+                        id=make_secondary_id('assignment', content_id),
+                        filename=safe_title,
+                        display_name=getattr(item, 'title', 'Untitled'),
+                        size=0,
+                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                        url=getattr(item, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+                elif item.type == 'Quiz' and secondary_content_settings and secondary_content_settings.get('download_quizzes'):
+                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    content_id = getattr(item, 'content_id', 0) or 0
+                    files.append(CanvasFileInfo(
+                        id=make_secondary_id('quiz', content_id),
+                        filename=safe_title,
+                        display_name=getattr(item, 'title', 'Untitled'),
+                        size=0,
+                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                        url=getattr(item, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+                elif item.type == 'Discussion' and secondary_content_settings and secondary_content_settings.get('download_discussions'):
+                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    content_id = getattr(item, 'content_id', 0) or 0
+                    files.append(CanvasFileInfo(
+                        id=make_secondary_id('discussion', content_id),
+                        filename=safe_title,
+                        display_name=getattr(item, 'title', 'Untitled'),
+                        size=0,
+                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                        url=getattr(item, 'html_url', ''),
+                        content_type='text/html',
+                    ))
         return files
+
+    def get_secondary_content_metadata(self, course, settings):
+        """Return CanvasFileInfo list for *standalone* secondary content.
+
+        This covers entities that are NOT linked from any module and thus
+        would not be surfaced by ``_get_files_from_modules``.  Examples:
+        Announcements, Syllabus, standalone Assignments, Rubrics.
+
+        Used by the sync analysis path to detect new/updated/missing
+        secondary entities in the manifest.
+        """
+        from sync_manager import CanvasFileInfo
+
+        items = []
+
+        # Syllabus
+        if settings.get('download_syllabus'):
+            try:
+                full_course = self.canvas.get_course(
+                    course.id, include=['syllabus_body'],
+                )
+                if getattr(full_course, 'syllabus_body', None):
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('syllabus', course.id),
+                        filename='Syllabus.html',
+                        display_name='Syllabus',
+                        size=0,
+                        modified_at=getattr(full_course, 'updated_at', ''),
+                        url='',
+                        content_type='text/html',
+                    ))
+            except Exception:
+                pass
+
+        # Announcements
+        if settings.get('download_announcements'):
+            try:
+                topics = course.get_discussion_topics(only_announcements=True)
+                for topic in topics:
+                    t_id = getattr(topic, 'id', 0)
+                    title = getattr(topic, 'title', 'Announcement')
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('announcement', t_id),
+                        filename=self._sanitize_filename(title) + '.html',
+                        display_name=title,
+                        size=0,
+                        modified_at=getattr(topic, 'posted_at', ''),
+                        url=getattr(topic, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+            except Exception:
+                pass
+
+        # Standalone Assignments (ones not in modules are caught here)
+        if settings.get('download_assignments'):
+            try:
+                for assignment in course.get_assignments():
+                    a_id = getattr(assignment, 'id', 0)
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('assignment', a_id),
+                        filename=self._sanitize_filename(
+                            getattr(assignment, 'name', 'Assignment')) + '.html',
+                        display_name=getattr(assignment, 'name', 'Assignment'),
+                        size=0,
+                        modified_at=getattr(assignment, 'updated_at', ''),
+                        url=getattr(assignment, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+            except Exception:
+                pass
+
+        # Standalone Discussions (non-announcement)
+        if settings.get('download_discussions'):
+            try:
+                for topic in course.get_discussion_topics():
+                    if getattr(topic, 'is_announcement', False):
+                        continue
+                    t_id = getattr(topic, 'id', 0)
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('discussion', t_id),
+                        filename=self._sanitize_filename(
+                            getattr(topic, 'title', 'Discussion')) + '.html',
+                        display_name=getattr(topic, 'title', 'Discussion'),
+                        size=0,
+                        modified_at=(getattr(topic, 'last_reply_at', '')
+                                     or getattr(topic, 'updated_at', '')),
+                        url=getattr(topic, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+            except Exception:
+                pass
+
+        # Quizzes
+        if settings.get('download_quizzes'):
+            try:
+                for quiz in course.get_quizzes():
+                    q_id = getattr(quiz, 'id', 0)
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('quiz', q_id),
+                        filename=self._sanitize_filename(
+                            getattr(quiz, 'title', 'Quiz')) + '.html',
+                        display_name=getattr(quiz, 'title', 'Quiz'),
+                        size=0,
+                        modified_at=getattr(quiz, 'updated_at', ''),
+                        url=getattr(quiz, 'html_url', ''),
+                        content_type='text/html',
+                    ))
+            except Exception:
+                pass
+
+        # Rubrics
+        if settings.get('download_rubrics'):
+            try:
+                for rubric in course.get_rubrics():
+                    r_id = getattr(rubric, 'id', 0)
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('rubric', r_id),
+                        filename=self._sanitize_filename(
+                            getattr(rubric, 'title', 'Rubric')) + '.md',
+                        display_name=getattr(rubric, 'title', 'Rubric'),
+                        size=0,
+                        modified_at=getattr(rubric, 'updated_at', ''),
+                        url='',
+                        content_type='text/markdown',
+                    ))
+            except Exception:
+                pass
+
+        return items
 
     def get_folder_map(self, course) -> dict:
         """
@@ -364,7 +574,7 @@ class CanvasManager:
             pass
         return total_bytes / (1024 * 1024)
 
-    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False, post_processing_settings=None):
+    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False, post_processing_settings=None, secondary_content_settings=None):
         """
         Downloads content for a single course asynchronously.
         """
@@ -402,6 +612,7 @@ class CanvasManager:
 
         downloaded_file_ids = set()
         seen_target_paths = set()  # Path-based collision tracking
+        module_handled_ids = set()  # Secondary entity IDs already handled via module dispatch
         mb_tracker = {'bytes_downloaded': 0}
         
         # Determine semaphore limit from session state if available, default to 5
@@ -554,6 +765,112 @@ class CanvasManager:
                                                 content_type="application/x-url"
                                             )
                                             downloaded_files_info.append((info, filepath))
+
+                                    # --- Secondary Content: Module-aware dispatch ---
+                                    elif item.type == 'Assignment':
+                                        if secondary_content_settings and secondary_content_settings.get('download_assignments'):
+                                            if hasattr(item, 'content_id') and item.content_id:
+                                                try:
+                                                    isolate = secondary_content_settings.get('isolate_secondary_content', True)
+                                                    assignment = course.get_assignment(item.content_id)
+                                                    a_id = getattr(assignment, 'id', 0)
+                                                    a_name = getattr(assignment, 'name', 'Untitled Assignment')
+                                                    description = getattr(assignment, 'description', '') or ''
+                                                    updated_at = getattr(assignment, 'updated_at', '') or ''
+
+                                                    attachments = []
+                                                    try:
+                                                        raw_att = getattr(assignment, 'attachments', None)
+                                                        if raw_att and isinstance(raw_att, list):
+                                                            attachments = raw_att
+                                                    except Exception:
+                                                        pass
+
+                                                    metadata = [
+                                                        ('Due', getattr(assignment, 'due_at', None)),
+                                                        ('Points', getattr(assignment, 'points_possible', None)),
+                                                    ]
+                                                    module_target = target_path if not isolate else None
+                                                    self._save_secondary_entity(
+                                                        'assignment', a_name, description, base_path,
+                                                        course_base_path=base_path, sync_manager=sync_manager,
+                                                        canvas_entity_id=a_id, canvas_updated_at=updated_at,
+                                                        progress_callback=progress_callback,
+                                                        debug_file=debug_file,
+                                                        error_root_path=Path(save_dir),
+                                                        course_name=course.name,
+                                                        module_path=module_target, isolate=isolate,
+                                                        has_attachments=bool(attachments),
+                                                        metadata_pairs=metadata,
+                                                    )
+                                                    module_handled_ids.add(a_id)
+                                                except Exception as ae:
+                                                    log_debug(f"Module Assignment dispatch error: {ae}", debug_file)
+
+                                    elif item.type == 'Quiz':
+                                        if secondary_content_settings and secondary_content_settings.get('download_quizzes'):
+                                            if hasattr(item, 'content_id') and item.content_id:
+                                                try:
+                                                    isolate = secondary_content_settings.get('isolate_secondary_content', True)
+                                                    quiz = course.get_quiz(item.content_id)
+                                                    q_id = getattr(quiz, 'id', 0)
+                                                    q_title = getattr(quiz, 'title', 'Untitled Quiz')
+                                                    q_desc = getattr(quiz, 'description', '') or ''
+                                                    updated_at = getattr(quiz, 'updated_at', '') or ''
+
+                                                    metadata = [
+                                                        ('Points', getattr(quiz, 'points_possible', None)),
+                                                        ('Due', getattr(quiz, 'due_at', None)),
+                                                    ]
+                                                    module_target = target_path if not isolate else None
+                                                    self._save_secondary_entity(
+                                                        'quiz', q_title, q_desc, base_path,
+                                                        course_base_path=base_path, sync_manager=sync_manager,
+                                                        canvas_entity_id=q_id, canvas_updated_at=updated_at,
+                                                        progress_callback=progress_callback,
+                                                        debug_file=debug_file,
+                                                        error_root_path=Path(save_dir),
+                                                        course_name=course.name,
+                                                        module_path=module_target, isolate=isolate,
+                                                        has_attachments=False,
+                                                        metadata_pairs=metadata,
+                                                    )
+                                                    module_handled_ids.add(q_id)
+                                                except Exception as qe:
+                                                    log_debug(f"Module Quiz dispatch error: {qe}", debug_file)
+
+                                    elif item.type == 'Discussion':
+                                        if secondary_content_settings and secondary_content_settings.get('download_discussions'):
+                                            if hasattr(item, 'content_id') and item.content_id:
+                                                try:
+                                                    isolate = secondary_content_settings.get('isolate_secondary_content', True)
+                                                    topic = course.get_discussion_topic(item.content_id)
+                                                    t_id = getattr(topic, 'id', 0)
+                                                    title = getattr(topic, 'title', 'Untitled Discussion')
+                                                    message = getattr(topic, 'message', '') or ''
+                                                    updated_at = (getattr(topic, 'last_reply_at', '')
+                                                                  or getattr(topic, 'updated_at', '') or '')
+
+                                                    metadata = [
+                                                        ('Posted', getattr(topic, 'posted_at', None)),
+                                                        ('Replies', getattr(topic, 'discussion_subentry_count', None)),
+                                                    ]
+                                                    module_target = target_path if not isolate else None
+                                                    self._save_secondary_entity(
+                                                        'discussion', title, message, base_path,
+                                                        course_base_path=base_path, sync_manager=sync_manager,
+                                                        canvas_entity_id=t_id, canvas_updated_at=updated_at,
+                                                        progress_callback=progress_callback,
+                                                        debug_file=debug_file,
+                                                        error_root_path=Path(save_dir),
+                                                        course_name=course.name,
+                                                        module_path=module_target, isolate=isolate,
+                                                        has_attachments=False,
+                                                        metadata_pairs=metadata,
+                                                    )
+                                                    module_handled_ids.add(t_id)
+                                                except Exception as de:
+                                                    log_debug(f"Module Discussion dispatch error: {de}", debug_file)
                                         
                                 except Exception as item_e:
                                     err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Item Processing Error", str(item_e), raw_error=item_e)
@@ -646,6 +963,30 @@ class CanvasManager:
                         self._log_error(save_dir, err)
                 # ---- HYBRID MODE CATCH-ALL ENDED ----
 
+                # ---- SECONDARY CONTENT DOWNLOAD ----
+                if secondary_content_settings and any(
+                    secondary_content_settings.get(k)
+                    for k in SECONDARY_CONTENT_DEFAULTS
+                    if k.startswith('download_')
+                ):
+                    try:
+                        await self._download_secondary_content(
+                            course, base_path, sem, session,
+                            progress_callback, mb_tracker, check_cancellation,
+                            secondary_content_settings, Path(save_dir),
+                            debug_file, sync_manager, module_handled_ids,
+                        )
+                    except Exception as sec_e:
+                        err = DownloadError(
+                            course.name, "Secondary Content",
+                            "Secondary Content Error", str(sec_e),
+                            raw_error=sec_e,
+                        )
+                        if progress_callback:
+                            progress_callback(err, progress_type='error')
+                        self._log_error(save_dir, err)
+                # ---- SECONDARY CONTENT DOWNLOAD ENDED ----
+
             except Exception as e:
                  is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)
                  if is_unauthorized and mode != 'flat':
@@ -669,6 +1010,10 @@ class CanvasManager:
                 if post_processing_settings:
                     import json
                     sync_manager._save_metadata('sync_contract', json.dumps(post_processing_settings))
+                # Save the secondary content contract
+                if secondary_content_settings:
+                    import json
+                    sync_manager._save_metadata('secondary_content_contract', json.dumps(secondary_content_settings))
             except Exception as e:
                 log_debug(f"Warning: Could not save sync metadata: {e}", debug_file)
 
@@ -1136,7 +1481,769 @@ class CanvasManager:
                     self._log_error(error_root_path, err)
                     return
 
-    def _save_page(self, page_obj, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
+    # ═══════════════════════════════════════════════════════════════
+    # SECONDARY CONTENT ENGINE
+    # ═══════════════════════════════════════════════════════════════
+
+    # --- Routing Helpers --------------------------------------------------
+
+    def _resolve_secondary_path(self, entity_type, entity_name, base_path,
+                                module_path=None, isolate=True,
+                                has_attachments=False):
+        """Resolve the target directory and clean/prefixed filename.
+
+        Mode A (isolate=False):
+            Uses *module_path* (or course root if flat) and prepends a
+            ``"Type: "`` prefix to avoid ambiguity among study files.
+
+        Mode B (isolate=True):
+            Creates ``base_path/<Category>/`` and, if the entity has
+            attachments, an additional ``<Entity Name>/`` subfolder.
+
+        Returns:
+            ``(target_dir: Path, display_name: str)``
+        """
+        routing = _ENTITY_ROUTING[entity_type]
+        safe_name = self._sanitize_filename(entity_name)
+
+        if isolate:
+            category_folder = base_path / routing['folder']
+            if has_attachments:
+                entity_folder = category_folder / safe_name
+                entity_folder.mkdir(parents=True, exist_ok=True)
+                return entity_folder, safe_name
+            else:
+                category_folder.mkdir(parents=True, exist_ok=True)
+                return category_folder, safe_name
+        else:
+            target_dir = module_path if module_path else base_path
+            target_dir.mkdir(parents=True, exist_ok=True)
+            prefixed_name = f"{routing['prefix']}: {safe_name}"
+            return target_dir, prefixed_name
+
+    @staticmethod
+    def _build_entity_html(title, body_html, metadata_pairs=None):
+        """Build a complete HTML document from a title, HTML body, and metadata.
+
+        Parameters
+        ----------
+        title : str
+            Entity title (will be escaped).
+        body_html : str | None
+            Raw HTML content from Canvas (may be None for empty entities).
+        metadata_pairs : list[tuple[str, str]] | None
+            ``[(label, value), ...]`` rendered as a header block.
+        """
+        safe_title = html.escape(title)
+        meta_section = ""
+        if metadata_pairs:
+            items = "".join(
+                f"<strong>{html.escape(str(k))}:</strong> {html.escape(str(v))}<br>"
+                for k, v in metadata_pairs if v
+            )
+            if items:
+                meta_section = (
+                    f'<div style="background:#f5f5f5;padding:10px;'
+                    f'margin-bottom:15px;border-radius:5px;">{items}</div>'
+                )
+
+        return (
+            f"<html><head><title>{safe_title}</title>"
+            f"<meta charset=\"utf-8\"></head><body>"
+            f"<h1>{safe_title}</h1>{meta_section}<hr>"
+            f"{body_html or '<p><em>(No content)</em></p>'}"
+            f"</body></html>"
+        )
+
+    def _save_secondary_entity(self, entity_type, entity_name, body_html,
+                               base_path, course_base_path, sync_manager,
+                               canvas_entity_id, canvas_updated_at,
+                               progress_callback=None, debug_file=None,
+                               error_root_path=None, course_name="Unknown",
+                               module_path=None, isolate=True,
+                               has_attachments=False, metadata_pairs=None,
+                               file_extension=".html"):
+        """Unified save-to-disk + DB-record logic for all secondary entities.
+
+        Returns
+        -------
+        ``(filepath, synthetic_id)`` on success, ``(None, None)`` on failure.
+        """
+        target_dir, display_name = self._resolve_secondary_path(
+            entity_type, entity_name, base_path,
+            module_path=module_path, isolate=isolate,
+            has_attachments=has_attachments,
+        )
+
+        filename = self._sanitize_filename(display_name) + file_extension
+        filepath = target_dir / filename
+        filepath = self._handle_conflict(filepath)
+
+        content = self._build_entity_html(
+            entity_name, body_html, metadata_pairs=metadata_pairs,
+        )
+
+        log_debug(f"Saving {entity_type}: {entity_name} -> {filepath}", debug_file)
+
+        try:
+            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
+                f.write(content)
+        except Exception as e:
+            err = DownloadError(
+                course_name, entity_name,
+                f"{entity_type.title()} Save Error", str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+            return None, None
+
+        # DB record ― synthetic negative ID
+        synthetic_id = make_secondary_id(entity_type, canvas_entity_id)
+        if sync_manager and course_base_path:
+            try:
+                rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                sync_manager.record_downloaded_file(
+                    canvas_file_id=synthetic_id,
+                    canvas_filename=filepath.name,
+                    local_relative_path=rel_path,
+                    canvas_updated_at=canvas_updated_at or '',
+                    original_size=0,
+                )
+            except Exception:
+                pass  # Non-fatal
+
+        if progress_callback:
+            progress_callback(
+                f'Saving {entity_type}: {entity_name}', progress_type='page',
+            )
+
+        return filepath, synthetic_id
+
+    # --- Entity-Specific Fetchers -----------------------------------------
+
+    def _fetch_and_save_assignments(self, course, base_path, sem, session,
+                                    progress_callback, mb_tracker,
+                                    check_cancellation, settings,
+                                    error_root_path, debug_file,
+                                    sync_manager, module_handled_ids,
+                                    download_tasks):
+        """Fetch all assignments for a course and save their HTML bodies.
+
+        Attachments on Canvas Assignments are real Canvas File objects
+        ― they are queued for async download using their *true positive*
+        ``file.id``, just like any normal course file.
+        """
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching assignments...", debug_file)
+
+        try:
+            assignments = course.get_assignments()
+            for assignment in assignments:
+                if check_cancellation and check_cancellation():
+                    break
+
+                a_id = getattr(assignment, 'id', 0)
+                if a_id in module_handled_ids:
+                    continue  # Already saved via module dispatch
+
+                a_name = getattr(assignment, 'name', 'Untitled Assignment')
+                description = getattr(assignment, 'description', '') or ''
+                updated_at = getattr(assignment, 'updated_at', '') or ''
+
+                # Check for file attachments
+                attachments = []
+                try:
+                    # The canvasapi Assignment may expose .attachments or
+                    # we can try assignment submission_types for hints.
+                    raw_attachments = getattr(assignment, 'attachments', None)
+                    if raw_attachments and isinstance(raw_attachments, list):
+                        attachments = raw_attachments
+                except Exception:
+                    pass
+
+                has_attachments = bool(attachments)
+                metadata = [
+                    ('Due', getattr(assignment, 'due_at', None)),
+                    ('Points', getattr(assignment, 'points_possible', None)),
+                    ('Submission Types', ', '.join(
+                        getattr(assignment, 'submission_types', []) or []
+                    )),
+                ]
+
+                filepath, syn_id = self._save_secondary_entity(
+                    'assignment', a_name, description, base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=a_id, canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
+                    has_attachments=has_attachments,
+                    metadata_pairs=metadata,
+                )
+
+                # Queue attachment downloads using their REAL positive IDs
+                if filepath and attachments:
+                    attach_dir = filepath.parent
+                    for att in attachments:
+                        att_id = att.get('id')
+                        att_url = att.get('url', '')
+                        att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                        if not att_url or not att_id:
+                            continue
+
+                        if not isolate:
+                            # Mode A: prefix attachment filename
+                            routing = _ENTITY_ROUTING['assignment']
+                            att_filename = f"{routing['prefix']}: {self._sanitize_filename(a_name)} - {att_filename}"
+
+                        # Build a mock file object that _download_file_async expects
+                        att_file_obj = type('AttachmentObj', (), {
+                            'id': att_id,
+                            'url': att_url,
+                            'filename': att_filename,
+                            'display_name': att.get('display_name', att_filename),
+                            'size': att.get('size', 0),
+                            'modified_at': att.get('modified_at', updated_at),
+                            'md5': None,
+                            'content-type': att.get('content-type', ''),
+                            'folder_id': None,
+                        })()
+
+                        att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                        task = asyncio.create_task(self._download_file_async(
+                            sem, session, att_file_obj, attach_dir,
+                            progress_callback, mb_tracker, 'all',
+                            error_root_path=error_root_path,
+                            course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager,
+                            course_base_path=base_path,
+                            explicit_filepath=att_filepath,
+                        ))
+                        download_tasks.append(task)
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Assignments not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Assignments", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    def _fetch_and_save_syllabus(self, course, base_path,
+                                 progress_callback, settings,
+                                 error_root_path, debug_file,
+                                 sync_manager):
+        """Fetch the course syllabus_body and save as a single HTML file."""
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching syllabus...", debug_file)
+
+        try:
+            # Re-fetch the course object with syllabus_body included
+            full_course = self.canvas.get_course(
+                course.id, include=['syllabus_body'],
+            )
+            syllabus_body = getattr(full_course, 'syllabus_body', None)
+
+            if not syllabus_body:
+                log_debug("Syllabus body is empty, skipping.", debug_file)
+                return
+
+            updated_at = getattr(full_course, 'updated_at', '') or ''
+
+            self._save_secondary_entity(
+                'syllabus', 'Syllabus', syllabus_body, base_path,
+                course_base_path=base_path, sync_manager=sync_manager,
+                canvas_entity_id=course.id, canvas_updated_at=updated_at,
+                progress_callback=progress_callback,
+                debug_file=debug_file,
+                error_root_path=error_root_path,
+                course_name=course.name, isolate=isolate,
+                has_attachments=False,
+                metadata_pairs=[
+                    ('Course', getattr(course, 'name', '')),
+                    ('Course Code', getattr(full_course, 'course_code', '')),
+                ],
+            )
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Syllabus not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Syllabus", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    def _fetch_and_save_announcements(self, course, base_path, sem, session,
+                                      progress_callback, mb_tracker,
+                                      check_cancellation, settings,
+                                      error_root_path, debug_file,
+                                      sync_manager, download_tasks):
+        """Fetch course announcements and save each as an HTML file.
+
+        Attachments on announcements are real Canvas File objects and are
+        queued for download using their true positive IDs.
+        """
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching announcements...", debug_file)
+
+        try:
+            topics = course.get_discussion_topics(only_announcements=True)
+            for topic in topics:
+                if check_cancellation and check_cancellation():
+                    break
+
+                t_id = getattr(topic, 'id', 0)
+                title = getattr(topic, 'title', 'Untitled Announcement')
+                message = getattr(topic, 'message', '') or ''
+                posted_at = getattr(topic, 'posted_at', '') or ''
+                updated_at = posted_at  # Announcements rarely get edited
+
+                # Date-prefix for chronological file ordering
+                date_prefix = ''
+                if posted_at:
+                    try:
+                        dt = datetime.fromisoformat(posted_at.replace('Z', '+00:00'))
+                        date_prefix = dt.strftime('%Y-%m-%d') + ' - '
+                    except (ValueError, TypeError):
+                        pass
+
+                # Check for attachments
+                attachments = []
+                try:
+                    raw = getattr(topic, 'attachments', None)
+                    if raw and isinstance(raw, list):
+                        attachments = raw
+                except Exception:
+                    pass
+
+                has_attachments = bool(attachments)
+                display_name = f"{date_prefix}{title}"
+
+                filepath, syn_id = self._save_secondary_entity(
+                    'announcement', display_name, message, base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=t_id, canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
+                    has_attachments=has_attachments,
+                    metadata_pairs=[
+                        ('Posted', posted_at),
+                        ('Author', getattr(topic, 'user_name', None)
+                                   or getattr(topic, 'author', {}).get('display_name', None)),
+                    ],
+                )
+
+                # Queue attachment downloads with REAL positive IDs
+                if filepath and attachments:
+                    attach_dir = filepath.parent
+                    for att in attachments:
+                        att_id = att.get('id')
+                        att_url = att.get('url', '')
+                        att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                        if not att_url or not att_id:
+                            continue
+
+                        if not isolate:
+                            routing = _ENTITY_ROUTING['announcement']
+                            att_filename = f"{routing['prefix']}: {self._sanitize_filename(display_name)} - {att_filename}"
+
+                        att_file_obj = type('AttachmentObj', (), {
+                            'id': att_id,
+                            'url': att_url,
+                            'filename': att_filename,
+                            'display_name': att.get('display_name', att_filename),
+                            'size': att.get('size', 0),
+                            'modified_at': att.get('modified_at', updated_at),
+                            'md5': None,
+                            'content-type': att.get('content-type', ''),
+                            'folder_id': None,
+                        })()
+
+                        att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                        task = asyncio.create_task(self._download_file_async(
+                            sem, session, att_file_obj, attach_dir,
+                            progress_callback, mb_tracker, 'all',
+                            error_root_path=error_root_path,
+                            course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager,
+                            course_base_path=base_path,
+                            explicit_filepath=att_filepath,
+                        ))
+                        download_tasks.append(task)
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Announcements not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Announcements", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    def _fetch_and_save_discussions(self, course, base_path,
+                                    progress_callback, check_cancellation,
+                                    settings, error_root_path, debug_file,
+                                    sync_manager, module_handled_ids):
+        """Fetch non-announcement discussion topics and save as HTML."""
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching discussions...", debug_file)
+
+        try:
+            topics = course.get_discussion_topics()
+            for topic in topics:
+                if check_cancellation and check_cancellation():
+                    break
+
+                t_id = getattr(topic, 'id', 0)
+                if t_id in module_handled_ids:
+                    continue
+
+                # Skip announcements (they have is_announcement=True)
+                if getattr(topic, 'is_announcement', False):
+                    continue
+
+                title = getattr(topic, 'title', 'Untitled Discussion')
+                message = getattr(topic, 'message', '') or ''
+                updated_at = (getattr(topic, 'last_reply_at', '')
+                              or getattr(topic, 'updated_at', '')
+                              or '')
+
+                self._save_secondary_entity(
+                    'discussion', title, message, base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=t_id, canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=[
+                        ('Posted', getattr(topic, 'posted_at', None)),
+                        ('Replies', getattr(topic, 'discussion_subentry_count', None)),
+                        ('Author', getattr(topic, 'user_name', None)
+                                   or getattr(topic, 'author', {}).get('display_name', None)),
+                    ],
+                )
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Discussions not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Discussions", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    def _fetch_and_save_quizzes(self, course, base_path,
+                                progress_callback, check_cancellation,
+                                settings, error_root_path, debug_file,
+                                sync_manager, module_handled_ids):
+        """Fetch Classic Quizzes and serialise questions into structured HTML."""
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching quizzes...", debug_file)
+
+        try:
+            quizzes = course.get_quizzes()
+            for quiz in quizzes:
+                if check_cancellation and check_cancellation():
+                    break
+
+                q_id = getattr(quiz, 'id', 0)
+                if q_id in module_handled_ids:
+                    continue
+
+                q_title = getattr(quiz, 'title', 'Untitled Quiz')
+                q_description = getattr(quiz, 'description', '') or ''
+                updated_at = getattr(quiz, 'updated_at', '') or ''
+
+                # Try to fetch questions (may 403 for students)
+                questions_html = ''
+                try:
+                    questions = quiz.get_questions()
+                    q_num = 0
+                    for q in questions:
+                        q_num += 1
+                        q_name = getattr(q, 'question_name', f'Question {q_num}')
+                        q_text = getattr(q, 'question_text', '') or ''
+                        q_type = getattr(q, 'question_type', 'unknown')
+
+                        questions_html += (
+                            f'<div style="margin:15px 0;padding:10px;'
+                            f'border:1px solid #ddd;border-radius:5px;">'
+                            f'<h3>Q{q_num}: {html.escape(q_name)}</h3>'
+                            f'<p style="color:#666;font-size:0.85em;">'
+                            f'Type: {html.escape(q_type)}</p>'
+                            f'{q_text}'
+                            f'</div>'
+                        )
+
+                        # Render answers if available
+                        answers = getattr(q, 'answers', None)
+                        if answers and isinstance(answers, list):
+                            answers_html = '<ul>'
+                            for ans in answers:
+                                ans_text = ans.get('text', '') or ans.get('html', '') or ''
+                                answers_html += f'<li>{ans_text}</li>'
+                            answers_html += '</ul>'
+                            questions_html += answers_html
+
+                except (Unauthorized, ResourceDoesNotExist):
+                    questions_html = (
+                        '<p><em>Quiz questions are not accessible. '
+                        'The quiz may be locked or unpublished.</em></p>'
+                    )
+                except Exception as qe:
+                    log_debug(f"Could not fetch questions for quiz {q_id}: {qe}", debug_file)
+                    questions_html = (
+                        '<p><em>Could not load quiz questions.</em></p>'
+                    )
+
+                # Combine description + questions
+                full_body = q_description
+                if questions_html:
+                    full_body += '<h2>Questions</h2>' + questions_html
+
+                self._save_secondary_entity(
+                    'quiz', q_title, full_body, base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=q_id, canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=[
+                        ('Points', getattr(quiz, 'points_possible', None)),
+                        ('Time Limit', f"{getattr(quiz, 'time_limit', '∞')} min"),
+                        ('Due', getattr(quiz, 'due_at', None)),
+                        ('Allowed Attempts', getattr(quiz, 'allowed_attempts', None)),
+                    ],
+                )
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Quizzes not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Quizzes", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    def _fetch_and_save_rubrics(self, course, base_path,
+                                progress_callback, check_cancellation,
+                                settings, error_root_path, debug_file,
+                                sync_manager):
+        """Fetch rubrics and serialise as Markdown tables."""
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching rubrics...", debug_file)
+
+        try:
+            rubrics = course.get_rubrics()
+            for rubric in rubrics:
+                if check_cancellation and check_cancellation():
+                    break
+
+                r_id = getattr(rubric, 'id', 0)
+                r_title = getattr(rubric, 'title', 'Untitled Rubric')
+                r_description = getattr(rubric, 'description', '') or ''
+                updated_at = getattr(rubric, 'updated_at', '') or ''
+
+                # Build a structured Markdown table from criteria
+                criteria = getattr(rubric, 'data', None) or []
+                md_content = f"# Rubric: {r_title}\n\n"
+                if r_description:
+                    md_content += f"{r_description}\n\n"
+
+                if criteria:
+                    # Build table header from first criterion's ratings
+                    sample_ratings = criteria[0].get('ratings', [])
+                    headers = ['Criterion'] + [
+                        f"{r.get('description', '?')} ({r.get('points', '?')})"
+                        for r in sorted(sample_ratings,
+                                        key=lambda x: x.get('points', 0),
+                                        reverse=True)
+                    ]
+                    md_content += '| ' + ' | '.join(headers) + ' |\n'
+                    md_content += '|' + '---|' * len(headers) + '\n'
+
+                    for criterion in criteria:
+                        row = [criterion.get('description', '')]
+                        c_ratings = sorted(
+                            criterion.get('ratings', []),
+                            key=lambda x: x.get('points', 0),
+                            reverse=True,
+                        )
+                        for rating in c_ratings:
+                            long_desc = rating.get('long_description', '')
+                            short_desc = rating.get('description', '')
+                            row.append(long_desc or short_desc)
+                        # Pad row if ratings count differs
+                        while len(row) < len(headers):
+                            row.append('')
+                        md_content += '| ' + ' | '.join(row) + ' |\n'
+                else:
+                    md_content += '*No criteria data available.*\n'
+
+                # Save as .md instead of .html
+                target_dir, display_name = self._resolve_secondary_path(
+                    'rubric', r_title, base_path, isolate=isolate,
+                    has_attachments=False,
+                )
+                filename = self._sanitize_filename(display_name) + '.md'
+                filepath = target_dir / filename
+                filepath = self._handle_conflict(filepath)
+
+                try:
+                    with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
+                        f.write(md_content)
+                except Exception as e:
+                    err = DownloadError(
+                        course.name, r_title, "Rubric Save Error",
+                        str(e), raw_error=e,
+                    )
+                    if progress_callback:
+                        progress_callback(err, progress_type='error')
+                    self._log_error(error_root_path, err)
+                    continue
+
+                synthetic_id = make_secondary_id('rubric', r_id)
+                if sync_manager:
+                    try:
+                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=synthetic_id,
+                            canvas_filename=filepath.name,
+                            local_relative_path=rel_path,
+                            canvas_updated_at=updated_at,
+                            original_size=0,
+                        )
+                    except Exception:
+                        pass
+
+                if progress_callback:
+                    progress_callback(
+                        f'Saving rubric: {r_title}', progress_type='page',
+                    )
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Rubrics not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Rubrics", "Secondary Content Error",
+                str(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
+    # --- Orchestrator ------------------------------------------------------
+
+    async def _download_secondary_content(self, course, base_path, sem,
+                                           session, progress_callback,
+                                           mb_tracker, check_cancellation,
+                                           settings, error_root_path,
+                                           debug_file, sync_manager,
+                                           module_handled_ids):
+        """Download all secondary entities based on the settings dict.
+
+        Called from ``download_course_async()`` AFTER file downloads complete.
+        ``module_handled_ids`` contains entity IDs already processed during
+        the module-item loop so they are not downloaded twice.
+
+        Attachment download tasks are gathered at the end.
+        """
+        if not settings:
+            return
+        log_debug("=== Starting Secondary Content Download ===", debug_file)
+        if progress_callback:
+            progress_callback('Downloading secondary content...', progress_type='log')
+
+        download_tasks = []  # Async tasks for attachment downloads
+
+        # 1. Assignments
+        if settings.get('download_assignments'):
+            self._fetch_and_save_assignments(
+                course, base_path, sem, session,
+                progress_callback, mb_tracker, check_cancellation,
+                settings, error_root_path, debug_file,
+                sync_manager, module_handled_ids, download_tasks,
+            )
+
+        # 2. Syllabus
+        if settings.get('download_syllabus'):
+            self._fetch_and_save_syllabus(
+                course, base_path, progress_callback, settings,
+                error_root_path, debug_file, sync_manager,
+            )
+
+        # 3. Announcements
+        if settings.get('download_announcements'):
+            self._fetch_and_save_announcements(
+                course, base_path, sem, session,
+                progress_callback, mb_tracker, check_cancellation,
+                settings, error_root_path, debug_file,
+                sync_manager, download_tasks,
+            )
+
+        # 4. Discussions
+        if settings.get('download_discussions'):
+            self._fetch_and_save_discussions(
+                course, base_path, progress_callback,
+                check_cancellation, settings,
+                error_root_path, debug_file,
+                sync_manager, module_handled_ids,
+            )
+
+        # 5. Quizzes
+        if settings.get('download_quizzes'):
+            self._fetch_and_save_quizzes(
+                course, base_path, progress_callback,
+                check_cancellation, settings,
+                error_root_path, debug_file,
+                sync_manager, module_handled_ids,
+            )
+
+        # 6. Rubrics
+        if settings.get('download_rubrics'):
+            self._fetch_and_save_rubrics(
+                course, base_path, progress_callback,
+                check_cancellation, settings,
+                error_root_path, debug_file, sync_manager,
+            )
+
+        # Gather all attachment download tasks
+        if download_tasks:
+            log_debug(f"Waiting for {len(download_tasks)} attachment downloads...", debug_file)
+            results = await asyncio.gather(*download_tasks, return_exceptions=True)
+            for result in results:
+                if isinstance(result, Exception):
+                    err = DownloadError(
+                        course.name, "Attachment Task", "Async Error",
+                        str(result), raw_error=result,
+                    )
+                    if progress_callback:
+                        progress_callback(err, progress_type='error')
+                    self._log_error(error_root_path, err)
+
+        log_debug("=== Secondary Content Download Complete ===", debug_file)
+
+
         safe_title = html.escape(page_obj.title) if hasattr(page_obj, 'title') else 'Untitled'
         filename = self._sanitize_filename(page_obj.title if hasattr(page_obj, 'title') else 'Untitled') + ".html"
         filepath = folder_path / filename

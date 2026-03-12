@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 3: Secondary Content Engine Backend Implementation** (2026-03-12):
+    - [x] **Negative ID Offset Registry**: Engineered a collision-free SQLite ID allocation system (`SECONDARY_ID_OFFSETS`) to track 6 new synthetic Canvas entity types (Assignments, Quizzes, etc.) without mutating real file primary keys.
+    - [x] **Universal Routing Architecture**: Developed Mode A (Inline/Prefixed) and Mode B (Isolated Subfolder) routing logic to dynamically construct and place HTML/MD artifacts without cluttering primary course materials.
+    - [x] **Attachment Handling Integrity**: Bypassed synthetic ID generation for Assignment/Announcement attachments, strictly preserving their true Canvas positive IDs to guarantee 100% deduplication parity with the `Files` tab.
+    - [x] **Sync Engine Integration**: Rewired `CanvasManager`'s module parsers and metadata fetchers to natively inject secondary entities into the Sync Tab's visual diffing engine using timestamp analysis.
 - [x] **Phase 2: Deferred Issues Implementation** (2026-03-12):
     - [x] **JSON Atomic Writes**: Fortified `SyncHistoryManager` to use a `.tmp` file and `os.replace()`, preventing history json corruption during abrupt process termination.
     - [x] **Subprocess Hang Protection**: Wrapped `moviepy.close()` in an asynchronous thread executor with a 10s maximum timeout to prevent the main download pipeline from permanently stalling on corrupted `.mp4` payloads.
