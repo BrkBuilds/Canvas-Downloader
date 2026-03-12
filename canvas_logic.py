@@ -12,6 +12,7 @@ from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
 import aiohttp
+import aiofiles
 from canvas_debug import log_debug, clear_debug_log
 import logging
 
@@ -2242,43 +2243,6 @@ class CanvasManager:
                     self._log_error(error_root_path, err)
 
         log_debug("=== Secondary Content Download Complete ===", debug_file)
-
-
-        safe_title = html.escape(page_obj.title) if hasattr(page_obj, 'title') else 'Untitled'
-        filename = self._sanitize_filename(page_obj.title if hasattr(page_obj, 'title') else 'Untitled') + ".html"
-        filepath = folder_path / filename
-        filepath = self._handle_conflict(filepath)
-
-        if progress_callback:
-            progress_callback(f'Saving page: {safe_title}', progress_type='page')
-        
-        log_debug(f"Saving Page: {safe_title} -> {filepath}", debug_file)
-
-        try:
-            body_content = page_obj.body if hasattr(page_obj, 'body') else ''
-            content = f"<html><head><title>{safe_title}</title></head><body><h1>{safe_title}</h1>{body_content}</body></html>"
-            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
-                f.write(content)
-            # Sync Run #0: Record page file to DB using deterministic canvas_item_id
-            if sync_manager and course_base_path and canvas_item_id:
-                try:
-                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
-                    sync_manager.record_downloaded_file(
-                        canvas_file_id=canvas_item_id,
-                        canvas_filename=filepath.name,
-                        local_relative_path=rel_path,
-                        canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
-                        original_size=0
-                    )
-                except Exception:
-                    pass  # Non-fatal
-            return filepath
-        except Exception as e:
-            err = DownloadError(course_name, safe_title, "Page Save Error", str(e), raw_error=e)
-            if progress_callback: progress_callback(err, progress_type='error')
-            self._log_error(error_root_path, err)
-            log_debug(f"Error saving page: {e}", debug_file)
-            return None
 
     def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
         import xml.sax.saxutils as saxutils

@@ -1097,11 +1097,13 @@ def _render_hub_config(pair: dict):
         sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
         raw_contract = sm._load_metadata('sync_contract')
         raw_mode = sm._load_metadata('download_mode') # Load download_mode directly
+        raw_secondary = sm._load_metadata('secondary_content_contract')
         
         if not raw_contract:
             st.warning("⚠️ No sync contract stored. Run a sync to save settings.")
             return
         contract = _json.loads(raw_contract)
+        secondary = _json.loads(raw_secondary) if raw_secondary else {}
     except Exception:
         st.warning("⚠️ Could not read configuration.")
         return
@@ -1124,7 +1126,7 @@ def _render_hub_config(pair: dict):
         indent_cls = "cfg-indent" if indent else ""
         return f"<div class='cfg-cb {state} {indent_cls}'><input type='checkbox' {chk}><span>{label}</span></div>"
 
-    c1, c2, c3 = st.columns([1, 1.1, 1.1], gap="small")
+    c1, c2, c3, c4 = st.columns([1, 1, 1.1, 1.1], gap="small")
 
     # LOGIC FIX 1: Evaluate flat vs subfolders from raw_mode
     is_flat = (raw_mode == 'flat')
@@ -1140,23 +1142,42 @@ def _render_hub_config(pair: dict):
         st.markdown(cb("With subfolders (matches Canvas Modules)", not is_flat), unsafe_allow_html=True)
         st.markdown(cb("Flat (All files in one folder)", is_flat), unsafe_allow_html=True)
 
-        st.markdown("<div class='cfg-header' style='margin-top: 15px;'>File types downloaded:</div>", unsafe_allow_html=True)
-        st.markdown(cb("All Files", is_all), unsafe_allow_html=True)
-        st.markdown(cb("Pdf & Powerpoint only", not is_all), unsafe_allow_html=True)
+        st.markdown("<div class='cfg-header' style='margin-top: 15px;'>Include Files:</div>", unsafe_allow_html=True)
+        st.markdown(cb("All Files (Default)", is_all), unsafe_allow_html=True)
+        st.markdown(cb("Pdf &amp; Powerpoint only", not is_all), unsafe_allow_html=True)
 
     with c2:
+        _sec_keys = ['download_assignments', 'download_syllabus', 'download_announcements',
+                     'download_discussions', 'download_quizzes', 'download_rubrics', 'download_submissions']
+        _sec_active = sum(1 for k in _sec_keys if secondary.get(k, False))
+        _sec_total = len(_sec_keys)
+        _is_isolate = secondary.get('isolate_secondary_content', False)
+        _mode_label = "In Subfolders" if _is_isolate else "Inline with Modules"
+
+        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Additional Course Content:</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='margin-left: 15px; margin-bottom: 8px; font-size: 0.85rem; color: #a3a8b8;'>Organized by: <b style='color: {theme.WHITE};'>{_mode_label}</b></div>", unsafe_allow_html=True)
+        st.markdown(cb(f"Additional Course Content ({_sec_active}/{_sec_total})", _sec_active == _sec_total), unsafe_allow_html=True)
+        st.markdown(cb("Assignments", secondary.get('download_assignments', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Syllabus", secondary.get('download_syllabus', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Announcements", secondary.get('download_announcements', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Discussions", secondary.get('download_discussions', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Quizzes", secondary.get('download_quizzes', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Rubrics", secondary.get('download_rubrics', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Submissions", secondary.get('download_submissions', False), indent=True), unsafe_allow_html=True)
+
+    with c3:
         st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Additional settings:</div>", unsafe_allow_html=True)
-        st.markdown(cb("NotebookLM Compatible Download", is_notebook_lm), unsafe_allow_html=True) # Uses derived boolean
+        st.markdown(cb("NotebookLM Compatible Download", is_notebook_lm), unsafe_allow_html=True)
         st.markdown(cb("Auto-extract Archives (.zip, .tar.gz)", contract.get('convert_zip', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Powerpoints (pptx.) to PDF", contract.get('convert_pptx', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Old Word Docs (.doc, .rtf) to PDF", contract.get('convert_word', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
 
-    with c3:
+    with c4:
         st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -15px;'>Spacer</div>", unsafe_allow_html=True) 
         st.markdown("<div class='cfg-cb' style='visibility: hidden;'><input type='checkbox'><span>Spacer</span></div>", unsafe_allow_html=True)
         st.markdown(cb("Convert Canvas Pages (HTML) to Markdown", contract.get('convert_html', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Code & Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Code &amp; Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Compile Web Links (.url/.webloc) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
 
@@ -4311,12 +4332,21 @@ def _show_analysis_review():
     # both the global (Mode 1) and per-course (Mode 2) session state keys.
     _CONVERT_KEYS = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+    _SECONDARY_KEYS = ['download_assignments', 'download_syllabus', 'download_announcements',
+                       'download_discussions', 'download_quizzes', 'download_rubrics',
+                       'download_submissions']
+    TOTAL_SECONDARY_SUBS = len(_SECONDARY_KEYS)
 
     if '_sync_contract_loaded' not in st.session_state:
         _batch_settings_map = {k: set() for k in _CONVERT_KEYS}
         _batch_settings_map['file_filter'] = set()  # Also sweep file_filter
-        _batch_contracts = {}  # {course_id: {name, contract}}
+        # Secondary content settings sweep
+        for _sk in _SECONDARY_KEYS:
+            _batch_settings_map[_sk] = set()
+        _batch_settings_map['isolate_secondary_content'] = set()
+        _batch_contracts = {}  # {course_id: {name, contract, secondary}}
         _first_contract = {}
+        _first_secondary = {}
 
         for i, res_data in enumerate(all_results):
             try:
@@ -4325,31 +4355,44 @@ def _show_analysis_review():
                 _cname = friendly_course_name(_p.get('course_name', 'Unknown'))
                 _sm = SyncManager(_p['local_folder'], _cid, _p.get('course_name', ''))
                 _raw_contract = _sm._load_metadata('sync_contract')
+                _raw_secondary = _sm._load_metadata('secondary_content_contract')
                 _c = {}
+                _sc = {}
                 if _raw_contract:
                     _c = json.loads(_raw_contract)
+                if _raw_secondary:
+                    _sc = json.loads(_raw_secondary)
 
                 if i == 0:
                     _first_contract = _c
+                    _first_secondary = _sc
 
                 # Store per-course contract for Diff Table & Mode 2
-                _batch_contracts[_cid] = {'name': _cname, 'contract': _c}
+                _batch_contracts[_cid] = {'name': _cname, 'contract': _c, 'secondary': _sc}
 
                 # Accumulate per-key sets for uniform detection
                 for _key in _CONVERT_KEYS:
                     _batch_settings_map[_key].add(_c.get(_key, False))
                 _batch_settings_map['file_filter'].add(_c.get('file_filter', 'all'))
+                # Secondary content sweep
+                for _sk in _SECONDARY_KEYS:
+                    _batch_settings_map[_sk].add(_sc.get(_sk, False))
+                _batch_settings_map['isolate_secondary_content'].add(_sc.get('isolate_secondary_content', False))
             except Exception:
                 # One corrupted contract must not poison the entire sweep
                 _batch_contracts[res_data['pair'].get('course_id', f'unknown_{i}')] = {
                     'name': friendly_course_name(res_data['pair'].get('course_name', 'Unknown')),
-                    'contract': {}
+                    'contract': {},
+                    'secondary': {}
                 }
                 # CRITICAL: Still populate settings map with defaults so
                 # uniform detection and Diff Table work correctly
                 for _key in _CONVERT_KEYS:
                     _batch_settings_map[_key].add(False)
                 _batch_settings_map['file_filter'].add('all')
+                for _sk in _SECONDARY_KEYS:
+                    _batch_settings_map[_sk].add(False)
+                _batch_settings_map['isolate_secondary_content'].add(False)
 
         st.session_state['_batch_contracts'] = _batch_contracts
 
@@ -4365,11 +4408,23 @@ def _show_analysis_review():
             st.session_state['notebooklm_master'] = all(
                 st.session_state.get(k, False) for k in _CONVERT_KEYS
             )
+            # Secondary global keys
+            for _sk in _SECONDARY_KEYS:
+                st.session_state[_sk] = _first_secondary.get(_sk, False)
+            st.session_state['isolate_secondary_content'] = _first_secondary.get('isolate_secondary_content', False)
+            st.session_state['secondary_master'] = all(
+                st.session_state.get(k, False) for k in _SECONDARY_KEYS
+            )
         else:
             for _key in _CONVERT_KEYS:
                 st.session_state[_key] = False
             st.session_state['notebooklm_master'] = False
             st.session_state['file_filter'] = 'all'
+            # Secondary defaults
+            for _sk in _SECONDARY_KEYS:
+                st.session_state[_sk] = False
+            st.session_state['secondary_master'] = False
+            st.session_state['isolate_secondary_content'] = False
 
         # Derive file_filter UI checkboxes from the canonical string value
         st.session_state['ff_all'] = (st.session_state['file_filter'] == 'all')
@@ -4378,6 +4433,7 @@ def _show_analysis_review():
         # Pre-populate PER-COURSE keys (Mode 2) from each course's SQLite contract
         for _cid, _data in _batch_contracts.items():
             _c = _data['contract']
+            _sc = _data.get('secondary', {})
             for _key in _CONVERT_KEYS:
                 st.session_state[f'ind_{_key}_{_cid}'] = _c.get(_key, False)
             _ff = _c.get('file_filter', 'all')
@@ -4387,6 +4443,12 @@ def _show_analysis_review():
             # Pre-populate master toggle from children
             _all_on = all(_c.get(k, False) for k in _CONVERT_KEYS)
             st.session_state[f'ind_notebooklm_master_{_cid}'] = _all_on
+            # Pre-populate secondary per-course keys
+            for _sk in _SECONDARY_KEYS:
+                st.session_state[f'ind_{_sk}_{_cid}'] = _sc.get(_sk, False)
+            st.session_state[f'ind_isolate_secondary_content_{_cid}'] = _sc.get('isolate_secondary_content', False)
+            _sec_all_on = all(_sc.get(k, False) for k in _SECONDARY_KEYS)
+            st.session_state[f'ind_secondary_master_{_cid}'] = _sec_all_on
 
         st.session_state['_sync_contract_loaded'] = True
 
@@ -4474,6 +4536,40 @@ def _show_analysis_review():
                 st.session_state[f'ind_file_filter_{_sel_cid}'] = 'all'
                 st.session_state[f'ind_ff_all_{_sel_cid}'] = True
 
+    # ── Secondary content master/sub toggle callbacks (Mode 1 global) ──
+    def _sync_secondary_master_changed():
+        for k in _SECONDARY_KEYS:
+            st.session_state[k] = st.session_state['secondary_master']
+
+    def _sync_secondary_sub_changed():
+        active = sum(st.session_state.get(k, False) for k in _SECONDARY_KEYS)
+        st.session_state['secondary_master'] = (active == TOTAL_SECONDARY_SUBS)
+
+    # ── Secondary content master/sub toggle callbacks (Mode 2 per-course) ──
+    def _ind_secondary_master_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            _val = st.session_state.get(f'ind_secondary_master_{_sel_cid}', False)
+            for k in _SECONDARY_KEYS:
+                st.session_state[f'ind_{k}_{_sel_cid}'] = _val
+
+    def _ind_secondary_sub_changed():
+        _sel_cid = st.session_state.get('_ind_selected_course')
+        if _sel_cid:
+            _active = sum(st.session_state.get(f'ind_{k}_{_sel_cid}', False) for k in _SECONDARY_KEYS)
+            st.session_state[f'ind_secondary_master_{_sel_cid}'] = (_active == TOTAL_SECONDARY_SUBS)
+
+    # --- Secondary content checkbox labels ---
+    _SECONDARY_LABELS = {
+        'download_assignments': ('Assignments', 'Download assignment descriptions and any attached files.'),
+        'download_syllabus': ('Syllabus', 'Download the course syllabus page as HTML.'),
+        'download_announcements': ('Announcements', 'Download course announcements and any attached files.'),
+        'download_discussions': ('Discussions', 'Download discussion topic prompts as HTML.'),
+        'download_quizzes': ('Quizzes', 'Download quiz questions and answers as structured HTML.'),
+        'download_rubrics': ('Rubrics', 'Download rubric criteria as Markdown tables.'),
+        'download_submissions': ('Submissions (metadata)', 'Download submission metadata (grades, timestamps).'),
+    }
+
     def _render_conversion_checkboxes(key_prefix='', key_suffix='',
                                        master_on_change=None, sub_on_change=None):
         """Render master toggle + 8 conversion checkboxes.
@@ -4505,6 +4601,65 @@ def _show_analysis_review():
                 help=_help
             )
 
+    def _render_secondary_checkboxes(key_prefix='', key_suffix='',
+                                      master_on_change=None, sub_on_change=None,
+                                      context_label='sync'):
+        """Render master toggle + 7 secondary content checkboxes, then conditionally
+        show radio (Mode A/B) below when at least one checkbox is enabled."""
+        _m_on = master_on_change or _sync_secondary_master_changed
+        _s_on = sub_on_change or _sync_secondary_sub_changed
+        _m_key = f'{key_prefix}secondary_master{key_suffix}'
+        _isolate_key = f'{key_prefix}isolate_secondary_content{key_suffix}'
+        _radio_key = f'{key_prefix}_isolate_radio{key_suffix}'
+        _active = sum(st.session_state.get(f'{key_prefix}{k}{key_suffix}', False) for k in _SECONDARY_KEYS)
+
+        # --- Section 1: Descriptive label + Checkboxes ---
+        st.markdown(f"<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Select what to include in {context_label}:</p>", unsafe_allow_html=True)
+
+        # Master toggle + counter
+        st.checkbox(
+            f"**Additional Course Content** &nbsp; :gray[({_active}/{TOTAL_SECONDARY_SUBS})]",
+            value=st.session_state.get(_m_key, False),
+            key=_m_key,
+            on_change=_m_on,
+            help='Enable/disable downloading additional Canvas content types (assignments, quizzes, etc.).'
+        )
+        # 7 sub-checkboxes
+        for _key in _SECONDARY_KEYS:
+            _label, _help = _SECONDARY_LABELS[_key]
+            _full_key = f'{key_prefix}{_key}{key_suffix}'
+            st.checkbox(
+                _label,
+                value=st.session_state.get(_full_key, False),
+                key=_full_key,
+                on_change=_s_on,
+                help=_help
+            )
+
+        # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
+        if _active > 0:
+            st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 5px;'>Organize Additional Course Content by:</p>", unsafe_allow_html=True)
+
+            _current_isolate = st.session_state.get(_isolate_key, False)
+
+            def _isolate_radio_changed():
+                _choice = st.session_state.get(_radio_key)
+                st.session_state[_isolate_key] = (_choice == 'In Subfolders')
+
+            st.radio(
+                'Organize additional course content:',
+                ['In Course Folder/Modules (Default)', 'In Subfolders'],
+                index=1 if _current_isolate else 0,
+                key=_radio_key,
+                label_visibility='collapsed',
+                on_change=_isolate_radio_changed,
+            )
+            # Per-option help text (Streamlit radio doesn't support per-option ⓘ icons)
+            st.markdown("""<div style='font-size: 0.78rem; color: #6b7280; margin-top: -10px; margin-bottom: 5px; line-height: 1.5;'>
+            ⓘ <b>In Course Folder/Modules</b> — places content inline with module files using a type prefix.<br>
+            ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
+            </div>""", unsafe_allow_html=True)
+
     # 1. Inject Tree-View CSS for nested sub-checkboxes + Diff Table
     st.markdown("""
     <style>
@@ -4514,13 +4669,27 @@ def _show_analysis_review():
     .st-key-convert_urls, .st-key-convert_video {
         margin-left: 28px !important;
         padding-left: 15px !important;
-        border-left: 2px solid {theme.BG_CARD_HOVER} !important; 
+        border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important; 
         margin-top: -12px !important; 
         padding-top: 4px !important;
         padding-bottom: 4px !important;
     }
     .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
     .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+
+    /* 1b. Tree-view styling for secondary content sub-checkboxes (Global Mode 1) */
+    .st-key-download_assignments, .st-key-download_syllabus, .st-key-download_announcements,
+    .st-key-download_discussions, .st-key-download_quizzes, .st-key-download_rubrics,
+    .st-key-download_submissions {
+        margin-left: 28px !important;
+        padding-left: 15px !important;
+        border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
+        margin-top: -12px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    .st-key-download_assignments { margin-top: 0px !important; padding-top: 8px !important; }
+    .st-key-download_submissions { margin-bottom: 10px !important; padding-bottom: 8px !important; }
 
     /* 2. Tree-view styling for per-course checkboxes (Mode 2) */
     [class*="st-key-ind_convert_zip_"], [class*="st-key-ind_convert_pptx_"],
@@ -4529,7 +4698,7 @@ def _show_analysis_review():
     [class*="st-key-ind_convert_urls_"], [class*="st-key-ind_convert_video_"] {
         margin-left: 28px !important;
         padding-left: 15px !important;
-        border-left: 2px solid {theme.BG_CARD_HOVER} !important;
+        border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
         margin-top: -12px !important;
         padding-top: 4px !important;
         padding-bottom: 4px !important;
@@ -4537,20 +4706,35 @@ def _show_analysis_review():
     [class*="st-key-ind_convert_zip_"] { margin-top: 0px !important; padding-top: 8px !important; }
     [class*="st-key-ind_convert_video_"] { margin-bottom: 10px !important; padding-bottom: 8px !important; }
 
+    /* 2b. Tree-view styling for secondary content per-course checkboxes (Mode 2) */
+    [class*="st-key-ind_download_assignments_"], [class*="st-key-ind_download_syllabus_"],
+    [class*="st-key-ind_download_announcements_"], [class*="st-key-ind_download_discussions_"],
+    [class*="st-key-ind_download_quizzes_"], [class*="st-key-ind_download_rubrics_"],
+    [class*="st-key-ind_download_submissions_"] {
+        margin-left: 28px !important;
+        padding-left: 15px !important;
+        border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
+        margin-top: -12px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    [class*="st-key-ind_download_assignments_"] { margin-top: 0px !important; padding-top: 8px !important; }
+    [class*="st-key-ind_download_submissions_"] { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+
     /* 3. Diff table styling */
     .diff-table { width: 100%; border-collapse: collapse; margin: 10px 0 15px 0; font-size: 0.85rem; }
-    .diff-table th { background: #1a1d27; color: {theme.TEXT_SECONDARY}; padding: 8px 12px; text-align: center;
-                     border-bottom: 2px solid {theme.BG_CARD_HOVER}; font-weight: 600; font-size: 0.75rem;
+    .diff-table th { background: #1a1d27; color: """ + theme.TEXT_SECONDARY + """; padding: 8px 12px; text-align: center;
+                     border-bottom: 2px solid """ + theme.BG_CARD_HOVER + """; font-weight: 600; font-size: 0.75rem;
                      text-transform: uppercase; letter-spacing: 0.5px; }
     .diff-table th:first-child { text-align: left; }
     .diff-table td { padding: 6px 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);
                      color: #e2e8f0; }
-    .diff-table td:first-child { text-align: left; color: {theme.TEXT_SECONDARY}; font-weight: 500; }
+    .diff-table td:first-child { text-align: left; color: """ + theme.TEXT_SECONDARY + """; font-weight: 500; }
     .diff-table tr:hover { background: rgba(255,255,255,0.02); }
 
     /* 4. Selectbox dropdown popover border */
     [data-testid="stSelectbox"] [data-baseweb="popover"] {
-        border: 1px solid {theme.BG_CARD_HOVER} !important;
+        border: 1px solid """ + theme.BG_CARD_HOVER + """ !important;
         border-radius: 8px !important;
     }
     </style>
@@ -4611,6 +4795,12 @@ def _show_analysis_review():
                 'convert_html': 'HTML → Markdown', 'convert_code': 'Code → .txt',
                 'convert_urls': 'URLs → List', 'convert_video': 'Video → MP3',
                 'file_filter': 'File Filter',
+                # Secondary content
+                'download_assignments': 'Assignments', 'download_syllabus': 'Syllabus',
+                'download_announcements': 'Announcements', 'download_discussions': 'Discussions',
+                'download_quizzes': 'Quizzes', 'download_rubrics': 'Rubrics',
+                'download_submissions': 'Submissions',
+                'isolate_secondary_content': 'Organization',
             }
             _thead = '<tr><th>Setting</th>' + ''.join(
                 f'<th>{d["name"]}</th>' for d in _batch_contracts.values()
@@ -4619,9 +4809,18 @@ def _show_analysis_review():
             for _key, _short in _short_labels.items():
                 _cells = ''
                 for _cid, _data in _batch_contracts.items():
-                    _val = _data['contract'].get(_key, False if _key != 'file_filter' else 'all')
+                    # Secondary content keys are stored in 'secondary' sub-dict
+                    if _key in ('download_assignments', 'download_syllabus', 'download_announcements',
+                                'download_discussions', 'download_quizzes', 'download_rubrics',
+                                'download_submissions', 'isolate_secondary_content'):
+                        _val = _data.get('secondary', {}).get(_key, False)
+                    else:
+                        _val = _data['contract'].get(_key, False if _key != 'file_filter' else 'all')
                     if _key == 'file_filter':
                         _cells += f'<td style="color:{theme.TEXT_SECONDARY};">{_val}</td>'
+                    elif _key == 'isolate_secondary_content':
+                        _mode_txt = 'Subfolders' if _val else 'Inline'
+                        _cells += f'<td style="color:{theme.TEXT_SECONDARY};">{_mode_txt}</td>'
                     else:
                         _icon = '✅' if _val else '❌'
                         _cells += f'<td>{_icon}</td>'
@@ -4630,11 +4829,17 @@ def _show_analysis_review():
             st.markdown(_table_html, unsafe_allow_html=True)
 
         # File Type Filter — vertical, no emojis
-        st.caption('File Type Filter')
-        st.checkbox('All Files', value=st.session_state.get('ff_all', False),
+        st.caption('Include Files:')
+        st.checkbox('All Files (Default)', value=st.session_state.get('ff_all', False),
                     key='ff_all', on_change=_ff_all_changed)
         st.checkbox('PDF & PowerPoint Only', value=st.session_state.get('ff_pdf_only', False),
                     key='ff_pdf_only', on_change=_ff_pdf_changed)
+
+        # Render secondary content checkboxes (between File Filter & Additional Settings)
+        _render_secondary_checkboxes(
+            master_on_change=_sync_secondary_master_changed,
+            sub_on_change=_sync_secondary_sub_changed
+        )
 
         # Render global conversion checkboxes
         st.caption('Additional settings:')
@@ -4658,13 +4863,21 @@ def _show_analysis_review():
             )
 
             # File Type Filter — vertical, no emojis, below selector
-            st.caption('File Type Filter')
-            st.checkbox('All Files', value=st.session_state.get(f'ind_ff_all_{_selected_cid}', False),
+            st.caption('Include Files:')
+            st.checkbox('All Files (Default)', value=st.session_state.get(f'ind_ff_all_{_selected_cid}', False),
                         key=f'ind_ff_all_{_selected_cid}',
                         on_change=_ind_ff_all_changed)
             st.checkbox('PDF & PowerPoint Only', value=st.session_state.get(f'ind_ff_pdf_only_{_selected_cid}', False),
                         key=f'ind_ff_pdf_only_{_selected_cid}',
                         on_change=_ind_ff_pdf_changed)
+
+            # Render per-course secondary content checkboxes
+            _render_secondary_checkboxes(
+                key_prefix='ind_',
+                key_suffix=f'_{_selected_cid}',
+                master_on_change=_ind_secondary_master_changed,
+                sub_on_change=_ind_secondary_sub_changed,
+            )
 
             # Render per-course conversion checkboxes
             # NOTE: _render_conversion_checkboxes uses value=st.session_state.get(master_key)
@@ -6264,6 +6477,11 @@ def _cleanup_sync_state():
         '_sync_settings_uniform', '_batch_contracts', '_sync_config_mode',
         '_ind_selected_course', '_ind_contracts_loaded',
         'ff_all', 'ff_pdf_only',
+        # Secondary content global keys
+        'secondary_master', 'isolate_secondary_content',
+        'download_assignments', 'download_syllabus', 'download_announcements',
+        'download_discussions', 'download_quizzes', 'download_rubrics',
+        'download_submissions',
     ]:
         st.session_state.pop(key, None)
 
@@ -6283,6 +6501,7 @@ def _cleanup_sync_state():
         'sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_',
         'ind_convert_', 'ind_file_filter_', 'ind_notebooklm_master_',
         'ind_ff_all_', 'ind_ff_pdf_only_',
+        'ind_download_', 'ind_secondary_master_', 'ind_isolate_secondary_content_',
     ))]
     for k in keys_to_remove:
         st.session_state.pop(k, None)

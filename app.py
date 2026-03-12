@@ -111,6 +111,20 @@ if 'notebooklm_master' not in st.session_state:
 if 'convert_pptx' not in st.session_state:
     st.session_state['convert_pptx'] = False
 
+# Secondary (Additional Course Content) toggles — all OFF by default in Download Mode
+_SECONDARY_CONTENT_KEYS = [
+    'dl_assignments', 'dl_syllabus', 'dl_announcements',
+    'dl_discussions', 'dl_quizzes', 'dl_rubrics', 'dl_submissions',
+]
+TOTAL_SECONDARY_SUBS = len(_SECONDARY_CONTENT_KEYS)
+for _sck in _SECONDARY_CONTENT_KEYS:
+    if _sck not in st.session_state:
+        st.session_state[_sck] = False
+if 'dl_secondary_master' not in st.session_state:
+    st.session_state['dl_secondary_master'] = False
+if 'dl_isolate_secondary' not in st.session_state:
+    st.session_state['dl_isolate_secondary'] = False  # Default: inline with modules
+
 # --- Helper Functions ---
 def select_folder():
     from ui_helpers import native_folder_picker
@@ -824,15 +838,97 @@ with _main_content.container():
             else:
                 st.session_state['download_mode'] = 'flat'
             
-            # 2. File Types (Radio buttons have standard padding)
-            st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>File Types</h3>", unsafe_allow_html=True)
+            # 2. Include Files (Radio buttons have standard padding)
+            st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>Include Files:</h3>", unsafe_allow_html=True)
             filter_choice = st.radio(
-                'File Types', # Hidden label via label_visibility if needed, but subheader is fine
-                ['All Files', 'Pdf & Powerpoint only'],
+                'Include Files:', # Hidden label via label_visibility
+                ['All Files (Default)', 'Pdf & Powerpoint only'],
                 index=0 if st.session_state['file_filter'] == 'all' else 1,
                 label_visibility="collapsed"
             )
-            st.session_state['file_filter'] = 'all' if filter_choice == 'All Files' else 'study'
+            st.session_state['file_filter'] = 'all' if filter_choice == 'All Files (Default)' else 'study'
+
+            # ── Additional Course Content (Secondary entities) ──
+            # Callbacks for master/sub toggle interaction (identical pattern to NotebookLM)
+            def _secondary_master_changed():
+                for k in _SECONDARY_CONTENT_KEYS:
+                    st.session_state[k] = st.session_state['dl_secondary_master']
+
+            def _secondary_sub_changed():
+                active = sum(st.session_state.get(k, False) for k in _SECONDARY_CONTENT_KEYS)
+                st.session_state['dl_secondary_master'] = (active == TOTAL_SECONDARY_SUBS)
+
+            # CSS: Tree-view indent + borderless expander pattern for secondary checkboxes
+            st.markdown("""
+            <style>
+            /* Tree-view styling for secondary content sub-checkboxes */
+            .st-key-dl_assignments, .st-key-dl_syllabus, .st-key-dl_announcements,
+            .st-key-dl_discussions, .st-key-dl_quizzes, .st-key-dl_rubrics,
+            .st-key-dl_submissions {
+                margin-left: 28px !important;
+                padding-left: 15px !important;
+                border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
+                margin-top: -12px !important;
+                padding-top: 4px !important;
+                padding-bottom: 4px !important;
+            }
+            .st-key-dl_assignments { margin-top: 0px !important; padding-top: 8px !important; }
+            .st-key-dl_submissions { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+            </style>
+            """, unsafe_allow_html=True)
+
+            st.markdown("<h3 style='margin-top: 20px; margin-bottom: -5px;'>Additional Course Content</h3>", unsafe_allow_html=True)
+
+            _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
+
+            # --- Section 1: Descriptive label + Checkboxes ---
+            st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Select what to include in download:</p>", unsafe_allow_html=True)
+
+            # Master toggle + counter
+            st.checkbox(
+                f"**Additional Course Content** &nbsp; :gray[({_sec_active}/{TOTAL_SECONDARY_SUBS})]",
+                key='dl_secondary_master',
+                on_change=_secondary_master_changed,
+                help='Enable/disable downloading additional Canvas content types (assignments, quizzes, etc.).'
+            )
+
+            # 7 sub-checkboxes (tree-view indent via CSS above)
+            st.checkbox('Assignments', key='dl_assignments', on_change=_secondary_sub_changed,
+                        help='Download assignment descriptions and any attached files.')
+            st.checkbox('Syllabus', key='dl_syllabus', on_change=_secondary_sub_changed,
+                        help='Download the course syllabus page as HTML.')
+            st.checkbox('Announcements', key='dl_announcements', on_change=_secondary_sub_changed,
+                        help='Download course announcements and any attached files.')
+            st.checkbox('Discussions', key='dl_discussions', on_change=_secondary_sub_changed,
+                        help='Download discussion topic prompts as HTML.')
+            st.checkbox('Quizzes', key='dl_quizzes', on_change=_secondary_sub_changed,
+                        help='Download quiz questions and answers as structured HTML.')
+            st.checkbox('Rubrics', key='dl_rubrics', on_change=_secondary_sub_changed,
+                        help='Download rubric criteria as Markdown tables.')
+            st.checkbox('Submissions (metadata)', key='dl_submissions', on_change=_secondary_sub_changed,
+                        help='Download submission metadata (grades, timestamps). Content files are not included.')
+
+            # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
+            if _sec_active > 0:
+                st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 5px;'>Organize Additional Course Content by:</p>", unsafe_allow_html=True)
+
+                def _dl_isolate_radio_changed():
+                    _choice = st.session_state.get('dl_isolate_radio')
+                    st.session_state['dl_isolate_secondary'] = (_choice == 'In Subfolders')
+
+                st.radio(
+                    'Organize additional course content:',
+                    ['In Course Folder/Modules (Default)', 'In Subfolders'],
+                    index=1 if st.session_state.get('dl_isolate_secondary', False) else 0,
+                    key='dl_isolate_radio',
+                    label_visibility='collapsed',
+                    on_change=_dl_isolate_radio_changed,
+                )
+                # Per-option help text
+                st.markdown("""<div style='font-size: 0.78rem; color: #6b7280; margin-top: -10px; margin-bottom: 5px; line-height: 1.5;'>
+                ⓘ <b>In Course Folder/Modules</b> — places content inline with module files using a type prefix.<br>
+                ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
+                </div>""", unsafe_allow_html=True)
             
             # --- NotebookLM Compatible Download ---
 
@@ -883,7 +979,7 @@ with _main_content.container():
             .st-key-convert_urls, .st-key-convert_video {
                 margin-left: 28px !important;
                 padding-left: 15px !important;
-                border-left: 2px solid {theme.BG_CARD_HOVER} !important; 
+                border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important; 
                 margin-top: -12px !important; 
                 padding-top: 4px !important;
                 padding-bottom: 4px !important;
@@ -1003,6 +1099,11 @@ with _main_content.container():
                         st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
                         st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
                         
+                        # Task 1b: Save secondary content state on button click
+                        for _sck in _SECONDARY_CONTENT_KEYS:
+                            st.session_state[f'persistent_{_sck}'] = st.session_state.get(_sck, False)
+                        st.session_state['persistent_dl_isolate_secondary'] = st.session_state.get('dl_isolate_secondary', True)
+
                         # Clear debug log once at session start (subsequent courses append)
                         if st.session_state.get('debug_mode', False):
                             from canvas_debug import clear_debug_log
@@ -1358,6 +1459,17 @@ with _main_content.container():
                     'convert_video': st.session_state.get('persistent_convert_video', False),
                     'convert_excel': st.session_state.get('persistent_convert_excel', False),
                 }
+                # Build secondary content settings from persisted state
+                _secondary_settings = {
+                    'download_assignments': st.session_state.get('persistent_dl_assignments', False),
+                    'download_syllabus': st.session_state.get('persistent_dl_syllabus', False),
+                    'download_announcements': st.session_state.get('persistent_dl_announcements', False),
+                    'download_discussions': st.session_state.get('persistent_dl_discussions', False),
+                    'download_quizzes': st.session_state.get('persistent_dl_quizzes', False),
+                    'download_rubrics': st.session_state.get('persistent_dl_rubrics', False),
+                    'download_submissions': st.session_state.get('persistent_dl_submissions', False),
+                    'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
+                }
                 asyncio.run(cm.download_course_async(
                     course,
                     st.session_state['download_mode'],
@@ -1366,7 +1478,8 @@ with _main_content.container():
                     check_cancellation=check_cancellation,
                     file_filter=st.session_state['file_filter'],
                     debug_mode=st.session_state.get('debug_mode', False),
-                    post_processing_settings=_pp_settings
+                    post_processing_settings=_pp_settings,
+                    secondary_content_settings=_secondary_settings
                 ))
                 
                 # --- Post-Processing: Setup ---
