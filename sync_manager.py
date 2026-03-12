@@ -863,7 +863,7 @@ class SyncManager:
                 if os.name == 'nt':
                     self._windows_unhide_file(self.db_path)
                 
-                with sqlite3.connect(self.db_path) as conn:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     conn.execute(
                         '''UPDATE sync_manifest 
                            SET local_path = ?, original_size = ?, original_md5 = ?
@@ -910,22 +910,30 @@ class SyncManager:
             self._windows_unhide_file(self.db_path)
             
         success = False
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute(
-                    '''INSERT INTO sync_manifest 
-                       (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                       VALUES (?, ?, '', '', '', 0, 1, '')
-                       ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
-                    (canvas_file_id, canvas_filename)
-                )
-                conn.commit()
-            success = True
-        except sqlite3.Error as e:
-            logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
-        finally:
-            if os.name == 'nt':
-                self._windows_hide_file(self.db_path)
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                    conn.execute(
+                        '''INSERT INTO sync_manifest 
+                           (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
+                           VALUES (?, ?, '', '', '', 0, 1, '')
+                           ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
+                        (canvas_file_id, canvas_filename)
+                    )
+                    conn.commit()
+                success = True
+                break
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
+            except sqlite3.Error as e:
+                logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
+                break
+        
+        if os.name == 'nt':
+            self._windows_hide_file(self.db_path)
                 
         return success
 
@@ -935,19 +943,27 @@ class SyncManager:
             self._windows_unhide_file(self.db_path)
             
         success = False
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute(
-                    'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
-                    (canvas_file_id,)
-                )
-                conn.commit()
-            success = True
-        except sqlite3.Error as e:
-            logger.warning(f"Error restoring file {canvas_file_id}: {e}")
-        finally:
-            if os.name == 'nt':
-                self._windows_hide_file(self.db_path)
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                    conn.execute(
+                        'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
+                        (canvas_file_id,)
+                    )
+                    conn.commit()
+                success = True
+                break
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"Error restoring file {canvas_file_id}: {e}")
+            except sqlite3.Error as e:
+                logger.warning(f"Error restoring file {canvas_file_id}: {e}")
+                break
+        
+        if os.name == 'nt':
+            self._windows_hide_file(self.db_path)
                 
         return success
 
@@ -1017,6 +1033,11 @@ class SyncManager:
                 
         return success
 
+    @staticmethod
+    def compute_local_md5(filepath: Path) -> str:
+        """Compute MD5 hash of a file efficiently by reading in chunks."""
+        return compute_local_md5(filepath)
+
 
 # --- Sync History Manager ---
 
@@ -1043,6 +1064,9 @@ class SyncHistoryManager:
     def add_entry(self, entry: dict):
         """Add a sync history entry and save.
         
+        Uses atomic temp-file + os.replace() to prevent JSON corruption
+        if the process crashes mid-write.
+        
         Args:
             entry: Dict with keys like 'timestamp', 'courses', 'files_synced', 'errors', 'categories'
         """
@@ -1052,8 +1076,11 @@ class SyncHistoryManager:
         if len(history) > 50:
             history = history[-50:]
         try:
-            with open(self.history_path, 'w', encoding='utf-8') as f:
+            tmp_path = self.history_path.with_suffix('.tmp')
+            with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump(history, f, indent=2, ensure_ascii=False)
+            # Atomic replace — prevents corrupt JSON on crash-during-write
+            os.replace(str(tmp_path), str(self.history_path))
         except IOError as e:
             logger.warning(f"Error saving sync history: {e}")
 
@@ -1233,8 +1260,7 @@ def compute_local_md5(filepath: Path) -> str:
     except OSError:
         return ""
         
-# Add compute_local_md5 to SyncManager namespace for easier class-relative calling
-SyncManager.compute_local_md5 = staticmethod(compute_local_md5)
+# compute_local_md5 is now a proper @staticmethod on SyncManager (see class body)
 
 
 def format_file_size(size_bytes: int) -> str:
