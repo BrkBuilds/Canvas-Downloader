@@ -2372,6 +2372,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.session_state['step'] = 4
             st.session_state['download_status'] = 'analyzing'
             st.session_state['analysis_pass'] = 1
+            st.session_state.pop('sync_quick_mode', None)
+            st.session_state.pop('qs_cancel_route', None)
             st.session_state.pop('sync_single_pair_idx', None)
             if main_placeholder:
                 main_placeholder.empty()
@@ -3383,7 +3385,6 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                 'detected_structure': detected,
             })
         except Exception as e:
-            logger = logging.getLogger(__name__)
             traceback.print_exc()
             logger.error(f"Sync Analysis Error: {str(e)}")
             st.error(f"Error accessing course {display_name}: {e}")
