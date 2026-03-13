@@ -27,8 +27,11 @@ from pathlib import Path
 from datetime import datetime
 from urllib.parse import unquote_plus
 import urllib.parse
+from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
+
+# --- Concurrency Mutexes ---
 
 import streamlit as st
 import aiohttp
@@ -44,7 +47,7 @@ from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, ge
 from ui_helpers import (
     esc,
     load_sync_pairs,
-    save_sync_pairs,
+    atomic_update_sync_pairs,
     check_disk_space,
     open_folder,
     render_progress_bar,
@@ -97,9 +100,65 @@ def _load_persistent_pairs():
         st.session_state['sync_pairs_loaded'] = True
 
 
-def _persist_current_pairs():
-    """Save the current session-state pairs to disk."""
-    save_sync_pairs(st.session_state.get('sync_pairs', []))
+def _add_pair(new_pair):
+    def modifier(fresh_pairs):
+        target_cid = new_pair.get('course_id')
+        target_folder = new_pair.get('local_folder')
+        exists = any(
+            p.get('course_id') == target_cid and p.get('local_folder') == target_folder
+            for p in fresh_pairs
+        )
+        if not exists:
+            fresh_pairs.append(new_pair)
+        return fresh_pairs
+    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+
+
+def _add_pairs_batch(new_pairs_list):
+    def modifier(fresh_pairs):
+        for new_pair in new_pairs_list:
+            target_cid = new_pair.get('course_id')
+            target_folder = new_pair.get('local_folder')
+            exists = any(
+                p.get('course_id') == target_cid and p.get('local_folder') == target_folder
+                for p in fresh_pairs
+            )
+            if not exists:
+                fresh_pairs.append(new_pair)
+        return fresh_pairs
+    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+
+
+def _remove_pairs_by_signature(signatures_to_remove):
+    def modifier(fresh_pairs):
+        def should_keep(p):
+            for sig in signatures_to_remove:
+                if p.get('course_id') == sig.get('course_id') and p.get('local_folder') == sig.get('local_folder'):
+                    return False
+            return True
+        return [p for p in fresh_pairs if should_keep(p)]
+    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+
+
+def _update_pair_by_signature(old_signature, new_pair_data):
+    def modifier(fresh_pairs):
+        for idx, p in enumerate(fresh_pairs):
+            if p.get('course_id') == old_signature.get('course_id') and p.get('local_folder') == old_signature.get('local_folder'):
+                fresh_pairs[idx] = new_pair_data
+                break
+        return fresh_pairs
+    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+
+
+def _update_last_synced_batch(updates_list):
+    def modifier(fresh_pairs):
+        for cid, folder, ts in updates_list:
+            for p in fresh_pairs:
+                if p.get('course_id') == cid and p.get('local_folder') == folder:
+                    p['last_synced'] = ts
+                    break
+        return fresh_pairs
+    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
 
 
 # ---------------------------------------------------------------------------
@@ -498,8 +557,8 @@ def _saved_groups_hub_dialog(courses, course_names):
                                         return
 
                                 # Validation passed — append
-                                st.session_state['sync_pairs'].append(incoming_pair)
-                                _persist_current_pairs()
+                                # Validation passed — append atomically
+                                _add_pair(incoming_pair)
                                 st.session_state['pending_toast'] = f"\u2705 Added '{display_name}' to sync list!"
                                 _hub_cleanup()
                                 st.rerun()
@@ -577,8 +636,8 @@ def _saved_groups_hub_dialog(courses, course_names):
 
                                     if not missing_indices:
                                         # All folders exist — merge immediately
-                                        st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + unique_pairs
-                                        _persist_current_pairs()
+                                        # All folders exist — merge immediately using batch atomic append
+                                        _add_pairs_batch(unique_pairs)
                                         added = len(unique_pairs)
                                         msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
                                         if skipped:
@@ -1070,8 +1129,8 @@ def _saved_groups_hub_dialog(courses, course_names):
                     mgr.update_group(rescue_gid, {'pairs': updated_group_pairs})
 
             # Merge into active sync list
-            st.session_state['sync_pairs'] = st.session_state.get('sync_pairs', []) + final_pairs
-            _persist_current_pairs()
+            # Merge securely into active sync list
+            _add_pairs_batch(final_pairs)
 
             added = len(final_pairs)
             msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
@@ -2183,8 +2242,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         pairs_to_remove.append(idx)
                 
             if pairs_to_remove:
-                st.session_state['sync_pairs'] = [p for i, p in enumerate(sync_pairs) if i not in pairs_to_remove]
-                _persist_current_pairs()
+                signatures = [{'course_id': sync_pairs[i].get('course_id'), 'local_folder': sync_pairs[i].get('local_folder')} for i in pairs_to_remove]
+                _remove_pairs_by_signature(signatures)
                 st.rerun()
             if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
@@ -3141,18 +3200,17 @@ def _render_pending_folder_ui(courses, course_names, course_options, ):
                         if edit_idx is not None and 0 <= edit_idx < len(st.session_state['sync_pairs']):
                             # Update existing
                             old_pair = st.session_state['sync_pairs'][edit_idx]
+                            old_sig = {'course_id': old_pair.get('course_id'), 'local_folder': old_pair.get('local_folder')}
                             if old_pair.get('course_id') == selected_course_id:
                                 new_pair['last_synced'] = old_pair.get('last_synced')
-                            
-                            st.session_state['sync_pairs'][edit_idx] = new_pair
+                            _update_pair_by_signature(old_sig, new_pair)
                         else:
                             # Append new
-                            st.session_state['sync_pairs'].append(new_pair)
+                            _add_pair(new_pair)
 
                         st.session_state['pending_sync_folder'] = None
                         st.session_state.pop('editing_pair_idx', None)
                         st.session_state.pop('_prev_course_search', None)
-                        _persist_current_pairs()
                         st.rerun()
                 else:
                     # Custom error message with lower height (compact)
@@ -5736,10 +5794,16 @@ def _run_sync():
                                                     
                                                     # 100% success: atomic rename .part → final path
                                                     try:
-                                                        os.rename(make_long_path(part_path), make_long_path(filepath))
-                                                    except OSError:
-                                                        # Fallback: If rename fails (cross-device), use replace
-                                                        shutil.move(make_long_path(part_path), make_long_path(filepath))
+                                                        os.replace(make_long_path(part_path), make_long_path(filepath))
+                                                    except PermissionError:
+                                                        error_msg = f"Cannot overwrite file (it may be open in another program): {filepath}"
+                                                        logger.error(error_msg)
+                                                        try:
+                                                            os.unlink(make_long_path(part_path))
+                                                        except Exception:
+                                                            pass
+                                                        raise RuntimeError(error_msg)
+                                                    
                                                     atomic_rename_done = True
                                                     
                                                     # Only commit to DB AFTER file is physically complete on disk
@@ -6048,15 +6112,17 @@ def _run_sync():
     st.session_state['synced_details'] = dict(synced_details)
     st.session_state['retry_selections'] = retry_selections
 
-    # Update last_synced timestamps
+    # Update last_synced timestamps atomically
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    updates = []
     pairs = st.session_state.get('sync_pairs', [])
     for sel in sync_selections:
         pair_idx = sel['pair_idx']
         if pair_idx < len(pairs):
-            pairs[pair_idx]['last_synced'] = now_str
-    st.session_state['sync_pairs'] = pairs
-    _persist_current_pairs()
+            updates.append((pairs[pair_idx].get('course_id'), pairs[pair_idx].get('local_folder'), now_str))
+    
+    if updates:
+        _update_last_synced_batch(updates)
 
     # Record sync history
     if synced_counter[0] > 0:

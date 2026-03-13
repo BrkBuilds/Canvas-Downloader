@@ -14,9 +14,12 @@ import time
 import platform
 import subprocess
 from pathlib import Path
+import threading
 
 import urllib.parse
 from sync_manager import format_file_size
+
+_sync_pairs_lock = threading.Lock()
 
 
 def make_long_path(p: str | Path) -> str:
@@ -93,8 +96,56 @@ def load_sync_pairs(config_dir: str = None) -> list[dict]:
         return []
 
 
+def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) -> list[dict]:
+    """Atomically update sync pairs, solving TOCTOU race conditions.
+    
+    Args:
+        modifier_func: A callable that takes the current list of pairs and returns the new list.
+        config_dir: Config directory path
+        
+    Returns:
+        The updated list of pairs.
+    """
+    if config_dir is None:
+        config_dir = get_config_dir()
+        
+    path = Path(config_dir) / SYNC_PAIRS_FILENAME
+    temp_path = path.with_suffix('.tmp')
+    
+    with _sync_pairs_lock:
+        # 1. READ
+        pairs = []
+        if path.exists():
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        pairs = data
+            except (json.JSONDecodeError, IOError):
+                pass
+                
+        # 2. MODIFY
+        new_pairs = modifier_func(pairs)
+        
+        # 3. WRITE
+        try:
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(new_pairs, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temp_path, path)
+        except IOError as e:
+            logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
+            try:
+                if temp_path.exists():
+                    temp_path.unlink()
+            except OSError:
+                pass
+                
+        return new_pairs
+
 def save_sync_pairs(pairs: list[dict], config_dir: str = None):
-    """Save sync pairs to disk.
+    """Save sync pairs to disk. Use atomic_update_sync_pairs for modifying.
     
     Args:
         pairs: List of pair dicts
@@ -104,11 +155,22 @@ def save_sync_pairs(pairs: list[dict], config_dir: str = None):
         config_dir = get_config_dir()
     
     path = Path(config_dir) / SYNC_PAIRS_FILENAME
-    try:
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(pairs, f, indent=2, ensure_ascii=False)
-    except IOError as e:
-        logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
+    temp_path = path.with_suffix('.tmp')
+    
+    with _sync_pairs_lock:
+        try:
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(pairs, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temp_path, path)
+        except IOError as e:
+            logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
+            try:
+                if temp_path.exists():
+                    temp_path.unlink()
+            except OSError:
+                pass
 
 
 # --- Disk Space ---
@@ -179,13 +241,18 @@ def native_folder_picker() -> str | None:
 
     import tkinter as tk
     from tkinter import filedialog
+    
     root = tk.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
+    
     try:
-        root.iconbitmap(os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico'))
+        icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            root.iconbitmap(icon_path)
     except Exception:
         pass
+        
     folder_path = filedialog.askdirectory(master=root)
     root.destroy()
     return folder_path if folder_path else None
