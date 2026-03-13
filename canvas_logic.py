@@ -51,6 +51,31 @@ _ENTITY_ROUTING = {
     'submission':   {'folder': 'Submissions',   'prefix': 'Submission'},
 }
 
+def _format_canvas_date(date_str):
+    """
+    Formats ISO 8601 UTC strings from Canvas (e.g., '2025-08-26T14:07:50Z')
+    into human-readable localized strings like 'August 26th, 2025 at 14:07'.
+    """
+    if not date_str or not isinstance(date_str, str):
+        return str(date_str)
+    try:
+        # Convert Canvas Zulu time 'Z' to explicit UTC '+00:00' for Python parsing
+        dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        
+        # Astimezone inherently converts to the user's local operating system timezone
+        local_dt = dt.astimezone()
+        
+        # Calculate English ordinal suffix for the day
+        day = local_dt.day
+        if 4 <= day <= 20 or 24 <= day <= 30:
+            suffix = "th"
+        else:
+            suffix = ["st", "nd", "rd"][day % 10 - 1]
+            
+        return local_dt.strftime(f"%B {day}{suffix}, %Y at %H:%M")
+    except Exception:
+        return date_str
+
 class DownloadError:
     """Structured error object for UI display and logging."""
     def __init__(self, course_name, item_name, error_type, message, raw_error=None, context=None):
@@ -1536,25 +1561,185 @@ class CanvasManager:
             ``[(label, value), ...]`` rendered as a header block.
         """
         safe_title = html.escape(title)
+        
+        # Build the metadata block if provided
         meta_section = ""
         if metadata_pairs:
-            items = "".join(
-                f"<strong>{html.escape(str(k))}:</strong> {html.escape(str(v))}<br>"
-                for k, v in metadata_pairs if v
-            )
-            if items:
-                meta_section = (
-                    f'<div style="background:#f5f5f5;padding:10px;'
-                    f'margin-bottom:15px;border-radius:5px;">{items}</div>'
+            formatted_items = []
+            for k, v in metadata_pairs:
+                if not v:
+                    continue
+                v_str = str(v)
+                # Auto-detect and format ISO 8601 strings from Canvas
+                if v_str.endswith('Z') and 'T' in v_str and len(v_str) >= 19:
+                    v_str = _format_canvas_date(v_str)
+                
+                formatted_items.append(
+                    f'<div class="meta-item"><span class="meta-label">{html.escape(str(k))}:</span> <span class="meta-value">{html.escape(v_str)}</span></div>'
                 )
+            
+            if formatted_items:
+                meta_section = f'<div class="meta-box">{"".join(formatted_items)}</div>'
 
-        return (
-            f"<html><head><title>{safe_title}</title>"
-            f"<meta charset=\"utf-8\"></head><body>"
-            f"<h1>{safe_title}</h1>{meta_section}<hr>"
-            f"{body_html or '<p><em>(No content)</em></p>'}"
-            f"</body></html>"
+        # Inject modern styling with 60% layout parity
+        css = """
+        <style>
+            :root {
+                --bg-canvas: #f9fafb;
+                --bg-card: #ffffff;
+                --text-main: #374151;
+                --text-heading: #111827;
+                --text-muted: #6b7280;
+                --border-color: #e5e7eb;
+                --accent-color: #3b82f6;
+                --meta-bg: #f3f4f6;
+            }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+                line-height: 1.6;
+                color: var(--text-main);
+                background-color: var(--bg-canvas);
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 60%;
+                margin: 3rem auto;
+                background-color: var(--bg-card);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                border-radius: 8px;
+                padding: 40px 50px;
+                box-sizing: border-box;
+            }
+            @media (max-width: 1200px) {
+                .container { width: 80%; }
+            }
+            @media (max-width: 768px) {
+                .container {
+                    width: 95%;
+                    padding: 25px 20px;
+                    margin: 1.5rem auto;
+                }
+            }
+            h1.doc-title {
+                color: var(--text-heading);
+                margin-top: 0;
+                font-size: 2.2rem;
+                line-height: 1.25;
+                font-weight: 700;
+                border-bottom: 2px solid var(--border-color);
+                padding-bottom: 12px;
+                margin-bottom: 25px;
+            }
+            .meta-box {
+                background-color: var(--meta-bg);
+                border-left: 4px solid var(--accent-color);
+                padding: 16px 20px;
+                margin-bottom: 30px;
+                border-radius: 0 6px 6px 0;
+                font-size: 0.95rem;
+            }
+            .meta-item {
+                margin-bottom: 8px;
+            }
+            .meta-item:last-child {
+                margin-bottom: 0;
+            }
+            .meta-label {
+                font-weight: 600;
+                color: var(--text-heading);
+                display: inline-block;
+                width: 160px;
+            }
+            .meta-value {
+                color: var(--text-main);
+            }
+            .content-box {
+                font-size: 1.05rem;
+            }
+            .content-box img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 6px;
+                display: block;
+                margin: 1.5rem 0;
+            }
+            .content-box table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1.5rem 0;
+            }
+            .content-box th, .content-box td {
+                border: 1px solid var(--border-color);
+                padding: 10px 14px;
+                text-align: left;
+            }
+            .content-box th {
+                background-color: var(--meta-bg);
+                font-weight: 600;
+            }
+            .content-box a {
+                color: var(--accent-color);
+                text-decoration: none;
+                word-break: break-word;
+            }
+            .content-box a:hover {
+                text-decoration: underline;
+            }
+            .content-box blockquote {
+                border-left: 4px solid var(--border-color);
+                padding-left: 1.25rem;
+                margin-left: 0;
+                margin-right: 0;
+                color: var(--text-muted);
+                font-style: italic;
+                background-color: rgba(243, 244, 246, 0.4);
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+                border-radius: 0 4px 4px 0;
+            }
+            .content-box pre {
+                background-color: var(--meta-bg);
+                padding: 1.25rem;
+                border-radius: 6px;
+                overflow-x: auto;
+                font-size: 0.9rem;
+            }
+            .content-box code {
+                background-color: var(--meta-bg);
+                padding: 0.2rem 0.4rem;
+                border-radius: 4px;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                font-size: 0.9em;
+            }
+            .content-box pre code {
+                background-color: transparent;
+                padding: 0;
+            }
+        </style>
+        """
+
+        html_out = (
+            f"<!DOCTYPE html>\n"
+            f"<html lang=\"en\">\n"
+            f"<head>\n"
+            f"<meta charset=\"utf-8\">\n"
+            f"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+            f"<title>{safe_title}</title>\n"
+            f"{css}\n"
+            f"</head>\n"
+            f"<body>\n"
+            f"<div class=\"container\">\n"
+            f"<h1 class=\"doc-title\">{safe_title}</h1>\n"
+            f"{meta_section}\n"
+            f"<div class=\"content-box\">\n"
+            f"{body_html or '<p><em>(No content provided)</em></p>'}\n"
+            f"</div>\n"
+            f"</div>\n"
+            f"</body>\n"
+            f"</html>"
         )
+        return html_out
 
     def _save_secondary_entity(self, entity_type, entity_name, body_html,
                                base_path, course_base_path, sync_manager,
