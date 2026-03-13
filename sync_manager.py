@@ -15,8 +15,12 @@ from pathlib import Path
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional, Callable
+import threading
+
 # Module-level logger
 logger = logging.getLogger(__name__)
+
+_groups_lock = threading.Lock()
 
 # --- Data Classes ---
 
@@ -145,7 +149,7 @@ class SyncManager:
             self._windows_unhide_file(self.db_path)
         
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 cursor = conn.cursor()
                 
                 # Enable WAL mode for better concurrency and synchronous=NORMAL for speed/safety
@@ -219,7 +223,7 @@ class SyncManager:
         
         for attempt in range(max_retries):
             try:
-                with sqlite3.connect(self.db_path) as conn:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     cursor = conn.cursor()
                     cursor.execute('SELECT canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5 FROM sync_manifest')
                     for row in cursor.fetchall():
@@ -260,10 +264,8 @@ class SyncManager:
         
         for attempt in range(max_retries):
             try:
-                if os.name == 'nt':
-                    self._windows_unhide_file(self.db_path)
                     
-                with sqlite3.connect(self.db_path) as conn:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     cursor = conn.cursor()
                     now_iso = datetime.now(timezone.utc).isoformat()
                     cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_sync', now_iso))
@@ -293,8 +295,6 @@ class SyncManager:
                         ))
                     conn.commit()
                     
-                if os.name == 'nt':
-                    self._windows_hide_file(self.db_path)
                 return True
             except sqlite3.OperationalError as e:
                 if 'database is locked' in str(e) and attempt < max_retries - 1:
@@ -711,10 +711,8 @@ class SyncManager:
 
     def _save_metadata(self, key: str, value: str) -> bool:
         """Save a key-value pair to the sync_metadata table."""
-        if os.name == 'nt':
-            self._windows_unhide_file(self.db_path)
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 conn.execute(
                     'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
                     (key, value)
@@ -725,15 +723,12 @@ class SyncManager:
             logger.warning(f"Error saving metadata '{key}': {e}")
             return False
         finally:
-            if os.name == 'nt':
-                self._windows_hide_file(self.db_path)
+            pass
 
     def _load_metadata(self, key: str) -> str | None:
         """Load a value from the sync_metadata table. Returns None if not found."""
         try:
-            if os.name == 'nt':
-                self._windows_unhide_file(self.db_path)
-            with sqlite3.connect(self.db_path) as conn:
+            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 cursor = conn.execute(
                     'SELECT value FROM sync_metadata WHERE key = ?', (key,)
                 )
@@ -742,11 +737,7 @@ class SyncManager:
         except sqlite3.Error:
             return None
         finally:
-            if os.name == 'nt':
-                try:
-                    self._windows_hide_file(self.db_path)
-                except Exception:
-                    pass
+            pass
 
     def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
                                 local_relative_path: str, canvas_updated_at: str,
@@ -861,8 +852,6 @@ class SyncManager:
         
         for attempt in range(max_retries):
             try:
-                if os.name == 'nt':
-                    self._windows_unhide_file(self.db_path)
                     
                 with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     cursor = conn.cursor()
@@ -889,8 +878,6 @@ class SyncManager:
                     ))
                     conn.commit()
                     
-                if os.name == 'nt':
-                    self._windows_hide_file(self.db_path)
                 return True
             except sqlite3.OperationalError as e:
                 if 'database is locked' in str(e) and attempt < max_retries - 1:
@@ -921,8 +908,6 @@ class SyncManager:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                if os.name == 'nt':
-                    self._windows_unhide_file(self.db_path)
                 
                 with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     conn.execute(
@@ -932,9 +917,6 @@ class SyncManager:
                         (new_file_path, new_size, new_md5, canvas_file_id)
                     )
                     conn.commit()
-                
-                if os.name == 'nt':
-                    self._windows_hide_file(self.db_path)
                 
                 logger.info(f"Updated manifest entry {canvas_file_id} to new file: {new_file_path}")
                 return True
@@ -967,9 +949,6 @@ class SyncManager:
         If the file already exists in the manifest, UPDATE its is_ignored flag.
         If the file is brand-new (not yet downloaded), INSERT a stub row with is_ignored=1.
         """
-        if os.name == 'nt':
-            self._windows_unhide_file(self.db_path)
-            
         success = False
         for attempt in range(3):
             try:
@@ -992,17 +971,11 @@ class SyncManager:
             except sqlite3.Error as e:
                 logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
                 break
-        
-        if os.name == 'nt':
-            self._windows_hide_file(self.db_path)
                 
         return success
 
     def restore_file(self, canvas_file_id: int) -> bool:
         """Mark a file as no longer ignored directly in the SQLite DB."""
-        if os.name == 'nt':
-            self._windows_unhide_file(self.db_path)
-            
         success = False
         for attempt in range(3):
             try:
@@ -1022,9 +995,6 @@ class SyncManager:
             except sqlite3.Error as e:
                 logger.warning(f"Error restoring file {canvas_file_id}: {e}")
                 break
-        
-        if os.name == 'nt':
-            self._windows_hide_file(self.db_path)
                 
         return success
 
@@ -1038,9 +1008,6 @@ class SyncManager:
         if not file_ids_and_names:
             return True
             
-        if os.name == 'nt':
-            self._windows_unhide_file(self.db_path)
-        
         # Normalize input: accept both list[int] and list[tuple]
         rows = []
         for item in file_ids_and_names:
@@ -1051,7 +1018,7 @@ class SyncManager:
             
         success = False
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 conn.executemany(
                     '''INSERT INTO sync_manifest 
                        (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
@@ -1063,9 +1030,6 @@ class SyncManager:
             success = True
         except sqlite3.Error as e:
             logger.warning(f"Error bulk ignoring files: {e}")
-        finally:
-            if os.name == 'nt':
-                self._windows_hide_file(self.db_path)
                 
         return success
 
@@ -1074,12 +1038,9 @@ class SyncManager:
         if not file_ids:
             return True
             
-        if os.name == 'nt':
-            self._windows_unhide_file(self.db_path)
-            
         success = False
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 conn.executemany(
                     'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
                     [(fid,) for fid in file_ids]
@@ -1088,9 +1049,6 @@ class SyncManager:
             success = True
         except sqlite3.Error as e:
             logger.warning(f"Error bulk restoring files: {e}")
-        finally:
-            if os.name == 'nt':
-                self._windows_hide_file(self.db_path)
                 
         return success
 
@@ -1199,24 +1157,25 @@ class SavedGroupsManager:
         Returns:
             The newly created group dict
         """
-        groups = self.load_groups()
-        new_group = {
-            'group_id': f"grp_{uuid.uuid4().hex}",
-            'group_name': name.strip(),
-            'pairs': [
-                {
-                    'local_folder': p.get('local_folder', ''),
-                    'course_id': p.get('course_id'),
-                    'course_name': p.get('course_name', ''),
-                }
-                for p in pairs
-            ],
-        }
-        if is_single_pair:
-            new_group['is_single_pair'] = True
-        groups.append(new_group)
-        self._save_all(groups)
-        return new_group
+        with _groups_lock:
+            groups = self.load_groups()
+            new_group = {
+                'group_id': f"grp_{uuid.uuid4().hex}",
+                'group_name': name.strip(),
+                'pairs': [
+                    {
+                        'local_folder': p.get('local_folder', ''),
+                        'course_id': p.get('course_id'),
+                        'course_name': p.get('course_name', ''),
+                    }
+                    for p in pairs
+                ],
+            }
+            if is_single_pair:
+                new_group['is_single_pair'] = True
+            groups.append(new_group)
+            self._save_all(groups)
+            return new_group
     
     def delete_group(self, group_id: str) -> bool:
         """Delete a group by its ID.
@@ -1224,13 +1183,14 @@ class SavedGroupsManager:
         Returns:
             True if found and deleted, False otherwise
         """
-        groups = self.load_groups()
-        original_len = len(groups)
-        groups = [g for g in groups if g.get('group_id') != group_id]
-        if len(groups) == original_len:
-            return False
-        self._save_all(groups)
-        return True
+        with _groups_lock:
+            groups = self.load_groups()
+            original_len = len(groups)
+            groups = [g for g in groups if g.get('group_id') != group_id]
+            if len(groups) == original_len:
+                return False
+            self._save_all(groups)
+            return True
     
     def update_group(self, group_id: str, new_data: dict) -> bool:
         """Update an existing group's name and/or pairs.
@@ -1242,25 +1202,26 @@ class SavedGroupsManager:
         Returns:
             True if found and updated, False otherwise
         """
-        groups = self.load_groups()
-        for g in groups:
-            if g.get('group_id') == group_id:
-                if 'group_name' in new_data:
-                    g['group_name'] = new_data['group_name'].strip()
-                if 'pairs' in new_data:
-                    g['pairs'] = [
-                        {
-                            'local_folder': p.get('local_folder', ''),
-                            'course_id': p.get('course_id'),
-                            'course_name': p.get('course_name', ''),
-                        }
-                        for p in new_data['pairs']
-                    ]
-                if 'is_single_pair' in new_data:
-                    g['is_single_pair'] = new_data['is_single_pair']
-                self._save_all(groups)
-                return True
-        return False
+        with _groups_lock:
+            groups = self.load_groups()
+            for g in groups:
+                if g.get('group_id') == group_id:
+                    if 'group_name' in new_data:
+                        g['group_name'] = new_data['group_name'].strip()
+                    if 'pairs' in new_data:
+                        g['pairs'] = [
+                            {
+                                'local_folder': p.get('local_folder', ''),
+                                'course_id': p.get('course_id'),
+                                'course_name': p.get('course_name', ''),
+                            }
+                            for p in new_data['pairs']
+                        ]
+                    if 'is_single_pair' in new_data:
+                        g['is_single_pair'] = new_data['is_single_pair']
+                    self._save_all(groups)
+                    return True
+            return False
     
     def matches_existing_group(self, pairs: list[dict]) -> bool:
         """Check if the given pairs exactly match any saved group.

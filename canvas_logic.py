@@ -21,6 +21,30 @@ from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
 
+# --- Global Async Locks ---
+_download_locks = {}
+_lock_mutex = asyncio.Lock()
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def manage_download_lock(filepath):
+    async with _lock_mutex:
+        if filepath not in _download_locks:
+            _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0}
+        lock_data = _download_locks[filepath]
+        lock_data["count"] += 1
+        file_lock = lock_data["lock"]
+    
+    try:
+        async with file_lock:
+            yield
+    finally:
+        async with _lock_mutex:
+            lock_data["count"] -= 1
+            if lock_data["count"] == 0:
+                del _download_locks[filepath]
+
 # --- Constants ---
 MAX_RETRIES = 5
 TIMEOUT_SECONDS = 300
@@ -1286,21 +1310,29 @@ class CanvasManager:
         return downloaded
 
     async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, explicit_filepath=None):
-        async with sem:
-            if explicit_filepath:
-                filepath = explicit_filepath
-                filename = filepath.name
-            else:
-                filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
-                filepath = folder_path / filename
+        if explicit_filepath:
+            filepath = explicit_filepath
+            filename = filepath.name
+        else:
+            filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+            filepath = folder_path / filename
 
-            if file_filter == 'study':
-                ext = filepath.suffix.lower()
-                if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
-                    return
+        if file_filter == 'study':
+            ext = filepath.suffix.lower()
+            if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
+                return
 
-            # Check duplication by size
-            file_size_bytes = getattr(file_obj, 'size', 0)
+        # Only run disk-conflict resolution when the caller hasn't already
+        # resolved naming via seen_flat_paths / seen_target_paths.
+        if not explicit_filepath:
+            filepath = self._handle_conflict(filepath)
+            filename = filepath.name
+
+        # Check duplication by size
+        file_size_bytes = getattr(file_obj, 'size', 0)
+        
+        async with manage_download_lock(filepath):
+            # Re-check existence inside lock
             if filepath.exists():
                 try:
                     # We only skip if size matches. If size differs, we overwrite (update).
@@ -1313,7 +1345,8 @@ class CanvasManager:
                         if sync_manager and course_base_path:
                             try:
                                 rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
-                                sync_manager.record_downloaded_file(
+                                await asyncio.to_thread(
+                                    sync_manager.record_downloaded_file,
                                     canvas_file_id=file_obj.id,
                                     canvas_filename=getattr(file_obj, 'filename', ''),
                                     local_relative_path=rel_path,
@@ -1340,11 +1373,6 @@ class CanvasManager:
                 except Exception:
                     pass
 
-            # Only run disk-conflict resolution when the caller hasn't already
-            # resolved naming via seen_flat_paths / seen_target_paths.
-            if not explicit_filepath:
-                filepath = self._handle_conflict(filepath)
-
             url = file_obj.url
             if not url:
                 # Check for LTI/Media streams
@@ -1363,136 +1391,147 @@ class CanvasManager:
 
             for attempt in range(MAX_RETRIES):
                 try:
-                    log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
-                    async with session.get(url) as response:
-                        log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
-                        if response.status == 200:
-                            # --- Atomic .part Pattern ---
-                            import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit
-                            part_path = filepath.parent / (filepath.name + '.part')
-                            download_interrupted = False
-                            
-                            try:
-                                async with aiofiles.open(make_long_path(part_path), 'wb') as f:
-                                    total_bytes = 0
-                                    while True:
-                                        # Instant cancel check INSIDE the chunk loop
-                                        if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
-                                            download_interrupted = True
-                                            break
-                                        
-                                        chunk = await response.content.read(1024*1024)
-                                        if not chunk: break
-                                        await f.write(chunk)
-                                        total_bytes += len(chunk)
-                                        
-                                        if mb_tracker:
-                                            mb_tracker['bytes_downloaded'] += len(chunk)
-                                            if progress_callback:
-                                                mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
-                                                progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
-                            except Exception as write_err:
-                                download_interrupted = True
-                                # Clean up .part file on write error
-                                try:
-                                    if Path(make_long_path(part_path)).exists():
-                                        Path(make_long_path(part_path)).unlink()
-                                except OSError:
-                                    pass
-                                raise write_err
-                            
-                            # Handle interrupted download: delete partial .part file
-                            if download_interrupted:
-                                try:
-                                    if Path(make_long_path(part_path)).exists():
-                                        Path(make_long_path(part_path)).unlink()
-                                        log_debug(f"Cancelled: deleted partial {part_path.name}", debug_file)
-                                except OSError:
-                                    pass
-                                return  # Cancel — do not return file info
-                            
-                            # Verify download completeness BEFORE rename
-                            if file_size_bytes > 0 and total_bytes != file_size_bytes:
-                                flexible_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v']
-                                is_flexible_media = any(filename.lower().endswith(ext) for ext in flexible_extensions)
+                    # Request block inside semaphore
+                    async with sem:
+                        log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
+                        async with session.get(url) as response:
+                            if response.status == 403 or response.status == 429:
+                                wait = int(response.headers.get('Retry-After', RETRY_DELAY * (2 ** attempt)))
+                                raise ValueError(f"RATE_LIMIT:{wait}")
+                            elif 500 <= response.status < 600:
+                                raise ValueError(f"SERVER_ERROR:{response.status}")
+
+                            log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
+                            if response.status == 200:
+                                # --- Atomic .part Pattern ---
+                                import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit
+                                part_path = filepath.parent / (filepath.name + '.part')
+                                download_interrupted = False
                                 
-                                if is_flexible_media and total_bytes > 0:
-                                    log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
-                                else:
-                                    # Incomplete download — delete .part and raise
+                                try:
+                                    async with aiofiles.open(make_long_path(part_path), 'wb') as f:
+                                        total_bytes = 0
+                                        while True:
+                                            # Instant cancel check INSIDE the chunk loop
+                                            if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
+                                                download_interrupted = True
+                                                break
+                                            
+                                            chunk = await response.content.read(1024*1024)
+                                            if not chunk: break
+                                            await f.write(chunk)
+                                            total_bytes += len(chunk)
+                                            
+                                            if mb_tracker:
+                                                mb_tracker['bytes_downloaded'] += len(chunk)
+                                                if progress_callback:
+                                                    mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
+                                                    progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
+                                except Exception as write_err:
+                                    download_interrupted = True
+                                    # Clean up .part file on write error
                                     try:
                                         if Path(make_long_path(part_path)).exists():
                                             Path(make_long_path(part_path)).unlink()
                                     except OSError:
                                         pass
-                                    raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
-                            
-                            # 100% success: atomic rename .part → final path
-                            try:
-                                os.rename(make_long_path(part_path), make_long_path(filepath))
-                            except OSError:
-                                _shutil = shutil  # shutil imported at module level; alias for local clarity
-                                try:
-                                    _shutil.move(make_long_path(part_path), make_long_path(filepath))
-                                except Exception:
-                                    # Clean up partial destination file from failed cross-FS copy
+                                    raise write_err
+                                
+                                # Handle interrupted download: delete partial .part file
+                                if download_interrupted:
                                     try:
-                                        if Path(make_long_path(filepath)).exists():
-                                            Path(make_long_path(filepath)).unlink()
+                                        if Path(make_long_path(part_path)).exists():
+                                            Path(make_long_path(part_path)).unlink()
+                                            log_debug(f"Cancelled: deleted partial {part_path.name}", debug_file)
                                     except OSError:
                                         pass
-                                    raise  # Re-raise to trigger retry loop
-                            
-                            log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
-                            
-                            # --- Sync Run #0: Record to DB AFTER successful atomic rename ---
-                            # This is the safety guard: only fully-downloaded files get recorded.
-                            # Cancelled/partial .part files never reach this point.
-                            if sync_manager and course_base_path:
-                                try:
-                                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
-                                    sync_manager.record_downloaded_file(
-                                        canvas_file_id=file_obj.id,
-                                        canvas_filename=getattr(file_obj, 'filename', ''),
-                                        local_relative_path=rel_path,
-                                        canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
-                                        original_size=getattr(file_obj, 'size', 0)
-                                    )
-                                except Exception as db_err:
-                                    log_debug(f"Warning: DB record failed for {filename}: {db_err}", debug_file)
-                                    # Non-fatal: download succeeded, DB write failed. File is on disk.
-                            
-                            if progress_callback:
-                                progress_callback(f'Downloading file: {filename}', progress_type='download')
+                                    return  # Cancel — do not return file info
                                 
-                            return (
-                                CanvasFileInfo(
-                                    id=file_obj.id,
-                                    filename=getattr(file_obj, 'filename', ''),
-                                    display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
-                                    size=getattr(file_obj, 'size', 0),
-                                    modified_at=getattr(file_obj, 'modified_at', None),
-                                    md5=getattr(file_obj, 'md5', None),
-                                    url=getattr(file_obj, 'url', ''),
-                                    content_type=getattr(file_obj, 'content-type', ''),
-                                    folder_id=getattr(file_obj, 'folder_id', None)
-                                ), filepath
-                            )
+                                # Verify download completeness BEFORE rename
+                                if file_size_bytes > 0 and total_bytes != file_size_bytes:
+                                    flexible_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v']
+                                    is_flexible_media = any(filename.lower().endswith(ext) for ext in flexible_extensions)
+                                    
+                                    if is_flexible_media and total_bytes > 0:
+                                        log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
+                                    else:
+                                        # Incomplete download — delete .part and raise
+                                        try:
+                                            if Path(make_long_path(part_path)).exists():
+                                                Path(make_long_path(part_path)).unlink()
+                                        except OSError:
+                                            pass
+                                        raise Exception(f"File system error: Download incomplete. Expected {file_size_bytes} bytes, got {total_bytes} bytes.")
+                                
+                                # 100% success: atomic rename .part → final path
+                                try:
+                                    os.replace(make_long_path(part_path), make_long_path(filepath))
+                                except PermissionError:
+                                    error_msg = f"Cannot overwrite file (it may be open in another program): {filepath}"
+                                    log_debug(error_msg, debug_file)
+                                    try:
+                                        if Path(make_long_path(part_path)).exists():
+                                            Path(make_long_path(part_path)).unlink()
+                                    except OSError:
+                                        pass
+                                    raise RuntimeError(error_msg)
 
-                        elif response.status == 429: # Rate Limit
-                            wait = int(response.headers.get('Retry-After', RETRY_DELAY * (2 ** attempt)))
-                            await asyncio.sleep(wait)
-                            continue
-                        elif 500 <= response.status < 600:
-                            await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
-                            continue
-                        else:
-                            err_msg = f"Download failed with status {response.status}"
-                            log_debug(f"ERROR: {err_msg}", debug_file)
-                            err = DownloadError(course_name, filename, f"HTTP {response.status}", err_msg)
-                            if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
-                            self._log_error(error_root_path, err)
-                            return
+                                log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
+                                
+                                # --- Sync Run #0: Record to DB AFTER successful atomic rename ---
+                                # This is the safety guard: only fully-downloaded files get recorded.
+                                # Cancelled/partial .part files never reach this point.
+                                if sync_manager and course_base_path:
+                                    try:
+                                        rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                                        await asyncio.to_thread(
+                                            sync_manager.record_downloaded_file,
+                                            canvas_file_id=file_obj.id,
+                                            canvas_filename=getattr(file_obj, 'filename', ''),
+                                            local_relative_path=rel_path,
+                                            canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
+                                            original_size=getattr(file_obj, 'size', 0)
+                                        )
+                                    except Exception as db_err:
+                                        log_debug(f"Warning: DB record failed for {filename}: {db_err}", debug_file)
+                                        # Non-fatal: download succeeded, DB write failed. File is on disk.
+                                
+                                if progress_callback:
+                                    progress_callback(f'Downloading file: {filename}', progress_type='download')
+                                    
+                                return (
+                                    CanvasFileInfo(
+                                        id=file_obj.id,
+                                        filename=getattr(file_obj, 'filename', ''),
+                                        display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
+                                        size=getattr(file_obj, 'size', 0),
+                                        modified_at=getattr(file_obj, 'modified_at', None),
+                                        md5=getattr(file_obj, 'md5', None),
+                                        url=getattr(file_obj, 'url', ''),
+                                        content_type=getattr(file_obj, 'content-type', ''),
+                                        folder_id=getattr(file_obj, 'folder_id', None)
+                                    ), filepath
+                                )
+                            else:
+                                err_msg = f"Download failed with status {response.status}"
+                                log_debug(f"ERROR: {err_msg}", debug_file)
+                                err = DownloadError(course_name, filename, f"HTTP {response.status}", err_msg)
+                                if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                                self._log_error(error_root_path, err)
+                                return
+
+                except ValueError as ve:
+                    msg = str(ve)
+                    if msg.startswith("RATE_LIMIT:"):
+                        wait_time = int(msg.split(":")[1])
+                        log_debug(f"Rate limited (403/429). Sleeping {wait_time}s outside semaphore.", debug_file)
+                        await asyncio.sleep(wait_time)
+                        continue
+                    elif msg.startswith("SERVER_ERROR:"):
+                        await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+                        continue
+                    raise ve
+                    
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     if attempt < MAX_RETRIES - 1:
                         await asyncio.sleep(RETRY_DELAY * (2 ** attempt))

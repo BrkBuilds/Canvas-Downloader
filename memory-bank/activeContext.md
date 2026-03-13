@@ -1,6 +1,8 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- [x] **Active Feature: Arch. Audit Follow-Up - Critical Windows Concurrency Fixes (Complete)**: Rectified sharing violations in SQLite, injected strict async file mutexing for `.part` downloads in the sync loop, and transitioned to atomic `os.replace` backed by `PermissionError` rescue logic to protect against files opened in external editors.
+- [x] **Active Feature: Phase 6 Final Architecture Audit Resolution**: Executed the final 5 architecture fixes. Resolved async event loop freezing, fixed asyncio memory leaks, eliminated JSON TOCTOU race conditions using thread locks, substituted Tkinter for native PowerShell folder pickers on Windows, and implemented aggressive FFmpeg process tree pruning via `psutil`.
 - [x] **Active Feature: Phase 4 Secondary Content Engine UI (Complete)**: Executed a comprehensive UI pass refining the user experience of toggling and organizing Canvas secondary entities. Fixed layout overlap, corrected missing CSS tree-lines, built dynamic conditional widgets, injected custom radio component tooltips, and securely aligned backend default variables with the "In Course Folder" paradigm.
 - [x] **Active Feature: Phase 3 Secondary Content Engine Backend (Complete)**: Architected and verified the full backend engine (`canvas_logic.py`, `sync_manager.py`) for downloading Assignments, Syllabus, Announcements, Discussions, Quizzes, and Rubrics using dynamically generated HTML artifacts and a Negative ID Offset Registry.
 - [x] **Active Feature: Phase 2 Deferred Issues (Complete)**: Evaluated and implemented the deferred major/minor issues from the V1 Master Audit. Addressed JSON atomic writes, FFmpeg subprocess stalls, post-processing failure UI surfacing, and import hoisting. Dropped architectural monolith splitting for V2.0.
@@ -10,6 +12,18 @@
 - **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+## Recent Changes (Session 2026-03-13 — Phase 7: Audited Concurrency & Security Fixes)
+- **Resolved SQLite Win32 IO Sharing Violation (`sync_manager.py`)**: Removed all `os.name == 'nt'` `_windows_unhide_file()` attribute flags from within the `save_manifest` and other DB transactional methods. This solves the core trace of concurrent thread locks thrown by SQLite operations being interrupted by Windows Defender / OS-level file permission assertions mid-write.
+- **Asyncio Sync Mutexing for File Paths (`sync_ui.py`)**: Designed and injected `manage_sync_download_lock` into `_run_sync`. A global `_sync_lock_mutex` now serializes dictionary bindings that vend `asyncio.Lock()` objects uniquely keyed per physical file path. This successfully throttles concurrent network threads downloading the same resource across dual cross-mapped courses without duplicating handles or mangling raw byte streams inside `aiofiles`.
+- **Atomic Windows Replacing with Deep Permission Guards (`sync_ui.py`, `canvas_logic.py`)**: Eradicated the legacy `os.rename` approach for completing `.part` downloads on Windows, substituting it with the atomic OS primitive `os.replace`. Recognizing that Windows rigidly enforces file usage (unlike POSIX), embedded explicit `PermissionError` (`[WinError 32]`) exception blocks. If a user natively opens a target file (e.g. Acrobat Reader viewing a syllabus) during a sync loop, the application intercepts the crash, surgically unlinks the redundant `[].part` payload, and bubbles an intelligent log message, avoiding an overarching fatal exit.
+
+## Recent Changes (Session 2026-03-13 — Phase 6 Final Architecture Audit Resolution)
+- **Async SQLite Unblocking (`canvas_logic.py`)**: Offloaded the synchronous `record_downloaded_file` database commit directly into a background thread utilizing `await asyncio.to_thread`. This definitively stops heavy IO writes from pausing the core concurrent asyncio event loop.
+- **Asyncio Memory Leak Fixed (`canvas_logic.py`)**: Purged the unbound `_download_locks` dictionary memory leak by structurally deploying an `@asynccontextmanager`. Locks now employ a dynamic reference `count`; when the active count reaches zero, the specific path's `asyncio.Lock()` is explicitly deleted from memory via `try...finally`.
+- **JSON TOCTOU Race Eradicated (`ui_helpers.py`, `sync_manager.py`)**: Discovered that `.tmp` atomic replacements did *not* resolve the TOCTOU issue where two simultaneous Read-Modify-Write threads would blindly overwrite each other's updates. Completely rewrote `save_sync_pairs` into `atomic_update_sync_pairs` and `SavedGroupsManager` routines by wrapping their execution in robust `threading.Lock()` mutexes.
+- **PowerShell PyInstaller Safety (`ui_helpers.py`)**: Substituted the unstable Streamlit-Tkinter `sys.executable -c` Windows folder picker string. Deployed a highly-reliable `powershell.exe -Command` wrapped string invoking `System.Windows.Forms.FolderBrowserDialog`. This perfectly aligns with the PyInstaller constraint on preventing thread-based crashes.
+- **Definitive Zombie Pruning (`video_converter.py`)**: Integrated `psutil` into the `moviepy` executor. In instances where corrupt video payloads completely stall FFmpeg, abandoning the `Future` is no longer acceptable. The timeout loop now actively crawls the `Process` tree to systematically send forceful termination signals (`kill()`) to the exact worker processes, guaranteeing resource reclamation.
 
 ## Recent Changes (Session 2026-03-13 — Phase 4 Secondary Content Engine UI)
 - **UI Architecture Sequencing (`app.py`, `sync_ui.py`)**: Restructured the visual flow of the secondary content configuration block. Checkboxes ("Select what to include") now deliberately precede structural routing decisions ("Organize by:"), aligning the UI with standard user intent models.
@@ -298,6 +312,16 @@
   - **Standardized Styling**: Implemented a consistent `#38bdf8` blue color with `font-weight: 500` for all "Currently downloading:" and "Currently processing:" status messages.
   - **Post-Processing Visibility**: Injected the blue status indicator into all 7 conversion/extraction loops (Archives, PPTX, HTML, Code, Word, Excel, Video) in both `sync_ui.py` and `app.py`.
   - **Cleanup Hooks**: Added `active_file_placeholder.empty()` calls after all post-processing completions to ensure the status text is cleared once the course/batch is finished.
+
+## Recent Changes (Session 2026-03-13 - Built-to-Last Architecture Fixes)
+- **Concurrency & Rate Limit Unblocking (`canvas_logic.py`)**:
+  - **Semaphore Release Penalty**: Moved `asyncio.sleep()` for 403/429 Canvas rate limiting outside the core processing lock (`async with sem:`). Rate-limited tasks now peacefully wait out their penalty without stealing active concurrent connection slots from healthy tasks.
+  - **Target-Path Serialization**: Interwoven a new mutex dictionary global lock (`_download_locks`) directly into `.part` file operations. Multiple threads attempting to write overlapping file structures are seamlessly serialized byte-for-byte instead of colliding or throwing OS File in Use exceptions.
+- **Deadlock Eradication (`video_converter.py` & `sync_manager.py`)**:
+  - **Zombie FFmpeg Neutralization**: Disassembled the synchronous `with ThreadPoolExecutor` used for `moviepy` destruction. Invoked strict asynchronous exit directives (`wait=False, cancel_futures=True`) to prevent the entire download thread from hanging infinitely on corrupted MP4/MOV headers.
+  - **DB Flood Defense Escalation**: Standardized all `sqlite3.connect` initializations globally to block for up to `30.0` seconds instead of 20.0, granting slow hard drives massive breathing room to write sync states.
+- **Atomic State Guarantees (`ui_helpers.py`)**:
+  - **Configuration Immutability**: All edits to `canvas_sync_pairs.json` now employ a `.tmp` file and `os.replace` shadow-swap, protecting configuration states from cross-thread tear interference.
 
 ## Recent Changes (Session 2026-03-03 - UI Polish)
 - **Quick Sync Flow Repair (`sync_ui.py`)**:

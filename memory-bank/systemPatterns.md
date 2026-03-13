@@ -18,6 +18,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Native Cocoa Rendering Parity**:
     - *Policy*: Where Tkinter's cross-platform bridges fail to mimic native macOS expectations (crashes, ugly UI), bypass Tkinter entirely via subprocess AppleScript execution.
     - *Implementation*: `native_folder_picker()` on macOS pipes straight to `osascript -e POSIX path of (choose folder)` to leverage the actual macOS Finder dialog. Also, `open_folder()` leverages `open -R {path}` and an explicit `tell application "Finder" to activate` to guarantee the explorer window punches through Streamlit to seize the foreground.
+- **Windows PyInstaller Native Dialogue Parity**:
+    - *Policy*: Avoid using `tkinter` in Streamlit applications when compiled via PyInstaller, as invoking it outside the main thread frequently causes application segfaults.
+    - *Implementation*: `native_folder_picker()` on Windows uses a `subprocess.run` to spawn `powershell -Command` loading `System.Windows.Forms.FolderBrowserDialog`. This perfectly natively executes the Windows folder picker in a totally isolated OS process, ensuring the Streamlit background runner never hangs or crashes.
 - **AppleScript Lifecycle Controller Parity (macOS)**:
     - *Policy*: Avoid terminal-bound infinite loops or unstable Tkinter root windows to manage the application lifecycle on macOS.
     - *Implementation*: The `start.py` launcher uses a synchronous `osascript` dialog ("Open Browser", "Stop Server") executed via `subprocess.run()`. This acts as a native blocking controller for the `os.urandom` daemon thread, keeping the Streamlit server alive while allowing a graceful, user-friendly shutdown without zombie processes.
@@ -37,6 +40,32 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Defensive Exception Handling**:
     - *Policy*: Never use bare `except:` clauses.
     - *Implementation*: Always catch `Exception` explicitly (`except Exception as e:`) to prevent silently dropping vital OS-level interrupts like `KeyboardInterrupt` or `SystemExit`.
+- **Atomic Config Serialization (The `.tmp` Swap Pattern)**:
+    - *Problem*: Directly utilizing `json.dump(f)` to write user configurations or sync contracts is prone to disk tearing if the overarching Streamlit thread crashes, restarts, or is terminated mid-write, resulting in permanent `JSONDecodeError`s.
+    - *Implementation*: Configuration operations mathematically enforce atomicity by dumping to a named `.tmp` file, calling `f.flush()` and `os.fsync(f.fileno())` to guarantee disk saturation, and finally utilizing `os.replace(temp, final)` for a perfectly instantaneous, uninterruptible OS-level swap.
+- **Atomic File Writing vs Concurrent Thread Locks (JSON TOCTOU)**:
+    - *Problem*: While writing to a `.tmp` file and using `os.replace` guarantees the file on disk isn't corrupted (Disk Tearing), doing so during a concurrent Read-Modify-Write cycle without a `threading.Lock` still causes TOCTOU (Time-Of-Check-To-Time-Of-Update) data loss. Furthermore, passing a stale, pre-read monolithic memory state (`st.session_state`) into the lock completely defeats the mutex.
+    - *Implementation (Signature-Based Modifiers)*: Ensure the wrapper (e.g., `atomic_update(modifier_func)`) accepts a callable that modifies freshly read data *inside* the lock. Rip out monolithic state saves. Migrate to granular operations (`_add_pair`, `_remove_pairs_by_signature`) that mutate the fresh JSON array matched by a strict unique signature (`course_id` + `local_folder`) rather than volatile list indices. Finally, synchronously rehydrate the application state with the wrapper's exact return value.
+
+## Concurrency, Async & Subprocess Patterns
+- **Active Subprocess ThreadPool Management**:
+    - *Problem*: Utilizing the synchronous `with ThreadPoolExecutor() as pool:` context manager blocks the executing thread unconditionally on `__exit__`. If the spawned task interacts with misbehaving native subprocesses (e.g., FFmpeg grinding on corrupted MP4s), the top-level Python controller thread will hang indefinitely even if a `timeout=` is caught on the `Future.result()`.
+    - *Implementation*: Abandon the `with` context pattern. Initialize the `pool` manually, capture the `TimeoutError`, and rigorously enforce termination inside a `finally` block using `pool.shutdown(wait=False, cancel_futures=True)`. This cleanly severs Python's blocking relationship with the zombie child process.
+- **Semaphore Exemption (Slot Yielding)**:
+    - *Problem*: Executing an `asyncio.sleep()` exponential backoff penalty (e.g., waiting 60 seconds after a 429 Rate Limit) *inside* the `async with semaphore:` block inherently holds that concurrency slot hostage, draining the application's ability to process other healthy files.
+    - *Implementation*: Eject sleep mechanisms outside the semaphore's scope. HTTP 429 endpoints instantly raise a custom exception that is caught in the outer retry wrapper, releasing the semaphore before invoking the sleep penalty.
+- **Dual-Layer Async Deduplication Locks**:
+    - *Problem*: Two identical Canvas modules initiating high-speed downloads can breach pre-execution path deduplication checks if spanning happens concurrently. Both worker threads will instantly stream bytes to the identical `file.pdf.part` temp path, mutating data randomly or violently triggering OS `[WinError 32]` violations.
+    - *Implementation*: Enact a Dictionary Mutex Pattern. A top-level global `_lock_mutex = asyncio.Lock()` guards access to a hash map (`_download_locks = {}`). Threads eagerly lookup or generate a unique `asyncio.Lock()` bound explicitly to their normalized target file path. The actual `.part` file download stream is then perfectly serialized behind that path-specific lock.
+- **FFmpeg Zombie Process Pruning (`psutil`)**:
+    - *Problem*: Simply dropping the Future from a `ThreadPoolExecutor` or calling `shutdown(wait=False, cancel_futures=True)` abandons the Python thread, but the underlying OS Process (FFmpeg) spawned by `moviepy` continues churning indefinitely in the background, locking files and burning RAM.
+    - *Implementation*: Extract the parent PID and utilize `psutil.Process(pid).children(recursive=True)` inside a `timeout` handler. Explicitly send `.kill()` to every child process in the tree, guaranteeing complete execution halt.
+- **Asyncio Lock Memory Leaks (Reference Counting)**:
+    - *Problem*: Using a globally caching dictionary (`_locks[path] = asyncio.Lock()`) generates a permanent memory leak if the locks are never cleaned up after downloading thousands of files.
+    - *Implementation*: Wrap the global dictionary interaction in an `@asynccontextmanager` utilizing reference counting (`"count": 0`). The lock is newly forged on count 1, incremented, used securely, and finally explicitly `del _locks[path]` when the reference count hits exactly 0.
+- **Event Loop I/O Block Avoidance**:
+    - *Problem*: Executing blocking synchronous routines (like `sqlite3` database commits or massive JSON writes) directly inside an `async def` function completely stalls the overarching `asyncio` event loop.
+    - *Implementation*: Offload all heavy synchronous database and filesystem I/O into native background threads using `await asyncio.to_thread(func, *args)`.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
