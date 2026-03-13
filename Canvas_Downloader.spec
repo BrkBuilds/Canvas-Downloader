@@ -3,7 +3,26 @@ from PyInstaller.utils.hooks import collect_all
 import sys
 import os
 
-datas = [('app.py', '.'), ('canvas_logic.py', '.'), ('assets', 'assets')]
+datas = [
+    ('app.py', '.'), 
+    ('canvas_logic.py', '.'), 
+    ('canvas_debug.py', '.'),
+    ('sync_manager.py', '.'),
+    ('sync_ui.py', '.'),
+    ('ui_helpers.py', '.'),
+    ('code_converter.py', '.'),
+    ('md_converter.py', '.'),
+    ('pdf_converter.py', '.'),
+    ('word_converter.py', '.'),
+    ('excel_converter.py', '.'),
+    ('video_converter.py', '.'),
+    ('archive_extractor.py', '.'),
+    ('post_processing.py', '.'),
+    ('url_compiler.py', '.'),
+    ('version.py', '.'),
+    ('theme.py', '.'),
+    ('assets', 'assets')
+]
 binaries = []
 hiddenimports = []
 
@@ -16,7 +35,10 @@ tmp_ret = collect_all('canvasapi')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 # Collect other critical packages
-packages_to_collect = ['requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi']
+packages_to_collect = [
+    'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
+    'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil'
+]
 for package in packages_to_collect:
     try:
         tmp_ret = collect_all(package)
