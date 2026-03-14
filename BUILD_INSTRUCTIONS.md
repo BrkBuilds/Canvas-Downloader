@@ -23,6 +23,8 @@ Do **NOT** remove these from the `excludes` list in the spec file, or the execut
 
 | Package | Why it's excluded | Size Savings |
 |---------|-------------------|--------------|
+| `polars` | Heavy data processing lib pulled by Streamlit | ~154 MB |
+| `botocore` / `boto3` | AWS libs pulled by Streamlit | ~17 MB |
 | `pyarrow` | Not used by this simple app | ~28 MB |
 | `pandas` | Not used (we use simple lists/dicts) | ~30 MB |
 | `numpy` | Not used | ~20 MB |
@@ -52,4 +54,4 @@ These packages are **required**:
 
 3.  **Verify**:
     - Output location: `dist/Canvas_Downloader.exe`
-    - Expected Size: **~40-45 MB**
+    - Expected Size: **~130 MB**
