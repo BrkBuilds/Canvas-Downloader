@@ -73,6 +73,8 @@ _ENTITY_ROUTING = {
     'quiz':         {'folder': 'Quizzes',       'prefix': 'Quiz'},
     'rubric':       {'folder': 'Rubrics',       'prefix': 'Rubric'},
     'submission':   {'folder': 'Submissions',   'prefix': 'Submission'},
+    'page':         {'folder': 'Pages',         'prefix': 'Page'},
+    'link':         {'folder': 'Links',         'prefix': 'Link'},
 }
 
 def _format_canvas_date(date_str):
@@ -761,7 +763,14 @@ class CanvasManager:
                                             continue
                                         
                                         page_obj = course.get_page(item.page_url)
-                                        filepath = self._save_page(page_obj, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
+                                        page_id = getattr(page_obj, 'page_id', getattr(page_obj, 'id', 0))
+                                        filepath, _ = self._save_secondary_entity(
+                                            'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '', 
+                                            base_path, course_base_path=base_path, sync_manager=sync_manager,
+                                            canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
+                                            progress_callback=progress_callback, debug_file=debug_file, error_root_path=Path(save_dir) if 'save_dir' in locals() else None,
+                                            course_name=course.name, module_path=target_path, isolate=False, has_attachments=False, metadata_pairs=[]
+                                        )
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -1256,7 +1265,14 @@ class CanvasManager:
                                 if file_filter == 'study': continue
                                 if not hasattr(item, 'page_url') or not item.page_url: continue
                                 page_obj = course.get_page(item.page_url)
-                                filepath = self._save_page(page_obj, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
+                                page_id = getattr(page_obj, 'page_id', getattr(page_obj, 'id', 0))
+                                filepath, _ = self._save_secondary_entity(
+                                    'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '', 
+                                    base_path, course_base_path=base_path, sync_manager=sync_manager,
+                                    canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
+                                    progress_callback=progress_callback, debug_file=debug_file, error_root_path=error_root_path,
+                                    course_name=course.name, module_path=base_path, isolate=False, has_attachments=False, metadata_pairs=[]
+                                )
                                 if filepath and filepath.exists():
                                     info = CanvasFileInfo(
                                         id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -1844,6 +1860,36 @@ class CanvasManager:
             )
 
         return filepath, synthetic_id
+
+    def _create_link(self, title, url, target_path, progress_callback=None, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=None):
+        safe_title = self._sanitize_filename(title)
+        filepath = target_path / f"{safe_title}.url"
+        filepath = self._handle_conflict(filepath)
+        
+        try:
+            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
+                f.write("[InternetShortcut]\n")
+                f.write(f"URL={url}\n")
+            if progress_callback: progress_callback(f'Created link: {safe_title}.url', progress_type='download')
+            
+            if sync_manager and course_base_path and canvas_item_id:
+                try:
+                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                    sync_manager.record_downloaded_file(
+                        canvas_file_id=canvas_item_id,
+                        canvas_filename=filepath.name,
+                        local_relative_path=rel_path,
+                        canvas_updated_at=datetime.now(timezone.utc).isoformat(),
+                        original_size=0
+                    )
+                except Exception:
+                    pass
+            return filepath
+        except Exception as e:
+            err = DownloadError(course_name, title, "Link Creation", str(e), raw_error=e)
+            if progress_callback: progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+            return None
 
     # --- Entity-Specific Fetchers -----------------------------------------
 

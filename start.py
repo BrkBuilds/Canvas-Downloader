@@ -73,91 +73,7 @@ def _wait_for_server(timeout_seconds: int = 60) -> bool:
     return False
 
 
-# ── Windows Launcher (Tkinter) ────────────────────────────────────
 
-class CanvasLauncher:
-    """Tkinter-based launcher window for Windows.
-
-    Shows a progress bar while Streamlit boots, then displays the server
-    URL and an "Open Browser" button.  Closing the window exits the app
-    and kills the Streamlit daemon thread.
-    """
-
-    def __init__(self):
-        import tkinter as tk
-        from tkinter import ttk
-
-        self.root = tk.Tk()
-        self.root.title("Canvas Downloader")
-        self.root.geometry("400x250")
-        self.root.resizable(False, False)
-
-        # Window icon
-        try:
-            self.root.iconbitmap(resolve_path("assets/icon.ico"))
-        except Exception:
-            pass
-
-        self.style = ttk.Style()
-        _font = "Segoe UI"
-        self.style.configure("TLabel", font=(_font, 10))
-        self.style.configure("Header.TLabel", font=(_font, 12, "bold"))
-
-        self.main_frame = ttk.Frame(self.root, padding="20")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
-
-        ttk.Label(
-            self.main_frame, text="Canvas Downloader", style="Header.TLabel"
-        ).pack(pady=(0, 20))
-
-        self.status_var = tk.StringVar(value="Starting application...")
-        ttk.Label(
-            self.main_frame, textvariable=self.status_var, wraplength=360
-        ).pack(pady=10)
-
-        self.progress = ttk.Progressbar(self.main_frame, mode='indeterminate')
-        self.progress.pack(fill=tk.X, pady=10)
-        self.progress.start(10)
-
-        ttk.Label(
-            self.main_frame,
-            text="Close this window to stop the application",
-            foreground="gray",
-        ).pack(side=tk.BOTTOM, pady=10)
-
-        self.server_started = False
-
-        # Background threads
-        threading.Thread(target=_start_streamlit_thread, daemon=True).start()
-        threading.Thread(target=self._monitor_server, daemon=True).start()
-
-    def _monitor_server(self):
-        """Poll the health endpoint and update the UI when ready."""
-        if _wait_for_server():
-            self.root.after(0, self._on_server_ready)
-
-    def _on_server_ready(self):
-        import tkinter as tk
-        from tkinter import ttk
-
-        if self.server_started:
-            return
-        self.server_started = True
-
-        self.status_var.set(f"Application running — visit {_STREAMLIT_URL}")
-        self.progress.stop()
-        self.progress.pack_forget()
-
-        ttk.Button(
-            self.main_frame,
-            text="Open Browser",
-            command=lambda: webbrowser.open(_STREAMLIT_URL),
-        ).pack(pady=5)
-
-        webbrowser.open(_STREAMLIT_URL)
-
-    def run(self):
-        self.root.mainloop()
 
 
 # ── macOS Launcher (AppleScript) ──────────────────────────────────
@@ -224,7 +140,16 @@ if __name__ == "__main__":
     if platform.system() == 'Darwin':
         _run_macos_launcher()
     else:
-        app = CanvasLauncher()
-        app.run()
+        import webview
+        
+        # Start Streamlit in the background
+        threading.Thread(target=_start_streamlit_thread, daemon=True).start()
+        
+        # Wait for Streamlit to be ready
+        _wait_for_server()
+        
+        # Create and start the native window
+        webview.create_window('Canvas Downloader', _STREAMLIT_URL, width=1280, height=800)
+        webview.start()
 
     sys.exit(0)
