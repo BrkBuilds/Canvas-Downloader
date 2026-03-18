@@ -1,7 +1,14 @@
+import sys
 import os
 import logging
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+# PyInstaller FFmpeg fix
+if getattr(sys, 'frozen', False):
+    import imageio_ffmpeg
+    ffmpeg_name = os.path.basename(imageio_ffmpeg.get_ffmpeg_exe())
+    os.environ["IMAGEIO_FFMPEG_EXE"] = os.path.join(sys._MEIPASS, "imageio_ffmpeg", "binaries", ffmpeg_name)
 
 try:
     # MoviePy v2.x
@@ -73,6 +80,7 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
     abs_mp3 = str(Path(video_path).with_suffix('.mp3').resolve().absolute())
     
     video_clip = None
+    conversion_success = False
     try:
         video_clip = VideoFileClip(abs_video)
         
@@ -85,9 +93,7 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
         # Extract audio and write to mp3. logger=None prevents console spam.
         video_clip.audio.write_audiofile(abs_mp3, logger=None)
         
-        # Delete original video file to save space
-        Path(abs_video).unlink(missing_ok=True)
-        
+        conversion_success = True
         return abs_mp3
         
     except Exception as e:
@@ -101,3 +107,10 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
             if video_clip.audio:
                 _safe_close(video_clip.audio, "audio")
             _safe_close(video_clip, "video")
+            
+        # Delete original video file to save space only if extraction succeeded
+        if conversion_success:
+            try:
+                Path(abs_video).unlink(missing_ok=True)
+            except Exception as cleanup_err:
+                logger.warning(f"Could not delete original video {abs_video}: {cleanup_err}")
