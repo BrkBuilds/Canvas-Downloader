@@ -1,7 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, copy_metadata
 import sys
 import os
+import imageio_ffmpeg
 
 datas = [
     ('app.py', '.'), 
@@ -21,10 +22,18 @@ datas = [
     ('url_compiler.py', '.'),
     ('version.py', '.'),
     ('theme.py', '.'),
-    ('assets', 'assets')
 ]
-binaries = []
+
+# Automatically locate the ffmpeg binary provided by imageio_ffmpeg
+ffmpeg_exe_path = imageio_ffmpeg.get_ffmpeg_exe()
+
+binaries = [
+    (ffmpeg_exe_path, 'imageio_ffmpeg/binaries')
+]
 hiddenimports = []
+
+# ImageIO needs its own metadata to survive importlib.metadata.version() checks
+datas += copy_metadata('imageio')
 
 # Collect all Streamlit dependencies
 tmp_ret = collect_all('streamlit')
@@ -61,6 +70,11 @@ hiddenimports += [
     'win32com.client',
     'pythoncom',
     'pywintypes',
+    'webview',
+    'webview.platforms.winforms',
+    'webview.platforms.edgechromium',
+    'moviepy.audio.fx.all',
+    'moviepy.video.fx.all',
 ]
 
 a = Analysis(
@@ -77,6 +91,8 @@ a = Analysis(
               'sqlalchemy',
               # Heavy packages not used by this app
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
+              'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
+              'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
               # More unused Streamlit features
               'streamlit.external.langchain'],
     noarchive=False,
