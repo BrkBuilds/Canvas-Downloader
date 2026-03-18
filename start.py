@@ -14,7 +14,7 @@ logging.disable(logging.CRITICAL)
 # ── Shared Utilities ──────────────────────────────────────────────
 
 _STREAMLIT_PORT = "8501"
-_STREAMLIT_URL = f"http://localhost:{_STREAMLIT_PORT}"
+_STREAMLIT_URL = f"http://127.0.0.1:{_STREAMLIT_PORT}"
 _HEALTH_ENDPOINT = f"{_STREAMLIT_URL}/_stcore/health"
 
 
@@ -42,6 +42,7 @@ def _start_streamlit_thread():
             "streamlit", "run", app_path,
             "--global.developmentMode=false",
             f"--server.port={_STREAMLIT_PORT}",
+            "--server.address=127.0.0.1",
             "--server.headless=true",
             "--theme.base=dark",
             "--theme.primaryColor=#0072CE",
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         _wait_for_server()
         
         # Create and start the native window
-        webview.create_window('Canvas Downloader', _STREAMLIT_URL, width=1280, height=800)
+        webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
         webview.start()
 
     sys.exit(0)
