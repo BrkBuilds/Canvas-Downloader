@@ -5667,7 +5667,13 @@ def _run_sync():
                         last_ui_update = curr_time
 
                     try:
-                        filename = cm._sanitize_filename(file.filename)
+                        # file.filename may contain subfolder prefixes
+                        # (e.g. "Assignments/Name/doc.pdf"). Sanitize each
+                        # path component individually to preserve hierarchy,
+                        # then extract only the basename — the parent
+                        # directory is already handled by calc_path routing.
+                        _fn_parts = Path(file.filename).parts
+                        filename = cm._sanitize_filename(_fn_parts[-1]) if _fn_parts else cm._sanitize_filename(file.filename)
                         
                         # Task 4: Target Path Resolution
                         target_dir = local_path
@@ -5740,12 +5746,26 @@ def _run_sync():
                                     if sec_attachments:
                                         from sync_manager import CanvasFileInfo as _CFI
                                         attach_dir = sec_filepath.parent
+                                        
+                                        # Deduplication guard: prevent double-queueing if
+                                        # the attachment was already in the sync selection
+                                        # (e.g. both HTML + attachment were locally deleted)
+                                        _queued_ids = {getattr(f, 'id', None) for f in all_files}
                                         for att in sec_attachments:
                                             att_id = att.get('id')
                                             att_url = att.get('url', '')
                                             att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                            
                                             if not att_url or not att_id:
                                                 continue
+                                                
+                                            # Guard against cross-queue and intra-document duplicates
+                                            if att_id in _queued_ids:
+                                                continue  
+                                                
+                                            # Add the ID to the set to prevent duplicate links 
+                                            # within the same HTML document from firing twice
+                                            _queued_ids.add(att_id)
                                             att_info = _CFI(
                                                 id=att_id,
                                                 filename=att_filename,
