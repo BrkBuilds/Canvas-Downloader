@@ -793,6 +793,13 @@ class SyncManager:
         try:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
+
+            # Secondary entities: tolerate ≤60s of Canvas API timestamp drift.
+            # These HTML files are regenerated from the API each sync, so minor
+            # drift (student activity, Canvas internals) is noise, not a real edit.
+            if canvas_file.id < 0 and canvas_file.id <= -(SECONDARY_ID_OFFSETS['assignment']):
+                return (canvas_dt - manifest_dt).total_seconds() > 60
+
             return canvas_dt > manifest_dt
         except (ValueError, TypeError):
             return False
