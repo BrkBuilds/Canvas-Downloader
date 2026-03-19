@@ -1,6 +1,9 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 4.4: Sync Loop Regression Fixes** (2026-03-19):
+    - [x] **Safe Path Sanitization**: Modified the download loop to sanitize only the filename basename via `Path.parts`, securely preserving `/` directory separators for subfolder-prefixed attachments.
+    - [x] **Bulletproof Deduplication Guard**: Implemented an intra-document hash set check (`_queued_ids.add(att_id)`) that prevents redundant downloads even when multiple links from the same HTML file point to the same Canvas resource.
 - [x] **Phase 4.3: Secondary Content Path Divergence & Performance Fixes** (2026-03-19):
     - [x] **Scanning Bypass**: Injected `is_scanning_phase` flags into `canvas_logic.py` and `app.py` to securely skip heavy API querying during initial course scanning, removing pre-download UI lockups.
     - [x] **Dynamic Metric Incrementing**: Created a reactive UI state lock emitting an explicit `total_items += 1` increment when individual secondary attachments are downloaded, seamlessly correcting progress bar math on-the-fly.

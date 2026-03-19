@@ -577,10 +577,22 @@ class CanvasManager:
                         att_id = att.get('id')
                         if not att_id:
                             continue
+
+                        # Unify namespace: prepend the parent entity's
+                        # subfolder so the filename mirrors the physical
+                        # extraction layout on disk.
+                        att_raw_name = att.get('filename',
+                                               att.get('display_name', 'attachment'))
+                        if isolate and has_attachments:
+                            att_prefixed_name = f"{routing['folder']}/{safe_name}/{att_raw_name}"
+                        elif isolate:
+                            att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
+                        else:
+                            att_prefixed_name = att_raw_name
+
                         items.append(CanvasFileInfo(
                             id=att_id,
-                            filename=att.get('filename',
-                                             att.get('display_name', 'attachment')),
+                            filename=att_prefixed_name,
                             display_name=att.get('display_name',
                                                  att.get('filename', 'attachment')),
                             size=att.get('size', 0),
@@ -2044,7 +2056,7 @@ class CanvasManager:
                 rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
                 sync_manager.record_downloaded_file(
                     canvas_file_id=synthetic_id,
-                    canvas_filename=filepath.name,
+                    canvas_filename=rel_path,
                     local_relative_path=rel_path,
                     canvas_updated_at=canvas_updated_at or '',
                     original_size=0,

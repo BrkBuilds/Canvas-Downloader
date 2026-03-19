@@ -557,7 +557,10 @@ class SyncManager:
                 if norm_name in local_files_map:
                     # Check all files with this name
                     for local_path, local_size in local_files_map[norm_name]:
-                        if local_size == c_file.size:
+                        # Synthetic secondary entities are stored with size=0
+                        # but the HTML on disk has content. Skip size check
+                        # for negative IDs and rely on path matching only.
+                        if c_file.id < 0 or local_size == c_file.size:
                             # Auto-discover the file and count it as up-to-date
                             try:
                                 rel_path = local_path.relative_to(self.local_path)
@@ -778,21 +781,15 @@ class SyncManager:
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry.
 
-        For *legacy* module-item synthetics (Pages, External URLs — IDs in
-        the -1 to -9,999,999 range) we return False because these objects
-        have no reliable ``updated_at`` timestamp.  The sync engine falls
-        back to a local-existence check for them.
-
-        For the *new* secondary-content entities (Assignments, Quizzes …)
-        whose negative IDs fall outside that legacy range, we have genuine
-        ``updated_at`` values from the Canvas API, so we run the normal
-        timestamp comparison.
+        For ALL synthetic entities with negative IDs we return False.
+        Legacy module-item synthetics (Pages, External URLs) have no
+        reliable ``updated_at`` timestamp. New secondary-content
+        entities (Assignments, Quizzes …) are regenerated from the live
+        Canvas API on every sync download, so timestamp-based diffing
+        is unnecessary — local existence is sufficient.
         """
         if canvas_file.id < 0:
-            # Legacy module-item synthetics: -1 to -9,999,999
-            if canvas_file.id > -(SECONDARY_ID_OFFSETS['assignment']):
-                return False
-            # New secondary entities — fall through to timestamp check
+            return False
 
         if not canvas_file.modified_at:
             return False
@@ -804,13 +801,6 @@ class SyncManager:
         try:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
-
-            # Secondary entities: tolerate ≤300s (5 min) of Canvas API timestamp
-            # drift. These HTML files are regenerated from the API each sync, and
-            # Canvas background jobs, student views, and cache flushes can cause
-            # multi-minute timestamp jitter that is NOT a real teacher edit.
-            if canvas_file.id < 0 and canvas_file.id <= -(SECONDARY_ID_OFFSETS['assignment']):
-                return (canvas_dt - manifest_dt).total_seconds() > 300
 
             return canvas_dt > manifest_dt
         except (ValueError, TypeError):
