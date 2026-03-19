@@ -474,7 +474,8 @@ class SyncManager:
     # --- Analysis ---
     
     def analyze_course(self, canvas_files: list[CanvasFileInfo], manifest: dict, 
-                       cm=None, download_mode: str = 'modules') -> AnalysisResult:
+                       cm=None, download_mode: str = 'modules',
+                       secondary_fetch_success: dict | None = None) -> AnalysisResult:
         """
         Compare Canvas files with local manifest to categorize files.
         Pre-calculates target paths and performs backend deduplication (matching new files to missing ones).
@@ -617,6 +618,16 @@ class SyncManager:
         for file_id, entry in files_section.items():
             if file_id not in seen_ids:
                 if not entry.get('is_ignored', False):
+                    int_id = int(file_id)
+                    # Guard: If this is a synthetic secondary ID and the
+                    # metadata fetch for its entity type failed, DO NOT mark
+                    # as deleted — the absence is due to an API error, not a
+                    # real teacher deletion.
+                    if int_id <= -(SECONDARY_ID_OFFSETS['assignment']) and secondary_fetch_success:
+                        etype = secondary_id_type(int_id)
+                        if etype and etype not in ('module_item', 'unknown'):
+                            if not secondary_fetch_success.get(etype, True):
+                                continue  # Skip — API failed for this type
                     sync_info = self._dict_to_sync_info(file_id, entry)
                     result.deleted_on_canvas.append(sync_info)
                     
@@ -794,11 +805,12 @@ class SyncManager:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
 
-            # Secondary entities: tolerate ≤60s of Canvas API timestamp drift.
-            # These HTML files are regenerated from the API each sync, so minor
-            # drift (student activity, Canvas internals) is noise, not a real edit.
+            # Secondary entities: tolerate ≤300s (5 min) of Canvas API timestamp
+            # drift. These HTML files are regenerated from the API each sync, and
+            # Canvas background jobs, student views, and cache flushes can cause
+            # multi-minute timestamp jitter that is NOT a real teacher edit.
             if canvas_file.id < 0 and canvas_file.id <= -(SECONDARY_ID_OFFSETS['assignment']):
-                return (canvas_dt - manifest_dt).total_seconds() > 60
+                return (canvas_dt - manifest_dt).total_seconds() > 300
 
             return canvas_dt > manifest_dt
         except (ValueError, TypeError):
