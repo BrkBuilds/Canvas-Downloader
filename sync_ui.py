@@ -59,6 +59,11 @@ from ui_helpers import (
     make_long_path,
 )
 
+from ui_shared import (
+    render_completion_card, render_folder_cards,
+    render_error_section, render_pp_warning,
+)
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -3425,7 +3430,7 @@ def _run_analysis(sync_pairs, main_placeholder=None):
             _secondary_settings = json.loads(_raw_secondary) if _raw_secondary else None
 
             sync_progress_hook(0, 1, "Fetching files from Canvas...")
-            canvas_files = cm.get_course_files_metadata(
+            canvas_files, sec_fetch_status = cm.get_course_files_metadata(
                 course,
                 progress_callback=sync_progress_hook,
                 secondary_content_settings=_secondary_settings,
@@ -3436,8 +3441,12 @@ def _run_analysis(sync_pairs, main_placeholder=None):
             
             sync_progress_hook(1, 1, "Comparing files...")
             detected = sync_mgr.detect_structure()
-            # Pass canvas manager to analyze_course for backend structure pre-calculation
-            result = sync_mgr.analyze_course(canvas_files, manifest, cm=cm, download_mode=detected)
+            # Pass canvas manager and secondary fetch status to analyze_course for backend structure pre-calculation
+            result = sync_mgr.analyze_course(
+                canvas_files, manifest, cm=cm,
+                download_mode=detected,
+                secondary_fetch_success=sec_fetch_status
+            )
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
             
@@ -5089,7 +5098,7 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, tot
             icon = get_file_icon(f.filename)
             fname = get_friendly_name(f.display_name or f.filename)
             file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
-        for f, _ in s['updates']:
+        for f in s['updates']:
             icon = get_file_icon(f.filename)
             fname = get_friendly_name(f.display_name or f.filename)
             file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
@@ -5746,11 +5755,17 @@ def _run_sync():
                                                 url=att_url,
                                             )
                                             # Set target path so the download loop routes correctly
-                                            att_info._target_local_path = str(
-                                                attach_dir / cm._sanitize_filename(att_filename)
-                                            )
+                                            try:
+                                                att_info._target_local_path = str(
+                                                    (attach_dir / cm._sanitize_filename(att_filename)).relative_to(local_path)
+                                                )
+                                            except ValueError:
+                                                # Fallback: attachment dir is outside local_path — use filename only
+                                                att_info._target_local_path = cm._sanitize_filename(att_filename)
                                             all_files.append(att_info)
                                             total_files += 1
+                                            terminal_log.append(f"<span style='color:{theme.ACCENT_BLUE}'>[📎] Queued attachment: </span> {esc(att_filename)}")
+                                            log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                 else:
                                     terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>[⚠️] Skipped: </span> {esc(display_file_name)}")
                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -6308,75 +6323,14 @@ def _show_sync_complete():
     render_progress_bar(st, 1, 1, mode=mode, custom_text=custom_text)
 
     # Summary card logic
-    # We want to be very clear about what happened.
-    # Scenarios:
-    # 1. Full Failure: 0 synced, >0 errors -> RED Error, NO Success card.
-    # 3. Success: >0 synced, 0 errors -> GREEN Success card.
-    # 4. Nothing to sync (should be caught earlier, but just in case): Info.
-
     total_bytes = st.session_state.get('synced_bytes', 0)
-    sync_selections = st.session_state.get('sync_selections', [])
     
-    # Calculate breakdown of what was actually downloaded
-    total_upd = sum(len(s.get('updates', [])) for s in sync_selections)
-    # This might be slightly off if some updates failed, but close enough for summary unless we track per-file success type.
-    # Let's rely on synced_count.
-    # Heuristic: We don't know exactly which files failed (update vs new), so we'll just display totals if possible,
-    # or simplify the message.
-    
-    file_word = ("file" if synced_count == 1 else "files")
-    error_word = ("error" if len(sync_errors) == 1 else "errors")
-
-    if synced_count == 0 and sync_errors:
-        # Scenario 1: Full Failure
-        st.error('Sync failed for all files.')
-        # No green card.
-    
-    elif synced_count > 0 and sync_errors:
-        # Scenario 2: Partial Success
-        # Yellow card
-        success_title = f"Partial Success! Synced {synced_count} {file_word} with {len(sync_errors)} {error_word}"
-        summary_text = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.'
-        
-        st.markdown(f"""
-        <div style="background-color:#3a2a1a;border:1px solid {theme.WARNING_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:{theme.WARNING_ALT};font-weight:600;font-size:1.05em;">
-                ⚠️ {success_title}
-            </div>
-            <div style="color:#ccc;font-size:0.85em;margin-top:4px;">
-                {summary_text}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        # st.balloons() # Maybe no balloons for partial?
-
-    elif synced_count > 0:
-        # Scenario 3: Success
-        # Green card
-        success_title = f'Sync Success! Synced {synced_count} {file_word}'
-        summary_text = f"{format_file_size(total_bytes)} downloaded."
-
-        st.markdown(f"""
-        <div style="background-color:#1a3a2a;border:1px solid {theme.SUCCESS_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:{theme.SUCCESS_ALT};font-weight:600;font-size:1.05em;">
-                🎉 {success_title}
-            </div>
-            <div style="color:#aaa;font-size:0.85em;margin-top:4px;">
-                {summary_text}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.balloons()
-    
-
-    
-    else:
-        # synced_count == 0 and no errors — all files are already up to date
-        up_to_date_count = st.session_state.get('up_to_date_file_count', 0)
-        if up_to_date_count:
-            st.success(f"All selected folders are up to date! ({up_to_date_count} files already downloaded)")
-        else:
-            st.success("Nothing to sync — all files are up to date!")
+    render_completion_card(
+        synced_count=synced_count,
+        error_count=len(sync_errors),
+        total_bytes=total_bytes,
+        mode='sync'
+    )
 
     # UN-TRAPPED QUICK SYNC WARNING:
     skipped_data = st.session_state.get('qs_skipped', {})
@@ -6397,14 +6351,12 @@ def _show_sync_complete():
         if 'qs_skipped' in st.session_state:
             del st.session_state['qs_skipped']
 
-    # Post-processing failure warning (M-7)
-    pp_failures = st.session_state.get('pp_failure_count', 0)
-    if pp_failures > 0:
-        _pp_word = "file" if pp_failures == 1 else "files"
-        st.warning(f"⚠️ {pp_failures} {_pp_word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
+    # Post-processing failure warning
+    render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
     retry_selections = st.session_state.get('retry_selections', [])
 
+    # We use sync_ui's custom _show_sync_errors wrapper which sets up its own expander
     _show_sync_errors()
 
     if sync_errors and retry_selections:
@@ -6420,111 +6372,27 @@ def _show_sync_complete():
 
     # Folders updated — card style with dropdown
     sync_pairs = st.session_state.get('sync_pairs', [])
-    
-    # Filter to show only pairs that actually had synced files (or we can show all attempted)
-    # User said: "Folders updated should have a dropdown inside showing the files added"
-    # We'll show all pairs that were part of the selection, but only list files if they exist.
-    
     sync_selections = st.session_state.get('sync_selections', [])
     
-    # Only show "Folders Updated" if we actually synced something
-    has_synced_files = any(len(files) > 0 for files in synced_details.values())
-
-    if sync_selections and has_synced_files:
-        st.markdown("#### 📁 " + 'Folders Updated')
-
+    # Translate synced_details format to match render_folder_cards API
+    # synced_details holds pair_idx -> list of filenames
+    file_dropdown_details = {}
+    folder_paths_map = {}
+    
+    if sync_selections:
         for sel in sync_selections:
             pair_idx = sel['pair_idx']
             if pair_idx >= len(sync_pairs):
                 continue
-
             pair = sync_pairs[pair_idx]
             display_name = friendly_course_name(pair['course_name'])
-            folder_display = short_path(pair['local_folder'])
-
-            # Get synced files for this pair
-            files_synced = synced_details.get(pair_idx, [])
-
-            if not files_synced:
-                continue
-
-            # Wrap folder header + Open button + file list in a visual card.
-            # Use a bordered container with CSS overrides to remove the nested
-            # expander border and tighten spacing so the dropdown sits right
-            # below the folder title.
-            with st.container(border=True):
-                # CSS: remove inner expander border & tighten horizontal row
-                st.markdown(f"""<style>
-                /* Remove border from expanders nested inside bordered containers */
-                div[data-testid="stExpander"] {{
-                    border: none !important;
-                    box-shadow: none !important;
-                    padding: 0 !important;
-                    margin-top: 0 !important; /* Reset out the negative margin previously used */
-                }}
-                /* Tighten the parent container padding to reduce top dead space */
-                div[data-testid="stVerticalBlock"]:has(span#folder_row_{pair_idx}) {{
-                    padding-top: 5px !important;
-                }}
-                /* Tight horizontal column layouts for the folder display */
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) {{
-                    align-items: center !important;
-                    gap: 15px !important; /* Increased gap between course name and button */
-                    min-height: 0 !important;
-                    margin-bottom: 0px !important; /* Reduced expander gap to 0px */
-                }}
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stColumn"] {{
-                    width: auto !important;
-                    flex: 0 0 auto !important;
-                    min-width: 0 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                }}
-                /* Fix negative margins that clip text and break flex alignment */
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stMarkdownContainer"] {{
-                    margin: 0 !important;
-                }}
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stMarkdown"] {{
-                    display: flex !important;
-                    align-items: center !important;
-                    overflow: visible !important;
-                }}
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) div[data-testid="stElementContainer"] {{
-                    margin: 0 !important;
-                    overflow: visible !important;
-                }}
-                /* Kill paragraph margins & normalize line height to allow perfect alignment */
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) p {{
-                    margin: 0 !important;
-                    line-height: 1.4 !important;
-                }}
-                /* Target the specific Open Folder button to adjust height/padding and vertical position */
-                div[data-testid="stHorizontalBlock"]:has(span#folder_row_{pair_idx}) button {{
-                    border: 1px solid rgba(255,255,255,0.3) !important;
-                    padding: 4px 14px !important;
-                    font-size: 0.85rem !important;
-                    line-height: 1.4 !important;
-                    min-height: 0 !important;
-                    height: auto !important;
-                    /* Translate is more reliable than margin inside a flex container */
-                    transform: translateY(-2px) !important; 
-                }}
-                </style>""", unsafe_allow_html=True)
-
-                c1, c2, c3 = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
-                with c1:
-                    st.markdown(f'<span id="folder_row_{pair_idx}"></span>**📁 {folder_display}**', unsafe_allow_html=True)
-                with c2:
-                    if Path(pair['local_folder']).exists():
-                        if st.button('📂 Open folder', key=f"open_complete_{pair_idx}"):
-                            open_folder(pair['local_folder'])
-                with c3:
-                    st.empty()
-
-                with st.expander(f'See {len(files_synced)} synced files'):
-                    for fname in files_synced:
-                        st.markdown(f"<div style='font-size:0.85em;color:#ccc;'>✅ {fname}</div>", unsafe_allow_html=True)
-                    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+            
+            # Use display_name suffix to avoid key collisions on similar names
+            f_key = f"{display_name} ({pair_idx})"
+            file_dropdown_details[f_key] = synced_details.get(pair_idx, [])
+            folder_paths_map[f_key] = pair['local_folder']
+            
+    render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete')
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     if st.button("🏠 " + 'Go to front page', type="primary", use_container_width=True):
