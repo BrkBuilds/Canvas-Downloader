@@ -14,6 +14,11 @@
 - **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
 - **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
 
+## Recent Changes (Session 2026-03-19 — Secondary Content Post-Fix Bug Fixes)
+- **Universal Attachment Offloading (`canvas_logic.py`, `sync_ui.py`)**: Modified the architecture of `download_secondary_entity()` to return a 3-tuple `(filepath, synthetic_id, attachments)`. This extracts inner Canvas files (e.g. Assignment attachments) and allows `sync_ui.py` to mint real, positive ID `CanvasFileInfo` objects containing direct URLs, dynamically appending them to the active `all_files` sync iteration queue. This allows attachments to inherently benefit from the main async loop's retries, `.part` atomicity, and cancellation monitoring.
+- **Canvas API Timestamp Drift Tolerance (`sync_manager.py`)**: Solved the False Positive "Updates Available" bug affecting synthetic entities by injecting a 60-second tolerance window into `_is_canvas_newer()` strictly for IDs matching the secondary content negative registry ranges (`id <= -10000000`).
+- **Sync Review Tuple Crash (`sync_ui.py`)**: Resolved a `TypeError: 'CanvasFileInfo' object is not subscriptable` in `_show_analysis_review()` layout logic by correctly referencing `f.size` instead of `f[0].size` after the variables had already been destructured from the initial payload tuples.
+
 ## Recent Changes (Session 2026-03-19 — Metric Card UI Hotfix)
 - **Inactive Metric Card Styling (`sync_ui.py`)**: Resolved a CSS parsing bug where literal Python f-string brackets (`"{theme.SUCCESS_ALT}"`) were inadvertently passed directly to the `_render_metric_card` function rather than being evaluated. This generated invalid CSS (e.g. `linear-gradient(..., {theme.SUCCESS_ALT}1A)`), causing modern browsers to silently drop the background and border properties for zero-value sync counters. Removed the string wrappers, allowing proper hex resolution and restoring the intended muted/dimmed aesthetic for inactive file type metrics.
 

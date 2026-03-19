@@ -208,6 +208,14 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Solution*: Extract the true, positive `file.id` direct from the attachment metadata block. Send it directly into the standard `_download_file_async()` pipeline without mutation. Deduplication naturally deduplicates the byte-for-byte matches.
 - **Analysis Engine**: Diffing Canvas vs Local Manifest vs Local Disk.
 - **Path Determination**: `detect_structure()` must precede analysis to correctly calculate relative paths for "Flat" vs "Folders" modes.
+- **Universal Secondary Handler**:
+    - *Pattern*: `download_secondary_entity()` in `canvas_logic.py` serves as the single source of truth for both the initial download pipeline and the secondary sync loop, returning a standardized 3-tuple `(filepath, synthetic_id, attachments)`.
+- **Sync Loop Attachment Offloading**:
+    - *Problem*: Secondary entities (Assignments, Announcements) can contain real Canvas file attachments. Downloading these synchronously inside the HTML generation function blocks the Streamlit UI thread and breaks cancellation hooks.
+    - *Solution*: Extract the metadata and return it to the caller. `sync_ui.py` then dynamically mints mock `CanvasFileInfo` objects with **positive** Canvas IDs and appends them directly back into the live `all_files` async queue. This forces attachments to seamlessly inherit the high-performance async HTTP pipeline, atomic `.part` writing, and deduplication tracking natively utilized by standard files.
+- **Canvas API Timestamp Tolerance**:
+    - *Problem*: Generating HTML for secondary entities relies on dynamic `updated_at` API endpoints. Minor 5-10 second timestamp drift (from internal Canvas student activity or micro-versioning) causes the Sync engine to endlessly flag freshly downloaded secondary content as "Updates Available".
+    - *Solution*: `_is_canvas_newer()` enforces a >60 second tolerance window exclusively for negative IDs in the secondary offset range. Real file IDs retain strict millisecond precision matching.
 
 ## Error Handling & Logging
 - **Locked File Pruning**: Pre-filtering Canvas `File` objects for missing `url` attributes to prevent batch download crashes.
