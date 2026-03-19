@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
 from ui_helpers import esc, friendly_course_name, parse_cbs_metadata, render_download_wizard
+from ui_shared import (
+    render_completion_card, render_folder_cards,
+    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
+)
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
@@ -1245,7 +1249,22 @@ with _main_content.container():
                 
                 # Use robust Hybrid file fetching logic directly, identical to actual download loop
                 try:
-                    course_files = cm.get_course_files_metadata(course, progress_callback=analysis_progress_hook)
+                    # Build scanning-phase secondary settings for accurate counting
+                    _scan_secondary = {
+                        'download_assignments': st.session_state.get('persistent_dl_assignments', False),
+                        'download_syllabus': st.session_state.get('persistent_dl_syllabus', False),
+                        'download_announcements': st.session_state.get('persistent_dl_announcements', False),
+                        'download_discussions': st.session_state.get('persistent_dl_discussions', False),
+                        'download_quizzes': st.session_state.get('persistent_dl_quizzes', False),
+                        'download_rubrics': st.session_state.get('persistent_dl_rubrics', False),
+                        'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
+                    }
+                    course_files, _ = cm.get_course_files_metadata(
+                        course,
+                        progress_callback=analysis_progress_hook,
+                        secondary_content_settings=_scan_secondary,
+                        is_scanning_phase=True
+                    )
                     
                     # Apply file filter if needed ('study' vs 'all')
                     allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
@@ -1394,6 +1413,14 @@ with _main_content.container():
                 # Render initial state
                 render_dashboard()
                 
+                def _clean_display_name(raw_msg):
+                    """Strip progress-callback prefixes so only the bare filename is stored."""
+                    s = str(raw_msg)
+                    for prefix in ('Downloading file: ', 'Created link: ', 'Saved: '):
+                        if s.startswith(prefix):
+                            return s[len(prefix):]
+                    return s
+                
                 def update_ui(msg, progress_type='log', **kwargs):
                     """Update UI with progress information. Wrapped in try/except for async safety."""
                     try:
@@ -1401,12 +1428,71 @@ with _main_content.container():
                         if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
                             return
                         
+                        # Lazy-init download file details tracker
+                        if 'download_file_details' not in st.session_state:
+                            st.session_state['download_file_details'] = {}
+
                         if progress_type in ('download', 'page', 'link'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
                                 active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
                                 log_deque.append(f"[✅] Finished: {msg}")
+                                # Track filename for completion screen
+                                course_key = course.name
+                                if course_key not in st.session_state['download_file_details']:
+                                    st.session_state['download_file_details'][course_key] = []
+                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
+                                # Guardrail 2: Force state rebind for deep mutation
+                                st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
+
+                        elif progress_type == 'secondary':
+                            # Secondary content entity (Assignment, Quiz, etc.)
+                            st.session_state['downloaded_items'] += 1
+                            entity_type = kwargs.get('entity_type', '')
+                            icon = SECONDARY_ENTITY_ICONS.get(entity_type, '📄')
+                            if msg:
+                                active_file_placeholder.markdown(
+                                    f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>"
+                                    f"🔄 {icon} Saving {entity_type}: {msg}...</div>",
+                                    unsafe_allow_html=True,
+                                )
+                                log_deque.append(f"[✅] {icon} Saved: {msg}")
+                                # Track for completion screen
+                                course_key = course.name
+                                if course_key not in st.session_state['download_file_details']:
+                                    st.session_state['download_file_details'][course_key] = []
+                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
+                                # Guardrail 2: Force state rebind for deep mutation
+                                st.session_state['download_file_details'] = st.session_state['download_file_details']
+                            render_dashboard()
+
+                        elif progress_type == 'attachment':
+                            # Individual attachment queued/finished
+                            st.session_state['total_items'] = st.session_state.get('total_items', 0) + 1
+                            st.session_state['downloaded_items'] += 1
+                            if msg:
+                                log_deque.append(f"<span style='color: {theme.ACCENT_BLUE};'>[📎] Attachment: {msg}</span>")
+                                course_key = course.name
+                                if course_key not in st.session_state['download_file_details']:
+                                    st.session_state['download_file_details'][course_key] = []
+                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
+                                # Guardrail 2: Force state rebind for deep mutation
+                                st.session_state['download_file_details'] = st.session_state['download_file_details']
+                            render_dashboard()
+
+                        elif progress_type == 'phase':
+                            # Phase transition (e.g. "Files" → "Secondary Content")
+                            phase_name = kwargs.get('phase_name', 'Processing')
+                            new_total = kwargs.get('new_total', 0)
+                            if new_total > 0:
+                                st.session_state['total_items'] += new_total
+                            log_deque.append(
+                                f"<span style='color: {theme.ACCENT_BLUE};'>"
+                                f"[📦] Phase: {phase_name}</span>"
+                            )
+                            render_dashboard()
+
                             
                         elif progress_type == 'error':
                             st.session_state['failed_items'] += 1
@@ -1587,101 +1673,80 @@ with _main_content.container():
                 # -------------------------------------------------------------------
         
         elif st.session_state['download_status'] == 'done':
-            st.success('Download Completed Successfully!')
-            # Show download location (no background color)
-            st.markdown(f"**{f"You can find the downloaded files here: {st.session_state['download_path']}"}**")
-            # Show final progress bar at 100%
-            try:
-                progress_container.markdown(f"""
-                    <div style="position: relative; height: 35px; background-color: #f0f2f6; border-radius: 5px; overflow: hidden;">
-                        <div style="width: 100%; height: 100%; background-color: #1f77b4;"></div>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #333;">{'Complete!'}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-                status_text.text(f'Downloaded {total} course(s).')
-            except Exception:
-                pass
-            
-            # Post-processing failure warning (M-7)
-            pp_failures = st.session_state.get('pp_failure_count', 0)
-            if pp_failures > 0:
-                _pp_word = "file" if pp_failures == 1 else "files"
-                st.warning(f"⚠️ {pp_failures} {_pp_word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
+            # --- Premium Completion Screen (Parity with Sync) ---
+            download_errors = st.session_state.get('download_errors_list', [])
+            failed_count = st.session_state.get('failed_items', 0)
+            total_mb = st.session_state.get('total_mb', 0)
+            total_bytes = int(total_mb * 1024 * 1024)
 
-            # Check for download errors (In-Memory first, fallback to disk)
-            error_messages = st.session_state.get('download_errors_list', [])
-            
-            # Fallback (optional): If empty, check disk (legacy/redundant if list works)
-            if not error_messages:
-                from pathlib import Path
-                download_path = Path(st.session_state['download_path'])
-                
-                # Collect errors from all course folders
-                for course in st.session_state['courses_to_download']:
-                    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                    course_name = cm._sanitize_filename(course.name)
-                    error_file = download_path / course_name / "download_errors.txt"
-                    if error_file.exists():
-                        try:
-                            with open(error_file, 'r', encoding='utf-8') as f:
-                                errors = f.read().strip()
-                                if errors:
-                                    error_messages.extend(errors.split('\n'))
-                        except Exception:
-                            pass
-            
-            # Display error summary if there are errors
-            if error_messages:
-                st.warning(f'⚠️ {len(error_messages)} error(s) occurred during download')
-                
-                with st.expander('View Error Details', expanded=True):
-                    # Group by course
-                    errors_by_course = {}
-                    for err in error_messages:
-                        c_name = err.course_name if isinstance(err, DownloadError) else "Unknown"
-                        if c_name not in errors_by_course: errors_by_course[c_name] = []
-                        errors_by_course[c_name].append(err)
-                    
-                    for course_name, errs in errors_by_course.items():
-                        st.markdown(f"**{course_name}** ({len(errs)})")
-                        for err in errs:
-                            if isinstance(err, DownloadError):
-                                item_label = f"{err.item_name}: " if err.item_name else ""
-                                st.markdown(f"- {item_label}{err.message}", unsafe_allow_html=True)
-                            else:
-                                st.text(f"  • {err}")
-                    
-                    st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
+            # Build the set of failed filenames so we can filter them out of the
+            # file-detail list. This ensures the card count matches the expander.
+            _failed_names = set()
+            for err in download_errors:
+                if hasattr(err, 'item_name') and err.item_name:
+                    _failed_names.add(err.item_name)
 
-                # In-App Error Log Viewer — collect error log paths from course folders
-                download_path = Path(st.session_state['download_path'])
-                error_log_paths = []
-                for course in st.session_state.get('courses_to_download', []):
-                    cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                    course_folder = download_path / cm_temp._sanitize_filename(course.name)
-                    log_file = course_folder / "download_errors.txt"
-                    if log_file.exists():
-                        error_log_paths.append(log_file)
-                
-                if error_log_paths:
-                    col_log_dl, _ = st.columns([0.3, 0.7])
-                    with col_log_dl:
-                        if st.button("📄 View Full Error Log", key="dl_view_error_log", use_container_width=True):
-                            _download_error_log_dialog(error_log_paths)
+            file_details_raw = st.session_state.get('download_file_details', {})
+            file_details = {}
+            for k, names in file_details_raw.items():
+                filtered = [n for n in names if n not in _failed_names]
+                if filtered:
+                    file_details[k] = filtered
+            st.session_state['download_file_details'] = file_details
 
-                # Retry Button
+            success_count = sum(len(v) for v in file_details.values())
+
+            # 1. Summary card
+            render_completion_card(
+                synced_count=success_count,
+                error_count=len(download_errors),
+                total_bytes=total_bytes,
+                mode='download',
+            )
+
+
+            # 2. Post-processing warning
+            render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+            # 3. Error section
+            download_path = Path(st.session_state['download_path'])
+            error_log_paths = []
+            for c in st.session_state.get('courses_to_download', []):
+                cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                log_file = download_path / cm_temp._sanitize_filename(c.name) / "download_errors.txt"
+                if log_file.exists():
+                    error_log_paths.append(log_file)
+
+            render_error_section(
+                download_errors, error_log_paths,
+                dialog_fn=_download_error_log_dialog,
+                key_prefix='dl',
+            )
+
+            # 4. Retry button (only if errors)
+            if download_errors:
                 st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
-                retry_label = "Retry Failed Items"
                 col_retry, _ = st.columns([0.25, 0.75])
                 with col_retry:
-                    if st.button(f"🔄 {retry_label}", type="secondary", key="retry_failed_btn", use_container_width=True):
-                         st.session_state['current_course_index'] = 0
-                         st.session_state['download_status'] = 'scanning'
-                         st.session_state['downloaded_items'] = 0
-                         st.session_state['failed_items'] = 0
-                         st.session_state['download_errors_list'] = []
-                         st.session_state['log_content'] = ""
-                         st.rerun()
+                    if st.button("🔄 Retry Failed Items", type="secondary", key="retry_failed_btn",
+                                 use_container_width=True):
+                        st.session_state['current_course_index'] = 0
+                        st.session_state['download_status'] = 'scanning'
+                        st.session_state['downloaded_items'] = 0
+                        st.session_state['failed_items'] = 0
+                        st.session_state['download_errors_list'] = []
+                        st.session_state['log_content'] = ""
+                        st.rerun()
+
+            # 5. Per-course folder cards with file dropdowns
+            # file_details was already filtered above
+            folder_paths = {}
+            for c in st.session_state.get('courses_to_download', []):
+                cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                course_folder = download_path / cm_temp._sanitize_filename(c.name)
+                folder_paths[c.name] = str(course_folder)
+
+            render_folder_cards(file_details, folder_paths, key_prefix='dl')
         
         elif st.session_state['download_status'] == 'cancelled':
             # Premium styled cancellation card (matches sync_ui.py design)

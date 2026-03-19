@@ -64,6 +64,59 @@ SECONDARY_CONTENT_DEFAULTS = {
     'isolate_secondary_content': True,   # True = Mode B (subfolder), False = Mode A (inline)
 }
 
+
+def _extract_canvas_file_links(html_body):
+    """Parse an HTML body and extract Canvas file download links.
+
+    Instructors often embed file references as ``<a>`` tags inside
+    assignment/announcement descriptions rather than using the Canvas
+    ``attachments`` API field.  This function discovers those links.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has ``'file_id'`` (int) and ``'link_text'`` (str).
+        Deduplicated by ``file_id``.
+    """
+    if not html_body:
+        return []
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html_body, 'html.parser')
+    except Exception:
+        return []
+
+    seen_ids = set()
+    results = []
+
+    for a_tag in soup.find_all('a', href=True):
+        href = a_tag['href']
+        if '/files/' not in href:
+            continue
+
+        # Extract file_id from patterns like:
+        #   /courses/123/files/456/download
+        #   /files/456/download?download_frd=1
+        #   /courses/123/files/456?wrap=1
+        try:
+            # Split on '/files/' and take the segment after it
+            after_files = href.split('/files/', 1)[1]
+            # The file_id is the next path segment (digits)
+            file_id_str = after_files.split('/')[0].split('?')[0]
+            file_id = int(file_id_str)
+        except (IndexError, ValueError):
+            continue
+
+        if file_id in seen_ids:
+            continue
+        seen_ids.add(file_id)
+
+        link_text = a_tag.get_text(strip=True) or f'file_{file_id}'
+        results.append({'file_id': file_id, 'link_text': link_text})
+
+    return results
+
+
 # Maps entity types to their subfolder names (Mode B) and prefixes (Mode A)
 _ENTITY_ROUTING = {
     'assignment':   {'folder': 'Assignments',   'prefix': 'Assignment'},
@@ -182,7 +235,7 @@ class CanvasManager:
                     course_list.append(course)
         return course_list
 
-    def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None):
+    def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None, is_scanning_phase=False):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -248,10 +301,11 @@ class CanvasManager:
             logger.error(f"Error during module scan fallback: {e}")
 
         # --- Phase 3: Secondary Content Metadata ---
+        secondary_fetch_success = {}
         if secondary_content_settings:
             try:
-                secondary_items = self.get_secondary_content_metadata(
-                    course, secondary_content_settings,
+                secondary_items, secondary_fetch_success = self.get_secondary_content_metadata(
+                    course, secondary_content_settings, is_scanning_phase=is_scanning_phase
                 )
                 for s_info in secondary_items:
                     if s_info.id not in all_files_map:
@@ -259,7 +313,7 @@ class CanvasManager:
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
             
-        return list(all_files_map.values())
+        return list(all_files_map.values()), secondary_fetch_success
     
     def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None):
         """Fallback: Get files by iterating through modules.
@@ -358,8 +412,8 @@ class CanvasManager:
                     ))
         return files
 
-    def get_secondary_content_metadata(self, course, settings):
-        """Return CanvasFileInfo list for *standalone* secondary content.
+    def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False):
+        """Return (items, fetch_success) for *standalone* secondary content.
 
         This covers entities that are NOT linked from any module and thus
         would not be surfaced by ``_get_files_from_modules``.  Examples:
@@ -367,10 +421,19 @@ class CanvasManager:
 
         Used by the sync analysis path to detect new/updated/missing
         secondary entities in the manifest.
+
+        Returns
+        -------
+        tuple[list[CanvasFileInfo], dict[str, bool]]
+            ``(items, fetch_success)`` where ``fetch_success`` maps entity
+            type strings to True/False indicating whether the API call
+            succeeded.  The sync engine uses this to guard against false
+            deletions when a fetch times out.
         """
         from sync_manager import CanvasFileInfo
 
         items = []
+        fetch_success = {}
 
         # Syllabus
         if settings.get('download_syllabus'):
@@ -379,17 +442,24 @@ class CanvasManager:
                     course.id, include=['syllabus_body'],
                 )
                 if getattr(full_course, 'syllabus_body', None):
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['syllabus']
+                    if isolate:
+                        syl_filename = f"{routing['folder']}/Syllabus.html"
+                    else:
+                        syl_filename = f"{routing['prefix']}: Syllabus.html"
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('syllabus', course.id),
-                        filename='Syllabus.html',
+                        filename=syl_filename,
                         display_name='Syllabus',
                         size=0,
                         modified_at=getattr(full_course, 'updated_at', ''),
                         url='',
                         content_type='text/html',
                     ))
+                fetch_success['syllabus'] = True
             except Exception:
-                pass
+                fetch_success['syllabus'] = False
 
         # Announcements
         if settings.get('download_announcements'):
@@ -398,35 +468,130 @@ class CanvasManager:
                 for topic in topics:
                     t_id = getattr(topic, 'id', 0)
                     title = getattr(topic, 'title', 'Announcement')
+                    safe_title = self._sanitize_filename(title)
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['announcement']
+                    
+                    if isolate:
+                        ann_filename = f"{routing['folder']}/{safe_title}.html"
+                    else:
+                        ann_filename = f"{routing['prefix']}: {safe_title}.html"
+                        
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('announcement', t_id),
-                        filename=self._sanitize_filename(title) + '.html',
+                        filename=ann_filename,
                         display_name=title,
                         size=0,
                         modified_at=getattr(topic, 'posted_at', ''),
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
                     ))
+                fetch_success['announcement'] = True
             except Exception:
-                pass
+                fetch_success['announcement'] = False
 
-        # Standalone Assignments (ones not in modules are caught here)
+        # Standalone Assignments — fetch individually for timestamp parity
+        # and attachment discovery (mirrors the download path exactly).
         if settings.get('download_assignments'):
             try:
                 for assignment in course.get_assignments():
                     a_id = getattr(assignment, 'id', 0)
+                    a_name = getattr(assignment, 'name', 'Assignment')
+                    a_updated = getattr(assignment, 'updated_at', '') or ''
+
+                    if not is_scanning_phase:
+                        # Full sync analysis: fetch individually for
+                        # timestamp parity and attachment discovery.
+                        try:
+                            full_assignment = course.get_assignment(a_id)
+                        except Exception:
+                            full_assignment = assignment
+                        a_name = getattr(full_assignment, 'name', 'Assignment')
+                        a_updated = getattr(full_assignment, 'updated_at', '') or ''
+
+                    # --- Build the correct filename path ---
+                    safe_name = self._sanitize_filename(a_name)
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['assignment']
+
+                    # Discover attachments (only in full analysis mode)
+                    attachments = []
+                    if not is_scanning_phase:
+                        try:
+                            raw_att = getattr(full_assignment, 'attachments', None)
+                            if raw_att and isinstance(raw_att, list):
+                                attachments = list(raw_att)
+                        except Exception:
+                            pass
+
+                        # Inline file links from the description HTML
+                        a_desc = getattr(full_assignment, 'description', '') or ''
+                        existing_att_ids = {
+                            a.get('id') for a in attachments if isinstance(a, dict)
+                        }
+                        for link_info in _extract_canvas_file_links(a_desc):
+                            fid = link_info['file_id']
+                            if fid in existing_att_ids:
+                                continue
+                            try:
+                                canvas_file = course.get_file(fid)
+                                attachments.append({
+                                    'id': canvas_file.id,
+                                    'url': canvas_file.url,
+                                    'filename': getattr(canvas_file, 'filename',
+                                                        link_info['link_text']),
+                                    'display_name': getattr(canvas_file, 'display_name',
+                                                            link_info['link_text']),
+                                    'size': getattr(canvas_file, 'size', 0),
+                                    'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                    'content-type': getattr(canvas_file, 'content_type', ''),
+                                })
+                                existing_att_ids.add(canvas_file.id)
+                            except Exception:
+                                pass  # Inaccessible file — skip silently
+
+                    has_attachments = bool(attachments)
+
+                    # Build the filename to match _resolve_secondary_path
+                    if isolate:
+                        if has_attachments:
+                            entity_filename = f"{routing['folder']}/{safe_name}/{safe_name}.html"
+                        else:
+                            entity_filename = f"{routing['folder']}/{safe_name}.html"
+                    else:
+                        entity_filename = f"{routing['prefix']}: {safe_name}.html"
+
+                    # 1) The Assignment HTML entity itself (negative synthetic ID)
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('assignment', a_id),
-                        filename=self._sanitize_filename(
-                            getattr(assignment, 'name', 'Assignment')) + '.html',
-                        display_name=getattr(assignment, 'name', 'Assignment'),
+                        filename=entity_filename,
+                        display_name=a_name,
                         size=0,
-                        modified_at=getattr(assignment, 'updated_at', ''),
+                        modified_at=a_updated,
                         url=getattr(assignment, 'html_url', ''),
                         content_type='text/html',
                     ))
+
+                    # 2) Yield each attachment as a true CanvasFileInfo
+                    for att in attachments:
+                        att_id = att.get('id')
+                        if not att_id:
+                            continue
+                        items.append(CanvasFileInfo(
+                            id=att_id,
+                            filename=att.get('filename',
+                                             att.get('display_name', 'attachment')),
+                            display_name=att.get('display_name',
+                                                 att.get('filename', 'attachment')),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', a_updated),
+                            url=att.get('url', ''),
+                            content_type=att.get('content-type', ''),
+                        ))
+
+                fetch_success['assignment'] = True
             except Exception:
-                pass
+                fetch_success['assignment'] = False
 
         # Standalone Discussions (non-announcement)
         if settings.get('download_discussions'):
@@ -435,57 +600,80 @@ class CanvasManager:
                     if getattr(topic, 'is_announcement', False):
                         continue
                     t_id = getattr(topic, 'id', 0)
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['discussion']
+                    d_title = getattr(topic, 'title', 'Discussion')
+                    safe_title = self._sanitize_filename(d_title)
+                    if isolate:
+                        disc_filename = f"{routing['folder']}/{safe_title}.html"
+                    else:
+                        disc_filename = f"{routing['prefix']}: {safe_title}.html"
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('discussion', t_id),
-                        filename=self._sanitize_filename(
-                            getattr(topic, 'title', 'Discussion')) + '.html',
-                        display_name=getattr(topic, 'title', 'Discussion'),
+                        filename=disc_filename,
+                        display_name=d_title,
                         size=0,
-                        modified_at=(getattr(topic, 'last_reply_at', '')
-                                     or getattr(topic, 'updated_at', '')),
+                        modified_at=getattr(topic, 'updated_at', ''),
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
                     ))
+                fetch_success['discussion'] = True
             except Exception:
-                pass
+                fetch_success['discussion'] = False
 
         # Quizzes
         if settings.get('download_quizzes'):
             try:
                 for quiz in course.get_quizzes():
                     q_id = getattr(quiz, 'id', 0)
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['quiz']
+                    q_title = getattr(quiz, 'title', 'Quiz')
+                    safe_title = self._sanitize_filename(q_title)
+                    if isolate:
+                        quiz_filename = f"{routing['folder']}/{safe_title}.html"
+                    else:
+                        quiz_filename = f"{routing['prefix']}: {safe_title}.html"
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('quiz', q_id),
-                        filename=self._sanitize_filename(
-                            getattr(quiz, 'title', 'Quiz')) + '.html',
-                        display_name=getattr(quiz, 'title', 'Quiz'),
+                        filename=quiz_filename,
+                        display_name=q_title,
                         size=0,
                         modified_at=getattr(quiz, 'updated_at', ''),
                         url=getattr(quiz, 'html_url', ''),
                         content_type='text/html',
                     ))
+                fetch_success['quiz'] = True
             except Exception:
-                pass
+                fetch_success['quiz'] = False
 
         # Rubrics
         if settings.get('download_rubrics'):
             try:
                 for rubric in course.get_rubrics():
                     r_id = getattr(rubric, 'id', 0)
+                    isolate = settings.get('isolate_secondary_content', True)
+                    routing = _ENTITY_ROUTING['rubric']
+                    r_title = getattr(rubric, 'title', 'Rubric')
+                    safe_title = self._sanitize_filename(r_title)
+                    if isolate:
+                        rubric_filename = f"{routing['folder']}/{safe_title}.md"
+                    else:
+                        rubric_filename = f"{routing['prefix']}: {safe_title}.md"
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('rubric', r_id),
-                        filename=self._sanitize_filename(
-                            getattr(rubric, 'title', 'Rubric')) + '.md',
-                        display_name=getattr(rubric, 'title', 'Rubric'),
+                        filename=rubric_filename,
+                        display_name=r_title,
                         size=0,
                         modified_at=getattr(rubric, 'updated_at', ''),
                         url='',
                         content_type='text/markdown',
                     ))
+                fetch_success['rubric'] = True
             except Exception:
-                pass
+                fetch_success['rubric'] = False
 
-        return items
+        return items, fetch_success
 
     def get_folder_map(self, course) -> dict:
         """
@@ -848,6 +1036,7 @@ class CanvasManager:
                                                     metadata = [
                                                         ('Due', getattr(assignment, 'due_at', None)),
                                                         ('Points', getattr(assignment, 'points_possible', None)),
+                                                        ('URL', getattr(assignment, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
                                                     self._save_secondary_entity(
@@ -880,6 +1069,7 @@ class CanvasManager:
                                                     metadata = [
                                                         ('Points', getattr(quiz, 'points_possible', None)),
                                                         ('Due', getattr(quiz, 'due_at', None)),
+                                                        ('URL', getattr(quiz, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
                                                     self._save_secondary_entity(
@@ -907,12 +1097,14 @@ class CanvasManager:
                                                     t_id = getattr(topic, 'id', 0)
                                                     title = getattr(topic, 'title', 'Untitled Discussion')
                                                     message = getattr(topic, 'message', '') or ''
+                                                    message += await asyncio.to_thread(self._build_discussion_replies_html_sync, topic, debug_file)
                                                     updated_at = (getattr(topic, 'last_reply_at', '')
                                                                   or getattr(topic, 'updated_at', '') or '')
 
                                                     metadata = [
                                                         ('Posted', getattr(topic, 'posted_at', None)),
                                                         ('Replies', getattr(topic, 'discussion_subentry_count', None)),
+                                                        ('URL', getattr(topic, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
                                                     self._save_secondary_entity(
@@ -1629,8 +1821,14 @@ class CanvasManager:
                 if v_str.endswith('Z') and 'T' in v_str and len(v_str) >= 19:
                     v_str = _format_canvas_date(v_str)
                 
+                # Render URLs as clickable links
+                if v_str.startswith('http://') or v_str.startswith('https://'):
+                    v_html = f'<a href="{html.escape(v_str)}" target="_blank">{html.escape(v_str)}</a>'
+                else:
+                    v_html = html.escape(v_str)
+                
                 formatted_items.append(
-                    f'<div class="meta-item"><span class="meta-label">{html.escape(str(k))}:</span> <span class="meta-value">{html.escape(v_str)}</span></div>'
+                    f'<div class="meta-item"><span class="meta-label">{html.escape(str(k))}:</span> <span class="meta-value">{v_html}</span></div>'
                 )
             
             if formatted_items:
@@ -1856,7 +2054,8 @@ class CanvasManager:
 
         if progress_callback:
             progress_callback(
-                f'Saving {entity_type}: {entity_name}', progress_type='page',
+                entity_name, progress_type='secondary',
+                entity_type=entity_type,
             )
 
         return filepath, synthetic_id
@@ -1920,17 +2119,45 @@ class CanvasManager:
                 except Exception:
                     pass
 
+                # ── Inline-link extraction (HTML body) ──
+                # Instructors embed file links in the description HTML.
+                # These are NOT in the attachments API field.
+                a_desc = getattr(assignment, 'description', '') or ''
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(a_desc):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue  # Already captured via API attachments
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
                 metadata = [
                     ('Due', getattr(assignment, 'due_at', None)),
                     ('Points', getattr(assignment, 'points_possible', None)),
                     ('Submission Types', ', '.join(
                         getattr(assignment, 'submission_types', []) or []
                     )),
+                    ('URL', getattr(assignment, 'html_url', None)),
                 ]
                 filepath, syn_id = self._save_secondary_entity(
                     'assignment',
                     getattr(assignment, 'name', 'Untitled Assignment'),
-                    getattr(assignment, 'description', '') or '',
+                    a_desc,
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -1949,6 +2176,7 @@ class CanvasManager:
                 metadata = [
                     ('Points', getattr(quiz, 'points_possible', None)),
                     ('Due', getattr(quiz, 'due_at', None)),
+                    ('URL', getattr(quiz, 'html_url', None)),
                 ]
                 filepath, syn_id = self._save_secondary_entity(
                     'quiz',
@@ -1972,13 +2200,14 @@ class CanvasManager:
                 metadata = [
                     ('Posted', getattr(topic, 'posted_at', None)),
                     ('Replies', getattr(topic, 'discussion_subentry_count', None)),
+                    ('URL', getattr(topic, 'html_url', None)),
                 ]
                 updated_at = (getattr(topic, 'last_reply_at', '')
                               or getattr(topic, 'updated_at', '') or '')
                 filepath, syn_id = self._save_secondary_entity(
                     'discussion',
                     getattr(topic, 'title', 'Untitled Discussion'),
-                    getattr(topic, 'message', '') or '',
+                    (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -1996,11 +2225,12 @@ class CanvasManager:
                 topic = course.get_discussion_topic(raw_id)
                 metadata = [
                     ('Posted', getattr(topic, 'posted_at', None)),
+                    ('URL', getattr(topic, 'html_url', None)),
                 ]
                 filepath, syn_id = self._save_secondary_entity(
                     'announcement',
                     getattr(topic, 'title', 'Announcement'),
-                    getattr(topic, 'message', '') or '',
+                    (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -2110,6 +2340,71 @@ class CanvasManager:
 
     # --- Entity-Specific Fetchers -----------------------------------------
 
+    def _build_discussion_replies_html_sync(self, topic, debug_file=None):
+        """Fetch and format discussion/announcement replies synchronously."""
+        from canvasapi.exceptions import Unauthorized, ResourceDoesNotExist
+        from ui_helpers import esc
+        from canvas_debug import log_debug
+        
+        try:
+            entries = list(topic.get_topic_entries())
+            if not entries:
+                return ""
+            
+            html_out = ["<hr style='margin-top: 30px; border: 0; border-top: 1px solid #e4e4e7;'><h3 style='margin-bottom: 20px; color: #3f3f46;'>Replies</h3>"]
+            
+            def render_entry(entry, depth=0):
+                margin = min(depth * 30, 150)
+                author = getattr(entry, 'user_name', 'Unknown Author')
+                message = getattr(entry, 'message', '') or ''
+                created_at = getattr(entry, 'created_at', '')
+                
+                formatted_date = _format_canvas_date(created_at) if created_at else ""
+                
+                html_out.append(f"<div style='margin-left: {margin}px; padding: 15px; margin-bottom: 12px; background-color: #f4f4f5; border-left: 3px solid #3b82f6; border-radius: 4px;'>")
+                html_out.append(f"<div style='margin-bottom: 8px;'><strong>{esc(author)}</strong> <span style='color: #71717a; font-size: 0.9em; margin-left: 8px;'>{esc(formatted_date)}</span></div>")
+                
+                att_list = []
+                raw_atts = getattr(entry, 'attachments', [])
+                if not raw_atts:
+                    single_att = getattr(entry, 'attachment', None)
+                    if single_att:
+                        raw_atts = [single_att]
+                        
+                for att in raw_atts:
+                    url = att.get('url', '')
+                    display_name = att.get('display_name') or att.get('filename') or 'attachment'
+                    if url:
+                        att_list.append(f"<a href='{esc(url)}' target='_blank' style='color: #3b82f6; text-decoration: none;'>📎 {esc(display_name)}</a>")
+                
+                attachments_html = ""
+                if att_list:
+                    attachments_html = "<div style='margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d4d4d8; font-size: 0.9em;'>" + "<br>".join(att_list) + "</div>"
+
+                html_out.append(f"<div style='color: #27272a; margin-top: 8px;'>{message}</div>")
+                html_out.append(attachments_html)
+                
+                if hasattr(entry, 'get_replies'):
+                    try:
+                        for sub_entry in entry.get_replies():
+                            render_entry(sub_entry, depth + 1)
+                    except Exception as e:
+                        if debug_file:
+                            log_debug(f"Could not fetch sub-replies: {e}", debug_file)
+                html_out.append("</div>")
+
+            for entry in entries:
+                render_entry(entry, 0)
+                
+            return "\n".join(html_out)
+        except (Unauthorized, ResourceDoesNotExist):
+            return "<hr style='margin-top: 30px; border: 0; border-top: 1px solid #e4e4e7;'><p style='color: #71717a;'><em>Replies could not be accessed.</em></p>"
+        except Exception as e:
+            if debug_file:
+                from canvas_debug import log_debug
+                log_debug(f"Error fetching replies: {e}", debug_file)
+            return ""
+
     def _fetch_and_save_assignments(self, course, base_path, sem, session,
                                     progress_callback, mb_tracker,
                                     check_cancellation, settings,
@@ -2140,23 +2435,58 @@ class CanvasManager:
                 updated_at = getattr(assignment, 'updated_at', '') or ''
 
                 # Check for file attachments
+                # IMPORTANT: course.get_assignments() (list endpoint) does NOT
+                # return the `attachments` field. We must refetch each
+                # assignment individually to get full data including attached
+                # files — this mirrors the sync path's download_secondary_entity.
                 attachments = []
                 try:
-                    # The canvasapi Assignment may expose .attachments or
-                    # we can try assignment submission_types for hints.
-                    raw_attachments = getattr(assignment, 'attachments', None)
+                    full_assignment = course.get_assignment(a_id)
+                    # Update description/updated_at from the richer individual response
+                    description = getattr(full_assignment, 'description', '') or description
+                    updated_at = getattr(full_assignment, 'updated_at', '') or updated_at
+                    raw_attachments = getattr(full_assignment, 'attachments', None)
                     if raw_attachments and isinstance(raw_attachments, list):
                         attachments = raw_attachments
-                except Exception:
-                    pass
+                        log_debug(f"  Assignment '{a_name}': found {len(attachments)} API attachment(s)", debug_file)
+                except Exception as att_err:
+                    log_debug(f"  Could not refetch assignment {a_id} for attachments: {att_err}", debug_file)
+
+                # ── Inline-link extraction (HTML body) ──
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(description):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
                 has_attachments = bool(attachments)
+                if has_attachments:
+                    log_debug(f"  Assignment '{a_name}': {len(attachments)} total attachment(s) (API + inline)", debug_file)
+
                 metadata = [
                     ('Due', getattr(assignment, 'due_at', None)),
                     ('Points', getattr(assignment, 'points_possible', None)),
                     ('Submission Types', ', '.join(
                         getattr(assignment, 'submission_types', []) or []
                     )),
+                    ('URL', getattr(assignment, 'html_url', None)),
                 ]
 
                 filepath, syn_id = self._save_secondary_entity(
@@ -2255,6 +2585,7 @@ class CanvasManager:
                 metadata_pairs=[
                     ('Course', getattr(course, 'name', '')),
                     ('Course Code', getattr(full_course, 'course_code', '')),
+                    ('URL', getattr(full_course, 'html_url', None) or getattr(course, 'html_url', None)),
                 ],
             )
 
@@ -2316,7 +2647,7 @@ class CanvasManager:
                 display_name = f"{date_prefix}{title}"
 
                 filepath, syn_id = self._save_secondary_entity(
-                    'announcement', display_name, message, base_path,
+                    'announcement', display_name, message + self._build_discussion_replies_html_sync(topic, debug_file), base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=t_id, canvas_updated_at=updated_at,
                     progress_callback=progress_callback,
@@ -2328,6 +2659,7 @@ class CanvasManager:
                         ('Posted', posted_at),
                         ('Author', getattr(topic, 'user_name', None)
                                    or getattr(topic, 'author', {}).get('display_name', None)),
+                        ('URL', getattr(topic, 'html_url', None)),
                     ],
                 )
 
@@ -2409,7 +2741,7 @@ class CanvasManager:
                               or '')
 
                 self._save_secondary_entity(
-                    'discussion', title, message, base_path,
+                    'discussion', title, message + self._build_discussion_replies_html_sync(topic, debug_file), base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=t_id, canvas_updated_at=updated_at,
                     progress_callback=progress_callback,
@@ -2422,6 +2754,7 @@ class CanvasManager:
                         ('Replies', getattr(topic, 'discussion_subentry_count', None)),
                         ('Author', getattr(topic, 'user_name', None)
                                    or getattr(topic, 'author', {}).get('display_name', None)),
+                        ('URL', getattr(topic, 'html_url', None)),
                     ],
                 )
 
@@ -2519,6 +2852,7 @@ class CanvasManager:
                         ('Time Limit', f"{getattr(quiz, 'time_limit', '∞')} min"),
                         ('Due', getattr(quiz, 'due_at', None)),
                         ('Allowed Attempts', getattr(quiz, 'allowed_attempts', None)),
+                        ('URL', getattr(quiz, 'html_url', None)),
                     ],
                 )
 
@@ -2555,6 +2889,11 @@ class CanvasManager:
                 # Build a structured Markdown table from criteria
                 criteria = getattr(rubric, 'data', None) or []
                 md_content = f"# Rubric: {r_title}\n\n"
+                
+                r_html_url = getattr(rubric, 'html_url', None)
+                if r_html_url:
+                    md_content += f"[View on Canvas]({r_html_url})\n\n"
+
                 if r_description:
                     md_content += f"{r_description}\n\n"
 
@@ -2659,8 +2998,13 @@ class CanvasManager:
         if not settings:
             return
         log_debug("=== Starting Secondary Content Download ===", debug_file)
+
         if progress_callback:
-            progress_callback('Downloading secondary content...', progress_type='log')
+            progress_callback(
+                'Downloading Course Pages & Assignments...',
+                progress_type='phase',
+                phase_name='Secondary Content',
+            )
 
         download_tasks = []  # Async tasks for attachment downloads
 

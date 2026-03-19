@@ -1,6 +1,21 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 4.3: Secondary Content Path Divergence & Performance Fixes** (2026-03-19):
+    - [x] **Scanning Bypass**: Injected `is_scanning_phase` flags into `canvas_logic.py` and `app.py` to securely skip heavy API querying during initial course scanning, removing pre-download UI lockups.
+    - [x] **Dynamic Metric Incrementing**: Created a reactive UI state lock emitting an explicit `total_items += 1` increment when individual secondary attachments are downloaded, seamlessly correcting progress bar math on-the-fly.
+    - [x] **Path Structural Parity**: Bound all 6 synthetic Canvas entities natively to the `_ENTITY_ROUTING` dictionary to enforce matching folder prefixes and subdirectory inheritance between the Download extraction architecture and the Sync analysis engine.
+- [x] **Phase 4.2: Discussion & Announcement Reply Fetching** (2026-03-19):
+    - [x] **Recursive Thread Rendering**: Engineered `_build_discussion_replies_html_sync` to recursively fetch all entries and sub-replies, generating a hierarchical offline HTML document.
+    - [x] **Rich Text Preservation**: Implemented a structural exemption for the Canvas `message` body, allowing pre-formatted HTML from the Rich Text Editor to render natively while keeping metadata (authors/dates) strictly escaped.
+    - [x] **Phase 3 Design Alignment**: Applied Notion-inspired styling with left-border hierarchy and system-font stacks.
+    - [x] **UI Formatting Fixes**: Eradicated literal `\n` string injections and resolved double-spacing bugs by removing `white-space: pre-wrap` from block-level containers.
+- [x] **Phase 4.1: Secondary Content Inline Attachments & Metadata** (2026-03-19):
+    - [x] **HTML Body Parsing**: Integrated `beautifulsoup4` into `canvas_logic.py` to extract inline `<a href="/files/...">` links from assignment descriptions, capturing instructor-embedded files that bypass the standard Canvas `attachments` API.
+    - [x] **Exception Safety**: Wrapped synchronous `course.get_file(id)` fetches in robust `try/except` guards to prevent dead or unauthorized inline links from terminating the download loop.
+    - [x] **Zero-Collision ID Parity**: Enforced true positive Canvas IDs on discovered inline attachments, guaranteeing that SQLite correctly deduplicates them against the main file repository.
+    - [x] **Metadata Link Hydration**: Injected the specific Canvas `html_url` into the metadata dictionary arrays of all 6 secondary content types (Assignments, Quizzes, Discussions, Announcements, Syllabus, Rubrics) across both the Sync Engine and the Initial Download core.
+    - [x] **Clickable Offline Links**: Upgraded `_build_entity_html` to automatically render `http://` metadata values as live `<a target="_blank">` hyperlinks, dramatically improving the offline-to-online navigation workflow for generated secondary HTML files.
 - [x] **Phase 7: Audited Concurrency & Security Fixes** (2026-03-13):
     - [x] **SQLite Thread-Crash Prevention**: Removed conflicting Windows `_windows_hide_file` manipulations from atomic SQLite loops in `sync_manager.py` to permanently solve the `ERROR_SHARING_VIOLATION` lock failures.
     - [x] **Sync Download Mutex**: Implemented `manage_sync_download_lock` dynamically mapping `asyncio.Lock()` per filepath in `sync_ui.py`, locking the file IO byte-streaming phase to enforce byte-perfect integrity during concurrent syncs.
@@ -70,8 +85,13 @@
     - [x] **Item 9 (Import Hoisting)**: Relocated 26 inline function imports to module headers.
     - [x] **Item 10 (Strict Exceptions)**: Eradicated 9 bare `except:` blocks, shielding vital OS interrupts.
     - [x] **Item 13 (Design Token Centralization)**: Stripped 249 raw hex color strings out of the UI files, centralizing all aesthetics into `theme.py`.
-    - [x] **Item 14 (HTML Sanitization)**: Developed an `esc()` utility and blanketed 46 user-controlled strings inside `st.markdown()` blocks to guarantee safety against payload-based XSS injection.
-- [x] **V3.0 Architecture Audit Fixes Implementation** (2026-03-10):
+    - [x] **Item 14 (HTML Sanitization)- **Strict HTML Escaping (`esc()`)**:
+    - *Problem*: Passing raw user-controlled variables (Course Names, File Names, Error Messages) into `st.markdown(unsafe_allow_html=True)` immediately opens the application to XSS and DOM-corruption if a Canvas server returns payload strings containing `<script>` or unclosed HTML tags `</div>`.
+    - *Solution*: Universally wrap all interpolated variables inside HTML structures with the custom `esc()` utility (from `ui_helpers.py`), which safely standardizes `html.escape` behavior across the codebase.
+- **Rich Text Preservation Exemption**:
+    - *Pattern*: Unlike names or dates, Canvas Discussion/Announcement bodies are natively authored in a Rich Text Editor and returned as structured HTML. Escaping these strings destroys the document (turning `<p>` into text).
+    - *Rule*: The `message` body of these entities is exempt from the `esc()` utility, relying instead on the Canvas API's backend sanitization. However, all surrounding metadata (author, date, URL) MUST remain strictly escaped to prevent DOM breakout.
+    - [x] **V3.0 Architecture Audit Fixes Implementation** (2026-03-10):
     - [x] **"Modules Mode" Data Loss Fix**: Eradicated the global `downloaded_file_ids` tracker that incorrectly forced the system to skip files present in multiple modules.
     - [x] **Path Conflict Data Loss Fix**: Replaced aggressive `seen_target_paths` skipping with a robust synchronous renaming mechanism `(1)`, `(2)` to safely queue identical filenames crashing into the same directory without `[WinError 32]` or data loss.
     - [x] **Global Timeout Starvation Fix**: Scaled up massive payload resilience by trading the rigid 5-minute `total=300` aiohttp ceiling for an infinitely patient `sock_read=60` data-stream timeout. 

@@ -173,6 +173,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Pattern*: When converting a file (e.g., `.pptx` to `.pdf`), the system updates the `local_path`, `original_size`, and `original_md5` in the database to match the new derivative file, but preserves the original `canvas_filename`. This effectively tricks the sync diffing engine into linking a remote PPTX to a local PDF for version control.
 
 ## Synchronization Strategy & Data Integrity
+- **Performance-Safe Path Divergence & Dynamic Accounting**:
+    - *Problem*: To prevent massive UI freezes before a download begins, the system must not execute hundreds of deep individual Canvas API queries (e.g., pulling every assignment's full description to find attachments) just to count files. However, if the sync engine skips these fetches, it fails to evaluate the true physical path structures of attachments, falsely flagging them as "Deleted on Canvas".
+    - *Solution*: A strict boolean passthrough (`is_scanning_phase=True/False`) allows the UI (`app.py`) to bypass deep queries during the initial count. Later, as files download, they emit `'attachment'` progress hooks which dynamically increment `st.session_state['total_items']` to correct the denominator on the fly. The Sync Engine (`sync_ui.py`) uses `is_scanning_phase=False`, paying the API cost to map exact structural (`Assignments/Assignment Name/Attachment.pdf`) parity for accurate diffing.
 - **Dynamic Disk Space Validation**:
     - *Problem*: Static disk space minimums (e.g., 1GB) allow massive 10GB+ sync payloads to pass validation and then crash midway through execution when the drive fills.
     - *Solution*: Replaced all static `min_free_gb` floor additions with a dynamic algorithm: `max(min_free_gb * 1024**3, required_bytes * 1.2)`. This unconditionally guarantees a 20% safety margin scaled directly against the calculated active payload.
