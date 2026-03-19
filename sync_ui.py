@@ -3419,9 +3419,17 @@ def _run_analysis(sync_pairs, main_placeholder=None):
 
             sync_progress_hook(0, 1, "Loading local sync manifest...")
             manifest = sync_mgr.load_manifest()
-                
+
+            # Load secondary content contract so analysis includes negative-ID entities
+            _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
+            _secondary_settings = json.loads(_raw_secondary) if _raw_secondary else None
+
             sync_progress_hook(0, 1, "Fetching files from Canvas...")
-            canvas_files = cm.get_course_files_metadata(course, progress_callback=sync_progress_hook)
+            canvas_files = cm.get_course_files_metadata(
+                course,
+                progress_callback=sync_progress_hook,
+                secondary_content_settings=_secondary_settings,
+            )
             
             sync_progress_hook(1, 1, "Healing local sync manifest...")
             manifest = sync_mgr.heal_manifest(manifest)
@@ -5015,7 +5023,7 @@ def _show_analysis_review():
                 total_bytes = 0
                 for s in sync_selections:
                     total_bytes += sum(f.size for f in s['new'] if hasattr(f, 'size'))
-                    total_bytes += sum(f[0].size for f in s['updates'] if hasattr(f[0], 'size'))
+                    total_bytes += sum(f.size for f in s['updates'] if hasattr(f, 'size'))
                     # redownload items are SyncInfo objects — look up size via canvas_files_map
                     canvas_files_map = {f.id: f for f in s['res_data']['canvas_files']}
                     for si in s['redownload']:
@@ -5688,12 +5696,72 @@ def _run_sync():
                             filepath = cm._handle_conflict(filepath)
 
                         if getattr(file, 'id', 0) < 0:
-                            # It's a synthetic shortcut. Recreate it directly
+                            # ── Secondary Content Entities (Assignment, Quiz, etc.) ──
+                            from sync_manager import is_secondary_id, secondary_id_type
+                            _sec_entity_type = secondary_id_type(file.id)
+                            if _sec_entity_type not in ('module_item', 'unknown'):
+                                # Load secondary contract for this pair
+                                _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
+                                _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
+
+                                try:
+                                    sec_filepath, sec_id, sec_attachments = cm.download_secondary_entity(
+                                        course=res_data['course'],
+                                        canvas_file_info=file,
+                                        base_path=Path(local_path),
+                                        sync_manager=sync_mgr,
+                                        secondary_content_settings=_sec_settings,
+                                        course_name=course_name,
+                                    )
+                                except Exception as _sec_err:
+                                    # Let the error bubble up to the outer retry loop
+                                    raise _sec_err
+
+                                if sec_filepath:
+                                    synced_counter[0] += 1
+                                    st.session_state['sync_cancelled_file_count'] = synced_counter[0]
+                                    synced_details[pair_idx].append(sec_filepath.name)
+                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Synced: </span> {esc(display_file_name)}")
+                                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+
+                                    # ── Inject attachments into the async download queue ──
+                                    # Attachments have REAL positive Canvas file IDs, so they
+                                    # bypass the `file.id < 0` branch and enter the standard
+                                    # HTTP download path with full retry + cancellation support.
+                                    if sec_attachments:
+                                        from sync_manager import CanvasFileInfo as _CFI
+                                        attach_dir = sec_filepath.parent
+                                        for att in sec_attachments:
+                                            att_id = att.get('id')
+                                            att_url = att.get('url', '')
+                                            att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                            if not att_url or not att_id:
+                                                continue
+                                            att_info = _CFI(
+                                                id=att_id,
+                                                filename=att_filename,
+                                                display_name=att.get('display_name', att_filename),
+                                                size=att.get('size', 0),
+                                                modified_at=att.get('modified_at', ''),
+                                                url=att_url,
+                                            )
+                                            # Set target path so the download loop routes correctly
+                                            att_info._target_local_path = str(
+                                                attach_dir / cm._sanitize_filename(att_filename)
+                                            )
+                                            all_files.append(att_info)
+                                            total_files += 1
+                                else:
+                                    terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>[⚠️] Skipped: </span> {esc(display_file_name)}")
+                                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                continue
+
+                            # ── Legacy Synthetic Shortcuts (Pages, External URLs) ──
                             Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
-                            
+
                             is_url_ext = filepath.name.lower().endswith('.url') or filepath.name.lower().endswith('.webloc')
                             is_html_ext = filepath.name.lower().endswith('.html')
-                            
+
                             if is_url_ext:
                                 if platform.system() == 'Darwin':
                                     import plistlib
@@ -5707,7 +5775,7 @@ def _run_sync():
                             elif is_html_ext:
                                 html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
                                 Path(make_long_path(filepath)).write_text(html_content, encoding='utf-8')
-                            
+
                             if is_url_ext or is_html_ext:
                                 rel_path = filepath.relative_to(local_path)
                                 sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))

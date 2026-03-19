@@ -1861,6 +1861,223 @@ class CanvasManager:
 
         return filepath, synthetic_id
 
+    def download_secondary_entity(self, course, canvas_file_info, base_path,
+                                   sync_manager, secondary_content_settings,
+                                   progress_callback=None, debug_file=None,
+                                   error_root_path=None, course_name="Unknown"):
+        """Fetch a single secondary entity from Canvas and save it to disk.
+
+        This is the UNIVERSAL entry point used by both:
+          - The initial download pipeline (via _download_secondary_content)
+          - The sync download loop (sync_ui.py)
+
+        Parameters
+        ----------
+        course : canvasapi.Course
+            The Canvas course object.
+        canvas_file_info : CanvasFileInfo
+            Must have a negative ``.id`` in the SECONDARY_ID_OFFSETS range.
+        base_path : Path
+            Course root folder on disk.
+        sync_manager : SyncManager
+            For DB recording.
+        secondary_content_settings : dict
+            The active secondary content contract.
+
+        Returns
+        -------
+        ``(filepath: Path | None, synthetic_id: int | None, attachments: list | None)``
+        Where ``attachments`` is a list of Canvas attachment dicts (each with
+        ``id``, ``url``, ``filename``, ``size``) — only populated for assignments.
+        """
+        # Local imports to prevent circular dependency with sync_manager
+        from sync_manager import (
+            SECONDARY_ID_OFFSETS, is_secondary_id, secondary_id_type,
+        )
+
+        file_id = canvas_file_info.id
+        if not is_secondary_id(file_id):
+            return None, None, None
+
+        entity_type = secondary_id_type(file_id)
+        if not entity_type or entity_type in ('module_item', 'unknown'):
+            return None, None, None
+
+        isolate = secondary_content_settings.get('isolate_secondary_content', True)
+        offset = SECONDARY_ID_OFFSETS.get(entity_type, 0)
+        raw_id = abs(file_id) - offset
+
+        try:
+            if entity_type == 'assignment':
+                assignment = course.get_assignment(raw_id)
+
+                # Extract attachments BEFORE saving the HTML body
+                attachments = []
+                try:
+                    raw_att = getattr(assignment, 'attachments', None)
+                    if raw_att and isinstance(raw_att, list):
+                        attachments = raw_att
+                except Exception:
+                    pass
+
+                metadata = [
+                    ('Due', getattr(assignment, 'due_at', None)),
+                    ('Points', getattr(assignment, 'points_possible', None)),
+                    ('Submission Types', ', '.join(
+                        getattr(assignment, 'submission_types', []) or []
+                    )),
+                ]
+                filepath, syn_id = self._save_secondary_entity(
+                    'assignment',
+                    getattr(assignment, 'name', 'Untitled Assignment'),
+                    getattr(assignment, 'description', '') or '',
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=raw_id,
+                    canvas_updated_at=getattr(assignment, 'updated_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=bool(attachments),
+                    metadata_pairs=metadata,
+                )
+                return filepath, syn_id, attachments or None
+
+            elif entity_type == 'quiz':
+                quiz = course.get_quiz(raw_id)
+                metadata = [
+                    ('Points', getattr(quiz, 'points_possible', None)),
+                    ('Due', getattr(quiz, 'due_at', None)),
+                ]
+                filepath, syn_id = self._save_secondary_entity(
+                    'quiz',
+                    getattr(quiz, 'title', 'Untitled Quiz'),
+                    getattr(quiz, 'description', '') or '',
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=raw_id,
+                    canvas_updated_at=getattr(quiz, 'updated_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=metadata,
+                )
+                return filepath, syn_id, None
+
+            elif entity_type == 'discussion':
+                topic = course.get_discussion_topic(raw_id)
+                metadata = [
+                    ('Posted', getattr(topic, 'posted_at', None)),
+                    ('Replies', getattr(topic, 'discussion_subentry_count', None)),
+                ]
+                updated_at = (getattr(topic, 'last_reply_at', '')
+                              or getattr(topic, 'updated_at', '') or '')
+                filepath, syn_id = self._save_secondary_entity(
+                    'discussion',
+                    getattr(topic, 'title', 'Untitled Discussion'),
+                    getattr(topic, 'message', '') or '',
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=raw_id,
+                    canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=metadata,
+                )
+                return filepath, syn_id, None
+
+            elif entity_type == 'announcement':
+                topic = course.get_discussion_topic(raw_id)
+                metadata = [
+                    ('Posted', getattr(topic, 'posted_at', None)),
+                ]
+                filepath, syn_id = self._save_secondary_entity(
+                    'announcement',
+                    getattr(topic, 'title', 'Announcement'),
+                    getattr(topic, 'message', '') or '',
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=raw_id,
+                    canvas_updated_at=getattr(topic, 'posted_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=metadata,
+                )
+                return filepath, syn_id, None
+
+            elif entity_type == 'syllabus':
+                full_course = self.canvas.get_course(
+                    course.id, include=['syllabus_body'],
+                )
+                body = getattr(full_course, 'syllabus_body', '') or ''
+                if not body:
+                    return None, None, None
+                filepath, syn_id = self._save_secondary_entity(
+                    'syllabus', 'Syllabus', body,
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=course.id,
+                    canvas_updated_at=getattr(full_course, 'updated_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=None,
+                )
+                return filepath, syn_id, None
+
+            elif entity_type == 'rubric':
+                rubric = course.get_rubric(raw_id)
+                criteria = getattr(rubric, 'data', []) or []
+                body_lines = []
+                for crit in criteria:
+                    desc = crit.get('description', '')
+                    pts = crit.get('points', '')
+                    body_lines.append(f"### {desc} ({pts} pts)")
+                    long_desc = crit.get('long_description', '')
+                    if long_desc:
+                        body_lines.append(long_desc)
+                    ratings = crit.get('ratings', [])
+                    for r in ratings:
+                        body_lines.append(
+                            f"- **{r.get('description', '')}** ({r.get('points', '')} pts)"
+                        )
+                filepath, syn_id = self._save_secondary_entity(
+                    'rubric',
+                    getattr(rubric, 'title', 'Rubric'),
+                    '\n'.join(body_lines),
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=raw_id,
+                    canvas_updated_at=getattr(rubric, 'updated_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course_name, isolate=isolate,
+                    has_attachments=False,
+                    metadata_pairs=None,
+                    file_extension='.md',
+                )
+                return filepath, syn_id, None
+
+            else:
+                log_debug(f"Unknown secondary entity type: {entity_type} for ID {file_id}", debug_file)
+                return None, None, None
+
+        except Exception as e:
+            log_debug(f"Failed to download secondary entity {entity_type} (ID {file_id}): {e}", debug_file)
+            raise  # Let exceptions bubble up so the sync retry loop can handle them
+
     def _create_link(self, title, url, target_path, progress_callback=None, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=None):
         safe_title = self._sanitize_filename(title)
         filepath = target_path / f"{safe_title}.url"
