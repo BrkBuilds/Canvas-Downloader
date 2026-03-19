@@ -3909,13 +3909,13 @@ def _show_analysis_review():
             with c1:
                 st.markdown(_render_metric_card(total_new, lbl_new, "📄", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
             with c2:
-                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", "{theme.SUCCESS_ALT}", "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", "{theme.WARNING_ALT}", "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
                 st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "✂️", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
-                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", "{theme.ERROR_ALT}", "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
