@@ -2254,7 +2254,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
                 # (9) "Add Course folder" + "Save List as Group" — full width
-                col_add, col_save, _ = st.columns([1.5, 1.5, 7], gap="small", vertical_alignment="bottom") 
+                col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom") 
                 with col_add:
                     # Clean, isolated CSS for "Add Course" using its Streamlit key
                     st.markdown("""<style>
@@ -2262,7 +2262,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         border: 1px solid #4a7a9b !important;
                         background-color: #2a3a4a !important;
                         color: #cde !important;
-                        margin-top: -35px !important;
+                        margin-top: -50px !important;
                         position: relative;
                         z-index: 1;
                     }
@@ -2290,7 +2290,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         background-color: rgba(95, 100, 200, 0.1) !important;
                         color: #e0e7ff !important;
                         border: 1px solid rgba(95, 100, 200, 0.75) !important;
-                        margin-top: -35px !important;
+                        margin-top: -50px !important;
                         position: relative;
                         z-index: 1;
                     }
@@ -2316,7 +2316,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
-                col_add, _ = st.columns([0.25, 0.75]) 
+                col_add, _ = st.columns([2.25, 7.75]) 
                 with col_add:
                     st.markdown("""
                     <style>
@@ -2326,6 +2326,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         border: 1px solid #4a7a9b !important;
                         background-color: #2a3a4a !important;
                         color: #cde !important;
+                        margin-top: -15px !important;
                     }
                     div.st-key-btn_add_folder_empty button:hover {
                          background-color: #3a4a5a !important;
@@ -2334,7 +2335,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
     
-                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder_empty"):
+                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder_empty", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -3182,7 +3183,7 @@ def _render_pending_folder_ui(courses, course_names, course_options, ):
 
         # (3) Confirm + Cancel — compact, side-by-side, cancel has red tint
         # Made columns narrower (10% each) to reduce button width significantly (per user request)
-        col_add, col_cancel, _ = st.columns([1, 1, 8])
+        col_add, col_cancel, _ = st.columns([1.5, 1, 7.5])
         with col_add:
             if st.button("✓ " + 'Confirm and Add', key="confirm_pair",
                          type="primary", use_container_width=True):
