@@ -204,7 +204,7 @@ def fetch_courses(token, url, fav_only):
 # --- Sidebar: Authentication ---
 with st.sidebar:
     st.markdown("---")
-    st.title('🎓 Canvas Tool')
+    st.title('Canvas Downloader')
     
     # Auth Logic
     
@@ -564,8 +564,6 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-# --- Main Content ---
-st.title('Canvas LMS Course Material Downloader')
 
 if not st.session_state['is_authenticated']:
     st.info('👈 Please authenticate in the sidebar to continue.')
