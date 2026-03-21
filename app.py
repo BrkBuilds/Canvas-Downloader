@@ -2096,37 +2096,37 @@ with _main_content.container():
                     with col_retry:
                         if st.button("🔄 Retry Failed Items", type="secondary", key="retry_failed_btn",
                                      use_container_width=True):
-                        # Sniper Retry: jump straight to 'isolated_retry', skipping the
-                        # multi-minute Canvas analysis phase.  Queue specifically the failed items.
-                        
-                        # CRITICAL: Capture the existing error list into a local variable BEFORE clearing state!
-                        current_errors = list(st.session_state.get('download_errors_list', []))
-                        st.session_state['isolated_retry_queue'] = current_errors
-                        st.session_state['download_status'] = 'isolated_retry'
-                        
-                        # --- FIX: Prevent Success Amnesia ---
-                        # Initialize sandboxed variables for the retry isolated UI
-                        st.session_state['retry_isolated_details'] = {}
-                        st.session_state['retry_downloaded_items'] = 0
-                        st.session_state['retry_failed_items'] = 0
-                        
-                        # --- FIX: Prevent Zombie Cancel Loop ---
-                        st.session_state['cancel_requested'] = False
-                        st.session_state['download_cancelled'] = False
-                        
-                        # Note: We NO LONGER wipe global `downloaded_items`, `failed_items`, `download_errors_list`,
-                        # or `download_file_details` so history is preserved if user cancels.
-                        # We also keep `seen_error_sigs` intact so identical repeat errors don't flood UI.
-                        st.session_state['skipped_discovery_errors'] = 0
-                        st.session_state['pp_failure_count'] = 0
-                        st.session_state['pp_success_count'] = 0
-                        st.session_state['log_content'] = ""
-                        st.session_state['start_time'] = time.time()
-                        
-                        # Set total items so the progress bar works
-                        st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
-                        
-                        st.rerun()
+                            # Sniper Retry: jump straight to 'isolated_retry', skipping the
+                            # multi-minute Canvas analysis phase.  Queue specifically the failed items.
+                            
+                            # CRITICAL: Capture the existing error list into a local variable BEFORE clearing state!
+                            current_errors = list(st.session_state.get('download_errors_list', []))
+                            st.session_state['isolated_retry_queue'] = current_errors
+                            st.session_state['download_status'] = 'isolated_retry'
+                            
+                            # --- FIX: Prevent Success Amnesia ---
+                            # Initialize sandboxed variables for the retry isolated UI
+                            st.session_state['retry_isolated_details'] = {}
+                            st.session_state['retry_downloaded_items'] = 0
+                            st.session_state['retry_failed_items'] = 0
+                            
+                            # --- FIX: Prevent Zombie Cancel Loop ---
+                            st.session_state['cancel_requested'] = False
+                            st.session_state['download_cancelled'] = False
+                            
+                            # Note: We NO LONGER wipe global `downloaded_items`, `failed_items`, `download_errors_list`,
+                            # or `download_file_details` so history is preserved if user cancels.
+                            # We also keep `seen_error_sigs` intact so identical repeat errors don't flood UI.
+                            st.session_state['skipped_discovery_errors'] = 0
+                            st.session_state['pp_failure_count'] = 0
+                            st.session_state['pp_success_count'] = 0
+                            st.session_state['log_content'] = ""
+                            st.session_state['start_time'] = time.time()
+                            
+                            # Set total items so the progress bar works
+                            st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
+                            
+                            st.rerun()
 
             # 5. Per-course folder cards with file dropdowns
             # file_details was already filtered above

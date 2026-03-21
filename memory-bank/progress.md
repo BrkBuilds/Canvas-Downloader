@@ -1,6 +1,10 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Emergency Login & Import Fixes** (2026-03-21):
+    - [x] **IndentationError Correction**: Fixed a fatal block-level indentation error in the `app.py` retry reconciliation loop.
+    - [x] **Import Namespace Repair**: Corrected the `CanvasFileInfo` import in `canvas_logic.py` from the incorrect `ui_shared` to the correct `sync_manager` origin.
+    - [x] **Login Failure Remediation**: Removed the unsupported `request_kwargs` argument from the `Canvas` constructor, restoring authentication functionality.
 - [x] **Phase 6: Exhaustive V2 Code Audit & Global Interruption Guard** (2026-03-21):
     - [x] **Deep Structural Audit**: Verified all Task 1-5 requirements for the V2 fixes (Path Integrity, Error Loops, Tuple Identity, Post-Processing Interruption, ACID Transactions).
     - [x] **Global Cancellation Hotfix**: Discovered and patched a missing cancellation guard in the main global download post-processing pipeline in `app.py`.
