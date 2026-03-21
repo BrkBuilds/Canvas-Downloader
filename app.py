@@ -1508,21 +1508,27 @@ with _main_content.container():
 
                             
                         elif progress_type == 'error':
-                            st.session_state['failed_items'] += 1
-                            
                             if msg:
                                 if isinstance(msg, DownloadError):
                                     error_obj = msg
                                 else:
                                     error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
                                 
-                                if 'download_errors_list' not in st.session_state:
-                                    st.session_state['download_errors_list'] = []
-                                st.session_state['download_errors_list'].append(error_obj)
+                                sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
+                                seen = st.session_state.get('seen_error_sigs', set())
                                 
-                                error_text = f"[{esc(course.name)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {esc(error_text)}</span>")
-                                
+                                if sig not in seen:
+                                    seen.add(sig)
+                                    st.session_state['seen_error_sigs'] = seen
+                                    st.session_state['failed_items'] += 1  # <-- STRICTLY INSIDE THE GUARD
+                                    
+                                    if 'download_errors_list' not in st.session_state:
+                                        st.session_state['download_errors_list'] = []
+                                    st.session_state['download_errors_list'].append(error_obj)
+                                    
+                                    error_text = f"[{esc(course.name)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                    log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {esc(error_text)}</span>")
+                                    
                             render_dashboard()
 
                         elif progress_type == 'mb_progress':
@@ -1690,6 +1696,21 @@ with _main_content.container():
                 st.session_state['download_status'] = 'cancelled'
                 st.rerun()
                 
+            header_placeholder = st.empty()
+            progress_placeholder = st.empty()
+            metrics_placeholder = st.empty()
+            active_file_placeholder = st.empty()
+            log_placeholder = st.empty()
+            
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            cancel_placeholder = st.empty()
+            cancel_placeholder.button(
+                'Cancel Retry',
+                type="secondary",
+                key="cancel_retry_btn",
+                on_click=cancel_download_callback,
+            )
+
             queue = st.session_state.get('isolated_retry_queue', [])
 
             # 1. Update total_items to reflect strictly the retry queue
@@ -1880,7 +1901,7 @@ with _main_content.container():
                     course=course,
                     error_queue=errors,
                     save_dir=st.session_state['download_path'],
-                    progress_callback=lambda msg, p_type='log', **kwargs: update_ui(msg, p_type, course_name=kwargs.get('course_name', course.name), **kwargs),
+                    progress_callback=lambda msg, progress_type='log', **kwargs: update_ui(msg, progress_type, course_name=kwargs.get('course_name', course.name), **kwargs),
                     check_cancellation=check_cancellation,
                     debug_mode=st.session_state.get('debug_mode', False),
                     mb_tracker=st.session_state['retry_mb_tracker']
@@ -2060,7 +2081,7 @@ with _main_content.container():
             # Hybrid Discovery Warning (Surfaced explicitly in UI)
             skipped_discovery = st.session_state.get('skipped_discovery_errors', 0)
             if skipped_discovery > 0:
-                st.warning(f"⚠️ {skipped_discovery} item(s) failed during the discovery phase and could not be isolated for retry. A full course rescan is required to retry them.", icon="⚠️")
+                st.warning(f"{skipped_discovery} item(s) failed during the discovery phase and could not be isolated for retry. A full course rescan is required to retry them.", icon="⚠️")
 
 
             # 2. Post-processing warning
@@ -2086,7 +2107,7 @@ with _main_content.container():
                 # --- FIX: Prevent Structural Error Retry Infinite Loop ---
                 # Guarantee that at least one error corresponds to a physical file (has 'filepath' context)
                 has_retriable_errors = any(
-                    isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') 
+                    isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream'
                     for err in download_errors
                 )
                 
@@ -2101,7 +2122,17 @@ with _main_content.container():
                             
                             # CRITICAL: Capture the existing error list into a local variable BEFORE clearing state!
                             current_errors = list(st.session_state.get('download_errors_list', []))
-                            st.session_state['isolated_retry_queue'] = current_errors
+                            
+                            retriable_queue = []
+                            structural_count = 0
+                            for err in current_errors:
+                                ctx = getattr(err, 'context', None) if not isinstance(err, dict) else err.get('context')
+                                if isinstance(ctx, dict) and ctx.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream':
+                                    retriable_queue.append(err)
+                                else:
+                                    structural_count += 1
+                                    
+                            st.session_state['isolated_retry_queue'] = retriable_queue
                             st.session_state['download_status'] = 'isolated_retry'
                             
                             # --- FIX: Prevent Success Amnesia ---
@@ -2117,7 +2148,7 @@ with _main_content.container():
                             # Note: We NO LONGER wipe global `downloaded_items`, `failed_items`, `download_errors_list`,
                             # or `download_file_details` so history is preserved if user cancels.
                             # We also keep `seen_error_sigs` intact so identical repeat errors don't flood UI.
-                            st.session_state['skipped_discovery_errors'] = 0
+                            st.session_state['skipped_discovery_errors'] = structural_count
                             st.session_state['pp_failure_count'] = 0
                             st.session_state['pp_success_count'] = 0
                             st.session_state['log_content'] = ""

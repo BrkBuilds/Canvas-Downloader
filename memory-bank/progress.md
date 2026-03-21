@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Attachment ID Reversion & Sync Retry UI Fix** (2026-03-21):
+    - [x] **Attachment ID Reversion**: Reverted synthetic negative IDs for attachments to their true positive Canvas file IDs to ensure proper SQLite deduplication.
+    - [x] **Negative ID Logic Removal**: Stripped the codebase of decoding and refresh logic related to negative attachment IDs.
+    - [x] **Sync Retry UI Fix**: Resolved the blank UI issue during retries by resetting the `sync_cancelled` flag in the retry button callback.
+    - [x] **Verification**: Confirmed zero remaining negative attachment ID references and verified clean compilation.
 - [x] **Emergency Login & Import Fixes** (2026-03-21):
     - [x] **IndentationError Correction**: Fixed a fatal block-level indentation error in the `app.py` retry reconciliation loop.
     - [x] **Import Namespace Repair**: Corrected the `CanvasFileInfo` import in `canvas_logic.py` from the incorrect `ui_shared` to the correct `sync_manager` origin.
@@ -8,6 +13,7 @@
 - [x] **Phase 6: Exhaustive V2 Code Audit & Global Interruption Guard** (2026-03-21):
     - [x] **Deep Structural Audit**: Verified all Task 1-5 requirements for the V2 fixes (Path Integrity, Error Loops, Tuple Identity, Post-Processing Interruption, ACID Transactions).
     - [x] **Global Cancellation Hotfix**: Discovered and patched a missing cancellation guard in the main global download post-processing pipeline in `app.py`.
+    - [x] **Architectural Desk-Check (Secondary Content & Retry)**: Performed a comprehensive QA assessment verifying 5 core pillars: Discovery & Pathing (synthetic negative IDs + true positive attachment IDs), two-layer Deduplication Safety, Sync Diffing (handling deleted subfolders), Download Execution (subfolder recreation), and Sniper Retry State (UI recovery and module scope preservation).
 - [x] **Phase 5: Chaos Audit & State Isolation Fixes** (2026-03-21):
     - [x] **Sniper Retry ACID Refactor ("Await-and-Inject")**: Refactored `download_isolated_batch_async` in `canvas_logic.py` to synchronously await secondary entity discovery and perform an explicit ACID commit to the manifest before injecting attachment tasks.
     - [x] **Path Separation V2 (Data/Presentation)**: Completely decoupled `retry_isolated_details` persistence from UI rendering, preserving full paths for post-processing while JIT-stripping for display.
