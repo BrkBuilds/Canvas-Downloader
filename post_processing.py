@@ -106,7 +106,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         time.sleep(0.05)
     except (KeyboardInterrupt, SystemExit):
         raise
-    except BaseException:
+    except Exception:
         pass
 
 
@@ -130,7 +130,7 @@ def _log_msg(ui: UIBridge, msg: str):
         </div>
         ''', unsafe_allow_html=True)
         time.sleep(0.05)
-    except BaseException:
+    except Exception:
         pass
 
 
@@ -143,7 +143,7 @@ def _show_active_file(ui: UIBridge, filename: str):
         )
     except (KeyboardInterrupt, SystemExit):
         raise
-    except BaseException:
+    except Exception:
         pass
 
 
@@ -481,10 +481,13 @@ def run_video_conversion(files, ui: UIBridge):
 # Convenience: Glob + Run All (for app.py Download flow)
 # ─────────────────────────────────────────────────────
 
-def _glob_files(course_folder: Path, extensions: set) -> list:
+def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None) -> list:
     """Glob course folder for files matching extensions, filtering OS junk."""
     if not course_folder.exists():
         return []
+        
+    explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
+    
     return [
         f for f in course_folder.rglob('*')
         if f.is_file()
@@ -492,10 +495,11 @@ def _glob_files(course_folder: Path, extensions: set) -> list:
         and not f.name.startswith('~$')
         and "__MACOSX" not in f.parts
         and f.suffix.lower() in extensions
+        and (not explicit_set or f.resolve() in explicit_set)
     ]
 
 
-def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, course_name: str = ''):
+def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, course_name: str = '', explicit_files: list = None):
     """Run all converters for a single course folder based on contract settings.
 
     Used by the Download flow in app.py.  Each converter is gated by its
@@ -504,13 +508,15 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     # Archive Extraction
     if contract.get('convert_zip', False):
         archive_exts = {'.zip', '.tar'}
-        archive_files = _glob_files(course_folder, archive_exts)
+        archive_files = _glob_files(course_folder, archive_exts, explicit_files)
         # Also catch .tar.gz by full name (since .gz alone may match other files)
+        explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
         extra_targz = [
             f for f in course_folder.rglob('*')
             if f.is_file() and f.name.lower().endswith('.tar.gz')
             and not f.name.startswith('._') and "__MACOSX" not in f.parts
             and f not in archive_files
+            and (not explicit_set or f.resolve() in explicit_set)
         ] if course_folder.exists() else []
         archive_files.extend(extra_targz)
         if archive_files:
@@ -518,41 +524,47 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # PPTX → PDF
     if contract.get('convert_pptx', False):
-        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'})
+        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files)
         if pptx_files:
             run_pptx_conversion([(f, sm, None) for f in pptx_files], ui)
 
     # HTML → Markdown
     if contract.get('convert_html', False):
-        html_files = _glob_files(course_folder, {'.html'})
+        html_files = _glob_files(course_folder, {'.html'}, explicit_files)
         if html_files:
             run_html_conversion([(f, sm, None) for f in html_files], ui)
 
     # Code → TXT
     if contract.get('convert_code', False):
         from code_converter import CODE_EXTENSIONS
-        code_files = _glob_files(course_folder, CODE_EXTENSIONS)
+        code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
         if code_files:
             run_code_conversion([(f, sm, None) for f in code_files], ui)
 
     # URL Compilation
     if contract.get('convert_urls', False):
-        run_url_compilation([(course_folder, course_name)], ui)
+        if explicit_files is not None:
+             # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
+             has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc', '.html'} for p in explicit_files)
+             if has_shortcut:
+                 run_url_compilation([(course_folder, course_name)], ui)
+        else:
+             run_url_compilation([(course_folder, course_name)], ui)
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):
-        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'})
+        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files)
         if word_files:
             run_word_conversion([(f, sm, None) for f in word_files], ui)
 
     # Excel → PDF
     if contract.get('convert_excel', False):
-        excel_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'})
+        excel_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
         if excel_files:
             run_excel_conversion([(f, sm, None) for f in excel_files], ui)
 
     # Video → MP3
     if contract.get('convert_video', False):
-        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'})
+        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files)
         if video_files:
             run_video_conversion([(f, sm, None) for f in video_files], ui)

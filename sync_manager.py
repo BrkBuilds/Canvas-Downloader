@@ -63,6 +63,12 @@ class AnalysisResult:
     deleted_on_canvas: list[SyncFileInfo] = field(default_factory=list)
     locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
     untracked_shortcuts: int = 0
+    structural_errors: int = 0
+    ignored_files: list[SyncFileInfo] = field(default_factory=list)
+    uptodate_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
+    deleted_on_canvas: list[SyncFileInfo] = field(default_factory=list)
+    locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
+    untracked_shortcuts: int = 0
 
 
 # --- Constants ---
@@ -142,7 +148,7 @@ class SyncManager:
         self.db_path = self.local_path / DB_FILENAME
         self._init_db()
         
-    def _init_db(self):
+    def _init_db(self, attempt=0):
         """Initialize SQLite database for tracking synced files."""
         self.local_path.mkdir(parents=True, exist_ok=True)
         if os.name == 'nt':
@@ -191,17 +197,30 @@ class SyncManager:
         except sqlite3.DatabaseError as e:
             # Database is corrupted — rescue by renaming and re-initializing
             logger.error(f"Database corrupted at {self.db_path}: {e}. Resetting to fresh database.")
+            if attempt >= 3:
+                logger.error(f"Max retries reached trying to fix DB at {self.db_path}. Aborting.")
+                return
             try:
                 corrupted_path = self.db_path.with_name('.canvas_sync_corrupted.db')
                 if corrupted_path.exists():
-                    corrupted_path.unlink()
-                self.db_path.rename(corrupted_path)
-                logger.info(f"Corrupted database backed up to {corrupted_path}")
-            except OSError as rename_err:
-                logger.warning(f"Could not rename corrupted DB: {rename_err}. Deleting instead.")
-                self.db_path.unlink(missing_ok=True)
+                    try:
+                        corrupted_path.unlink()
+                    except OSError as unlink_err:
+                        logger.warning(f"Could not unlink previous corrupted DB: {unlink_err}")
+                try:
+                    self.db_path.rename(corrupted_path)
+                    logger.info(f"Corrupted database backed up to {corrupted_path}")
+                except OSError as rename_err:
+                    logger.warning(f"Could not rename corrupted DB: {rename_err}. Deleting instead.")
+                    try:
+                        self.db_path.unlink(missing_ok=True)
+                    except OSError as unlink_err2:
+                        logger.error(f"Could not delete corrupted DB: {unlink_err2}")
+            except Exception as outer_err:
+                logger.error(f"Unexpected error during DB recovery: {outer_err}")
+            
             # Recursively re-init with a clean slate
-            self._init_db()
+            self._init_db(attempt=attempt + 1)
             return
             
         if os.name == 'nt':
@@ -497,6 +516,7 @@ class SyncManager:
                             target_paths[item.content_id] = clean_module_name
             except Exception as e:
                 logger.warning(f"Failed to fetch module map in analyze_course: {e}")
+                result.structural_errors += 1
         
         # Scan local files for discovery of "existing but untracked" files
         local_files_map = {}
