@@ -17,8 +17,7 @@ import aiofiles
 from canvas_debug import log_debug, clear_debug_log
 import logging
 
-from sync_manager import SyncManager, make_secondary_id, is_secondary_id
-from ui_shared import CanvasFileInfo
+from sync_manager import SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo
 from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
@@ -191,7 +190,7 @@ class CanvasManager:
             
         # Initialize Canvas object
         try:
-            self.canvas = Canvas(self.api_url, self.api_key, request_kwargs={'timeout': 30})
+            self.canvas = Canvas(self.api_url, self.api_key)
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
