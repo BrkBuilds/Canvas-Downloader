@@ -12,11 +12,13 @@ from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
 import aiohttp
+import threading
 import aiofiles
 from canvas_debug import log_debug, clear_debug_log
 import logging
 
-from sync_manager import SyncManager, CanvasFileInfo, make_secondary_id, is_secondary_id
+from sync_manager import SyncManager, make_secondary_id, is_secondary_id
+from ui_shared import CanvasFileInfo
 from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
@@ -162,7 +164,7 @@ class DownloadError:
         self.item_name = item_name
         self.error_type = error_type # e.g., '401', 'Rate Limit', 'Network', 'Generic'
         self.message = message
-        self.raw_error = raw_error
+        self.raw_error = str(raw_error) if isinstance(raw_error, Exception) else raw_error
         self.context = context or {}
         self.timestamp = datetime.now()
 
@@ -189,7 +191,7 @@ class CanvasManager:
             
         # Initialize Canvas object
         try:
-            self.canvas = Canvas(self.api_url, self.api_key)
+            self.canvas = Canvas(self.api_url, self.api_key, request_kwargs={'timeout': 30})
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
@@ -1280,6 +1282,208 @@ class CanvasManager:
             except Exception as e:
                 log_debug(f"Warning: Could not save sync metadata: {e}", debug_file)
 
+    async def download_isolated_batch_async(self, course, error_queue, save_dir, progress_callback=None, check_cancellation=None, debug_mode=False, mb_tracker=None):
+        """
+        Targeted retry for specifically failed items queued in error_queue.
+        """
+        course_name = self._sanitize_filename(course.name)
+        base_path = Path(save_dir) / course_name
+        
+        # We instantiate a local sync_manager so files downloaded here are logged
+        try:
+            sync_manager = SyncManager(base_path, course.id, course.name)
+        except Exception as e:
+            log_debug(f"Failed to initialize SyncManager during isolated batch: {e}", debug_file)
+            sync_manager = None
+        
+        import streamlit as st
+        from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx
+        
+        # Streamlit Context Safety Assert:
+        # Before accessing any session states or spawning sub-tasks, guarantee thread bounds.
+        current_ctx = get_script_run_ctx()
+        if not current_ctx:
+            raise RuntimeError("CRITICAL THREAD LEAK: Streamlit ScriptRunContext is missing in download_isolated_batch_async.")
+            
+        def safe_thread_wrapper(func, *args, **kwargs):
+            add_script_run_ctx(threading.current_thread(), current_ctx)
+            return func(*args, **kwargs)
+
+        concurrent_limit = st.session_state.get('concurrent_downloads', 5)
+        sem = asyncio.Semaphore(concurrent_limit)
+        tasks = []
+        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
+        
+        if mb_tracker is None:
+            mb_tracker = {'bytes_downloaded': 0}
+        debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
+
+        if debug_mode:
+            log_debug(f"\n{'='*50}\n--- Isolated Retry Mode for {course.name} ---\n{'='*50}", debug_file)
+
+        async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
+            for error_obj in error_queue:
+                if check_cancellation and check_cancellation():
+                    break
+                
+                context = getattr(error_obj, 'context', {})
+                file_dict = context.get('file_dict')
+                filepath_str = context.get('filepath')
+                file_filter = context.get('file_filter', 'all')
+                
+                if file_dict and filepath_str:
+                    filepath = Path(filepath_str)
+                    
+                    # Reconstruct lightweight CanvasFileInfo mock object safely
+                    file_obj = CanvasFileInfo(
+                        id=file_dict.get('id', 0),
+                        filename=file_dict.get('filename', ''),
+                        display_name=file_dict.get('display_name', file_dict.get('filename', '')),
+                        size=file_dict.get('size', 0),
+                        modified_at=file_dict.get('modified_at', None),
+                        md5=file_dict.get('md5', None),
+                        url=file_dict.get('url', ''),
+                        content_type=file_dict.get('content-type', ''),
+                        folder_id=file_dict.get('folder_id', None)
+                    )
+                    
+                    # Ensure the explicitly passed parent directory actually exists on disk
+                    # to prevent FileNotFoundError during aiofiles.open writes
+                    Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
+                    
+                    if file_obj.id < 0:
+                        # Synthetic entity - Route differently
+                        from sync_manager import secondary_id_type
+                        etype = secondary_id_type(file_obj.id)
+                        
+                        if etype == 'module_item':
+                            # Legacy synthetic entities (Pages or ExternalURLs)
+                            # Synchronously write standard shortcuts/stubs to disk to prevent brittle API refetches.
+                            try:
+                                url_to_save = file_obj.url
+                                ext = filepath.suffix.lower()
+                                
+                                # Write file formats based directly on extension
+                                if ext == '.html':
+                                    content = f'<meta http-equiv="refresh" content="0; url={url_to_save}">'
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                        await f.write(content)
+                                elif ext == '.url':
+                                    content = f'[InternetShortcut]\nURL={url_to_save}'
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                        await f.write(content)
+                                elif ext == '.webloc':
+                                    content = f'<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n\t<key>URL</key>\n\t<string>{url_to_save}</string>\n</dict>\n</plist>'
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                        await f.write(content)
+                                
+                                # Do NOT append a task; this item is now done synchronously. 
+                                if progress_callback:
+                                    progress_callback(f"Saved Link: {filepath.name}", progress_type='download', explicit_filepath=str(filepath.resolve()))
+                            
+                            except Exception as e:
+                                err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "Legacy Entity Save Error", str(e), raw_error=e)
+                                if progress_callback: progress_callback(err, progress_type='error')
+                                self._log_error(save_dir, err)
+                        else:
+                            # Modern secondary entities (actively re-fetched inside the function using raw_id)
+                            secondary_settings = {'isolate_secondary_content': True}
+                            try:
+                                sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
+                                    safe_thread_wrapper,
+                                    self.download_secondary_entity,
+                                    course, file_obj, filepath.parent,
+                                    sync_manager, secondary_settings,
+                                    progress_callback, debug_file, Path(save_dir), course.name
+                                )
+                                
+                                # 1. The ACID Commit
+                                if sync_manager and sec_id and canvas_updated is not None and sec_filepath:
+                                    try:
+                                        rel_path = str(sec_filepath.relative_to(base_path)).replace('\\', '/')
+                                        await asyncio.to_thread(
+                                            sync_manager.record_downloaded_file,
+                                            canvas_file_id=sec_id,
+                                            canvas_filename=sec_filepath.name,
+                                            local_relative_path=rel_path,
+                                            canvas_updated_at=canvas_updated,
+                                            original_size=0
+                                        )
+                                    except Exception as db_err:
+                                        if debug_mode: log_debug(f"DB Commit failed during retry: {db_err}", debug_file)
+                                
+                                # 2. Dynamic Queue Injection (Await-and-Inject)
+                                if sec_attachments:
+                                    attach_dir = sec_filepath.parent if sec_filepath else filepath.parent
+                                    for att in sec_attachments:
+                                        att_id = att.get('id')
+                                        att_url = att.get('url', '')
+                                        att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                        if not att_url or not att_id:
+                                            continue
+                                            
+                                        att_info = CanvasFileInfo(
+                                            id=att_id,
+                                            filename=att_filename,
+                                            display_name=att.get('display_name', att_filename),
+                                            size=att.get('size', 0),
+                                            modified_at=att.get('modified_at', ''),
+                                            url=att_url,
+                                            content_type=att.get('content-type', '')
+                                        )
+                                        
+                                        # Progress Bar Integrity
+                                        if progress_callback:
+                                            progress_callback(att_filename, progress_type='attachment')
+                                            
+                                        att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                                        
+                                        att_task = asyncio.create_task(self._download_file_async(
+                                            sem, session, att_info, attach_dir, progress_callback, mb_tracker, file_filter, 
+                                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
+                                            sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=att_filepath,
+                                            check_cancellation=check_cancellation
+                                        ))
+                                        tasks.append(att_task)
+
+                            except Exception as sec_e:
+                                err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "Secondary Retry Error", str(sec_e), raw_error=sec_e)
+                                if progress_callback: progress_callback(err, progress_type='error')
+                                self._log_error(save_dir, err)
+                    else:
+                        # Refresh URL securely using the safe_thread_wrapper to preserve context for logging
+                        try:
+                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, file_obj.id)
+                            fresh_url = getattr(fresh_file, 'url', '')
+                            if not fresh_url:
+                                raise ValueError("Canvas API returned an empty URL for this item.")
+                            
+                            file_obj.url = fresh_url
+                            if debug_mode: log_debug(f"Successfully refreshed URL for {file_obj.filename}", debug_file)
+                        except Exception as e:
+                            # HARD-FAIL CONSTRAINT: Do NOT fallback to stale URL. It will just trigger 403 backoff loops.
+                            err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "URL Expiration", f"Could not refresh expired URL: {e}", raw_error=e)
+                            if progress_callback: progress_callback(err, progress_type='error', file_size=file_obj.size)
+                            self._log_error(save_dir, err)
+                            continue # Skip to the next file immediately
+                            
+                        task = asyncio.create_task(self._download_file_async(
+                            sem, session, file_obj, filepath.parent, progress_callback, mb_tracker, file_filter, 
+                            error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath,
+                            check_cancellation=check_cancellation
+                        ))
+                        tasks.append(task)
+                else:
+                    # Discovery error. Lacks file context. Skip and tally.
+                    if 'skipped_discovery_errors' not in getattr(self, '__dict__', {}):
+                        self.skipped_discovery_errors = 0
+                    self.skipped_discovery_errors += 1
+            
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+                
+            return getattr(self, 'skipped_discovery_errors', 0)
 
     async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):
         """Downloads files preserving actual folder structure."""
@@ -1328,7 +1532,7 @@ class CanvasManager:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, target_path, progress_callback, mb_tracker, file_filter, 
                         error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                        sync_manager=sync_manager, course_base_path=base_path
+                        sync_manager=sync_manager, course_base_path=base_path, check_cancellation=check_cancellation
                     ))
                     tasks.append(task)
                 except Exception as e:
@@ -1406,7 +1610,8 @@ class CanvasManager:
                     task = asyncio.create_task(self._download_file_async(
                         sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
                         error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                        sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath
+                        sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath,
+                        check_cancellation=check_cancellation
                     ))
                     tasks.append(task)
                 except Exception as e:
@@ -1507,6 +1712,9 @@ class CanvasManager:
                                         )
                                         downloaded.append((info, filepath))
                         except Exception as e:
+                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Fallback Scan Error", str(e), raw_error=e)
+                             if progress_callback: progress_callback(err, progress_type='error')
+                             self._log_error(error_root_path, err)
                              log_debug(f"Fallback scan item error: {getattr(item, 'title', 'unknown')}: {e}", debug_file)
 
                 if module_tasks:
@@ -1520,6 +1728,9 @@ class CanvasManager:
                            downloaded.append(result)
 
             except Exception as e:
+                err = DownloadError(course.name, "Fallback Module Scan", "Scan Error", str(e), raw_error=e)
+                if progress_callback: progress_callback(err, progress_type='error')
+                self._log_error(error_root_path, err)
                 log_debug(f"Fallback module scan failed: {e}", debug_file)
 
         except Exception as e:
@@ -1529,7 +1740,7 @@ class CanvasManager:
         
         return downloaded
 
-    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, explicit_filepath=None):
+    async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, explicit_filepath=None, check_cancellation=None):
         if explicit_filepath:
             filepath = explicit_filepath
             filename = filepath.name
@@ -1560,7 +1771,7 @@ class CanvasManager:
                         log_debug(f"Skipping existing file: {filename}", debug_file)
                         # User Request: Remove skipped files from Total MB count (they don't need downloading)
                         if progress_callback:
-                             progress_callback("", progress_type='skipped', file_size=file_size_bytes)
+                             progress_callback("", progress_type='skipped', file_size=file_size_bytes, explicit_filepath=str(filepath.resolve()))
                         # Sync Run #0: Record skipped-but-existing files to the DB
                         if sync_manager and course_base_path:
                             try:
@@ -1595,13 +1806,26 @@ class CanvasManager:
 
             url = file_obj.url
             if not url:
+                # Create lightweight dictionary for session state JSON serialization safety
+                safe_file_dict = {
+                    'filename': getattr(file_obj, 'filename', ''),
+                    'id': getattr(file_obj, 'id', ''),
+                    'url': getattr(file_obj, 'url', ''),
+                    'size': getattr(file_obj, 'size', 0),
+                    'content-type': getattr(file_obj, 'content-type', ''),
+                    'display_name': getattr(file_obj, 'display_name', ''),
+                    'modified_at': getattr(file_obj, 'modified_at', None),
+                    'md5': getattr(file_obj, 'md5', None),
+                    'folder_id': getattr(file_obj, 'folder_id', None)
+                }
+                
                 # Check for LTI/Media streams
                 ext_lower = filepath.suffix.lower()
                 media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
                 if ext_lower in media_exts:
-                    err = DownloadError(course_name, filename, "LTI/Media Stream", "This video is streamed via a Canvas plugin (e.g., Panopto/Studio) and cannot be directly downloaded.")
+                    err = DownloadError(course_name, filename, "LTI/Media Stream", "This video is streamed via a Canvas plugin (e.g., Panopto/Studio) and cannot be directly downloaded.", context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                 else:
-                    err = DownloadError(course_name, filename, "No URL", "File object has no URL")
+                    err = DownloadError(course_name, filename, "No URL", "File object has no URL", context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                     
                 if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                 self._log_error(error_root_path, err)
@@ -1611,6 +1835,10 @@ class CanvasManager:
 
             for attempt in range(MAX_RETRIES):
                 try:
+                    # Early Cancellation Guard (API DoS fix)
+                    if check_cancellation and check_cancellation():
+                        return
+                    
                     # Request block inside semaphore
                     async with sem:
                         log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
@@ -1623,8 +1851,19 @@ class CanvasManager:
 
                             log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
                             if response.status == 200:
+                                # --- Content-Type Validation ---
+                                # Guards against Canvas returning HTML error pages
+                                # with a 200 status (common LMS failure mode).
+                                resp_ct = (response.headers.get('Content-Type', '') or '').lower().split(';')[0].strip()
+                                is_html_response = resp_ct == 'text/html'
+                                expects_html = filepath.suffix.lower() in ('.html', '.htm')
+                                if is_html_response and not expects_html and file_size_bytes > 0:
+                                    raise ValueError(
+                                        f"Content-Type mismatch: server returned 'text/html' "
+                                        f"but expected a binary file ({filepath.suffix}). "
+                                        f"This usually means Canvas returned an error page."
+                                    )
                                 # --- Atomic .part Pattern ---
-                                import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit
                                 part_path = filepath.parent / (filepath.name + '.part')
                                 download_interrupted = False
                                 
@@ -1632,8 +1871,8 @@ class CanvasManager:
                                     async with aiofiles.open(make_long_path(part_path), 'wb') as f:
                                         total_bytes = 0
                                         while True:
-                                            # Instant cancel check INSIDE the chunk loop
-                                            if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
+                                            # Instant cancel check INSIDE the chunk loop via decoupled callable
+                                            if check_cancellation and check_cancellation():
                                                 download_interrupted = True
                                                 break
                                             
@@ -1717,7 +1956,7 @@ class CanvasManager:
                                         # Non-fatal: download succeeded, DB write failed. File is on disk.
                                 
                                 if progress_callback:
-                                    progress_callback(f'Downloading file: {filename}', progress_type='download')
+                                    progress_callback(f'Downloading file: {filename}', progress_type='download', explicit_filepath=str(filepath.resolve()))
                                     
                                 return (
                                     CanvasFileInfo(
@@ -1735,7 +1974,7 @@ class CanvasManager:
                             else:
                                 err_msg = f"Download failed with status {response.status}"
                                 log_debug(f"ERROR: {err_msg}", debug_file)
-                                err = DownloadError(course_name, filename, f"HTTP {response.status}", err_msg)
+                                err = DownloadError(course_name, filename, f"HTTP {response.status}", err_msg, context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                                 if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                                 self._log_error(error_root_path, err)
                                 return
@@ -1756,12 +1995,12 @@ class CanvasManager:
                     if attempt < MAX_RETRIES - 1:
                         await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
                     else:
-                        err = DownloadError(course_name, filename, "Network Error", f"Max retries exceeded: {e}", raw_error=e)
+                        err = DownloadError(course_name, filename, "Network Error", f"Max retries exceeded: {e}", raw_error=e, context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                         if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                         self._log_error(error_root_path, err)
                         return
                 except Exception as e:
-                    err = DownloadError(course_name, filename, "Write Error", f"File system error: {e}", raw_error=e)
+                    err = DownloadError(course_name, filename, "Write Error", f"File system error: {e}", raw_error=e, context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                     if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                     self._log_error(error_root_path, err)
                     return
@@ -2051,18 +2290,6 @@ class CanvasManager:
 
         # DB record ― synthetic negative ID
         synthetic_id = make_secondary_id(entity_type, canvas_entity_id)
-        if sync_manager and course_base_path:
-            try:
-                rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
-                sync_manager.record_downloaded_file(
-                    canvas_file_id=synthetic_id,
-                    canvas_filename=rel_path,
-                    local_relative_path=rel_path,
-                    canvas_updated_at=canvas_updated_at or '',
-                    original_size=0,
-                )
-            except Exception:
-                pass  # Non-fatal
 
         if progress_callback:
             progress_callback(
@@ -2070,7 +2297,7 @@ class CanvasManager:
                 entity_type=entity_type,
             )
 
-        return filepath, synthetic_id
+        return filepath, synthetic_id, canvas_updated_at or ''
 
     def download_secondary_entity(self, course, canvas_file_info, base_path,
                                    sync_manager, secondary_content_settings,
@@ -2108,11 +2335,11 @@ class CanvasManager:
 
         file_id = canvas_file_info.id
         if not is_secondary_id(file_id):
-            return None, None, None
+            return None, None, None, None
 
         entity_type = secondary_id_type(file_id)
         if not entity_type or entity_type in ('module_item', 'unknown'):
-            return None, None, None
+            return None, None, None, None
 
         isolate = secondary_content_settings.get('isolate_secondary_content', True)
         offset = SECONDARY_ID_OFFSETS.get(entity_type, 0)
@@ -2166,7 +2393,7 @@ class CanvasManager:
                     )),
                     ('URL', getattr(assignment, 'html_url', None)),
                 ]
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'assignment',
                     getattr(assignment, 'name', 'Untitled Assignment'),
                     a_desc,
@@ -2181,7 +2408,7 @@ class CanvasManager:
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, attachments or None
+                return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'quiz':
                 quiz = course.get_quiz(raw_id)
@@ -2190,7 +2417,7 @@ class CanvasManager:
                     ('Due', getattr(quiz, 'due_at', None)),
                     ('URL', getattr(quiz, 'html_url', None)),
                 ]
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'quiz',
                     getattr(quiz, 'title', 'Untitled Quiz'),
                     getattr(quiz, 'description', '') or '',
@@ -2205,7 +2432,7 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None
+                return filepath, syn_id, None, canvas_updated
 
             elif entity_type == 'discussion':
                 topic = course.get_discussion_topic(raw_id)
@@ -2216,7 +2443,7 @@ class CanvasManager:
                 ]
                 updated_at = (getattr(topic, 'last_reply_at', '')
                               or getattr(topic, 'updated_at', '') or '')
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'discussion',
                     getattr(topic, 'title', 'Untitled Discussion'),
                     (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
@@ -2231,7 +2458,7 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None
+                return filepath, syn_id, None, canvas_updated
 
             elif entity_type == 'announcement':
                 topic = course.get_discussion_topic(raw_id)
@@ -2239,7 +2466,7 @@ class CanvasManager:
                     ('Posted', getattr(topic, 'posted_at', None)),
                     ('URL', getattr(topic, 'html_url', None)),
                 ]
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'announcement',
                     getattr(topic, 'title', 'Announcement'),
                     (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
@@ -2254,7 +2481,7 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None
+                return filepath, syn_id, None, canvas_updated
 
             elif entity_type == 'syllabus':
                 full_course = self.canvas.get_course(
@@ -2262,8 +2489,8 @@ class CanvasManager:
                 )
                 body = getattr(full_course, 'syllabus_body', '') or ''
                 if not body:
-                    return None, None, None
-                filepath, syn_id = self._save_secondary_entity(
+                    return None, None, None, None
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'syllabus', 'Syllabus', body,
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
@@ -2276,7 +2503,7 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=None,
                 )
-                return filepath, syn_id, None
+                return filepath, syn_id, None, canvas_updated
 
             elif entity_type == 'rubric':
                 rubric = course.get_rubric(raw_id)
@@ -2294,7 +2521,7 @@ class CanvasManager:
                         body_lines.append(
                             f"- **{r.get('description', '')}** ({r.get('points', '')} pts)"
                         )
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'rubric',
                     getattr(rubric, 'title', 'Rubric'),
                     '\n'.join(body_lines),
@@ -2310,7 +2537,7 @@ class CanvasManager:
                     metadata_pairs=None,
                     file_extension='.md',
                 )
-                return filepath, syn_id, None
+                return filepath, syn_id, None, canvas_updated
 
             else:
                 log_debug(f"Unknown secondary entity type: {entity_type} for ID {file_id}", debug_file)
@@ -2501,7 +2728,7 @@ class CanvasManager:
                     ('URL', getattr(assignment, 'html_url', None)),
                 ]
 
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'assignment', a_name, description, base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=a_id, canvas_updated_at=updated_at,
@@ -2552,6 +2779,20 @@ class CanvasManager:
                             explicit_filepath=att_filepath,
                         ))
                         download_tasks.append(task)
+                        
+                # ACID Fix: Only commit to DB *after* attachments are safely in the queue
+                if filepath and sync_manager:
+                    try:
+                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=filepath.name,
+                            local_relative_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception:
+                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Assignments not accessible: {e}", debug_file)
@@ -2585,7 +2826,7 @@ class CanvasManager:
 
             updated_at = getattr(full_course, 'updated_at', '') or ''
 
-            self._save_secondary_entity(
+            filepath, syn_id, canvas_updated = self._save_secondary_entity(
                 'syllabus', 'Syllabus', syllabus_body, base_path,
                 course_base_path=base_path, sync_manager=sync_manager,
                 canvas_entity_id=course.id, canvas_updated_at=updated_at,
@@ -2600,6 +2841,19 @@ class CanvasManager:
                     ('URL', getattr(full_course, 'html_url', None) or getattr(course, 'html_url', None)),
                 ],
             )
+            
+            if filepath and sync_manager:
+                try:
+                    rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                    sync_manager.record_downloaded_file(
+                        canvas_file_id=syn_id,
+                        canvas_filename=filepath.name,
+                        local_relative_path=rel_path,
+                        canvas_updated_at=canvas_updated,
+                        original_size=0,
+                    )
+                except Exception:
+                    pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Syllabus not accessible: {e}", debug_file)
@@ -2658,7 +2912,7 @@ class CanvasManager:
                 has_attachments = bool(attachments)
                 display_name = f"{date_prefix}{title}"
 
-                filepath, syn_id = self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'announcement', display_name, message + self._build_discussion_replies_html_sync(topic, debug_file), base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=t_id, canvas_updated_at=updated_at,
@@ -2712,6 +2966,19 @@ class CanvasManager:
                             explicit_filepath=att_filepath,
                         ))
                         download_tasks.append(task)
+                        
+                if filepath and sync_manager:
+                    try:
+                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=filepath.name,
+                            local_relative_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception:
+                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Announcements not accessible: {e}", debug_file)
@@ -2752,7 +3019,7 @@ class CanvasManager:
                               or getattr(topic, 'updated_at', '')
                               or '')
 
-                self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'discussion', title, message + self._build_discussion_replies_html_sync(topic, debug_file), base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=t_id, canvas_updated_at=updated_at,
@@ -2769,6 +3036,19 @@ class CanvasManager:
                         ('URL', getattr(topic, 'html_url', None)),
                     ],
                 )
+                
+                if filepath and sync_manager:
+                    try:
+                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=filepath.name,
+                            local_relative_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception:
+                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Discussions not accessible: {e}", debug_file)
@@ -2850,7 +3130,7 @@ class CanvasManager:
                 if questions_html:
                     full_body += '<h2>Questions</h2>' + questions_html
 
-                self._save_secondary_entity(
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'quiz', q_title, full_body, base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=q_id, canvas_updated_at=updated_at,
@@ -2867,6 +3147,19 @@ class CanvasManager:
                         ('URL', getattr(quiz, 'html_url', None)),
                     ],
                 )
+                
+                if filepath and sync_manager:
+                    try:
+                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=filepath.name,
+                            local_relative_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception:
+                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Quizzes not accessible: {e}", debug_file)
