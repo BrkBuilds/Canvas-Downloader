@@ -1,5 +1,7 @@
 import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
+from post_processing import run_all_conversions, UIBridge
+from sync_manager import SyncManager
 import asyncio
 import base64
 import collections
@@ -1090,6 +1092,7 @@ with _main_content.container():
                         st.session_state['downloaded_items'] = 0
                         st.session_state['course_mb_downloaded'] = {}
                         st.session_state['log_content'] = ""  # Initialize log content
+                        st.session_state['seen_error_sigs'] = set()  # Clear deduplication state for fresh download
                         
                         # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
                         st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
@@ -1430,7 +1433,19 @@ with _main_content.container():
                         if 'download_file_details' not in st.session_state:
                             st.session_state['download_file_details'] = {}
 
-                        if progress_type in ('download', 'page', 'link'):
+                        if progress_type == 'skipped':
+                            st.session_state['downloaded_items'] += 1
+                            if msg:
+                                log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped: {msg}</span>")
+                                if kwargs.get('explicit_filepath'):
+                                    course_key = course.name
+                                    if course_key not in st.session_state['download_file_details']:
+                                        st.session_state['download_file_details'][course_key] = []
+                                    st.session_state['download_file_details'][course_key].append(kwargs['explicit_filepath'])
+                                    st.session_state['download_file_details'] = st.session_state['download_file_details']
+                            render_dashboard()
+
+                        elif progress_type in ('download', 'page', 'link'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
                                 active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
@@ -1523,7 +1538,7 @@ with _main_content.container():
                             render_dashboard()
                     except (KeyboardInterrupt, SystemExit):
                         raise
-                    except BaseException:
+                    except Exception:
                         # Catch Streamlit's StopException / RerunException during async
                         # teardown without killing the download event loop. Cancellation
                         # flows via st.session_state['cancel_requested'] instead.
@@ -1611,7 +1626,7 @@ with _main_content.container():
                                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
                     contract = {k: st.session_state.get(f'persistent_{k}', False) for k in _convert_keys}
 
-                    if any(contract.values()):
+                    if any(contract.values()) and not (st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled')):
                         pp_sm = SyncManager(course_folder, course.id, course.name)
                         pp_ui = UIBridge(
                             header_placeholder=header_placeholder,
@@ -1670,6 +1685,345 @@ with _main_content.container():
                         logger.error(f"Failed to write session log: {e}")
                 # -------------------------------------------------------------------
         
+        elif st.session_state['download_status'] == 'isolated_retry':
+            if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
+                st.session_state['download_status'] = 'cancelled'
+                st.rerun()
+                
+            queue = st.session_state.get('isolated_retry_queue', [])
+
+            # 1. Update total_items to reflect strictly the retry queue
+            total_items = len(queue)
+            st.session_state['total_items'] = total_items
+
+            # 2. Dynamically calculate MB from the encapsulated file_dict (Object/Dict safe)
+            total_bytes = 0
+            for err in queue:
+                # Safely handle both Object and Dict representations of the error payload
+                ctx = getattr(err, 'context', None) if not isinstance(err, dict) else err.get('context')
+                
+                if isinstance(ctx, dict):
+                    f_dict = ctx.get('file_dict', {})
+                    if isinstance(f_dict, dict):
+                        total_bytes += f_dict.get('size', 0)
+
+            total_mb = total_bytes / (1024 * 1024) if total_bytes > 0 else 0.0
+
+            # 3. Explicitly overwrite the global session state so progress metrics use the new denominator
+            st.session_state['total_mb'] = total_mb
+            start_time = st.session_state.get('start_time', time.time())
+            log_deque = st.session_state.get('log_deque', collections.deque(maxlen=6))
+            
+            # Map course_name -> course object
+            course_map = {c.name: c for c in st.session_state.get('courses_to_download', [])}
+            
+            # Group errors by course_name
+            queue_by_course = {}
+            for err in queue:
+                queue_by_course.setdefault(err.course_name, []).append(err)
+            
+            def render_dashboard(current_course_name):
+                # Calculate current progress
+                current_files = st.session_state.get('retry_downloaded_items', 0) + st.session_state.get('retry_failed_items', 0)
+                
+                total_items = st.session_state.get('total_items', 1)
+                percent = int((current_files / max(1, total_items)) * 100)
+                percent = min(100, percent)
+                if current_files == total_items:
+                    percent = 100
+                
+                # Metrics Extraction for Parity
+                bytes_down = st.session_state.get('retry_mb_tracker', {}).get('bytes_downloaded', 0)
+                current_mb = bytes_down / (1024 * 1024)
+                elapsed = time.time() - st.session_state.get('start_time', time.time())
+                speed_mb_s = current_mb / elapsed if elapsed > 0 else 0
+
+                header_placeholder.markdown(f'''
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Retrying Failed Items</p>
+                    <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(current_course_name)}</h3>
+                </div>
+                ''', unsafe_allow_html=True)
+
+                progress_placeholder.markdown(f'''
+                <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+                    <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
+                        {percent}%
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                metrics_placeholder.markdown(f'''
+                <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
+                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">MB</span></span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
+                        <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files Processed</span>
+                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_items}</span></span>
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                log_content = "<br>".join(reversed(list(log_deque)))
+                log_placeholder.markdown(f'''
+                <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                    {log_content}
+                </div>
+                ''', unsafe_allow_html=True)
+            
+            # Use same update_ui logic to append errors/successes
+            def update_ui(msg, progress_type='log', **kwargs):
+                try:
+                    if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'): return
+                    
+                    is_retry = st.session_state.get('download_status') == 'isolated_retry'
+                    
+                    if 'download_file_details' not in st.session_state:
+                         st.session_state['download_file_details'] = {}
+                    if is_retry and 'retry_isolated_details' not in st.session_state:
+                         st.session_state['retry_isolated_details'] = {}
+                         
+                    course_name_ref = kwargs.get('course_name', 'Unknown')
+                         
+                    if progress_type == 'skipped':
+                        if is_retry:
+                            st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
+                        else:
+                            st.session_state['downloaded_items'] += 1
+                        if msg:
+                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped: {msg}</span>")
+                            if kwargs.get('explicit_filepath'):
+                                if is_retry:
+                                    if course_name_ref not in st.session_state['retry_isolated_details']:
+                                        st.session_state['retry_isolated_details'][course_name_ref] = []
+                                    st.session_state['retry_isolated_details'][course_name_ref].append(kwargs['explicit_filepath'])
+                                    st.session_state['retry_isolated_details'] = st.session_state['retry_isolated_details']
+                                else:
+                                    if course_name_ref not in st.session_state['download_file_details']:
+                                        st.session_state['download_file_details'][course_name_ref] = []
+                                    st.session_state['download_file_details'][course_name_ref].append(kwargs['explicit_filepath'])
+                                    st.session_state['download_file_details'] = st.session_state['download_file_details']
+                        render_dashboard(course_name_ref)
+
+                    elif progress_type in ('download', 'page', 'link', 'attachment'):
+                        if is_retry:
+                            st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
+                        else:
+                            st.session_state['downloaded_items'] += 1
+                        if msg:
+                            active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Retry success: {msg}...</div>", unsafe_allow_html=True)
+                            log_deque.append(f"[✅] Finished: {msg}")
+                            
+                            if kwargs.get('explicit_filepath'):
+                                if is_retry:
+                                    if course_name_ref not in st.session_state['retry_isolated_details']:
+                                        st.session_state['retry_isolated_details'][course_name_ref] = []
+                                    st.session_state['retry_isolated_details'][course_name_ref].append(kwargs['explicit_filepath'])
+                                    st.session_state['retry_isolated_details'] = st.session_state['retry_isolated_details']
+                                else:
+                                    if course_name_ref not in st.session_state['download_file_details']:
+                                        st.session_state['download_file_details'][course_name_ref] = []
+                                    st.session_state['download_file_details'][course_name_ref].append(kwargs['explicit_filepath'])
+                                    st.session_state['download_file_details'] = st.session_state['download_file_details']
+                        render_dashboard(course_name_ref)
+                    
+                    elif progress_type == 'error':
+                        if is_retry:
+                            st.session_state['retry_failed_items'] = st.session_state.get('retry_failed_items', 0) + 1
+                        else:
+                            st.session_state['failed_items'] += 1
+                        if msg:
+                            if isinstance(msg, DownloadError): error_obj = msg
+                            else: error_obj = DownloadError(course_name_ref, "Unknown Item", "Generic Error", str(msg))
+                            
+                            # Deduplicate identical errors to prevent log spam
+                            sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
+                            seen = st.session_state.get('seen_error_sigs', set())
+                            if sig not in seen:
+                                seen.add(sig)
+                                st.session_state['seen_error_sigs'] = seen
+                                
+                                if 'download_errors_list' not in st.session_state: st.session_state['download_errors_list'] = []
+                                st.session_state['download_errors_list'].append(error_obj)
+                                
+                                error_text = f"[{esc(course_name_ref)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                log_deque.append(f"<span style='color: #FF7B72;'>[❌] Failed: {esc(error_text)}</span>")
+                        render_dashboard(course_name_ref)
+                        
+                    elif msg and progress_type == 'log':
+                        new_line = f"[{esc(course_name_ref)}] {msg}"
+                        log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[ℹ️] {new_line}</span>")
+                        render_dashboard(course_name_ref)
+                except Exception:
+                    pass
+
+            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+            
+            if 'retry_mb_tracker' not in st.session_state:
+                st.session_state['retry_mb_tracker'] = {'bytes_downloaded': 0}
+            
+            for course_name, errors in queue_by_course.items():
+                if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'): break
+                course = course_map.get(course_name)
+                if not course: continue
+                
+                render_dashboard(course.name)
+                
+                dropped_errors = asyncio.run(cm.download_isolated_batch_async(
+                    course=course,
+                    error_queue=errors,
+                    save_dir=st.session_state['download_path'],
+                    progress_callback=lambda msg, p_type='log', **kwargs: update_ui(msg, p_type, course_name=kwargs.get('course_name', course.name), **kwargs),
+                    check_cancellation=check_cancellation,
+                    debug_mode=st.session_state.get('debug_mode', False),
+                    mb_tracker=st.session_state['retry_mb_tracker']
+                ))
+                if dropped_errors:
+                    st.session_state['skipped_discovery_errors'] = st.session_state.get('skipped_discovery_errors', 0) + dropped_errors
+            
+            # --- NEW Post-Processing Pipeline for Retry ---
+            if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
+                if not getattr(st.session_state, '_sync_cancel_warning_shown', False):
+                    st.warning("Retry cancelled. Skipping post-processing.")
+                    st.session_state['_sync_cancel_warning_shown'] = True
+            else:
+                for course_name in queue_by_course.keys():
+                    course = course_map.get(course_name)
+                    if not course: continue
+                    course_name_sanitized = cm._sanitize_filename(course.name)
+                    course_folder = Path(st.session_state['download_path']) / course_name_sanitized
+    
+                    if course_folder.exists():
+                        _convert_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                                         'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+                        contract = {k: st.session_state.get(f'persistent_{k}', False) for k in _convert_keys}
+    
+                        if any(contract.values()):
+                            # --- FIX: Post-Processing Overkill Pipeline Swaps ---
+                            success_names = st.session_state.get('retry_isolated_details', {}).get(course.name, [])
+                            if not success_names:
+                                continue  # Skip post-processing entirely if nothing actually succeeded during this retry
+                                
+                            from pathlib import Path
+                            success_paths = []
+                            for n in success_names:
+                                if Path(n).is_absolute():
+                                    success_paths.append(str(Path(n).resolve()))
+                                else:
+                                    success_paths.append(str((course_folder / cm._sanitize_filename(n)).resolve()))
+                            
+                            st.session_state['is_post_processing'] = True
+                            pp_sm = SyncManager(course_folder, course.id, course.name)
+                            pp_ui = UIBridge(
+                                header_placeholder=header_placeholder,
+                                progress_placeholder=progress_placeholder,
+                                metrics_placeholder=metrics_placeholder,
+                                log_placeholder=log_placeholder,
+                                active_file_placeholder=active_file_placeholder,
+                                log_lines=log_deque,
+                                is_cancelled=lambda: st.session_state.get('download_cancelled', False),
+                                error_log_path=Path(st.session_state['download_path']),
+                            )
+                            run_all_conversions(
+                                course_folder=course_folder,
+                                sm=pp_sm,
+                                contract=contract,
+                                ui=pp_ui,
+                                course_name=course.name,
+                                explicit_files=success_paths
+                            )
+                            st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
+            # --- End Post-Processing Pipeline ---
+
+            # --- Success Metrics Rehydration & Error Resolution ---
+            retry_success_details = st.session_state.get('retry_isolated_details', {})
+            global_details = st.session_state.get('download_file_details', {})
+            global_errors = st.session_state.get('download_errors_list', [])
+            
+            resolved_count = 0
+            
+            from pathlib import Path
+            temp_cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+            
+            for c_name, success_list in retry_success_details.items():
+                # 1. Merge into global details
+                if c_name not in global_details:
+                    global_details[c_name] = []
+                for p in success_list:
+                    if p not in global_details[c_name]:
+                        global_details[c_name].append(p)
+                
+                # 2. Iterate successes to find resolved errors
+                success_basenames = {Path(p).name for p in success_list}
+                resolved_for_course = []
+                
+                # Filter out errors that are now resolved
+                new_global_errors = []
+                for err in global_errors:
+                    # Guardrail 2: The Serialization Trap
+                    ctx = getattr(err, 'context', None) if not isinstance(err, dict) else err.get('context')
+                    err_filepath = ctx.get('filepath') if isinstance(ctx, dict) else None
+                    
+                    err_course_name = getattr(err, 'course_name', None) if not isinstance(err, dict) else err.get('course_name')
+                    err_item_name = getattr(err, 'item_name', None) if not isinstance(err, dict) else err.get('item_name')
+                    
+                    is_resolved = False
+                    if err_filepath:
+                         is_resolved = any(str(Path(p).resolve()) == str(Path(err_filepath).resolve()) for p in success_list)
+                    else:
+                         is_resolved = (err_course_name == c_name and err_item_name in success_basenames)
+                         
+                    if is_resolved:
+                        resolved_for_course.append(err_item_name)
+                        resolved_count += 1
+                        
+                        # --- FIX: Error Signature Drift ---
+                        # Reconstruct the exact signature used to deduplicate the error
+                        err_error_type = getattr(err, 'error_type', 'Unknown Type') if not isinstance(err, dict) else err.get('error_type', 'Unknown Type')
+                        sig = f"{c_name}|{err_item_name}|{err_error_type}"
+                        
+                        # Safely purge from tracking buffer to prevent permanent muting
+                        # CRITICAL: Use .discard() instead of .remove() to prevent KeyError crashes
+                        seen = st.session_state.get('seen_error_sigs', set())
+                        if sig in seen:
+                            seen.discard(sig)
+                            st.session_state['seen_error_sigs'] = seen
+                        
+                        # Guardrail 3: Safe Directory Resolution (fallback to course folder if err_filepath missing)
+                        save_dir = Path(err_filepath).parent if err_filepath else Path(st.session_state['download_path']) / temp_cm._sanitize_filename(c_name)
+                        log_file = save_dir / "download_errors.txt"
+                        if log_file.exists():
+                            try:
+                                with open(log_file, "a", encoding="utf-8") as f:
+                                    f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [RESOLVED] Successfully downloaded: {err_item_name}\n")
+                            except Exception as e:
+                                logger.error(f"Failed to write [RESOLVED] log: {e}")
+                    else:
+                        new_global_errors.append(err)
+                global_errors = new_global_errors
+
+            # Update session state with rehydrated metrics
+            st.session_state['download_file_details'] = global_details
+            st.session_state['download_errors_list'] = global_errors
+            st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + st.session_state.get('retry_downloaded_items', 0)
+            st.session_state['failed_items'] = max(0, st.session_state.get('failed_items', 0) - resolved_count)
+
+            # Post-retry cleanup
+            # --- FIX: Cancel-to-Done Bypass ---
+            if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
+                st.session_state['download_status'] = 'cancelled'
+            else:
+                st.session_state['download_status'] = 'done'
+                st.balloons()
+            st.rerun()
+
         elif st.session_state['download_status'] == 'done':
             # --- Premium Completion Screen (Parity with Sync) ---
             download_errors = st.session_state.get('download_errors_list', [])
@@ -1686,8 +2040,9 @@ with _main_content.container():
 
             file_details_raw = st.session_state.get('download_file_details', {})
             file_details = {}
-            for k, names in file_details_raw.items():
-                filtered = [n for n in names if n not in _failed_names]
+            for k, paths in file_details_raw.items():
+                # Present only the base name to the UI rendering loop to preserve Completion Card aesthetics
+                filtered = [Path(p).name for p in paths if Path(p).name not in _failed_names]
                 if filtered:
                     file_details[k] = filtered
             st.session_state['download_file_details'] = file_details
@@ -1701,6 +2056,11 @@ with _main_content.container():
                 total_bytes=total_bytes,
                 mode='download',
             )
+
+            # Hybrid Discovery Warning (Surfaced explicitly in UI)
+            skipped_discovery = st.session_state.get('skipped_discovery_errors', 0)
+            if skipped_discovery > 0:
+                st.warning(f"⚠️ {skipped_discovery} item(s) failed during the discovery phase and could not be isolated for retry. A full course rescan is required to retry them.", icon="⚠️")
 
 
             # 2. Post-processing warning
@@ -1723,17 +2083,49 @@ with _main_content.container():
 
             # 4. Retry button (only if errors)
             if download_errors:
-                st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
-                col_retry, _ = st.columns([0.25, 0.75])
-                with col_retry:
-                    if st.button("🔄 Retry Failed Items", type="secondary", key="retry_failed_btn",
-                                 use_container_width=True):
-                        st.session_state['current_course_index'] = 0
-                        st.session_state['download_status'] = 'scanning'
-                        st.session_state['downloaded_items'] = 0
-                        st.session_state['failed_items'] = 0
-                        st.session_state['download_errors_list'] = []
+                # --- FIX: Prevent Structural Error Retry Infinite Loop ---
+                # Guarantee that at least one error corresponds to a physical file (has 'filepath' context)
+                has_retriable_errors = any(
+                    isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') 
+                    for err in download_errors
+                )
+                
+                if has_retriable_errors:
+                    st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+                    col_retry, _ = st.columns([0.25, 0.75])
+                    with col_retry:
+                        if st.button("🔄 Retry Failed Items", type="secondary", key="retry_failed_btn",
+                                     use_container_width=True):
+                        # Sniper Retry: jump straight to 'isolated_retry', skipping the
+                        # multi-minute Canvas analysis phase.  Queue specifically the failed items.
+                        
+                        # CRITICAL: Capture the existing error list into a local variable BEFORE clearing state!
+                        current_errors = list(st.session_state.get('download_errors_list', []))
+                        st.session_state['isolated_retry_queue'] = current_errors
+                        st.session_state['download_status'] = 'isolated_retry'
+                        
+                        # --- FIX: Prevent Success Amnesia ---
+                        # Initialize sandboxed variables for the retry isolated UI
+                        st.session_state['retry_isolated_details'] = {}
+                        st.session_state['retry_downloaded_items'] = 0
+                        st.session_state['retry_failed_items'] = 0
+                        
+                        # --- FIX: Prevent Zombie Cancel Loop ---
+                        st.session_state['cancel_requested'] = False
+                        st.session_state['download_cancelled'] = False
+                        
+                        # Note: We NO LONGER wipe global `downloaded_items`, `failed_items`, `download_errors_list`,
+                        # or `download_file_details` so history is preserved if user cancels.
+                        # We also keep `seen_error_sigs` intact so identical repeat errors don't flood UI.
+                        st.session_state['skipped_discovery_errors'] = 0
+                        st.session_state['pp_failure_count'] = 0
+                        st.session_state['pp_success_count'] = 0
                         st.session_state['log_content'] = ""
+                        st.session_state['start_time'] = time.time()
+                        
+                        # Set total items so the progress bar works
+                        st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
+                        
                         st.rerun()
 
             # 5. Per-course folder cards with file dropdowns

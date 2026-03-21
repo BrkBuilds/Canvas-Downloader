@@ -45,30 +45,36 @@ def _safe_close(clip, label="clip"):
             f"moviepy {label}.close() timed out after "
             f"{_CLOSE_TIMEOUT_SECONDS}s — abandoning hung FFmpeg process and forcing termination"
         )
-        import psutil
-        def _terminate_proc(proc):
-            if proc and proc.pid:
-                try:
-                    import psutil
-                    parent = psutil.Process(proc.pid)
-                    for child in parent.children(recursive=True):
+        try:
+            import psutil
+
+            def _terminate_proc(proc):
+                if proc and proc.pid:
+                    try:
+                        parent = psutil.Process(proc.pid)
+                        for child in parent.children(recursive=True):
+                            try:
+                                child.kill()
+                            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                pass
                         try:
-                            child.kill()
+                            parent.kill()
                         except (psutil.NoSuchProcess, psutil.AccessDenied):
                             pass
-                    try:
-                        parent.kill()
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
 
-        if hasattr(clip, 'reader') and hasattr(clip.reader, 'proc'):
-            _terminate_proc(clip.reader.proc)
-        if hasattr(clip, 'audio') and hasattr(clip.audio, 'reader') and hasattr(clip.audio.reader, 'proc'):
-            _terminate_proc(clip.audio.reader.proc)
+            if hasattr(clip, 'reader') and hasattr(clip.reader, 'proc'):
+                _terminate_proc(clip.reader.proc)
+            if hasattr(clip, 'audio') and hasattr(clip.audio, 'reader') and hasattr(clip.audio.reader, 'proc'):
+                _terminate_proc(clip.audio.reader.proc)
+        except ImportError:
+            logger.warning(
+                "psutil not available — cannot force-kill hung FFmpeg process. "
+                "It may remain as an orphan until the application exits."
+            )
     except Exception:
         pass
     finally:

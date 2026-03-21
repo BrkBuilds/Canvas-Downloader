@@ -46,6 +46,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Atomic File Writing vs Concurrent Thread Locks (JSON TOCTOU)**:
     - *Problem*: While writing to a `.tmp` file and using `os.replace` guarantees the file on disk isn't corrupted (Disk Tearing), doing so during a concurrent Read-Modify-Write cycle without a `threading.Lock` still causes TOCTOU (Time-Of-Check-To-Time-Of-Update) data loss. Furthermore, passing a stale, pre-read monolithic memory state (`st.session_state`) into the lock completely defeats the mutex.
     - *Implementation (Signature-Based Modifiers)*: Ensure the wrapper (e.g., `atomic_update(modifier_func)`) accepts a callable that modifies freshly read data *inside* the lock. Rip out monolithic state saves. Migrate to granular operations (`_add_pair`, `_remove_pairs_by_signature`) that mutate the fresh JSON array matched by a strict unique signature (`course_id` + `local_folder`) rather than volatile list indices. Finally, synchronously rehydrate the application state with the wrapper's exact return value.
+- **Pipeline Interruption Guards (Cancellation Flow)**:
+    - *Problem*: Long-running pipelines (like post-processing conversions) that trigger automatically after a primary task (like downloading) are vulnerable to "Execution Leakage" if the user cancels during the primary task. If the secondary pipeline lacks explicit cancellation guards, it may trigger on a partial or aborted state, leading to "Overkill" loops or processing of half-downloaded files.
+    - *Implementation*: Enforce a strict "Pre-Flight Interruption Check" before every major pipeline transition. In `app.py`, the `run_all_conversions` sequence is explicitly guarded by `not st.session_state.get('cancel_requested')` and `not st.session_state.get('download_cancelled')`. This ensures that an aborted download terminates the entire logic tree instantly, rather than falling through to the next phase.
 
 ## Concurrency, Async & Subprocess Patterns
 - **Active Subprocess ThreadPool Management**:
@@ -66,6 +69,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Event Loop I/O Block Avoidance**:
     - *Problem*: Executing blocking synchronous routines (like `sqlite3` database commits or massive JSON writes) directly inside an `async def` function completely stalls the overarching `asyncio` event loop.
     - *Implementation*: Offload all heavy synchronous database and filesystem I/O into native background threads using `await asyncio.to_thread(func, *args)`.
+- **Streamlit Async Context Safety (`safe_thread_wrapper`)**:
+    - *Problem*: Asynchronous `asyncio.to_thread` calls lose the Streamlit `ScriptRunContext`, causing `StreamlitAPIException` when background threads attempt to access `st.session_state` or UI placeholders.
+    - *Implementation*: Implement a `safe_thread_wrapper` using `streamlit.runtime.scriptrunner.add_script_run_ctx`. Capture the context in the main async thread via `get_script_run_ctx()` and inject it into the worker thread before dispatching. Ensure Streamlit-specific imports remain deferred inside the function for framework independence in `canvas_logic.py`.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
@@ -134,6 +140,21 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Supercharged Fragment Close Pattern & Native Hiding**:
     - *Problem*: Closing a `@st.dialog` fragment (either natively or via standard `st.rerun()`) only unmounts the modal context; the main application UI behind the modal remains completely frozen in its previous state until the user interacts with it, leaving things like save buttons stale.
     - *Solution*: Upgrade custom routing "Close" buttons inside the dialog to execute `st.rerun(scope="app")`. This tears down the fragment and forces a top-to-bottom paint of the main application. To ensure users don't bypass this fix, universally inject `div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }` in CSS to hide the native Streamlit 'X', forcing interaction with the state-aware button.
+- **Sniper Retry Sandboxing Pattern**:
+    - *Problem*: "Success Amnesia" occurs when global session state variables (like `downloaded_items`) are reset for a retry, losing the context of the initial successful run.
+    - *Solution*: Instantiate an isolated `retry_` sandbox in `st.session_state`. Bifurcate the UI progress callback (`update_ui`) to route increments to the sandbox if `download_status == 'isolated_retry'`. This keeps the global state immutable during the retry and allows for a "Synthesis" phase to merge results purely at the end of the operation.
+- **Safe Property Extraction Pattern (The Serialization Trap)**:
+    - *Problem*: Streamlit may serialize complex objects into dictionaries when stored in `session_state` across reruns. Subsequent dot-notation access (`err.course_name`) triggers an `AttributeError`.
+    - *Solution*: Use a strict abstraction for property extraction: `getattr(obj, attr, None) if not isinstance(obj, dict) else obj.get(attr)`. This guarantees robustness across both object and dictionary representations, particularly critical in post-execution reconciliation loops.
+- **Data/Presentation Layer Separation (Pathing)**:
+    - *Problem*: Stripping file paths for a cleaner UI (e.g., displaying only the filename) at the storage level breaks downstream logic (like post-processing) that requires absolute paths to resolve file locations on disk.
+    - *Solution*: Maintain a strict "Full Path Data Layer". Store the absolute, un-mutated `explicit_filepath` in session state dictionaries. High-level UI rendering functions (like `render_folder_cards`) should perform JIT (Just-In-Time) transformations using `Path(p).name` ONLY for the visual layer, never for the underlying state.
+- **Structural Error Guard Pattern**:
+    - *Problem*: Re-rendering a "Retry" button when only un-retriable errors persist (e.g., API 404s on course metadata, rather than missing files) creates an infinite UX loop where the user clicks "Retry" and nothing happens.
+    - *Solution*: Pre-evaluate the error list for **retriability**. Implement a boolean guard (`has_retriable_errors`) that checks if any error possesses a valid `filepath` context. Conditionally hide the Retry button and render a "Full Rescan Required" warning if the guard fails.
+- **Tuple Identity Fallback (O(1) Hash Map)**:
+    - *Problem*: Advanced retry logic often uses O(1) dictionary maps to re-queue failed items. If the source items are raw database tuples (SQLite rows) rather than named objects, standard `getattr(id)` calls will fail.
+    - *Solution*: Use a cascaded identity lookup: `getattr(item, 'id', getattr(item, 'canvas_file_id', item[0] if isinstance(item, tuple) else None))`. This ensures raw database results are handled with the same identity integrity as high-level API objects.
 
 ## Synchronous API Integration Patterns (Win32COM)
 - **COM Application Context Managers**:
@@ -197,12 +218,21 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Solution 1 (Zero-Amnesia Upserts)*: Eliminated bulk `DELETE FROM` query routines tracking the manifest. Reengineered scalar and bulk saves to exclusively utilize `INSERT INTO ... ON CONFLICT(canvas_file_id) DO UPDATE SET ...` while specifically excluding the `is_ignored` column from the excluded target block.
     - *Solution 2 (The `.part` Pattern)*: All active downloads append a `.part` extension to the filename during streaming. Cancel checks fire every 1MB chunk. If interrupted or cancelled, the `.part` file is unlinked. The file is only atomically renamed to its final extension upon 100% byte verification.
     - *Solution 3 (Semantic Purity Guards)*: DB commit loops (`save_manifest` and `_save_single_file_to_db`) strictly occur *after* all physical disk verification is complete, and are shielded by top-level execution guards (e.g., `if st.session_state.sync_cancelled: st.rerun()`) to ensure zero database mutations occur during a cancelled session.
+- **ACID Transaction Shift (Delayed DB Commit)**: 
+    - *Problem*: In synthetic entity loops (Assignments, Pages), the system previously executed `sync_manager.record_downloaded_file()` inside `_save_secondary_entity`. This committed the parent entity to SQLite *before* its associated file attachments were queued or saved. If the sync was cancelled or crashed during attachment processing, the parent remained marked "Downloaded", permanently orphaning its children on future runs ("Orphaned Attachment Amnesia").
+    - *Implementation (Delayed Commit)*: Decoupled the DB commit from the leaf-level save function. `_save_secondary_entity` and `download_secondary_entity` now return a 4-tuple including the Canvas `updated_at` timestamp. The responsibility for the DB commit is shifted upward to the `_fetch_and_save_*` orchestrators (in Phase 1) or `sync_ui.py` (in Phase 2). The commit is manually triggered only *after* all attachments have been successfully injected into the asynchronous download queue or saved locally, ensuring 100% ACID compliance for complex entity trees.
+- **Await-and-Inject Pattern (Sniper Retry ACID Integrity)**:
+    - *Problem*: During "Sniper Retries" of failed secondary entities, blind `asyncio` queueing of the parent task leads to a race condition where the parent is committed to the manifest before its children are discovered or queued.
+    - *Implementation*: The `download_isolated_batch_async` loop in `canvas_logic.py` executes a strict "Await-and-Inject" sequence for secondary items. It **awaits** the synchronous result of `download_secondary_entity` to ensure 100% discovery, performs an explicit **ACID Commit** to the manifest using the unpacked 4-tuple, and then **injects** attachment sub-tasks as fresh `asyncio.create_task` objects into the live execution list.
 - **Negative ID Pattern & Offset Registry**: 
     - *Problem*: Synthetic shortcuts (Pages, ExternalUrls) and dynamic entities (Assignments, Quizzes, Discussions) need to be tracked in the SQLite manifest, but they don't possess traditional file IDs. Blindly assigning them negative IDs risks primary key collisions if multiple synthetic types share the same numerical space.
     - *Implementation*: Utilizes a massive `SECONDARY_ID_OFFSETS` registry in `sync_manager.py` that allocates 10-million wide ranges for each entity type (e.g., Module Items: 0 to -9.9M, Assignments: -10M to -19.9M, Syllabus: -20M to -29.9M). This mathematically eliminates namespace overlap.
 - **Shortcut Bypass Logic**: `_is_canvas_newer()` in `sync_manager.py` explicitly returns `False` for `id < 0`. This bypasses unreliable module timestamps and forces the engine to rely on local existence checks.
 - **Sync Restoration Interception**: The download pipeline in `sync_ui.py` intercepts negative IDs and recreates `.url` or `.html` files locally using static templates rather than performing an HTTP GET.
 - **URL Extraction Priority**: For synthetic shortcuts, `html_url` is prioritized over `external_url` to ensure LTI tools route through the Canvas wrapper for authentication.
+- **Retry Identity Preservation (Hash Map Pattern)**:
+    - *Problem*: In Streamlit, retrying a subset of items (e.g., from a "Failed" list) often loses the original object context (like custom flags or synthetic IDs) if the list only contains raw names or IDs. This causes "Update" retries to be demoted to "New" retries, losing versioning traits.
+    - *Solution*: Use O(1) Dictionary Hash Maps to pre-index the original complex object lists before iterating over the failure list. Use `getattr(f, 'id', None)` or strict identity tuples as keys to "pluck" the original object back into the correct retry queue, guaranteeing that structured intent is preserved across the retry boundary.
 - **Deduplication Strategy (Path vs API IDs)**:
     - *Problem*: Relying solely on Canvas API IDs (`file.id`) fails because identically named duplicate module items, synthetic pages, and LTI tools can carry different DB IDs (or negative ones) but resolve to the identical local filepath. If they enter the `asyncio` task queue simultaneously, both workers write to `duplicate_file.pdf.part`, causing fatal `[WinError 32]` access crashes.
     - *Solution*: Deduplication must *always* key off the computed, sanitized local path target (`target_folder / sanitize(filename)`) *before* generating async tasks.
@@ -232,8 +262,10 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Two-Layer Error Deduplication**:
     - *Problem*: A single problematic LTI link appearing across multiple modules fails multiple times during identical scanning passes, flooding the UI terminal and `.txt` log with duplicate entries.
     - *Solution*: Implement unified signature verification (`f"{course}|{item}|{message}"`). 
-      - **Layer 1 (Disk)**: Inside the `CanvasManager._log_error` instance class to prevent duplicate file appends.
       - **Layer 2 (State)**: Inside the Streamlit `update_ui` callback (`st.session_state['seen_error_sigs']`) to guard the accumulator list driving the frontend dashboard.
+- **Strict Exception Handling**: Always use `except Exception:` instead of `except BaseException:`. Catching `BaseException` swallows `SystemExit` and `KeyboardInterrupt`, preventing PyInstaller and Streamlit execution loops from tearing down cleanly.
+- **Defensive Lazy Importing**: When importing fragile C-extensions (like `psutil`) inside fallback or error-handler functions, always wrap them in `try: import psutil except ImportError:`. This prevents the error handler itself from crashing the host process if the dependency fails to load.
+- **Blind 200 Guarding (Content-Type)**: Do not blindly trust `status == 200` for binary file downloads. Canvas LMS often returns 200 OK with `text/html` payloads containing server error messages. Always validate the response `Content-Type` against the expected file extension before opening a local `.part` file handler.
 
 ## UI Component Patterns
 - **Un-Throttled Per-File Status Indicator**:
@@ -242,3 +274,8 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Expander for Sub-Toggles**:
     - *Problem*: 8+ sub-checkboxes clutter the Step 2 UI and visually overwhelm the page.
     - *Solution*: Keep the master toggle (`notebooklm_master`) always visible, and nest all sub-checkboxes inside `st.expander(f"⚙️ Advanced Conversion Settings ({active}/{total})")`. The dynamic label updates on rerun. No custom CSS indentation needed — the expander provides natural visual hierarchy.
+- **Sniper Retry UI Bypassing & Path Provisioning**:
+    - *Problem*: Retrying failed downloads normally requires resetting the UI to the "scanning" state, forcing the user to wait multiple minutes while the app recursively rescans every Canvas module and folder just to rebuild the `files_to_download` queue. Furthermore, if the user manually deleted a folder *after* the initial failure, the sniper retry will crash with a `FileNotFoundError` as it attempts to write a file into a non-existent directory.
+    - *Solution 1 (State Jump)*: Jump Streamlit directly back to the execution phase by surgically injecting `download_status = 'running'`. Preserve the existing `courses_to_download` and total metrics in `st.session_state`. Only zero out the success/fail counters. This fast-forwards the UI and skips the multi-minute analysis bottleneck.
+    - *Solution 2 (State De-cluttering)*: On every "Retry Failed Items" click, explicitly reset `st.session_state['seen_error_sigs'] = set()`. This ensures that identical errors occurring during the retry are not suppressed by the session-wide deduplication filter.
+    - *Solution 3 (Surgical Directory Guards)*: Inside the `download_isolated_batch_async` loop, always execute `Path(filepath.parent).mkdir(parents=True, exist_ok=True)` before initiating the download task for each item. This guarantees folder existence even if the environment was modified between the initial scan and the retry attempt.

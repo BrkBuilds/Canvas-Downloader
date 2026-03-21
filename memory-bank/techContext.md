@@ -62,6 +62,10 @@ Canvas_LMS_batch_file_downloader/
     - `canvas_sync_pairs.json` — stores active `local_folder`, `course_id`, `course_name`, `last_synced`.
     - `saved_sync_groups.json` — managed by `SavedGroupsManager`, stores reusable multi-course groups with unique `group_id`s.
 - **Sync History File**: `canvas_sync_history.json` — last 50 entries with timestamp, files_synced, courses, errors.
+- **ACID Consistency (Await-and-Inject)**: 
+    - During Sniper Retries, the system enforces a strict synchronous discovery phase for secondary entities. 
+    - Parent metadata is unpacked and committed to the manifest *before* attachment download tasks are injected into the async queue.
+    - This prevents orphaned children if the application crashes between parent recording and child processing.
 
 ## Build System
 - **PyInstaller**: Standalone `.exe` and macOS bundle `.app` compilation.

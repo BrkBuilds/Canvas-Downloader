@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 # --- Concurrency Mutexes ---
 
+from typing import Dict, List
 import streamlit as st
 import aiohttp
 from collections import defaultdict
@@ -43,7 +44,7 @@ import theme
 
 
 from canvas_logic import CanvasManager
-from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon, format_file_size
+from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon, format_file_size, SyncFileInfo
 from ui_helpers import (
     esc,
     load_sync_pairs,
@@ -3410,7 +3411,7 @@ def _run_analysis(sync_pairs, main_placeholder=None):
                 </div>
                 """, unsafe_allow_html=True)
                 time.sleep(0.05)
-            except BaseException:
+            except Exception:
                 pass
 
         local_folder = pair['local_folder']
@@ -5499,7 +5500,15 @@ def _run_sync():
         unsafe_allow_html=True,
     )
 
-    synced_counter = [0, 0]  # [count, bytes]
+    # Accumulate metrics if this is a Retry pass, otherwise reset for fresh syncs
+    is_retry = bool(st.session_state.get('retry_selections'))
+    if is_retry:
+        synced_counter = [
+            st.session_state.get('synced_count', 0),
+            st.session_state.get('synced_bytes', 0)
+        ]
+    else:
+        synced_counter = [0, 0]  # [count, bytes]
     error_list = []
 
     # --- Task 2 Fix: Wipe error state at start of every sync run ---
@@ -5541,8 +5550,8 @@ def _run_sync():
         </div>
         """
 
-    async def download_sync_files_batch():
-        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+    async def download_sync_files_batch(sync_api_token, sync_api_url):
+        cm = CanvasManager(sync_api_token, sync_api_url)
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state
@@ -5597,12 +5606,17 @@ def _run_sync():
                 failed_files_for_pair = []
 
                 res_data = sel['res_data']
-                sync_mgr = res_data['sync_manager']
-                manifest = res_data['manifest']
+                sync_mgr = res_data.get('sync_manager')
+                manifest = res_data.get('manifest')
                 canvas_files_map = {f.id: f for f in res_data['canvas_files']}
                 pair = res_data['pair']
 
                 course_name = friendly_course_name(pair['course_name'])
+
+                if sync_mgr is None:
+                    error_list.append(f"Skipping {course_name}: Database failed to initialize.")
+                    failed_files_for_pair.extend(sel.get('new', []) + sel.get('updates', []))
+                    continue
                 header_html = f"""
                 <div style="margin-bottom: 0.5rem;">
                     <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Course {pair_idx + 1} of {total_pairs}</p>
@@ -5610,6 +5624,22 @@ def _run_sync():
                 </div>
                 """
                 status_text.markdown(header_html, unsafe_allow_html=True)
+                
+                # Re-hydration Injection
+                course = res_data.get('course')
+                if course is None:
+                    terminal_log.append(f"<span style='color:{theme.TEXT_SECONDARY}'>[ℹ️] Establishing secure connection to {esc(course_name)}...</span>")
+                    log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                    try:
+                        course = await asyncio.to_thread(cm.get_course, pair['course_id'])
+                        res_data['course'] = course
+                    except Exception as e:
+                        err_str = f"Connection failure to {esc(course_name)}: {str(e)}"
+                        error_list.append(err_str)
+                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>[❌] Reconnection Failed: {esc(course_name)} ({str(e)})</span>")
+                        log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                        failed_files_for_pair.extend(sel.get('new', []))
+                        continue
 
                 # Task 4: State Leakage Fix
                 # We save the auto-healed manifest + any newly ignored files only ONCE per folder, 
@@ -5721,7 +5751,7 @@ def _run_sync():
                                 _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
 
                                 try:
-                                    sec_filepath, sec_id, sec_attachments = cm.download_secondary_entity(
+                                    sec_filepath, sec_id, sec_attachments, canvas_updated = cm.download_secondary_entity(
                                         course=res_data['course'],
                                         canvas_file_info=file,
                                         base_path=Path(local_path),
@@ -5787,6 +5817,20 @@ def _run_sync():
                                             total_files += 1
                                             terminal_log.append(f"<span style='color:{theme.ACCENT_BLUE}'>[📎] Queued attachment: </span> {esc(att_filename)}")
                                             log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
+                                            
+                                    # ACID Fix: Delay DB commit until attachments are safely queued
+                                    if sync_mgr and sec_id and canvas_updated is not None:
+                                        try:
+                                            rel_path = str(sec_filepath.relative_to(local_path)).replace('\\', '/')
+                                            sync_mgr.record_downloaded_file(
+                                                canvas_file_id=sec_id,
+                                                canvas_filename=sec_filepath.name,
+                                                local_relative_path=rel_path,
+                                                canvas_updated_at=canvas_updated,
+                                                original_size=0,
+                                            )
+                                        except Exception:
+                                            pass
                                 else:
                                     terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>[⚠️] Skipped: </span> {esc(display_file_name)}")
                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
@@ -5801,16 +5845,20 @@ def _run_sync():
                             if is_url_ext:
                                 if platform.system() == 'Darwin':
                                     import plistlib
+                                    import aiofiles
                                     plist_data = {'URL': file.url}
-                                    Path(make_long_path(filepath)).write_bytes(
-                                        plistlib.dumps(plist_data, fmt=plistlib.FMT_XML)
-                                    )
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'wb') as f:
+                                        await f.write(plistlib.dumps(plist_data, fmt=plistlib.FMT_XML))
                                 else:
+                                    import aiofiles
                                     shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
-                                    Path(make_long_path(filepath)).write_text(shortcut_content, encoding='utf-8')
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                        await f.write(shortcut_content)
                             elif is_html_ext:
+                                import aiofiles
                                 html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
-                                Path(make_long_path(filepath)).write_text(html_content, encoding='utf-8')
+                                async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                    await f.write(html_content)
 
                             if is_url_ext or is_html_ext:
                                 rel_path = filepath.relative_to(local_path)
@@ -6001,12 +6049,36 @@ def _run_sync():
 
                 
                 if failed_files_for_pair:
+                    safe_res_data = sel['res_data'].copy()
+                    # Strip heavy objects to protect Streamlit memory integrity
+                    safe_res_data.pop('course', None)
+                    safe_res_data.pop('sync_manager', None)
+                    
+                    # BUG FIX: Restore failed items to their exact correct buckets using O(1) Dictionaries
+                    update_map: Dict[int, CanvasFileInfo] = {getattr(f, 'id', None): f for f in sel['updates']}
+                    redownload_map: Dict[int, SyncFileInfo] = {getattr(r, 'canvas_file_id', r[0] if isinstance(r, tuple) else None): r for r in sel['redownload']}
+                    
+                    retry_new: List[CanvasFileInfo] = []
+                    retry_updates: List[CanvasFileInfo] = []
+                    retry_redownload: List[SyncFileInfo] = []
+                    
+                    for failed_item in failed_files_for_pair:
+                        # --- FIX: Tuple Identity Loss ---
+                        # Mirror O(1) redownload_map logic: try 'id', then 'canvas_file_id', then tuple explicit index
+                        f_id = getattr(failed_item, 'id', getattr(failed_item, 'canvas_file_id', failed_item[0] if isinstance(failed_item, tuple) else None))
+                        if f_id in update_map:
+                            retry_updates.append(update_map[f_id])
+                        elif f_id in redownload_map:
+                            retry_redownload.append(redownload_map[f_id])
+                        else:
+                            retry_new.append(failed_item)
+                            
                     retry_selections.append({
                         'pair_idx': pair_idx,
-                        'res_data': sel['res_data'],
-                        'new': failed_files_for_pair,
-                        'updates': [],
-                        'redownload': [],
+                        'res_data': safe_res_data,
+                        'new': retry_new,
+                        'updates': retry_updates,
+                        'redownload': retry_redownload,
                         'ignore': []
                     })
                         
@@ -6053,7 +6125,10 @@ def _run_sync():
                 
         return synced_details, retry_selections, list(terminal_log)
 
-    synced_details, retry_selections, _download_log_history = asyncio.run(download_sync_files_batch())
+    # Extract variables locally to preserve streamli ThreadContext boundary
+    local_sync_api_token = st.session_state.get('api_token', '')
+    local_sync_api_url = st.session_state.get('api_url', '')
+    synced_details, retry_selections, _download_log_history = asyncio.run(download_sync_files_batch(local_sync_api_token, local_sync_api_url))
 
     # --- Shared post-processing helpers ---
     def get_synced_file_paths(target_exts, conversion_key=None):
@@ -6375,6 +6450,18 @@ def _show_sync_complete():
     # Post-processing failure warning
     render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
+    # Surface Structural Discovery Errors gracefully
+    total_structural_errors = sum(
+        res['res_data']['result'].structural_errors
+        for res in st.session_state.get('sync_selections', [])
+        if res.get('res_data') and hasattr(res['res_data'].get('result'), 'structural_errors')
+    )
+    if total_structural_errors > 0:
+        st.warning(
+            f"⚠️ {total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
+            icon="⚠️"
+        )
+
     retry_selections = st.session_state.get('retry_selections', [])
 
     # We use sync_ui's custom _show_sync_errors wrapper which sets up its own expander
@@ -6385,8 +6472,22 @@ def _show_sync_complete():
         col_retry, _ = st.columns([0.25, 0.75])
         with col_retry:
             if st.button("🔄 Retry Failed Downloads", type="secondary", use_container_width=True):
+                # Critical Re-hydration: We leave course as None, safely offloading API calls to the async pipeline
+                for r_sel in retry_selections:
+                    pair_info = r_sel['res_data']['pair']
+                    r_sel['res_data']['course'] = None
+                    try:
+                        r_sel['res_data']['sync_manager'] = SyncManager(
+                            local_path=pair_info['local_folder'],
+                            course_id=pair_info['course_id'],
+                            course_name=pair_info['course_name']
+                        )
+                    except Exception:
+                        r_sel['res_data']['sync_manager'] = None
+                
                 st.session_state['sync_selections'] = retry_selections
                 st.session_state['download_status'] = 'syncing'
+                st.session_state['step'] = 3
                 st.session_state['sync_errors'] = []
                 st.session_state['sync_cancel_requested'] = False
                 st.rerun()

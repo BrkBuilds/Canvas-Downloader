@@ -1,6 +1,33 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6: Exhaustive V2 Code Audit & Global Interruption Guard** (2026-03-21):
+    - [x] **Deep Structural Audit**: Verified all Task 1-5 requirements for the V2 fixes (Path Integrity, Error Loops, Tuple Identity, Post-Processing Interruption, ACID Transactions).
+    - [x] **Global Cancellation Hotfix**: Discovered and patched a missing cancellation guard in the main global download post-processing pipeline in `app.py`.
+- [x] **Phase 5: Chaos Audit & State Isolation Fixes** (2026-03-21):
+    - [x] **Sniper Retry ACID Refactor ("Await-and-Inject")**: Refactored `download_isolated_batch_async` in `canvas_logic.py` to synchronously await secondary entity discovery and perform an explicit ACID commit to the manifest before injecting attachment tasks.
+    - [x] **Path Separation V2 (Data/Presentation)**: Completely decoupled `retry_isolated_details` persistence from UI rendering, preserving full paths for post-processing while JIT-stripping for display.
+    - [x] **Structural Error Guard**: Injected `has_retriable_errors` guardrail to conditionally hide the Retry button to prevent infinite loops.
+    - [x] **Tuple Identity Fallback**: Fortified `sync_ui.py` retry logic with robust `getattr` / index fallbacks for SQLite tuples.
+    - [x] **ACID Transaction Fix ("Orphaned Attachment Amnesia")**: Decoupled database commits from `_save_secondary_entity` and shifted them to parent orchestrators to ensure parent entities are only recorded after all asynchronous attachments are successfully queued/saved.
+    - [x] **Interruption Integrity Guard**: Injected a conditional control flow check (`if not st.session_state.get('cancel_requested'):`) preceding the `run_all_conversions` loop in `app.py`, preventing post-processing from firing if the user cancelled during the download phase.
+    - [x] **Success Amnesia Fix**: Sandboxed retry states to prevent wiping global progress metrics during a retry.
+    - [x] **Serialization Trap Neutralization**: Implemented safe property extraction logic for all error attributes to survive Streamlit's dictionary serialization.
+    - [x] **Safe Error Resolution**: Optimized the reconciliation loop to append `[RESOLVED]` to audit logs and accurately update UI counters post-retry.
+
+- [x] **Phase 4.7: Regression Defenses & Context Safety** (2026-03-20):
+    - [x] **Strict Type Hinting**: Enforced `Dict[int, CanvasFileInfo]` and `Dict[int, SyncFileInfo]` mapping on all retry logic in `sync_ui.py`, preventing type pollution across the retry boundary.
+    - [x] **Streamlit Context Safety**: Engineered `safe_thread_wrapper` in `canvas_logic.py` using `add_script_run_ctx` to correctly propagate the Streamlit session state to asynchronous background threads.
+    - [x] **PEP-8 Compliant Hoisting**: Standardized module-level import hoisting in `sync_ui.py` while preserving framework independence in `canvas_logic.py` via deferred imports.
+- [x] **Phase 4.6: Retry Logic Identity & Efficiency Fixes** (2026-03-20):
+    - [x] **Targeted Post-Processing**: Refactored `post_processing.py` to support `explicit_files` filtering, eliminating redundant conversions of already-processed files during retries.
+    - [x] **Sync Identity Restoration**: Implemented O(1) Hash Map lookups in `sync_ui.py` to correctly re-queue failed "Update" and "Redownload" items, preserving critical identity traits like `_NewVersion` naming.
+    - [x] **Path Normalization**: Injected strict `.resolve()` comparison logic into the post-processing filter to ensure cross-platform path parity.
+- [x] **Phase 4.5: Retry Logic Audit & Sniper Fixes** (2026-03-20):
+    - [x] **Sniper Retry Directory Provisioning**: Injected `Path.mkdir` calls into the `download_isolated_batch_async` loop in `canvas_logic.py`, ensuring that surgical retries of specific files correctly create their parent folder structures if they were missing or deleted.
+    - [x] **Error State Reset**: Implemented explicit `st.session_state['seen_error_sigs'] = set()` resets in `app.py` for both fresh downloads and "Retry Failed Items" clicks. This prevents identical errors from previous runs from being silently suppressed in subsequent retries.
+    - [x] **Architecture Verification**: Audited the Sync Mode's retry logic and confirmed its resilience due to the full re-initialization of the `CanvasManager` context and existing directory creation guards.
+    - [x] **Sniper Retry Metrics Restoration**: Decoupled the Retry UI's Total MB calculation from static course scanning by injecting dynamic extraction logic into `app.py` that parses `file_dict.get('size')` directly off `DownloadError` encapsulated context payloads. This logic was strictly hardened to gracefully unpack dictionary permutations resulting from Streamlit session-state serialization and safely overwrites `st.session_state['total_mb']` globally.
 - [x] **Phase 4.4: Sync Loop Regression Fixes** (2026-03-19):
     - [x] **Safe Path Sanitization**: Modified the download loop to sanitize only the filename basename via `Path.parts`, securely preserving `/` directory separators for subfolder-prefixed attachments.
     - [x] **Bulletproof Deduplication Guard**: Implemented an intra-document hash set check (`_queued_ids.add(att_id)`) that prevents redundant downloads even when multiple links from the same HTML file point to the same Canvas resource.
