@@ -5745,7 +5745,7 @@ def _run_sync():
                             # ── Secondary Content Entities (Assignment, Quiz, etc.) ──
                             from sync_manager import is_secondary_id, secondary_id_type
                             _sec_entity_type = secondary_id_type(file.id)
-                            if _sec_entity_type not in ('module_item', 'unknown'):
+                            if _sec_entity_type != 'attachment' and _sec_entity_type not in ('module_item', 'unknown'):
                                 # Load secondary contract for this pair
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
                                 _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
@@ -5869,12 +5869,16 @@ def _run_sync():
                                 terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Recreated: </span> {esc(display_file_name)}")
                                 log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                 continue
+                                
+                            continue # Ensure Legacy Synthetic block definitively skips binary downloader
 
                         # Refresh download URL from Canvas API (signed URLs expire quickly)
                         download_url = file.url
                         try:
                             course = res_data['course']
-                            fresh_file = course.get_file(file.id)
+                            
+                            real_id = file.id
+                            fresh_file = course.get_file(real_id)
                             fresh_url = getattr(fresh_file, 'url', '')
                             if fresh_url:
                                 download_url = fresh_url
@@ -6490,6 +6494,7 @@ def _show_sync_complete():
                 st.session_state['step'] = 3
                 st.session_state['sync_errors'] = []
                 st.session_state['sync_cancel_requested'] = False
+                st.session_state['sync_cancelled'] = False
                 st.rerun()
 
     # Folders updated — card style with dropdown

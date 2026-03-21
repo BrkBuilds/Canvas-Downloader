@@ -473,8 +473,45 @@ class CanvasManager:
                     isolate = settings.get('isolate_secondary_content', True)
                     routing = _ENTITY_ROUTING['announcement']
                     
+                    attachments = []
+                    if not is_scanning_phase:
+                        try:
+                            raw_att = getattr(topic, 'attachments', None)
+                            if raw_att and isinstance(raw_att, list):
+                                attachments = list(raw_att)
+                        except Exception:
+                            pass
+
+                        t_msg = getattr(topic, 'message', '') or ''
+                        existing_att_ids = {
+                            a.get('id') for a in attachments if isinstance(a, dict)
+                        }
+                        for link_info in _extract_canvas_file_links(t_msg):
+                            fid = link_info['file_id']
+                            if fid in existing_att_ids:
+                                continue
+                            try:
+                                canvas_file = course.get_file(fid)
+                                attachments.append({
+                                    'id': canvas_file.id,
+                                    'url': canvas_file.url,
+                                    'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                    'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                    'size': getattr(canvas_file, 'size', 0),
+                                    'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                    'content-type': getattr(canvas_file, 'content_type', ''),
+                                })
+                                existing_att_ids.add(canvas_file.id)
+                            except Exception:
+                                pass
+
+                    has_attachments = bool(attachments)
+                    
                     if isolate:
-                        ann_filename = f"{routing['folder']}/{safe_title}.html"
+                        if has_attachments:
+                            ann_filename = f"{routing['folder']}/{safe_title}/{safe_title}.html"
+                        else:
+                            ann_filename = f"{routing['folder']}/{safe_title}.html"
                     else:
                         ann_filename = f"{routing['prefix']}: {safe_title}.html"
                         
@@ -487,6 +524,29 @@ class CanvasManager:
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
                     ))
+                    
+                    for att in attachments:
+                        att_id = att.get('id')
+                        if not att_id:
+                            continue
+                        
+                        att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
+                        if isolate and has_attachments:
+                            att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
+                        elif isolate:
+                            att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
+                        else:
+                            att_prefixed_name = att_raw_name
+                            
+                        items.append(CanvasFileInfo(
+                            id=att_id,
+                            filename=att_prefixed_name,
+                            display_name=att.get('display_name', att.get('filename', 'attachment')),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', getattr(topic, 'posted_at', '')),
+                            url=att.get('url', ''),
+                            content_type=att.get('content-type', ''),
+                        ))
                 fetch_success['announcement'] = True
             except Exception:
                 fetch_success['announcement'] = False
@@ -617,10 +677,49 @@ class CanvasManager:
                     routing = _ENTITY_ROUTING['discussion']
                     d_title = getattr(topic, 'title', 'Discussion')
                     safe_title = self._sanitize_filename(d_title)
+                    
+                    attachments = []
+                    if not is_scanning_phase:
+                        try:
+                            raw_att = getattr(topic, 'attachments', None)
+                            if raw_att and isinstance(raw_att, list):
+                                attachments = list(raw_att)
+                        except Exception:
+                            pass
+
+                        t_msg = getattr(topic, 'message', '') or ''
+                        existing_att_ids = {
+                            a.get('id') for a in attachments if isinstance(a, dict)
+                        }
+                        for link_info in _extract_canvas_file_links(t_msg):
+                            fid = link_info['file_id']
+                            if fid in existing_att_ids:
+                                continue
+                            try:
+                                canvas_file = course.get_file(fid)
+                                attachments.append({
+                                    'id': canvas_file.id,
+                                    'url': canvas_file.url,
+                                    'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                    'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                    'size': getattr(canvas_file, 'size', 0),
+                                    'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                    'content-type': getattr(canvas_file, 'content_type', ''),
+                                })
+                                existing_att_ids.add(canvas_file.id)
+                            except Exception:
+                                pass
+
+                    has_attachments = bool(attachments)
+                    
                     if isolate:
-                        disc_filename = f"{routing['folder']}/{safe_title}.html"
+                        if has_attachments:
+                            disc_filename = f"{routing['folder']}/{safe_title}/{safe_title}.html"
+                        else:
+                            disc_filename = f"{routing['folder']}/{safe_title}.html"
                     else:
                         disc_filename = f"{routing['prefix']}: {safe_title}.html"
+                        
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('discussion', t_id),
                         filename=disc_filename,
@@ -630,6 +729,29 @@ class CanvasManager:
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
                     ))
+                    
+                    for att in attachments:
+                        att_id = att.get('id')
+                        if not att_id:
+                            continue
+                        
+                        att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
+                        if isolate and has_attachments:
+                            att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
+                        elif isolate:
+                            att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
+                        else:
+                            att_prefixed_name = att_raw_name
+                            
+                        items.append(CanvasFileInfo(
+                            id=att_id,
+                            filename=att_prefixed_name,
+                            display_name=att.get('display_name', att.get('filename', 'attachment')),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', getattr(topic, 'updated_at', '')),
+                            url=att.get('url', ''),
+                            content_type=att.get('content-type', ''),
+                        ))
                 fetch_success['discussion'] = True
             except Exception:
                 fetch_success['discussion'] = False
@@ -643,10 +765,49 @@ class CanvasManager:
                     routing = _ENTITY_ROUTING['quiz']
                     q_title = getattr(quiz, 'title', 'Quiz')
                     safe_title = self._sanitize_filename(q_title)
+                    
+                    attachments = []
+                    if not is_scanning_phase:
+                        try:
+                            raw_att = getattr(quiz, 'attachments', None)
+                            if raw_att and isinstance(raw_att, list):
+                                attachments = list(raw_att)
+                        except Exception:
+                            pass
+
+                        q_desc = getattr(quiz, 'description', '') or ''
+                        existing_att_ids = {
+                            a.get('id') for a in attachments if isinstance(a, dict)
+                        }
+                        for link_info in _extract_canvas_file_links(q_desc):
+                            fid = link_info['file_id']
+                            if fid in existing_att_ids:
+                                continue
+                            try:
+                                canvas_file = course.get_file(fid)
+                                attachments.append({
+                                    'id': canvas_file.id,
+                                    'url': canvas_file.url,
+                                    'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                    'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                    'size': getattr(canvas_file, 'size', 0),
+                                    'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                    'content-type': getattr(canvas_file, 'content_type', ''),
+                                })
+                                existing_att_ids.add(canvas_file.id)
+                            except Exception:
+                                pass
+
+                    has_attachments = bool(attachments)
+                    
                     if isolate:
-                        quiz_filename = f"{routing['folder']}/{safe_title}.html"
+                        if has_attachments:
+                            quiz_filename = f"{routing['folder']}/{safe_title}/{safe_title}.html"
+                        else:
+                            quiz_filename = f"{routing['folder']}/{safe_title}.html"
                     else:
                         quiz_filename = f"{routing['prefix']}: {safe_title}.html"
+                        
                     items.append(CanvasFileInfo(
                         id=make_secondary_id('quiz', q_id),
                         filename=quiz_filename,
@@ -656,6 +817,29 @@ class CanvasManager:
                         url=getattr(quiz, 'html_url', ''),
                         content_type='text/html',
                     ))
+                    
+                    for att in attachments:
+                        att_id = att.get('id')
+                        if not att_id:
+                            continue
+                        
+                        att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
+                        if isolate and has_attachments:
+                            att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
+                        elif isolate:
+                            att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
+                        else:
+                            att_prefixed_name = att_raw_name
+                            
+                        items.append(CanvasFileInfo(
+                            id=att_id,
+                            filename=att_prefixed_name,
+                            display_name=att.get('display_name', att.get('filename', 'attachment')),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', getattr(quiz, 'updated_at', '')),
+                            url=att.get('url', ''),
+                            content_type=att.get('content-type', ''),
+                        ))
                 fetch_success['quiz'] = True
             except Exception:
                 fetch_success['quiz'] = False
@@ -2411,6 +2595,39 @@ class CanvasManager:
 
             elif entity_type == 'quiz':
                 quiz = course.get_quiz(raw_id)
+                
+                attachments = []
+                try:
+                    raw_att = getattr(quiz, 'attachments', None)
+                    if raw_att and isinstance(raw_att, list):
+                        attachments = raw_att
+                except Exception:
+                    pass
+
+                q_desc = getattr(quiz, 'description', '') or ''
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(q_desc):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
                 metadata = [
                     ('Points', getattr(quiz, 'points_possible', None)),
                     ('Due', getattr(quiz, 'due_at', None)),
@@ -2419,7 +2636,7 @@ class CanvasManager:
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'quiz',
                     getattr(quiz, 'title', 'Untitled Quiz'),
-                    getattr(quiz, 'description', '') or '',
+                    q_desc,
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -2428,13 +2645,46 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
-                    has_attachments=False,
+                    has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None, canvas_updated
+                return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'discussion':
                 topic = course.get_discussion_topic(raw_id)
+                
+                attachments = []
+                try:
+                    raw_att = getattr(topic, 'attachments', None)
+                    if raw_att and isinstance(raw_att, list):
+                        attachments = raw_att
+                except Exception:
+                    pass
+
+                t_msg = getattr(topic, 'message', '') or ''
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(t_msg):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
                 metadata = [
                     ('Posted', getattr(topic, 'posted_at', None)),
                     ('Replies', getattr(topic, 'discussion_subentry_count', None)),
@@ -2445,7 +2695,7 @@ class CanvasManager:
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'discussion',
                     getattr(topic, 'title', 'Untitled Discussion'),
-                    (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
+                    t_msg + self._build_discussion_replies_html_sync(topic, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -2454,13 +2704,46 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
-                    has_attachments=False,
+                    has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None, canvas_updated
+                return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'announcement':
                 topic = course.get_discussion_topic(raw_id)
+                
+                attachments = []
+                try:
+                    raw_att = getattr(topic, 'attachments', None)
+                    if raw_att and isinstance(raw_att, list):
+                        attachments = raw_att
+                except Exception:
+                    pass
+
+                t_msg = getattr(topic, 'message', '') or ''
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(t_msg):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
                 metadata = [
                     ('Posted', getattr(topic, 'posted_at', None)),
                     ('URL', getattr(topic, 'html_url', None)),
@@ -2468,7 +2751,7 @@ class CanvasManager:
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'announcement',
                     getattr(topic, 'title', 'Announcement'),
-                    (getattr(topic, 'message', '') or '') + self._build_discussion_replies_html_sync(topic, debug_file),
+                    t_msg + self._build_discussion_replies_html_sync(topic, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -2477,10 +2760,10 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
-                    has_attachments=False,
+                    has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
-                return filepath, syn_id, None, canvas_updated
+                return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'syllabus':
                 full_course = self.canvas.get_course(
