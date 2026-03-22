@@ -470,7 +470,19 @@ class CanvasManager:
                 for topic in topics:
                     t_id = getattr(topic, 'id', 0)
                     title = getattr(topic, 'title', 'Announcement')
-                    safe_title = self._sanitize_filename(title)
+                    posted_at = getattr(topic, 'posted_at', '') or ''
+                    
+                    # Date-prefix for chronological file ordering (Alignment fix)
+                    date_prefix = ''
+                    if posted_at:
+                        try:
+                            dt = datetime.fromisoformat(posted_at.replace('Z', '+00:00'))
+                            date_prefix = dt.strftime('%Y-%m-%d') + ' - '
+                        except (ValueError, TypeError):
+                            pass
+                            
+                    display_name = f"{date_prefix}{title}"
+                    safe_title = self._sanitize_filename(display_name)
                     isolate = settings.get('isolate_secondary_content', True)
                     routing = _ENTITY_ROUTING['announcement']
                     
@@ -3045,6 +3057,21 @@ class CanvasManager:
                     metadata_pairs=metadata,
                 )
 
+                # CRITICAL: Save the parent HTML file to the database manifest
+                if filepath and sync_manager:
+                    try:
+                        from pathlib import Path
+                        rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=Path(filepath).name,
+                            local_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception as e:
+                        print(f"CRITICAL DB ERROR: {e}")
+
                 # Queue attachment downloads using their REAL positive IDs
                 if filepath and attachments:
                     attach_dir = filepath.parent
@@ -3089,20 +3116,6 @@ class CanvasManager:
                             explicit_filepath=att_filepath,
                         ))
                         download_tasks.append(task)
-                        
-                # ACID Fix: Only commit to DB *after* attachments are safely in the queue
-                if filepath and sync_manager:
-                    try:
-                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
-                        sync_manager.record_downloaded_file(
-                            canvas_file_id=syn_id,
-                            canvas_filename=filepath.name,
-                            local_path=rel_path,
-                            canvas_updated_at=canvas_updated,
-                            original_size=0,
-                        )
-                    except Exception:
-                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Assignments not accessible: {e}", debug_file)
@@ -3240,6 +3253,21 @@ class CanvasManager:
                     ],
                 )
 
+                # CRITICAL: Save the parent HTML file to the database manifest
+                if filepath and sync_manager:
+                    try:
+                        from pathlib import Path
+                        rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=Path(filepath).name,
+                            local_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                        )
+                    except Exception as e:
+                        print(f"CRITICAL DB ERROR: {e}")
+
                 # Queue attachment downloads with REAL positive IDs
                 if filepath and attachments:
                     attach_dir = filepath.parent
@@ -3282,19 +3310,6 @@ class CanvasManager:
                             explicit_filepath=att_filepath,
                         ))
                         download_tasks.append(task)
-                        
-                if filepath and sync_manager:
-                    try:
-                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
-                        sync_manager.record_downloaded_file(
-                            canvas_file_id=syn_id,
-                            canvas_filename=filepath.name,
-                            local_path=rel_path,
-                            canvas_updated_at=canvas_updated,
-                            original_size=0,
-                        )
-                    except Exception:
-                        pass
 
         except (Unauthorized, ResourceDoesNotExist) as e:
             log_debug(f"Announcements not accessible: {e}", debug_file)

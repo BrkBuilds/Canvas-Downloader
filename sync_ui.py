@@ -5033,14 +5033,14 @@ def _show_analysis_review():
                 # redownload items are SyncInfo; look up their size from canvas_files
                 total_bytes = 0
                 for s in sync_selections:
-                    total_bytes += sum(f.size for f in s['new'] if hasattr(f, 'size'))
-                    total_bytes += sum(f.size for f in s['updates'] if hasattr(f, 'size'))
-                    # redownload items are SyncInfo objects — look up size via canvas_files_map
-                    canvas_files_map = {f.id: f for f in s['res_data']['canvas_files']}
+                    total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
+                    total_bytes += sum(getattr(f, 'size', 0) or 0 for f, info in s['updates'])
+                    
+                    # For redownloads, we need to map back to the Canvas file to get the real size (SyncFileInfo lacks size)
+                    cfmap = {str(f.id): f for f in s['res_data']['canvas_files']}
                     for si in s['redownload']:
-                        cf = canvas_files_map.get(si.canvas_file_id)
-                        if cf:
-                            total_bytes += getattr(cf, 'size', 0) or 0
+                        cf = cfmap.get(str(si.canvas_file_id))
+                        total_bytes += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
     
                 if total_count == 0:
                     st.info('Nothing to sync - all files are up to date!')
@@ -5573,12 +5573,11 @@ def _run_sync():
             total_mb = 0.0
             for sel in sync_selections:
                 total_mb += sum(getattr(f, 'size', 0) or 0 for f in sel['new'])
-                total_mb += sum(getattr(f, 'size', 0) or 0 for f in sel['updates'])
-                cfmap = {f.id: f for f in sel['res_data']['canvas_files']}
+                total_mb += sum(getattr(f, 'size', 0) or 0 for f, info in sel['updates'])
+                cfmap = {str(f.id): f for f in sel['res_data']['canvas_files']}
                 for si in sel['redownload']:
-                    cf = cfmap.get(si.canvas_file_id)
-                    if cf:
-                        total_mb += getattr(cf, 'size', 0) or 0
+                    cf = cfmap.get(str(si.canvas_file_id))
+                    total_mb += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
             total_mb /= (1024 * 1024)
 
             current_file = 0
@@ -5652,12 +5651,30 @@ def _run_sync():
                     if entry.get('is_ignored'):
                         sync_mgr._save_single_file_to_db(entry)
 
-                all_files = list(sel['new']) + list(sel['updates'])
+                all_files = list(sel['new']) + [f for f, info in sel['updates']]
                 for sync_info in sel['redownload']:
-                    if sync_info.canvas_file_id in canvas_files_map:
-                        all_files.append(canvas_files_map[sync_info.canvas_file_id])
+                    # 1. Direct ID match (Real Files)
+                    if str(sync_info.canvas_file_id) in {str(k) for k in canvas_files_map.keys()}:
+                        # Map string ID to the proper canvas file map object safely
+                        _mapped_id = next(k for k in canvas_files_map.keys() if str(k) == str(sync_info.canvas_file_id))
+                        all_files.append(canvas_files_map[_mapped_id])
+                    
+                    # --- CRITICAL PATCH: Synthetic Proxy Reconstruction ---
+                    elif int(sync_info.canvas_file_id) < 0:
+                        import types
+                        proxy = types.SimpleNamespace(
+                            id=int(sync_info.canvas_file_id),
+                            filename=sync_info.canvas_filename,
+                            display_name=sync_info.canvas_filename,
+                            size=getattr(sync_info, 'original_size', 0),
+                            modified_at=getattr(sync_info, 'canvas_updated_at', ''),
+                            url=""
+                        )
+                        all_files.append(proxy)
+                    # ----------------------------------------------------
+                    
                     else:
-                        # Fallback: Try to match by filename (handle URL encoding + vs space, case insensitivity)
+                        # 3. Fallback: Try to match by filename (handle URL encoding + vs space, case insensitivity)
                         # Files may be re-uploaded (new ID) but keep same name.
                         target_name = robust_filename_normalize(sync_info.canvas_filename)
                         found_file = None
@@ -5719,7 +5736,7 @@ def _run_sync():
                             
                         if not calc_path:
                             for info in sel['redownload']:
-                                if info.canvas_file_id == file.id or info.canvas_file_id == getattr(file, 'id', None):
+                                if str(info.canvas_file_id) == str(getattr(file, 'id', None)) or str(info.canvas_file_id) == str(getattr(file, 'canvas_file_id', None)):
                                     calc_path = info.target_local_path
                                     break
                                     
