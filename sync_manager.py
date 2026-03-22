@@ -553,6 +553,21 @@ class SyncManager:
         
         for c_file in canvas_files:
             file_id = str(c_file.id)
+            
+            # --- CRITICAL ARCHITECTURAL PATCH: The Phase 1 Existence Guard ---
+            if file_id in files_section:
+                entry = files_section[file_id]
+                # Reconstruct the exact physical path from the manifest
+                check_path = self.local_path / entry.get('local_path', '')
+                
+                # If it was previously downloaded but is physically missing now:
+                if not check_path.exists() and entry.get('downloaded_at'):
+                    sync_info = self._dict_to_sync_info(file_id, entry)
+                    # Add to locally deleted if not already caught
+                    if not any(f.canvas_file_id == sync_info.canvas_file_id for f in raw_locally_deleted):
+                        raw_locally_deleted.append(sync_info)
+            # -----------------------------------------------------------------
+            
             seen_ids.add(file_id)
             
             # Determine target path
@@ -562,7 +577,7 @@ class SyncManager:
             else:
                 calc_path = c_file.filename
                 
-            path_size_key = (robust_filename_normalize(calc_path), getattr(c_file, 'size', 0))
+            path_size_key = (calc_path.lower(), getattr(c_file, 'size', 0))
             if path_size_key not in seen_path_sizes:
                 seen_path_sizes.add(path_size_key)
                 unique_canvas_files.append((c_file, calc_path))
@@ -643,30 +658,36 @@ class SyncManager:
             if file_id not in seen_ids:
                 if not entry.get('is_ignored', False):
                     int_id = int(file_id)
-                    # Guard: If this is a synthetic secondary ID and the
-                    # metadata fetch for its entity type failed, DO NOT mark
-                    # as deleted — the absence is due to an API error, not a
-                    # real teacher deletion.
+                    sync_info = self._dict_to_sync_info(file_id, entry)
+                    
+                    # Attach target path
+                    sync_info.target_local_path = str(Path(entry.get('local_path', '')).parent).replace('\\\\', '/')
+                    if sync_info.target_local_path == '.':
+                        sync_info.target_local_path = ''
+                        
+                    local_path = self.local_path / entry.get('local_path', '')
+                    
+                    # 1. ALWAYS check local existence unconditionally first!
+                    if not local_path.exists():
+                        if entry.get('downloaded_at'):
+                            raw_locally_deleted.append(sync_info)
+                        else:
+                            raw_missing_infos.append(sync_info)
+                        continue # Successfully caught local deletion, move to next file
+                    
+                    # 2. If it exists locally, process Canvas API failure guards
                     if int_id <= -(SECONDARY_ID_OFFSETS['assignment']) and secondary_fetch_success:
                         etype = secondary_id_type(int_id)
                         if etype and etype not in ('module_item', 'unknown'):
                             if not secondary_fetch_success.get(etype, True):
                                 continue  # Skip — API failed for this type
-                    sync_info = self._dict_to_sync_info(file_id, entry)
-                    local_path = self.local_path / entry.get('local_path', '')
-                    
-                    if not local_path.exists():
-                        # Guard A: Missing locally. MUST be caught here first!
-                        if entry.get('downloaded_at'):
-                            raw_locally_deleted.append(sync_info)
-                        else:
-                            raw_missing_infos.append(sync_info)
-                    elif int_id < 0:
-                        # Guard B: Exists locally AND is synthetic. Bypass 'Deleted on Canvas'.
+                                
+                    # 3. Guard B: Bypass synthetic entities from Canvas deletion
+                    if int_id < 0:
                         continue
-                    else:
-                        # Exists locally AND is a standard file. Teacher deleted it.
-                        result.deleted_on_canvas.append(sync_info)
+                        
+                    # 4. Standard file deleted on canvas
+                    result.deleted_on_canvas.append(sync_info)
                     
         # --- Backend Deduplication (The Teacher Re-upload Scenario) ---
         new_name_map = {robust_filename_normalize(nf.filename): nf for nf in raw_new_files}
@@ -692,6 +713,17 @@ class SyncManager:
         # Check locally deleted files against re-uploads as well
         final_locally_deleted = []
         for del_info in raw_locally_deleted:
+            # --- CRITICAL PATCH: Type-Safe Shield ---
+            try:
+                check_id = int(del_info.canvas_file_id)
+            except (TypeError, ValueError):
+                check_id = 1
+                
+            if check_id < 0:
+                final_locally_deleted.append(del_info)
+                continue
+            # ----------------------------------------
+            
             missing_norm = robust_filename_normalize(del_info.canvas_filename)
             if missing_norm in new_name_map:
                 matching_new_cfile = new_name_map[missing_norm]
