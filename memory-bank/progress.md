@@ -1,6 +1,23 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.7: Catch-All Overlap & UI Ledger Parity** (2026-03-22):
+    - [x] **Catch-All Parity**: Synchronized the secondary scan with Phase 1's `module_file_ids` to prevent double-queuing of module files.
+    - [x] **UI Ledger Synchronization**: Moved progress increments in `app.py` to the `if msg:` branch, ensuring `x/y` parity with the physical download details ledger.
+    - [x] **Principal Architect Verification**: Confirmed that the "30-file phantom jump" is mathematically impossible under the new routing logic.
+- [x] **Phase 6.6: Structural Audit Execution & Guardrail Verification** (2026-03-21):
+    - [x] **Signature Standardization**: Renovated the `sync_manager.py` SQL write signature to use `local_path: str`, neutralizing the parameter hallucination that was orphaning files in the manifest.
+    - [x] **Global Call Sweep**: Scrubbed `canvas_logic.py` identifying and patching 11 explicit `record_downloaded_file` invocations to align with the new signature.
+    - [x] **Dynamic Metric Fetching**: Decoupled `total_mb` from the static render scope in `app.py`, implementing real-time session state extraction within the dashboard closure.
+    - [x] **Attachment Unit Compliance**: Implemented the Byte-to-MB conversion guardrail `(size / (1024 * 1024))` for all dynamically discovered attachments in the UI mutation hook.
+    - [x] **Principal Architect Verification**: Conducted a critical self-audit to prove the state mutation and signature sweeps were applied securely without side effects.
+- [x] **Phase 6.5: Secondary Entity Extraction & Manifest Parity Audit** (2026-03-21):
+    - [x] **Registry Expansion**: Injected the critical `'attachment': 60000000` mapping into the `SECONDARY_ID_OFFSETS` dictionary inside `sync_manager.py`, preventing fatal `KeyError` crashes during Hybrid ID generation.
+    - [x] **Attachment Manifest Routing (`canvas_logic.py`)**: Ensured HTML manifest commutations (`record_downloaded_file`) correctly execute after inner attachment loops. Verified 'attachment' dispatch payload survives regex extraction blocks.
+    - [x] **UI Metric Lock Auditing**: Discovered that the dynamic `st.session_state['total_items']` increment hook was functionally successful, but visually ignored due to Streamlit's lexical scoping freezing the string denominator `{current_files} / {total_items}` during the outer render closure.
+    - [x] **Guard B Blind Spot Discovery**: Identified a critical flaw in `sync_manager.py`'s Step 5 `analyze_course()` logic where an over-broad `if int_id < 0: continue` check was silently discarding all instructor-deleted synthetic entities, preventing valid missing files from appearing in the 'Locally Deleted' UI queue.
+    - [x] **UI Metric Lock Resolved**: Pulled `active_total` and `active_current` directly from `st.session_state` inside the `render_dashboard` closure. Metrics should now update dynamically in real-time.
+    - [x] **Step 5 Order of Operations Fixed**: Refactored `analyze_course()` in `sync_manager.py` to a strict `if / elif / else` structure. Guard A (local existence) now correctly prioritizes missing files before Guard B (synthetic entity bypass) executes.
 - [x] **Attachment ID Reversion & Sync Retry UI Fix** (2026-03-21):
     - [x] **Attachment ID Reversion**: Reverted synthetic negative IDs for attachments to their true positive Canvas file IDs to ensure proper SQLite deduplication.
     - [x] **Negative ID Logic Removal**: Stripped the codebase of decoding and refresh logic related to negative attachment IDs.
@@ -24,6 +41,7 @@
     - [x] **Success Amnesia Fix**: Sandboxed retry states to prevent wiping global progress metrics during a retry.
     - [x] **Serialization Trap Neutralization**: Implemented safe property extraction logic for all error attributes to survive Streamlit's dictionary serialization.
     - [x] **Safe Error Resolution**: Optimized the reconciliation loop to append `[RESOLVED]` to audit logs and accurately update UI counters post-retry.
+    - [x] **Ghost DB Receipt Fix (Interface Hydration)**: Resolved the bug where secondary attachments were missing from the SQLite manifest by using `types.SimpleNamespace` to hydrate raw dictionaries into dot-notation compliant objects before database committal.
 
 - [x] **Phase 4.7: Regression Defenses & Context Safety** (2026-03-20):
     - [x] **Strict Type Hinting**: Enforced `Dict[int, CanvasFileInfo]` and `Dict[int, SyncFileInfo]` mapping on all retry logic in `sync_ui.py`, preventing type pollution across the retry boundary.
@@ -269,9 +287,8 @@
 - Post-processing pipeline now has complete observability via dual logging to `debug_log.txt` and `download_errors.txt`.
 
 ## Pending Tasks
-- [x] **CRITICAL**: Fix `excel_converter.py` missing `import time` (Line 96).
-- [x] **CRITICAL**: Fix `word_converter.py` unconditional COM imports (Move inside `__enter__`).
-- [ ] **CRITICAL**: Establish an automated test suite (unit + integration tests) to prevent silent regressions.
+- [ ] **STRETCH**: Establish an automated test suite (unit + integration tests) to prevent silent regressions.
+- [ ] **PHASE 7**: Implement multi-threaded download support for high-bandwidth connections.
 - [x] **MAJOR**: Add `tarfile` path traversal protection (`filter='data'`) in `archive_extractor.py`.
 - [x] **MAJOR**: Pin `requirements.txt` dependencies and remove unused ones (`watchdog`, `requests`).
 - [x] Refactor `sync_ui.py` to break up the monolith into logical sub-modules (e.g. `dialogs.py`, `ui_render_helpers.py` via `ui_helpers.py`).
