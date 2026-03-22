@@ -12,6 +12,7 @@ from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
 import asyncio
 import aiohttp
+import types
 import threading
 import aiofiles
 from canvas_debug import log_debug, clear_debug_log
@@ -474,18 +475,19 @@ class CanvasManager:
                     routing = _ENTITY_ROUTING['announcement']
                     
                     attachments = []
-                    if not is_scanning_phase:
-                        try:
-                            raw_att = getattr(topic, 'attachments', None)
-                            if raw_att and isinstance(raw_att, list):
-                                attachments = list(raw_att)
-                        except Exception:
-                            pass
+                    try:
+                        raw_att = getattr(topic, 'attachments', None)
+                        if raw_att and isinstance(raw_att, list):
+                            attachments = list(raw_att)
+                    except Exception:
+                        pass
 
+                    existing_att_ids = {
+                        a.get('id') for a in attachments if isinstance(a, dict)
+                    }
+
+                    if not is_scanning_phase:
                         t_msg = getattr(topic, 'message', '') or ''
-                        existing_att_ids = {
-                            a.get('id') for a in attachments if isinstance(a, dict)
-                        }
                         for link_info in _extract_canvas_file_links(t_msg):
                             fid = link_info['file_id']
                             if fid in existing_att_ids:
@@ -526,9 +528,11 @@ class CanvasManager:
                     ))
                     
                     for att in attachments:
-                        att_id = att.get('id')
-                        if not att_id:
+                        raw_id = att.get('id')
+                        if not raw_id:
                             continue
+                        from sync_manager import make_secondary_id
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
                         
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
@@ -577,19 +581,20 @@ class CanvasManager:
 
                     # Discover attachments (only in full analysis mode)
                     attachments = []
-                    if not is_scanning_phase:
-                        try:
-                            raw_att = getattr(full_assignment, 'attachments', None)
-                            if raw_att and isinstance(raw_att, list):
-                                attachments = list(raw_att)
-                        except Exception:
-                            pass
+                    try:
+                        raw_att = getattr(full_assignment, 'attachments', None)
+                        if raw_att and isinstance(raw_att, list):
+                            attachments = list(raw_att)
+                    except Exception:
+                        pass
 
+                    existing_att_ids = {
+                        a.get('id') for a in attachments if isinstance(a, dict)
+                    }
+
+                    if not is_scanning_phase:
                         # Inline file links from the description HTML
                         a_desc = getattr(full_assignment, 'description', '') or ''
-                        existing_att_ids = {
-                            a.get('id') for a in attachments if isinstance(a, dict)
-                        }
                         for link_info in _extract_canvas_file_links(a_desc):
                             fid = link_info['file_id']
                             if fid in existing_att_ids:
@@ -635,9 +640,11 @@ class CanvasManager:
 
                     # 2) Yield each attachment as a true CanvasFileInfo
                     for att in attachments:
-                        att_id = att.get('id')
-                        if not att_id:
+                        raw_id = att.get('id')
+                        if not raw_id:
                             continue
+                        from sync_manager import make_secondary_id
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         # Unify namespace: prepend the parent entity's
                         # subfolder so the filename mirrors the physical
@@ -679,18 +686,19 @@ class CanvasManager:
                     safe_title = self._sanitize_filename(d_title)
                     
                     attachments = []
-                    if not is_scanning_phase:
-                        try:
-                            raw_att = getattr(topic, 'attachments', None)
-                            if raw_att and isinstance(raw_att, list):
-                                attachments = list(raw_att)
-                        except Exception:
-                            pass
+                    try:
+                        raw_att = getattr(topic, 'attachments', None)
+                        if raw_att and isinstance(raw_att, list):
+                            attachments = list(raw_att)
+                    except Exception:
+                        pass
 
+                    existing_att_ids = {
+                        a.get('id') for a in attachments if isinstance(a, dict)
+                    }
+
+                    if not is_scanning_phase:
                         t_msg = getattr(topic, 'message', '') or ''
-                        existing_att_ids = {
-                            a.get('id') for a in attachments if isinstance(a, dict)
-                        }
                         for link_info in _extract_canvas_file_links(t_msg):
                             fid = link_info['file_id']
                             if fid in existing_att_ids:
@@ -731,9 +739,11 @@ class CanvasManager:
                     ))
                     
                     for att in attachments:
-                        att_id = att.get('id')
-                        if not att_id:
+                        raw_id = att.get('id')
+                        if not raw_id:
                             continue
+                        from sync_manager import make_secondary_id
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
                         
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
@@ -767,18 +777,19 @@ class CanvasManager:
                     safe_title = self._sanitize_filename(q_title)
                     
                     attachments = []
-                    if not is_scanning_phase:
-                        try:
-                            raw_att = getattr(quiz, 'attachments', None)
-                            if raw_att and isinstance(raw_att, list):
-                                attachments = list(raw_att)
-                        except Exception:
-                            pass
+                    try:
+                        raw_att = getattr(quiz, 'attachments', None)
+                        if raw_att and isinstance(raw_att, list):
+                            attachments = list(raw_att)
+                    except Exception:
+                        pass
 
+                    existing_att_ids = {
+                        a.get('id') for a in attachments if isinstance(a, dict)
+                    }
+
+                    if not is_scanning_phase:
                         q_desc = getattr(quiz, 'description', '') or ''
-                        existing_att_ids = {
-                            a.get('id') for a in attachments if isinstance(a, dict)
-                        }
                         for link_info in _extract_canvas_file_links(q_desc):
                             fid = link_info['file_id']
                             if fid in existing_att_ids:
@@ -819,9 +830,11 @@ class CanvasManager:
                     ))
                     
                     for att in attachments:
-                        att_id = att.get('id')
-                        if not att_id:
+                        raw_id = att.get('id')
+                        if not raw_id:
                             continue
+                        from sync_manager import make_secondary_id
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
                         
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
@@ -990,7 +1003,7 @@ class CanvasManager:
                         ext = os.path.splitext(getattr(file, 'filename', ''))[1].lower()
                         if ext not in allowed_exts:
                             continue
-                    total_bytes += getattr(file, 'size', 0)
+                    total_bytes += getattr(file, 'size', 0) or 0
             except Exception:
                 # Fallback to modules
                 modules = course.get_modules()
@@ -1004,7 +1017,7 @@ class CanvasManager:
                                     ext = os.path.splitext(getattr(file_obj, 'filename', ''))[1].lower()
                                     if ext not in allowed_exts:
                                         continue
-                                total_bytes += getattr(file_obj, 'size', 0)
+                                total_bytes += getattr(file_obj, 'size', 0) or 0
                             except Exception:
                                 pass
         except Exception:
@@ -1048,6 +1061,7 @@ class CanvasManager:
             log_debug(f"Save Dir: {save_dir}", debug_file)
 
         downloaded_file_ids = set()
+        module_file_ids = set()
         seen_target_paths = set()  # Path-based collision tracking
         module_handled_ids = set()  # Secondary entity IDs already handled via module dispatch
         mb_tracker = {'bytes_downloaded': 0}
@@ -1101,6 +1115,8 @@ class CanvasManager:
                                 
                                 try:
                                     if item.type == 'File':
+                                        if hasattr(item, 'content_id'):
+                                            module_file_ids.add(item.content_id)
                                         if not hasattr(item, 'content_id') or not item.content_id:
                                             # Create Error
                                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Content ID", f"Item {getattr(item, 'title', 'unknown')} missing content_id")
@@ -1354,7 +1370,7 @@ class CanvasManager:
                     for file in all_files:
                         if check_cancellation and check_cancellation(): break
                         
-                        if file.id in downloaded_file_ids:
+                        if int(file.id) in {int(i) for i in downloaded_file_ids} or int(file.id) in {int(i) for i in module_file_ids}:
                             log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
                             continue # Already downloaded in a module
                         
@@ -1588,7 +1604,7 @@ class CanvasManager:
                                             sync_manager.record_downloaded_file,
                                             canvas_file_id=sec_id,
                                             canvas_filename=sec_filepath.name,
-                                            local_relative_path=rel_path,
+                                            local_path=rel_path,
                                             canvas_updated_at=canvas_updated,
                                             original_size=0
                                         )
@@ -1617,7 +1633,7 @@ class CanvasManager:
                                         
                                         # Progress Bar Integrity
                                         if progress_callback:
-                                            progress_callback(att_filename, progress_type='attachment')
+                                            progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
                                             
                                         att_filepath = attach_dir / self._sanitize_filename(att_filename)
                                         
@@ -1636,7 +1652,13 @@ class CanvasManager:
                     else:
                         # Refresh URL securely using the safe_thread_wrapper to preserve context for logging
                         try:
-                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, file_obj.id)
+                            fetch_id = file_obj.id
+                            if fetch_id < 0:
+                                from sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
+                                if secondary_id_type(fetch_id) == 'attachment':
+                                    fetch_id = abs(fetch_id) - SECONDARY_ID_OFFSETS['attachment']
+                            
+                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, fetch_id)
                             fresh_url = getattr(fresh_file, 'url', '')
                             if not fresh_url:
                                 raise ValueError("Canvas API returned an empty URL for this item.")
@@ -1943,7 +1965,7 @@ class CanvasManager:
             filename = filepath.name
 
         # Check duplication by size
-        file_size_bytes = getattr(file_obj, 'size', 0)
+        file_size_bytes = getattr(file_obj, 'size', 0) or 0
         
         async with manage_download_lock(filepath):
             # Re-check existence inside lock
@@ -1963,7 +1985,7 @@ class CanvasManager:
                                     sync_manager.record_downloaded_file,
                                     canvas_file_id=file_obj.id,
                                     canvas_filename=getattr(file_obj, 'filename', ''),
-                                    local_relative_path=rel_path,
+                                    local_path=rel_path,
                                     canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
                                     original_size=file_size_bytes
                                 )
@@ -2130,7 +2152,7 @@ class CanvasManager:
                                             sync_manager.record_downloaded_file,
                                             canvas_file_id=file_obj.id,
                                             canvas_filename=getattr(file_obj, 'filename', ''),
-                                            local_relative_path=rel_path,
+                                            local_path=rel_path,
                                             canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
                                             original_size=getattr(file_obj, 'size', 0)
                                         )
@@ -2477,7 +2499,7 @@ class CanvasManager:
         if progress_callback:
             progress_callback(
                 entity_name, progress_type='secondary',
-                entity_type=entity_type,
+                entity_type=entity_type, explicit_filepath=str(filepath)
             )
 
         return filepath, synthetic_id, canvas_updated_at or ''
@@ -2838,15 +2860,15 @@ class CanvasManager:
             with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
                 f.write("[InternetShortcut]\n")
                 f.write(f"URL={url}\n")
-            if progress_callback: progress_callback(f'Created link: {safe_title}.url', progress_type='download')
-            
+            if progress_callback: progress_callback(f'Created link: {safe_title}.url', progress_type='link', explicit_filepath=str(filepath))
+
             if sync_manager and course_base_path and canvas_item_id:
                 try:
                     rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
                     sync_manager.record_downloaded_file(
                         canvas_file_id=canvas_item_id,
                         canvas_filename=filepath.name,
-                        local_relative_path=rel_path,
+                        local_path=rel_path,
                         canvas_updated_at=datetime.now(timezone.utc).isoformat(),
                         original_size=0
                     )
@@ -2938,6 +2960,7 @@ class CanvasManager:
         ― they are queued for async download using their *true positive*
         ``file.id``, just like any normal course file.
         """
+        from sync_manager import make_secondary_id
         isolate = settings.get('isolate_secondary_content', True)
         log_debug("Secondary: Fetching assignments...", debug_file)
 
@@ -3026,11 +3049,13 @@ class CanvasManager:
                 if filepath and attachments:
                     attach_dir = filepath.parent
                     for att in attachments:
-                        att_id = att.get('id')
+                        raw_id = att.get('id')
                         att_url = att.get('url', '')
                         att_filename = att.get('filename', att.get('display_name', 'attachment'))
-                        if not att_url or not att_id:
+                        if not att_url or not raw_id:
                             continue
+
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         if not isolate:
                             # Mode A: prefix attachment filename
@@ -3038,22 +3063,25 @@ class CanvasManager:
                             att_filename = f"{routing['prefix']}: {self._sanitize_filename(a_name)} - {att_filename}"
 
                         # Build a mock file object that _download_file_async expects
-                        att_file_obj = type('AttachmentObj', (), {
-                            'id': att_id,
-                            'url': att_url,
-                            'filename': att_filename,
-                            'display_name': att.get('display_name', att_filename),
-                            'size': att.get('size', 0),
-                            'modified_at': att.get('modified_at', updated_at),
-                            'md5': None,
-                            'content-type': att.get('content-type', ''),
-                            'folder_id': None,
-                        })()
+                        att_file_obj = types.SimpleNamespace(
+                            id=att_id,
+                            url=att_url,
+                            filename=att_filename,
+                            display_name=att.get('display_name', att_filename),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', updated_at),
+                            md5=None,
+                            content_type=att.get('content-type', ''),
+                            folder_id=None,
+                        )
 
                         att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                        if progress_callback:
+                            progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
+                        
                         task = asyncio.create_task(self._download_file_async(
                             sem, session, att_file_obj, attach_dir,
-                            progress_callback, mb_tracker, 'all',
+                            progress_callback, mb_tracker, 'attachment',
                             error_root_path=error_root_path,
                             course_name=course.name, debug_file=debug_file,
                             sync_manager=sync_manager,
@@ -3069,7 +3097,7 @@ class CanvasManager:
                         sync_manager.record_downloaded_file(
                             canvas_file_id=syn_id,
                             canvas_filename=filepath.name,
-                            local_relative_path=rel_path,
+                            local_path=rel_path,
                             canvas_updated_at=canvas_updated,
                             original_size=0,
                         )
@@ -3130,7 +3158,7 @@ class CanvasManager:
                     sync_manager.record_downloaded_file(
                         canvas_file_id=syn_id,
                         canvas_filename=filepath.name,
-                        local_relative_path=rel_path,
+                        local_path=rel_path,
                         canvas_updated_at=canvas_updated,
                         original_size=0,
                     )
@@ -3158,6 +3186,7 @@ class CanvasManager:
         Attachments on announcements are real Canvas File objects and are
         queued for download using their true positive IDs.
         """
+        from sync_manager import make_secondary_id
         isolate = settings.get('isolate_secondary_content', True)
         log_debug("Secondary: Fetching announcements...", debug_file)
 
@@ -3215,32 +3244,37 @@ class CanvasManager:
                 if filepath and attachments:
                     attach_dir = filepath.parent
                     for att in attachments:
-                        att_id = att.get('id')
+                        raw_id = att.get('id')
                         att_url = att.get('url', '')
                         att_filename = att.get('filename', att.get('display_name', 'attachment'))
-                        if not att_url or not att_id:
+                        if not att_url or not raw_id:
                             continue
+
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         if not isolate:
                             routing = _ENTITY_ROUTING['announcement']
                             att_filename = f"{routing['prefix']}: {self._sanitize_filename(display_name)} - {att_filename}"
 
-                        att_file_obj = type('AttachmentObj', (), {
-                            'id': att_id,
-                            'url': att_url,
-                            'filename': att_filename,
-                            'display_name': att.get('display_name', att_filename),
-                            'size': att.get('size', 0),
-                            'modified_at': att.get('modified_at', updated_at),
-                            'md5': None,
-                            'content-type': att.get('content-type', ''),
-                            'folder_id': None,
-                        })()
+                        att_file_obj = types.SimpleNamespace(
+                            id=att_id,
+                            url=att_url,
+                            filename=att_filename,
+                            display_name=att.get('display_name', att_filename),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', updated_at),
+                            md5=None,
+                            content_type=att.get('content-type', ''),
+                            folder_id=None,
+                        )
 
                         att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                        if progress_callback:
+                            progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
+
                         task = asyncio.create_task(self._download_file_async(
                             sem, session, att_file_obj, attach_dir,
-                            progress_callback, mb_tracker, 'all',
+                            progress_callback, mb_tracker, 'attachment',
                             error_root_path=error_root_path,
                             course_name=course.name, debug_file=debug_file,
                             sync_manager=sync_manager,
@@ -3255,7 +3289,7 @@ class CanvasManager:
                         sync_manager.record_downloaded_file(
                             canvas_file_id=syn_id,
                             canvas_filename=filepath.name,
-                            local_relative_path=rel_path,
+                            local_path=rel_path,
                             canvas_updated_at=canvas_updated,
                             original_size=0,
                         )
@@ -3325,7 +3359,7 @@ class CanvasManager:
                         sync_manager.record_downloaded_file(
                             canvas_file_id=syn_id,
                             canvas_filename=filepath.name,
-                            local_relative_path=rel_path,
+                            local_path=rel_path,
                             canvas_updated_at=canvas_updated,
                             original_size=0,
                         )
@@ -3436,7 +3470,7 @@ class CanvasManager:
                         sync_manager.record_downloaded_file(
                             canvas_file_id=syn_id,
                             canvas_filename=filepath.name,
-                            local_relative_path=rel_path,
+                            local_path=rel_path,
                             canvas_updated_at=canvas_updated,
                             original_size=0,
                         )
@@ -3543,7 +3577,7 @@ class CanvasManager:
                         sync_manager.record_downloaded_file(
                             canvas_file_id=synthetic_id,
                             canvas_filename=filepath.name,
-                            local_relative_path=rel_path,
+                            local_path=rel_path,
                             canvas_updated_at=updated_at,
                             original_size=0,
                         )
@@ -3687,7 +3721,7 @@ class CanvasManager:
             content = f'[InternetShortcut]\nURL={safe_url}'
 
         if progress_callback:
-            progress_callback(f'Creating link: {title}', progress_type='link')
+            progress_callback(f'Creating link: {title}', progress_type='link', explicit_filepath=str(filepath))
 
         log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
 
@@ -3701,7 +3735,7 @@ class CanvasManager:
                     sync_manager.record_downloaded_file(
                         canvas_file_id=canvas_item_id,
                         canvas_filename=filepath.name,
-                        local_relative_path=rel_path,
+                        local_path=rel_path,
                         canvas_updated_at=datetime.now(timezone.utc).isoformat(),
                         original_size=0
                     )

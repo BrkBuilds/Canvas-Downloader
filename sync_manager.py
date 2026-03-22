@@ -653,7 +653,20 @@ class SyncManager:
                             if not secondary_fetch_success.get(etype, True):
                                 continue  # Skip — API failed for this type
                     sync_info = self._dict_to_sync_info(file_id, entry)
-                    result.deleted_on_canvas.append(sync_info)
+                    local_path = self.local_path / entry.get('local_path', '')
+                    
+                    if not local_path.exists():
+                        # Guard A: Missing locally. MUST be caught here first!
+                        if entry.get('downloaded_at'):
+                            raw_locally_deleted.append(sync_info)
+                        else:
+                            raw_missing_infos.append(sync_info)
+                    elif int_id < 0:
+                        # Guard B: Exists locally AND is synthetic. Bypass 'Deleted on Canvas'.
+                        continue
+                    else:
+                        # Exists locally AND is a standard file. Teacher deleted it.
+                        result.deleted_on_canvas.append(sync_info)
                     
         # --- Backend Deduplication (The Teacher Re-upload Scenario) ---
         new_name_map = {robust_filename_normalize(nf.filename): nf for nf in raw_new_files}
@@ -775,7 +788,7 @@ class SyncManager:
             pass
 
     def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
-                                local_relative_path: str, canvas_updated_at: str,
+                                local_path: str, canvas_updated_at: str,
                                 original_size: int, local_md5: str = "") -> bool:
         """Record a single downloaded file directly to the SQLite DB.
         
@@ -790,7 +803,7 @@ class SyncManager:
         info = {
             'canvas_file_id': canvas_file_id,
             'canvas_filename': canvas_filename,
-            'local_path': local_relative_path,
+            'local_path': local_path,
             'canvas_updated_at': canvas_updated_at or datetime.now(timezone.utc).isoformat(),
             'downloaded_at': datetime.now(timezone.utc).isoformat(),
             'original_size': original_size,
@@ -844,20 +857,20 @@ class SyncManager:
     # --- Manifest Update Helpers ---
     
     def add_file_to_manifest(self, manifest: dict, canvas_file: CanvasFileInfo, 
-                             local_relative_path: str, local_md5: str = "") -> dict:
+                             local_path: str, local_md5: str = "") -> dict:
         """Add or update a file entry in the manifest after successful download and save immediately to DB."""
         file_id = str(canvas_file.id)
         
         # If no MD5 is provided but file exists, compute it
         if not local_md5:
-            full_path = self.local_path / local_relative_path
+            full_path = self.local_path / local_path
             if full_path.exists():
                 local_md5 = SyncManager.compute_local_md5(full_path)
                 
         entry = {
             'canvas_file_id': int(file_id),
             'canvas_filename': canvas_file.filename,
-            'local_path': local_relative_path,
+            'local_path': local_path,
             'canvas_updated_at': canvas_file.modified_at or datetime.now(timezone.utc).isoformat(),
             'downloaded_at': datetime.now(timezone.utc).isoformat(),
             'original_size': canvas_file.size,

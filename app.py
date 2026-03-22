@@ -1272,9 +1272,14 @@ with _main_content.container():
                     filtered_files = []
                     for f in course_files:
                         if st.session_state['file_filter'] == 'study':
-                            ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
-                            if ext in allowed_exts:
+                            # Synthetic secondary items (negative ID) bypass the file filter
+                            # Since the user specifically checked the box to download them.
+                            if getattr(f, 'id', 1) < 0:
                                 filtered_files.append(f)
+                            else:
+                                ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
+                                if ext in allowed_exts:
+                                    filtered_files.append(f)
                         else:
                             filtered_files.append(f)
                             
@@ -1304,7 +1309,9 @@ with _main_content.container():
                                             total_items += 1
                         except Exception:
                             pass
-                    total_mb += sum(getattr(f, 'size', 0) for f in filtered_files) / (1024 * 1024)
+                    
+                    # Guard against API returning literal None for size which breaks sum()
+                    total_mb += sum((getattr(f, 'size', 0) or 0) for f in filtered_files) / (1024 * 1024)
                     
                 except Exception as e:
                     # Fallback to older count_course_items if Hybrid fetch fails critically
@@ -1352,10 +1359,16 @@ with _main_content.container():
                     current_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
                     current_files = st.session_state.get('downloaded_items', 0) + st.session_state.get('failed_items', 0)
                     
-                    if total_items > 0:
-                        percent = int((current_files / total_items) * 100)
+                    is_retry = st.session_state.get('download_status') == 'isolated_retry'
+                    active_total = st.session_state.get('total_items', total_items)
+                    active_current = st.session_state.get('retry_downloaded_items', current_files) if is_retry else st.session_state.get('downloaded_items', current_files)
+                    active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
+                    active_total_mb = st.session_state.get('total_mb', total_mb)
+
+                    if active_total > 0:
+                        percent = int((active_current / active_total) * 100)
                         percent = min(100, percent) # Clamp to max 100
-                        if current_files == total_items:
+                        if active_current >= active_total:
                             percent = 100
                     else:
                         percent = 0
@@ -1363,7 +1376,7 @@ with _main_content.container():
                     # Calculate Speed & ETA
                     elapsed = time.time() - start_time
                     speed_mb_s = (current_mb / elapsed) if elapsed > 0 else 0.0
-                    remaining_mb = max(0, total_mb - current_mb) # prevent negative remaining mb
+                    remaining_mb = max(0, active_total_mb - current_mb) # prevent negative remaining mb
                     eta_seconds = (remaining_mb / speed_mb_s) if speed_mb_s > 0 else 0
                     eta_string = time.strftime('%M:%S', time.gmtime(max(0, eta_seconds)))
                     
@@ -1387,7 +1400,7 @@ with _main_content.container():
                     <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_mb:.1f} MB</span></span>
+                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total_mb:.1f} MB</span></span>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
@@ -1395,7 +1408,7 @@ with _main_content.container():
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_items}</span></span>
+                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{active_current} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total}</span></span>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
@@ -1434,8 +1447,8 @@ with _main_content.container():
                             st.session_state['download_file_details'] = {}
 
                         if progress_type == 'skipped':
-                            st.session_state['downloaded_items'] += 1
                             if msg:
+                                st.session_state['downloaded_items'] += 1
                                 log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped: {msg}</span>")
                                 if kwargs.get('explicit_filepath'):
                                     course_key = course.name
@@ -1445,11 +1458,26 @@ with _main_content.container():
                                     st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
 
-                        elif progress_type in ('download', 'page', 'link'):
+                        elif progress_type == 'attachment_discovered':
+                            size = kwargs.get('size', 0)
+                            st.session_state['total_mb'] = st.session_state.get('total_mb', total_mb) + (size / (1024 * 1024))
+                            st.session_state['total_items'] = st.session_state.get('total_items', total_items) + 1
+                            render_dashboard()
+
+                        elif progress_type in ('page', 'link', 'secondary'):
+                            # Synthetic entities bypass Phase 1, so they must scale BOTH metrics simultaneously
                             st.session_state['downloaded_items'] += 1
+                            st.session_state['total_items'] = st.session_state.get('total_items', total_items) + 1
                             if msg:
-                                active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
-                                log_deque.append(f"[✅] Finished: {msg}")
+                                if progress_type == 'secondary':
+                                    entity_type = kwargs.get('entity_type', '')
+                                    icon = SECONDARY_ENTITY_ICONS.get(entity_type, '📄')
+                                    active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 {icon} Saving {entity_type}: {msg}...</div>", unsafe_allow_html=True)
+                                    log_deque.append(f"[✅] {icon} Saved: {msg}")
+                                else:
+                                    active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
+                                    log_deque.append(f"[✅] Finished: {msg}")
+                                    
                                 # Track filename for completion screen
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
@@ -1459,33 +1487,16 @@ with _main_content.container():
                                 st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
 
-                        elif progress_type == 'secondary':
-                            # Secondary content entity (Assignment, Quiz, etc.)
-                            st.session_state['downloaded_items'] += 1
-                            entity_type = kwargs.get('entity_type', '')
-                            icon = SECONDARY_ENTITY_ICONS.get(entity_type, '📄')
-                            if msg:
-                                active_file_placeholder.markdown(
-                                    f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>"
-                                    f"🔄 {icon} Saving {entity_type}: {msg}...</div>",
-                                    unsafe_allow_html=True,
-                                )
-                                log_deque.append(f"[✅] {icon} Saved: {msg}")
-                                # Track for completion screen
-                                course_key = course.name
-                                if course_key not in st.session_state['download_file_details']:
-                                    st.session_state['download_file_details'][course_key] = []
-                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
-                                # Guardrail 2: Force state rebind for deep mutation
-                                st.session_state['download_file_details'] = st.session_state['download_file_details']
-                            render_dashboard()
-
-                        elif progress_type == 'attachment':
-                            # Individual attachment queued/finished
-                            st.session_state['total_items'] = st.session_state.get('total_items', 0) + 1
+                        elif progress_type in ('download', 'attachment'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
-                                log_deque.append(f"<span style='color: {theme.ACCENT_BLUE};'>[📎] Attachment: {msg}</span>")
+                                if progress_type == 'attachment':
+                                    log_deque.append(f"<span style='color: {theme.ACCENT_BLUE};'>[📎] Attachment: {msg}</span>")
+                                else:
+                                    active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {msg}...</div>", unsafe_allow_html=True)
+                                    log_deque.append(f"[✅] Finished: {msg}")
+                                    
+                                # Track filename for completion screen
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
                                     st.session_state['download_file_details'][course_key] = []
@@ -1521,6 +1532,7 @@ with _main_content.container():
                                     seen.add(sig)
                                     st.session_state['seen_error_sigs'] = seen
                                     st.session_state['failed_items'] += 1  # <-- STRICTLY INSIDE THE GUARD
+                                    st.session_state['total_items'] = max(st.session_state.get('total_items', total_items), st.session_state.get('downloaded_items', 0) + st.session_state['failed_items'])
                                     
                                     if 'download_errors_list' not in st.session_state:
                                         st.session_state['download_errors_list'] = []
@@ -1747,10 +1759,14 @@ with _main_content.container():
                 # Calculate current progress
                 current_files = st.session_state.get('retry_downloaded_items', 0) + st.session_state.get('retry_failed_items', 0)
                 
-                total_items = st.session_state.get('total_items', 1)
-                percent = int((current_files / max(1, total_items)) * 100)
+                is_retry = st.session_state.get('download_status') == 'isolated_retry'
+                active_total = st.session_state.get('total_items', 1)
+                active_current = st.session_state.get('retry_downloaded_items', current_files) if is_retry else st.session_state.get('downloaded_items', current_files)
+                active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
+                
+                percent = int((active_current / max(1, active_total)) * 100)
                 percent = min(100, percent)
-                if current_files == total_items:
+                if active_current >= active_total:
                     percent = 100
                 
                 # Metrics Extraction for Parity
@@ -1787,7 +1803,7 @@ with _main_content.container():
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: center;">
                         <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files Processed</span>
-                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_items}</span></span>
+                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{active_current} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total}</span></span>
                     </div>
                 </div>
                 ''', unsafe_allow_html=True)
@@ -1814,11 +1830,11 @@ with _main_content.container():
                     course_name_ref = kwargs.get('course_name', 'Unknown')
                          
                     if progress_type == 'skipped':
-                        if is_retry:
-                            st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
-                        else:
-                            st.session_state['downloaded_items'] += 1
                         if msg:
+                            if is_retry:
+                                st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
+                            else:
+                                st.session_state['downloaded_items'] += 1
                             log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped: {msg}</span>")
                             if kwargs.get('explicit_filepath'):
                                 if is_retry:
@@ -1833,7 +1849,11 @@ with _main_content.container():
                                     st.session_state['download_file_details'] = st.session_state['download_file_details']
                         render_dashboard(course_name_ref)
 
-                    elif progress_type in ('download', 'page', 'link', 'attachment'):
+                    elif progress_type == 'attachment_discovered':
+                        st.session_state['total_items'] = st.session_state.get('total_items', 1) + 1
+                        render_dashboard(course_name_ref)
+
+                    elif progress_type in ('download', 'page', 'link', 'secondary', 'attachment'):
                         if is_retry:
                             st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
                         else:
@@ -1860,6 +1880,7 @@ with _main_content.container():
                             st.session_state['retry_failed_items'] = st.session_state.get('retry_failed_items', 0) + 1
                         else:
                             st.session_state['failed_items'] += 1
+                            st.session_state['total_items'] = max(st.session_state.get('total_items', 1), st.session_state.get('downloaded_items', 0) + st.session_state['failed_items'])
                         if msg:
                             if isinstance(msg, DownloadError): error_obj = msg
                             else: error_obj = DownloadError(course_name_ref, "Unknown Item", "Generic Error", str(msg))
