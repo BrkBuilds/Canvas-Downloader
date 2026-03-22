@@ -258,6 +258,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Implementation*: The local disk scanner bypasses them (`os.walk`), but the SQLite manifest lookup still finds their past records (both negative IDs for HTML and positive for attachments). Since `local_path.exists()` returns `False` and their `downloaded_at` is truthy, the diffing engine accurately routes both files to `AnalysisResult.locally_deleted_files`. 
 - **Download Execution & Attachment Passback**:
     - *Pattern*: `download_secondary_entity` dynamically evaluates `has_attachments=bool(attachments)`. When True, `_save_secondary_entity` constructs the path as `Folder/Name/Name.html`, implicitly creating the parent subfolder via `Path.mkdir(parents=True, exist_ok=True)`. The function then passes the positive-ID `attachments` array back up to the caller so they can be injected into the main task queue, safely nesting inside the newly guaranteed directory.
+- **Phase 1 & Step 5 Existence Guard Pattern**:
+    - *Problem*: Sync engines often rely on remote API results to drive their analysis. If an API call is restricted or fails to return an entity, the engine may skip the local existence check, creating a "Black Hole" where locally deleted files go undetected.
+    - *Solution*: Enforce an unconditional `Path.exists()` check at the top of every analysis loop. In Phase 1, verify existence before marking a file as "Seen." In the Step 5 deletion loop, prioritize the "Missing on Disk" check before any Canvas API guards. This guarantees local deletions are surfaced regardless of API availability.
+- **SimpleNamespace Proxy Reconstruction Pattern**:
+    - *Problem*: Redownloading locally-deleted synthetic entities (which don't have a direct URL and are generated via API) fails if they aren't present in the active Canvas file scan.
+    - *Solution*: Use `types.SimpleNamespace` to reconstruct a proxy object from the SQLite manifest data. This lightweight proxy provides the required attributes (`id`, `filename`, etc.) to route the entity into the secondary generation pipeline while shielding it from the primary URL downloader, avoiding complex imports of internal data classes.
 
 ## Error Handling & Logging
 - **Locked File Pruning**: Pre-filtering Canvas `File` objects for missing `url` attributes to prevent batch download crashes.

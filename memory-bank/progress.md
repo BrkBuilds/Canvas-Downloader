@@ -1,7 +1,12 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.8: Sync Deletion & Redownload Overhaul** (2026-03-22):
+    - [x] **Existence Guard (Phase 1/Step 5)**: Injected mandatory `.exists()` checks into `sync_manager.py` to ensure local deletions are surfaced even if API metadata is missing or restricted.
+    - [x] **Deduplication Shield**: Protected negative-ID synthetic entities from false re-upload categorization.
+    - [x] **SimpleNamespace Proxy**: Implemented on-the-fly proxy reconstruction in `sync_ui.py` to enable redownloading of locally-deleted HTML files.
 - [x] **Phase 6.7: Catch-All Overlap & UI Ledger Parity** (2026-03-22):
+    - [x] **Sync Filename Alignment**: Fixed the bug where deleted synthetic HTML files were swallowed by the sync engine instead of showing up as "Locally Deleted." Spliced the missing `date_prefix` generating logic into `get_secondary_content_metadata` to enforce 1:1 parity with the manifest DB.
     - [x] **Catch-All Parity**: Synchronized the secondary scan with Phase 1's `module_file_ids` to prevent double-queuing of module files.
     - [x] **UI Ledger Synchronization**: Moved progress increments in `app.py` to the `if msg:` branch, ensuring `x/y` parity with the physical download details ledger.
     - [x] **Principal Architect Verification**: Confirmed that the "30-file phantom jump" is mathematically impossible under the new routing logic.
