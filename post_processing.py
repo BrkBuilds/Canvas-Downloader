@@ -340,7 +340,7 @@ def run_code_conversion(files, ui: UIBridge):
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Code to TXT conversion complete!</span>")
 
 
-def run_url_compilation(folders, ui: UIBridge):
+def run_url_compilation(folders, ui: UIBridge, sm=None):
     """Compile .url shortcuts into a NotebookLM text file.
 
     folders: list of (course_folder_path: Path, course_name: str)
@@ -357,9 +357,18 @@ def run_url_compilation(folders, ui: UIBridge):
             break
 
         if course_folder.exists():
-            compiled_path = compile_urls_to_txt(course_folder, course_name)
+            compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
             if compiled_path:
                 _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{course_name}' into: NotebookLM_External_Links.txt</span>")
+                
+                # Pure Link Deletion (Sync Engine Bypass)
+                for shortcut in processed_shortcuts:
+                    try:
+                        shortcut.unlink(missing_ok=True)
+                    except Exception as e:
+                        logger.warning(f"Failed to purely delete shortcut {shortcut.name}: {e}")
+                        _log_error_to_file(ui.error_log_path, shortcut.name, f"Shortcut deletion failed: {e}")
+                        continue
 
 
 def run_word_conversion(files, ui: UIBridge):
@@ -547,9 +556,9 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
              # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
              has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc', '.html'} for p in explicit_files)
              if has_shortcut:
-                 run_url_compilation([(course_folder, course_name)], ui)
+                 run_url_compilation([(course_folder, course_name)], ui, sm=sm)
         else:
-             run_url_compilation([(course_folder, course_name)], ui)
+             run_url_compilation([(course_folder, course_name)], ui, sm=sm)
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):

@@ -503,6 +503,14 @@ class SyncManager:
         result = AnalysisResult()
         files_section = manifest.get('files', {})
         
+        # Fetch sync contract for URL Compilation bypass
+        contract = self._load_metadata('sync_contract')
+        try:
+            contract_dict = json.loads(contract) if contract else {}
+        except Exception:
+            contract_dict = {}
+        convert_urls_enabled = contract_dict.get('convert_urls', False)
+        
         # 0. Pre-calculate Target Paths if CanvasManager is provided
         target_paths = {}
         if cm and download_mode == 'modules':
@@ -542,10 +550,11 @@ class SyncManager:
 
         seen_ids = set()
         
-        # Temporary lists for deduplication
+        # Temporary sets/lists for deduplication
         raw_new_files = []
         raw_missing_infos = []
         raw_locally_deleted = []
+        _phase1_locdel_seen = set()
 
         # Deduplicate canvas files based on their target path and size
         unique_canvas_files = []
@@ -562,10 +571,16 @@ class SyncManager:
                 
                 # If it was previously downloaded but is physically missing now:
                 if not check_path.exists() and entry.get('downloaded_at'):
-                    sync_info = self._dict_to_sync_info(file_id, entry)
-                    # Add to locally deleted if not already caught
-                    if not any(f.canvas_file_id == sync_info.canvas_file_id for f in raw_locally_deleted):
-                        raw_locally_deleted.append(sync_info)
+                    # URL Compiler Bypass (Phase 1)
+                    if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
+                        pass  # Treat as up-to-date by silently skipping the deletion flag
+                    else:
+                        sync_info = self._dict_to_sync_info(file_id, entry)
+                        # Add to locally deleted if not already caught
+                        raw_id_str = str(sync_info.canvas_file_id)
+                        if raw_id_str not in _phase1_locdel_seen:
+                            _phase1_locdel_seen.add(raw_id_str)
+                            raw_locally_deleted.append(sync_info)
             # -----------------------------------------------------------------
             
             seen_ids.add(file_id)
@@ -645,13 +660,18 @@ class SyncManager:
                     if local_path.exists():
                         result.uptodate_files.append((c_file, sync_info))
                     else:
-                        # Missing locally = Student deleted it
-                        if entry.get('downloaded_at'):
-                            # It was previously downloaded, so it's a student deletion
-                            raw_locally_deleted.append(sync_info)
+                        # URL Compiler Bypass (Phase 2)
+                        _calc_path_p = Path(calc_path)
+                        if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
+                            result.uptodate_files.append((c_file, sync_info))
                         else:
-                            # It was never downloaded (maybe sync crashed), so standard missing
-                            raw_missing_infos.append(sync_info)
+                            # Missing locally = Student deleted it
+                            if entry.get('downloaded_at'):
+                                # It was previously downloaded, so it's a student deletion
+                                raw_locally_deleted.append(sync_info)
+                            else:
+                                # It was never downloaded (maybe sync crashed), so standard missing
+                                raw_missing_infos.append(sync_info)
                         
         # 5. Check deletions (in manifest but not in canvas)
         for file_id, entry in files_section.items():
@@ -669,7 +689,10 @@ class SyncManager:
                     
                     # 1. ALWAYS check local existence unconditionally first!
                     if not local_path.exists():
-                        if entry.get('downloaded_at'):
+                        # URL Compiler Bypass (Step 5)
+                        if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
+                            pass # Pure deletion bypass
+                        elif entry.get('downloaded_at'):
                             raw_locally_deleted.append(sync_info)
                         else:
                             raw_missing_infos.append(sync_info)
@@ -712,7 +735,13 @@ class SyncManager:
                 
         # Check locally deleted files against re-uploads as well
         final_locally_deleted = []
+        dedup_loc_del_ids = set()
         for del_info in raw_locally_deleted:
+            raw_id_str = str(del_info.canvas_file_id)
+            if raw_id_str in dedup_loc_del_ids:
+                continue
+            dedup_loc_del_ids.add(raw_id_str)
+            
             # --- CRITICAL PATCH: Type-Safe Shield ---
             try:
                 check_id = int(del_info.canvas_file_id)

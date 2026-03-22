@@ -4286,7 +4286,8 @@ def _show_analysis_review():
                                     st.session_state[key] = True
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.checkbox(f"{icon} {unquote_plus(canvas_file.display_name or canvas_file.filename)} ({size})", key=key)
+                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
+                                    st.checkbox(f"{icon} {_disp} ({size})", key=key)
                                 with col2:
                                     st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
@@ -4319,7 +4320,8 @@ def _show_analysis_review():
                                     key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
                                     if key not in st.session_state:
                                         st.session_state[key] = True
-                                    st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
+                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                    st.checkbox(f"{icon} {_disp}", key=key)
                                 with col2:
                                     st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
@@ -4354,7 +4356,8 @@ def _show_analysis_review():
                                     
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.checkbox(f"{icon} {unquote_plus(sync_info.canvas_filename)}", key=key)
+                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                    st.checkbox(f"{icon} {_disp}", key=key)
                                 with col2:
                                     st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
@@ -5784,7 +5787,7 @@ def _run_sync():
                                     synced_counter[0] += 1
                                     st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                     synced_details[pair_idx].append(sec_filepath.name)
-                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Synced: </span> {esc(display_file_name)}")
+                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Synced: </span> {esc(sec_filepath.name)}")
                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
 
                                     # ── Inject attachments into the async download queue ──
@@ -5987,8 +5990,9 @@ def _run_sync():
                                                     st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                                     
                                                     # Track success for UI dropdown
-                                                    synced_details[pair_idx].append(display_file_name)
-                                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Finished: </span> {esc(display_file_name)}")
+                                                    final_name = filepath.name
+                                                    synced_details[pair_idx].append(final_name)
+                                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>[✅] Finished: </span> {esc(final_name)}")
                                                     log_container.markdown(render_terminal_html(terminal_log), unsafe_allow_html=True)
                                                 finally:
                                                     # GUARD: Always clean up .part if rename didn't complete
