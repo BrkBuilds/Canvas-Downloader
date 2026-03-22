@@ -185,9 +185,15 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
   - **Excel to PDF (Tabular Integrity & Global Export)**:
     - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. 
     - *Anti-Pattern Avoidance*: Never attempt to select sheets via `ActiveWindow` or filter data via `WorksheetFunction.CountA(sheet.Cells)`. `ActiveWindow` crashes reliably in `Visible=False` environments, and `CountA` sweeps billions of cells causing guaranteed RPC timeouts. The cleanest strategy is to just export the entire workbook via `ExportAsFixedFormat(0)`—empty sheets will produce small harmless PDFs instead of crashing the batch pipeline.
-- **The Ghost Stub Pattern (Archive Extraction)**:
-    - *Problem*: Automatically extracting large `.zip` / `.tar.gz` payloads after download creates massive file duplication, but deleting the original archive causes the sync engine to endlessly re-download it.
-    - *Solution*: Extract the contents, delete the original archive, and instantly drop a 0-byte `.extracted` file matching the original archive's name. Update the SQLite manifest `local_path` to point to this stub, preserving sync integrity without wasting disk space.
+- **The Ghost Stub Pattern (Archives & URL Shortcuts)**:
+    - *Problem*: Physical file deletion after automated conversion/extraction (e.g., ZIP extraction or URL compilation) causes the Sync Engine to flag files as "Locally Deleted," triggering redundant re-downloads.
+    - *Solution*: Delete the original source file post-processing and immediately `touch` a 0-byte `.extracted` stub in its place.
+    - *Workflow*: 
+        1. **Physical Mutation**: Unlink original, create stub.
+        2. **Database Mutation**: Call `sm.update_converted_file()` to point the manifest record to the stub's path.
+    - *Use Cases*: 
+        - **Archives**: Prevents re-downloading large ZIPs after extraction.
+        - **URL Compiler**: Removes `.url`/`.webloc` files (unsupported by NotebookLM) while keeping the Sync Engine satisfied.
 - **Top-of-Pipeline Extraction**:
     - *Pattern*: Always run Archive Extraction *before* any other post-processing hook (like HTML->MD or Code->TXT). This ensures files liberated from a student's ZIP folder are caught by the subsequent loops and format-shifted properly.
 - **Manifest Translation**:
@@ -228,6 +234,13 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: Synthetic shortcuts (Pages, ExternalUrls) and dynamic entities (Assignments, Quizzes, Discussions) need to be tracked in the SQLite manifest, but they don't possess traditional file IDs. Blindly assigning them negative IDs risks primary key collisions if multiple synthetic types share the same numerical space.
     - *Implementation*: Utilizes a massive `SECONDARY_ID_OFFSETS` registry in `sync_manager.py` that allocates 10-million wide ranges for each entity type (e.g., Module Items: 0 to -9.9M, Assignments: -10M to -19.9M, Syllabus: -20M to -29.9M). This mathematically eliminates namespace overlap.
 - **Shortcut Bypass Logic**: `_is_canvas_newer()` in `sync_manager.py` explicitly returns `False` for `id < 0`. This bypasses unreliable module timestamps and forces the engine to rely on local existence checks.
+- **Sync Engine Bypass Pattern (External Deletions / Conversions)**:
+    - *Problem*: Features like "URL Compilation" require deleting original files (`.url`/`.webloc`) post-download to satisfy external requirements (like NotebookLM compatibility). Normally, this would trigger the Sync Engine to flag these files as "Locally Deleted," causing redundant re-downloads.
+    - *Solution*: Instead of creating stubs, modify the Sync Engine to be feature-aware. If a specific conversion feature is enabled in the `sync_contract`, the engine's analysis loops (Phase 1, Phase 2, and Step 5) are injected with guard clauses that skip flagging the absence of those specific file types as a deletion.
+    - *Extension Trap Guardrail*: Bypass logic must never rely on display names or API metadata (which can lack extensions). It must strictly check the `local_path` or `calc_path` suffix against the known shortcut extensions (`.url`, `.webloc`).
+- **Merge-Append / State Hydration Pattern (Conversion Ledgers)**:
+    - *Problem*: When converting multiple small items (shortcuts) into one master ledger file, a standard overwrite (`w`) destroys previous state during subsequent syncs because the original sources are physically deleted post-conversion.
+    - *Solution*: Hydrate high-level state by reading the existing master file before scanning. Use a deduplication `set` (UTF-8 safe, stripped) to filter incoming duplicates. Use append mode (`a`) for new data while maintaining the physical teardown of all processed sources.
 - **Sync Restoration Interception**: The download pipeline in `sync_ui.py` intercepts negative IDs and recreates `.url` or `.html` files locally using static templates rather than performing an HTTP GET.
 - **URL Extraction Priority**: For synthetic shortcuts, `html_url` is prioritized over `external_url` to ensure LTI tools route through the Canvas wrapper for authentication.
 - **Retry Identity Preservation (Hash Map Pattern)**:

@@ -1,6 +1,15 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.10: URL Pivot - Sync Engine Bypass** (2026-03-22):
+    - [x] **Pure Deletion**: Implemented absolute shortcut deletion in `post_processing.py` to ensure zero individual shortcut files remain on disk.
+    - [x] **Sync Engine Bypass**: Injected logic into `sync_manager.py` to intelligently skip missing `.url` and `.webloc` files during analysis phases when URL compilation is active.
+    - [x] **Extension Trap Defense**: Verified that the bypass logic uses strict `.suffix.lower()` and `.endswith()` checks to avoid reliance on unstable Canvas API metadata.
+    - [x] **Merge-Append Strategy**: Upgraded `url_compiler.py` to hydrate state from existing files and append new links, transforming the output into a non-destructive master ledger.
+- [x] **Phase 6.9: Presentation Layer & Deduplication Fixes** (2026-03-22):
+    - [x] **Data-Layer Deduplication**: Implemented O(1) string-based deduplication for locally deleted files in `sync_manager.py` to prevent Streamlit duplicate key crashes.
+    - [x] **Path Blindness Fix**: Updated `sync_ui.py` to display physical basenames from `local_path` in checkboxes.
+    - [x] **Success Screen Fidelity**: Updated `sync_ui.py` download loops to report actual physical filenames in success summaries and terminal logs.
 - [x] **Phase 6.8: Sync Deletion & Redownload Overhaul** (2026-03-22):
     - [x] **Existence Guard (Phase 1/Step 5)**: Injected mandatory `.exists()` checks into `sync_manager.py` to ensure local deletions are surfaced even if API metadata is missing or restricted.
     - [x] **Deduplication Shield**: Protected negative-ID synthetic entities from false re-upload categorization.

@@ -3,11 +3,11 @@ import platform
 import plistlib
 from pathlib import Path
 
-def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> Path | None:
+def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path | None, list[Path]]:
     """
     Scans a course directory for shortcut files (.url on Windows, .webloc on macOS),
     extracts the links, and compiles them into a single NotebookLM_External_Links.txt
-    file in the course root.
+    file in the course root. Uses a Merge-Append strategy to preserve existing links.
     """
     course_path = Path(course_dir)
 
@@ -18,34 +18,68 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> Path | None
         shortcut_files = list(course_path.rglob("*.url"))
     
     if not shortcut_files:
-        return None
+        return None, []
         
-    compiled_links = []
-    
-    for shortcut_file in shortcut_files:
-        link = _extract_url(shortcut_file)
-        if link:
-            compiled_links.append(f"📌 {shortcut_file.stem}\n🔗 {link}\n")
-            
-    if not compiled_links:
-        return None
-        
-    # Build a beautiful, copy-paste friendly output
-    output_content = (
-        f"========================================================\n"
-        f" 🤖 NotebookLM Links for: {course_name}\n"
-        f"========================================================\n"
-        f"Copy and paste these links directly into NotebookLM's website source field.\n\n"
-    )
-    output_content += "\n".join(compiled_links)
-    
-    # Save in the root of the course directory
     output_path = course_path / "NotebookLM_External_Links.txt"
     
-    with open(output_path, 'w', encoding='utf-8') as f:
+    existing_urls = set()
+    existing_content = ""
+    
+    # 1. State Hydration
+    if output_path.exists():
+        try:
+            with open(output_path, 'r', encoding='utf-8') as f:
+                existing_content = f.read()
+            for line in existing_content.splitlines():
+                if line.startswith("🔗 "):
+                    # Robust hydration parsing: aggressive strip
+                    existing_urls.add(line[2:].strip())
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not read existing NotebookLM text file for deduplication: {e}")
+
+    compiled_links = []
+    processed_shortcuts = []
+    
+    # 2. Deduplication
+    for shortcut_file in shortcut_files:
+        raw_link = _extract_url(shortcut_file)
+        if raw_link:
+            link = raw_link.strip()
+            # We always add it to processed_shortcuts so it gets physically deleted by the post-processor!
+            processed_shortcuts.append(shortcut_file)
+            
+            if link not in existing_urls:
+                compiled_links.append(f"📌 {shortcut_file.stem}\n🔗 {link}\n")
+                existing_urls.add(link)
+                
+    if not compiled_links:
+        # If nothing new to append but we still found shortcuts (duplicates), return them for unlinking
+        if processed_shortcuts:
+            return (output_path if existing_content else None), processed_shortcuts
+        return None, []
+        
+    # 3. Append/Rewrite
+    write_mode = 'a' if existing_content else 'w'
+    
+    if not existing_content:
+        # Build a beautiful, copy-paste friendly output header
+        output_content = (
+            f"========================================================\n"
+            f" 🤖 NotebookLM Links for: {course_name}\n"
+            f"========================================================\n"
+            f"Copy and paste these links directly into NotebookLM's website source field.\n\n"
+        )
+    else:
+        # Add a newline spacer if we are appending to an existing master list
+        output_content = "\n"
+
+    output_content += "\n".join(compiled_links)
+    
+    with open(output_path, write_mode, encoding='utf-8') as f:
         f.write(output_content)
         
-    return output_path
+    return output_path, processed_shortcuts
 
 
 def _extract_url(shortcut_file: Path) -> str | None:
