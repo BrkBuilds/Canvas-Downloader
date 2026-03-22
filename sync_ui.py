@@ -5825,7 +5825,7 @@ def _run_sync():
                                             sync_mgr.record_downloaded_file(
                                                 canvas_file_id=sec_id,
                                                 canvas_filename=sec_filepath.name,
-                                                local_relative_path=rel_path,
+                                                local_path=rel_path,
                                                 canvas_updated_at=canvas_updated,
                                                 original_size=0,
                                             )
@@ -5845,17 +5845,14 @@ def _run_sync():
                             if is_url_ext:
                                 if platform.system() == 'Darwin':
                                     import plistlib
-                                    import aiofiles
                                     plist_data = {'URL': file.url}
                                     async with aiofiles.open(str(make_long_path(filepath)), 'wb') as f:
                                         await f.write(plistlib.dumps(plist_data, fmt=plistlib.FMT_XML))
                                 else:
-                                    import aiofiles
                                     shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(shortcut_content)
                             elif is_html_ext:
-                                import aiofiles
                                 html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
                                 async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                     await f.write(html_content)
@@ -5878,6 +5875,10 @@ def _run_sync():
                             course = res_data['course']
                             
                             real_id = file.id
+                            if real_id < 0:
+                                from sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
+                                if secondary_id_type(real_id) == 'attachment':
+                                    real_id = abs(real_id) - SECONDARY_ID_OFFSETS['attachment']
                             fresh_file = course.get_file(real_id)
                             fresh_url = getattr(fresh_file, 'url', '')
                             if fresh_url:
