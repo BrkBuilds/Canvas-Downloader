@@ -116,6 +116,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Aggressive Header Suction Pattern**:
     - *Problem*: Native Streamlit `###` headers have large default bottom margins that create excessive dead space.
     - *Solution*: Replace with custom HTML `<h3 style='margin-bottom: -25px;'>` to forcefully pull widgets up against the header. Adjust margin-bottom per widget type (e.g., -10px for deeper widgets, -25px for flat ones).
+- **3-Column Card Layout (Horizontal Symmetry) Pattern**:
+    - *Problem*: Multi-column layouts in Streamlit often look "jagged" if top-level widgets (like headers or different input types) have different vertical paddings, causing column borders and titles to start at disparate heights.
+    - *Solution*: Negate native Streamlit container gaps by injecting a single, identical `st.markdown(<h3>...)` block at the absolute top of every column. By using custom HTML headers with negative bottom margins (`margin-bottom: -15px`), you lock every column to a shared horizontal baseline, creating a professional, symmetrical grid.
+- **Callback & CSS Hoisting Pattern**:
+    - *Problem*: Defining `@st.fragment` callback functions or `<style>` blocks inside `st.columns` or `st.container` blocks can cause Streamlit to unmount and re-re-render those elements when the parent container's state changes. This leads to "flapping" UI or lost widget focus.
+    - *Solution*: Always hoist fragments, callbacks, and CSS definitions to the absolute top of the parent render function, *before* any layout containers (`columns`, `tabs`, `expanders`) are instantiated. This ensures the logic and styling remain stable regardless of the layout's internal branch mutations.
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.

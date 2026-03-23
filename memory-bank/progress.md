@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.11: Step 2 UI Structural Refactor** (2026-03-23):
+    - [x] **3-Column Layout**: Implemented `st.columns(3)` with `gap="medium"` for the Download Settings wizard.
+    - [x] **Symmetry Enforcement**: Replicated identical HTML/CSS header tokens across all columns to guarantee 100% horizontal alignment.
+    - [x] **Callback Hoisting**: Moved fragment-based callbacks and CSS definitions outside of column sub-containers to prevent unmounting bugs.
+    - [x] **Container Unification**: Replaced nested expanders with bordered containers to standardize visual "Card" weight.
 - [x] **Phase 6.10: URL Pivot - Sync Engine Bypass** (2026-03-22):
     - [x] **Pure Deletion**: Implemented absolute shortcut deletion in `post_processing.py` to ensure zero individual shortcut files remain on disk.
     - [x] **Sync Engine Bypass**: Injected logic into `sync_manager.py` to intelligently skip missing `.url` and `.webloc` files during analysis phases when URL compilation is active.
