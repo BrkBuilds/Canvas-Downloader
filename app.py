@@ -816,44 +816,7 @@ with _main_content.container():
         st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
         step2_container = st.empty()
         with step2_container.container():
-            # Removed "Download Structure" per request
-            mode_options = [
-                'With subfolders (Matches Canvas Modules)', 
-                # 'Files (Course Folders)', # Removed per user request
-                'Flat (All files in one folder)'
-            ]
-            
-            # Determine current index
-            current_mode_idx = 0
-            # If mode is 'files' (legacy), default back to 0 (modules)
-            if st.session_state['download_mode'] == 'flat':
-                current_mode_idx = 1
-                
-            mode_choice = st.radio(
-                'Choose how files should be organized:',
-                mode_options,
-                index=current_mode_idx
-            )
-            
-            if mode_choice == 'With subfolders (Matches Canvas Modules)':
-                st.session_state['download_mode'] = 'modules'
-            # elif mode_choice == 'Files (Course Folders)':
-            #     st.session_state['download_mode'] = 'files'
-            else:
-                st.session_state['download_mode'] = 'flat'
-            
-            # 2. Include Files (Radio buttons have standard padding)
-            st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>Include Files:</h3>", unsafe_allow_html=True)
-            filter_choice = st.radio(
-                'Include Files:', # Hidden label via label_visibility
-                ['All Files (Default)', 'Pdf & Powerpoint only'],
-                index=0 if st.session_state['file_filter'] == 'all' else 1,
-                label_visibility="collapsed"
-            )
-            st.session_state['file_filter'] = 'all' if filter_choice == 'All Files (Default)' else 'study'
-
-            # ── Additional Course Content (Secondary entities) ──
-            # Callbacks for master/sub toggle interaction (identical pattern to NotebookLM)
+            # HOISTED CALLBACKS
             def _secondary_master_changed():
                 for k in _SECONDARY_CONTENT_KEYS:
                     st.session_state[k] = st.session_state['dl_secondary_master']
@@ -862,80 +825,9 @@ with _main_content.container():
                 active = sum(st.session_state.get(k, False) for k in _SECONDARY_CONTENT_KEYS)
                 st.session_state['dl_secondary_master'] = (active == TOTAL_SECONDARY_SUBS)
 
-            # CSS: Tree-view indent + borderless expander pattern for secondary checkboxes
-            st.markdown("""
-            <style>
-            /* Tree-view styling for secondary content sub-checkboxes */
-            .st-key-dl_assignments, .st-key-dl_syllabus, .st-key-dl_announcements,
-            .st-key-dl_discussions, .st-key-dl_quizzes, .st-key-dl_rubrics,
-            .st-key-dl_submissions {
-                margin-left: 28px !important;
-                padding-left: 15px !important;
-                border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
-                margin-top: -12px !important;
-                padding-top: 4px !important;
-                padding-bottom: 4px !important;
-            }
-            .st-key-dl_assignments { margin-top: 0px !important; padding-top: 8px !important; }
-            .st-key-dl_submissions { margin-bottom: 10px !important; padding-bottom: 8px !important; }
-            </style>
-            """, unsafe_allow_html=True)
-
-            st.markdown("<h3 style='margin-top: 20px; margin-bottom: -5px;'>Additional Course Content</h3>", unsafe_allow_html=True)
-
-            _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
-
-            # --- Section 1: Descriptive label + Checkboxes ---
-            st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Select what to include in download:</p>", unsafe_allow_html=True)
-
-            # Master toggle + counter
-            st.checkbox(
-                f"**Additional Course Content** &nbsp; :gray[({_sec_active}/{TOTAL_SECONDARY_SUBS})]",
-                key='dl_secondary_master',
-                on_change=_secondary_master_changed,
-                help='Enable/disable downloading additional Canvas content types (assignments, quizzes, etc.).'
-            )
-
-            # 7 sub-checkboxes (tree-view indent via CSS above)
-            st.checkbox('Assignments', key='dl_assignments', on_change=_secondary_sub_changed,
-                        help='Download assignment descriptions and any attached files.')
-            st.checkbox('Syllabus', key='dl_syllabus', on_change=_secondary_sub_changed,
-                        help='Download the course syllabus page as HTML.')
-            st.checkbox('Announcements', key='dl_announcements', on_change=_secondary_sub_changed,
-                        help='Download course announcements and any attached files.')
-            st.checkbox('Discussions', key='dl_discussions', on_change=_secondary_sub_changed,
-                        help='Download discussion topic prompts as HTML.')
-            st.checkbox('Quizzes', key='dl_quizzes', on_change=_secondary_sub_changed,
-                        help='Download quiz questions and answers as structured HTML.')
-            st.checkbox('Rubrics', key='dl_rubrics', on_change=_secondary_sub_changed,
-                        help='Download rubric criteria as Markdown tables.')
-            st.checkbox('Submissions (metadata)', key='dl_submissions', on_change=_secondary_sub_changed,
-                        help='Download submission metadata (grades, timestamps). Content files are not included.')
-
-            # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
-            if _sec_active > 0:
-                st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 5px;'>Organize Additional Course Content by:</p>", unsafe_allow_html=True)
-
-                def _dl_isolate_radio_changed():
-                    _choice = st.session_state.get('dl_isolate_radio')
-                    st.session_state['dl_isolate_secondary'] = (_choice == 'In Subfolders')
-
-                st.radio(
-                    'Organize additional course content:',
-                    ['In Course Folder/Modules (Default)', 'In Subfolders'],
-                    index=1 if st.session_state.get('dl_isolate_secondary', False) else 0,
-                    key='dl_isolate_radio',
-                    label_visibility='collapsed',
-                    on_change=_dl_isolate_radio_changed,
-                )
-                # Per-option help text
-                st.markdown("""<div style='font-size: 0.78rem; color: #6b7280; margin-top: -10px; margin-bottom: 5px; line-height: 1.5;'>
-                ⓘ <b>In Course Folder/Modules</b> — places content inline with module files using a type prefix.<br>
-                ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
-                </div>""", unsafe_allow_html=True)
-            
-            # --- NotebookLM Compatible Download ---
-
+            def _dl_isolate_radio_changed():
+                _choice = st.session_state.get('dl_isolate_radio')
+                st.session_state['dl_isolate_secondary'] = (_choice == 'In Subfolders')
 
             def _master_toggle_changed():
                 # Force all sub-checkboxes to match the master toggle's new state
@@ -954,30 +846,30 @@ with _main_content.container():
                 # Master is only True if ALL sub-checkboxes are True
                 st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
 
-            # 1. Inject Borderless Expander + Tree-View CSS
+            notebook_sub_keys = [
+                'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                'convert_html', 'convert_code', 'convert_urls', 'convert_video'
+            ]
+            TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
+
+            # HOISTED CSS
             st.markdown("""
             <style>
-            /* 1. Target ONLY the specific expander containing the master checkbox */
-            [data-testid="stExpander"]:has(.st-key-notebooklm_master) details {
-                border-style: none !important;
-                background-color: transparent !important;
+            /* Tree-view styling for secondary content sub-checkboxes */
+            .st-key-dl_assignments, .st-key-dl_syllabus, .st-key-dl_announcements,
+            .st-key-dl_discussions, .st-key-dl_quizzes, .st-key-dl_rubrics,
+            .st-key-dl_submissions {
+                margin-left: 28px !important;
+                padding-left: 15px !important;
+                border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important;
+                margin-top: -12px !important;
+                padding-top: 4px !important;
+                padding-bottom: 4px !important;
             }
-            [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary {
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-                background-color: transparent !important;
-            }
-            [data-testid="stExpander"]:has(.st-key-notebooklm_master) [data-testid="stExpanderDetails"] {
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-                padding-bottom: 0 !important;
-            }
-            [data-testid="stExpander"]:has(.st-key-notebooklm_master) summary p {
-                font-size: 1.75rem !important;
-                font-weight: 600 !important;
-            }
+            .st-key-dl_assignments { margin-top: 0px !important; padding-top: 8px !important; }
+            .st-key-dl_submissions { margin-bottom: 10px !important; padding-bottom: 8px !important; }
 
-            /* 2. Tree-view styling for nested sub-checkboxes */
+            /* Tree-view styling for nested NotebookLM sub-checkboxes */
             .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
             .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
             .st-key-convert_urls, .st-key-convert_video {
@@ -993,71 +885,167 @@ with _main_content.container():
             </style>
             """, unsafe_allow_html=True)
 
-            notebook_sub_keys = [
-                'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-                'convert_html', 'convert_code', 'convert_urls', 'convert_video'
-            ]
-            TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
-            current_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+            col1, col2, col3 = st.columns(3, gap="medium")
 
-            with st.expander("🛠️ Additional Settings", expanded=False):
-                # Master Toggle (always visible)
-                st.checkbox(
-                    f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
-                    key="notebooklm_master",
-                    on_change=_master_toggle_changed,
-                    help="Enable conversions to optimize files for AI processing."
-                )
-                
-                # Sub-toggles directly underneath (Tree-view styling via CSS)
-                st.checkbox(
-                    "Auto-Extract Archives (.zip, .tar.gz)",
-                    key="convert_zip",
-                    on_change=_sub_toggle_changed,
-                    help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
-                )
-                st.checkbox(
-                    "Convert PowerPoints (.pptx) to PDF",
-                    key="convert_pptx",
-                    on_change=_sub_toggle_changed,
-                    help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
-                )
-                st.checkbox(
-                    "Convert Old Word Docs (.doc, .rtf) to PDF",
-                    key="convert_word",
-                    on_change=_sub_toggle_changed,
-                    help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-                )
-                st.checkbox(
-                    "Convert Excel Files (.xlsx, .xls) to PDF",
-                    key="convert_excel",
-                    on_change=_sub_toggle_changed,
-                    help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
-                )
-                st.checkbox(
-                    "Convert Canvas Pages (HTML) to Markdown",
-                    key="convert_html",
-                    on_change=_sub_toggle_changed,
-                    help="Converts Canvas Pages from HTML to clean Markdown formats."
-                )
-                st.checkbox(
-                    "Convert Code & Data Files to .txt",
-                    key="convert_code",
-                    on_change=_sub_toggle_changed,
-                    help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
-                )
-                st.checkbox(
-                    "Compile Web Links (.url/.webloc) into a single list",
-                    key="convert_urls",
-                    on_change=_sub_toggle_changed,
-                    help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
-                )
-                st.checkbox(
-                    "Extract Audio (.mp3) from Videos (.mp4, .mov)",
-                    key="convert_video",
-                    on_change=_sub_toggle_changed,
-                    help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-                )
+            # --- COLUMN 1: Organization & Include Files ---
+            with col1:
+                with st.container(border=True):
+                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>File Organization</h3>", unsafe_allow_html=True)
+                    
+                    # Removed "Download Structure" per request
+                    mode_options = [
+                        'With subfolders (Matches Canvas Modules)', 
+                        # 'Files (Course Folders)', # Removed per user request
+                        'Flat (All files in one folder)'
+                    ]
+                    
+                    # Determine current index
+                    current_mode_idx = 0
+                    # If mode is 'files' (legacy), default back to 0 (modules)
+                    if st.session_state['download_mode'] == 'flat':
+                        current_mode_idx = 1
+                        
+                    mode_choice = st.radio(
+                        'Choose how files should be organized:',
+                        mode_options,
+                        index=current_mode_idx,
+                        label_visibility='collapsed'
+                    )
+                    
+                    if mode_choice == 'With subfolders (Matches Canvas Modules)':
+                        st.session_state['download_mode'] = 'modules'
+                    # elif mode_choice == 'Files (Course Folders)':
+                    #     st.session_state['download_mode'] = 'files'
+                    else:
+                        st.session_state['download_mode'] = 'flat'
+                    
+                    # 2. Include Files (Radio buttons have standard padding)
+                    st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>Include Files:</h3>", unsafe_allow_html=True)
+                    filter_choice = st.radio(
+                        'Include Files:', # Hidden label via label_visibility
+                        ['All Files (Default)', 'Pdf & Powerpoint only'],
+                        index=0 if st.session_state['file_filter'] == 'all' else 1,
+                        label_visibility="collapsed"
+                    )
+                    st.session_state['file_filter'] = 'all' if filter_choice == 'All Files (Default)' else 'study'
+
+            # --- COLUMN 2: Additional Course Content ---
+            with col2:
+                with st.container(border=True):
+                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>Additional Content</h3>", unsafe_allow_html=True)
+                    
+                    _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
+
+                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Select what to include in download:</p>", unsafe_allow_html=True)
+
+                    # Master toggle + counter
+                    st.checkbox(
+                        f"**Additional Course Content** &nbsp; :gray[({_sec_active}/{TOTAL_SECONDARY_SUBS})]",
+                        key='dl_secondary_master',
+                        on_change=_secondary_master_changed,
+                        help='Enable/disable downloading additional Canvas content types (assignments, quizzes, etc.).'
+                    )
+
+                    # 7 sub-checkboxes (tree-view indent via CSS above)
+                    st.checkbox('Assignments', key='dl_assignments', on_change=_secondary_sub_changed,
+                                help='Download assignment descriptions and any attached files.')
+                    st.checkbox('Syllabus', key='dl_syllabus', on_change=_secondary_sub_changed,
+                                help='Download the course syllabus page as HTML.')
+                    st.checkbox('Announcements', key='dl_announcements', on_change=_secondary_sub_changed,
+                                help='Download course announcements and any attached files.')
+                    st.checkbox('Discussions', key='dl_discussions', on_change=_secondary_sub_changed,
+                                help='Download discussion topic prompts as HTML.')
+                    st.checkbox('Quizzes', key='dl_quizzes', on_change=_secondary_sub_changed,
+                                help='Download quiz questions and answers as structured HTML.')
+                    st.checkbox('Rubrics', key='dl_rubrics', on_change=_secondary_sub_changed,
+                                help='Download rubric criteria as Markdown tables.')
+                    st.checkbox('Submissions (metadata)', key='dl_submissions', on_change=_secondary_sub_changed,
+                                help='Download submission metadata (grades, timestamps). Content files are not included.')
+
+                    # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
+                    if _sec_active > 0:
+                        st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 5px;'>Organize Additional Course Content by:</p>", unsafe_allow_html=True)
+
+                        st.radio(
+                            'Organize additional course content:',
+                            ['In Course Folder/Modules (Default)', 'In Subfolders'],
+                            index=1 if st.session_state.get('dl_isolate_secondary', False) else 0,
+                            key='dl_isolate_radio',
+                            label_visibility='collapsed',
+                            on_change=_dl_isolate_radio_changed,
+                        )
+                        # Per-option help text
+                        st.markdown("""<div style='font-size: 0.78rem; color: #6b7280; margin-top: -10px; margin-bottom: 5px; line-height: 1.5;'>
+                        ⓘ <b>In Course Folder/Modules</b> — places content inline with module files using a type prefix.<br>
+                        ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
+                        </div>""", unsafe_allow_html=True)
+
+            # --- COLUMN 3: Additional Settings / NotebookLM ---
+            with col3:
+                with st.container(border=True):
+                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>Additional Settings</h3>", unsafe_allow_html=True)
+
+                    current_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+
+                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Enable conversions for AI:</p>", unsafe_allow_html=True)
+
+                    # Master Toggle
+                    st.checkbox(
+                        f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
+                        key="notebooklm_master",
+                        on_change=_master_toggle_changed,
+                        help="Enable conversions to optimize files for AI processing."
+                    )
+                    
+                    # Sub-toggles directly underneath (Tree-view styling via CSS)
+                    st.checkbox(
+                        "Auto-Extract Archives (.zip, .tar.gz)",
+                        key="convert_zip",
+                        on_change=_sub_toggle_changed,
+                        help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
+                    )
+                    st.checkbox(
+                        "Convert PowerPoints (.pptx) to PDF",
+                        key="convert_pptx",
+                        on_change=_sub_toggle_changed,
+                        help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
+                    )
+                    st.checkbox(
+                        "Convert Old Word Docs (.doc, .rtf) to PDF",
+                        key="convert_word",
+                        on_change=_sub_toggle_changed,
+                        help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
+                    )
+                    st.checkbox(
+                        "Convert Excel Files (.xlsx, .xls) to PDF",
+                        key="convert_excel",
+                        on_change=_sub_toggle_changed,
+                        help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
+                    )
+                    st.checkbox(
+                        "Convert Canvas Pages (HTML) to Markdown",
+                        key="convert_html",
+                        on_change=_sub_toggle_changed,
+                        help="Converts Canvas Pages from HTML to clean Markdown formats."
+                    )
+                    st.checkbox(
+                        "Convert Code & Data Files to .txt",
+                        key="convert_code",
+                        on_change=_sub_toggle_changed,
+                        help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
+                    )
+                    st.checkbox(
+                        "Compile Web Links (.url/.webloc) into a single list",
+                        key="convert_urls",
+                        on_change=_sub_toggle_changed,
+                        help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
+                    )
+                    st.checkbox(
+                        "Extract Audio (.mp3) from Videos (.mp4, .mov)",
+                        key="convert_video",
+                        on_change=_sub_toggle_changed,
+                        help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
+                    )
 
             # 2. Destination (Columns have weird padding)
             st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
