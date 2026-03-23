@@ -132,6 +132,15 @@ if 'dl_isolate_secondary' not in st.session_state:
     st.session_state['dl_isolate_secondary'] = False  # Default: inline with modules
 
 # --- Helper Functions ---
+def get_base64_image(image_path):
+    """Reads a local file and returns its Base64 string representation."""
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    except Exception as e:
+        logger.error(f"Failed to encode image {image_path}: {e}")
+        return ""
+
 def select_folder():
     from ui_helpers import native_folder_picker
     folder_path = native_folder_picker()
@@ -814,6 +823,158 @@ with _main_content.container():
         render_download_wizard(st, 2)
         # 1. Squeeze the Main "Step 2" Header
         st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
+
+        def _load_b64(path):
+            import base64
+            try:
+                with open(path, "rb") as f:
+                    return base64.b64encode(f.read()).decode()
+            except FileNotFoundError:
+                return ""
+
+        b64_icon_all = _load_b64("assets/icon_all_files.png")
+        b64_icon_study = _load_b64("assets/icon_study_files.png")
+        active_include = st.session_state.get('file_filter', 'all')
+        active_include_key = "all" if active_include == 'all' else "study"
+        try:
+            import theme
+            bg_color_active = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(0, 123, 255, 0.1)"
+        except Exception:
+            bg_color_active = "rgba(0, 123, 255, 0.1)"
+
+        st.markdown(f'''
+<style>
+/* 1. Outer Container & Crush horizontal gap */
+div[class*="st-key-include_files_segmented_wrapper"] {{
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 4px !important;
+    margin-top: 5px !important;
+}}
+div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
+    gap: 4px !important;
+}}
+
+/* 2. Stretch column wrappers for dynamic height */
+div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="column"] > div,
+div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"] {{
+    height: 100% !important;
+}}
+
+/* 3. Base Button: Flex Column + Relative Position */
+div[class*="st-key-btn_include_"] button {{
+    background-color: transparent !important;
+    border: none !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    position: relative !important;
+    padding: 12px 12px 12px 48px !important;
+    border-radius: 8px !important;
+    color: #a0a0a0 !important;
+    transition: all 0.2s ease-in-out !important;
+}}
+
+/* 4. Force strict left alignment on inner Streamlit wrappers */
+div[class*="st-key-btn_include_"] button > div {{
+    text-align: left !important;
+    width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+}}
+div[class*="st-key-btn_include_"] button p {{
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    color: inherit !important;
+    text-align: left !important;
+    width: 100% !important;
+}}
+
+/* 5. Independent Icon Layer (::before) - Defaults to Monochrome */
+div[class*="st-key-btn_include_"] button::before {{
+    content: "" !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    filter: grayscale(25%) opacity(50%) !important;
+    transition: all 0.2s ease-in-out !important;
+}}
+div.st-key-btn_include_all button::before {{
+    background-image: url('data:image/png;base64,{b64_icon_all}') !important;
+}}
+div.st-key-btn_include_study button::before {{
+    background-image: url('data:image/png;base64,{b64_icon_study}') !important;
+}}
+
+/* 6. Descriptions (::after) */
+div.st-key-btn_include_all button::after {{
+    content: "Download everything!" !important;
+    display: block !important;
+    font-size: 0.75rem !important;
+    color: #a0a0a0 !important;
+    margin-top: 4px !important;
+    font-weight: normal !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    width: 100% !important;
+}}
+div.st-key-btn_include_study button::after {{
+    content: "Only the essentials" !important;
+    display: block !important;
+    font-size: 0.75rem !important;
+    color: #a0a0a0 !important;
+    margin-top: 4px !important;
+    font-weight: normal !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    width: 100% !important;
+}}
+/* 6.5 Hover State (Inactive Buttons) */
+div[class*="st-key-btn_include_"] button:hover {{
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}}
+
+/* Wake up the icon slightly on hover */
+div[class*="st-key-btn_include_"] button:hover::before {{
+    filter: grayscale(10%) opacity(85%) !important;
+}}
+
+/* Protect Active State from Hover Overrides */
+div.st-key-btn_include_{active_include_key} button:hover {{
+    background-color: {bg_color_active} !important;
+}}
+div.st-key-btn_include_{active_include_key} button:hover::before {{
+    filter: grayscale(0%) opacity(100%) !important;
+}}
+/* 7. Active State Logic */
+div.st-key-btn_include_{active_include_key} button {{
+    background-color: {bg_color_active} !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}}
+div.st-key-btn_include_{active_include_key} button p {{
+    color: #ffffff !important;
+}}
+div.st-key-btn_include_{active_include_key} button::before {{
+    filter: grayscale(0%) opacity(100%) !important;
+}}
+</style>
+''', unsafe_allow_html=True)
+
         step2_container = st.empty()
         with step2_container.container():
             # HOISTED CALLBACKS
@@ -885,49 +1046,120 @@ with _main_content.container():
             </style>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3 = st.columns(3, gap="medium")
+            col1, col2, col3, spacer = st.columns([1, 1, 1, 1.5], gap="medium")
 
             # --- COLUMN 1: Organization & Include Files ---
             with col1:
                 with st.container(border=True):
                     st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>File Organization</h3>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
                     
-                    # Removed "Download Structure" per request
-                    mode_options = [
-                        'With subfolders (Matches Canvas Modules)', 
-                        # 'Files (Course Folders)', # Removed per user request
-                        'Flat (All files in one folder)'
-                    ]
+                    def update_org_state(mode):
+                        st.session_state['download_mode'] = 'modules' if mode == 'subfolders' else mode
+
+                    btn_left, btn_right = st.columns(2)
+                    b64_subfolders = get_base64_image("assets/icon_subfolders.png")
+                    b64_flat = get_base64_image("assets/icon_flat.png")
                     
-                    # Determine current index
-                    current_mode_idx = 0
-                    # If mode is 'files' (legacy), default back to 0 (modules)
-                    if st.session_state['download_mode'] == 'flat':
-                        current_mode_idx = 1
+                    with btn_left:
+                        st.button("Subfolders", key="btn_org_subfolders", use_container_width=True, on_click=update_org_state, args=("subfolders",))
+                            
+                    with btn_right:
+                        st.button("Flat", key="btn_org_flat", use_container_width=True, on_click=update_org_state, args=("flat",))
+
+                    active_mode = st.session_state.get('download_mode', 'modules')
+                    active_btn_key = "subfolders" if active_mode == 'modules' else "flat"
+                    
+                    try:
+                        border_color = theme.PRIMARY_BLUE if hasattr(theme, 'PRIMARY_BLUE') else theme.ACCENT_LINK
+                        bg_color = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(0, 123, 255, 0.1)"
+                    except Exception:
+                        border_color = "#007bff"
+                        bg_color = "rgba(0, 123, 255, 0.1)"
                         
-                    mode_choice = st.radio(
-                        'Choose how files should be organized:',
-                        mode_options,
-                        index=current_mode_idx,
-                        label_visibility='collapsed'
-                    )
+                    st.markdown(f'''
+                    <style>
+                    /* Base Card Styling for BOTH buttons */
+                    div[class*="st-key-btn_org_"] button {{
+                        height: 170px !important;
+                        background-color: transparent !important;
+                        background-repeat: no-repeat !important;
+                        background-position: center 15px !important;
+                        background-size: 64px !important;
+                        padding-top: 85px !important;
+                        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                        border-radius: 8px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: flex-start !important;
+                        transition: all 0.2s ease-in-out !important;
+                    }}
+
+                    /* Primary Title Styling (The native button label) */
+                    div[class*="st-key-btn_org_"] button p {{
+                        font-size: 1.1rem !important;
+                        font-weight: 600 !important;
+                        margin: 0 !important;
+                        line-height: 1.2 !important;
+                        color: #ffffff !important;
+                    }}
+
+                    /* Hover State */
+                    div[class*="st-key-btn_org_"] button:hover {{
+                        border-color: rgba(255, 255, 255, 0.3) !important;
+                        background-color: rgba(255, 255, 255, 0.02) !important;
+                    }}
+
+                    /* ----- SUBFOLDERS SPECIFIC ----- */
+                    div.st-key-btn_org_subfolders button {{
+                        background-image: url('data:image/png;base64,{b64_subfolders}') !important;
+                    }}
+                    div.st-key-btn_org_subfolders button::after {{
+                        content: "Group files in subfolders, matching Canvas Modules" !important;
+                        font-size: 0.85rem !important;
+                        color: #a0a0a0 !important;
+                        margin-top: 4px !important;
+                        font-weight: 400 !important;
+                    }}
+
+                    /* ----- FLAT SPECIFIC ----- */
+                    div.st-key-btn_org_flat button {{
+                        background-image: url('data:image/png;base64,{b64_flat}') !important;
+                    }}
+                    div.st-key-btn_org_flat button::after {{
+                        content: "Place all files together in the course folder" !important;
+                        font-size: 0.85rem !important;
+                        color: #a0a0a0 !important;
+                        margin-top: 4px !important;
+                        font-weight: 400 !important;
+                    }}
+
+                    /* Active State Highlight */
+                    div.st-key-btn_org_{active_btn_key} button {{
+                        border: 2px solid {border_color} !important;
+                        background-color: rgba(56, 189, 248, 0.05) !important;
+                    }}
+                    /* Protect Active State from generic Hover Overrides */
+                    div.st-key-btn_org_{active_btn_key} button:hover {{
+                        border: 2px solid {border_color} !important;
+                        background-color: rgba(56, 189, 248, 0.08) !important;
+                    }}
+                    </style>
+                    ''', unsafe_allow_html=True)
                     
-                    if mode_choice == 'With subfolders (Matches Canvas Modules)':
-                        st.session_state['download_mode'] = 'modules'
-                    # elif mode_choice == 'Files (Course Folders)':
-                    #     st.session_state['download_mode'] = 'files'
-                    else:
-                        st.session_state['download_mode'] = 'flat'
-                    
-                    # 2. Include Files (Radio buttons have standard padding)
+                    # 2. Include Files (Radio buttons replaced with Segmented Control)
                     st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>Include Files:</h3>", unsafe_allow_html=True)
-                    filter_choice = st.radio(
-                        'Include Files:', # Hidden label via label_visibility
-                        ['All Files (Default)', 'Pdf & Powerpoint only'],
-                        index=0 if st.session_state['file_filter'] == 'all' else 1,
-                        label_visibility="collapsed"
-                    )
-                    st.session_state['file_filter'] = 'all' if filter_choice == 'All Files (Default)' else 'study'
+                    
+                    def update_include_state(mode):
+                        st.session_state['file_filter'] = mode
+
+                    with st.container(key="include_files_segmented_wrapper"):
+                        inc_left, inc_right = st.columns(2, gap="small")
+                        with inc_left:
+                            st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
+                        with inc_right:
+                            st.button("PDF & PPTX Only", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
             # --- COLUMN 2: Additional Course Content ---
             with col2:
