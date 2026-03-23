@@ -1,6 +1,12 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.12: Native Button Card Architecture** (2026-03-23):
+    - [x] **Physical Overlap Pivot**: Abandoned brittle `position: absolute` and "Invisible Overlay" hacks in favor of styling native `st.button` widgets as cards. This guarantees the entire rectangular area is natively clickable.
+    - [x] **Scoped CSS Injection**: Target keys (e.g., `btn_org_subfolders`) to apply background images (Base64), fixed heights, and hovered states.
+    - [x] **Pseudo-Element Descriptions**: Used `::after` content to render metadata without adding extra DOM elements.
+    - [x] **Segmented Control Injection**: Upgraded the "Include Files" segmented buttons by crushing stHorizontalBlock gaps, implementing flex-column layouts for vertical alignment, and separating icon states into ::before pseudo-element toggles.
+    - [x] **Hover State Parity**: Injected global hover rules and active-state protection to ensure unselected cards react to mouse interaction without overriding the primary selection highlight.
 - [x] **Phase 6.11: Step 2 UI Structural Refactor** (2026-03-23):
     - [x] **3-Column Layout**: Implemented `st.columns(3)` with `gap="medium"` for the Download Settings wizard.
     - [x] **Symmetry Enforcement**: Replicated identical HTML/CSS header tokens across all columns to guarantee 100% horizontal alignment.

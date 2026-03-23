@@ -1,6 +1,7 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- [x] **Active Feature: Native Button Card Architecture (Complete)**: Refactored the "File Organization" UI in `app.py` to use a native `st.button` card architecture. This ensures 100% click reliability across the entire card surface by styling the native button itself into the card, bypassing brittle DOM overlay hacks.
 - [x] **Active Feature: Step 2 UI Structural Refactor (Complete)**: Refactored the core Download Settings view in `app.py` into a premium 3-column Card layout. Implemented strict horizontal symmetry using identical <h3> structures and hoisted all Python callbacks/CSS to the top-level scope to prevent DOM unmounting. Replaced the NotebookLM st.expander with a bordered container for unified visual weight.
 - [x] **Active Feature: Sync Engine Bypass for URL Compiler (Pivot Complete)**: Initially implemented a "Ghost Stub" pattern, but pivoted to a cleaner "Pure Deletion & Sync Engine Bypass" approach. Original .url and .webloc files are now strictly deleted after compilation into NotebookLM_External_Links.txt, and the Sync Engine is modified to intelligently ignore their absence, ensuring 100% NotebookLM compatibility without breaking sync integrity.
 - [x] **Active Feature: Final E2E Validation**: Monitoring the system for any remaining edge cases in the sync engine or UI feedback loops now that the core metric and diffing blocks have been audited and patched.
@@ -40,6 +41,17 @@
 - **TUPLE IDENTITY DEFENSE (`sync_ui.py`)**: Fortified the O(1) hash map re-queuing logic against SQLite tuple decomposition. Injected a robust `getattr(failed_item, 'id', getattr(failed_item, 'canvas_file_id', failed_item[0] if isinstance(failed_item, tuple) else None))` fallback to prevent identity loss during Sync Mode retries.
 - **ACID TRANSACTION FIX ("Orphaned Attachment Amnesia")**: Found and fixed a critical data-loss vulnerability in `sync_ui.py`. Previously, secondary entities (Assignments, pages) executed a database commit *before* their associated file attachments were queued. We decoupled the commit, updated `download_secondary_entity` to return `canvas_updated_at`, and now manually trigger the DB write strictly *after* all child attachments are safely injected into the async download queue.
 - **SNIPER RETRY ACID REFACTOR ("Await-and-Inject")**: Completed a comprehensive architectural refactor of `download_isolated_batch_async` in `canvas_logic.py`. Replaced blind `asyncio` queueing with a strict "Await-and-Inject" pattern. The retry loop now synchronously awaits the discovery of secondary entities, unpacks the 4-tuple metadata, and executes an atomic database commit via `sync_manager.record_downloaded_file()` *before* dynamically injecting attachment download tasks into the live queue. This permanently eliminates "Database Amnesia" where parent entities were recorded while their children remained orphaned or lost.
+## Recent Changes (Session 2026-03-23 — Native Button Card Architecture)
+- **Native Button Card Architecture Implementation (`app.py`)**:
+    - **Physical Overlap Pivot**: Abandoned brittle `position: absolute` and "Invisible Overlay" hacks in favor of styling native `st.button` widgets as cards. This guarantees the entire rectangular area is natively clickable and responsive.
+    - **CSS-Driven Aesthetics**: Injected scoped CSS targeting `div[class*="st-key-btn_org_"] button` to apply backgrounds, padding, and border-radius.
+    - **Pseudo-Element Metadata**: Utilized `::after` pseudo-elements to inject descriptive text ("Matches Canvas Modules", "All files in one folder") directly into the button surface without adding DOM bloat.
+    - **Base64 Icon Integration**: Embedded `get_base64_image` icons directly into the CSS `background-image` property for zero-dependency visual fidelity.
+    - **Dynamic Active Highlighting**: Implemented real-time border and background color shifts (`st.session_state['download_mode']`) using f-string CSS injection.
+    - [x] **Segmented Control Injection**: Upgraded the "Include Files" segmented buttons by crushing stHorizontalBlock gaps, implementing flex-column layouts for vertical alignment, and separating icon states into ::before pseudo-element toggles.
+    - [x] **Hover State Parity**: Injected global hover rules and active-state protection to ensure unselected cards react to mouse interaction without overriding the primary selection highlight.
+    - **Interactive Hover Logic**: Integrated dynamic hover states for all Native Button Cards, including subtle background shifts and icon "wake-up" transitions (`filter: grayscale(10%)`) that are gracefully preserved or overridden by the active session state.
+
 ## Recent Changes (Session 2026-03-23 — Step 2 UI Structural Refactor)
 - **3-Column Card Layout Implementation (`app.py`)**:
     - **Structural Geometry**: Transitioned "Step 2: Download Settings" from a vertical stack to a balanced `st.columns(3, gap="medium")` layout.

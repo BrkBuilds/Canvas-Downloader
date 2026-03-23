@@ -125,6 +125,16 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.
+- **Native Button Card Architecture**:
+    - *Problem*: Streamlit's nested DOM wrappers and flexbox layout make absolute positioning or "invisible overlay" hacks for card-wide clickability extremely brittle and prone to failure across different browser sizes or Streamlit versions.
+    - *Solution*: Style the native `st.button` widget to *become* the card. This ensures that the entire rectangular area is natively clickable.
+    - *Technique*:
+        1. Inject CSS targeting the button's key-based wrapper (e.g., `div[class*="st-key-btn_org_"] button`).
+        2. Set `height`, `background-color`, `border`, etc.
+        3. Use `background-image` with Base64 SVGs/PNGs for icons.
+        4. Use `::after` pseudo-elements for secondary descriptions.
+        5. Use `padding-top` to shift the native button label (the `<p>` tag) down to accommodate the icon.
+        6. Dynamic active state styling using f-strings in the CSS block to inject the active button's key and theme colors.
 - **First-Render Checkbox Hydration Pattern**:
     - *Problem*: In Streamlit, manually stuffing values into `st.session_state["my_checkbox"]` *before* the script reaches the `st.checkbox("Label", key="my_checkbox")` declaration often fails to visually check the box on its very first render. The UI appears unchecked (flashing), even though the underlying state dictionary reads `True`.
     - *Solution*: For dynamically populated configurations (like loading saved JSON settings from SQLite), always explicitly define the `value=` parameter falling back to the state key: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))`. This guarantees 100% visual parity on the initial draw frame without triggering duplicate state assignment warnings.

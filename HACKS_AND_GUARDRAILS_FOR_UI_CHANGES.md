@@ -13,6 +13,9 @@
 * **Page-Level CSS Injection:** NEVER inject `<style>` tags inside an `st.empty().container()` context; Streamlit discards them during DOM transitions. **Rule:** All critical UI CSS must be injected at the PAGE level, outside dynamic empty containers.
 * **CSS Specificity & Leakage Prevention:** Avoid using the `:has()` pseudo-class combined with sibling combinators (`~`) to style main app components, as it climbs the DOM tree and inadvertently matches the Streamlit `stDialog` portal, leaking styles with devastating `(1,1,4)` specificity. **Rule:** ALWAYS prefix dialog button CSS with `div[data-testid="stDialog"]` to ensure bulletproof styling.
 * **Merged CSS/HTML Injection:** Separate `st.markdown` calls for `<style>` and HTML generate multiple hidden Streamlit wrapper `divs` that add unwanted vertical padding. **Rule:** Bundle the CSS `<style>` block and HTML tags into a *single* `st.markdown(unsafe_allow_html=True)` call.
+* **The F-String CSS Trap (Fatal NameErrors):** When injecting CSS via `st.markdown(f'''<style>...''')` to pass Python variables (like Base64 strings or Theme colors), standard CSS brackets `{` and `}` will be evaluated as Python code and crash the app with a `NameError`. **Rule:** You MUST double-escape all literal CSS brackets as `{{` and `}}` inside Python f-strings.
+* **The Specificity Shield (Active vs Hover states):** Streamlit's shadow DOM and your own generic `:hover` states (e.g., `div[class*="st-key-btn_"] button:hover`) carry heavy CSS specificity because of the pseudo-class. This will accidentally overwrite your active state styles (like blue borders) when the user hovers over an already-active button. **Rule:** Always create a Specificity Shield rule directly below your active state: `div.st-key-{active_key} button:hover { border-color: {active_color} !important; }` to protect it from generic hover degradation.
+* **Overriding Streamlit's Inner Button Wrappers:** Telling an `st.button` to be `text-align: left` or `display: flex` often fails because Streamlit injects a hidden `div[data-testid="stMarkdownContainer"]` inside the button that aggressively forces center-alignment. **Rule:** To force text alignment inside a custom button card, you must explicitly target the inner wrappers: `div.st-key-my_button button > div { text-align: left !important; width: 100% !important; justify-content: flex-start !important; }`.
 
 #### 3. Component Workarounds & Layout Hacks
 * **Hitbox Margin Defeat:** Pulling text labels tight against active UI widgets (like checkboxes) using negative `margin-bottom` causes the text's transparent DOM bounding box to overlay and physically block mouse clicks on the widget below. **Rule:** Use `margin-bottom: 0px` on text labels, and achieve tightness by using negative *top* margins on the elements beneath them.
@@ -21,6 +24,8 @@
 * **Dynamic Expander Counters (CSS Ghost Text):** Injecting dynamic variables directly into the Python string of `st.expander(f"🆕 [{x}/{y}]")` changes the widget ID on rerun, destroying the user's open/closed state. **Rule:** Keep the title static (`st.expander("🆕 Files")`) and project the dynamic counter onto the screen using the `::after` CSS pseudo-element targeting the summary tag.
 * **Radio Widget Granular Tooltips:** Streamlit lacks per-option tooltips for radios. **Rule:** Inject a styled HTML block (`st.markdown`) directly beneath the radio using `ⓘ` icons, `color: #6b7280`, and `font-size: 0.78rem` to visually fake native hints.
 * **Zero-Indentation HTML:** Streamlit parses indented HTML strings as `<pre><code>` blocks. **Rule:** Keep multi-line HTML/CSS strings strictly unindented in Python code.
+* **Dynamic Equal-Height Columns (Elastic Cards):** When placing buttons/cards side-by-side in st.columns, they will render at different heights if the text wraps unevenly. Streamlit stretches the invisible outer columns, but leaves the inner stButton wrappers at height: auto. **Rule:** To create uniform card rows, never hardcode pixel heights. Instead, inject CSS to stretch the middlemen: div[data-testid="column"] > div, div[data-testid="stButton"] { height: 100% !important; } and then set your custom button to height: 100% !important;.
+* **Crushing Streamlit Column Gaps:** st.columns(gap="small") still enforces a rigid 0.5rem minimum gap. **Rule:** To pull segmented controls or cards tightly together, target the specific wrapper's flexbox container: div[class*="st-key-my_wrapper"] [data-testid="stHorizontalBlock"] { gap: 4px !important; }.
 
 #### 4. State Management, Reactivity & Lifecycle
 * **First-Render Checkbox Hydration:** Stuffing `True` into `st.session_state["my_key"]` before declaring `st.checkbox` often fails visually on the first frame (the box flashes or appears unchecked). **Rule:** Always explicitly define the parameter: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))` to guarantee 100% visual parity on the initial draw.
@@ -33,4 +38,63 @@
 * **Strict HTML Escaping (`esc()`):** Passing raw, user-controlled variables (Canvas Course names, filenames, error strings) into `st.markdown(unsafe_allow_html=True)` opens the UI to DOM-corruption and XSS if the string contains `<script>` or unclosed `</div>` tags. **Rule:** Universally wrap all interpolated variables inside HTML structures with the `esc()` utility (wraps `html.escape`). *Exception:* Canvas Rich Text payloads (like Discussion bodies).
 
 ***
+#### 6. Advanced Button & Card Architectures (The Clickable Card)
+* **Anti-Pattern: The "Invisible Button Overlay" (DOM Layering Hacks):**
 
+**Problem:** Attempting to make a visually rich card (built with st.container and st.markdown) clickable by stretching a transparent st.button over it using position: absolute, CSS Grid stacking, or negative margin overlap (-140px) will always fail. Streamlit dynamically wraps st.button inside multiple hidden flexbox containers (like element-container and stVerticalBlock). The React frontend constantly recalculates the heights of these inner wrappers during render cycles, causing the absolute button to collapse into a tiny, unclickable dead-zone at the bottom of the card.
+
+**Rule:** NEVER attempt to layer an invisible Streamlit button over HTML/Markdown content to fake a clickable area. Do not try to strip Streamlit's internal position: relative wrappers. The React DOM will always fight back and break the hitbox.
+
+* **The "Native Button is the Card" Architecture:**
+
+**Problem:** You need a large, visually rich UI card containing an icon/image, a primary title, and a sub-description, where 100% of the surface area is perfectly clickable and correctly triggers a Streamlit on_click callback without layout glitches.
+
+**Solution:** Discard st.container and st.markdown wrappers entirely. Instantiate a raw, native st.button("Primary Title", key="my_card", use_container_width=True) and use highly targeted CSS to dress the native <button> DOM element in a "card suit".
+
+**Implementation Rules:**
+
+**The Base Component:** Instantiate only the native button. The string you pass to the button will act as the <h3> Primary Title.
+
+**Image Injection (Base64):** Never use <img> tags. Inject your icons/images dynamically into the button's CSS background-image property using Base64 encoded strings. Use background-position and background-size to center the icon at the top of the button. 
+
+**Independent image/Icon Layers (::before Hack):** * Problem: If you apply background-image directly to the <button> and want to make the icon monochrome/grayscale when inactive, applying filter: grayscale(100%) to the button will also turn the text and background grey!
+
+**Rule:** Detach the icon from the button background. Give the button position: relative !important;. Then, create an independent layer using button::before { content: ""; position: absolute; ... }. Inject the Base64 image into the ::before element. You can now safely apply filter: grayscale(100%) opacity(50%) to the inactive ::before icon, and remove the filter on the active state, without affecting the button's text or background color.
+
+**Dimensions & Flexbox:** Force the button to act as a card by setting a strict height (e.g., 140px !important). Use padding-top to push the primary title text down below the background image. Set display: flex; flex-direction: column; align-items: center;.
+
+**Descriptions via Pseudo-Elements:** Streamlit buttons do not accept HTML subtitles. To add a description below the primary title, inject a CSS ::after pseudo-element attached to the button (e.g., content: "Matches Canvas Modules" !important; margin-top: 4px; color: #a0a0a0;).
+
+**Dynamic Active States:** Use the specific widget key (div.st-key-my_card button) to apply standard hover states and dynamically inject Python f-string logic to apply an active border/background when the card matches the current st.session_state.
+
+**Example CSS Skeleton for "Native Button is the Card":**
+
+CSS
+/* Base Card Styling */
+div.st-key-my_custom_card button {
+    height: 140px !important;
+    background-color: transparent !important;
+    background-image: url('data:image/png;base64,...') !important; /* Base64 Icon */
+    background-repeat: no-repeat !important;
+    background-position: center 15px !important;
+    background-size: 64px !important;
+    padding-top: 85px !important; /* Pushes text below image */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Primary Title Formatting */
+div.st-key-my_custom_card button p {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Sub-description Injection */
+div.st-key-my_custom_card button::after {
+    content: "Sub-description text goes here" !important;
+    font-size: 0.85rem !important;
+    color: #a0a0a0 !important;
+}
