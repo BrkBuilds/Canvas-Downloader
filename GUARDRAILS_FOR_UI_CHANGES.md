@@ -1,0 +1,36 @@
+### 📋 The Master Streamlit UI Guardrails & Architecture Guidelines
+
+#### 1. Dialogs & Fragments (`@st.dialog`) Architecture
+* **No Nested Dialogs:** Streamlit fundamentally crashes if you attempt to trigger an `@st.dialog` from inside another `@st.dialog`. **Rule:** Flatten modal architecture; use inline UI components (like `st.selectbox` or inline edit cards) within a single dialog.
+* **Dialog Persistence:** Streamlit natively keeps dialogs open as long as they are called. Trigger the dialog strictly inside the `if st.button:` block; do not use dangling session state flags (e.g., `dialog_open = True`) which cause "Ghost Dialogs" on unrelated reruns.
+* **The Ghost Toast Pattern:** Calling `st.toast()` and then immediately triggering `st.rerun()`, or calling a toast directly inside a fragment's `on_click` callback, wipes the DOM and causes a `Fragment rerun was triggered...` crash. **Rule:** Set a scoped variable (e.g., `st.session_state['pending_toast'] = "Success"`) and consume it via `st.toast()` at the absolute top of the main render function or dialog body.
+* **Supercharged Close / DOM Refresh:** Closing a dialog fragment natively or via a standard `st.rerun()` leaves the main app behind it frozen in a stale state. **Rule:** Custom "Close" buttons inside modals must use `st.rerun(scope="app")` to force a top-to-bottom repaint of the main UI. Hide the native Streamlit 'X' via CSS (`div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }`) to force users through the state-aware button.
+* **Intra-Dialog Routing:** Do not use `st.rerun()` for tab/layer navigation inside a dialog, as it will abruptly close the SPA (Single Page Application) modal. **Rule:** Use `on_click` callbacks on buttons to mutate session state *before* the dialog re-evaluates its layout.
+
+#### 2. CSS Injection & DOM Targeting
+* **Keyed Container Scoping:** Streamlit's default margins are often too loose. Wrap target loops or sections in `st.container(key="some_key")`. **Rule:** Inject CSS using partial attribute selectors (`div[class*="st-key-some_key"]`) to override internal `stHorizontalBlock` or `stVerticalBlock` styling without polluting the global scope.
+* **Wildcard Selectors for Dynamic Widgets:** Standard class selectors fail on dynamic keys (e.g., `key=f"cat_new_{course.id}"`). **Rule:** Use CSS wildcard attribute selectors (`div[class*="st-key-cat_new"]`) to style identical dynamic widgets globally.
+* **Page-Level CSS Injection:** NEVER inject `<style>` tags inside an `st.empty().container()` context; Streamlit discards them during DOM transitions. **Rule:** All critical UI CSS must be injected at the PAGE level, outside dynamic empty containers.
+* **CSS Specificity & Leakage Prevention:** Avoid using the `:has()` pseudo-class combined with sibling combinators (`~`) to style main app components, as it climbs the DOM tree and inadvertently matches the Streamlit `stDialog` portal, leaking styles with devastating `(1,1,4)` specificity. **Rule:** ALWAYS prefix dialog button CSS with `div[data-testid="stDialog"]` to ensure bulletproof styling.
+* **Merged CSS/HTML Injection:** Separate `st.markdown` calls for `<style>` and HTML generate multiple hidden Streamlit wrapper `divs` that add unwanted vertical padding. **Rule:** Bundle the CSS `<style>` block and HTML tags into a *single* `st.markdown(unsafe_allow_html=True)` call.
+
+#### 3. Component Workarounds & Layout Hacks
+* **Hitbox Margin Defeat:** Pulling text labels tight against active UI widgets (like checkboxes) using negative `margin-bottom` causes the text's transparent DOM bounding box to overlay and physically block mouse clicks on the widget below. **Rule:** Use `margin-bottom: 0px` on text labels, and achieve tightness by using negative *top* margins on the elements beneath them.
+* **Aggressive Header Suction:** Native Streamlit `###` headers have massive default bottom margins. **Rule:** Replace them with custom HTML `<h3 style='margin-bottom: -25px;'>` to forcefully pull widgets up against the header.
+* **Extreme Column Ratios:** Default `st.columns(2)` splits are too wide for small trigger buttons next to inputs. **Rule:** Use extreme ratios like `[1.5, 8.5]` or `[1, 6]` to perfectly align layout elements horizontally.
+* **Dynamic Expander Counters (CSS Ghost Text):** Injecting dynamic variables directly into the Python string of `st.expander(f"🆕 [{x}/{y}]")` changes the widget ID on rerun, destroying the user's open/closed state. **Rule:** Keep the title static (`st.expander("🆕 Files")`) and project the dynamic counter onto the screen using the `::after` CSS pseudo-element targeting the summary tag.
+* **Radio Widget Granular Tooltips:** Streamlit lacks per-option tooltips for radios. **Rule:** Inject a styled HTML block (`st.markdown`) directly beneath the radio using `ⓘ` icons, `color: #6b7280`, and `font-size: 0.78rem` to visually fake native hints.
+* **Zero-Indentation HTML:** Streamlit parses indented HTML strings as `<pre><code>` blocks. **Rule:** Keep multi-line HTML/CSS strings strictly unindented in Python code.
+
+#### 4. State Management, Reactivity & Lifecycle
+* **First-Render Checkbox Hydration:** Stuffing `True` into `st.session_state["my_key"]` before declaring `st.checkbox` often fails visually on the first frame (the box flashes or appears unchecked). **Rule:** Always explicitly define the parameter: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))` to guarantee 100% visual parity on the initial draw.
+* **Widget Cleanup Bypass:** Navigating away from a step destroys its widgets and deletes their keys from `st.session_state`. **Rule:** Capture crucial widget booleans into custom `persistent_` state keys explicitly inside the `if st.button('Next'):` block, right before the `st.rerun()` trigger.
+* **Idempotent Array Mutations:** Rapidly double-clicking buttons triggers `on_click` events twice before the render loop executes. **Rule:** All array manipulations (like appending to a list of UI elements) must be strictly idempotent to prevent duplicate keys and subsequent Streamlit crashes.
+* **UI Thread Flushing (DOM Paint Locking):** Launching heavy blocking backend threads (like COM automation) immediately after updating a UI placeholder freezes the UI before the browser can paint the new text. **Rule:** Inject an explicit `time.sleep(0.2)` immediately after rendering loading states to guarantee Streamlit flushes the HTML to the DOM.
+* **Un-Throttled Per-File Status Indicators:** Updating UI placeholders at high speeds (e.g., inside a fast file-download loop) crashes Streamlit's render budget. **Rule:** Throttle the main UI dashboard renders (e.g., `if time.time() - last_update > 0.4:`), but keep the lightweight `active_file_placeholder` text *outside* the throttle for instant, responsive feedback.
+
+#### 5. Frontend Security
+* **Strict HTML Escaping (`esc()`):** Passing raw, user-controlled variables (Canvas Course names, filenames, error strings) into `st.markdown(unsafe_allow_html=True)` opens the UI to DOM-corruption and XSS if the string contains `<script>` or unclosed `</div>` tags. **Rule:** Universally wrap all interpolated variables inside HTML structures with the `esc()` utility (wraps `html.escape`). *Exception:* Canvas Rich Text payloads (like Discussion bodies).
+
+***
+
