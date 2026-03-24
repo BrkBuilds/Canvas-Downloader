@@ -1,6 +1,13 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-24 — Step 2 UI Structural Polish)
+- **2-Column Top Row Conversion (`app.py`)**:
+    - Refactored the core Download Settings view from a 3-column layout into a 2-column (`[1, 1, 1.5]`) layout for "Organization" and "Content", meticulously preserving the original card width on ultra-wide monitors without stretching.
+- **Constrained Bottom Row (`app.py`)**:
+    - Extracted "Additional Settings / NotebookLM" into a dedicated bottom row, horizontally constrained by a dummy column wrapper (`[2, 1.5]`). This spans the exact combined width of the top two equal-width cards, keeping it perfectly flush.
+    - Verified `sync_ui.py` does not utilize this interactive block and uses a read-only 4-col layout instead, requiring no parity changes.
+
 - [x] **Active Feature: Native Button Card Architecture (Complete)**: Refactored the "File Organization" UI in `app.py` to use a native `st.button` card architecture. This ensures 100% click reliability across the entire card surface by styling the native button itself into the card, bypassing brittle DOM overlay hacks.
 - [x] **Active Feature: Step 2 UI Structural Refactor (Complete)**: Refactored the core Download Settings view in `app.py` into a premium 3-column Card layout. Implemented strict horizontal symmetry using identical <h3> structures and hoisted all Python callbacks/CSS to the top-level scope to prevent DOM unmounting. Replaced the NotebookLM st.expander with a bordered container for unified visual weight.
 - [x] **Active Feature: Sync Engine Bypass for URL Compiler (Pivot Complete)**: Initially implemented a "Ghost Stub" pattern, but pivoted to a cleaner "Pure Deletion & Sync Engine Bypass" approach. Original .url and .webloc files are now strictly deleted after compilation into NotebookLM_External_Links.txt, and the Sync Engine is modified to intelligently ignore their absence, ensuring 100% NotebookLM compatibility without breaking sync integrity.

@@ -978,13 +978,16 @@ div.st-key-btn_include_{active_include_key} button::before {{
         step2_container = st.empty()
         with step2_container.container():
             # HOISTED CALLBACKS
-            def _secondary_master_changed():
-                for k in _SECONDARY_CONTENT_KEYS:
-                    st.session_state[k] = st.session_state['dl_secondary_master']
-
-            def _secondary_sub_changed():
+            def _toggle_secondary_sub(target_key):
+                st.session_state[target_key] = not st.session_state.get(target_key, False)
                 active = sum(st.session_state.get(k, False) for k in _SECONDARY_CONTENT_KEYS)
                 st.session_state['dl_secondary_master'] = (active == TOTAL_SECONDARY_SUBS)
+
+            def _toggle_secondary_master():
+                new_state = not st.session_state.get('dl_secondary_master', False)
+                st.session_state['dl_secondary_master'] = new_state
+                for k in _SECONDARY_CONTENT_KEYS:
+                    st.session_state[k] = new_state
 
             def _dl_isolate_radio_changed():
                 _choice = st.session_state.get('dl_isolate_radio')
@@ -1046,7 +1049,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
             </style>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, spacer = st.columns([1, 1, 1, 1.5], gap="medium")
+            col1, col2 = st.columns([3, 5], gap="large")
 
             # --- COLUMN 1: Organization & Include Files ---
             with col1:
@@ -1164,35 +1167,142 @@ div.st-key-btn_include_{active_include_key} button::before {{
             # --- COLUMN 2: Additional Course Content ---
             with col2:
                 with st.container(border=True):
-                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>Additional Content</h3>", unsafe_allow_html=True)
-                    
                     _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
+                    if _sec_active == 0:
+                        dynamic_tag = "None selected"
+                    elif _sec_active == TOTAL_SECONDARY_SUBS:
+                        dynamic_tag = "Everything included in download"
+                    else:
+                        dynamic_tag = f"{_sec_active} Included in download"
 
-                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Select what to include in download:</p>", unsafe_allow_html=True)
+                    header_html = f"""
+                    <div style='display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;'>
+                        <h3 style='margin: 0;'>Additional Course Content</h3>
+                        <span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
+                    </div>
+                    """
 
-                    # Master toggle + counter
-                    st.checkbox(
-                        f"**Additional Course Content** &nbsp; :gray[({_sec_active}/{TOTAL_SECONDARY_SUBS})]",
-                        key='dl_secondary_master',
-                        on_change=_secondary_master_changed,
-                        help='Enable/disable downloading additional Canvas content types (assignments, quizzes, etc.).'
-                    )
+                    # Helper to safely load icon
+                    def safe_b64(name):
+                        try:
+                            res = get_base64_image(f"assets/{name}")
+                            return res if res else ""
+                        except:
+                            return ""
 
-                    # 7 sub-checkboxes (tree-view indent via CSS above)
-                    st.checkbox('Assignments', key='dl_assignments', on_change=_secondary_sub_changed,
-                                help='Download assignment descriptions and any attached files.')
-                    st.checkbox('Syllabus', key='dl_syllabus', on_change=_secondary_sub_changed,
-                                help='Download the course syllabus page as HTML.')
-                    st.checkbox('Announcements', key='dl_announcements', on_change=_secondary_sub_changed,
-                                help='Download course announcements and any attached files.')
-                    st.checkbox('Discussions', key='dl_discussions', on_change=_secondary_sub_changed,
-                                help='Download discussion topic prompts as HTML.')
-                    st.checkbox('Quizzes', key='dl_quizzes', on_change=_secondary_sub_changed,
-                                help='Download quiz questions and answers as structured HTML.')
-                    st.checkbox('Rubrics', key='dl_rubrics', on_change=_secondary_sub_changed,
-                                help='Download rubric criteria as Markdown tables.')
-                    st.checkbox('Submissions (metadata)', key='dl_submissions', on_change=_secondary_sub_changed,
-                                help='Download submission metadata (grades, timestamps). Content files are not included.')
+                    # Button data
+                    button_defs = [
+                        ('dl_assignments', 'Assignments', 'Download assignment descriptions and any attached files.', 'icon_assignments.png'),
+                        ('dl_syllabus', 'Syllabus', 'Download the course syllabus page as HTML.', 'icon_syllabus.png'),
+                        ('dl_announcements', 'Announcements', 'Download course announcements and any attached files.', 'icon_announcements.png'),
+                        ('dl_discussions', 'Discussions', 'Download discussion topic prompts as HTML.', 'icon_discussions.png'),
+                        ('dl_quizzes', 'Quizzes', 'Download quiz questions and answers as structured HTML.', 'icon_quizzes.png'),
+                        ('dl_rubrics', 'Rubrics', 'Download rubric criteria as Markdown tables.', 'icon_rubrics.png'),
+                        ('dl_submissions', 'Submissions (metadata)', 'Download submission metadata (grades, timestamps). Content files are not included.', 'icon_submissions.png')
+                    ]
+
+                    # Generate CSS
+                    css_blocks = []
+                    css_blocks.append('''
+                    div.st-key-secondary_cards_grid [data-testid="stHorizontalBlock"] {
+                        gap: 12px !important;
+                    }
+                    div[class*="st-key-btn_dl_"] button > div { 
+                        width: 100% !important; 
+                        align-items: flex-start !important; 
+                    }
+                    div[class*="st-key-btn_dl_"] button p {
+                        text-align: left !important;
+                        margin: 0 !important;
+                    }
+                    div[class*="st-key-btn_dl_"] button::after {
+                        text-align: left !important;
+                    }
+                    div[class*="st-key-btn_dl_"] button {
+                        height: 85px !important;
+                        padding: 10px !important;
+                        padding-left: 50px !important;
+                        background-position: 15px center !important;
+                        background-size: 24px !important;
+                        background-repeat: no-repeat !important;
+                        border-radius: 12px !important;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    }
+                    div.st-key-btn_dl_secondary_master button {
+                        height: 64px !important;
+                        padding-top: 5px !important;
+                        padding-bottom: 5px !important;
+                    }
+                    ''')
+
+                    # Master CSS
+                    m_active = st.session_state.get('dl_secondary_master', False)
+                    m_bg = "rgba(104, 212, 163, 0.15)" if m_active else "rgba(255, 255, 255, 0.02)"
+                    m_border = "#68d4a3" if m_active else "rgba(255, 255, 255, 0.1)"
+                    b64_m = safe_b64('icon_select_all.png')
+                    m_img_rule = f"background-image: url('data:image/png;base64,{b64_m}') !important;" if b64_m else ""
+                    
+                    css_blocks.append(f'''
+                    div.st-key-btn_dl_secondary_master button {{
+                        background-color: {m_bg} !important;
+                        border: 1px solid {m_border} !important;
+                        {m_img_rule}
+                    }}
+                    div.st-key-btn_dl_secondary_master button::after {{
+                        content: "Include all supplementary materials in the download." !important;
+                        font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important;
+                        display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important;
+                    }}
+                    ''')
+
+                    # Child CSS
+                    for key, title, desc, icon in button_defs:
+                        is_active = st.session_state.get(key, False)
+                        c_bg = "rgba(104, 212, 163, 0.15)" if is_active else "rgba(255, 255, 255, 0.02)"
+                        c_border = "#68d4a3" if is_active else "rgba(255, 255, 255, 0.1)"
+                        b64_c = safe_b64(icon)
+                        c_img_rule = f"background-image: url('data:image/png;base64,{b64_c}') !important;" if b64_c else ""
+                        
+                        css_blocks.append(f'''
+                        div.st-key-btn_{key} button {{
+                            background-color: {c_bg} !important;
+                            border: 1px solid {c_border} !important;
+                            {c_img_rule}
+                        }}
+                        div.st-key-btn_{key} button::after {{
+                            content: "{desc}" !important;
+                            font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important;
+                            display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important;
+                        }}
+                        div.st-key-btn_{key} button:hover {{
+                            border-color: #68d4a3 !important;
+                        }}
+                        ''')
+
+                    final_html = f"""
+                    {header_html}
+                    <style>
+                    {''.join(css_blocks)}
+                    </style>
+                    """
+                    st.markdown(final_html, unsafe_allow_html=True)
+
+                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 10px; margin-top: 5px;'>Select what to include in download:</p>", unsafe_allow_html=True)
+                    st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
+                    
+                    with st.container(key="secondary_cards_grid"):
+                        c1, c2, c3 = st.columns(3)
+                        with c1:
+                            for key, title, _, _ in button_defs[:3]:
+                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+                        with c2:
+                            for key, title, _, _ in button_defs[3:5]:
+                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+                        with c3:
+                            for key, title, _, _ in button_defs[5:]:
+                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
 
                     # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
                     if _sec_active > 0:
@@ -1212,8 +1322,12 @@ div.st-key-btn_include_{active_include_key} button::before {{
                         ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
                         </div>""", unsafe_allow_html=True)
 
-            # --- COLUMN 3: Additional Settings / NotebookLM ---
-            with col3:
+            # Force a visual break between top and bottom rows
+            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
+            # --- BOTTOM ROW: Additional Settings / NotebookLM ---
+            col_bottom, _bottom_spacer = st.columns([6, 2], gap="medium")
+            with col_bottom:
                 with st.container(border=True):
                     st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>Additional Settings</h3>", unsafe_allow_html=True)
 
