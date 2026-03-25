@@ -112,10 +112,15 @@ if 'pending_sync_folder' not in st.session_state:
     st.session_state['pending_sync_folder'] = None  # Temp storage for folder picker
 
 # NotebookLM Compatible Download toggles
+_NOTEBOOK_SUB_KEYS_INIT = [
+    'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+    'convert_html', 'convert_code', 'convert_urls', 'convert_video'
+]
 if 'notebooklm_master' not in st.session_state:
     st.session_state['notebooklm_master'] = False
-if 'convert_pptx' not in st.session_state:
-    st.session_state['convert_pptx'] = False
+for _nk in _NOTEBOOK_SUB_KEYS_INIT:
+    if _nk not in st.session_state:
+        st.session_state[_nk] = False
 
 # Secondary (Additional Course Content) toggles — all OFF by default in Download Mode
 _SECONDARY_CONTENT_KEYS = [
@@ -1103,28 +1108,26 @@ div.st-key-btn_include_{active_include_key} button::before {{
                 </style>
                 """
 
-            def _master_toggle_changed():
-                # Force all sub-checkboxes to match the master toggle's new state
-                st.session_state['convert_zip'] = st.session_state['notebooklm_master']
-                st.session_state['convert_pptx'] = st.session_state['notebooklm_master']
-                st.session_state['convert_html'] = st.session_state['notebooklm_master']
-                st.session_state['convert_code'] = st.session_state['notebooklm_master']
-                st.session_state['convert_urls'] = st.session_state['notebooklm_master']
-                st.session_state['convert_word'] = st.session_state['notebooklm_master']
-                st.session_state['convert_video'] = st.session_state['notebooklm_master']
-                st.session_state['convert_excel'] = st.session_state['notebooklm_master']
-
-            def _sub_toggle_changed():
-                # Calculate how many sub-checkboxes are currently active
-                active_subs = sum([st.session_state.get('convert_zip', False), st.session_state.get('convert_pptx', False), st.session_state.get('convert_html', False), st.session_state.get('convert_code', False), st.session_state.get('convert_urls', False), st.session_state.get('convert_word', False), st.session_state.get('convert_video', False), st.session_state.get('convert_excel', False)])
-                # Master is only True if ALL sub-checkboxes are True
-                st.session_state['notebooklm_master'] = (active_subs == TOTAL_NOTEBOOK_SUBS)
-
             notebook_sub_keys = [
                 'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
                 'convert_html', 'convert_code', 'convert_urls', 'convert_video'
             ]
             TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
+
+            def _toggle_conv_master():
+                # If master is currently True (or all subs are True), turn everything off. Otherwise, turn all on.
+                current_master = st.session_state.get('notebooklm_master', False)
+                new_state = not current_master
+                st.session_state['notebooklm_master'] = new_state
+                for k in notebook_sub_keys:
+                    st.session_state[k] = new_state
+
+            def _toggle_conv_sub(key):
+                # Flip the specific sub-toggle
+                st.session_state[key] = not st.session_state.get(key, False)
+                # Re-evaluate the master toggle based on the sum of active subs
+                active_count = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+                st.session_state['notebooklm_master'] = (active_count == TOTAL_NOTEBOOK_SUBS)
 
             # HOISTED CSS
             st.markdown("""
@@ -1143,19 +1146,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
             .st-key-dl_assignments { margin-top: 0px !important; padding-top: 8px !important; }
             .st-key-dl_submissions { margin-bottom: 10px !important; padding-bottom: 8px !important; }
 
-            /* Tree-view styling for nested NotebookLM sub-checkboxes */
-            .st-key-convert_zip, .st-key-convert_pptx, .st-key-convert_word, 
-            .st-key-convert_excel, .st-key-convert_html, .st-key-convert_code, 
-            .st-key-convert_urls, .st-key-convert_video {
-                margin-left: 28px !important;
-                padding-left: 15px !important;
-                border-left: 2px solid """ + theme.BG_CARD_HOVER + """ !important; 
-                margin-top: -12px !important; 
-                padding-top: 4px !important;
-                padding-bottom: 4px !important;
-            }
-            .st-key-convert_zip { margin-top: 0px !important; padding-top: 8px !important; }
-            .st-key-convert_video { margin-bottom: 10px !important; padding-bottom: 8px !important; }
+
             </style>
             """, unsafe_allow_html=True)
 
@@ -1465,73 +1456,101 @@ div.st-key-btn_include_{active_include_key} button::before {{
             # Force a visual break between top and bottom rows
             st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
-            # --- BOTTOM ROW: Additional Settings / NotebookLM ---
+            # --- BOTTOM ROW: Conversion Settings / NotebookLM ---
             col_bottom, _bottom_spacer = st.columns([6, 2], gap="medium")
             with col_bottom:
                 with st.container(border=True):
-                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>Additional Settings</h3>", unsafe_allow_html=True)
+                    # --- Conversion Button Data ---
+                    conv_button_defs = [
+                        ('convert_zip',   'Auto-Extract Archives',    'Extracts files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
+                        ('convert_pptx',  'PowerPoint → PDF',         'Converts .pptx/.ppt to PDF via Microsoft Office.',      'icon_conv_pptx.png'),
+                        ('convert_word',  'Word Docs → PDF',          'Converts legacy .doc, .rtf to PDF.',                    'icon_conv_word.png'),
+                        ('convert_excel', 'Excel → PDF',              'Converts .xlsx, .xls workbooks to PDF.',                'icon_conv_excel.png'),
+                        ('convert_html',  'HTML → Markdown',          'Converts Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
+                        ('convert_code',  'Code & Data → .txt',       'Appends .txt extension to programming files.',          'icon_conv_code.png'),
+                        ('convert_urls',  'Compile Web Links',        'Aggregates .url/.webloc shortcuts into a list.',        'icon_conv_urls.png'),
+                        ('convert_video', 'Video → Audio',            'Extracts .mp3 audio tracks from video files.',          'icon_conv_video.png'),
+                    ]
 
-                    current_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+                    # --- Dynamic Tag Counter ---
+                    _conv_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+                    if _conv_active == 0:
+                        conv_tag = "None selected"
+                    elif _conv_active == TOTAL_NOTEBOOK_SUBS:
+                        conv_tag = "All enabled"
+                    else:
+                        conv_tag = f"{_conv_active} enabled"
 
-                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 10px;'>Enable conversions for AI:</p>", unsafe_allow_html=True)
+                    # --- Generate CSS for each button ---
+                    conv_css_blocks = []
 
-                    # Master Toggle
-                    st.checkbox(
-                        f"**NotebookLM Compatible Download** &nbsp; :gray[({current_active}/{TOTAL_NOTEBOOK_SUBS})]",
-                        key="notebooklm_master",
-                        on_change=_master_toggle_changed,
-                        help="Enable conversions to optimize files for AI processing."
+                    # Base styles — zero-indentation to prevent Streamlit code-block conversion
+                    conv_css_blocks.append(
+'div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }\n'
+'div[class*="st-key-btn_convert_"] button > div,\n'
+'div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] {\n'
+'width: 100% !important; display: flex !important; justify-content: flex-start !important; text-align: left !important; }\n'
+'div[class*="st-key-btn_convert_"] button p { text-align: left !important; width: 100% !important; margin: 0 !important; }\n'
+'div[class*="st-key-btn_convert_"] button::after { text-align: left !important; width: 100% !important; display: block !important; }\n'
+'div[class*="st-key-btn_convert_"] button {\n'
+'height: 72px !important; min-height: 0px !important;\n'
+'padding-top: 0px !important; padding-bottom: 0px !important;\n'
+'padding-right: 10px !important; padding-left: 52px !important;\n'
+'background-position: 15px center !important; background-size: 30px !important;\n'
+'background-repeat: no-repeat !important; border-radius: 12px !important;\n'
+'display: flex; flex-direction: column; justify-content: center; }\n'
+'div.st-key-btn_convert_master button { height: 64px !important; padding-top: 5px !important; padding-bottom: 5px !important; padding-left: 50px !important; background-size: 24px !important; }\n'
                     )
-                    
-                    # Sub-toggles directly underneath (Tree-view styling via CSS)
-                    st.checkbox(
-                        "Auto-Extract Archives (.zip, .tar.gz)",
-                        key="convert_zip",
-                        on_change=_sub_toggle_changed,
-                        help="Extracts internal files from archives so downstream tools can ingest them. Stubs the archive file to skip next sync."
+
+                    # Master (Select All) CSS
+                    m_active = st.session_state.get('notebooklm_master', False)
+                    m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
+                    m_border = "rgba(255, 255, 255, 0.05)"
+                    m_ledge = "#f97316" if m_active else "transparent"
+                    b64_conv_m = safe_b64('icon_conv_select_all.png')
+                    m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
+                    m_conv_icon_filter = "none" if m_active else "grayscale(100%) opacity(40%)"
+
+                    conv_css_blocks.append(
+f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 4px solid {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
+f'div.st-key-btn_convert_master button:hover {{ border-bottom: 4px solid {m_ledge} !important; }}\n'
+f'div.st-key-btn_convert_master button::before {{ filter: {m_conv_icon_filter} !important; }}\n'
+f'div.st-key-btn_convert_master button::after {{ content: "Enable all conversions to optimize files for AI processing." !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important; }}\n'
                     )
-                    st.checkbox(
-                        "Convert PowerPoints (.pptx) to PDF",
-                        key="convert_pptx",
-                        on_change=_sub_toggle_changed,
-                        help="Converts .pptx/.ppt files to PDF after download using Microsoft Office. Requires PowerPoint installed."
-                    )
-                    st.checkbox(
-                        "Convert Old Word Docs (.doc, .rtf) to PDF",
-                        key="convert_word",
-                        on_change=_sub_toggle_changed,
-                        help="Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored."
-                    )
-                    st.checkbox(
-                        "Convert Excel Files (.xlsx, .xls) to PDF",
-                        key="convert_excel",
-                        on_change=_sub_toggle_changed,
-                        help="Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall."
-                    )
-                    st.checkbox(
-                        "Convert Canvas Pages (HTML) to Markdown",
-                        key="convert_html",
-                        on_change=_sub_toggle_changed,
-                        help="Converts Canvas Pages from HTML to clean Markdown formats."
-                    )
-                    st.checkbox(
-                        "Convert Code & Data Files to .txt",
-                        key="convert_code",
-                        on_change=_sub_toggle_changed,
-                        help="Appends a .txt extension to programming files (e.g., .py, .java, .csv, .json) to ensure they can be read by NotebookLM."
-                    )
-                    st.checkbox(
-                        "Compile Web Links (.url/.webloc) into a single list",
-                        key="convert_urls",
-                        on_change=_sub_toggle_changed,
-                        help="Scans for downloaded web/video shortcuts and securely extracts all URLs into a master NotebookLM text file."
-                    )
-                    st.checkbox(
-                        "Extract Audio (.mp3) from Videos (.mp4, .mov)",
-                        key="convert_video",
-                        on_change=_sub_toggle_changed,
-                        help="Converts video formats (.mp4, .mov, .mkv) into .mp3 format for ingestion into Google NotebookLM. Drops original video size."
-                    )
+
+                    # Child button CSS (per-toggle)
+                    for conv_key, conv_title, conv_desc, conv_icon in conv_button_defs:
+                        is_conv_active = st.session_state.get(conv_key, False)
+                        c_bg = "rgba(249, 115, 22, 0.15)" if is_conv_active else "rgba(255, 255, 255, 0.02)"
+                        c_border = "#f97316" if is_conv_active else "rgba(255, 255, 255, 0.1)"
+                        c_icon_filter = "none" if is_conv_active else "grayscale(100%) opacity(40%)"
+                        b64_conv_c = safe_b64(conv_icon)
+                        c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
+
+                        conv_css_blocks.append(
+f'div.st-key-btn_{conv_key} button {{ background-color: {c_bg} !important; border: 1px solid {c_border} !important; {c_conv_img_rule} }}\n'
+f'div.st-key-btn_{conv_key} button::before {{ filter: {c_icon_filter} !important; }}\n'
+f'div.st-key-btn_{conv_key} button::after {{ content: "{conv_desc}" !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important; }}\n'
+f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}\n'
+                        )
+
+                    # --- Header HTML (separate injection) ---
+                    conv_header_html = f"""<div style='display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;'><h3 style='margin: 0;'>Conversion Settings</h3><span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span></div>"""
+                    st.markdown(conv_header_html, unsafe_allow_html=True)
+
+                    # --- CSS injection (separate call, zero-indentation) ---
+                    conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
+                    st.markdown(conv_css_html, unsafe_allow_html=True)
+
+                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 10px; margin-top: 5px;'>Enable conversions for AI:</p>", unsafe_allow_html=True)
+                    st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
+
+                    with st.container(key="conversion_cards_grid"):
+                        cols = st.columns(4)
+                        for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
+                            col = cols[idx % 4]
+                            with col:
+                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
             # 2. Destination (Columns have weird padding)
             st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
