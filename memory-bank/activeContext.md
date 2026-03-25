@@ -1,13 +1,28 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-## Recent Changes (Session 2026-03-24 — Step 2 UI Structural Polish)
+## Recent Changes (Session 2026-03-25 — Step 2 UI Modernization: Conversion Settings)
+- **Conversion Settings UI Revamp (`app.py`)**:
+    - Replaced legacy tree-view checkboxes with a premium 4x2 grid of orange-themed (`#f97316`) button-toggle cards.
+    - Implemented a "Select All" master button spanning all 4 columns with a dedicated description sub-text.
+    - Integrated a dynamic selection counter (`None selected` / `X enabled` / `All enabled`) in the card header for real-time feedback.
+    - Engineered idempotent callbacks (`_toggle_conv_master`, `_toggle_conv_sub`) to handle complex state synchronization between the master toggle and individual settings.
+    - Applied high-fidelity CSS overrides for icons, borders, and hover effects, achieving visual parity with the "Additional Course Content" component.
+    - Refined icon scaling: increased sub-button icons to 30px (25% increase) while maintaining 24px for the master button for optimal balance.
+
+## Recent Changes (Session 2026-03-24 — Step 2 UI Structural Polish & Secondary Content)
+- **Additional Course Content UI Refactor (`app.py`)**:
+    - Replaced native `st.radio` components with high-fidelity segmented button controls matching the "Include Files" design.
+    - Implemented a 4-column responsive grid for secondary entity toggles (Assignments, Announcements, etc.).
+    - Bound all UI states to `st.session_state['dl_isolate_secondary']` to ensure 1:1 backend logical parity.
 - **2-Column Top Row Conversion (`app.py`)**:
     - Refactored the core Download Settings view from a 3-column layout into a 2-column (`[1, 1, 1.5]`) layout for "Organization" and "Content", meticulously preserving the original card width on ultra-wide monitors without stretching.
 - **Constrained Bottom Row (`app.py`)**:
     - Extracted "Additional Settings / NotebookLM" into a dedicated bottom row, horizontally constrained by a dummy column wrapper (`[2, 1.5]`). This spans the exact combined width of the top two equal-width cards, keeping it perfectly flush.
     - Verified `sync_ui.py` does not utilize this interactive block and uses a read-only 4-col layout instead, requiring no parity changes.
 
+- [x] **Active Feature: Conversion Settings UI Revamp (Complete)**: Modernized the conversion settings into a high-fidelity orange grid of button-toggle cards. Implemented robust state synchronization, dynamic counters, and scaled iconography.
+- [x] **Active Feature: Additional Course Content UI Refactor (Complete)**: Refactored secondary content toggles into a premium segmented control/grid layout with 100% backend logical parity.
 - [x] **Active Feature: Native Button Card Architecture (Complete)**: Refactored the "File Organization" UI in `app.py` to use a native `st.button` card architecture. This ensures 100% click reliability across the entire card surface by styling the native button itself into the card, bypassing brittle DOM overlay hacks.
 - [x] **Active Feature: Step 2 UI Structural Refactor (Complete)**: Refactored the core Download Settings view in `app.py` into a premium 3-column Card layout. Implemented strict horizontal symmetry using identical <h3> structures and hoisted all Python callbacks/CSS to the top-level scope to prevent DOM unmounting. Replaced the NotebookLM st.expander with a bordered container for unified visual weight.
 - [x] **Active Feature: Sync Engine Bypass for URL Compiler (Pivot Complete)**: Initially implemented a "Ghost Stub" pattern, but pivoted to a cleaner "Pure Deletion & Sync Engine Bypass" approach. Original .url and .webloc files are now strictly deleted after compilation into NotebookLM_External_Links.txt, and the Sync Engine is modified to intelligently ignore their absence, ensuring 100% NotebookLM compatibility without breaking sync integrity.

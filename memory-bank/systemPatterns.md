@@ -125,7 +125,28 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.
-- **Native Button Card Architecture**:
+### Native Button Card Architecture
+To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.
+
+#### 1. Wildcard Header/Styling
+When managing multiple related buttons (e.g., Conversion Settings), use a wildcard CSS selector based on the button key prefix:
+```css
+div[class*="st-key-btn_convert_"] button {
+    /* Base card styles */
+}
+```
+This ensures that any button starting with `btn_convert_` (including the `master` toggle) inherits the same foundation, while specific overrides can be applied via full key matches.
+
+#### 2. Selective Icon Sizing
+For complex grids where a "Master" button is used alongside "Sub" buttons, apply different icon scales for visual hierarchy:
+- **Sub-buttons**: 30px (e.g., `div[class*="st-key-btn_convert_sub_"]`) for maximum clarity in 4-column grids.
+- **Master-button**: 24px (e.g., `div[class*="st-key-btn_convert_master"]`) to prevent the icon from overwhelming the larger card container.
+
+#### 3. Idempotent State Callbacks
+UI toggles must use idempotent callbacks to synchronize master/sub states:
+- **Master Callback**: Evaluates current state to decide whether to turn "All On" or "All Off".
+- **Sub Callback**: Toggles the individual state and then checks if the master toggle needs to be synchronized (e.g., if all sub-states are now `True`, set master to `True`).
+- **Initialization Guard**: All `st.session_state` keys must be explicitly initialized before UI rendering to prevents `KeyError` during callback execution.
     - *Problem*: Streamlit's nested DOM wrappers and flexbox layout make absolute positioning or "invisible overlay" hacks for card-wide clickability extremely brittle and prone to failure across different browser sizes or Streamlit versions.
     - *Solution*: Style the native `st.button` widget to *become* the card. This ensures that the entire rectangular area is natively clickable.
     - *Technique*:

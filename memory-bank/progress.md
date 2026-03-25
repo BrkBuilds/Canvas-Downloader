@@ -115,6 +115,10 @@
     - [x] **SQLite Timeout Escalation**: Universally escalated the `sqlite3.connect` DB wrapper in `sync_manager.py` to `timeout=30.0` to completely neutralize `database is locked` terminal exceptions during end-of-batch high-concurrency flushes.
     - [x] **Atomic JSON Sweeping**: Refactored `save_sync_pairs` in `ui_helpers.py` away from generic `json.dump` to utilize OS-level atomic temp file swaps (`os.replace`). This guarantees the configuration file cannot render corrupted or empty during unexpected Streamlit thread terminations.
     - [x] **Subprocess Deadlock Eviction**: Rewrote the `moviepy.close()` executor in `video_converter.py`. Removed the synchronous `with` context manager block and forcefully mandated `pool.shutdown(wait=False, cancel_futures=True)` mapping, definitively preventing FFmpeg zombie threads from hanging the main UI process endlessly.
+- [x] Phase 4: Secondary Content Engine UI (Complete) <!-- Milestone: 2026-03-24 -->
+- [x] Phase 4: Conversion Settings UI Modernization (Complete) <!-- Milestone: 2026-03-25 -->
+- [ ] Phase 4: Final Verification & Polish
+- [ ] Phase 5: Production Deployment Prep
 - [x] **Phase 4: Secondary Content Engine UI Refinements & Bug Fixes** (2026-03-19):
     - [x] **Universal Attachment Offloading**: Modified `canvas_logic.py` and `sync_ui.py` to route secondary entity attachments (positive Canvas IDs) dynamically into the main async download queue, achieving retry/cancellation parity.
     - [x] **Timestamp Drift Tolerance**: Injected a 60-second tolerance window into `sync_manager.py` exclusively for negative IDs, permanently fixing the "False Updates Available" API drift bug.
