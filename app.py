@@ -846,8 +846,8 @@ with _main_content.container():
 <style>
 /* 1. Outer Container & Crush horizontal gap */
 div[class*="st-key-include_files_segmented_wrapper"] {{
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
     border-radius: 12px !important;
     padding: 4px !important;
     margin-top: 5px !important;
@@ -865,7 +865,7 @@ div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"]
 /* 3. Base Button: Flex Column + Relative Position */
 div[class*="st-key-btn_include_"] button {{
     background-color: transparent !important;
-    border: none !important;
+    border: 1px solid transparent !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
@@ -944,12 +944,7 @@ div.st-key-btn_include_study button::after {{
 }}
 /* 6.5 Hover State (Inactive Buttons) */
 div[class*="st-key-btn_include_"] button:hover {{
-    background-color: rgba(255, 255, 255, 0.06) !important;
-}}
-
-/* Wake up the icon slightly on hover */
-div[class*="st-key-btn_include_"] button:hover::before {{
-    filter: grayscale(10%) opacity(85%) !important;
+    background-color: rgba(255, 255, 255, 0.00) !important;
 }}
 
 /* Protect Active State from Hover Overrides */
@@ -961,10 +956,15 @@ div.st-key-btn_include_{active_include_key} button:hover::before {{
 }}
 /* 7. Active State Logic */
 div.st-key-btn_include_{active_include_key} button {{
-    background-color: {bg_color_active} !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+    background-color: rgba(56, 189, 248, 0.15) !important; /* Muted Canvas Blue */
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
     color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}}
+/* Protect Active Blue Pill from Grey Hover Override */
+div.st-key-btn_include_{active_include_key} button:hover {{
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
 }}
 div.st-key-btn_include_{active_include_key} button p {{
     color: #ffffff !important;
@@ -989,9 +989,119 @@ div.st-key-btn_include_{active_include_key} button::before {{
                 for k in _SECONDARY_CONTENT_KEYS:
                     st.session_state[k] = new_state
 
-            def _dl_isolate_radio_changed():
-                _choice = st.session_state.get('dl_isolate_radio')
-                st.session_state['dl_isolate_secondary'] = (_choice == 'In Subfolders')
+            def _set_isolate_secondary(is_subfolders: bool):
+                """Sets the secondary content organization mode."""
+                st.session_state['dl_isolate_secondary'] = is_subfolders
+
+            def _get_sec_org_segmented_css():
+                import base64
+                import os
+
+                def _get_b64(filepath):
+                    if os.path.exists(filepath):
+                        with open(filepath, "rb") as f:
+                            return base64.b64encode(f.read()).decode()
+                    return ""
+
+                b64_inline = _get_b64("assets/icon_sec_inline.png")
+                b64_sub = _get_b64("assets/icon_sec_subfolders.png")
+                
+                is_sub = st.session_state.get('dl_isolate_secondary', False)
+                active_key = "subfolders" if is_sub else "inline"
+                
+                # Use current theme colors
+                bg_active = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(104, 212, 163, 0.15)"
+                border_active = "#68d4a3"
+                
+                return f"""
+                <style>
+                div[class*="st-key-sec_org_segmented_wrapper"] {{
+                    background-color: rgba(0, 0, 0, 0.25) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                    border-radius: 12px !important;
+                    padding: 4px !important;
+                    margin-top: 5px !important;
+                }}
+                div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
+                    gap: 4px !important;
+                }}
+                div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="column"] > div, 
+                div[class*="st-key-sec_org_segmented_wrapper"] div[data-testid="stButton"], 
+                div[class*="st-key-sec_org_segmented_wrapper"] button {{
+                    height: 100% !important;
+                }}
+                div[class*="st-key-btn_sec_org_"] button {{
+                    background-color: transparent !important;
+                    border: 1px solid transparent !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    padding: 12px 12px 12px 48px !important;
+                    border-radius: 8px !important;
+                    color: #a0a0a0 !important;
+                    transition: all 0.2s ease-in-out !important;
+                    position: relative !important;
+                }}
+                /* Nuke Streamlit's center alignment for the segmented control */
+                div[class*="st-key-btn_sec_org_"] button > div,
+                div[class*="st-key-btn_sec_org_"] button div[data-testid="stMarkdownContainer"] {{
+                    width: 100% !important;
+                    display: flex !important;
+                    justify-content: flex-start !important;
+                    text-align: left !important;
+                }}
+                div[class*="st-key-btn_sec_org_"] button p {{
+                    text-align: left !important;
+                    width: 100% !important;
+                    margin: 0 !important;
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    line-height: 1.2 !important;
+                    color: inherit !important;
+                }}
+                div[class*="st-key-btn_sec_org_"] button::before {{
+                    content: "" !important;
+                    position: absolute !important;
+                    left: 12px !important;
+                    top: 50% !important;
+                    transform: translateY(-50%) !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    background-size: contain !important;
+                    background-repeat: no-repeat !important;
+                    background-position: center !important;
+                    filter: grayscale(25%) opacity(50%) !important;
+                    transition: all 0.2s ease-in-out !important;
+                }}
+                div.st-key-btn_sec_org_inline button::before {{ background-image: url('data:image/png;base64,{b64_inline}') !important; }}
+                div.st-key-btn_sec_org_subfolders button::before {{ background-image: url('data:image/png;base64,{b64_sub}') !important; }}
+                div.st-key-btn_sec_org_inline button::after {{ content: "Places content inline with module files using a type prefix." !important; }}
+                div.st-key-btn_sec_org_subfolders button::after {{ content: "Creates dedicated folders (e.g. Assignments/, Quizzes/)." !important; }}
+                div[class*="st-key-btn_sec_org_"] button::after {{
+                    text-align: left !important;
+                    width: 100% !important;
+                    display: block !important;
+                    font-size: 0.75rem !important;
+                    color: #a0a0a0 !important;
+                    margin-top: 2px !important;
+                    font-weight: 400 !important;
+                    white-space: normal !important;
+                    line-height: 1.2 !important;
+                }}
+                div.st-key-btn_sec_org_{active_key} button {{
+                    background-color: rgba(104, 212, 163, 0.15) !important; /* Muted Green */
+                    border: 1px solid rgba(104, 212, 163, 0.3) !important;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
+                    color: #ffffff !important;
+                }}
+                /* Protect Active Green Pill from Grey Hover Override */
+                div.st-key-btn_sec_org_{active_key} button:hover {{
+                    background-color: rgba(104, 212, 163, 0.15) !important;
+                    border: 1px solid rgba(104, 212, 163, 0.3) !important;
+                }}
+                div.st-key-btn_sec_org_{active_key} button p {{ color: #ffffff !important; }}
+                div.st-key-btn_sec_org_{active_key} button::before {{ filter: grayscale(0%) opacity(100%) !important; }}
+                </style>
+                """
 
             def _master_toggle_changed():
                 # Force all sub-checkboxes to match the master toggle's new state
@@ -1207,20 +1317,30 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     div.st-key-secondary_cards_grid [data-testid="stHorizontalBlock"] {
                         gap: 12px !important;
                     }
-                    div[class*="st-key-btn_dl_"] button > div { 
-                        width: 100% !important; 
-                        align-items: flex-start !important; 
+                    /* Nuke Streamlit's center alignment */
+                    div[class*="st-key-btn_dl_"] button > div,
+                    div[class*="st-key-btn_dl_"] button div[data-testid="stMarkdownContainer"] {
+                        width: 100% !important;
+                        display: flex !important;
+                        justify-content: flex-start !important;
+                        text-align: left !important;
                     }
                     div[class*="st-key-btn_dl_"] button p {
                         text-align: left !important;
+                        width: 100% !important;
                         margin: 0 !important;
                     }
                     div[class*="st-key-btn_dl_"] button::after {
                         text-align: left !important;
+                        width: 100% !important;
+                        display: block !important;
                     }
                     div[class*="st-key-btn_dl_"] button {
-                        height: 85px !important;
-                        padding: 10px !important;
+                        height: 72px !important;
+                        min-height: 0px !important;
+                        padding-top: 0px !important;
+                        padding-bottom: 0px !important;
+                        padding-right: 10px !important;
                         padding-left: 50px !important;
                         background-position: 15px center !important;
                         background-size: 24px !important;
@@ -1239,16 +1359,26 @@ div.st-key-btn_include_{active_include_key} button::before {{
 
                     # Master CSS
                     m_active = st.session_state.get('dl_secondary_master', False)
-                    m_bg = "rgba(104, 212, 163, 0.15)" if m_active else "rgba(255, 255, 255, 0.02)"
-                    m_border = "#68d4a3" if m_active else "rgba(255, 255, 255, 0.1)"
+                    m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
+                    m_border = "rgba(255, 255, 255, 0.05)"
+                    m_ledge = "#68d4a3" if m_active else "transparent"
                     b64_m = safe_b64('icon_select_all.png')
                     m_img_rule = f"background-image: url('data:image/png;base64,{b64_m}') !important;" if b64_m else ""
+                    m_icon_filter = "grayscale(0%) opacity(100%)" if m_active else "grayscale(25%) opacity(50%)"
                     
                     css_blocks.append(f'''
                     div.st-key-btn_dl_secondary_master button {{
                         background-color: {m_bg} !important;
                         border: 1px solid {m_border} !important;
+                        border-bottom: 4px solid {m_ledge} !important;
+                        border-radius: 12px !important;
                         {m_img_rule}
+                    }}
+                    div.st-key-btn_dl_secondary_master button:hover {{
+                        border-bottom: 4px solid {m_ledge} !important;
+                    }}
+                    div.st-key-btn_dl_secondary_master button::before {{ 
+                        filter: {m_icon_filter} !important; 
                     }}
                     div.st-key-btn_dl_secondary_master button::after {{
                         content: "Include all supplementary materials in the download." !important;
@@ -1306,21 +1436,31 @@ div.st-key-btn_include_{active_include_key} button::before {{
 
                     # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
                     if _sec_active > 0:
-                        st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 0px; margin-top: 5px;'>Organize Additional Course Content by:</p>", unsafe_allow_html=True)
+                        # Zero-Div-Bloat: Label and CSS in single markdown call
+                        st.markdown(f"""
+                        <p style='font-size: 0.9rem; margin-bottom: 5px; color: #FAFAFA;'>Organize Additional Course Content by:</p>
+                        {_get_sec_org_segmented_css()}
+                        """, unsafe_allow_html=True)
 
-                        st.radio(
-                            'Organize additional course content:',
-                            ['In Course Folder/Modules (Default)', 'In Subfolders'],
-                            index=1 if st.session_state.get('dl_isolate_secondary', False) else 0,
-                            key='dl_isolate_radio',
-                            label_visibility='collapsed',
-                            on_change=_dl_isolate_radio_changed,
-                        )
-                        # Per-option help text
-                        st.markdown("""<div style='font-size: 0.78rem; color: #6b7280; margin-top: -10px; margin-bottom: 5px; line-height: 1.5;'>
-                        ⓘ <b>In Course Folder/Modules</b> — places content inline with module files using a type prefix.<br>
-                        ⓘ <b>In Subfolders</b> — creates dedicated folders (e.g. Assignments/, Quizzes/).
-                        </div>""", unsafe_allow_html=True)
+                        with st.container(key="sec_org_segmented_wrapper"):
+                            c1, c2 = st.columns(2, gap="small")
+                            
+                            with c1:
+                                st.button(
+                                    "In Course Folder/Modules (Default)", 
+                                    key="btn_sec_org_inline", 
+                                    on_click=_set_isolate_secondary, 
+                                    args=(False,), 
+                                    use_container_width=True
+                                )
+                            with c2:
+                                st.button(
+                                    "In Subfolders", 
+                                    key="btn_sec_org_subfolders", 
+                                    on_click=_set_isolate_secondary, 
+                                    args=(True,), 
+                                    use_container_width=True
+                                )
 
             # Force a visual break between top and bottom rows
             st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
