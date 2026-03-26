@@ -1,4 +1,5 @@
 import os
+import sys
 import zipfile
 import tarfile
 from pathlib import Path
@@ -30,11 +31,32 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
         
         # Extract based on type (with Zip Bomb protection)
         if abs_archive.suffix.lower() == '.zip':
-            with zipfile.ZipFile(abs_archive, 'r') as zip_ref:
-                uncompressed_size = sum(info.file_size for info in zip_ref.infolist())
-                if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
-                    raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
-                zip_ref.extractall(extract_dir)
+            # ── UTF-8 filename fix for non-ASCII characters (e.g. Danish ø, æ, å) ──
+            # Python's zipfile defaults to CP437 decoding unless the UTF-8 flag
+            # (bit 11) is set. Many tools (including Canvas LMS) don't set this flag.
+            if sys.version_info >= (3, 11):
+                # Python 3.11+ natively supports metadata_encoding
+                with zipfile.ZipFile(abs_archive, 'r', metadata_encoding='utf-8') as zip_ref:
+                    uncompressed_size = sum(info.file_size for info in zip_ref.infolist())
+                    if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
+                        raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
+                    zip_ref.extractall(extract_dir)
+            else:
+                # Python < 3.11: manually re-decode CP437 → UTF-8
+                with zipfile.ZipFile(abs_archive, 'r') as zip_ref:
+                    mutated_members = []
+                    for info in zip_ref.infolist():
+                        # Only re-decode if the UTF-8 flag (bit 11) is NOT set
+                        if info.flag_bits & 0x800 == 0:
+                            try:
+                                info.filename = info.filename.encode('cp437').decode('utf-8')
+                            except (UnicodeDecodeError, UnicodeEncodeError):
+                                pass  # Keep original if re-encoding fails
+                        mutated_members.append(info)
+                    uncompressed_size = sum(info.file_size for info in mutated_members)
+                    if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
+                        raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
+                    zip_ref.extractall(path=extract_dir, members=mutated_members)
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
             mode = 'r:gz' if abs_archive.name.lower().endswith('.gz') else 'r:'
             with tarfile.open(abs_archive, mode) as tar_ref:
