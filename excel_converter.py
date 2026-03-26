@@ -154,58 +154,63 @@ class ExcelToPDF:
                 return str(dst), ""
             return None, "AppleScript conversion failed (is Microsoft Excel installed?)"
 
-        # Windows: COM automation
+        # Windows: COM automation with path shadowing
         # Proactive health check — catches the "alternating failure" pattern
         # where the PREVIOUS export silently corrupted the COM channel.
         self._ensure_app()
         if not self.app:
             return None, "Excel COM application could not be initialized."
 
-        abs_excel = str(src)
-        abs_pdf = str(dst)
-        wb = None
+        from ui_helpers import office_safe_path
 
-        try:
-            wb = self.app.Workbooks.Open(abs_excel, UpdateLinks=0, ReadOnly=True)
-            time.sleep(0.3)  # let COM settle
-
-            # Best-effort page-setup: landscape, fit-to-width, zero margins.
-            for sheet in wb.Worksheets:
-                try:
-                    sheet.PageSetup.Zoom = False
-                    sheet.PageSetup.FitToPagesWide = 1
-                    sheet.PageSetup.FitToPagesTall = False
-                    sheet.PageSetup.Orientation = 2        # xlLandscape
-                    sheet.PageSetup.LeftMargin = 0.0
-                    sheet.PageSetup.RightMargin = 0.0
-                    sheet.PageSetup.TopMargin = 0.0
-                    sheet.PageSetup.BottomMargin = 0.0
-                except Exception:
-                    pass
-
-            # 0 = xlTypePDF
-            wb.ExportAsFixedFormat(0, abs_pdf)
-            time.sleep(0.3)
-
-            wb.Close(SaveChanges=False)
+        with office_safe_path(src) as (safe_src, safe_pdf, true_pdf):
+            abs_excel = str(safe_src)
+            abs_pdf = str(safe_pdf)
             wb = None
-            time.sleep(0.2)
 
-            # Remove the original spreadsheet
-            src.unlink(missing_ok=True)
-            return abs_pdf, ""
+            try:
+                wb = self.app.Workbooks.Open(abs_excel, UpdateLinks=0, ReadOnly=True)
+                time.sleep(0.3)  # let COM settle
 
-        except Exception as e:
-            error_msg = str(e)
+                # Best-effort page-setup: landscape, fit-to-width, zero margins.
+                for sheet in wb.Worksheets:
+                    try:
+                        sheet.PageSetup.Zoom = False
+                        sheet.PageSetup.FitToPagesWide = 1
+                        sheet.PageSetup.FitToPagesTall = False
+                        sheet.PageSetup.Orientation = 2        # xlLandscape
+                        sheet.PageSetup.LeftMargin = 0.0
+                        sheet.PageSetup.RightMargin = 0.0
+                        sheet.PageSetup.TopMargin = 0.0
+                        sheet.PageSetup.BottomMargin = 0.0
+                    except Exception:
+                        pass
 
-            if wb is not None:
-                try:
-                    wb.Close(SaveChanges=False)
-                except Exception:
-                    pass
+                # 0 = xlTypePDF
+                wb.ExportAsFixedFormat(0, abs_pdf)
+                time.sleep(0.3)
 
-            # SELF-HEAL: assume the COM channel is dead
-            self._kill_app()
-            self._init_app()
+                wb.Close(SaveChanges=False)
+                wb = None
+                time.sleep(0.2)
 
-            return None, f"COM Error: {error_msg}"
+                # Remove the original spreadsheet (from the true long path)
+                src.unlink(missing_ok=True)
+                # Return the true long-path PDF location (context manager moves it back)
+                return str(true_pdf), ""
+
+            except Exception as e:
+                error_msg = str(e)
+
+                if wb is not None:
+                    try:
+                        wb.Close(SaveChanges=False)
+                    except Exception:
+                        pass
+
+                # SELF-HEAL: assume the COM channel is dead
+                self._kill_app()
+                self._init_app()
+
+                return None, f"COM Error: {error_msg}"
+

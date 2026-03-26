@@ -134,46 +134,51 @@ class WordToPDF:
                 return str(abs_pdf_path.resolve())
             return None
 
-        # Windows: COM automation
+        # Windows: COM automation with path shadowing
         self._ensure_app()
         if self.app is None:
             return None
-            
-        abs_doc = str(abs_doc_path.resolve().absolute())
-        abs_pdf = str(abs_pdf_path.resolve().absolute())
-        
-        doc = None
-        
-        try:
-            logger.debug(f"[COM Converter] Attempting to convert: {abs_doc}")
-            
-            # Open the legacy document
-            doc = self.app.Documents.Open(abs_doc, ReadOnly=True, Visible=False)
-            
-            # Save as PDF (17 is wdFormatPDF)
-            doc.SaveAs(abs_pdf, FileFormat=17)
-            
-            # Close original
-            doc.Close(SaveChanges=0)
+
+        from ui_helpers import office_safe_path
+
+        with office_safe_path(abs_doc_path) as (safe_src, safe_pdf, true_pdf):
+            abs_doc = str(safe_src.resolve().absolute())
+            abs_pdf = str(safe_pdf.resolve().absolute())
+
             doc = None
-            
-            # Delete the original legacy file
-            Path(abs_doc).unlink(missing_ok=True)
-            
-            return abs_pdf
-            
-        except Exception as e:
-            logger.error(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
-            
-            # Close document if error happened after open
-            if doc is not None:
-                try:
-                    doc.Close(SaveChanges=0)
-                except Exception:
-                    pass
-            
-            # SELF-HEAL: assume the COM channel is dead
-            self._kill_app()
-            self._init_app()
-            
-            return None
+
+            try:
+                logger.debug(f"[COM Converter] Attempting to convert: {abs_doc}")
+
+                # Open the legacy document
+                doc = self.app.Documents.Open(abs_doc, ReadOnly=True, Visible=False)
+
+                # Save as PDF (17 is wdFormatPDF)
+                doc.SaveAs(abs_pdf, FileFormat=17)
+
+                # Close original
+                doc.Close(SaveChanges=0)
+                doc = None
+
+                # Delete the original legacy file (from the true long path)
+                abs_doc_path.unlink(missing_ok=True)
+
+                # Return the true long-path PDF location (context manager moves it back)
+                return str(true_pdf.resolve().absolute())
+
+            except Exception as e:
+                logger.error(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
+
+                # Close document if error happened after open
+                if doc is not None:
+                    try:
+                        doc.Close(SaveChanges=0)
+                    except Exception:
+                        pass
+
+                # SELF-HEAL: assume the COM channel is dead
+                self._kill_app()
+                self._init_app()
+
+                return None
+
