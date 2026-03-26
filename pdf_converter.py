@@ -91,9 +91,7 @@ class PowerPointToPDF:
 
     def convert(self, pptx_path: str | Path) -> str | None:
         pptx_path = Path(pptx_path)
-        abs_pptx = str(pptx_path.resolve().absolute())
         pdf_path = pptx_path.with_suffix('.pdf')
-        abs_pdf = str(pdf_path.resolve().absolute())
 
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
@@ -103,79 +101,87 @@ class PowerPointToPDF:
                 except OSError as e:
                     logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
                 logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
-                return abs_pdf
+                return str(pdf_path.resolve().absolute())
             _log_conversion_error(
                 self.error_log_path, pptx_path.name,
                 "AppleScript conversion failed (is Microsoft PowerPoint installed?)"
             )
             return None
 
-        # Windows: COM automation
+        # Windows: COM automation with path shadowing
         if self.app is None:
             return None
-            
-        logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
-        presentation = None
-        
-        try:
-            # Open presentation
-            presentation = self.app.Presentations.Open(
-                abs_pptx,
-                ReadOnly=True,
-                Untitled=False,
-                WithWindow=False
-            )
 
-            # Save as PDF
-            presentation.SaveAs(abs_pdf, PP_SAVE_AS_PDF)
-            presentation.Close()
+        from ui_helpers import office_safe_path
+
+        with office_safe_path(pptx_path) as (safe_src, safe_pdf, true_pdf):
+            abs_pptx = str(safe_src.resolve().absolute())
+            abs_pdf = str(safe_pdf.resolve().absolute())
+
+            logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
             presentation = None
 
-            # Verify the PDF was actually created
-            if not pdf_path.exists():
-                _log_conversion_error(
-                    self.error_log_path,
-                    pptx_path.name,
-                    "PowerPoint reported success but PDF file was not found on disk."
-                )
-                return None
-
-            # Delete the original PPTX
             try:
-                pptx_path.unlink()
-            except OSError as e:
-                logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
+                # Open presentation
+                presentation = self.app.Presentations.Open(
+                    abs_pptx,
+                    ReadOnly=True,
+                    Untitled=False,
+                    WithWindow=False
+                )
 
-            logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
-            return abs_pdf
+                # Save as PDF
+                presentation.SaveAs(abs_pdf, PP_SAVE_AS_PDF)
+                presentation.Close()
+                presentation = None
 
-        except Exception as e:
-            error_msg = str(e)
-            
-            if "Class not registered" in error_msg or "0x80040154" in error_msg:
-                friendly_msg = "Microsoft PowerPoint is not installed on this machine."
-            elif "RPC" in error_msg:
-                friendly_msg = f"PowerPoint COM server error (is another instance hanging?): {error_msg}"
-            else:
-                friendly_msg = f"COM conversion failed: {error_msg}"
+                # Verify the PDF was actually created (at the safe path)
+                if not safe_pdf.exists():
+                    _log_conversion_error(
+                        self.error_log_path,
+                        pptx_path.name,
+                        "PowerPoint reported success but PDF file was not found on disk."
+                    )
+                    return None
 
-            logger.error(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
-            
-            _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
-
-            if pdf_path.exists():
+                # Delete the original PPTX (from the true long path)
                 try:
-                    pdf_path.unlink()
-                except OSError:
-                    pass
+                    pptx_path.unlink()
+                except OSError as e:
+                    logger.warning(f"Converted to PDF but could not delete original: {pptx_path} — {e}")
 
-            return None
-        finally:
-            if presentation is not None:
-                try:
-                    presentation.Close()
-                except Exception:
-                    pass
+                logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
+                # Return the true long-path PDF location (context manager moves it back)
+                return str(true_pdf.resolve().absolute())
+
+            except Exception as e:
+                error_msg = str(e)
+
+                if "Class not registered" in error_msg or "0x80040154" in error_msg:
+                    friendly_msg = "Microsoft PowerPoint is not installed on this machine."
+                elif "RPC" in error_msg:
+                    friendly_msg = f"PowerPoint COM server error (is another instance hanging?): {error_msg}"
+                else:
+                    friendly_msg = f"COM conversion failed: {error_msg}"
+
+                logger.error(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
+
+                _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
+
+                # Clean up partial PDF at the safe path (if any)
+                if safe_pdf.exists():
+                    try:
+                        safe_pdf.unlink()
+                    except OSError:
+                        pass
+
+                return None
+            finally:
+                if presentation is not None:
+                    try:
+                        presentation.Close()
+                    except Exception:
+                        pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.app:

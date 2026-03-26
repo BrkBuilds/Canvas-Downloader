@@ -11,7 +11,21 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).
 - **`excel_converter.py`**: Excel to PDF conversion utility (Win32COM + AppleScript).
 
-## Cross-Platform Architecture
+## Temp File Shadowing (Win32 MAX_PATH Bypass)
+- **Pattern**: `office_safe_path(original_path)` context manager in `ui_helpers.py`.
+- **Policy**: Office COM APIs hard-crash on paths ≥255 chars. Shadow long paths into `%TEMP%` with short UUID names, yield safe paths, move results back on exit.
+- **Threshold**: 240 characters (15-char safety margin). Short paths pass through at zero cost.
+- **Ghost PDF Guard**: Exit block checks `temp_pdf.exists()` before `shutil.move()`. If COM crashed, no orphaned ghost file is created at the destination.
+- **Cleanup**: `temp_source.unlink(missing_ok=True)` in `finally` block — always runs.
+- **Injection Points**: `pdf_converter.py`, `word_converter.py`, `excel_converter.py` — Windows COM blocks only. macOS AppleScript branches are never touched.
+- **Yields**: 3-tuple `(safe_source, safe_pdf, original_pdf)` — converters use first two for COM, third for return value.
+
+## ZIP Encoding (Mojibake Fix)
+- **Pattern**: `archive_extractor.py` uses Python-version-aware UTF-8 decoding for ZIP entry filenames.
+- **Policy**: Python's `zipfile` defaults to CP437 for filenames when the UTF-8 flag (bit 11) is not set, mangling non-ASCII characters.
+- **Python 3.11+**: Uses native `metadata_encoding='utf-8'` parameter.
+- **Python <3.11**: Iterates `infolist()`, re-decodes CP437→UTF-8 for entries without the flag, passes mutated members list to `extractall(path=..., members=mutated_members)`.
+
 - **Dual-Engine Automation Bridge**:
     - *Policy*: Achieve 100% feature parity between Windows and macOS without disabling features on UNIX.
     - *Implementation*: Office converters (`word`, `excel`, `pdf`) use a dynamic `if sys.platform == 'darwin':` branch inside their `convert()` methods. Windows uses `win32com` with self-healing. macOS uses `subprocess.run(['osascript'])` to inject AppleScript payloads directly into the local Mac Office applications.
@@ -125,6 +139,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.
+- **The "Trojan Horse" CSS Selector Pattern**:
+    - *Problem*: Streamlit's internal DOM refactoring (especially in version 1.51.0+) frequently strips or renames the wrapper classes (`stVerticalBlockBorderWrapper`, etc.) that developers rely on for targeting containers with custom CSS. Even explicit `st-key` classes can be moved or stripped by the rendering engine.
+    - *Solution*: Plant a custom, developer-controlled CSS class (a "Trojan Horse") inside an injected HTML block (e.g., `<div class='step-2-card-target'>...</div>`).
+    - *Selector Architecture*: Use the modern CSS `:has()` pseudo-class to target the high-level Streamlit container that contains the Trojan class: `div[data-testid="stContainer"]:has(.step-2-card-target)`. This effectively anchors the styling to a stable, identifiable element within the content, allowing for robust application-level overrides regardless of Streamlit's internal structural shifts.
+
 ### Native Button Card Architecture
 To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.
 

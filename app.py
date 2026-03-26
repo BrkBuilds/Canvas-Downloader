@@ -1150,13 +1150,36 @@ div.st-key-btn_include_{active_include_key} button::before {{
             </style>
             """, unsafe_allow_html=True)
 
+            # Card elevation CSS — Version-Agnostic Target for Streamlit 1.51+
+            st.markdown("""
+<style>
+/* 1. Target via the explicit Streamlit Keys (Most Reliable) */
+div[class*="st-key-card_core_files"],
+div[class*="st-key-card_native_content"],
+div[class*="st-key-card_ai_engine"],
+
+/* 2. Target via modern Streamlit 1.51+ Container ID + Trojan Class */
+div[data-testid="stContainer"]:has(.step-2-card-target) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-radius: 8px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
             col1, col2 = st.columns([3, 5], gap="large")
 
             # --- COLUMN 1: Organization & Include Files ---
             with col1:
-                with st.container(border=True):
-                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: -10px;'>File Organization</h3>", unsafe_allow_html=True)
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                with st.container(border=True, key="card_core_files"):
+                    b64_wf1 = _load_b64("assets/icon_workflow_1.png")
+                    st.markdown(f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
+<img src='data:image/png;base64,{b64_wf1}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
+<div style='padding-left: 0px;'>
+<h3 style='margin: 0; line-height: 1.2;'>Core Course Files &amp; Structure</h3>
+</div>
+</div>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Choose the physical layout and essential files for your main course directory.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                     
                     def update_org_state(mode):
                         st.session_state['download_mode'] = 'modules' if mode == 'subfolders' else mode
@@ -1253,7 +1276,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     ''', unsafe_allow_html=True)
                     
                     # 2. Include Files (Radio buttons replaced with Segmented Control)
-                    st.markdown("<h3 style='margin-top: 15px; margin-bottom: -10px;'>Include Files:</h3>", unsafe_allow_html=True)
+
                     
                     def update_include_state(mode):
                         st.session_state['file_filter'] = mode
@@ -1267,7 +1290,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
 
             # --- COLUMN 2: Additional Course Content ---
             with col2:
-                with st.container(border=True):
+                with st.container(border=True, key="card_native_content"):
                     _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
                     if _sec_active == 0:
                         dynamic_tag = "None selected"
@@ -1276,12 +1299,16 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     else:
                         dynamic_tag = f"{_sec_active} Included in download"
 
-                    header_html = f"""
-                    <div style='display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;'>
-                        <h3 style='margin: 0;'>Additional Course Content</h3>
-                        <span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
-                    </div>
-                    """
+                    b64_wf2 = _load_b64("assets/icon_workflow_2.png")
+                    header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
+<img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
+<div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
+<h3 style='margin: 0; line-height: 1.2;'>Canvas-Native Content <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
+<span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
+</div>
+</div>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Extract native Canvas data (assignments, quizzes) into offline-readable documents.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
 
                     # Helper to safely load icon
                     def safe_b64(name):
@@ -1410,7 +1437,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     """
                     st.markdown(final_html, unsafe_allow_html=True)
 
-                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 10px; margin-top: 5px;'>Select what to include in download:</p>", unsafe_allow_html=True)
+
                     st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
                     
                     with st.container(key="secondary_cards_grid"):
@@ -1459,7 +1486,7 @@ div.st-key-btn_include_{active_include_key} button::before {{
             # --- BOTTOM ROW: Conversion Settings / NotebookLM ---
             col_bottom, _bottom_spacer = st.columns([6, 2], gap="medium")
             with col_bottom:
-                with st.container(border=True):
+                with st.container(border=True, key="card_ai_engine"):
                     # --- Conversion Button Data ---
                     conv_button_defs = [
                         ('convert_zip',   'Auto-Extract Archives',    'Extracts files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
@@ -1535,14 +1562,22 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                         )
 
                     # --- Header HTML (separate injection) ---
-                    conv_header_html = f"""<div style='display: flex; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 15px;'><h3 style='margin: 0;'>Conversion Settings</h3><span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span></div>"""
+                    b64_wf3 = _load_b64("assets/icon_workflow_3.png")
+                    conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
+<img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
+<div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
+<h3 style='margin: 0; line-height: 1.2;'>AI Compatibility Engine <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
+<span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span>
+</div>
+</div>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Transform complex documents and videos into AI-ready formats optimized for NotebookLM.</p>
+<p style='font-size: 0.85rem; color: #64748b; font-style: italic; margin-top: 6px; margin-bottom: 0px;'>*Canvas-Native Content will also be converted if downloaded.*</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
                     st.markdown(conv_header_html, unsafe_allow_html=True)
 
                     # --- CSS injection (separate call, zero-indentation) ---
                     conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
                     st.markdown(conv_css_html, unsafe_allow_html=True)
-
-                    st.markdown("<p style='font-size: 0.9rem; color: #a3a8b8; margin-bottom: 10px; margin-top: 5px;'>Enable conversions for AI:</p>", unsafe_allow_html=True)
                     st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
 
                     with st.container(key="conversion_cards_grid"):

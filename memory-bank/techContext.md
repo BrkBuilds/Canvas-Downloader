@@ -2,7 +2,9 @@
 
 ## Core Technologies
 - **Python 3.10+**: Primary language.
-- **Streamlit**: Web application framework for the UI.
+- **Streamlit 1.51.0**: Web application framework for the UI (specifically pinned for targeting stability).
+- **Modern CSS (:has)**: Utilized for version-agnostic "Trojan Horse" container targeting.
+
 - **CanvasAPI**: Python wrapper for the Canvas LMS API.
 - **aiohttp / asyncio**: For high-performance, concurrent file downloads.
 - **Tkinter**: Used for native folder selection dialogs (as Streamlit runs in browser).

@@ -1,6 +1,32 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-26 — Temp File Shadowing Pipeline & Encoding Fix)
+- **Win32 MAX_PATH Bypass (`ui_helpers.py`, `pdf_converter.py`, `word_converter.py`, `excel_converter.py`)**:
+    - **Root Cause**: Deeply nested Canvas course folder structures generate absolute file paths exceeding Win32 MAX_PATH (255 chars), causing Office COM APIs (`Presentations.Open`, `Documents.Open`, `Workbooks.Open`) to hard-crash.
+    - **Solution**: Implemented `office_safe_path()` context manager in `ui_helpers.py` that transparently shadows long paths (≥240 chars) into `%TEMP%` with short UUID-based names, yields safe paths for COM, and moves results back on exit.
+    - **Ghost PDF Guard**: Exit block checks `temp_pdf.exists()` before `shutil.move()` — handles COM failures without orphaned ghost PDFs.
+    - **Unconditional Cleanup**: Temp source file always deleted via `temp_source.unlink(missing_ok=True)` in `finally` block.
+    - **Cross-Drive Safety**: Uses `shutil.move(str, str)` for Windows cross-drive and overwrite compatibility.
+    - **Converter Injection**: All three converters (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`) wrap their Windows COM blocks in `with office_safe_path(...)`. macOS AppleScript branches are completely untouched.
+    - **Threshold**: 240 characters (15-char safety margin below MAX_PATH).
+- **ZIP Encoding Fix (`archive_extractor.py`)**:
+    - **Root Cause**: Python's `zipfile` defaults to CP437 filename decoding, mangling Danish characters (ø, æ, å) into Mojibake.
+    - **Python 3.11+**: Uses native `metadata_encoding='utf-8'` parameter.
+    - **Python <3.11**: Iterates `infolist()`, re-decodes CP437→UTF-8 for entries without UTF-8 flag (bit 11), passes mutated members list to `extractall()`.
+- [x] **Active Feature: Temp File Shadowing Pipeline (Complete)**: Permanently bypasses Win32 MAX_PATH crashes in all Office COM converters.
+- [x] **Active Feature: ZIP Encoding Fix (Complete)**: Fixes Danish character Mojibake in extracted archive folder/file names.
+
+
+- **Step 2 UI Modernization & CSS Stabilization (`app.py`)**:
+    - **CSS Architecture Pivot**: Replaced the failing `stVerticalBlockBorderWrapper` selector (deprecated in Streamlit 1.51.0) with a robust, version-agnostic "Trojan Horse" architecture.
+    - **Trojan Horse Pattern**: Injected a custom class (`step-2-card-target`) into the injected HTML of each card header for the three Step 2 cards.
+    - **Indestructible Selector**: Implemented a modern `:has()` CSS selector array targeting `div[data-testid="stContainer"]:has(.step-2-card-target)` to apply background elevation (`rgba(255, 255, 255, 0.04)`), ensuring visual parity across Streamlit versions.
+    - **Direct Key Targeting**: Augmented the selector with explicit Streamlit Key targeting (`st-key-card_core_files`, etc.) for maximum reliability.
+    - **Typography Refinements**: Polished "(Optional)" text in Card 2 and 3 headers by isolating it in a `<span>` with muted color (`#64748b`), reduced weight, and smaller size.
+    - **Icon Badge Layout**: Finalized the "Corner Badge" icon layout where icons are centered on the top-left border of cards, with descriptions fully flush-left.
+
+
 ## Recent Changes (Session 2026-03-25 — Step 2 UI Modernization: Conversion Settings)
 - **Conversion Settings UI Revamp (`app.py`)**:
     - Replaced legacy tree-view checkboxes with a premium 4x2 grid of orange-themed (`#f97316`) button-toggle cards.
@@ -10,7 +36,6 @@
     - Applied high-fidelity CSS overrides for icons, borders, and hover effects, achieving visual parity with the "Additional Course Content" component.
     - Refined icon scaling: increased sub-button icons to 30px (25% increase) while maintaining 24px for the master button for optimal balance.
 
-## Recent Changes (Session 2026-03-24 — Step 2 UI Structural Polish & Secondary Content)
 - **Additional Course Content UI Refactor (`app.py`)**:
     - Replaced native `st.radio` components with high-fidelity segmented button controls matching the "Include Files" design.
     - Implemented a 4-column responsive grid for secondary entity toggles (Assignments, Announcements, etc.).
@@ -21,7 +46,9 @@
     - Extracted "Additional Settings / NotebookLM" into a dedicated bottom row, horizontally constrained by a dummy column wrapper (`[2, 1.5]`). This spans the exact combined width of the top two equal-width cards, keeping it perfectly flush.
     - Verified `sync_ui.py` does not utilize this interactive block and uses a read-only 4-col layout instead, requiring no parity changes.
 
+- [x] **Active Feature: Step 2 UI Modernization & CSS Stabilization (Complete)**: Transitioned to a version-agnostic "Trojan Horse" architecture for the Step 2 cards. Injected custom classes into header HTML and used modern `:has()` CSS selectors to ensure stable background elevation across Streamlit 1.51+ versions.
 - [x] **Active Feature: Conversion Settings UI Revamp (Complete)**: Modernized the conversion settings into a high-fidelity orange grid of button-toggle cards. Implemented robust state synchronization, dynamic counters, and scaled iconography.
+
 - [x] **Active Feature: Additional Course Content UI Refactor (Complete)**: Refactored secondary content toggles into a premium segmented control/grid layout with 100% backend logical parity.
 - [x] **Active Feature: Native Button Card Architecture (Complete)**: Refactored the "File Organization" UI in `app.py` to use a native `st.button` card architecture. This ensures 100% click reliability across the entire card surface by styling the native button itself into the card, bypassing brittle DOM overlay hacks.
 - [x] **Active Feature: Step 2 UI Structural Refactor (Complete)**: Refactored the core Download Settings view in `app.py` into a premium 3-column Card layout. Implemented strict horizontal symmetry using identical <h3> structures and hoisted all Python callbacks/CSS to the top-level scope to prevent DOM unmounting. Replaced the NotebookLM st.expander with a bordered container for unified visual weight.

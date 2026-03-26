@@ -1,7 +1,13 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.13: Step 2 UI Modernization & CSS Stabilization** (2026-03-26):
+    - [x] **Trojan Horse Architecture**: Injected custom classes (`step-2-card-target`) into HTML headers to bypass Streamlit's internal DOM refactoring.
+    - [x] **Version-Agnostic Targeting**: Implemented `:has()` CSS selectors on `stContainer` to ensure background elevation applies correctly in Streamlit 1.51+.
+    - [x] **Typography Polish**: Muted and refined "(Optional)" text in headers for better visual hierarchy.
+    - [x] **Icon Badge Finalization**: Standardized "Corner Badge" positioning and flush-left description alignment for all Step 2 cards.
 - [x] **Phase 6.12: Native Button Card Architecture** (2026-03-23):
+
     - [x] **Physical Overlap Pivot**: Abandoned brittle `position: absolute` and "Invisible Overlay" hacks in favor of styling native `st.button` widgets as cards. This guarantees the entire rectangular area is natively clickable.
     - [x] **Scoped CSS Injection**: Target keys (e.g., `btn_org_subfolders`) to apply background images (Base64), fixed heights, and hovered states.
     - [x] **Pseudo-Element Descriptions**: Used `::after` content to render metadata without adding extra DOM elements.

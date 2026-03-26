@@ -10,16 +10,21 @@ import re
 import json
 import shutil
 import sys
+import tempfile
 import time
 import platform
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 import threading
+import uuid
 
 import urllib.parse
 from sync_manager import format_file_size
 
 _sync_pairs_lock = threading.Lock()
+
+logger = logging.getLogger(__name__)
 
 
 def make_long_path(p: str | Path) -> str:
@@ -28,6 +33,79 @@ def make_long_path(p: str | Path) -> str:
     if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
         return '\\\\?\\' + s
     return s
+
+
+# ── Temp File Shadowing for Office COM APIs ────────────────────────────
+
+_MAX_PATH_THRESHOLD = 240  # 15-char safety margin below Win32 MAX_PATH (255)
+
+
+@contextmanager
+def office_safe_path(original_path: Path):
+    """Shadow long Windows paths into a temp dir for Office COM APIs.
+
+    Win32 COM APIs (PowerPoint, Word, Excel) hard-crash when given file
+    paths >= 255 characters.  This context manager transparently copies
+    the source file to a short temp path, yields the safe paths for COM
+    to work with, and moves the generated PDF result back on exit.
+
+    On short paths (< 240 chars) the context manager is a zero-cost
+    pass-through that yields the original paths unchanged.
+
+    Yields:
+        (safe_source_path: Path, safe_pdf_target: Path, original_pdf_target: Path)
+        — The first two are what COM should receive. The third is the true
+          long-path destination where the PDF ultimately belongs.
+    """
+    resolved = original_path.resolve()
+    original_pdf = original_path.with_suffix('.pdf')
+
+    if len(str(resolved)) < _MAX_PATH_THRESHOLD:
+        # Short path — pass-through, zero overhead
+        yield original_path, original_pdf, original_pdf
+        return
+
+    # ── Long path detected: shadow into temp directory ──
+    suffix = original_path.suffix  # e.g. '.pptx'
+    short_name = f"canvas_{uuid.uuid4().hex[:12]}"
+    temp_dir = Path(tempfile.gettempdir())
+    temp_source = temp_dir / f"{short_name}{suffix}"
+    temp_pdf = temp_dir / f"{short_name}.pdf"
+
+    try:
+        # Copy the source file to the short temp path
+        shutil.copy2(str(resolved), str(temp_source))
+        logger.debug(
+            f"[Path Shadow] Shadowed long path ({len(str(resolved))} chars) "
+            f"to temp: {temp_source.name}"
+        )
+
+        yield temp_source, temp_pdf, original_pdf
+
+    finally:
+        # ── Ghost PDF Guard: only move if COM actually produced a PDF ──
+        if temp_pdf.exists():
+            try:
+                # Ensure the true destination directory exists
+                original_pdf.parent.mkdir(parents=True, exist_ok=True)
+                # Cross-drive safe move with overwrite
+                shutil.move(str(temp_pdf), str(original_pdf))
+                logger.debug(
+                    f"[Path Shadow] Moved PDF back: {temp_pdf.name} → "
+                    f"{original_pdf.name}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"[Path Shadow] Failed to move PDF back from temp: {e}"
+                )
+        else:
+            logger.debug(
+                "[Path Shadow] No temp PDF generated (COM conversion failed), "
+                "skipping move-back."
+            )
+
+        # ── Unconditional cleanup of temp source file ──
+        temp_source.unlink(missing_ok=True)
 
 
 def esc(value) -> str:
