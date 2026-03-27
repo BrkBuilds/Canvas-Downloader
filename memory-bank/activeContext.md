@@ -25,6 +25,9 @@
     - **Direct Key Targeting**: Augmented the selector with explicit Streamlit Key targeting (`st-key-card_core_files`, etc.) for maximum reliability.
     - **Typography Refinements**: Polished "(Optional)" text in Card 2 and 3 headers by isolating it in a `<span>` with muted color (`#64748b`), reduced weight, and smaller size.
     - **Icon Badge Layout**: Finalized the "Corner Badge" icon layout where icons are centered on the top-left border of cards, with descriptions fully flush-left.
+    - **Vertical Rhythm Fix (Step 2)**: Tightened the vertical gap between card titles and descriptions by exactly 5px. Neutralized `margin-bottom` on `<p>` title tags and adjusted `margin-top` on `::after` pseudo-elements across all Step 2 grids ("Include Files", "Organization", "Canvas-Native Content", "AI Compatibility Engine").
+    - **Step 2 Organization Control Refinement**: Scaled icons to 28px, increased min-height to 62px (+5px), and bumped padding-left to 52px (+4px) for better visual proportions and balance.
+    - **Step 2 Interactive Feel Refinement**: Improved interactive responsiveness for "File Filter" and "Organization" segmented controls. Implemented 75% baseline opacity, smooth 0.2s multi-property transitions, and 100% opacity hover states (including white text for contrast) while protecting active state visuals.
 
 
 ## Recent Changes (Session 2026-03-25 — Step 2 UI Modernization: Conversion Settings)
@@ -97,6 +100,8 @@
     - **Pseudo-Element Metadata**: Utilized `::after` pseudo-elements to inject descriptive text ("Matches Canvas Modules", "All files in one folder") directly into the button surface without adding DOM bloat.
     - **Base64 Icon Integration**: Embedded `get_base64_image` icons directly into the CSS `background-image` property for zero-dependency visual fidelity.
     - **Dynamic Active Highlighting**: Implemented real-time border and background color shifts (`st.session_state['download_mode']`) using f-string CSS injection.
+    - [x] **Segmented Control - **Unified Card Labels**: Updated organizational labels in both Card 1 and Card 2 to a sleek, muted style (`#cbd5e1`, 0.9rem, 600 weight) for visual consistency.
+    - **Card 2 Copy Update**: Updated copy to "Choose how Canvas-Native Content should be organized:" and applied Hitbox Margin Defeat (`margin-bottom: 0px;`).
     - [x] **Segmented Control Injection**: Upgraded the "Include Files" segmented buttons by crushing stHorizontalBlock gaps, implementing flex-column layouts for vertical alignment, and separating icon states into ::before pseudo-element toggles.
     - [x] **Hover State Parity**: Injected global hover rules and active-state protection to ensure unselected cards react to mouse interaction without overriding the primary selection highlight.
     - **Interactive Hover Logic**: Integrated dynamic hover states for all Native Button Cards, including subtle background shifts and icon "wake-up" transitions (`filter: grayscale(10%)`) that are gracefully preserved or overridden by the active session state.
