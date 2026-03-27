@@ -880,7 +880,8 @@ div[class*="st-key-btn_include_"] button {{
     padding: 12px 12px 12px 48px !important;
     border-radius: 8px !important;
     color: #a0a0a0 !important;
-    transition: all 0.2s ease-in-out !important;
+    opacity: 0.75 !important;
+    transition: opacity 0.2s ease, background-color 0.2s ease, filter 0.2s ease, color 0.2s ease !important;
 }}
 
 /* 4. Force strict left alignment on inner Streamlit wrappers */
@@ -894,6 +895,7 @@ div[class*="st-key-btn_include_"] button p {{
     font-size: 0.95rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
+    margin-bottom: 0px !important;
     line-height: 1.2 !important;
     color: inherit !important;
     text-align: left !important;
@@ -912,7 +914,7 @@ div[class*="st-key-btn_include_"] button::before {{
     background-size: contain !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
-    filter: grayscale(25%) opacity(50%) !important;
+    filter: grayscale(20%) !important;
     transition: all 0.2s ease-in-out !important;
 }}
 div.st-key-btn_include_all button::before {{
@@ -928,7 +930,7 @@ div.st-key-btn_include_all button::after {{
     display: block !important;
     font-size: 0.75rem !important;
     color: #a0a0a0 !important;
-    margin-top: 4px !important;
+    margin-top: -1px !important;
     font-weight: normal !important;
     line-height: 1.2 !important;
     text-align: left !important;
@@ -940,7 +942,7 @@ div.st-key-btn_include_study button::after {{
     display: block !important;
     font-size: 0.75rem !important;
     color: #a0a0a0 !important;
-    margin-top: 4px !important;
+    margin-top: -1px !important;
     font-weight: normal !important;
     line-height: 1.2 !important;
     text-align: left !important;
@@ -949,13 +951,15 @@ div.st-key-btn_include_study button::after {{
 }}
 /* 6.5 Hover State (Inactive Buttons) */
 div[class*="st-key-btn_include_"] button:hover {{
-    background-color: rgba(255, 255, 255, 0.00) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+}}
+div[class*="st-key-btn_include_"] button:hover::before {{
+    filter: grayscale(0%) !important;
 }}
 
 /* Protect Active State from Hover Overrides */
-div.st-key-btn_include_{active_include_key} button:hover {{
-    background-color: {bg_color_active} !important;
-}}
 div.st-key-btn_include_{active_include_key} button:hover::before {{
     filter: grayscale(0%) opacity(100%) !important;
 }}
@@ -965,11 +969,13 @@ div.st-key-btn_include_{active_include_key} button {{
     border: 1px solid rgba(56, 189, 248, 0.3) !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
     color: #ffffff !important;
+    opacity: 1 !important;
 }}
 /* Protect Active Blue Pill from Grey Hover Override */
 div.st-key-btn_include_{active_include_key} button:hover {{
     background-color: rgba(56, 189, 248, 0.15) !important;
     border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    opacity: 1 !important;
 }}
 div.st-key-btn_include_{active_include_key} button p {{
     color: #ffffff !important;
@@ -1040,11 +1046,13 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     border: 1px solid transparent !important;
                     display: flex !important;
                     flex-direction: column !important;
-                    padding: 12px 12px 12px 48px !important;
+                    padding: 12px 12px 12px 52px !important;
                     border-radius: 8px !important;
                     color: #a0a0a0 !important;
-                    transition: all 0.2s ease-in-out !important;
+                    opacity: 0.75 !important;
+                    transition: opacity 0.2s ease, background-color 0.2s ease, filter 0.2s ease, color 0.2s ease !important;
                     position: relative !important;
+                    min-height: 62px !important;
                 }}
                 /* Nuke Streamlit's center alignment for the segmented control */
                 div[class*="st-key-btn_sec_org_"] button > div,
@@ -1069,16 +1077,26 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     left: 12px !important;
                     top: 50% !important;
                     transform: translateY(-50%) !important;
-                    width: 24px !important;
-                    height: 24px !important;
-                    background-size: contain !important;
+                    width: 28px !important;
+                    height: 28px !important;
+                    background-size: 28px !important;
                     background-repeat: no-repeat !important;
                     background-position: center !important;
-                    filter: grayscale(25%) opacity(50%) !important;
+                    filter: grayscale(20%) !important;
                     transition: all 0.2s ease-in-out !important;
                 }}
                 div.st-key-btn_sec_org_inline button::before {{ background-image: url('data:image/png;base64,{b64_inline}') !important; }}
                 div.st-key-btn_sec_org_subfolders button::before {{ background-image: url('data:image/png;base64,{b64_sub}') !important; }}
+                
+                div[class*="st-key-btn_sec_org_"] button:hover {{
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    opacity: 1 !important;
+                    color: #ffffff !important;
+                }}
+                div[class*="st-key-btn_sec_org_"] button:hover::before {{
+                    filter: grayscale(0%) !important;
+                }}
+
                 div.st-key-btn_sec_org_inline button::after {{ content: "Places content inline with module files using a type prefix." !important; }}
                 div.st-key-btn_sec_org_subfolders button::after {{ content: "Creates dedicated folders (e.g. Assignments/, Quizzes/)." !important; }}
                 div[class*="st-key-btn_sec_org_"] button::after {{
@@ -1097,11 +1115,13 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     border: 1px solid rgba(104, 212, 163, 0.3) !important;
                     box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
                     color: #ffffff !important;
+                    opacity: 1 !important;
                 }}
                 /* Protect Active Green Pill from Grey Hover Override */
                 div.st-key-btn_sec_org_{active_key} button:hover {{
                     background-color: rgba(104, 212, 163, 0.15) !important;
                     border: 1px solid rgba(104, 212, 163, 0.3) !important;
+                    opacity: 1 !important;
                 }}
                 div.st-key-btn_sec_org_{active_key} button p {{ color: #ffffff !important; }}
                 div.st-key-btn_sec_org_{active_key} button::before {{ filter: grayscale(0%) opacity(100%) !important; }}
@@ -1166,7 +1186,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
 </style>
 """, unsafe_allow_html=True)
 
-            col1, col2 = st.columns([3, 5], gap="large")
+            col1, col2 = st.columns([3, 5], gap="medium")
 
             # --- COLUMN 1: Organization & Include Files ---
             with col1:
@@ -1228,6 +1248,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         font-size: 1.1rem !important;
                         font-weight: 600 !important;
                         margin: 0 !important;
+                        margin-bottom: 0px !important;
                         line-height: 1.2 !important;
                         color: #ffffff !important;
                     }}
@@ -1246,7 +1267,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         content: "Group files in subfolders, matching Canvas Modules" !important;
                         font-size: 0.85rem !important;
                         color: #a0a0a0 !important;
-                        margin-top: 4px !important;
+                        margin-top: -1px !important;
                         font-weight: 400 !important;
                     }}
 
@@ -1258,7 +1279,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         content: "Place all files together in the course folder" !important;
                         font-size: 0.85rem !important;
                         color: #a0a0a0 !important;
-                        margin-top: 4px !important;
+                        margin-top: -1px !important;
                         font-weight: 400 !important;
                     }}
 
@@ -1281,6 +1302,10 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     def update_include_state(mode):
                         st.session_state['file_filter'] = mode
 
+                    st.markdown(
+                        "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: -5px; margin-bottom: 0px;'>Choose which files to include:</p>", 
+                        unsafe_allow_html=True
+                    )
                     with st.container(key="include_files_segmented_wrapper"):
                         inc_left, inc_right = st.columns(2, gap="small")
                         with inc_left:
@@ -1346,7 +1371,9 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     div[class*="st-key-btn_dl_"] button p {
                         text-align: left !important;
                         width: 100% !important;
-                        margin: 0 !important;
+                        margin-top: 0px !important;
+                        margin-bottom: 0px !important;
+                        line-height: 1.2 !important;
                     }
                     div[class*="st-key-btn_dl_"] button::after {
                         text-align: left !important;
@@ -1354,10 +1381,10 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         display: block !important;
                     }
                     div[class*="st-key-btn_dl_"] button {
-                        height: 72px !important;
+                        height: 58px !important;
                         min-height: 0px !important;
-                        padding-top: 0px !important;
-                        padding-bottom: 0px !important;
+                        padding-top: 10px !important;
+                        padding-bottom: 10px !important;
                         padding-right: 10px !important;
                         padding-left: 50px !important;
                         background-position: 15px center !important;
@@ -1366,12 +1393,11 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         border-radius: 12px !important;
                         display: flex;
                         flex-direction: column;
-                        justify-content: center;
                     }
                     div.st-key-btn_dl_secondary_master button {
-                        height: 64px !important;
-                        padding-top: 5px !important;
-                        padding-bottom: 5px !important;
+                        height: 52px !important;
+                        padding-top: 2px !important;
+                        padding-bottom: 2px !important;
                     }
                     ''')
 
@@ -1401,7 +1427,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     div.st-key-btn_dl_secondary_master button::after {{
                         content: "Include all supplementary materials in the download." !important;
                         font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important;
-                        display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important;
+                        display: block !important; text-align: left !important; width: 100%; margin-top: -3px !important; line-height: 1.2 !important;
                     }}
                     ''')
 
@@ -1422,7 +1448,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         div.st-key-btn_{key} button::after {{
                             content: "{desc}" !important;
                             font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important;
-                            display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important;
+                            display: block !important; text-align: left !important; width: 100%; margin-top: -2px !important; line-height: 1.2 !important;
                         }}
                         div.st-key-btn_{key} button:hover {{
                             border-color: #68d4a3 !important;
@@ -1456,7 +1482,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     if _sec_active > 0:
                         # Zero-Div-Bloat: Label and CSS in single markdown call
                         st.markdown(f"""
-                        <p style='font-size: 0.9rem; margin-bottom: 5px; color: #FAFAFA;'>Organize Additional Course Content by:</p>
+                        <p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas-Native Content should be organized:</p>
                         {_get_sec_org_segmented_css()}
                         """, unsafe_allow_html=True)
 
@@ -1484,86 +1510,84 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
             st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
             # --- BOTTOM ROW: Conversion Settings / NotebookLM ---
-            col_bottom, _bottom_spacer = st.columns([6, 2], gap="medium")
-            with col_bottom:
-                with st.container(border=True, key="card_ai_engine"):
-                    # --- Conversion Button Data ---
-                    conv_button_defs = [
-                        ('convert_zip',   'Auto-Extract Archives',    'Extracts files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
-                        ('convert_pptx',  'PowerPoint → PDF',         'Converts .pptx/.ppt to PDF via Microsoft Office.',      'icon_conv_pptx.png'),
-                        ('convert_word',  'Word Docs → PDF',          'Converts legacy .doc, .rtf to PDF.',                    'icon_conv_word.png'),
-                        ('convert_excel', 'Excel → PDF',              'Converts .xlsx, .xls workbooks to PDF.',                'icon_conv_excel.png'),
-                        ('convert_html',  'HTML → Markdown',          'Converts Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
-                        ('convert_code',  'Code & Data → .txt',       'Appends .txt extension to programming files.',          'icon_conv_code.png'),
-                        ('convert_urls',  'Compile Web Links',        'Aggregates .url/.webloc shortcuts into a list.',        'icon_conv_urls.png'),
-                        ('convert_video', 'Video → Audio',            'Extracts .mp3 audio tracks from video files.',          'icon_conv_video.png'),
-                    ]
+            with st.container(border=True, key="card_ai_engine"):
+                # --- Conversion Button Data ---
+                conv_button_defs = [
+                    ('convert_zip',   'Auto-Extract Archives',    'Extracts files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
+                    ('convert_pptx',  'PowerPoint → PDF',         'Converts .pptx/.ppt to PDF via Microsoft Office.',      'icon_conv_pptx.png'),
+                    ('convert_word',  'Word Docs → PDF',          'Converts legacy .doc, .rtf to PDF.',                    'icon_conv_word.png'),
+                    ('convert_excel', 'Excel → PDF',              'Converts .xlsx, .xls workbooks to PDF.',                'icon_conv_excel.png'),
+                    ('convert_html',  'HTML → Markdown',          'Converts Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
+                    ('convert_code',  'Code & Data → .txt',       'Appends .txt extension to programming files.',          'icon_conv_code.png'),
+                    ('convert_urls',  'Compile Web Links',        'Aggregates .url/.webloc shortcuts into a list.',        'icon_conv_urls.png'),
+                    ('convert_video', 'Video → Audio',            'Extracts .mp3 audio tracks from video files.',          'icon_conv_video.png'),
+                ]
 
-                    # --- Dynamic Tag Counter ---
-                    _conv_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
-                    if _conv_active == 0:
-                        conv_tag = "None selected"
-                    elif _conv_active == TOTAL_NOTEBOOK_SUBS:
-                        conv_tag = "All enabled"
-                    else:
-                        conv_tag = f"{_conv_active} enabled"
+                # --- Dynamic Tag Counter ---
+                _conv_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+                if _conv_active == 0:
+                    conv_tag = "None selected"
+                elif _conv_active == TOTAL_NOTEBOOK_SUBS:
+                    conv_tag = "All enabled"
+                else:
+                    conv_tag = f"{_conv_active} enabled"
 
-                    # --- Generate CSS for each button ---
-                    conv_css_blocks = []
+                # --- Generate CSS for each button ---
+                conv_css_blocks = []
 
-                    # Base styles — zero-indentation to prevent Streamlit code-block conversion
-                    conv_css_blocks.append(
+                # Base styles — zero-indentation to prevent Streamlit code-block conversion
+                conv_css_blocks.append(
 'div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }\n'
 'div[class*="st-key-btn_convert_"] button > div,\n'
 'div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] {\n'
 'width: 100% !important; display: flex !important; justify-content: flex-start !important; text-align: left !important; }\n'
-'div[class*="st-key-btn_convert_"] button p { text-align: left !important; width: 100% !important; margin: 0 !important; }\n'
+'div[class*="st-key-btn_convert_"] button p { text-align: left !important; width: 100% !important; margin-top: 0px !important; margin-bottom: 0px !important; line-height: 1.2 !important; }\n'
 'div[class*="st-key-btn_convert_"] button::after { text-align: left !important; width: 100% !important; display: block !important; }\n'
 'div[class*="st-key-btn_convert_"] button {\n'
-'height: 72px !important; min-height: 0px !important;\n'
-'padding-top: 0px !important; padding-bottom: 0px !important;\n'
+'height: 58px !important; min-height: 0px !important;\n'
+'padding-top: 10px !important; padding-bottom: 10px !important;\n'
 'padding-right: 10px !important; padding-left: 52px !important;\n'
 'background-position: 15px center !important; background-size: 30px !important;\n'
 'background-repeat: no-repeat !important; border-radius: 12px !important;\n'
-'display: flex; flex-direction: column; justify-content: center; }\n'
-'div.st-key-btn_convert_master button { height: 64px !important; padding-top: 5px !important; padding-bottom: 5px !important; padding-left: 50px !important; background-size: 24px !important; }\n'
-                    )
+'display: flex; flex-direction: column; }\n'
+'div.st-key-btn_convert_master button { height: 52px !important; padding-top: 2px !important; padding-bottom: 2px !important; padding-left: 50px !important; background-size: 24px !important; }\n'
+                )
 
-                    # Master (Select All) CSS
-                    m_active = st.session_state.get('notebooklm_master', False)
-                    m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
-                    m_border = "rgba(255, 255, 255, 0.05)"
-                    m_ledge = "#f97316" if m_active else "transparent"
-                    b64_conv_m = safe_b64('icon_conv_select_all.png')
-                    m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
-                    m_conv_icon_filter = "none" if m_active else "grayscale(100%) opacity(40%)"
+                # Master (Select All) CSS
+                m_active = st.session_state.get('notebooklm_master', False)
+                m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
+                m_border = "rgba(255, 255, 255, 0.05)"
+                m_ledge = "#f97316" if m_active else "transparent"
+                b64_conv_m = safe_b64('icon_conv_select_all.png')
+                m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
+                m_conv_icon_filter = "none" if m_active else "grayscale(100%) opacity(40%)"
 
-                    conv_css_blocks.append(
+                conv_css_blocks.append(
 f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 4px solid {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
 f'div.st-key-btn_convert_master button:hover {{ border-bottom: 4px solid {m_ledge} !important; }}\n'
 f'div.st-key-btn_convert_master button::before {{ filter: {m_conv_icon_filter} !important; }}\n'
-f'div.st-key-btn_convert_master button::after {{ content: "Enable all conversions to optimize files for AI processing." !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important; }}\n'
-                    )
+f'div.st-key-btn_convert_master button::after {{ content: "Enable all conversions to optimize files for AI processing." !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: -3px !important; line-height: 1.2 !important; }}\n'
+                )
 
-                    # Child button CSS (per-toggle)
-                    for conv_key, conv_title, conv_desc, conv_icon in conv_button_defs:
-                        is_conv_active = st.session_state.get(conv_key, False)
-                        c_bg = "rgba(249, 115, 22, 0.15)" if is_conv_active else "rgba(255, 255, 255, 0.02)"
-                        c_border = "#f97316" if is_conv_active else "rgba(255, 255, 255, 0.1)"
-                        c_icon_filter = "none" if is_conv_active else "grayscale(100%) opacity(40%)"
-                        b64_conv_c = safe_b64(conv_icon)
-                        c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
+                # Child button CSS (per-toggle)
+                for conv_key, conv_title, conv_desc, conv_icon in conv_button_defs:
+                    is_conv_active = st.session_state.get(conv_key, False)
+                    c_bg = "rgba(249, 115, 22, 0.15)" if is_conv_active else "rgba(255, 255, 255, 0.02)"
+                    c_border = "#f97316" if is_conv_active else "rgba(255, 255, 255, 0.1)"
+                    c_icon_filter = "none" if is_conv_active else "grayscale(100%) opacity(40%)"
+                    b64_conv_c = safe_b64(conv_icon)
+                    c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
 
-                        conv_css_blocks.append(
+                    conv_css_blocks.append(
 f'div.st-key-btn_{conv_key} button {{ background-color: {c_bg} !important; border: 1px solid {c_border} !important; {c_conv_img_rule} }}\n'
 f'div.st-key-btn_{conv_key} button::before {{ filter: {c_icon_filter} !important; }}\n'
-f'div.st-key-btn_{conv_key} button::after {{ content: "{conv_desc}" !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: 2px; line-height: 1.2 !important; }}\n'
+f'div.st-key-btn_{conv_key} button::after {{ content: "{conv_desc}" !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: -2px !important; line-height: 1.2 !important; }}\n'
 f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}\n'
-                        )
+                    )
 
-                    # --- Header HTML (separate injection) ---
-                    b64_wf3 = _load_b64("assets/icon_workflow_3.png")
-                    conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
+                # --- Header HTML (separate injection) ---
+                b64_wf3 = _load_b64("assets/icon_workflow_3.png")
+                conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
 <img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
 <h3 style='margin: 0; line-height: 1.2;'>AI Compatibility Engine <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
@@ -1573,19 +1597,19 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
 <p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Transform complex documents and videos into AI-ready formats optimized for NotebookLM.</p>
 <p style='font-size: 0.85rem; color: #64748b; font-style: italic; margin-top: 6px; margin-bottom: 0px;'>*Canvas-Native Content will also be converted if downloaded.*</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
-                    st.markdown(conv_header_html, unsafe_allow_html=True)
+                st.markdown(conv_header_html, unsafe_allow_html=True)
 
-                    # --- CSS injection (separate call, zero-indentation) ---
-                    conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
-                    st.markdown(conv_css_html, unsafe_allow_html=True)
-                    st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
+                # --- CSS injection (separate call, zero-indentation) ---
+                conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
+                st.markdown(conv_css_html, unsafe_allow_html=True)
+                st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
 
-                    with st.container(key="conversion_cards_grid"):
-                        cols = st.columns(4)
-                        for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
-                            col = cols[idx % 4]
-                            with col:
-                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
+                with st.container(key="conversion_cards_grid"):
+                    cols = st.columns(4)
+                    for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
+                        col = cols[idx % 4]
+                        with col:
+                            st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
             # 2. Destination (Columns have weird padding)
             st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
