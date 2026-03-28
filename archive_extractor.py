@@ -7,7 +7,7 @@ from pathlib import Path
 MAX_UNCOMPRESSED_SIZE = 50 * 1024 * 1024 * 1024  # 50 GB
 MAX_COMPRESSION_RATIO = 100.0
 
-def extract_and_stub(archive_path: str | Path) -> str | None:
+def extract_archive(archive_path: str | Path) -> bool | None:
     abs_archive = Path(archive_path).resolve().absolute()
     
     # Windows MAX_PATH protection for the extraction process
@@ -20,8 +20,7 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
     else:
         extract_dir = abs_archive.with_suffix('')
         
-    # The 0-byte ghost stub that will trick the database
-    stub_path = abs_archive.with_name(abs_archive.name + ".extracted")
+
     
     try:
         archive_size = abs_archive.stat().st_size
@@ -78,13 +77,10 @@ def extract_and_stub(archive_path: str | Path) -> str | None:
         else:
             return None
             
-        # 1. Delete the heavy original archive
+        # Delete the heavy original archive (Sync Engine Bypass handles the missing file)
         abs_archive.unlink(missing_ok=True)
         
-        # 2. Create the 0-byte Ghost Stub
-        stub_path.touch()
-        
-        return str(stub_path)
+        return True
         
     except Exception as e:
         import logging

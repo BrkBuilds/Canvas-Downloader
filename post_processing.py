@@ -53,6 +53,7 @@ class UIBridge:
     error_log_path: Optional[Path] = None
     pp_success_count: int = 0   # Post-processing files converted successfully
     pp_failure_count: int = 0   # Post-processing files that failed conversion
+    generated_sidecar_paths: list = field(default_factory=list)  # _Data.txt paths for UI ledger injection
 
 
 # ─────────────────────────────────────────────────────
@@ -199,7 +200,7 @@ def run_archive_extraction(files, ui: UIBridge):
     """Extract archives (.zip, .tar, .tar.gz)."""
     if not files:
         return
-    from archive_extractor import extract_and_stub
+    from archive_extractor import extract_archive
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Archive files for extraction...</span>")
@@ -214,13 +215,11 @@ def run_archive_extraction(files, ui: UIBridge):
         _show_active_file(ui, old_name)
         _render_dashboard(ui, i, total, "Archives")
 
-        new_stub_path_str = extract_and_stub(archive_file)
+        success = extract_archive(archive_file)
 
-        if new_stub_path_str:
-            new_stub_path = Path(new_stub_path_str)
-            _update_manifest_path(sm, archive_file, new_stub_path)
-            if ui.on_detail_update:
-                ui.on_detail_update(ctx, old_name, new_stub_path.name)
+        if success:
+            # No manifest update needed — the Sync Engine bypass will
+            # silently ignore the missing archive on future sync runs.
             _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)}</span>")
             ui.pp_success_count += 1
         else:
@@ -445,6 +444,7 @@ def run_excel_data_conversion(files, ui: UIBridge):
                     # Do NOT update manifest — _Data.txt is an untracked sidecar
                     _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)} → {esc(data_name)}</span>")
                     ui.pp_success_count += 1
+                    ui.generated_sidecar_paths.append(str(data_path))
                 else:
                     err_detail = data_error_msg if data_error_msg else "Excel data extraction failed"
                     _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} ({err_detail})</span>")
