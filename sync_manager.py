@@ -98,6 +98,19 @@ SECONDARY_ID_OFFSETS = {
 }
 
 
+# --- Archive Extension Bypass Helpers ---
+# Used by the Sync Engine to silently ignore missing archives when
+# convert_zip is enabled (mirrors the URL Compiler bypass pattern).
+_ARCHIVE_EXTS = {'.zip', '.tar', '.gz'}
+
+def _is_archive_path(path_str: str) -> bool:
+    """Check if a path string represents an archive file, including compound .tar.gz."""
+    lower = path_str.lower()
+    if lower.endswith('.tar.gz'):
+        return True
+    return Path(lower).suffix in _ARCHIVE_EXTS
+
+
 def make_secondary_id(entity_type: str, raw_id: int) -> int:
     """Generate a unique negative canvas_file_id for a synthetic entity.
 
@@ -510,6 +523,7 @@ class SyncManager:
         except Exception:
             contract_dict = {}
         convert_urls_enabled = contract_dict.get('convert_urls', False)
+        convert_zip_enabled = contract_dict.get('convert_zip', False)
         
         # 0. Pre-calculate Target Paths if CanvasManager is provided
         target_paths = {}
@@ -574,6 +588,9 @@ class SyncManager:
                     # URL Compiler Bypass (Phase 1)
                     if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
                         pass  # Treat as up-to-date by silently skipping the deletion flag
+                    # Archive Extraction Bypass (Phase 1)
+                    elif convert_zip_enabled and _is_archive_path(str(entry.get('local_path', ''))):
+                        pass  # Archive was extracted & deleted; skip deletion flag
                     else:
                         sync_info = self._dict_to_sync_info(file_id, entry)
                         # Add to locally deleted if not already caught
@@ -664,6 +681,9 @@ class SyncManager:
                         _calc_path_p = Path(calc_path)
                         if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
                             result.uptodate_files.append((c_file, sync_info))
+                        # Archive Extraction Bypass (Phase 2)
+                        elif convert_zip_enabled and _is_archive_path(calc_path):
+                            result.uptodate_files.append((c_file, sync_info))
                         else:
                             # Missing locally = Student deleted it
                             if entry.get('downloaded_at'):
@@ -692,6 +712,9 @@ class SyncManager:
                         # URL Compiler Bypass (Step 5)
                         if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
                             pass # Pure deletion bypass
+                        # Archive Extraction Bypass (Step 5)
+                        elif convert_zip_enabled and _is_archive_path(str(entry.get('local_path', ''))):
+                            pass  # Archive extraction bypass
                         elif entry.get('downloaded_at'):
                             raw_locally_deleted.append(sync_info)
                         else:

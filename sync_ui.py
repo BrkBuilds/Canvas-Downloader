@@ -6311,6 +6311,32 @@ def _run_sync():
         get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video'), pp_ui
     )
 
+    # --- Inject post-processing sidecars into sync UI ledger ---
+    _sidecar_paths = pp_ui.generated_sidecar_paths
+    if _sidecar_paths:
+        # Build reverse lookup: resolved local_path -> pair_idx
+        _pair_lookup = {}
+        for sel in sync_selections:
+            _sm = sel.get('res_data', {}).get('sync_manager')
+            if _sm and _sm.local_path.exists():
+                _pair_lookup[str(_sm.local_path.resolve())] = sel['pair_idx']
+
+        for sp in _sidecar_paths:
+            sp_path = Path(sp)
+            sidecar_name = sp_path.name  # e.g., "Grades_Data.txt"
+            # Walk up the path to find which pair's local_path contains this file
+            matched_pair_idx = None
+            for parent in sp_path.parents:
+                resolved_parent = str(parent.resolve())
+                if resolved_parent in _pair_lookup:
+                    matched_pair_idx = _pair_lookup[resolved_parent]
+                    break
+            if matched_pair_idx is not None:
+                existing = synced_details.get(matched_pair_idx, [])
+                if sidecar_name not in existing:
+                    synced_details[matched_pair_idx].append(sidecar_name)
+                    synced_counter[0] += 1  # Bump global synced count for completion card
+
 
     # Clear the blue status text so it doesn't linger on completion
     active_file_placeholder.empty()
