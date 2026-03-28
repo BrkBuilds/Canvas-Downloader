@@ -2283,6 +2283,24 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                         )
                         # Track post-processing failures for the completion screen (M-7)
                         st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
+                        # --- Inject post-processing sidecars into UI ledger ---
+                        _sidecar_paths = pp_ui.generated_sidecar_paths
+                        if _sidecar_paths:
+                            _ledger = st.session_state.get('download_file_details', {})
+                            _course_key = course.name
+                            if _course_key not in _ledger:
+                                _ledger[_course_key] = []
+                            _existing_paths = set(_ledger[_course_key])
+                            _new_count = 0
+                            for sp in _sidecar_paths:
+                                if sp not in _existing_paths:
+                                    _ledger[_course_key].append(sp)
+                                    _existing_paths.add(sp)
+                                    _new_count += 1
+                            if _new_count > 0:
+                                st.session_state['download_file_details'] = _ledger
+                                st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + _new_count
+                                st.session_state['total_items'] = st.session_state.get('total_items', 0) + _new_count
                 # --- End Post-Download Conversion Pipeline ---
                 # Clear the blue status text so it doesn't linger on completion
                 active_file_placeholder.empty()
@@ -2600,6 +2618,24 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                                 explicit_files=success_paths
                             )
                             st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
+                            # --- Inject post-processing sidecars into UI ledger ---
+                            _sidecar_paths = pp_ui.generated_sidecar_paths
+                            if _sidecar_paths:
+                                _ledger = st.session_state.get('download_file_details', {})
+                                _course_key = course.name
+                                if _course_key not in _ledger:
+                                    _ledger[_course_key] = []
+                                _existing_paths = set(_ledger[_course_key])
+                                _new_count = 0
+                                for sp in _sidecar_paths:
+                                    if sp not in _existing_paths:
+                                        _ledger[_course_key].append(sp)
+                                        _existing_paths.add(sp)
+                                        _new_count += 1
+                                if _new_count > 0:
+                                    st.session_state['download_file_details'] = _ledger
+                                    st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + _new_count
+                                    st.session_state['total_items'] = st.session_state.get('total_items', 0) + _new_count
             # --- End Post-Processing Pipeline ---
 
             # --- Success Metrics Rehydration & Error Resolution ---

@@ -1,6 +1,10 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.16: Eradicate Archive Ghost Stubs** (2026-03-28):
+    - [x] **Pure Deletion**: Refactored `archive_extractor.py` to eradicate the 0-byte `.extracted` ghost stub pattern. Note the transition from 0-byte stubs to the Sync Engine Bypass to guarantee 100% NotebookLM bulk-upload compatibility.
+    - [x] **Engine Extension Traps**: Engineered an `_is_archive_path` helper within `sync_manager.py`. The sync diffing engine now verifies `convert_zip` in the contract and intelligently ignores missing `.zip`, `.tar.gz`, and `.tar` payloads during Phase 1 (Existence), Phase 2 (Not Newer), and Step 5 (Canvas Deletions).
+    - [x] **Path Integrity Shift**: Simplified `post_processing.py` to leave original zip paths fully intact within the manifest DB instead of pivoting pointers to defunct stub paths.
 - [x] **Phase 6.15: Excel → AI Data Extraction Pipeline** (2026-03-28):
     - [x] **Zero-Dependency Engine**: Built `ExcelToData` to bypass `pandas` and `openpyxl`, utilizing `win32com` and `osascript` natively.
     - [x] **Scalar Trap Defense**: Engineered structural normalization arrays on Windows to safely coerce single-cell (`UsedRange.Value` scalar) returns into 2D tables, preventing `csv.writer` crashes.
@@ -94,6 +98,8 @@
 - [x] **Phase 4.6: Retry Logic Identity & Efficiency Fixes** (2026-03-20):
     - [x] **Targeted Post-Processing**: Refactored `post_processing.py` to support `explicit_files` filtering, eliminating redundant conversions of already-processed files during retries.
     - [x] **Sync Identity Restoration**: Implemented O(1) Hash Map lookups in `sync_ui.py` to correctly re-queue failed "Update" and "Redownload" items, preserving critical identity traits like `_NewVersion` naming.
+- [x] **Phase 6.16: Post-Processing Sidecar UI Ledger Sync** (2026-03-28):
+    - [x] **Single Source of Truth**: Successfully synchronized `_Data.txt` sidecars generated during post-processing with the `app.py` and `sync_ui.py` UI ledgers via the `UIBridge` dataclass, ensuring the Completion Screen accurately reflects all downloaded files without double-counting.
     - [x] **Path Normalization**: Injected strict `.resolve()` comparison logic into the post-processing filter to ensure cross-platform path parity.
 - [x] **Phase 4.5: Retry Logic Audit & Sniper Fixes** (2026-03-20):
     - [x] **Sniper Retry Directory Provisioning**: Injected `Path.mkdir` calls into the `download_isolated_batch_async` loop in `canvas_logic.py`, ensuring that surgical retries of specific files correctly create their parent folder structures if they were missing or deleted.
@@ -286,7 +292,7 @@
     - [x] **Video to Audio**: `video_converter.py` pulls `.mp3` tracks out of heavy `.mp4/.mov` payloads.
     - [x] **Excel to PDF**: `excel_converter.py` converts spreadsheets to 1-page-wide PDFs to maintain tabular structure.
     - [x] **COM Context Manager Refactoring**: Re-architected Word, PPTX, and Excel PDF converters from single-shot functions into Context Managers (`__enter__`, `__exit__`), resulting in massive performance gains by avoiding COM cold-boots natively per file.
-    - [x] **Archive Extractor**: `archive_extractor.py` unzips payloads, dropping a 0-byte `.extracted` ghost stub to satisfy the sync engine.
+    - [x] **Archive Extractor**: `archive_extractor.py` unzips payloads, natively bypassing the sync engine to keep the local workspace clean.
     - [x] **Manifest Updating**: Mimicking native Canvas files by updating paths and hashes seamlessly.
     - [x] **UI Hijacking**: Dynamic reassignment of the main progress bar for post-processing phases.
     - [x] **State Persistence**: Streamlit widget cleanup bypass logic for post-UI execution constraints.

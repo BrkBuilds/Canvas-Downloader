@@ -30,7 +30,7 @@ Desktop application for university students to batch download and synchronize co
     - **Markdown Transformation**: Strips HTML Canvas pages down to pristine Markdown (`md_converter.py`).
     - **Data/Code Extension Shadowing**: Appends `.txt` extensions to raw programming/data files (e.g., `.js`, `.py`, `.csv`) to ensure they can be read by NotebookLM.
     - **Audio Extraction**: Swaps large video files with lightweight `.mp3` audio tracks to fit AI file limits (`video_converter.py`).
-    - **Archive Stubbing**: Auto-extracts `.zip` and `.tar.gz` payloads, replacing them with `.extracted` ghost stubs to keep the local workspace clean.
+    - **Archive Extraction**: Auto-extracts `.zip` and `.tar.gz` payloads, bypassing the sync engine's deletion checks while keeping the local workspace clean.
 - **User-Friendly UI**:
     - **Visual Step Trackers**: Clear progress indicators with emojis for both Download and Sync modes.
     - **CBS Filters**: Filter courses by Type, Semester, and Year (sorted newest first).

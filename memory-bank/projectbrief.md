@@ -24,7 +24,7 @@ Recently, the application has evolved beyond simple downloading to include a **N
    - **Code/Data to TXT**: Appends `.txt` to ~50 programming/data formats (e.g., `script_py.txt`) while enforcing UTF-8.
    - **Link Compilation**: Scrapes `.url` shortcuts into a master `NotebookLM_External_Links.txt` file per course.
    - **Video to Audio**: Extracts `.mp3` tracks from `.mp4`/`.mov` using `moviepy`, deleting the heavy original video.
-   - **Auto-Extract Archives**: Unzips `.zip`/`.tar.gz` and inserts a 0-byte `.extracted` ghost stub to satisfy the sync engine without ballooning disk space.
+   - **Auto-Extract Archives**: Unzips `.zip`/`.tar.gz` and natively bypasses the sync engine's deletion checks without ballooning disk space.
 
 ## Architecture & Technology
 - **Frontend**: Streamlit, leveraging advanced custom CSS injection, fraction-column layouts, and `.st.dialog` modals to create a native-feeling desktop experience in a local browser window.

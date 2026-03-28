@@ -259,15 +259,13 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
   - **Excel to PDF (Tabular Integrity & Global Export)**:
     - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. 
     - *Anti-Pattern Avoidance*: Never attempt to select sheets via `ActiveWindow` or filter data via `WorksheetFunction.CountA(sheet.Cells)`. `ActiveWindow` crashes reliably in `Visible=False` environments, and `CountA` sweeps billions of cells causing guaranteed RPC timeouts. The cleanest strategy is to just export the entire workbook via `ExportAsFixedFormat(0)`—empty sheets will produce small harmless PDFs instead of crashing the batch pipeline.
-- **The Ghost Stub Pattern (Archives & URL Shortcuts)**:
-    - *Problem*: Physical file deletion after automated conversion/extraction (e.g., ZIP extraction or URL compilation) causes the Sync Engine to flag files as "Locally Deleted," triggering redundant re-downloads.
-    - *Solution*: Delete the original source file post-processing and immediately `touch` a 0-byte `.extracted` stub in its place.
-    - *Workflow*: 
-        1. **Physical Mutation**: Unlink original, create stub.
-        2. **Database Mutation**: Call `sm.update_converted_file()` to point the manifest record to the stub's path.
+- **Pure Deletion + Sync Engine Bypass**:
+    - *Pattern Description*: For destructive conversions (like URL compilation and Archive extraction), we DO NOT use Ghost Stubs (`.extracted` files) to represent the missing source file.
+    - *Problem*: Physical file deletion after automated conversion/extraction causes the standard Sync Engine to flag files as "Locally Deleted," triggering redundant re-downloads.
+    - *Solution*: Delete the source file completely (Pure Deletion). To prevent re-downloads, we inject extension traps tied to the `sync_contract` inside `sync_manager.py` (specifically at Diffing Phase 1, Phase 2, and Step 5) to silently ignore the missing files. The original filepath remains untouched in the manifest database.
     - *Use Cases*: 
-        - **Archives**: Prevents re-downloading large ZIPs after extraction.
-        - **URL Compiler**: Removes `.url`/`.webloc` files (unsupported by NotebookLM) while keeping the Sync Engine satisfied.
+        - **Archives**: Prevents re-downloading large `.zip`/`.tar.gz` files after extraction without polluting the user's workspace with `.extracted` dummy files.
+        - **URL Compiler**: Removes `.url`/`.webloc` files (which are unsupported by NotebookLM) while keeping the Sync Engine satisfied.
 - **Top-of-Pipeline Extraction**:
     - *Pattern*: Always run Archive Extraction *before* any other post-processing hook (like HTML->MD or Code->TXT). This ensures files liberated from a student's ZIP folder are caught by the subsequent loops and format-shifted properly.
 - **Manifest Translation**:
