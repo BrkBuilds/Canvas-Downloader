@@ -1097,8 +1097,17 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     filter: grayscale(0%) !important;
                 }}
 
-                div.st-key-btn_sec_org_inline button::after {{ content: "Places content inline with module files using a type prefix." !important; }}
-                div.st-key-btn_sec_org_subfolders button::after {{ content: "Creates dedicated folders (e.g. Assignments/, Quizzes/)." !important; }}
+                /* Disabled State Overrides */
+                div[class*="st-key-btn_sec_org_"] button[disabled] {{
+                    opacity: 0.4 !important;
+                    pointer-events: none !important;
+                }}
+                div[class*="st-key-btn_sec_org_"] button[disabled]::before {{
+                    filter: grayscale(100%) !important;
+                }}
+
+                div.st-key-btn_sec_org_inline button::after {{ content: "Place content according to chosen folder structure (Subfolders/Flat)" !important; }}
+                div.st-key-btn_sec_org_subfolders button::after {{ content: "Create folders for each content type (e.g. Assignments/, Quizzes/)" !important; }}
                 div[class*="st-key-btn_sec_org_"] button::after {{
                     text-align: left !important;
                     width: 100% !important;
@@ -1183,6 +1192,37 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
     background-color: rgba(255, 255, 255, 0.04) !important;
     border-radius: 8px !important;
 }
+
+/* === Card 1 ↔ Card 2: Dynamic Height Synchronization ===
+   DOM chain (verified by diagnostic):
+     stHorizontalBlock (align-items:stretch → columns equal height)
+       → column (display:block, height matches sibling)
+         → stVerticalBlock (flex:1 1 0% → stretches ✅)
+           → stLayoutWrapper (flex:0 1 auto → REFUSES TO GROW ⚠️)
+             → st-key-card_* (stVerticalBlock, flex:1 1 0% → would grow IF parent lets it)
+   
+   Fix: Force the stLayoutWrapper (parent of each keyed card) to grow.
+   The keyed card already has flex:1 from Streamlit + our Tier 2 rule.
+   There is NO stContainer inside — the keyed wrapper IS the bordered card. */
+
+/* TIER 1: The stLayoutWrapper that is the DIRECT PARENT of each card.
+   This is the single element blocking height propagation.
+   Target: stLayoutWrapper that contains our specific keyed card. */
+div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_core_files"]),
+div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_native_content"]) {
+    flex: 1 !important;
+}
+
+/* TIER 2: The keyed card wrappers themselves — ensure they fill their parent. */
+div[class*="st-key-card_core_files"],
+div[class*="st-key-card_native_content"] {
+    flex: 1 !important;
+}
+
+/* Push the "Include Files" section to the bottom of Card 1 */
+div[class*="st-key-card1_include_section"] {
+    margin-top: auto !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1198,7 +1238,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
 <h3 style='margin: 0; line-height: 1.2;'>Core Course Files &amp; Structure</h3>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Choose the physical layout and essential files for your main course directory.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Choose the course folder structure and which materials to download.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                     
                     def update_org_state(mode):
@@ -1228,12 +1268,12 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     <style>
                     /* Base Card Styling for BOTH buttons */
                     div[class*="st-key-btn_org_"] button {{
-                        height: 170px !important;
+                        height: 185px !important;
                         background-color: transparent !important;
                         background-repeat: no-repeat !important;
-                        background-position: center 15px !important;
-                        background-size: 64px !important;
-                        padding-top: 85px !important;
+                        background-position: center 25px !important;
+                        background-size: 80px !important;
+                        padding-top: 115px !important;
                         border: 1px solid rgba(255, 255, 255, 0.1) !important;
                         border-radius: 8px !important;
                         display: flex !important;
@@ -1253,6 +1293,11 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         color: #ffffff !important;
                     }}
 
+                    div[class*="st-key-btn_org_"] button::after {{
+                        margin-bottom: 0px !important;
+                        padding-bottom: 0px !important;
+                    }}
+
                     /* Hover State */
                     div[class*="st-key-btn_org_"] button:hover {{
                         border-color: rgba(255, 255, 255, 0.3) !important;
@@ -1266,6 +1311,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     div.st-key-btn_org_subfolders button::after {{
                         content: "Group files in subfolders, matching Canvas Modules" !important;
                         font-size: 0.85rem !important;
+                        line-height: 1.2 !important;
                         color: #a0a0a0 !important;
                         margin-top: -1px !important;
                         font-weight: 400 !important;
@@ -1302,16 +1348,17 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                     def update_include_state(mode):
                         st.session_state['file_filter'] = mode
 
-                    st.markdown(
-                        "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: -5px; margin-bottom: 0px;'>Choose which files to include:</p>", 
-                        unsafe_allow_html=True
-                    )
-                    with st.container(key="include_files_segmented_wrapper"):
-                        inc_left, inc_right = st.columns(2, gap="small")
-                        with inc_left:
-                            st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
-                        with inc_right:
-                            st.button("PDF & PPTX Only", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
+                    with st.container(key="card1_include_section"):
+                        st.markdown(
+                            "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose which files to include:</p>", 
+                            unsafe_allow_html=True
+                        )
+                        with st.container(key="include_files_segmented_wrapper"):
+                            inc_left, inc_right = st.columns(2, gap="small")
+                            with inc_left:
+                                st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
+                            with inc_right:
+                                st.button("PDF & PPTX Only", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
             # --- COLUMN 2: Additional Course Content ---
             with col2:
@@ -1332,7 +1379,7 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
 <span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Extract native Canvas data (assignments, quizzes) into offline-readable documents.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Grab everything else Canvas has to offer and extract it into your local course folder.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
 
                     # Helper to safely load icon
@@ -1348,10 +1395,10 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                         ('dl_assignments', 'Assignments', 'Download assignment descriptions and any attached files.', 'icon_assignments.png'),
                         ('dl_syllabus', 'Syllabus', 'Download the course syllabus page as HTML.', 'icon_syllabus.png'),
                         ('dl_announcements', 'Announcements', 'Download course announcements and any attached files.', 'icon_announcements.png'),
-                        ('dl_discussions', 'Discussions', 'Download discussion topic prompts as HTML.', 'icon_discussions.png'),
+                        ('dl_discussions', 'Discussions', 'Download discussion threads as HTML.', 'icon_discussions.png'),
                         ('dl_quizzes', 'Quizzes', 'Download quiz questions and answers as structured HTML.', 'icon_quizzes.png'),
                         ('dl_rubrics', 'Rubrics', 'Download rubric criteria as Markdown tables.', 'icon_rubrics.png'),
-                        ('dl_submissions', 'Submissions (metadata)', 'Download submission metadata (grades, timestamps). Content files are not included.', 'icon_submissions.png')
+                        ('dl_submissions', 'Submissions (metadata)', 'Download submission metadata (e.g. grades). Submission files not included.', 'icon_submissions.png')
                     ]
 
                     # Generate CSS
@@ -1478,33 +1525,41 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
                             for key, title, _, _ in button_defs[5:]:
                                 st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
 
-                    # --- Section 2: Conditional radio (only if ≥1 checkbox is active) ---
-                    if _sec_active > 0:
-                        # Zero-Div-Bloat: Label and CSS in single markdown call
-                        st.markdown(f"""
-                        <p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas-Native Content should be organized:</p>
-                        {_get_sec_org_segmented_css()}
-                        """, unsafe_allow_html=True)
+                    # --- Section 2: Canvas-Native Content Organization ---
+                    # Dim the label if no secondary content is active
+                    sec_org_label_color = "#cbd5e1" if _sec_active > 0 else "#475569"
+                    
+                    st.markdown(f"""
+                    <p style='font-size: 0.9rem; font-weight: 600; color: {sec_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas-Native Content should be organized:</p>
+                    {_get_sec_org_segmented_css()}
+                    """, unsafe_allow_html=True)
 
-                        with st.container(key="sec_org_segmented_wrapper"):
-                            c1, c2 = st.columns(2, gap="small")
-                            
-                            with c1:
-                                st.button(
-                                    "In Course Folder/Modules (Default)", 
-                                    key="btn_sec_org_inline", 
-                                    on_click=_set_isolate_secondary, 
-                                    args=(False,), 
-                                    use_container_width=True
-                                )
-                            with c2:
-                                st.button(
-                                    "In Subfolders", 
-                                    key="btn_sec_org_subfolders", 
-                                    on_click=_set_isolate_secondary, 
-                                    args=(True,), 
-                                    use_container_width=True
-                                )
+                    with st.container(key="sec_org_segmented_wrapper"):
+                        c1, c2 = st.columns(2, gap="small")
+                        
+                        is_disabled = (_sec_active == 0)
+                        
+                        with c1:
+                            st.button(
+                                "In Course Folder/Modules", 
+                                key="btn_sec_org_inline", 
+                                on_click=_set_isolate_secondary, 
+                                args=(False,), 
+                                use_container_width=True,
+                                disabled=is_disabled
+                            )
+                        with c2:
+                            st.button(
+                                "In Dedicated Subfolders", 
+                                key="btn_sec_org_subfolders", 
+                                on_click=_set_isolate_secondary, 
+                                args=(True,), 
+                                use_container_width=True,
+                                disabled=is_disabled
+                            )
+
+
+
 
             # Force a visual break between top and bottom rows
             st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
@@ -1513,14 +1568,14 @@ div[data-testid="stContainer"]:has(.step-2-card-target) {
             with st.container(border=True, key="card_ai_engine"):
                 # --- Conversion Button Data ---
                 conv_button_defs = [
-                    ('convert_zip',   'Auto-Extract Archives',    'Extracts files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
-                    ('convert_pptx',  'PowerPoint → PDF',         'Converts .pptx/.ppt to PDF via Microsoft Office.',      'icon_conv_pptx.png'),
-                    ('convert_word',  'Word Docs → PDF',          'Converts legacy .doc, .rtf to PDF.',                    'icon_conv_word.png'),
-                    ('convert_excel', 'Excel → PDF',              'Converts .xlsx, .xls workbooks to PDF.',                'icon_conv_excel.png'),
-                    ('convert_html',  'HTML → Markdown',          'Converts Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
-                    ('convert_code',  'Code & Data → .txt',       'Appends .txt extension to programming files.',          'icon_conv_code.png'),
-                    ('convert_urls',  'Compile Web Links',        'Aggregates .url/.webloc shortcuts into a list.',        'icon_conv_urls.png'),
-                    ('convert_video', 'Video → Audio',            'Extracts .mp3 audio tracks from video files.',          'icon_conv_video.png'),
+                    ('convert_zip',   'Auto-Extract Archives',    'Extract files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
+                    ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png'),
+                    ('convert_word',  'Word Docs → PDF',          'Convert old Word files (e.g. .doc, .rtf) to PDF.',                    'icon_conv_word.png'),
+                    ('convert_excel', 'Excel → PDF',              'Convert .xlsx, .xls spreadsheets to PDF.',                'icon_conv_excel.png'),
+                    ('convert_html',  'HTML → Markdown',          'Convert Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
+                    ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png'),
+                    ('convert_urls',  'Compile Web Links',        'Extract & insert all .url/.webloc shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
+                    ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png'),
                 ]
 
                 # --- Dynamic Tag Counter ---
@@ -1590,12 +1645,12 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                 conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
 <img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
-<h3 style='margin: 0; line-height: 1.2;'>AI Compatibility Engine <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
+<h3 style='margin: 0; line-height: 1.2;'>AI Compatibility: Conversion Engine <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
 <span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Transform complex documents and videos into AI-ready formats optimized for NotebookLM.</p>
-<p style='font-size: 0.85rem; color: #64748b; font-style: italic; margin-top: 6px; margin-bottom: 0px;'>*Canvas-Native Content will also be converted if downloaded.*</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Automatically convert your course materials into AI-digestible filetypes, <strong>optimized for NotebookLM</strong> (drag-and-drop) and other AI tools.</p>
+<p style='font-size: 0.85rem; color: #64748b; font-style: italic; margin-top: 6px; margin-bottom: 0px;'>Note: Runs after your download finishes. Canvas-Native Content will also be converted if included in download.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
                 st.markdown(conv_header_html, unsafe_allow_html=True)
 
