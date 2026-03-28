@@ -23,12 +23,14 @@ Desktop application for university students to batch download and synchronize co
 - **Offline Access**: Materials available without internet after download/sync.
 - **NotebookLM Compatible Content Generation**:
     - Extends the core downloaded assets by dynamically converting or extracting them into formats optimized for LLM ingestion (like Google NotebookLM).
-    - Features native PDF conversion for PowerPoints, Word Docs, and Excel spreadsheets. Uses Win32 COM automation on Windows, and native AppleScript (`osascript`) on macOS to control the local Office applications (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`).
-    - Compiles URL shortcuts into a single master TXT file (`url_compiler.py`).
-    - Strips HTML Canvas pages down to pristine Markdown (`md_converter.py`).
-    - Appends `.txt` extensions to raw programming/data files to survive AI ingestion checks (`code_converter.py`).
-    - Eliminates large video payloads by swapping `.mp4/.mov` files with extracted `.mp3` audio tracks (`video_converter.py`).
-    - Identifies heavy `.zip` and `.tar.gz` payloads, automatically extracting their contents and replacing the archive with a `.extracted` ghost stub to bypass future sync conflicts (`archive_extractor.py`).
+    - **Unified Excel Pipeline**: Features a single "Excel → PDF & AI Data" toggle that generates both a visual PDF and a structured `_Data.txt` sidecar.
+    - **Smart-CSV Data Extraction**: Uses Win32 COM automation on Windows and native AppleScript on macOS to extract raw tabular data from Excel into unified sidecars with an AI-optimized `META-CONTEXT` header. This avoids the loss of tabular integrity inherent in PDF parsing.
+    - **Native PDF Conversion**: Automates local Office applications to convert PowerPoints, Word Docs, and Excel spreadsheets into high-fidelity PDFs.
+    - **URL Shortcut Merging**: Compiles internet shortcuts into a single master TXT file (`url_compiler.py`).
+    - **Markdown Transformation**: Strips HTML Canvas pages down to pristine Markdown (`md_converter.py`).
+    - **Data/Code Extension Shadowing**: Appends `.txt` extensions to raw programming/data files (e.g., `.js`, `.py`, `.csv`) to ensure they can be read by NotebookLM.
+    - **Audio Extraction**: Swaps large video files with lightweight `.mp3` audio tracks to fit AI file limits (`video_converter.py`).
+    - **Archive Stubbing**: Auto-extracts `.zip` and `.tar.gz` payloads, replacing them with `.extracted` ghost stubs to keep the local workspace clean.
 - **User-Friendly UI**:
     - **Visual Step Trackers**: Clear progress indicators with emojis for both Download and Sync modes.
     - **CBS Filters**: Filter courses by Type, Semester, and Year (sorted newest first).

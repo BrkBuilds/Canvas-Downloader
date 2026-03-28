@@ -19,7 +19,7 @@ Recently, the application has evolved beyond simple downloading to include a **N
 4. **NotebookLM Compatible Features (AI Optimization)**:
    - **PowerPoints to PDF**: Native `win32com.client` conversion (`.pptx` -> `.pdf`).
    - **Legacy Word to PDF**: Native conversion for old formats (`.doc`, `.rtf`, `.odt` -> `.pdf`).
-   - **Excel to PDF**: Native `win32com.client` conversion (`.xlsx`, `.xls`, `.xlsm` -> `.pdf`) with tabular integrity PageSetup.
+   - **Excel → PDF & AI Data**: Native `win32com.client` conversion (`.xlsx`, `.xls`, `.xlsm` -> `.pdf & .txt`). Dual-pipeline native conversion. Generates a high-fidelity visual `.pdf` and a structured `_Data.txt` sidecar (Smart-CSV) with a `META-CONTEXT` header for deterministic AI parsing.
    - **HTML to Markdown**: Converts Canvas Pages to clean `.md` (`beautifulsoup4`, `markdownify`).
    - **Code/Data to TXT**: Appends `.txt` to ~50 programming/data formats (e.g., `script_py.txt`) while enforcing UTF-8.
    - **Link Compilation**: Scrapes `.url` shortcuts into a master `NotebookLM_External_Links.txt` file per course.

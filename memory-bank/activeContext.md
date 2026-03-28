@@ -1,6 +1,19 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-28 — Excel → AI Data Pipeline)
+- **Zero-Dependency Extraction Engine (`excel_converter.py`)**:
+    - **Root Cause**: The existing PDF converter optimizes Excel sheets for visual review but destroys raw tabular alignment, making the output difficult for AI Agents (NotebookLM, Claude) to parse accurately. Adding heavy dependencies like `pandas` or `openpyxl` violates the project's lightweight footprint.
+    - **Solution**: Engineered a zero-dependency `ExcelToData` context manager that extracts raw tabular data straight from memory using COM or AppleScript, appending the results to a unified `_Data.txt` sidecar.
+    - **Windows COM Scalar Trap**: Discovered that if a worksheet contains exactly one cell with data, `sheet.UsedRange.Value` returns a raw scalar instead of a tuple, which crashes `csv.writer`. Fixed natively by dynamically coercing scalars and 1D tuples into uniform 2D lists prior to CSV writing.
+    - **macOS AppleScript Newline Trap**: Standard `cell r of column c` string concatenation fails fatally on internal cell line-breaks (`\n`), corrupting row alignment. Refactored the payload to command Mac Office to export the active sheet to a temporary `CSV file format` file safely handling internal returns natively, before python ingest.
+    - **AI Context Header Initialization**: Injected a `META-CONTEXT` header at the absolute top of every generated `_Data.txt` file, explicitly asserting the CSV structure and empty cell grid behavior to optimize LLM deterministic inference without guesswork.
+    - **Single-Toggle UX Pivot**: Simplified the GUI by stripping out the standalone Data extraction toggle across all 12 system tracking layers. The primary toggle was rebranded as "Excel → PDF & AI Data", binding both `run_excel_data_conversion` and `run_excel_conversion` pipelines sequentially to a single user action.
+    - **Pipeline Execution Ordering (`post_processing.py`)**: Enforced explicit ordering: Data extraction executes *first* (while `.xlsx` exists), and PDF conversion executes *second* (which destroys the source `.xlsx`).
+    - **Iterator Exhaustion Defense**: Avoided generator exhaustion within the dual-pipeline by calling `_glob_files(..., explicit_files)` independently for each conversion runner.
+    - **PermissionError Guard for Locked Files**: Patched both the Windows and macOS write blocks inside `ExcelToData` to strictly catch `PermissionError` natively. Now, if the `_Data.txt` file is open in a strict program (e.g., Excel), `WinError 32` gracefully trips an intentional failure (returning the error string "Data sidecar in use by another program") rather than triggering a devastating engine crash during the loop.
+    - **Sync Ledger Integrity**: Deliberately shielded the `_Data.txt` sidecars from manifest tracking to prevent the Sync Engine from incorrectly flagging missing/extant files on subsequent syncs.
+
 ## Recent Changes (Session 2026-03-27 — Harmonizing Download Settings UI)
 - **Dynamic CSS Flex-Chain (`app.py`)**:
     - **Root Cause**: When the "Canvas-Native Content" (Card 2) expanded to reveal segmented controls, "Core Course Files" (Card 1) remained at its natural height. Streamlit 1.51 injects an `stLayoutWrapper` parent with `flex: 0 1 auto` that blocks vertical stretching, despite the parent `stVerticalBlock` having `flex: 1 1 0%`.

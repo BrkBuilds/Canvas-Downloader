@@ -26,6 +26,7 @@
 - `sqlite3`: Robust manifest database management.
 - `difflib`: Levenshtein string matching for collision resolution (`SequenceMatcher`).
 - **pywin32 / osascript**: Dual-engine architecture for Office-to-PDF conversions. Windows uses `win32com.client` COM automation. macOS uses native `osascript` (AppleScript) subprocess execution to achieve exact feature parity for `.doc`, `.pptx`, and `.xlsx` files without heavy dependencies.
+- **Zero-Dependency Smart-CSV Extraction**: Engineered a custom memory-to-CSV extraction layer in `excel_converter.py` that utilizes the existing COM/AppleScript bridge. This avoids adding `pandas` or `openpyxl` dependencies while ensuring tabular integrity for AI ingestion via unified `_Data.txt` sidecars.
 - `beautifulsoup4` / `markdownify`: Cleaning HTML Canvas Pages and converting them to Markdown.
 - `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
 - `zipfile` / `tarfile`: Native extraction of compressed payloads.
@@ -49,7 +50,7 @@ Canvas_LMS_batch_file_downloader/
 ├── md_converter.py     # Canvas Page HTML->MD parser
 ├── video_converter.py  # Zero-logger Video->MP3 extraction utility
 ├── archive_extractor.py# Extractor and 0-byte Stub-generator for .zip payloads
-├── excel_converter.py  # Native Excel to PDF COM converter (Tabular Integrity logic)
+├── excel_converter.py  # Dual-Pipeline Excel converter (PDF + AI-optimized CSV/TXT Sidecars)
 ├── canvas_sync_pairs.json  # Persistent sync pair storage (runtime)
 └── saved_sync_groups.json  # Persistent saved sync groups storage
 ```

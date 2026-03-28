@@ -1,6 +1,13 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.15: Excel → AI Data Extraction Pipeline** (2026-03-28):
+    - [x] **Zero-Dependency Engine**: Built `ExcelToData` to bypass `pandas` and `openpyxl`, utilizing `win32com` and `osascript` natively.
+    - [x] **Scalar Trap Defense**: Engineered structural normalization arrays on Windows to safely coerce single-cell (`UsedRange.Value` scalar) returns into 2D tables, preventing `csv.writer` crashes.
+    - [x] **AppleScript Temp File Matrix**: Evaded internal line-break corruption on macOS by explicitly saving the active sheet to a secure `CSV file format` temp directory instead of blind stdout string concatenation.
+    - [x] **Unified Sidecar with Context**: Added an explicit `META-CONTEXT` header at the top of the text files to guide LLM inference on the structure.
+    - [x] **Single-Toggle UX Pivot**: Merged the UI into a single "Excel → PDF & AI Data" switch that sequentially executes `run_excel_data_conversion` FIRST (while `.xlsx` exists) and `run_excel_conversion` SECOND (which safely deletes `.xlsx`).
+    - [x] **File Lock Immunity (`WinError 32`)**: Engineered dynamic `PermissionError` interception over both internal OS write blocks, ensuring locked sidecars gracefully flag as busy instead of detonating the post-processing loop.
 - [x] **Phase 6.14: Harmonizing Download Settings UI & Copy Polish** (2026-03-27):
     - [x] **Vertical Symmetry**: Finalized a 185px button height for Card 1 ("Core Course Files") to perfectly align with the persistent Card 2 footprint.
     - [x] **Copy Polish**: Optimized all Step 2 descriptions for clarity; rebranded "AI Compatibility" as "Optimized for NotebookLM".
