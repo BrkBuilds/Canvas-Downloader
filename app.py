@@ -938,7 +938,7 @@ div.st-key-btn_include_all button::after {{
     width: 100% !important;
 }}
 div.st-key-btn_include_study button::after {{
-    content: "Download PDFs & Powerpoints only" !important;
+    content: "Download PDFs & PowerPoints only" !important;
     display: block !important;
     font-size: 0.75rem !important;
     color: #a0a0a0 !important;
@@ -1238,7 +1238,7 @@ div[class*="st-key-card1_include_section"] {
 <h3 style='margin: 0; line-height: 1.2;'>Core Course Files &amp; Structure</h3>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Choose the course folder structure and which materials to download.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Select what to download and how to organize it on your computer.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                     
                     def update_org_state(mode):
@@ -1322,7 +1322,7 @@ div[class*="st-key-card1_include_section"] {
                         background-image: url('data:image/png;base64,{b64_flat}') !important;
                     }}
                     div.st-key-btn_org_flat button::after {{
-                        content: "Place all files together in the course folder" !important;
+                        content: "Place all files together in the course folder." !important;
                         font-size: 0.85rem !important;
                         line-height: 1.2 !important;
                         color: #a0a0a0 !important;
@@ -1366,21 +1366,21 @@ div[class*="st-key-card1_include_section"] {
                 with st.container(border=True, key="card_native_content"):
                     _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
                     if _sec_active == 0:
-                        dynamic_tag = "None selected"
+                        dynamic_tag = "<strong>OFF</strong>  |  None selected"
                     elif _sec_active == TOTAL_SECONDARY_SUBS:
-                        dynamic_tag = "Everything included in download"
+                        dynamic_tag = "<strong>ON</strong>  |  All selected"
                     else:
-                        dynamic_tag = f"{_sec_active} Included in download"
+                        dynamic_tag = f"<strong>ON</strong>  |  {_sec_active} selected"
 
                     b64_wf2 = _load_b64("assets/icon_workflow_2.png")
                     header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
 <img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
 <h3 style='margin: 0; line-height: 1.2;'>Canvas Content <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
-<span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
+<span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600;'>{dynamic_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Download information, pages and other content from Canvas to your local Course folder.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Save information, pages and other content from Canvas to your local Course folder.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
 
                     # Helper to safely load icon
@@ -1393,13 +1393,13 @@ div[class*="st-key-card1_include_section"] {
 
                     # Button data
                     button_defs = [
-                        ('dl_assignments', 'Assignments', 'Download assignment descriptions and any attached files.', 'icon_assignments.png'),
-                        ('dl_syllabus', 'Syllabus', 'Download the course syllabus page as HTML.', 'icon_syllabus.png'),
-                        ('dl_announcements', 'Announcements', 'Download course announcements and any attached files.', 'icon_announcements.png'),
-                        ('dl_discussions', 'Discussions', 'Download discussion threads as HTML.', 'icon_discussions.png'),
-                        ('dl_quizzes', 'Quizzes', 'Download quiz questions and answers as HTML.', 'icon_quizzes.png'),
-                        ('dl_rubrics', 'Rubrics', 'Download rubric criteria as text tables.', 'icon_rubrics.png'),
-                        ('dl_submissions', 'Submissions (Results)', 'Download feedback & grades from your submissions.', 'icon_submissions.png')
+                        ('dl_assignments', 'Assignments', 'Includes assignment descriptions and any attached files.', 'icon_assignments.png'),
+                        ('dl_syllabus', 'Syllabus', 'Save the course syllabus page as HTML.', 'icon_syllabus.png'),
+                        ('dl_announcements', 'Announcements', 'Save course announcements and any attached files.', 'icon_announcements.png'),
+                        ('dl_discussions', 'Discussions', 'Save discussion threads as HTML.', 'icon_discussions.png'),
+                        ('dl_quizzes', 'Quizzes', 'Save quiz questions and answers as HTML.', 'icon_quizzes.png'),
+                        ('dl_rubrics', 'Rubrics', 'Save rubric criteria to text files.', 'icon_rubrics.png'),
+                        ('dl_submissions', 'Submissions (Results)', 'Save feedback & grades from your submissions.', 'icon_submissions.png')
                     ]
 
                     # Generate CSS
@@ -1443,9 +1443,10 @@ div[class*="st-key-card1_include_section"] {
                         flex-direction: column;
                     }
                     div.st-key-btn_dl_secondary_master button {
-                        height: 52px !important;
-                        padding-top: 2px !important;
-                        padding-bottom: 2px !important;
+                        height: 48px !important;
+                        padding-top: 0px !important;
+                        padding-bottom: 0px !important;
+                        justify-content: center !important;
                     }
                     ''')
 
@@ -1454,6 +1455,7 @@ div[class*="st-key-card1_include_section"] {
                     m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
                     m_border = "rgba(255, 255, 255, 0.05)"
                     m_ledge = "#68d4a3" if m_active else "transparent"
+                    m_ledge_border = "#68d4a3" if m_active else m_border
                     b64_m = safe_b64('icon_select_all.png')
                     m_img_rule = f"background-image: url('data:image/png;base64,{b64_m}') !important;" if b64_m else ""
                     m_icon_filter = "grayscale(0%) opacity(100%)" if m_active else "grayscale(25%) opacity(50%)"
@@ -1462,20 +1464,24 @@ div[class*="st-key-card1_include_section"] {
                     div.st-key-btn_dl_secondary_master button {{
                         background-color: {m_bg} !important;
                         border: 1px solid {m_border} !important;
-                        border-bottom: 4px solid {m_ledge} !important;
+                        border-bottom: 1px solid {m_ledge_border} !important;
+                        box-shadow: inset 0 -3px 0 0 {m_ledge} !important;
                         border-radius: 12px !important;
                         {m_img_rule}
                     }}
-                    div.st-key-btn_dl_secondary_master button:hover {{
-                        border-bottom: 4px solid {m_ledge} !important;
-                    }}
+                    ''')
+
+                    if not m_active:
+                        css_blocks.append('''
+                        div.st-key-btn_dl_secondary_master button:hover {
+                            border-bottom: 1px solid #3e8162 !important;
+                            box-shadow: inset 0 -3px 0 0 #3e8162 !important;
+                        }
+                        ''')
+
+                    css_blocks.append(f'''
                     div.st-key-btn_dl_secondary_master button::before {{ 
                         filter: {m_icon_filter} !important; 
-                    }}
-                    div.st-key-btn_dl_secondary_master button::after {{
-                        content: "Include all supplementary materials in the download." !important;
-                        font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important;
-                        display: block !important; text-align: left !important; width: 100%; margin-top: -3px !important; line-height: 1.2 !important;
                     }}
                     ''')
 
@@ -1569,24 +1575,24 @@ div[class*="st-key-card1_include_section"] {
             with st.container(border=True, key="card_ai_engine"):
                 # --- Conversion Button Data ---
                 conv_button_defs = [
-                    ('convert_zip',   'Auto-Extract Archives',    'Extract files from .zip and .tar.gz archives.',        'icon_conv_zip.png'),
+                    ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png'),
                     ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png'),
-                    ('convert_word',  'Word Docs → PDF',          'Convert old Word files (e.g. .doc, .rtf) to PDF.',                    'icon_conv_word.png'),
-                    ('convert_excel', 'Excel → PDF',              'Convert .xlsx, .xls spreadsheets to PDF.',                'icon_conv_excel.png'),
+                    ('convert_word',  'Legacy Word Docs → PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png'),
+                    ('convert_excel', 'Excel → PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png'),
                     ('convert_html',  'Canvas Pages → Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png'),
                     ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png'),
-                    ('convert_urls',  'Gather Web Links in .txt',        'Gather all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
+                    ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
                     ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png'),
                 ]
 
                 # --- Dynamic Tag Counter ---
                 _conv_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
                 if _conv_active == 0:
-                    conv_tag = "None selected"
+                    conv_tag = "<strong>OFF</strong>  |  None selected"
                 elif _conv_active == TOTAL_NOTEBOOK_SUBS:
-                    conv_tag = "All enabled"
+                    conv_tag = "<strong>ON</strong>  |  All selected"
                 else:
-                    conv_tag = f"{_conv_active} enabled"
+                    conv_tag = f"<strong>ON</strong>  |  {_conv_active} selected"
 
                 # --- Generate CSS for each button ---
                 conv_css_blocks = []
@@ -1606,7 +1612,7 @@ div[class*="st-key-card1_include_section"] {
 'background-position: 15px center !important; background-size: 30px !important;\n'
 'background-repeat: no-repeat !important; border-radius: 12px !important;\n'
 'display: flex; flex-direction: column; }\n'
-'div.st-key-btn_convert_master button { height: 52px !important; padding-top: 2px !important; padding-bottom: 2px !important; padding-left: 50px !important; background-size: 24px !important; }\n'
+'div.st-key-btn_convert_master button { height: 48px !important; padding-top: 0px !important; padding-bottom: 0px !important; padding-left: 50px !important; background-size: 24px !important; justify-content: center !important; }\n'
                 )
 
                 # Master (Select All) CSS
@@ -1614,15 +1620,20 @@ div[class*="st-key-card1_include_section"] {
                 m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
                 m_border = "rgba(255, 255, 255, 0.05)"
                 m_ledge = "#f97316" if m_active else "transparent"
+                m_ledge_border = "#f97316" if m_active else m_border
                 b64_conv_m = safe_b64('icon_conv_select_all.png')
                 m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
                 m_conv_icon_filter = "none" if m_active else "grayscale(100%) opacity(40%)"
 
                 conv_css_blocks.append(
-f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 4px solid {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
-f'div.st-key-btn_convert_master button:hover {{ border-bottom: 4px solid {m_ledge} !important; }}\n'
+f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 1px solid {m_ledge_border} !important; box-shadow: inset 0 -3px 0 0 {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
+                )
+                if not m_active:
+                    conv_css_blocks.append(
+f'div.st-key-btn_convert_master button:hover {{ border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }}\n'
+                    )
+                conv_css_blocks.append(
 f'div.st-key-btn_convert_master button::before {{ filter: {m_conv_icon_filter} !important; }}\n'
-f'div.st-key-btn_convert_master button::after {{ content: "Enable all conversions to optimize files for AI processing." !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: -3px !important; line-height: 1.2 !important; }}\n'
                 )
 
                 # Child button CSS (per-toggle)
@@ -1647,10 +1658,10 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
 <img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
 <h3 style='margin: 0; line-height: 1.2;'>Optimize for AI Tools <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
-<span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span>
+<span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600;'>{conv_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Convert your files into AI-friendly formats, so they're drag-and-drop ready for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Automatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
                 st.markdown(conv_header_html, unsafe_allow_html=True)
 
