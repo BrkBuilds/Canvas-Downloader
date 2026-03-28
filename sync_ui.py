@@ -1198,7 +1198,7 @@ def _render_hub_config(pair: dict):
     is_all = contract.get('file_filter', 'all') == 'all'
 
     # LOGIC FIX 2: Evaluate NotebookLM status based on all sub-settings being true
-    conversion_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel', 
+    conversion_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
                        'convert_html', 'convert_code', 'convert_urls', 'convert_video']
     is_notebook_lm = all(contract.get(k, False) for k in conversion_keys)
 
@@ -1236,7 +1236,7 @@ def _render_hub_config(pair: dict):
         st.markdown(cb("Auto-extract Archives (.zip, .tar.gz)", contract.get('convert_zip', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Powerpoints (pptx.) to PDF", contract.get('convert_pptx', False), indent=True), unsafe_allow_html=True)
         st.markdown(cb("Convert Old Word Docs (.doc, .rtf) to PDF", contract.get('convert_word', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
+        st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF & AI Data", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
 
     with c4:
         st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -15px;'>Spacer</div>", unsafe_allow_html=True) 
@@ -4533,7 +4533,7 @@ def _show_analysis_review():
 
         st.session_state['_sync_contract_loaded'] = True
 
-    TOTAL_NOTEBOOK_SUBS = 8
+    TOTAL_NOTEBOOK_SUBS = 9
 
     # --- Checkbox label map (shared between Mode 1 global + Mode 2 per-course) ---
     _CHECKBOX_LABELS = {
@@ -4543,8 +4543,8 @@ def _show_analysis_review():
                           'Converts .pptx/.ppt files to PDF after sync using Microsoft Office. Requires PowerPoint installed.'),
         'convert_word':  ('Convert Old Word Docs (.doc, .rtf) to PDF',
                           'Converts legacy Word documents to PDF for accurate NotebookLM ingestion using Microsoft Office. Modern .docx are ignored.'),
-        'convert_excel': ('Convert Excel Files (.xlsx, .xls) to PDF',
-                          'Converts Excel workbooks to PDF. Restructures PageSetup to ensure tabular content is 1 page wide and infinitely tall.'),
+        'convert_excel': ('Convert Excel Files (.xlsx, .xls) to PDF & AI Data',
+                          'Converts Excel workbooks to PDF and extracts structured CSV data into a _Data.txt sidecar, optimized for AI ingestion.'),
         'convert_html':  ('Convert Canvas Pages (HTML) to Markdown',
                           'Converts Canvas Pages from HTML to clean Markdown formats.'),
         'convert_code':  ('Convert Code & Data Files to .txt',
@@ -4872,7 +4872,7 @@ def _show_analysis_review():
             # Build HTML diff table
             _short_labels = {
                 'convert_zip': 'Extract Archives', 'convert_pptx': 'PPTX → PDF',
-                'convert_word': 'Word → PDF', 'convert_excel': 'Excel → PDF',
+                'convert_word': 'Word → PDF', 'convert_excel': 'Excel → PDF & AI Data',
                 'convert_html': 'HTML → Markdown', 'convert_code': 'Code → .txt',
                 'convert_urls': 'URLs → List', 'convert_video': 'Video → MP3',
                 'file_filter': 'File Filter',
@@ -6202,7 +6202,8 @@ def _run_sync():
     from post_processing import (
         UIBridge, run_archive_extraction, run_pptx_conversion,
         run_html_conversion, run_code_conversion, run_url_compilation,
-        run_word_conversion, run_excel_conversion, run_video_conversion,
+        run_word_conversion, run_excel_data_conversion, run_excel_conversion,
+        run_video_conversion,
     )
 
     # 1. Clear Phase 2 download UI to prevent stacking
@@ -6294,7 +6295,13 @@ def _run_sync():
         get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word'), pp_ui
     )
 
-    # Excel -> PDF
+    # Excel → AI Data + PDF (single toggle, dual pipeline)
+    # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
+    run_excel_data_conversion(
+        get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel'), pp_ui
+    )
+
+    # Excel → PDF
     run_excel_conversion(
         get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel'), pp_ui
     )

@@ -29,6 +29,7 @@ _COLOR_MAP = {
     'Code files':         '#FBBF24',
     'Legacy Word files':  theme.BLUE_PRIMARY,
     'Excel files':        '#22c55e',
+    'Excel data files':   '#14b8a6',
     'Video files':        theme.WARNING,
 }
 
@@ -408,6 +409,54 @@ def run_word_conversion(files, ui: UIBridge):
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Legacy Word to PDF conversion complete!</span>")
 
 
+def run_excel_data_conversion(files, ui: UIBridge):
+    """Extract Excel data into a structured _Data.txt sidecar.
+
+    Produces a single _Data.txt file per workbook containing Markdown-headed
+    sheet sections with CSV-formatted cell data, optimized for AI ingestion.
+
+    Does NOT delete the original file or update the sync manifest — the
+    _Data.txt is an untracked secondary artifact (Approach A).
+    """
+    if not files:
+        return
+    from excel_converter import ExcelToData
+
+    total = len(files)
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Queueing {total} Excel files for AI data extraction...</span>")
+    _render_dashboard(ui, 0, total, "Excel data files")
+    time.sleep(0.2)
+
+    with ExcelToData() as extractor:
+        for i, (excel_file, sm, ctx) in enumerate(files, 1):
+            if ui.is_cancelled():
+                _log_msg(ui, f"<span style='color: {theme.ERROR};'>[ 🛑 ] Process cancelled by user.</span>")
+                break
+            old_name = excel_file.name
+            _show_active_file(ui, old_name)
+            _render_dashboard(ui, i, total, "Excel data files")
+
+            try:
+                abs_path = str(excel_file.absolute())
+                data_path, data_error_msg = extractor.convert(abs_path)
+
+                if data_path:
+                    data_name = Path(data_path).name
+                    # Do NOT update manifest — _Data.txt is an untracked sidecar
+                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)} → {esc(data_name)}</span>")
+                    ui.pp_success_count += 1
+                else:
+                    err_detail = data_error_msg if data_error_msg else "Excel data extraction failed"
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} ({err_detail})</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, err_detail)
+                    ui.pp_failure_count += 1
+            except Exception as e:
+                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] Skipped: {esc(old_name)} (System Error)</span>")
+                _log_error_to_file(ui.error_log_path, old_name, f"System Error: {e}")
+                ui.pp_failure_count += 1
+    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ ✨ ] Excel AI data extraction complete!</span>")
+
+
 def run_excel_conversion(files, ui: UIBridge):
     """Convert Excel files (.xlsx, .xls, .xlsm) to PDF.
 
@@ -566,11 +615,17 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         if word_files:
             run_word_conversion([(f, sm, None) for f in word_files], ui)
 
-    # Excel → PDF
+    # Excel → AI Data + PDF (single toggle, dual pipeline)
+    # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
+    # Each call to _glob_files produces an independent list — no iterator exhaustion.
     if contract.get('convert_excel', False):
-        excel_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
-        if excel_files:
-            run_excel_conversion([(f, sm, None) for f in excel_files], ui)
+        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
+        if excel_data_files:
+            run_excel_data_conversion([(f, sm, None) for f in excel_data_files], ui)
+
+        excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
+        if excel_pdf_files:
+            run_excel_conversion([(f, sm, None) for f in excel_pdf_files], ui)
 
     # Video → MP3
     if contract.get('convert_video', False):
