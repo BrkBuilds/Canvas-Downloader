@@ -24,9 +24,21 @@
 * **Dynamic Expander Counters (CSS Ghost Text):** Injecting dynamic variables directly into the Python string of `st.expander(f"🆕 [{x}/{y}]")` changes the widget ID on rerun, destroying the user's open/closed state. **Rule:** Keep the title static (`st.expander("🆕 Files")`) and project the dynamic counter onto the screen using the `::after` CSS pseudo-element targeting the summary tag.
 * **Radio Widget Granular Tooltips:** Streamlit lacks per-option tooltips for radios. **Rule:** Inject a styled HTML block (`st.markdown`) directly beneath the radio using `ⓘ` icons, `color: #6b7280`, and `font-size: 0.78rem` to visually fake native hints.
 * **Zero-Indentation HTML:** Streamlit parses indented HTML strings as `<pre><code>` blocks. **Rule:** Keep multi-line HTML/CSS strings strictly unindented in Python code.
-* **Dynamic Equal-Height Columns (Elastic Cards):** When placing buttons/cards side-by-side in st.columns, they will render at different heights if the text wraps unevenly. Streamlit stretches the invisible outer columns, but leaves the inner stButton wrappers at height: auto. **Rule:** To create uniform card rows, never hardcode pixel heights. Instead, inject CSS to stretch the middlemen: div[data-testid="column"] > div, div[data-testid="stButton"] { height: 100% !important; } and then set your custom button to height: 100% !important;.
-* **Crushing Streamlit Column Gaps:** st.columns(gap="small") still enforces a rigid 0.5rem minimum gap. **Rule:** To pull segmented controls or cards tightly together, target the specific wrapper's flexbox container: div[class*="st-key-my_wrapper"] [data-testid="stHorizontalBlock"] { gap: 4px !important; }.
-
+* **Dynamic Equal-Height Columns (Elastic Cards):** When placing buttons/cards side-by-side in st.columns, they will render at different heights if the text wraps unevenly. Streamlit stretches the invisible outer columns, but leaves the inner stButton wrappers at height: auto. **Rule:** To create uniform card rows, never hardcode pixel heights. Instead, inject CSS to stretch the middlemen: `div[data-testid="column"] > div, div[data-testid="stButton"] { height: 100% !important; }` and then set your custom button to `height: 100% !important;`.
+* **Bordered Container Height Synchronization (The Flex Bottleneck):**
+    * **Problem:** When using Native Streamlit `st.container(border=True, key="my_card")` elements side-by-side, they will fail to match each other's height dynamically if one expands. Streamlit 1.51+ injects an intermediate `stLayoutWrapper` parent *around* your keyed card, hardcoded to `flex: 0 1 auto`, permanently blocking vertical growth from the parent column. Furthermore, `st.container(border=True)` does *not* create an inner `stContainer` element; the keyed `stVerticalBlock` is the container itself.
+    * **Rule:** Do NOT use JavaScript `MutationObserver` components to sync heights (Streamlit's React engine will fight it, causing race conditions and infinite loops).
+    * **Solution:** To force dynamic height parity, apply a surgical two-tier CSS flex-chain directly mapping the DOM bottleneck:
+        ```css
+        /* Tier 1: Target the intermediate stLayoutWrapper parent */
+        div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-my_card"]) { flex: 1 !important; }
+        /* Tier 2: Ensure the target card wrapper itself actually expands */
+        div[class*="st-key-my_card"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        ```
+* **CSS `:has()` Depth Limits:**
+    * **Problem:** Attempting to build deep ancestor flex-chain selectors like `div:has(> div > div > [class*="st-key-my_card"])` often fails silently (`NO MATCH` in browser) because browser CSS engines struggle with deeply nested `:has()` pseudo-classes attached to partial attribute selectors within complex DOMs like Streamlit's.
+    * **Rule:** Never guess Streamlit wrapper depths. Map the exact DOM, and write minimal `parent:has(> child)` CSS selectors targeting precisely the bottleneck identified (like `stLayoutWrapper`).
+* **Crushing Streamlit Column Gaps:** st.columns(gap="small") still enforces a rigid 0.5rem minimum gap. **Rule:** To pull segmented controls or cards tightly together, target the specific wrapper's flexbox container: `div[class*="st-key-my_wrapper"] [data-testid="stHorizontalBlock"] { gap: 4px !important; }`.
 #### 4. State Management, Reactivity & Lifecycle
 * **First-Render Checkbox Hydration:** Stuffing `True` into `st.session_state["my_key"]` before declaring `st.checkbox` often fails visually on the first frame (the box flashes or appears unchecked). **Rule:** Always explicitly define the parameter: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))` to guarantee 100% visual parity on the initial draw.
 * **Widget Cleanup Bypass:** Navigating away from a step destroys its widgets and deletes their keys from `st.session_state`. **Rule:** Capture crucial widget booleans into custom `persistent_` state keys explicitly inside the `if st.button('Next'):` block, right before the `st.rerun()` trigger.
@@ -98,3 +110,15 @@ div.st-key-my_custom_card button::after {
     font-size: 0.85rem !important;
     color: #a0a0a0 !important;
 }
+
+#### 7. CSS-Based Disabled States (Streamlit Native API)
+* **Native Selector Targeting:** Streamlit buttons and widgets apply a `disabled` attribute to the underlying `<button>` tag when `disabled=True` is passed to the Python function.
+* **Rule:** Target `button[disabled]` natively within the parent keyed container CSS to handle dimming and interactivity locks for the entire "Card" unit:
+```css
+div[class*="st-key-btn_sec_org_"] button[disabled] {
+    opacity: 0.4 !important;
+    filter: grayscale(100%) !important;
+    pointer-events: none !important;
+}
+```
+* **Typography Stability:** Pair the native button dimming with a manual color toggle for the section label (e.g., using `#475569` for "Deep Dim" state) to maintain HTML structure while visually communicating a locked state.

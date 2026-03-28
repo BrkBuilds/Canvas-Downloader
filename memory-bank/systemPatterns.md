@@ -143,6 +143,22 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: Streamlit's internal DOM refactoring (especially in version 1.51.0+) frequently strips or renames the wrapper classes (`stVerticalBlockBorderWrapper`, etc.) that developers rely on for targeting containers with custom CSS. Even explicit `st-key` classes can be moved or stripped by the rendering engine.
     - *Solution*: Plant a custom, developer-controlled CSS class (a "Trojan Horse") inside an injected HTML block (e.g., `<div class='step-2-card-target'>...</div>`).
     - *Selector Architecture*: Use the modern CSS `:has()` pseudo-class to target the high-level Streamlit container that contains the Trojan class: `div[data-testid="stContainer"]:has(.step-2-card-target)`. This effectively anchors the styling to a stable, identifiable element within the content, allowing for robust application-level overrides regardless of Streamlit's internal structural shifts.
+- **Bordered Container Height Synchronization (The Flex Bottleneck)**:
+    - *Problem*: When placing `st.container(border=True, key="my_card")` elements side-by-side in `st.columns`, they will not stretch to match each other's height dynamically if one expands. Unlike standard columns, the `stHorizontalBlock` stretches, but Streamlit injects an `stLayoutWrapper` parent around your keyed card with `flex: 0 1 auto`, which acts as a hard bottleneck blocking vertical growth.
+    - *Anti-Pattern*: Do NOT use JS components or `MutationObserver` to sync heights (Streamlit's React engine will fight it and cause infinite loops). Do NOT assume there is an inner `stContainer` (in Streamlit 1.51+, the `st.container(border=True)` renders the keyed `stVerticalBlock` *as* the bordered container itself).
+    - *Solution*: Apply a two-tier CSS flex-chain targeting exactly the bottlenecks identified, combined with an established "Baseline Height" for static cards (e.g., **185px** for Card 1 buttons) to ensure cards start flush and grow in lockstep.
+      ```css
+      /* Tier 1: Force the stLayoutWrapper bottleneck to grow */
+      div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-my_card"]) { flex: 1 !important; }
+      /* Tier 2: Ensure the keyed card fills the new space */
+      div[class*="st-key-my_card"] { flex: 1 !important; }
+      ```
+- **CSS-Based Disabled States (Streamlit Native API)**:
+    - *Problem*: When a widget like `st_segmented_control` or `st.button` is disabled via the `disabled=True` attribute, Streamlit applies its own internal dimming, but custom parent card styling (backgrounds, icons, etc.) remains fully bright, creating a "Functional but not Visual" disabled state.
+    - *Solution*: Target the `button[disabled]` selector natively within the keyed container CSS. Apply `opacity: 0.4`, `filter: grayscale(100%)`, and `pointer-events: none` to the entire card unit. Combine this with a session-state-driven color toggle for adjacent label text (`:gray` or `#475569`) to ensure the entire card region is visually locked.
+- **CSS `:has()` Depth Limits**:
+    - *Problem*: Attempting to build deep ancestor selectors like `div:has(> div > div > [class*="st-key-my_card"])` to map Streamlit's wrapper maze often fails instantly (returning `NO MATCH`) because browser CSS engines struggle with deeply nested `:has()` pseudo-classes attached to partial attribute selectors.
+    - *Rule*: Never guess Streamlit wrapper depths. Use direct `parent:has(> child)` CSS selectors targeting precisely the DOM bottleneck.
 
 ### Native Button Card Architecture
 To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.

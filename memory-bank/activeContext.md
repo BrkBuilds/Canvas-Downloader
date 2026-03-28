@@ -1,6 +1,20 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-27 — Harmonizing Download Settings UI)
+- **Dynamic CSS Flex-Chain (`app.py`)**:
+    - **Root Cause**: When the "Canvas-Native Content" (Card 2) expanded to reveal segmented controls, "Core Course Files" (Card 1) remained at its natural height. Streamlit 1.51 injects an `stLayoutWrapper` parent with `flex: 0 1 auto` that blocks vertical stretching, despite the parent `stVerticalBlock` having `flex: 1 1 0%`.
+    - **Solution**: Injected a surgical 2-tier CSS flex chain. Tier 1 forces the `stLayoutWrapper` direct parent of the keyed cards to `flex: 1 !important` using a `:has(>)` selector. Tier 2 ensures the keyed cards themselves (`st-key-card_...`) maintain `flex: 1 !important`.
+    - **DOM Architecture Discovery**: Discovered that `st.container(border=True, key=...)` does *not* create an inner `stContainer` element. The `st-key-*` wrapper itself (an `stVerticalBlock`) is the bordered container.
+    - **Abandoned JS Workarounds**: Explicitly rejected `MutationObserver` DOM-syncing due to React rendering conflicts, race conditions, and infinite feedback loops triggered by Streamlit's state engine.
+- [x] **Active Feature: Harmonizing Download Settings UI (Complete)**: Transitioned to a pure CSS 2-rule flex-chain solution (185px height) that robustly forces Card 1 and Card 2 to align flush at the bottom across all layout states.
+- **UI & Copy Refinement (Session 2026-03-27 — Polishing Step 2 UX)**:
+    - **Permanent Card Visibility**: Removed conditional `if _sec_active > 0` wrapper around Card 2's segmented control. The "Organization" options are now permanently visible to prevent jarring layout shifts.
+    - **Native CSS Disabled State**: Implemented a robust `button[disabled]` CSS selector in `_get_sec_org_segmented_css` to handle dimming (`opacity: 0.4`, `filter: grayscale(100%)`) natively when no secondary content is selected.
+    - **Proportional Geometry**: Bumped Card 1 button heights to `185px` and icons to `80px` to perfectly match the persistent vertical footprint of Card 2.
+    - **Typography Dimming**: Introduced `#475569` as the "Deep Dim" color for disabled section labels, ensuring a clear visual hierarchy between locked and active states.
+    - **Copy Overhaul**: Updated terminology across Step 2 for clarity. "AI Compatibility Engine" is now explicitly marketed as "Optimized for NotebookLM". "Subfolders" in Card 2 became "Dedicated Subfolders". Descriptions for assignments and submissions were refined for accuracy (e.g., noting that submission files are not included in metadata downloads).
+
 ## Recent Changes (Session 2026-03-26 — Temp File Shadowing Pipeline & Encoding Fix)
 - **Win32 MAX_PATH Bypass (`ui_helpers.py`, `pdf_converter.py`, `word_converter.py`, `excel_converter.py`)**:
     - **Root Cause**: Deeply nested Canvas course folder structures generate absolute file paths exceeding Win32 MAX_PATH (255 chars), causing Office COM APIs (`Presentations.Open`, `Documents.Open`, `Workbooks.Open`) to hard-crash.

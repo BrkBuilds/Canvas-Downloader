@@ -1,6 +1,12 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.14: Harmonizing Download Settings UI & Copy Polish** (2026-03-27):
+    - [x] **Vertical Symmetry**: Finalized a 185px button height for Card 1 ("Core Course Files") to perfectly align with the persistent Card 2 footprint.
+    - [x] **Copy Polish**: Optimized all Step 2 descriptions for clarity; rebranded "AI Compatibility" as "Optimized for NotebookLM".
+    - [x] **Dynamic Text Dimming**: Implemented `#475569` as a "Deep Dim" color for disabled section labels to enhance visual state feedback.
+    - [x] **Native Disabled CSS**: Transitioned to `button[disabled]` CSS selectors in `_get_sec_org_segmented_css` to handle locked states without complex JS logic.
+    - [x] **Surgical Flex-Chain CSS**: Implemented a two-rule CSS fix targeting `stLayoutWrapper:has(> [class*="st-key-card_"])` to force `flex: 1 !important`, achieving flush bottom-edge alignment across all layout states without JavaScript.
 - [x] **Phase 6.13: Step 2 UI Modernization & CSS Stabilization** (2026-03-26):
     - [x] **Trojan Horse Architecture**: Injected custom classes (`step-2-card-target`) into HTML headers to bypass Streamlit's internal DOM refactoring.
     - [x] **Version-Agnostic Targeting**: Implemented `:has()` CSS selectors on `stContainer` to ensure background elevation applies correctly in Streamlit 1.51+.
