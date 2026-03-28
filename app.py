@@ -926,7 +926,7 @@ div.st-key-btn_include_study button::before {{
 
 /* 6. Descriptions (::after) */
 div.st-key-btn_include_all button::after {{
-    content: "Download everything!" !important;
+    content: "Includes everything from the Canvas Files tab" !important;
     display: block !important;
     font-size: 0.75rem !important;
     color: #a0a0a0 !important;
@@ -938,7 +938,7 @@ div.st-key-btn_include_all button::after {{
     width: 100% !important;
 }}
 div.st-key-btn_include_study button::after {{
-    content: "Only the essentials" !important;
+    content: "Download PDFs & Powerpoints only" !important;
     display: block !important;
     font-size: 0.75rem !important;
     color: #a0a0a0 !important;
@@ -1106,8 +1106,8 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     filter: grayscale(100%) !important;
                 }}
 
-                div.st-key-btn_sec_org_inline button::after {{ content: "Place content according to chosen folder structure (Subfolders/Flat)" !important; }}
-                div.st-key-btn_sec_org_subfolders button::after {{ content: "Create folders for each content type (e.g. Assignments/, Quizzes/)" !important; }}
+                div.st-key-btn_sec_org_inline button::after {{ content: "Place Canvas Content alongside your other downloaded files." !important; }}
+                div.st-key-btn_sec_org_subfolders button::after {{ content: "Create folders for each type (e.g. Assignments/, Quizzes/)" !important; }}
                 div[class*="st-key-btn_sec_org_"] button::after {{
                     text-align: left !important;
                     width: 100% !important;
@@ -1249,10 +1249,10 @@ div[class*="st-key-card1_include_section"] {
                     b64_flat = get_base64_image("assets/icon_flat.png")
                     
                     with btn_left:
-                        st.button("Subfolders", key="btn_org_subfolders", use_container_width=True, on_click=update_org_state, args=("subfolders",))
+                        st.button("With Subfolders", key="btn_org_subfolders", use_container_width=True, on_click=update_org_state, args=("subfolders",))
                             
                     with btn_right:
-                        st.button("Flat", key="btn_org_flat", use_container_width=True, on_click=update_org_state, args=("flat",))
+                        st.button("All in One Folder", key="btn_org_flat", use_container_width=True, on_click=update_org_state, args=("flat",))
 
                     active_mode = st.session_state.get('download_mode', 'modules')
                     active_btn_key = "subfolders" if active_mode == 'modules' else "flat"
@@ -1309,7 +1309,7 @@ div[class*="st-key-card1_include_section"] {
                         background-image: url('data:image/png;base64,{b64_subfolders}') !important;
                     }}
                     div.st-key-btn_org_subfolders button::after {{
-                        content: "Group files in subfolders, matching Canvas Modules" !important;
+                        content: "Organize files exactly as they appear in Canvas." !important;
                         font-size: 0.85rem !important;
                         line-height: 1.2 !important;
                         color: #a0a0a0 !important;
@@ -1324,6 +1324,7 @@ div[class*="st-key-card1_include_section"] {
                     div.st-key-btn_org_flat button::after {{
                         content: "Place all files together in the course folder" !important;
                         font-size: 0.85rem !important;
+                        line-height: 1.2 !important;
                         color: #a0a0a0 !important;
                         margin-top: -1px !important;
                         font-weight: 400 !important;
@@ -1350,7 +1351,7 @@ div[class*="st-key-card1_include_section"] {
 
                     with st.container(key="card1_include_section"):
                         st.markdown(
-                            "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose which files to include:</p>", 
+                            "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose which files to download:</p>", 
                             unsafe_allow_html=True
                         )
                         with st.container(key="include_files_segmented_wrapper"):
@@ -1358,7 +1359,7 @@ div[class*="st-key-card1_include_section"] {
                             with inc_left:
                                 st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
                             with inc_right:
-                                st.button("PDF & PPTX Only", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
+                                st.button("Presentations & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
             # --- COLUMN 2: Additional Course Content ---
             with col2:
@@ -1375,11 +1376,11 @@ div[class*="st-key-card1_include_section"] {
                     header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
 <img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
-<h3 style='margin: 0; line-height: 1.2;'>Canvas-Native Content <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
+<h3 style='margin: 0; line-height: 1.2;'>Canvas Content <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
 <span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{dynamic_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Grab everything else Canvas has to offer and extract it into your local course folder.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Download information, pages and other content from Canvas to your local Course folder.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
 
                     # Helper to safely load icon
@@ -1396,9 +1397,9 @@ div[class*="st-key-card1_include_section"] {
                         ('dl_syllabus', 'Syllabus', 'Download the course syllabus page as HTML.', 'icon_syllabus.png'),
                         ('dl_announcements', 'Announcements', 'Download course announcements and any attached files.', 'icon_announcements.png'),
                         ('dl_discussions', 'Discussions', 'Download discussion threads as HTML.', 'icon_discussions.png'),
-                        ('dl_quizzes', 'Quizzes', 'Download quiz questions and answers as structured HTML.', 'icon_quizzes.png'),
-                        ('dl_rubrics', 'Rubrics', 'Download rubric criteria as Markdown tables.', 'icon_rubrics.png'),
-                        ('dl_submissions', 'Submissions (metadata)', 'Download submission metadata (e.g. grades). Submission files not included.', 'icon_submissions.png')
+                        ('dl_quizzes', 'Quizzes', 'Download quiz questions and answers as HTML.', 'icon_quizzes.png'),
+                        ('dl_rubrics', 'Rubrics', 'Download rubric criteria as text tables.', 'icon_rubrics.png'),
+                        ('dl_submissions', 'Submissions (Results)', 'Download feedback & grades from your submissions.', 'icon_submissions.png')
                     ]
 
                     # Generate CSS
@@ -1530,7 +1531,7 @@ div[class*="st-key-card1_include_section"] {
                     sec_org_label_color = "#cbd5e1" if _sec_active > 0 else "#475569"
                     
                     st.markdown(f"""
-                    <p style='font-size: 0.9rem; font-weight: 600; color: {sec_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas-Native Content should be organized:</p>
+                    <p style='font-size: 0.9rem; font-weight: 600; color: {sec_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas Content should be organized:</p>
                     {_get_sec_org_segmented_css()}
                     """, unsafe_allow_html=True)
 
@@ -1541,7 +1542,7 @@ div[class*="st-key-card1_include_section"] {
                         
                         with c1:
                             st.button(
-                                "In Course Folder/Modules", 
+                                "Match Course Folder structure", 
                                 key="btn_sec_org_inline", 
                                 on_click=_set_isolate_secondary, 
                                 args=(False,), 
@@ -1550,7 +1551,7 @@ div[class*="st-key-card1_include_section"] {
                             )
                         with c2:
                             st.button(
-                                "In Dedicated Subfolders", 
+                                "In Separate Folders", 
                                 key="btn_sec_org_subfolders", 
                                 on_click=_set_isolate_secondary, 
                                 args=(True,), 
@@ -1572,9 +1573,9 @@ div[class*="st-key-card1_include_section"] {
                     ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png'),
                     ('convert_word',  'Word Docs → PDF',          'Convert old Word files (e.g. .doc, .rtf) to PDF.',                    'icon_conv_word.png'),
                     ('convert_excel', 'Excel → PDF',              'Convert .xlsx, .xls spreadsheets to PDF.',                'icon_conv_excel.png'),
-                    ('convert_html',  'HTML → Markdown',          'Convert Canvas Pages from HTML to Markdown.',          'icon_conv_html.png'),
+                    ('convert_html',  'Canvas Pages → Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png'),
                     ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png'),
-                    ('convert_urls',  'Compile Web Links',        'Extract & insert all .url/.webloc shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
+                    ('convert_urls',  'Gather Web Links in .txt',        'Gather all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
                     ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png'),
                 ]
 
@@ -1645,12 +1646,11 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                 conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
 <img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
 <div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
-<h3 style='margin: 0; line-height: 1.2;'>AI Compatibility: Conversion Engine <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
+<h3 style='margin: 0; line-height: 1.2;'>Optimize for AI Tools <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
 <span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>{conv_tag}</span>
 </div>
 </div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Automatically convert your course materials into AI-digestible filetypes, <strong>optimized for NotebookLM</strong> (drag-and-drop) and other AI tools.</p>
-<p style='font-size: 0.85rem; color: #64748b; font-style: italic; margin-top: 6px; margin-bottom: 0px;'>Note: Runs after your download finishes. Canvas-Native Content will also be converted if included in download.</p>
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Convert your files into AI-friendly formats, so they're drag-and-drop ready for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
                 st.markdown(conv_header_html, unsafe_allow_html=True)
 
