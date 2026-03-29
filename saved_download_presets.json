@@ -1,0 +1,35 @@
+{
+  "presets": [
+    {
+      "preset_id": "preset_3120e6168b40",
+      "preset_name": "w",
+      "description": "",
+      "created_at": "2026-03-29T00:50:49.616682+00:00",
+      "is_builtin": false,
+      "settings": {
+        "download_mode": "flat",
+        "file_filter": "all",
+        "dl_isolate_secondary": false,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_rubrics": false,
+        "dl_submissions": false,
+        "dl_secondary_master": false,
+        "notebooklm_master": false,
+        "convert_zip": false,
+        "convert_pptx": false,
+        "convert_word": false,
+        "convert_excel": false,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": false,
+        "convert_video": false
+      },
+      "include_path": true,
+      "download_path": "C:\\Users\\birkl\\Downloads"
+    }
+  ]
+}

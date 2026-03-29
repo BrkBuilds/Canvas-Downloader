@@ -138,6 +138,15 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Callback & CSS Hoisting Pattern**:
     - *Problem*: Defining `@st.fragment` callback functions or `<style>` blocks inside `st.columns` or `st.container` blocks can cause Streamlit to unmount and re-re-render those elements when the parent container's state changes. This leads to "flapping" UI or lost widget focus.
     - *Solution*: Always hoist fragments, callbacks, and CSS definitions to the absolute top of the parent render function, *before* any layout containers (`columns`, `tabs`, `expanders`) are instantiated. This ensures the logic and styling remain stable regardless of the layout's internal branch mutations.
+- **Dialog Function Global Hoisting (`@st.dialog`)**:
+    - *Problem*: If a dialog function is defined structurally inside an `if st.session_state['step'] == 1:` block, it effectively ceases to exist in the global Python namespace when the UI advances to `elif step == 2:`, crashing the application when a Step 2 button attempts to invoke the modal.
+    - *Solution*: Dialog definitions (`def _my_dialog():`) decorated with `@st.dialog` must be hoisted to the absolute top of the parent container wrapper (before any step-routing logical branches). This ensures they are compiled and accessible universally regardless of the user's current progression in the wizard.
+- **Dialog Full-Scope Rerun (`st.rerun(scope="app")`)**:
+    - *Problem*: When an action inside a dialog mutates the core `st.session_state` (like Applying a Preset), a standard `st.rerun()` only restarts the modal fragment itself. The underlying parent page remains completely visually stale until the user manually clicks away or closes the modal.
+    - *Solution*: Use `st.rerun(scope="app")` paired with a `try/except TypeError` fallback (for older Streamlit versions). This guarantees the modal is violently destroyed and the entire native application tree re-renders from the top using the newly injected state variables.
+- **The Ghost Toast Pattern (Pending Toasts)**:
+    - *Problem*: `st.toast()` notifications fired inside a dialog immediately disappear if the next line of code runs an `st.rerun(scope="app")`, because the modal container they were bound to is instantly destroyed.
+    - *Solution*: Do not call `st.toast` inside the dialog. Instead, inject the message into `st.session_state['pending_toast'] = "✅ Success"`. At the absolute top of the target page's layout block (e.g. `Step 2`), write a consumer: `if 'pending_toast' in session_state: st.toast(session_state.pop('pending_toast'))`. The toast will now cleanly render precisely as the dialog drops and the main page refreshes.
 - **Merged CSS/HTML Injection Pattern**:
     - *Problem*: Separate `st.markdown` calls for `<style>` and HTML headers create multiple hidden Streamlit wrapper `divs`, each adding extra vertical padding.
     - *Solution*: Bundle the CSS `<style>` block and the HTML `<h3>` tag into a *single* `st.markdown(unsafe_allow_html=True)` call to minimize div overhead.

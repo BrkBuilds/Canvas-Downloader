@@ -328,6 +328,13 @@
     - [x] **Throttling**: Added `time.sleep(0.3)` pauses after the `Open` and `Export` commands.
     - [x] **Session Global Log Headers**: `debug_log.txt` now sits globally in the workspace with automatically injected Course Headers.
 
+- [x] **Phase 6.17: Saved Settings & Presets** (2026-03-29):
+    - [x] **Backend Layer**: Created `preset_manager.py` featuring atomic JSON serialization and dictionary snapshots to perfectly capture 19+ session variables.
+    - [x] **Built-in Immutability**: Shipped 3 hardcoded, immutable system presets ("1:1 Full Canvas Course", "AI Power-User", "NotebookLM Optimized") for zero-config onboarding.
+    - [x] **Step 2 Header Integration**: Refactored the Step 2 wizard header into a split 2-column layout housing the "💾 Save Configuration" and "⚙️ Presets" triggering buttons.
+    - [x] **Dialog Management & Reruns**: Built two `@st.dialog` modals. Fixed stale underlying states by triggering cross-scope full-page refreshes (`st.rerun(scope="app")`) upon Application or Deletion of presets.
+    - [x] **Ghost Toast Implementation**: Engineered a `pending_toast` consumer at the top of Step 2 to gracefully hand off success messages from dying modals to the persistent main page.
+
 ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)
 - [x] Sync Robustness & Reliability Phase (2026-02-11)

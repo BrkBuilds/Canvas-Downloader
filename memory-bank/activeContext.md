@@ -1,6 +1,19 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-29 — Saved Settings & Presets)
+- **PresetManager Engine (`preset_manager.py`)**:
+    - **Core Function**: Abstracted a new data layer to allow power users to save and reuse complex Step 2 toggle configurations (Content, Organization, AI/NotebookLM conversions, and path).
+    - **Atomic Persistence**: Reused the proven `SavedGroupsManager` paradigm (`.tmp` file + `os.replace` + `threading.Lock`) to serialize user presets directly to `saved_download_presets.json` safely.
+    - **Immutable Built-ins**: Hardcoded 3 immutable system presets ("1:1 Full Canvas Course Download", "AI Power-User Student", "NotebookLM Optimized") to provide immediate value and protect baseline UX.
+    - **Master Toggle Re-derivation**: Engineered `apply_preset()` to not only dump the 19+ sub-state keys but also actively map and re-derive the mathematical states for `dl_secondary_master` and `notebooklm_master` toggles to maintain perfect UI visual parity without triggering React-style render loops.
+- **UI Integration (`app.py`)**:
+    - **Header Refactor**: Evolved the monolithic Step 2 markdown header into a stable 2-column layout (`[0.6, 0.4]`) to securely house the new "💾 Save Configuration" and "⚙️ Presets" buttons flush-right.
+    - **Dialog Architecture (`@st.dialog`)**: Deployed two new modals for saving and managing presets. The hub utilizes a tabbed interface ("🌟 Built-in Presets" vs "👤 My Presets") to organize the cards cleanly.
+    - **Dialog Scope Rerun (`st.rerun(scope="app")`)**: Fixed a severe UI state desync where clicking "Apply" inside a dialog wouldn't update the underlying main screen. By invoking `st.rerun(scope="app")`, the modal is instantly destroyed and the entire page re-evaluates the newly injected `session_state` variables.
+    - **Ghost Toast Pattern / Pending Toasts**: Solved the issue where `st.toast` calls initiated inside a dialog disappear instantly when `scope="app"` closes the modal. Implemented a `pending_toast` string in `session_state` that is consumed ("popped") at the top of the `elif step == 2:` block natively, ensuring the toast renders over the main UI *after* the dialog dies.
+    - **Global Dialog Placement**: Addressed a severe Pyrefly linting/lexical scoping error where dialog definitions (`@st.dialog`) nested inside the `if step == 1:` block were completely inaccessible during Step 2. Hoisted the definitions directly beneath the main `_main_content.container()` wrapper so they exist universally regardless of step state.
+
 ## Recent Changes (Session 2026-03-28 — Excel → AI Data Pipeline)
 - **Zero-Dependency Extraction Engine (`excel_converter.py`)**:
     - **Root Cause**: The existing PDF converter optimizes Excel sheets for visual review but destroys raw tabular alignment, making the output difficult for AI Agents (NotebookLM, Claude) to parse accurately. Adding heavy dependencies like `pandas` or `openpyxl` violates the project's lightweight footprint.

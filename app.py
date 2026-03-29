@@ -2,6 +2,7 @@ import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
 from post_processing import run_all_conversions, UIBridge
 from sync_manager import SyncManager
+from preset_manager import PresetManager
 import asyncio
 import base64
 import collections
@@ -64,6 +65,62 @@ st.markdown("""
         color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
     }
+
+    /* ═══════════════════════════════════════════════
+       Preset Header Buttons — compact, muted style
+       ═══════════════════════════════════════════════ */
+    div.st-key-btn_save_config button,
+    div.st-key-btn_presets_hub button {{
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 4px 12px !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #94a3b8 !important;
+        transition: all 0.2s ease !important;
+    }}
+    div.st-key-btn_save_config button:hover,
+    div.st-key-btn_presets_hub button:hover {{
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        color: #e2e8f0 !important;
+    }}
+
+    /* Dialog button overrides — scoped to preset dialogs */
+    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"],
+    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button[kind="primary"] {{
+        background-color: rgba(56, 189, 248, 0.2) !important;
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        color: #38bdf8 !important;
+    }}
+    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"]:hover,
+    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button[kind="primary"]:hover {{
+        background-color: rgba(56, 189, 248, 0.3) !important;
+    }}
+    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"][disabled] {{
+        opacity: 0.4 !important;
+        pointer-events: none !important;
+    }}
+
+    /* Delete buttons inside preset hub — red hover */
+    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button:hover {{
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }}
+
+    /* Hide native dialog close button — force users through state-aware Close */
+    div[data-testid="stDialog"] button[aria-label="Close"] {{
+        display: none !important;
+    }}
+
+    /* Preset card compact styling */
+    div[class*="st-key-preset_card_"] {{
+        padding: 12px !important;
+        margin-bottom: 8px !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -591,12 +648,171 @@ if not st.session_state['is_authenticated']:
 _main_content = st.empty()
 with _main_content.container():
 
+    # ===================================================================
+    # Preset Dialogs (defined here so they are accessible from any step)
+    # ===================================================================
+
+    def _render_preset_card(mgr, preset, is_builtin=False):
+        """Render a single preset as a bordered card with Apply/Delete actions."""
+        with st.container(border=True, key=f"preset_card_{preset['preset_id']}"):
+            name = preset['preset_name']
+            desc = preset.get('description', '')
+            icon = "🌟" if is_builtin else "👤"
+
+            st.markdown(f"""
+                <div style='margin-bottom: 8px;'>
+                    <span style='font-size: 1.15rem; font-weight: 600;'>{icon} {esc(name)}</span>
+                </div>
+            """, unsafe_allow_html=True)
+
+            if desc:
+                st.markdown(
+                    f"<p style='color:#aaa; font-size:0.85rem; margin-top: -8px;'>{esc(desc)}</p>",
+                    unsafe_allow_html=True,
+                )
+
+            # Settings summary tags
+            settings = preset['settings']
+            tags = []
+            sec_count = sum(1 for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k))
+            conv_count = sum(1 for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k))
+
+            mode_tag = "📁 Subfolders" if settings.get('download_mode') == 'modules' else "📄 Flat"
+            filter_tag = "📦 All Files" if settings.get('file_filter') == 'all' else "📄 Study Only"
+            tags.append(mode_tag)
+            tags.append(filter_tag)
+            if sec_count > 0:
+                tags.append(f"📝 {sec_count} Canvas Content")
+            if conv_count > 0:
+                tags.append(f"🔧 {conv_count} Conversions")
+
+            tag_html = " &nbsp;·&nbsp; ".join(
+                f"<span style='color:#8ad; font-size:0.8rem;'>{t}</span>" for t in tags
+            )
+            st.markdown(tag_html, unsafe_allow_html=True)
+
+            # Action buttons
+            if is_builtin:
+                col_apply, _ = st.columns([1, 2])
+            else:
+                col_apply, col_del, _ = st.columns([1, 1, 1])
+
+            with col_apply:
+                if st.button("🚀 Apply", key=f"preset_apply_{preset['preset_id']}",
+                             use_container_width=True, type="primary"):
+                    mgr.apply_preset(st.session_state, preset)
+                    st.session_state['pending_toast'] = f"✅ Applied preset '{esc(name)}'"
+                    try:
+                        st.rerun(scope="app")
+                    except TypeError:
+                        st.rerun()
+
+            if not is_builtin:
+                with col_del:
+                    if st.button("🗑️ Delete", key=f"preset_delete_{preset['preset_id']}",
+                                 use_container_width=True):
+                        mgr.delete_preset(preset['preset_id'])
+                        st.session_state['preset_hub_toast'] = f"🗑️ Preset '{esc(name)}' deleted."
+                        st.rerun()
+
+    @st.dialog("💾 Save Configuration")
+    def _save_config_dialog():
+        from ui_helpers import get_config_dir
+        mgr = PresetManager(get_config_dir())
+
+        st.markdown(
+            '<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'
+            'Save your current Download Settings as a reusable preset.</p>',
+            unsafe_allow_html=True,
+        )
+
+        preset_name = st.text_input(
+            "Preset name:",
+            placeholder="e.g., AI Study Pack",
+            key="preset_save_name_input",
+        )
+
+        preset_desc = st.text_input(
+            "Description (optional):",
+            placeholder="e.g., All conversions for NotebookLM uploads",
+            key="preset_save_desc_input",
+        )
+
+        include_path = st.checkbox(
+            "Also save the current output folder path",
+            key="preset_save_include_path",
+            value=False,
+        )
+
+        # Preview current settings (collapsed)
+        with st.expander("📋 Current settings being saved"):
+            _preview = mgr.capture_current_settings(st.session_state)
+            _mode_disp = "With Subfolders" if _preview.get('download_mode') == 'modules' else "All in One Folder"
+            _filter_disp = "All Files" if _preview.get('file_filter') == 'all' else "Presentations & PDFs"
+            st.markdown(f"**Organization:** {_mode_disp}  \n**Include:** {_filter_disp}")
+
+            _sec_on = [k.replace('dl_', '').replace('_', ' ').title()
+                       for k in PresetManager.SECONDARY_CONTENT_KEYS if _preview.get(k)]
+            st.markdown(f"**Canvas Content:** {', '.join(_sec_on) if _sec_on else 'None'}")
+
+            _conv_on = [k.replace('convert_', '').replace('_', ' ').title()
+                        for k in PresetManager.NOTEBOOK_SUB_KEYS if _preview.get(k)]
+            st.markdown(f"**Conversions:** {', '.join(_conv_on) if _conv_on else 'None'}")
+
+            if include_path:
+                st.markdown(f"**Path:** `{st.session_state.get('download_path', '')}`")
+
+        # Action buttons
+        col_create, col_cancel = st.columns([1, 1])
+        with col_create:
+            create_disabled = not preset_name or not preset_name.strip()
+            if st.button("Save Preset", type="primary", use_container_width=True,
+                         key="preset_save_create", disabled=create_disabled):
+                _settings = mgr.capture_current_settings(st.session_state)
+                _path = st.session_state.get('download_path', '') if include_path else ''
+                mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
+                st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
+                st.rerun()
+        with col_cancel:
+            if st.button("Cancel", type="secondary", use_container_width=True, key="preset_cancel_save"):
+                st.rerun()
+
+    @st.dialog("⚙️ Download Presets", width="large")
+    def _presets_hub_dialog():
+        from ui_helpers import get_config_dir
+        mgr = PresetManager(get_config_dir())
+
+        # Consume in-dialog toasts
+        if 'preset_hub_toast' in st.session_state:
+            st.toast(st.session_state.pop('preset_hub_toast'))
+
+        tab_builtin, tab_user = st.tabs(["🌟 Built-in Presets", "👤 My Presets"])
+
+        with tab_builtin:
+            for _bp in mgr.get_builtin_presets():
+                _render_preset_card(mgr, _bp, is_builtin=True)
+
+        with tab_user:
+            _user_presets = mgr.load_presets()
+            if not _user_presets:
+                st.info("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
+            for _up in _user_presets:
+                _render_preset_card(mgr, _up, is_builtin=False)
+
+        # Close button — forces full app rerun for fresh state
+        if st.button("Close", type="secondary", use_container_width=True, key="btn_preset_hub_close"):
+            try:
+                st.rerun(scope="app")
+            except TypeError:
+                st.rerun()
+
     # STEP 1: Different UI based on mode
     if st.session_state['step'] == 1:
         
         # ========== SYNC MODE - STEP 1 ==========
         if st.session_state['current_mode'] == 'sync':
             render_sync_step1(fetch_courses, _main_content)
+
         
             # ========== DOWNLOAD MODE - STEP 1 ==========
         else:
@@ -826,8 +1042,24 @@ with _main_content.container():
     # STEP 2: DOWNLOAD SETTINGS
     elif st.session_state['step'] == 2:
         render_download_wizard(st, 2)
-        # 1. Squeeze the Main "Step 2" Header
-        st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
+
+        # Consume pending toasts from preset dialogs
+        if 'pending_toast' in st.session_state:
+            st.toast(st.session_state.pop('pending_toast'))
+
+        # Step 2 Header with Preset Buttons
+        _hdr_left, _hdr_right = st.columns([0.6, 0.4])
+        with _hdr_left:
+            st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
+        with _hdr_right:
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            _pb1, _pb2 = st.columns(2, gap="small")
+            with _pb1:
+                if st.button("💾 Save Configuration", key="btn_save_config", use_container_width=True):
+                    _save_config_dialog()
+            with _pb2:
+                if st.button("⚙️ Presets", key="btn_presets_hub", use_container_width=True):
+                    _presets_hub_dialog()
 
         def _load_b64(path):
             import base64

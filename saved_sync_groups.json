@@ -1,3 +1,16 @@
 {
-  "groups": []
+  "groups": [
+    {
+      "group_id": "grp_33d6b3554f6c440c885e1106c5727076",
+      "group_name": "wdasd",
+      "pairs": [
+        {
+          "local_folder": "C:/Users/birkl/Downloads/prut",
+          "course_id": 44420,
+          "course_name": "Programmering og udvikling af små systemer samt databaser (XC)"
+        }
+      ],
+      "is_single_pair": true
+    }
+  ]
 }
