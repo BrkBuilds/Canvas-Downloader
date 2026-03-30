@@ -55,71 +55,168 @@ st.markdown("""
         color: #ff4b4b !important;
         background-color: rgba(255, 75, 75, 0.1) !important;
     }
+    </style>
+""", unsafe_allow_html=True)
+
+# Preset & Dialog CSS — f-string block for theme variable injection
+st.markdown(f"""
+    <style>
     /* Cancel buttons — scoped to specific cancel button keys only */
     .st-key-cancel_download_btn button:hover,
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
-    .st-key-cancel_pp_btn button:hover {
+    .st-key-cancel_pp_btn button:hover {{
         border-color: {theme.ERROR} !important;
         background-color: {theme.ERROR_BG} !important;
         color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
-    }
+    }}
 
     /* ═══════════════════════════════════════════════
-       Preset Header Buttons — compact, muted style
+       Hide native dialog close button globally
        ═══════════════════════════════════════════════ */
-    div.st-key-btn_save_config button,
-    div.st-key-btn_presets_hub button {{
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 4px 12px !important;
-        font-size: 0.85rem !important;
-        border-radius: 8px !important;
-        background-color: rgba(255, 255, 255, 0.04) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #94a3b8 !important;
-        transition: all 0.2s ease !important;
-    }}
-    div.st-key-btn_save_config button:hover,
-    div.st-key-btn_presets_hub button:hover {{
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        color: #e2e8f0 !important;
-    }}
-
-    /* Dialog button overrides — scoped to preset dialogs */
-    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"],
-    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button[kind="primary"] {{
-        background-color: rgba(56, 189, 248, 0.2) !important;
-        border: 1px solid rgba(56, 189, 248, 0.4) !important;
-        color: #38bdf8 !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"]:hover,
-    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button[kind="primary"]:hover {{
-        background-color: rgba(56, 189, 248, 0.3) !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-preset_save_create button[kind="primary"][disabled] {{
-        opacity: 0.4 !important;
-        pointer-events: none !important;
-    }}
-
-    /* Delete buttons inside preset hub — red hover */
-    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button:hover {{
-        border-color: #ef4444 !important;
-        color: #ef4444 !important;
-        background-color: rgba(239, 68, 68, 0.1) !important;
-    }}
-
-    /* Hide native dialog close button — force users through state-aware Close */
     div[data-testid="stDialog"] button[aria-label="Close"] {{
         display: none !important;
     }}
 
-    /* Preset card compact styling */
+    /* ═══════════════════════════════════════════════
+       Preset Header Buttons — Indigo Colorway
+       ═══════════════════════════════════════════════ */
+    /* Shared compact sizing */
+    div.st-key-btn_save_config button,
+    div.st-key-btn_presets_hub button {{
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 6px 16px !important;
+        font-size: 0.95rem !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }}
+    /* ⚙️ Presets button — Solid Indigo (hub opener) */
+    div.st-key-btn_presets_hub button {{
+        background-color: rgba(95, 100, 200, 0.35) !important;
+        border: 1px solid rgba(95, 100, 200, 0.6) !important;
+        color: #e0e7ff !important;
+    }}
+    div.st-key-btn_presets_hub button:hover {{
+        background-color: rgba(95, 100, 200, 0.55) !important;
+        border-color: rgba(95, 100, 200, 0.9) !important;
+        color: #ffffff !important;
+    }}
+    /* 💾 Save Configuration button — Ghost/Transparent Indigo */
+    div.st-key-btn_save_config button {{
+        background-color: rgba(95, 100, 200, 0.15) !important;
+        border: 1px solid rgba(95, 100, 200, 0.3) !important;
+        color: #cbd5e1 !important;
+    }}
+    div.st-key-btn_save_config button:hover {{
+        background-color: rgba(95, 100, 200, 0.3) !important;
+        border-color: rgba(95, 100, 200, 0.6) !important;
+        color: #ffffff !important;
+    }}
+
+    /* ═══════════════════════════════════════════════
+       Dialog Button Overrides — Preset Dialogs
+       ═══════════════════════════════════════════════ */
+    /* Apply buttons — Light Grey default, Indigo hover */
+    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button {{
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button:hover {{
+        background-color: rgba(95, 100, 200, 0.4) !important;
+        border-color: rgba(95, 100, 200, 1) !important;
+        color: #ffffff !important;
+    }}
+    /* Save Preset button — solid indigo */
+    div[data-testid="stDialog"] div.st-key-preset_save_create button {{
+        background-color: rgba(95, 100, 200, 0.35) !important;
+        border: 1px solid rgba(95, 100, 200, 0.6) !important;
+        color: #e0e7ff !important;
+    }}
+    div[data-testid="stDialog"] div.st-key-preset_save_create button:hover {{
+        background-color: rgba(95, 100, 200, 0.55) !important;
+        border-color: rgba(95, 100, 200, 0.9) !important;
+        color: #ffffff !important;
+    }}
+    div[data-testid="stDialog"] div.st-key-preset_save_create button[disabled] {{
+        opacity: 0.4 !important;
+        pointer-events: none !important;
+    }}
+
+    /* Delete buttons — recessed dark default, danger red hover */
+    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button {{
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: rgba(255, 255, 255, 1) !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button:hover {{
+        background-color: rgba(255, 75, 75, 0.15) !important;
+        border-color: #ff4b4b !important;
+        color: #ff4b4b !important;
+        transition: all 0.2s ease-in-out;
+    }}
+
+    /* ═══════════════════════════════════════════════
+       Preset Card Depth & Elevation
+       ═══════════════════════════════════════════════ */
     div[class*="st-key-preset_card_"] {{
         padding: 12px !important;
         margin-bottom: 8px !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }}
+
+    /* ═══════════════════════════════════════════════
+       Preset Hub Tab Buttons
+       ═══════════════════════════════════════════════ */
+    /* Base styling (Default Inactive State) */
+    div[class*="st-key-preset_tab_"] button {{
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        padding: 6px 16px !important;
+        height: auto !important;
+        min-height: 40px !important;
+        border-radius: 6px !important;
+        background-color: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #e0e7ff !important;
+        transition: all 0.2s ease !important;
+    }}
+    
+    /* Hover State (All Tabs) - Solid Indigo */
+    div[class*="st-key-preset_tab_"] button:hover {{
+        background-color: rgba(95, 100, 200, 0.85) !important;
+        border-color: rgba(95, 100, 200, 1) !important;
+        color: #ffffff !important;
+    }}
+
+    /* Active Tab (Primary) Context styling */
+    div[class*="st-key-preset_tab_"] button[kind="primary"] {{
+        background-color: rgba(95, 100, 200, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 3px solid rgba(140, 150, 255, 1) !important; /* Light indigo bottom border */
+        color: #ffffff !important;
+    }}
+
+    /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
+    div[class*="st-key-preset_tab_"] button[kind="primary"]:hover {{
+        background-color: rgba(95, 100, 200, 0.4) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
+        color: #ffffff !important;
+    }}
+    /* Compact the expander inside preset cards */
+    div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary {{
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        min-height: 0px !important;
+    }}
+    div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary p {{
+        font-size: 0.82rem !important;
+        color: #8ab4ff !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -652,18 +749,55 @@ with _main_content.container():
     # Preset Dialogs (defined here so they are accessible from any step)
     # ===================================================================
 
-    def _render_preset_card(mgr, preset, is_builtin=False):
-        """Render a single preset as a bordered card with Apply/Delete actions."""
+    def _build_preset_summary(settings):
+        """Build a dynamic, grammar-correct summary string for a preset's settings."""
+        # 1. Organization
+        mode_str = "📁 With Subfolders" if settings.get('download_mode') == 'modules' else "📁 All in One Folder"
+        # 2. File Filter
+        filter_str = "📦 All Files" if settings.get('file_filter') == 'all' else "📦 Presentations & PDFs"
+        # 3. Canvas Content
+        sec_count = sum(1 for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k))
+        sec_total = len(PresetManager.SECONDARY_CONTENT_KEYS)
+        if sec_count == sec_total:
+            sec_str = "📝 All Canvas Content"
+        elif sec_count > 0:
+            sec_str = f"📝 {sec_count} Canvas Content"
+        else:
+            sec_str = ""
+        # 4. Conversions — correct grammar
+        conv_count = sum(1 for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k))
+        conv_total = len(PresetManager.NOTEBOOK_SUB_KEYS)
+        if conv_count == conv_total:
+            conv_str = "🔧 All Conversions"
+        elif conv_count == 1:
+            conv_str = "🔧 1 Conversion"
+        elif conv_count > 1:
+            conv_str = f"🔧 {conv_count} Conversions"
+        else:
+            conv_str = ""
+        parts = [p for p in [mode_str, filter_str, sec_str, conv_str] if p]
+        return "  ·  ".join(parts)
+
+    def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_icon_user=""):
+        """Render a single preset as an elevated card with an expander summary."""
         with st.container(border=True, key=f"preset_card_{preset['preset_id']}"):
             name = preset['preset_name']
             desc = preset.get('description', '')
-            icon = "🌟" if is_builtin else "👤"
+            settings = preset.get('settings', {})
 
+            # Card header with Base64 icon
+            _icon_b64 = b64_icon_builtin if is_builtin else b64_icon_user
+            _icon_html = ""
+            if _icon_b64:
+                _icon_html = (
+                    f"<img src='data:image/png;base64,{_icon_b64}' "
+                    f"style='width:22px; height:22px; vertical-align:middle; margin-right:8px;' />"
+                )
             st.markdown(f"""
-                <div style='margin-bottom: 8px;'>
-                    <span style='font-size: 1.15rem; font-weight: 600;'>{icon} {esc(name)}</span>
-                </div>
-            """, unsafe_allow_html=True)
+<div style='margin-bottom: 4px;'>
+<span style='font-size: 1.15rem; font-weight: 600;'>{_icon_html}{esc(name)}</span>
+</div>
+""", unsafe_allow_html=True)
 
             if desc:
                 st.markdown(
@@ -671,25 +805,23 @@ with _main_content.container():
                     unsafe_allow_html=True,
                 )
 
-            # Settings summary tags
-            settings = preset['settings']
-            tags = []
-            sec_count = sum(1 for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k))
-            conv_count = sum(1 for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k))
+            # Dynamic settings summary as an expander
+            _summary_label = _build_preset_summary(settings)
+            with st.expander(_summary_label):
+                _mode_disp = "With Subfolders" if settings.get('download_mode') == 'modules' else "All in One Folder"
+                _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
+                st.markdown(f"**Organization:** {_mode_disp}  \n**Include:** {_filter_disp}")
 
-            mode_tag = "📁 Subfolders" if settings.get('download_mode') == 'modules' else "📄 Flat"
-            filter_tag = "📦 All Files" if settings.get('file_filter') == 'all' else "📄 Study Only"
-            tags.append(mode_tag)
-            tags.append(filter_tag)
-            if sec_count > 0:
-                tags.append(f"📝 {sec_count} Canvas Content")
-            if conv_count > 0:
-                tags.append(f"🔧 {conv_count} Conversions")
+                _sec_on = [k.replace('dl_', '').replace('_', ' ').title()
+                           for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
+                st.markdown(f"**Canvas Content:** {', '.join(_sec_on) if _sec_on else 'None'}")
 
-            tag_html = " &nbsp;·&nbsp; ".join(
-                f"<span style='color:#8ad; font-size:0.8rem;'>{t}</span>" for t in tags
-            )
-            st.markdown(tag_html, unsafe_allow_html=True)
+                _conv_on = [k.replace('convert_', '').replace('_', ' ').title()
+                            for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
+                st.markdown(f"**Ai Optimization (Conversions):** {', '.join(_conv_on) if _conv_on else 'None'}")
+
+                if preset.get('include_path') and preset.get('download_path'):
+                    st.markdown(f"**Download Path:** `{preset['download_path']}`")
 
             # Action buttons
             if is_builtin:
@@ -699,7 +831,7 @@ with _main_content.container():
 
             with col_apply:
                 if st.button("🚀 Apply", key=f"preset_apply_{preset['preset_id']}",
-                             use_container_width=True, type="primary"):
+                             use_container_width=True):
                     mgr.apply_preset(st.session_state, preset)
                     st.session_state['pending_toast'] = f"✅ Applied preset '{esc(name)}'"
                     try:
@@ -766,38 +898,106 @@ with _main_content.container():
         col_create, col_cancel = st.columns([1, 1])
         with col_create:
             create_disabled = not preset_name or not preset_name.strip()
-            if st.button("Save Preset", type="primary", use_container_width=True,
+            if st.button("Save Preset", use_container_width=True,
                          key="preset_save_create", disabled=create_disabled):
                 _settings = mgr.capture_current_settings(st.session_state)
                 _path = st.session_state.get('download_path', '') if include_path else ''
                 mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
                 st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
-                st.rerun()
+                try:
+                    st.rerun(scope="app")
+                except TypeError:
+                    st.rerun()
         with col_cancel:
             if st.button("Cancel", type="secondary", use_container_width=True, key="preset_cancel_save"):
-                st.rerun()
+                try:
+                    st.rerun(scope="app")
+                except TypeError:
+                    st.rerun()
 
     @st.dialog("⚙️ Download Presets", width="large")
     def _presets_hub_dialog():
         from ui_helpers import get_config_dir
         mgr = PresetManager(get_config_dir())
 
+        # Load Base64 icons for tabs and cards
+        _b64_user = get_base64_image("assets/icon_preset_user.png")
+        _b64_builtin = get_base64_image("assets/icon_preset_builtin.png")
+
         # Consume in-dialog toasts
         if 'preset_hub_toast' in st.session_state:
             st.toast(st.session_state.pop('preset_hub_toast'))
 
-        tab_builtin, tab_user = st.tabs(["🌟 Built-in Presets", "👤 My Presets"])
+        # --- Custom Tab Buttons (session-state driven) ---
+        st.session_state.setdefault('preset_hub_tab', 'user')
+        _active_tab = st.session_state['preset_hub_tab']
 
-        with tab_builtin:
-            for _bp in mgr.get_builtin_presets():
-                _render_preset_card(mgr, _bp, is_builtin=True)
+        def _set_preset_tab(tab_key):
+            st.session_state['preset_hub_tab'] = tab_key
 
-        with tab_user:
-            _user_presets = mgr.load_presets()
-            if not _user_presets:
-                st.info("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
-            for _up in _user_presets:
-                _render_preset_card(mgr, _up, is_builtin=False)
+        # Inject tab-specific CSS for Base64 icons via ::before pseudo-elements
+        st.markdown(f"""
+<style>
+div[class*="st-key-preset_tab_"] button div[data-testid="stMarkdownContainer"] p {{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}}
+div.st-key-preset_tab_user button div[data-testid="stMarkdownContainer"] p::before {{
+    content: "";
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin-right: 8px;
+    background-image: url('data:image/png;base64,{_b64_user}');
+    background-size: contain;
+    background-repeat: no-repeat;
+}}
+div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::before {{
+    content: "";
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin-right: 8px;
+    background-image: url('data:image/png;base64,{_b64_builtin}');
+    background-size: contain;
+    background-repeat: no-repeat;
+}}
+</style>
+""", unsafe_allow_html=True)
+
+        with st.container(key="preset_tabs_row"):
+            _tc1, _tc2 = st.columns(2, gap="small")
+            with _tc1:
+                st.button(
+                    "My Presets",
+                    key="preset_tab_user",
+                    type="primary" if _active_tab == 'user' else "secondary",
+                    use_container_width=True,
+                    on_click=_set_preset_tab, args=('user',),
+                )
+            with _tc2:
+                st.button(
+                    "Built-in Presets",
+                    key="preset_tab_builtin",
+                    type="primary" if _active_tab == 'builtin' else "secondary",
+                    use_container_width=True,
+                    on_click=_set_preset_tab, args=('builtin',),
+                )
+
+        # --- Fixed-height scrollable card container ---
+        with st.container(height=550, border=False):
+            if _active_tab == 'user':
+                _user_presets = mgr.load_presets()
+                if not _user_presets:
+                    st.info("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
+                for _up in _user_presets:
+                    _render_preset_card(mgr, _up, is_builtin=False,
+                                        b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)
+            else:
+                for _bp in mgr.get_builtin_presets():
+                    _render_preset_card(mgr, _bp, is_builtin=True,
+                                        b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)
 
         # Close button — forces full app rerun for fresh state
         if st.button("Close", type="secondary", use_container_width=True, key="btn_preset_hub_close"):

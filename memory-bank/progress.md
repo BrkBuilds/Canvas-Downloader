@@ -334,6 +334,7 @@
     - [x] **Step 2 Header Integration**: Refactored the Step 2 wizard header into a split 2-column layout housing the "💾 Save Configuration" and "⚙️ Presets" triggering buttons.
     - [x] **Dialog Management & Reruns**: Built two `@st.dialog` modals. Fixed stale underlying states by triggering cross-scope full-page refreshes (`st.rerun(scope="app")`) upon Application or Deletion of presets.
     - [x] **Ghost Toast Implementation**: Engineered a `pending_toast` consumer at the top of Step 2 to gracefully hand off success messages from dying modals to the persistent main page.
+    - [x] **UI & QA Polish Audit**: Resolved the fatal `{{` f-string CSS bug restoring native Streamlit close-button purging and indigo colorway parity. Upgraded from `st.tabs` to custom Base64 button-tabs. Wrapped preset cards in fixed-height scroll containers with card elevations, dynamic summary expanders, and targeted danger red hovers.
 
 ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)

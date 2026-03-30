@@ -1829,27 +1829,27 @@ def _inject_hub_global_css():
         font-size: 0.95rem !important;
     }
     
-    /* --- ACTIVE TAB (PRIMARY) --- */
+    /* Hover State (All Tabs) - Solid Indigo */
+    div.st-key-hub_tabs_container button:hover {
+        background-color: rgba(95, 100, 200, 0.85) !important;
+        border-color: rgba(95, 100, 200, 1) !important;
+        color: #ffffff !important;
+    }
+
+    /* --- ACTIVE TAB (PRIMARY) Context styling --- */
     div.st-key-hub_tabs_container button[kind="primary"] {
-        background-color: rgba(59, 130, 246, 0.15) !important; /* Soft blue tint */
-        border-bottom: 4px solid {theme.BLUE_PRIMARY} !important; /* Classic tab underline */
-        color: {theme.WHITE} !important;
+        background-color: rgba(95, 100, 200, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 3px solid rgba(140, 150, 255, 1) !important; /* Light indigo bottom border */
+        color: #ffffff !important;
     }
     
-    /* Kill the solid bright blue Streamlit default hover */
+    /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
     div.st-key-hub_tabs_container button[kind="primary"]:hover {
-        background-color: rgba(59, 130, 246, 0.25) !important; /* Just a tiny bit lighter */
-        border-color: rgba(255, 255, 255, 0.15) !important; /* Keep borders stable */
-        border-bottom: 4px solid {theme.BLUE_PRIMARY} !important; /* Keep underline */
-        color: {theme.WHITE} !important;
-    }
-    
-    /* --- INACTIVE TABS (SECONDARY) HOVER --- */
-    /* Muted blue hover instead of default light gray */
-    div.st-key-hub_tabs_container button:not([kind="primary"]):hover {
-        background-color: rgba(59, 130, 246, 1) !important; /* Very subtle muted blue */
-        border: 1px solid rgba(59, 130, 246, 0.15) !important; /* Subtle blue border glow */
-        color: {theme.WHITE} !important;
+        background-color: rgba(95, 100, 200, 0.4) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
+        color: #ffffff !important;
     }
 
     /* =========================================
