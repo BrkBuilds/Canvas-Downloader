@@ -122,3 +122,34 @@ div[class*="st-key-btn_sec_org_"] button[disabled] {
 }
 ```
 * **Typography Stability:** Pair the native button dimming with a manual color toggle for the section label (e.g., using `#475569` for "Deep Dim" state) to maintain HTML structure while visually communicating a locked state.
+
+***
+#### 8. CSS Injection Ordering & DOM Render Ghosting (The React Sub-frame Race Condition)
+
+**Problem (The "Ghost Box" Interaction Flaw):**
+During state-toggling UI interactions (e.g., clicking on a custom-masked `st.button` acting as an expansion chevron), the button briefly flashes a solid grey background for ~50-150ms. This looks like a CSS specificity failure or a `::focus-visible` ring piercing the CSS.
+
+**The Execution Architecture Failure:**
+We attempted to solve this by aggressively targeting Streamlit's inner BaseWeb elements (`span.ripple`, `div[data-testid="stMarkdownContainer"]`, `button:active`, `[disabled]`) with `all: unset !important;` and `display: none !important;`. The "Nuclear Option" failed. It failed because **the CSS does not exist in the DOM** when the button renders. 
+
+Streamlit's Python-to-React translation reads sequentially top-to-bottom. If your dynamic CSS styling relies on the `st.session_state` of the button, and you inject the `<style>` block *after* the `st.button` declaration:
+1. User clicks the button.
+2. The Streamlit Engine triggers a full page Rerun.
+3. React enters DOM Reconciliation.
+4. Python executes `st.button("Toggle")` -> Sends raw unstyled BaseWeb button JSON to React.
+5. React mounts the bare button to the DOM. **(The Flash Event happens here)**. 
+6. Python executes `css_blocks.append()` -> `st.markdown("<style>")`.
+7. React mounts the new `<style>` node into the `.element-container` below it.
+8. The browser parses the CSS and snaps the button back to the correct custom mask and background color.
+
+**Rule:** NEVER place dynamic CSS injections *below* the target elements they intend to style.
+
+**Solution: "Static Hoisting" (Pre-Injection)**
+All CSS overrides that structurally alter or mask Streamlit components must be hoisted and injected into the DOM **before** the component is instantiated in Python. 
+
+1. **Calculate State First:** Run your boolean logic (e.g., `is_expanded = st.session_state.get('toggle')`) at the top of the logic block.
+2. **Compute Colors Beforehand:** Derive your theme colors based on state (`c_base = "#f97316" if is_expanded else "#64748b"`).
+3. **Inject the Containerized Style Block:** Call `st.markdown(f"<style>...</style>", unsafe_allow_html=True)`.
+4. **Instantiate the Target:** *Then* execute the `st.button` or container.
+
+With the CSS already loaded into the browser memory before React is asked to re-render the Native Button, there is a 0ms vulnerability window. The Rerun completely bypasses rendering the default styles and directly inherits the custom masks.

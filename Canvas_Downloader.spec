@@ -11,6 +11,8 @@ datas = [
     ('sync_manager.py', '.'),
     ('sync_ui.py', '.'),
     ('ui_helpers.py', '.'),
+    ('ui_shared.py', '.'),
+    ('preset_manager.py', '.'),
     ('code_converter.py', '.'),
     ('md_converter.py', '.'),
     ('pdf_converter.py', '.'),
@@ -22,6 +24,7 @@ datas = [
     ('url_compiler.py', '.'),
     ('version.py', '.'),
     ('theme.py', '.'),
+    ('assets', 'assets'),
 ]
 
 # Automatically locate the ffmpeg binary provided by imageio_ffmpeg

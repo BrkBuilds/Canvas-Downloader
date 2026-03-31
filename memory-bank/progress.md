@@ -341,6 +341,9 @@
     - [x] **Dialog Management & Reruns**: Built two `@st.dialog` modals. Fixed stale underlying states by triggering cross-scope full-page refreshes (`st.rerun(scope="app")`) upon Application or Deletion of presets.
     - [x] **Ghost Toast Implementation**: Engineered a `pending_toast` consumer at the top of Step 2 to gracefully hand off success messages from dying modals to the persistent main page.
     - [x] **UI & QA Polish Audit**: Resolved the fatal `{{` f-string CSS bug restoring native Streamlit close-button purging and indigo colorway parity. Upgraded from `st.tabs` to custom Base64 button-tabs. Wrapped preset cards in fixed-height scroll containers with card elevations, dynamic summary expanders, and targeted danger red hovers.
+- [x] **Phase 6.19: Chevron Render-Flicker Resolution** (2026-03-31):
+    - [x] **Root Cause Diagnosis**: Identified a race condition during React DOM reconciliation where dynamic `<style>` tags injected below the target element were temporarily unmounted, causing native BaseWeb button elements to flash their default grey boxes on click.
+    - [x] **DOM Injection Hoisting**: Resolved the "Ghost Layout" flash permanently by lifting the CSS constructions and `st.markdown("<style>")` calls lexically above the `st.button` instantiations in Python. This guarantees the CSS is present in the DOM before React reconciles the button.
 
 ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)
