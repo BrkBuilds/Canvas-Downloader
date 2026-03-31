@@ -289,16 +289,34 @@ if 'dl_secondary_master' not in st.session_state:
     st.session_state['dl_secondary_master'] = False
 if 'dl_isolate_secondary' not in st.session_state:
     st.session_state['dl_isolate_secondary'] = False  # Default: inline with modules
+if 'card2_expanded' not in st.session_state:
+    st.session_state['card2_expanded'] = False
+if 'card3_expanded' not in st.session_state:
+    st.session_state['card3_expanded'] = False
 
 # --- Helper Functions ---
+def resolve_path(path):
+    """Resolve path for frozen (PyInstaller) vs normal execution."""
+    if getattr(sys, 'frozen', False):
+        return os.path.join(sys._MEIPASS, path)
+    return path
+
 def get_base64_image(image_path):
     """Reads a local file and returns its Base64 string representation."""
     try:
-        with open(image_path, "rb") as image_file:
+        with open(resolve_path(image_path), "rb") as image_file:
             return base64.b64encode(image_file.read()).decode()
     except Exception as e:
         logger.error(f"Failed to encode image {image_path}: {e}")
         return ""
+
+def _get_chevron_base64(is_expanded):
+    if is_expanded:
+        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1792" height="1792" viewBox="0 0 1792 1792" id="chevron"><path d="m1683 808-742 741q-19 19-45 19t-45-19L109 808q-19-19-19-45.5t19-45.5l166-165q19-19 45-19t45 19l531 531 531-531q19-19 45-19t45 19l166 165q19 19 19 45.5t-19 45.5z"></path></svg>'''
+    else:
+        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1792" height="1792" viewBox="0 0 1792 1792" id="chevron"><path d="m1363 877-742 742q-19 19-45 19t-45-19l-166-166q-19-19-19-45t19-45l531-531-531-531q-19-19-19-45t19-45L531 45q19-19 45-19t45 19l742 742q19 19 19 45t-19 45z"></path></svg>'''
+    b64_str = base64.b64encode(svg.encode('utf-8')).decode()
+    return f"url('data:image/svg+xml;base64,{b64_str}')"
 
 def select_folder():
     from ui_helpers import native_folder_picker
@@ -760,8 +778,8 @@ with _main_content.container():
         core_html = f"""
 <div style='margin-bottom:12px;'>
     <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Core Settings</div>
-    <span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span>
-    <span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span>
+    <div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
+    <div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span></div>
 </div>
 """
         
@@ -773,9 +791,9 @@ with _main_content.container():
         _sec_on = [k.replace('dl_', '').replace('_', ' ').title() for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
         if _sec_on:
             sec_badges_list = "".join([f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
-            sec_badges = f"{sec_org_badge}{sec_badges_list}"
+            sec_badges = f"<div>{sec_org_badge}</div><div>{sec_badges_list}</div>"
         else:
-            sec_badges = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span>"
+            sec_badges = f"<div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span></div>"
             
         content_html = f"""
 <div style='margin-bottom:12px;'>
@@ -892,6 +910,13 @@ with _main_content.container():
                 if st.button("Apply Preset", key=f"preset_apply_{preset['preset_id']}",
                              use_container_width=True):
                     mgr.apply_preset(st.session_state, preset)
+                    
+                    # Auto-expand cards if preset contains matching active keys
+                    if any(preset.get('settings', {}).get(k) for k in PresetManager.SECONDARY_CONTENT_KEYS):
+                        st.session_state['card2_expanded'] = True
+                    if any(preset.get('settings', {}).get(k) for k in PresetManager.NOTEBOOK_SUB_KEYS):
+                        st.session_state['card3_expanded'] = True
+
                     st.session_state['pending_toast'] = f"✅ Applied preset '{esc(name)}'"
                     try:
                         st.rerun(scope="app")
@@ -1302,6 +1327,9 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         with _hdr_right:
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
             _pb1, _pb2 = st.columns(2, gap="small")
+            with _pb1:
+                if st.button("💾 Save Preset", key="btn_save_config", use_container_width=True):
+                    _save_config_dialog()
             with _pb2:
                 if st.button("⚙️ Presets", key="btn_presets_hub", use_container_width=True):
                     _presets_hub_dialog()
@@ -1309,7 +1337,7 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         def _load_b64(path):
             import base64
             try:
-                with open(path, "rb") as f:
+                with open(resolve_path(path), "rb") as f:
                     return base64.b64encode(f.read()).decode()
             except FileNotFoundError:
                 return ""
@@ -1347,7 +1375,8 @@ div[class*="st-key-btn_"] button::before {{
 div.st-key-btn_save_config button::before,
 div.st-key-btn_presets_hub button::before,
 div.st-key-btn_dl_secondary_master button::before,
-div.st-key-btn_convert_master button::before {{
+div.st-key-btn_convert_master button::before,
+div.st-key-btn_preset_hub_close button::before {{
     display: none !important;
 }}
 /* Circular Mutually Exclusive Toggles */
@@ -1682,7 +1711,15 @@ div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color
             """, unsafe_allow_html=True)
 
             # Card elevation CSS — Version-Agnostic Target for Streamlit 1.51+
-            st.markdown("""
+            c2_exp_global = st.session_state.get('card2_expanded', False)
+            card2_flex_rule = """
+/* TIER 1 & TIER 2: Conditional Flex rule for Card 2 to match Card 1 height. 
+   If collapsed, this is omitted so the card shrink-fits to its textual content. */
+div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_native_content"]) { flex: 1 !important; }
+div[class*="st-key-card_native_content"] { flex: 1 !important; }
+""" if c2_exp_global else ""
+
+            st.markdown(f"""
 <style>
 /* 1. Target via the explicit Streamlit Keys (Most Reliable) */
 div[class*="st-key-card_core_files"],
@@ -1690,41 +1727,25 @@ div[class*="st-key-card_native_content"],
 div[class*="st-key-card_ai_engine"],
 
 /* 2. Target via modern Streamlit 1.51+ Container ID + Trojan Class */
-div[data-testid="stContainer"]:has(.step-2-card-target) {
+div[data-testid="stContainer"]:has(.step-2-card-target) {{
     background-color: rgba(255, 255, 255, 0.04) !important;
     border-radius: 8px !important;
-}
+}}
 
-/* === Card 1 ↔ Card 2: Dynamic Height Synchronization ===
-   DOM chain (verified by diagnostic):
-     stHorizontalBlock (align-items:stretch → columns equal height)
-       → column (display:block, height matches sibling)
-         → stVerticalBlock (flex:1 1 0% → stretches ✅)
-           → stLayoutWrapper (flex:0 1 auto → REFUSES TO GROW ⚠️)
-             → st-key-card_* (stVerticalBlock, flex:1 1 0% → would grow IF parent lets it)
-   
-   Fix: Force the stLayoutWrapper (parent of each keyed card) to grow.
-   The keyed card already has flex:1 from Streamlit + our Tier 2 rule.
-   There is NO stContainer inside — the keyed wrapper IS the bordered card. */
-
-/* TIER 1: The stLayoutWrapper that is the DIRECT PARENT of each card.
-   This is the single element blocking height propagation.
-   Target: stLayoutWrapper that contains our specific keyed card. */
-div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_core_files"]),
-div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_native_content"]) {
+/* === Card 1 ↔ Card 2: Dynamic Height Synchronization === */
+div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_core_files"]) {{
     flex: 1 !important;
-}
-
-/* TIER 2: The keyed card wrappers themselves — ensure they fill their parent. */
-div[class*="st-key-card_core_files"],
-div[class*="st-key-card_native_content"] {
+}}
+div[class*="st-key-card_core_files"] {{
     flex: 1 !important;
-}
+}}
+
+{card2_flex_rule}
 
 /* Push the "Include Files" section to the bottom of Card 1 */
-div[class*="st-key-card1_include_section"] {
+div[class*="st-key-card1_include_section"] {{
     margin-top: auto !important;
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1735,7 +1756,7 @@ div[class*="st-key-card1_include_section"] {
                 with st.container(border=True, key="card_core_files"):
                     b64_wf1 = _load_b64("assets/icon_workflow_1.png")
                     st.markdown(f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
-<img src='data:image/png;base64,{b64_wf1}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
+<img src='data:image/png;base64,{b64_wf1}' style='position: absolute; width: 36px; height: 36px; top: -24px; left: -34px; z-index: 10;'>
 <div style='padding-left: 0px;'>
 <h3 style='margin: 0; line-height: 1.2;'>Core Course Files &amp; Structure</h3>
 </div>
@@ -1743,6 +1764,25 @@ div[class*="st-key-card1_include_section"] {
 <p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Select what to download and how to organize it on your computer.</p>
 <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                     
+                    # 1. Include Files Block (Segmented Control)
+                    def update_include_state(mode):
+                        st.session_state['file_filter'] = mode
+
+                    with st.container(key="card1_include_section"):
+                        st.markdown(
+                            "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 0px; margin-bottom: 0px;'>Choose which files to download:</p>", 
+                            unsafe_allow_html=True
+                        )
+                        with st.container(key="include_files_segmented_wrapper"):
+                            inc_left, inc_right = st.columns(2, gap="small")
+                            with inc_left:
+                                st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
+                            with inc_right:
+                                st.button("Presentations & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
+                                
+                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+
+                    # 2. Organization Block (Large Buttons)
                     def update_org_state(mode):
                         st.session_state['download_mode'] = 'modules' if mode == 'subfolders' else mode
 
@@ -1851,46 +1891,134 @@ div[class*="st-key-card1_include_section"] {
                     }}
                     </style>
                     ''', unsafe_allow_html=True)
-                    
-                    # 2. Include Files (Radio buttons replaced with Segmented Control)
-
-                    
-                    def update_include_state(mode):
-                        st.session_state['file_filter'] = mode
-
-                    with st.container(key="card1_include_section"):
-                        st.markdown(
-                            "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose which files to download:</p>", 
-                            unsafe_allow_html=True
-                        )
-                        with st.container(key="include_files_segmented_wrapper"):
-                            inc_left, inc_right = st.columns(2, gap="small")
-                            with inc_left:
-                                st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
-                            with inc_right:
-                                st.button("Presentations & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
             # --- COLUMN 2: Additional Course Content ---
             with col2:
                 with st.container(border=True, key="card_native_content"):
+                    m_active = st.session_state.get('dl_secondary_master', False)
                     _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
+                    has_active_items2 = _sec_active > 0 or m_active
+                    
+                    _c2_is_exp = st.session_state.get('card2_expanded', False)
+                    c2_tag_bg = "rgba(104, 212, 163, 0.15)"
+                    c2_tag_col = "#68d4a3"
+                    c2_tag_bor = "1px solid transparent"
+                    
                     if _sec_active == 0:
-                        dynamic_tag = "<strong>OFF</strong>  |  None selected"
+                        c2_tag_bg = "rgba(255, 255, 255, 0.05)"
+                        c2_tag_col = "#94a3b8"
+                        c2_tag_bor = "1px solid rgba(255, 255, 255, 0.1)"
+                        if not _c2_is_exp:
+                            dynamic_tag = "<strong>OFF</strong>"
+                        else:
+                            dynamic_tag = "<strong>OFF</strong>  |  None selected"
                     elif _sec_active == TOTAL_SECONDARY_SUBS:
                         dynamic_tag = "<strong>ON</strong>  |  All selected"
                     else:
                         dynamic_tag = f"<strong>ON</strong>  |  {_sec_active} selected"
 
+                    def toggle_card2():
+                        st.session_state['card2_expanded'] = not st.session_state.get('card2_expanded', False)
+
+                    c2_exp = st.session_state.get('card2_expanded', False)
+                    chr_svg = _get_chevron_base64(c2_exp)
                     b64_wf2 = _load_b64("assets/icon_workflow_2.png")
-                    header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
-<img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
-<div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
-<h3 style='margin: 0; line-height: 1.2;'>Canvas Content <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
-<span style='background-color: rgba(104, 212, 163, 0.15); color: #68d4a3; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600;'>{dynamic_tag}</span>
-</div>
-</div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Save information, pages and other content from Canvas to your local Course folder.</p>
-<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
+                    c_filter = "grayscale(0%) brightness(100%)" if has_active_items2 else "grayscale(100%) brightness(60%)"
+
+                    # Compute chevron colors BEFORE the button renders
+                    c2_base_color = "#68d4a3" if c2_exp else "#64748b"
+                    c2_hover_color = "#86e0b8" if c2_exp else "#94a3b8"
+
+                    # THE FIX: Inject chevron CSS BEFORE the button to prevent ghost flash
+                    st.markdown(f'''<style>
+                    div.st-key-header_wrap_card2 {{
+                        display: flex !important;
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        justify-content: flex-start !important;
+                        gap: 12px !important;
+                        padding-top: 0px !important;
+                        padding-bottom: 0px !important;
+                        margin-top: -35px !important;
+                    }}
+                    div.st-key-header_wrap_card2 > div[data-testid="element-container"] {{
+                        margin-bottom: 0px !important;
+                    }}
+                    div.st-key-header_wrap_card2 > div[data-testid="element-container"]:nth-child(1) {{
+                        width: 24px !important;
+                        min-width: 24px !important;
+                        flex: 0 0 24px !important;
+                    }}
+                    div.st-key-header_wrap_card2 > div[data-testid="element-container"]:nth-child(2) {{
+                        flex: 1 1 auto !important;
+                        width: 100% !important;
+                    }}
+                    /* Kill focus rings on the parent wrappers */
+                    div.st-key-toggle_card2 div[data-testid="stButton"]:focus-within,
+                    div.st-key-toggle_card2 div[data-testid="stBaseButton-secondary"]:focus-within {{
+                        box-shadow: none !important;
+                        outline: none !important;
+                        background: transparent !important;
+                    }}
+                    /* Kill focus rings on the button itself during focus shifts */
+                    div.st-key-toggle_card2 button:focus-visible,
+                    div.st-key-toggle_card2 button:focus:not(:active),
+                    div.st-key-toggle_card2 button:focus {{
+                        box-shadow: none !important;
+                        outline: none !important;
+                        border: none !important;
+                        background-color: {c2_base_color} !important; 
+                    }}
+                    /* Ensure the inner markdown div remains completely hidden */
+                    div.st-key-toggle_card2 button > div {{
+                        display: none !important;
+                    }}
+                    /* BASE MASK STATE */
+                    div.st-key-toggle_card2 button {{
+                        all: unset !important;
+                        display: inline-block !important;
+                        cursor: pointer !important;
+                        width: 24px !important;
+                        height: 24px !important;
+                        position: relative !important;
+                        top: 5px !important;
+                        -webkit-mask-image: {chr_svg} !important;
+                        -webkit-mask-size: contain !important;
+                        -webkit-mask-repeat: no-repeat !important;
+                        -webkit-mask-position: center !important;
+                        background-color: {c2_base_color} !important;
+                        transition: background-color 0.2s ease !important;
+                        box-shadow: none !important;
+                        outline: none !important;
+                        border: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
+                    }}
+                    /* HOVER STATE */
+                    div.st-key-toggle_card2 button:hover {{ background-color: {c2_hover_color} !important; box-shadow: none !important; }}
+                    /* ACTIVE KILLER */
+                    div.st-key-toggle_card2 button:active {{
+                        box-shadow: none !important;
+                        outline: none !important;
+                        border: none !important;
+                        transform: none !important;
+                    }}
+                    /* RERUN LOCK */
+                    div.st-key-toggle_card2 button[disabled] {{
+                        box-shadow: none !important;
+                        outline: none !important;
+                        border: none !important;
+                        background-color: {c2_base_color} !important;
+                        opacity: 0.8 !important;
+                    }}
+                    </style>''', unsafe_allow_html=True)
+
+                    st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 36px; height: 36px; top: -34px; left: -34px; z-index: 10; filter: {c_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
+
+                    with st.container(key="header_wrap_card2"):
+                        st.button("\u200B", key="toggle_card2", on_click=toggle_card2)
+                        st.markdown(f"""<div style='display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Canvas Content <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c2_tag_bg}; color: {c2_tag_col}; border: {c2_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{dynamic_tag}</span></div>""", unsafe_allow_html=True)
+
+                    css_blocks = []
 
                     # Helper to safely load icon
                     def safe_b64(name):
@@ -1910,9 +2038,7 @@ div[class*="st-key-card1_include_section"] {
                         ('dl_rubrics', 'Rubrics', 'Save rubric criteria to text files.', 'icon_rubrics.png'),
                         ('dl_submissions', 'Submissions (Results)', 'Save feedback & grades from your submissions.', 'icon_submissions.png')
                     ]
-
-                    # Generate CSS
-                    css_blocks = []
+                    
                     css_blocks.append('''
                     div.st-key-secondary_cards_grid [data-testid="stHorizontalBlock"] {
                         gap: 12px !important;
@@ -1950,6 +2076,7 @@ div[class*="st-key-card1_include_section"] {
                         border-radius: 12px !important;
                         display: flex;
                         flex-direction: column;
+                        -webkit-tap-highlight-color: transparent !important;
                     }
                     div.st-key-btn_dl_secondary_master button {
                         height: 48px !important;
@@ -1960,9 +2087,9 @@ div[class*="st-key-card1_include_section"] {
                     ''')
 
                     # Master CSS
-                    m_active = st.session_state.get('dl_secondary_master', False)
-                    m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
-                    m_border = "rgba(255, 255, 255, 0.05)"
+                    # Master CSS
+                    m_bg = "rgba(255, 255, 255, 0.12)" if m_active else "rgba(255, 255, 255, 0.1)"
+                    m_border = "rgba(255, 255, 255, 0.1)"
                     m_ledge = "#68d4a3" if m_active else "transparent"
                     m_ledge_border = "#68d4a3" if m_active else m_border
                     b64_m = safe_b64('icon_select_all.png')
@@ -2033,61 +2160,58 @@ div[class*="st-key-card1_include_section"] {
                         {c_check}
                         ''')
 
-                    final_html = f"""
-                    {header_html}
-                    <style>
-                    {''.join(css_blocks)}
-                    </style>
-                    """
-                    st.markdown(final_html, unsafe_allow_html=True)
+                    final_html = f"<style>{''.join(css_blocks)}</style>"
 
-
-                    st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
-                    
-                    with st.container(key="secondary_cards_grid"):
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            for key, title, _, _ in button_defs[:3]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
-                        with c2:
-                            for key, title, _, _ in button_defs[3:5]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
-                        with c3:
-                            for key, title, _, _ in button_defs[5:]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
-
-                    # --- Section 2: Canvas-Native Content Organization ---
-                    # Dim the label if no secondary content is active
-                    sec_org_label_color = "#cbd5e1" if _sec_active > 0 else "#475569"
-                    
-                    st.markdown(f"""
-                    <p style='font-size: 0.9rem; font-weight: 600; color: {sec_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas Content should be organized:</p>
-                    {_get_sec_org_segmented_css()}
-                    """, unsafe_allow_html=True)
-
-                    with st.container(key="sec_org_segmented_wrapper"):
-                        c1, c2 = st.columns(2, gap="small")
+                    if c2_exp:
+                        st.markdown(f"""{final_html}
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Save information, pages and other content from Canvas to your local Course folder.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
+                        st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
                         
-                        is_disabled = (_sec_active == 0)
+                        with st.container(key="secondary_cards_grid"):
+                            c1, c2, c3 = st.columns(3)
+                            with c1:
+                                for key, title, _, _ in button_defs[:3]:
+                                    st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+                            with c2:
+                                for key, title, _, _ in button_defs[3:5]:
+                                    st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+                            with c3:
+                                for key, title, _, _ in button_defs[5:]:
+                                    st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+
+                        # --- Section 2: Canvas-Native Content Organization ---
+                        # Dim the label if no secondary content is active
+                        sec_org_label_color = "#cbd5e1" if _sec_active > 0 else "#475569"
                         
-                        with c1:
-                            st.button(
-                                "Match Course Folder structure", 
-                                key="btn_sec_org_inline", 
-                                on_click=_set_isolate_secondary, 
-                                args=(False,), 
-                                use_container_width=True,
-                                disabled=is_disabled
-                            )
-                        with c2:
-                            st.button(
-                                "In Separate Folders", 
-                                key="btn_sec_org_subfolders", 
-                                on_click=_set_isolate_secondary, 
-                                args=(True,), 
-                                use_container_width=True,
-                                disabled=is_disabled
-                            )
+                        st.markdown(f"""
+                        <p style='font-size: 0.9rem; font-weight: 600; color: {sec_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how Canvas Content should be organized:</p>
+                        {_get_sec_org_segmented_css()}
+                        """, unsafe_allow_html=True)
+
+                        with st.container(key="sec_org_segmented_wrapper"):
+                            c1, c2 = st.columns(2, gap="small")
+                            
+                            is_disabled = (_sec_active == 0)
+                            
+                            with c1:
+                                st.button(
+                                    "Match Course Folder structure", 
+                                    key="btn_sec_org_inline", 
+                                    on_click=_set_isolate_secondary, 
+                                    args=(False,), 
+                                    use_container_width=True,
+                                    disabled=is_disabled
+                                )
+                            with c2:
+                                st.button(
+                                    "In Separate Folders", 
+                                    key="btn_sec_org_subfolders", 
+                                    on_click=_set_isolate_secondary, 
+                                    args=(True,), 
+                                    use_container_width=True,
+                                    disabled=is_disabled
+                                )
 
 
 
@@ -2111,8 +2235,20 @@ div[class*="st-key-card1_include_section"] {
 
                 # --- Dynamic Tag Counter ---
                 _conv_active = sum(1 for k in notebook_sub_keys if st.session_state.get(k, False))
+                
+                _c3_is_exp = st.session_state.get('card3_expanded', False)
+                c3_tag_bg = "rgba(249, 115, 22, 0.15)"
+                c3_tag_col = "#f97316"
+                c3_tag_bor = "1px solid transparent"
+                
                 if _conv_active == 0:
-                    conv_tag = "<strong>OFF</strong>  |  None selected"
+                    c3_tag_bg = "rgba(255, 255, 255, 0.05)"
+                    c3_tag_col = "#94a3b8"
+                    c3_tag_bor = "1px solid rgba(255, 255, 255, 0.1)"
+                    if not _c3_is_exp:
+                        conv_tag = "<strong>OFF</strong>"
+                    else:
+                        conv_tag = "<strong>OFF</strong>  |  None selected"
                 elif _conv_active == TOTAL_NOTEBOOK_SUBS:
                     conv_tag = "<strong>ON</strong>  |  All selected"
                 else:
@@ -2135,14 +2271,14 @@ div[class*="st-key-card1_include_section"] {
 'padding-right: 10px !important; padding-left: 52px !important;\n'
 'background-position: 15px center !important; background-size: 30px !important;\n'
 'background-repeat: no-repeat !important; border-radius: 12px !important;\n'
-'display: flex; flex-direction: column; }\n'
+'display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent !important; }\n'
 'div.st-key-btn_convert_master button { height: 48px !important; padding-top: 0px !important; padding-bottom: 0px !important; padding-left: 50px !important; background-size: 24px !important; justify-content: center !important; }\n'
                 )
 
                 # Master (Select All) CSS
                 m_active = st.session_state.get('notebooklm_master', False)
-                m_bg = "rgba(255, 255, 255, 0.08)" if m_active else "rgba(255, 255, 255, 0.06)"
-                m_border = "rgba(255, 255, 255, 0.05)"
+                m_bg = "rgba(255, 255, 255, 0.12)" if m_active else "rgba(255, 255, 255, 0.1)"
+                m_border = "rgba(255, 255, 255, 0.1)"
                 m_ledge = "#f97316" if m_active else "transparent"
                 m_ledge_border = "#f97316" if m_active else m_border
                 b64_conv_m = safe_b64('icon_conv_select_all.png')
@@ -2186,29 +2322,123 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
                     )
 
                 # --- Header HTML (separate injection) ---
+                def toggle_card3():
+                    st.session_state['card3_expanded'] = not st.session_state.get('card3_expanded', False)
+
+                c3_exp = st.session_state.get('card3_expanded', False)
+                chr3_svg = _get_chevron_base64(c3_exp)
                 b64_wf3 = _load_b64("assets/icon_workflow_3.png")
-                conv_header_html = f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
-<img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 48px; height: 48px; top: -30px; left: -40px; z-index: 10;'>
-<div style='padding-left: 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;'>
-<h3 style='margin: 0; line-height: 1.2;'>Optimize for AI Tools <span style='color: #64748b; font-weight: 500; font-size: 0.85em;'>(Optional)</span></h3>
-<span style='background-color: rgba(249, 115, 22, 0.15); color: #f97316; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600;'>{conv_tag}</span>
-</div>
-</div>
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -20px; margin-bottom: 0px;'>Automatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
-<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>"""
-                st.markdown(conv_header_html, unsafe_allow_html=True)
+                
+                m_conv_active = st.session_state.get('notebooklm_master', False)
+                has_active_items3 = _conv_active > 0 or m_conv_active
+                c3_filter = "grayscale(0%) brightness(100%)" if has_active_items3 else "grayscale(100%) brightness(60%)"
+                c3_base_color = "#f97316" if c3_exp else "#64748b"
+                c3_hover_color = "#fb923c" if c3_exp else "#94a3b8"
+
+                # THE FIX: Inject chevron CSS BEFORE the button to prevent ghost flash
+                st.markdown(f'''<style>
+                div.st-key-header_wrap_card3 {{
+                    display: flex !important;
+                    flex-direction: row !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    gap: 12px !important;
+                    padding-top: 0px !important;
+                    padding-bottom: 0px !important;
+                    margin-top: -35px !important;
+                }}
+                div.st-key-header_wrap_card3 > div[data-testid="element-container"] {{
+                    margin-bottom: 0px !important;
+                }}
+                div.st-key-header_wrap_card3 > div[data-testid="element-container"]:nth-child(1) {{
+                    width: 24px !important;
+                    min-width: 24px !important;
+                    flex: 0 0 24px !important;
+                }}
+                div.st-key-header_wrap_card3 > div[data-testid="element-container"]:nth-child(2) {{
+                    flex: 1 1 auto !important;
+                    width: 100% !important;
+                }}
+                /* Kill focus rings on the parent wrappers */
+                div.st-key-toggle_card3 div[data-testid="stButton"]:focus-within,
+                div.st-key-toggle_card3 div[data-testid="stBaseButton-secondary"]:focus-within {{
+                    box-shadow: none !important;
+                    outline: none !important;
+                    background: transparent !important;
+                }}
+                /* Kill focus rings on the button itself during focus shifts */
+                div.st-key-toggle_card3 button:focus-visible,
+                div.st-key-toggle_card3 button:focus:not(:active),
+                div.st-key-toggle_card3 button:focus {{
+                    box-shadow: none !important;
+                    outline: none !important;
+                    border: none !important;
+                    background-color: {c3_base_color} !important;
+                }}
+                /* Ensure the inner markdown div remains completely hidden */
+                div.st-key-toggle_card3 button > div {{
+                    display: none !important;
+                }}
+                /* BASE MASK STATE */
+                div.st-key-toggle_card3 button {{
+                    all: unset !important;
+                    display: inline-block !important;
+                    cursor: pointer !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    position: relative !important;
+                    top: 5px !important;
+                    -webkit-mask-image: {chr3_svg} !important;
+                    -webkit-mask-size: contain !important;
+                    -webkit-mask-repeat: no-repeat !important;
+                    -webkit-mask-position: center !important;
+                    background-color: {c3_base_color} !important;
+                    transition: background-color 0.2s ease !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                    border: none !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                }}
+                /* HOVER STATE */
+                div.st-key-toggle_card3 button:hover {{ background-color: {c3_hover_color} !important; box-shadow: none !important; }}
+                /* ACTIVE KILLER */
+                div.st-key-toggle_card3 button:active {{
+                    box-shadow: none !important;
+                    outline: none !important;
+                    border: none !important;
+                    transform: none !important;
+                }}
+                /* RERUN LOCK */
+                div.st-key-toggle_card3 button[disabled] {{
+                    box-shadow: none !important;
+                    outline: none !important;
+                    border: none !important;
+                    background-color: {c3_base_color} !important;
+                    opacity: 0.8 !important;
+                }}
+                </style>''', unsafe_allow_html=True)
+
+                st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 36px; height: 36px; top: -34px; left: -34px; z-index: 10; filter: {c3_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
+
+                with st.container(key="header_wrap_card3"):
+                    st.button("\u200B", key="toggle_card3", on_click=toggle_card3)
+                    st.markdown(f"""<div style='display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Optimize for AI Tools <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c3_tag_bg}; color: {c3_tag_col}; border: {c3_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{conv_tag}</span></div>""", unsafe_allow_html=True)
 
                 # --- CSS injection (separate call, zero-indentation) ---
                 conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
-                st.markdown(conv_css_html, unsafe_allow_html=True)
-                st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
+                
+                if c3_exp:
+                    st.markdown(f"""{conv_css_html}
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Automatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
+                    st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
 
-                with st.container(key="conversion_cards_grid"):
-                    cols = st.columns(4)
-                    for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
-                        col = cols[idx % 4]
-                        with col:
-                            st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
+                    with st.container(key="conversion_cards_grid"):
+                        cols = st.columns(4)
+                        for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
+                            col = cols[idx % 4]
+                            with col:
+                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
             # 2. Destination (Columns have weird padding)
             st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
@@ -2225,12 +2455,6 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
                 st.text_input('Path', value=st.session_state['download_path'], disabled=True)
 
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-            col_save, _ = st.columns([1.875, 5])
-            with col_save:
-                if st.button("💾 Save Configuration as Preset", key="btn_save_config", use_container_width=True):
-                    _save_config_dialog()
-                    
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
             col_back, col_conf, _ = st.columns([0.66, 1.2, 5])
             with col_conf:
                 # Button label changes based on mode
