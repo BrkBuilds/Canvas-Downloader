@@ -328,6 +328,12 @@
     - [x] **Throttling**: Added `time.sleep(0.3)` pauses after the `Open` and `Export` commands.
     - [x] **Session Global Log Headers**: `debug_log.txt` now sits globally in the workspace with automatically injected Course Headers.
 
+- [x] **Phase 6.18: Download Settings UI Modernization** (2026-03-31):
+    - [x] **Checkbox -> Radio Migration**: Transitioned mutually exclusive groups (Include, Card 1 Org, Card 2 Org) to circular radio buttons using `border-radius: 50%` and custom circular SVG masks.
+    - [x] **Standardized Checkbox/Radio Aesthetics**: Implemented "Full Fill" indicators for the ON state. Used SVG Alpha Masks to create transparent checkmarks that reveal the card background through the indicator.
+    - [x] **State-Aware Hover Mechanics**: Refined hover logic across all cards; border and indicator outlines now only "light up" in the theme color when a button is currently *untoggled*.
+    - [x] **Primary Action Relocation**: Shifted the "Save Configuration" button from the header to a prominent, full-width position above the final "Back" and "Confirm" buttons, perfectly aligned via a `1.875` column ratio.
+    - [x] **Text Wrapping Safeguards**: Added mandatory `padding-right: 16px` to button containers to prevent long descriptions from overflowing into the absolute-positioned indicators.
 - [x] **Phase 6.17: Saved Settings & Presets** (2026-03-29):
     - [x] **Backend Layer**: Created `preset_manager.py` featuring atomic JSON serialization and dictionary snapshots to perfectly capture 19+ session variables.
     - [x] **Built-in Immutability**: Shipped 3 hardcoded, immutable system presets ("1:1 Full Canvas Course", "AI Power-User", "NotebookLM Optimized") for zero-config onboarding.

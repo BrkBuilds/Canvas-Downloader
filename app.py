@@ -216,7 +216,7 @@ st.markdown(f"""
     }}
     div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary p {{
         font-size: 0.82rem !important;
-        color: #8ab4ff !important;
+        color: #ffffff !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -749,6 +749,77 @@ with _main_content.container():
     # Preset Dialogs (defined here so they are accessible from any step)
     # ===================================================================
 
+    def _render_settings_preview_html(settings, download_path=None):
+        """Render a rich HTML preview of a preset's active settings without a container shell."""
+        
+        # Build Blue Core Badges
+        _mode_disp = "Modules (With Subfolders)" if settings.get('download_mode') == 'modules' else "All in One Folder"
+        _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
+        
+        c_core = "#3fd9ff"
+        core_html = f"""
+<div style='margin-bottom:12px;'>
+    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Core Settings</div>
+    <span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span>
+    <span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span>
+</div>
+"""
+        
+        # Build Green Canvas Content Badges
+        c_canvas = "#2DFFA0"
+        _sec_mode_disp = "Separate Folders" if settings.get('dl_isolate_secondary') else "Matching Core Settings"
+        sec_org_badge = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(45, 255, 160, 0.05); color:{c_canvas}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.7);'>📁 {_sec_mode_disp}</span>"
+        
+        _sec_on = [k.replace('dl_', '').replace('_', ' ').title() for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
+        if _sec_on:
+            sec_badges_list = "".join([f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
+            sec_badges = f"{sec_org_badge}{sec_badges_list}"
+        else:
+            sec_badges = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span>"
+            
+        content_html = f"""
+<div style='margin-bottom:12px;'>
+    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Canvas Content</div>
+    {sec_badges}
+</div>
+"""
+        
+        # Build Orange AI Optimization Badges
+        c_ai = "#FF9838"
+        conv_mapping = {
+            'convert_zip': 'Unpack Archives (.zip)',
+            'convert_pptx': 'PPTX ➡ PDF',
+            'convert_word': 'Legacy Word ➡ PDF',
+            'convert_excel': 'Excel ➡ PDF & Data',
+            'convert_html': 'HTML ➡ PDF',
+            'convert_code': 'Code ➡ .TXT',
+            'convert_urls': 'Links ➡ TXT',
+            'convert_video': 'Video ➡ MP3'
+        }
+        _conv_on = [conv_mapping.get(k, k) for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
+        if _conv_on:
+            conv_badges = "".join([f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
+        else:
+            conv_badges = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span>"
+            
+        conv_html = f"""
+<div style='margin-bottom:12px;'>
+    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>AI Optimization & Conversions</div>
+    {conv_badges}
+</div>
+"""
+        
+        path_html = ""
+        if download_path:
+            path_html = f"""
+<div style='margin-bottom:4px;'>
+    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Saved Path</div>
+    <div style='background-color:rgba(0,0,0,0.3); color:#cbd5e1; padding:6px 10px; border-radius:6px; font-size:0.78rem; font-family:monospace; border:1px dashed rgba(255,255,255,0.2); word-break: break-all;'>{esc(download_path)}</div>
+</div>
+"""
+            
+        return f"{core_html}{content_html}{conv_html}{path_html}"
+
     def _build_preset_summary(settings):
         """Build a dynamic, grammar-correct summary string for a preset's settings."""
         # 1. Organization
@@ -808,20 +879,8 @@ with _main_content.container():
             # Dynamic settings summary as an expander
             _summary_label = _build_preset_summary(settings)
             with st.expander(_summary_label):
-                _mode_disp = "With Subfolders" if settings.get('download_mode') == 'modules' else "All in One Folder"
-                _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
-                st.markdown(f"**Organization:** {_mode_disp}  \n**Include:** {_filter_disp}")
-
-                _sec_on = [k.replace('dl_', '').replace('_', ' ').title()
-                           for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
-                st.markdown(f"**Canvas Content:** {', '.join(_sec_on) if _sec_on else 'None'}")
-
-                _conv_on = [k.replace('convert_', '').replace('_', ' ').title()
-                            for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
-                st.markdown(f"**Ai Optimization (Conversions):** {', '.join(_conv_on) if _conv_on else 'None'}")
-
-                if preset.get('include_path') and preset.get('download_path'):
-                    st.markdown(f"**Download Path:** `{preset['download_path']}`")
+                path = str(preset.get('download_path', '')) if preset.get('include_path') else None
+                st.markdown(_render_settings_preview_html(settings, path), unsafe_allow_html=True)
 
             # Action buttons
             if is_builtin:
@@ -830,7 +889,7 @@ with _main_content.container():
                 col_apply, col_del, _ = st.columns([1, 1, 1])
 
             with col_apply:
-                if st.button("🚀 Apply", key=f"preset_apply_{preset['preset_id']}",
+                if st.button("Apply Preset", key=f"preset_apply_{preset['preset_id']}",
                              use_container_width=True):
                     mgr.apply_preset(st.session_state, preset)
                     st.session_state['pending_toast'] = f"✅ Applied preset '{esc(name)}'"
@@ -877,22 +936,11 @@ with _main_content.container():
         )
 
         # Preview current settings (collapsed)
-        with st.expander("📋 Current settings being saved"):
-            _preview = mgr.capture_current_settings(st.session_state)
-            _mode_disp = "With Subfolders" if _preview.get('download_mode') == 'modules' else "All in One Folder"
-            _filter_disp = "All Files" if _preview.get('file_filter') == 'all' else "Presentations & PDFs"
-            st.markdown(f"**Organization:** {_mode_disp}  \n**Include:** {_filter_disp}")
-
-            _sec_on = [k.replace('dl_', '').replace('_', ' ').title()
-                       for k in PresetManager.SECONDARY_CONTENT_KEYS if _preview.get(k)]
-            st.markdown(f"**Canvas Content:** {', '.join(_sec_on) if _sec_on else 'None'}")
-
-            _conv_on = [k.replace('convert_', '').replace('_', ' ').title()
-                        for k in PresetManager.NOTEBOOK_SUB_KEYS if _preview.get(k)]
-            st.markdown(f"**Conversions:** {', '.join(_conv_on) if _conv_on else 'None'}")
-
-            if include_path:
-                st.markdown(f"**Path:** `{st.session_state.get('download_path', '')}`")
+        with st.container(key="preset_save_preview", border=False):
+            with st.expander("📋 Current settings being saved"):
+                _preview = mgr.capture_current_settings(st.session_state)
+                path = str(st.session_state.get('download_path', '')) if include_path else None
+                st.markdown(_render_settings_preview_html(_preview, path), unsafe_allow_html=True)
 
         # Action buttons
         col_create, col_cancel = st.columns([1, 1])
@@ -1254,9 +1302,6 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         with _hdr_right:
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
             _pb1, _pb2 = st.columns(2, gap="small")
-            with _pb1:
-                if st.button("💾 Save Configuration", key="btn_save_config", use_container_width=True):
-                    _save_config_dialog()
             with _pb2:
                 if st.button("⚙️ Presets", key="btn_presets_hub", use_container_width=True):
                     _presets_hub_dialog()
@@ -1281,6 +1326,48 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
 
         st.markdown(f'''
 <style>
+/* GLOBAL CHECKBOX PSEUDO-ELEMENT BASE */
+div[class*="st-key-btn_"] button::before {{
+    content: "" !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 4px !important;
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    transition: all 0.2s ease-in-out !important;
+    box-sizing: border-box !important;
+}}
+/* Hide Checkboxes on Action Buttons & Master Toggles */
+div.st-key-btn_save_config button::before,
+div.st-key-btn_presets_hub button::before,
+div.st-key-btn_dl_secondary_master button::before,
+div.st-key-btn_convert_master button::before {{
+    display: none !important;
+}}
+/* Circular Mutually Exclusive Toggles */
+div[class*="st-key-btn_include_"] button::before,
+div[class*="st-key-btn_org_"] button::before,
+div[class*="st-key-btn_sec_org_"] button::before {{
+    border-radius: 50% !important;
+}}
+/* Apply generic buffer so text avoids the absolute checkboxes */
+div[class*="st-key-btn_"] button p, 
+div[class*="st-key-btn_"] button::after {{
+    padding-right: 16px !important;
+    box-sizing: border-box !important;
+}}
+/* Exclude Organization Master Buttons from Text Buffer */
+div.st-key-btn_org_all button p, div.st-key-btn_org_all button::after,
+div.st-key-btn_org_modules button p, div.st-key-btn_org_modules button::after {{
+    padding-right: 0px !important;
+}}
+
 /* 1. Outer Container & Crush horizontal gap */
 div[class*="st-key-include_files_segmented_wrapper"] {{
     background-color: rgba(0, 0, 0, 0.25) !important;
@@ -1334,25 +1421,17 @@ div[class*="st-key-btn_include_"] button p {{
     width: 100% !important;
 }}
 
-/* 5. Independent Icon Layer (::before) - Defaults to Monochrome */
-div[class*="st-key-btn_include_"] button::before {{
-    content: "" !important;
-    position: absolute !important;
-    left: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 24px !important;
-    height: 24px !important;
-    background-size: contain !important;
+/* 5. Icon Layer (native background) */
+div[class*="st-key-btn_include_"] button {{
+    background-size: 24px !important;
     background-repeat: no-repeat !important;
-    background-position: center !important;
-    filter: grayscale(20%) !important;
+    background-position: 12px center !important;
     transition: all 0.2s ease-in-out !important;
 }}
-div.st-key-btn_include_all button::before {{
+div.st-key-btn_include_all button {{
     background-image: url('data:image/png;base64,{b64_icon_all}') !important;
 }}
-div.st-key-btn_include_study button::before {{
+div.st-key-btn_include_study button {{
     background-image: url('data:image/png;base64,{b64_icon_study}') !important;
 }}
 
@@ -1384,17 +1463,11 @@ div.st-key-btn_include_study button::after {{
 /* 6.5 Hover State (Inactive Buttons) */
 div[class*="st-key-btn_include_"] button:hover {{
     background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: #3fd9ff !important;
     opacity: 1 !important;
     color: #ffffff !important;
 }}
-div[class*="st-key-btn_include_"] button:hover::before {{
-    filter: grayscale(0%) !important;
-}}
 
-/* Protect Active State from Hover Overrides */
-div.st-key-btn_include_{active_include_key} button:hover::before {{
-    filter: grayscale(0%) opacity(100%) !important;
-}}
 /* 7. Active State Logic */
 div.st-key-btn_include_{active_include_key} button {{
     background-color: rgba(56, 189, 248, 0.15) !important; /* Muted Canvas Blue */
@@ -1413,8 +1486,12 @@ div.st-key-btn_include_{active_include_key} button p {{
     color: #ffffff !important;
 }}
 div.st-key-btn_include_{active_include_key} button::before {{
-    filter: grayscale(0%) opacity(100%) !important;
+    border: none !important;
+    background-color: transparent !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%233fd9ff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%233fd9ff'/%3E%3C/svg%3E") !important;
 }}
+div[class*="st-key-btn_include_"] button:hover::before {{ border-color: #3fd9ff !important; }}
+div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color: transparent !important; }}
 </style>
 ''', unsafe_allow_html=True)
 
@@ -1503,38 +1580,25 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     line-height: 1.2 !important;
                     color: inherit !important;
                 }}
-                div[class*="st-key-btn_sec_org_"] button::before {{
-                    content: "" !important;
-                    position: absolute !important;
-                    left: 12px !important;
-                    top: 50% !important;
-                    transform: translateY(-50%) !important;
-                    width: 28px !important;
-                    height: 28px !important;
+                div[class*="st-key-btn_sec_org_"] button {{
                     background-size: 28px !important;
                     background-repeat: no-repeat !important;
-                    background-position: center !important;
-                    filter: grayscale(20%) !important;
-                    transition: all 0.2s ease-in-out !important;
+                    background-position: 12px center !important;
                 }}
-                div.st-key-btn_sec_org_inline button::before {{ background-image: url('data:image/png;base64,{b64_inline}') !important; }}
-                div.st-key-btn_sec_org_subfolders button::before {{ background-image: url('data:image/png;base64,{b64_sub}') !important; }}
+                div.st-key-btn_sec_org_inline button {{ background-image: url('data:image/png;base64,{b64_inline}') !important; }}
+                div.st-key-btn_sec_org_subfolders button {{ background-image: url('data:image/png;base64,{b64_sub}') !important; }}
                 
                 div[class*="st-key-btn_sec_org_"] button:hover {{
                     background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: #68d4a3 !important;
                     opacity: 1 !important;
                     color: #ffffff !important;
-                }}
-                div[class*="st-key-btn_sec_org_"] button:hover::before {{
-                    filter: grayscale(0%) !important;
                 }}
 
                 /* Disabled State Overrides */
                 div[class*="st-key-btn_sec_org_"] button[disabled] {{
                     opacity: 0.4 !important;
                     pointer-events: none !important;
-                }}
-                div[class*="st-key-btn_sec_org_"] button[disabled]::before {{
                     filter: grayscale(100%) !important;
                 }}
 
@@ -1564,8 +1628,14 @@ div.st-key-btn_include_{active_include_key} button::before {{
                     border: 1px solid rgba(104, 212, 163, 0.3) !important;
                     opacity: 1 !important;
                 }}
+                div[class*="st-key-btn_sec_org_"] button:hover::before {{ border-color: #68d4a3 !important; }}
+                div.st-key-btn_sec_org_{active_key} button:hover::before {{ border-color: transparent !important; }}
                 div.st-key-btn_sec_org_{active_key} button p {{ color: #ffffff !important; }}
-                div.st-key-btn_sec_org_{active_key} button::before {{ filter: grayscale(0%) opacity(100%) !important; }}
+                div.st-key-btn_sec_org_{active_key} button::before {{ 
+                    border: none !important;
+                    background-color: transparent !important;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%2368d4a3' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%2368d4a3'/%3E%3C/svg%3E") !important;
+                }}
                 </style>
                 """
 
@@ -1732,7 +1802,7 @@ div[class*="st-key-card1_include_section"] {
 
                     /* Hover State */
                     div[class*="st-key-btn_org_"] button:hover {{
-                        border-color: rgba(255, 255, 255, 0.3) !important;
+                        border-color: #3fd9ff !important;
                         background-color: rgba(255, 255, 255, 0.02) !important;
                     }}
 
@@ -1771,6 +1841,13 @@ div[class*="st-key-card1_include_section"] {
                     div.st-key-btn_org_{active_btn_key} button:hover {{
                         border: 2px solid {border_color} !important;
                         background-color: rgba(56, 189, 248, 0.08) !important;
+                    }}
+                    div[class*="st-key-btn_org_"] button:hover::before {{ border-color: #3fd9ff !important; }}
+                    div.st-key-btn_org_{active_btn_key} button:hover::before {{ border-color: transparent !important; }}
+                    div.st-key-btn_org_{active_btn_key} button::before {{
+                        border: none !important;
+                        background-color: transparent !important;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%233fd9ff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%233fd9ff'/%3E%3C/svg%3E") !important;
                     }}
                     </style>
                     ''', unsafe_allow_html=True)
@@ -1911,11 +1988,10 @@ div[class*="st-key-card1_include_section"] {
                         }
                         ''')
 
-                    css_blocks.append(f'''
-                    div.st-key-btn_dl_secondary_master button::before {{ 
-                        filter: {m_icon_filter} !important; 
-                    }}
-                    ''')
+                    if m_active:
+                        css_blocks.append(f'''
+                        /* Master button checkbox intentionally hidden by global rule. Left empty here for compatibility. */
+                        ''')
 
                     # Child CSS
                     for key, title, desc, icon in button_defs:
@@ -1925,6 +2001,18 @@ div[class*="st-key-card1_include_section"] {
                         b64_c = safe_b64(icon)
                         c_img_rule = f"background-image: url('data:image/png;base64,{b64_c}') !important;" if b64_c else ""
                         
+                        if is_active:
+                            c_check = f'''
+                            div.st-key-btn_{key} button::before {{
+                                border: none !important;
+                                background-color: transparent !important;
+                                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' rx='4' fill='%2368d4a3' mask='url(%23m)'/%3E%3C/svg%3E") !important;
+                            }}
+                            div.st-key-btn_{key} button:hover::before {{ border-color: transparent !important; }}
+                            '''
+                        else:
+                            c_check = ""
+
                         css_blocks.append(f'''
                         div.st-key-btn_{key} button {{
                             background-color: {c_bg} !important;
@@ -1939,6 +2027,10 @@ div[class*="st-key-card1_include_section"] {
                         div.st-key-btn_{key} button:hover {{
                             border-color: #68d4a3 !important;
                         }}
+                        div.st-key-btn_{key} button:hover::before {{
+                            border-color: #68d4a3 !important;
+                        }}
+                        {c_check}
                         ''')
 
                     final_html = f"""
@@ -2064,9 +2156,10 @@ f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; b
                     conv_css_blocks.append(
 f'div.st-key-btn_convert_master button:hover {{ border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }}\n'
                     )
-                conv_css_blocks.append(
-f'div.st-key-btn_convert_master button::before {{ filter: {m_conv_icon_filter} !important; }}\n'
-                )
+                if m_active:
+                    conv_css_blocks.append(
+f'/* Master button checkbox intentionally hidden by global rule. */\n'
+                    )
 
                 # Child button CSS (per-toggle)
                 for conv_key, conv_title, conv_desc, conv_icon in conv_button_defs:
@@ -2077,11 +2170,19 @@ f'div.st-key-btn_convert_master button::before {{ filter: {m_conv_icon_filter} !
                     b64_conv_c = safe_b64(conv_icon)
                     c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
 
+                    if is_conv_active:
+                        c_conv_check = f'''div.st-key-btn_{conv_key} button::before {{ border: none !important; background-color: transparent !important; background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cdefs%3E%3Cmask id=\'m\'%3E%3Crect width=\'24\' height=\'24\' fill=\'white\'/%3E%3Cpath d=\'M20 6L9 17l-5-5\' fill=\'none\' stroke=\'black\' stroke-width=\'4\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/mask%3E%3C/defs%3E%3Crect width=\'24\' height=\'24\' rx=\'4\' fill=\'%23ff9838\' mask=\'url(%23m)\'/%3E%3C/svg%3E") !important; }}\n'''
+                        hover_color = "transparent"
+                    else:
+                        c_conv_check = ""
+                        hover_color = "#f97316"
+                    
                     conv_css_blocks.append(
 f'div.st-key-btn_{conv_key} button {{ background-color: {c_bg} !important; border: 1px solid {c_border} !important; {c_conv_img_rule} }}\n'
-f'div.st-key-btn_{conv_key} button::before {{ filter: {c_icon_filter} !important; }}\n'
+f'{c_conv_check}'
 f'div.st-key-btn_{conv_key} button::after {{ content: "{conv_desc}" !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: -2px !important; line-height: 1.2 !important; }}\n'
 f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}\n'
+f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} !important; }}\n'
                     )
 
                 # --- Header HTML (separate injection) ---
@@ -2124,7 +2225,13 @@ f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}
                 st.text_input('Path', value=st.session_state['download_path'], disabled=True)
 
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-            col_conf, col_back, _ = st.columns([1.2, 1, 5])
+            col_save, _ = st.columns([1.875, 5])
+            with col_save:
+                if st.button("💾 Save Configuration as Preset", key="btn_save_config", use_container_width=True):
+                    _save_config_dialog()
+                    
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            col_back, col_conf, _ = st.columns([0.66, 1.2, 5])
             with col_conf:
                 # Button label changes based on mode
                 button_label = 'Sync (Download) Selected Files' if st.session_state['current_mode'] == 'sync' else 'Confirm and Download'

@@ -171,6 +171,17 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: Attempting to build deep ancestor selectors like `div:has(> div > div > [class*="st-key-my_card"])` to map Streamlit's wrapper maze often fails instantly (returning `NO MATCH`) because browser CSS engines struggle with deeply nested `:has()` pseudo-classes attached to partial attribute selectors.
     - *Rule*: Never guess Streamlit wrapper depths. Use direct `parent:has(> child)` CSS selectors targeting precisely the DOM bottleneck.
 
+- **SVG Alpha Mask "Cutout" Indicator Pattern**:
+    - *Problem*: Standard solid-colored icons can feel visually heavy and don't react to background color changes.
+    - *Solution*: Use an SVG mask featuring a transparent "cutout" of the check/radio dot. The indicator background fills the container, but the icon itself is a hole that reveals the underlying card's background.
+    - *Aesthetic*: Ensures the checkmark/dot always has perfect contrast and changes "color" dynamically as the card background shifts during hover or activation.
+- **Checkbox-to-Radio Visual Distinction Pattern**:
+    - *Problem*: Streamlit doesn't distinguish between single-select and multi-select cards visually when using styled buttons.
+    - *Solution*: Enforce strict geometric consistency:
+        - **Multi-select**: Square indicators (`border-radius: 2px`).
+        - **Mutually Exclusive**: Circular indicators (`border-radius: 50%`).
+    - *Implementation*: Use `::before` for the indicator box and `mask-image` for the inner icon (check vs dot).
+
 ### Native Button Card Architecture
 To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.
 

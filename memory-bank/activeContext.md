@@ -1,6 +1,25 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+## Recent Changes (Session 2026-03-31 — Download Settings UI Modernization)
+- **Checkbox -> Radio Transition Architecture (`app.py`)**:
+    - **Problem**: In Step 2, mutually exclusive choices (Include Files, Card 1 Organization, Card 2 Organization) were visually indistinguishable from multi-select checkboxes, leading to poor UX affordance.
+    - **Solution**: Migrated all mutually exclusive groups to circular radio buttons.
+    - **Implementation**: Utilized `border-radius: 50%` on `::before` pseudo-elements. Replaced standard square masks with 16px circular SVG masks featuring a 3px border and a centered solid dot (`<circle cx='8' cy='8' r='3'/>`) matched to the card's theme color.
+- **SVG Alpha Mask Checkmark Pattern (`app.py`)**:
+    - **Problem**: Standard "Checkmark-on-Solid-Box" indicators felt heavy and opaque.
+    - **Solution**: Engineered a "Cutout" checkmark using SVG mask indices. The indicator is a solid colored box, but the checkmark itself is transparent, allowing the underlying card background (and its hover/active colors) to "shine through" the icon.
+    - **Aesthetic**: This creates a premium, high-fidelity look where the checkmark color dynamically reacts to the card's background state.
+- **State-Aware Hover Logic**:
+    - **Standardization**: Unified hover behaviors across Cards 1, 2, and 3.
+    - **Suppression Logic**: Borders and indicator outlines only light up in the theme color when the button is in an *untoggled* state. Once toggled/active, the hover effect is suppressed to maintain focus on the selection.
+- **Primary Action Flow Relocation (`app.py`)**:
+    - **Positioning**: Moved the "Save Configuration" button from the top-right header to a dedicated full-width slot directly above the final action row ("Back", "Confirm").
+    - **Alignment Geometry**: Used a precise column ratio (`[1.875, 1]`) to ensure the Save button spans exactly the combined width of the "Back" and "Confirm" buttons, maintaining perfect vertical symmetry.
+- **Text Wrapping & Hitbox Safeguards**:
+    - **Padding**: Added `padding-right: 16px` to all card buttons to prevent long descriptions from overlapping the absolute-positioned indicators.
+    - **Layout Stability**: Hardened the flex-chain rules to prevent Card 1 buttons from "mangling" or shrinking during dynamic interactions.
+
 ## Recent Changes (Session 2026-03-29 — Saved Settings & Presets)
 - **PresetManager Engine (`preset_manager.py`)**:
     - **Core Function**: Abstracted a new data layer to allow power users to save and reuse complex Step 2 toggle configurations (Content, Organization, AI/NotebookLM conversions, and path).
@@ -14,6 +33,8 @@
     - **Ghost Toast Pattern / Pending Toasts**: Solved the issue where `st.toast` calls initiated inside a dialog disappear instantly when `scope="app"` closes the modal. Implemented a `pending_toast` string in `session_state` that is consumed ("popped") at the top of the `elif step == 2:` block natively, ensuring the toast renders over the main UI *after* the dialog dies.
     - **Global Dialog Placement**: Addressed a severe Pyrefly linting/lexical scoping error where dialog definitions (`@st.dialog`) nested inside the `if step == 1:` block were completely inaccessible during Step 2. Hoisted the definitions directly beneath the main `_main_content.container()` wrapper so they exist universally regardless of step state.
     - **UI Polish & QA Fixes**: Completely matched the visual parity of the Sync Hub UI. Fixed the f-string string interpolation bug that was causing invalid CSS braces (`{{`) to break all dialog and button styles. Transitioned the hub from native `st.tabs` to a custom session-state driven button-tab architecture with Base64 injected inline icons (`icon_preset_user.png` and `icon_preset_builtin.png`). Transformed the static preset summary tags into a dynamic, grammatically-correct `st.expander` rendering exact setting payloads. Added explicit card elevation, fixed-height scrolling constraints (`height=450`), and explicit danger hover states for the delete buttons to finalize the UX audit.
+    - **Streamlit Markdown Engine ("Zero-Indentation Rule")**: Hard-learned lesson: complex HTML strings passed to `st.markdown(html, unsafe_allow_html=True)` will violently break into raw text `<pre><code>` blocks if they contain any leading indentation. Refactored the `_render_settings_preview_html` payloads to be strictly left-aligned (0 space indentation).
+    - **Precise Setup & State Tracking**: Implemented rigid CSS overrides targeting `details summary > *` to guarantee expander titles remain crisply white, bypassing Streamlit's internal wrapper mutations. Additionally, engineered a verbose dictionary translation mapping for conversions (e.g., `convert_pptx` -> `PPTX ➡ PDF`) and perfectly matched core application hex colors (`#3fd9ff`, `#2DFFA0`, `#FF9838`) to ensure intuitive parity between the summary previews and the true Settings menu.
 
 ## Recent Changes (Session 2026-03-28 — Excel → AI Data Pipeline)
 - **Zero-Dependency Extraction Engine (`excel_converter.py`)**:
