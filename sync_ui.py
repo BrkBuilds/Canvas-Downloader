@@ -1173,78 +1173,23 @@ def _render_hub_config(pair: dict):
         st.warning("⚠️ Could not read configuration.")
         return
 
-    # --- PERFECTED HTML/CSS RENDERING ---
-    st.markdown("""
-    <style>
-    .cfg-header { font-weight: 600; color: {theme.WHITE}; margin-bottom: 8px; font-size: 1.05rem; margin-left: 15px; }
-    .cfg-cb { display: flex; align-items: flex-start; margin-bottom: 6px; font-size: 0.95rem; line-height: 1.3; pointer-events: none; margin-left: 15px; }
-    .cfg-cb input { margin-right: 8px; margin-top: 4px; accent-color: {theme.BLUE_PRIMARY}; width: 15px; height: 15px; }
-    .cfg-cb.checked { opacity: 1.0; color: {theme.WHITE}; }
-    .cfg-cb.unchecked { opacity: 0.65; color: #a3a8b8; }
-    .cfg-indent { margin-left: 37px; } 
-    </style>
-    """, unsafe_allow_html=True)
+    from ui_shared import render_config_summary_badges
 
-    def cb(label, is_checked, indent=False):
-        state = "checked" if is_checked else "unchecked"
-        chk = "checked" if is_checked else ""
-        indent_cls = "cfg-indent" if indent else ""
-        return f"<div class='cfg-cb {state} {indent_cls}'><input type='checkbox' {chk}><span>{label}</span></div>"
-
-    c1, c2, c3, c4 = st.columns([1, 1, 1.1, 1.1], gap="small")
-
-    # LOGIC FIX 1: Evaluate flat vs subfolders from raw_mode
-    is_flat = (raw_mode == 'flat')
-    is_all = contract.get('file_filter', 'all') == 'all'
-
-    # LOGIC FIX 2: Evaluate NotebookLM status based on all sub-settings being true
-    conversion_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-                       'convert_html', 'convert_code', 'convert_urls', 'convert_video']
-    is_notebook_lm = all(contract.get(k, False) for k in conversion_keys)
-
-    with c1:
-        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Folder Download Structure:</div>", unsafe_allow_html=True)
-        st.markdown(cb("With subfolders (matches Canvas Modules)", not is_flat), unsafe_allow_html=True)
-        st.markdown(cb("Flat (All files in one folder)", is_flat), unsafe_allow_html=True)
-
-        st.markdown("<div class='cfg-header' style='margin-top: 15px;'>Include Files:</div>", unsafe_allow_html=True)
-        st.markdown(cb("All Files (Default)", is_all), unsafe_allow_html=True)
-        st.markdown(cb("Pdf &amp; Powerpoint only", not is_all), unsafe_allow_html=True)
-
-    with c2:
-        _sec_keys = ['download_assignments', 'download_syllabus', 'download_announcements',
-                     'download_discussions', 'download_quizzes', 'download_rubrics', 'download_submissions']
-        _sec_active = sum(1 for k in _sec_keys if secondary.get(k, False))
-        _sec_total = len(_sec_keys)
-        _is_isolate = secondary.get('isolate_secondary_content', False)
-        _mode_label = "In Subfolders" if _is_isolate else "Inline with Modules"
-
-        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Additional Course Content:</div>", unsafe_allow_html=True)
-        st.markdown(f"<div style='margin-left: 15px; margin-bottom: 8px; font-size: 0.85rem; color: #a3a8b8;'>Organized by: <b style='color: {theme.WHITE};'>{_mode_label}</b></div>", unsafe_allow_html=True)
-        st.markdown(cb(f"Additional Course Content ({_sec_active}/{_sec_total})", _sec_active == _sec_total), unsafe_allow_html=True)
-        st.markdown(cb("Assignments", secondary.get('download_assignments', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Syllabus", secondary.get('download_syllabus', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Announcements", secondary.get('download_announcements', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Discussions", secondary.get('download_discussions', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Quizzes", secondary.get('download_quizzes', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Rubrics", secondary.get('download_rubrics', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Submissions", secondary.get('download_submissions', False), indent=True), unsafe_allow_html=True)
-
-    with c3:
-        st.markdown("<div class='cfg-header' style='margin-top: -15px;'>Additional settings:</div>", unsafe_allow_html=True)
-        st.markdown(cb("NotebookLM Compatible Download", is_notebook_lm), unsafe_allow_html=True)
-        st.markdown(cb("Auto-extract Archives (.zip, .tar.gz)", contract.get('convert_zip', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Powerpoints (pptx.) to PDF", contract.get('convert_pptx', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Old Word Docs (.doc, .rtf) to PDF", contract.get('convert_word', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Excel Files (.xlsx, .xls) to PDF & AI Data", contract.get('convert_excel', False), indent=True), unsafe_allow_html=True)
-
-    with c4:
-        st.markdown("<div class='cfg-header' style='visibility: hidden; margin-top: -15px;'>Spacer</div>", unsafe_allow_html=True) 
-        st.markdown("<div class='cfg-cb' style='visibility: hidden;'><input type='checkbox'><span>Spacer</span></div>", unsafe_allow_html=True)
-        st.markdown(cb("Convert Canvas Pages (HTML) to Markdown", contract.get('convert_html', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Convert Code &amp; Data Files to .txt", contract.get('convert_code', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Compile Web Links (.url/.webloc) into a single list", contract.get('convert_urls', False), indent=True), unsafe_allow_html=True)
-        st.markdown(cb("Extract Audio (.mp3) from Videos (.mp4, .mov)", contract.get('convert_video', False), indent=True), unsafe_allow_html=True)
+    normalized_settings = {}
+    normalized_settings['download_mode'] = raw_mode
+    normalized_settings['file_filter'] = contract.get('file_filter', 'all')
+    normalized_settings['dl_isolate_secondary'] = secondary.get('isolate_secondary_content', False)
+    
+    for key, value in secondary.items():
+        if key.startswith('download_'):
+            new_key = key.replace('download_', 'dl_', 1)
+            normalized_settings[new_key] = value
+            
+    for key, value in contract.items():
+        if key.startswith('convert_'):
+            normalized_settings[key] = value
+            
+    st.markdown(render_config_summary_badges(normalized_settings, show_path=False), unsafe_allow_html=True)
 
     st.markdown("<div style='margin-bottom: -10px;'></div>", unsafe_allow_html=True)
 

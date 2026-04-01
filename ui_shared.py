@@ -7,6 +7,7 @@ from pathlib import Path
 from ui_helpers import open_folder, esc, short_path, friendly_course_name
 from sync_manager import format_file_size
 import theme
+from preset_manager import PresetManager
 
 
 # --- Entity Icons for secondary content logging ---
@@ -204,3 +205,80 @@ def render_pp_warning(pp_failure_count: int):
     if pp_failure_count > 0:
         word = "file" if pp_failure_count == 1 else "files"
         st.warning(f"⚠️ {pp_failure_count} {word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
+
+def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
+    """Render a rich HTML preview of active settings using color-coded badges."""
+    # Build Blue Core Badges
+    _mode_disp = "Modules (With Subfolders)" if settings.get('download_mode') == 'modules' else "All in One Folder"
+    _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
+    
+    c_core = "#3fd9ff"
+    core_html = f"""
+<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
+    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Core Settings</div>
+    <div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
+    <span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span>
+</div>
+"""
+    
+    # Build Green Canvas Content Badges
+    c_canvas = "#2DFFA0"
+    _sec_mode_disp = "Separate Folders" if settings.get('dl_isolate_secondary') else "Matching Core Settings"
+    sec_org_badge = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.05); color:{c_canvas}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.7);'>📁 {_sec_mode_disp}</span>"
+    
+    _sec_on = [k.replace('dl_', '').replace('_', ' ').title() for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
+    if _sec_on:
+        sec_badges_list = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
+        sec_badges = f"<div style='width: 100%;'>{sec_org_badge}</div>{sec_badges_list}"
+    else:
+        sec_badges = f"<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>∅ None selected</span></div>"
+        
+    content_html = f"""
+<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
+    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Canvas Content</div>
+    {sec_badges}
+</div>
+"""
+    
+    # Build Orange AI Optimization Badges
+    c_ai = "#FF9838"
+    conv_mapping = {
+        'convert_zip': 'Unpack Archives (.zip)',
+        'convert_pptx': 'PPTX ➡ PDF',
+        'convert_word': 'Legacy Word ➡ PDF',
+        'convert_excel': 'Excel ➡ PDF & Data',
+        'convert_html': 'HTML ➡ PDF',
+        'convert_code': 'Code ➡ .TXT',
+        'convert_urls': 'Links ➡ TXT',
+        'convert_video': 'Video ➡ MP3'
+    }
+    _conv_on = [conv_mapping.get(k, k) for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
+    if _conv_on:
+        conv_badges = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
+    else:
+        conv_badges = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>∅ None selected</span>"
+        
+    conv_html = f"""
+<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
+    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>AI Optimization & Conversions</div>
+    {conv_badges}
+</div>
+"""
+    
+    path_html = ""
+    if show_path and settings.get('download_path'):
+        path_html = f"""
+<div style='margin-bottom:4px;'>
+    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Saved Path</div>
+    <div style='background-color:rgba(0,0,0,0.3); color:#cbd5e1; padding:6px 10px; border-radius:6px; font-size:0.78rem; font-family:monospace; border:1px dashed rgba(255,255,255,0.2); word-break: break-all;'>{esc(settings.get('download_path'))}</div>
+</div>
+"""
+    grid_container = f"""
+<div style="display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr; gap: 15px; margin-bottom: 5px;">
+    {core_html}
+    {content_html}
+    {conv_html}
+</div>
+"""
+
+    return f"{grid_container}{path_html}"
