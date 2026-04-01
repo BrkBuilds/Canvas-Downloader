@@ -1347,14 +1347,7 @@ div.st-key-btn_org_modules button p, div.st-key-btn_org_modules button::after {{
 
 /* 1. Outer Container & Crush horizontal gap */
 div[class*="st-key-include_files_segmented_wrapper"] {{
-    background-color: rgba(0, 0, 0, 0.25) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    border-radius: 12px !important;
-    padding: 4px !important;
     margin-top: 5px !important;
-}}
-div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
-    gap: 4px !important;
 }}
 
 /* 2. Stretch column wrappers for dynamic height */
@@ -1365,110 +1358,101 @@ div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"]
 
 /* 3. Base Button: Flex Column + Relative Position */
 div[class*="st-key-btn_include_"] button {{
+    position: relative !important;
+    height: 150px !important;
     background-color: transparent !important;
-    border: 1px solid transparent !important;
-    height: 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center 18px !important;
+    background-size: 55px !important;
+    padding-top: 85px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    position: relative !important;
-    padding: 12px 12px 12px 48px !important;
-    border-radius: 8px !important;
-    color: #a0a0a0 !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    transition: all 0.2s ease-in-out !important;
     opacity: 0.75 !important;
-    transition: opacity 0.2s ease, background-color 0.2s ease, filter 0.2s ease, color 0.2s ease !important;
+    color: #a0a0a0 !important;
 }}
 
-/* 4. Force strict left alignment on inner Streamlit wrappers */
-div[class*="st-key-btn_include_"] button > div {{
-    text-align: left !important;
-    width: 100% !important;
-    display: block !important;
-    margin: 0 !important;
-}}
+/* 4. Primary Title Styling (The native button label) */
 div[class*="st-key-btn_include_"] button p {{
-    font-size: 0.95rem !important;
+    font-size: 1.1rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     margin-bottom: 0px !important;
     line-height: 1.2 !important;
     color: inherit !important;
-    text-align: left !important;
-    width: 100% !important;
 }}
 
-/* 5. Icon Layer (native background) */
-div[class*="st-key-btn_include_"] button {{
-    background-size: 24px !important;
-    background-repeat: no-repeat !important;
-    background-position: 12px center !important;
-    transition: all 0.2s ease-in-out !important;
+div[class*="st-key-btn_include_"] button::after {{
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
 }}
-div.st-key-btn_include_all button {{
-    background-image: url('data:image/png;base64,{b64_icon_all}') !important;
+
+/* 5. Geometry lockdown for radio pseudo-element on Card 1 */
+div[class*="st-key-btn_include_"] button::before {{
+    top: 16px !important;
+    right: 16px !important;
+    box-sizing: border-box !important;
 }}
-div.st-key-btn_include_study button {{
-    background-image: url('data:image/png;base64,{b64_icon_study}') !important;
-}}
+
+/* Icon Layer (native background) */
+div.st-key-btn_include_all button {{ background-image: url('data:image/png;base64,{b64_icon_all}') !important; }}
+div.st-key-btn_include_study button {{ background-image: url('data:image/png;base64,{b64_icon_study}') !important; }}
 
 /* 6. Descriptions (::after) */
 div.st-key-btn_include_all button::after {{
-    content: "Includes everything from the Canvas Files tab" !important;
-    display: block !important;
-    font-size: 0.75rem !important;
+    content: "Includes everything from the Canvas folder" !important;
+    font-size: 0.85rem !important;
+    line-height: 1.1 !important;
     color: #a0a0a0 !important;
     margin-top: -1px !important;
-    font-weight: normal !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-    white-space: normal !important;
-    width: 100% !important;
+    font-weight: 400 !important;
 }}
 div.st-key-btn_include_study button::after {{
     content: "Download PDFs & PowerPoints only" !important;
-    display: block !important;
-    font-size: 0.75rem !important;
+    font-size: 0.85rem !important;
+    line-height: 1.1 !important;
     color: #a0a0a0 !important;
     margin-top: -1px !important;
-    font-weight: normal !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-    white-space: normal !important;
-    width: 100% !important;
+    font-weight: 400 !important;
 }}
+
 /* 6.5 Hover State (Inactive Buttons) */
 div[class*="st-key-btn_include_"] button:hover {{
-    background-color: rgba(255, 255, 255, 0.05) !important;
     border-color: #3fd9ff !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
     opacity: 1 !important;
     color: #ffffff !important;
 }}
 
 /* 7. Active State Logic */
 div.st-key-btn_include_{active_include_key} button {{
-    background-color: rgba(56, 189, 248, 0.15) !important; /* Muted Canvas Blue */
-    border: 1px solid rgba(56, 189, 248, 0.3) !important;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
-    color: #ffffff !important;
+    border: 1px solid #3fd9ff !important;
+    background-color: rgba(56, 189, 248, 0.05) !important;
+    box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
     opacity: 1 !important;
+    color: #ffffff !important;
 }}
 /* Protect Active Blue Pill from Grey Hover Override */
 div.st-key-btn_include_{active_include_key} button:hover {{
-    background-color: rgba(56, 189, 248, 0.15) !important;
-    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    border: 1px solid #3fd9ff !important;
+    background-color: rgba(56, 189, 248, 0.08) !important;
+    box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
     opacity: 1 !important;
-}}
-div.st-key-btn_include_{active_include_key} button p {{
     color: #ffffff !important;
 }}
+
+div[class*="st-key-btn_include_"] button:hover::before {{ border-color: #3fd9ff !important; }}
+div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color: transparent !important; }}
 div.st-key-btn_include_{active_include_key} button::before {{
     border: none !important;
     background-color: transparent !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%233fd9ff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%233fd9ff'/%3E%3C/svg%3E") !important;
 }}
-div[class*="st-key-btn_include_"] button:hover::before {{ border-color: #3fd9ff !important; }}
-div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color: transparent !important; }}
 </style>
 ''', unsafe_allow_html=True)
 
@@ -1758,19 +1742,22 @@ div[class*="st-key-card1_include_section"] {{
                     <style>
                     /* Base Card Styling for BOTH buttons */
                     div[class*="st-key-btn_org_"] button {{
-                        height: 185px !important;
+                        position: relative !important;
+                        height: 150px !important;
                         background-color: transparent !important;
                         background-repeat: no-repeat !important;
-                        background-position: center 25px !important;
-                        background-size: 80px !important;
-                        padding-top: 115px !important;
-                        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                        background-position: center 18px !important;
+                        background-size: 55px !important;
+                        padding-top: 85px !important;
+                        border: 1px solid rgba(255, 255, 255, 0.15) !important;
                         border-radius: 8px !important;
                         display: flex !important;
                         flex-direction: column !important;
                         align-items: center !important;
                         justify-content: flex-start !important;
                         transition: all 0.2s ease-in-out !important;
+                        opacity: 0.75 !important;
+                        color: #a0a0a0 !important;
                     }}
 
                     /* Primary Title Styling (The native button label) */
@@ -1780,7 +1767,7 @@ div[class*="st-key-card1_include_section"] {{
                         margin: 0 !important;
                         margin-bottom: 0px !important;
                         line-height: 1.2 !important;
-                        color: #ffffff !important;
+                        color: inherit !important;
                     }}
 
                     div[class*="st-key-btn_org_"] button::after {{
@@ -1788,10 +1775,20 @@ div[class*="st-key-card1_include_section"] {{
                         padding-bottom: 0px !important;
                     }}
 
+                    /* Geometry lockdown for radio pseudo-element on Card 1 */
+                    div[class*="st-key-btn_org_"] button::before {{
+                        top: 16px !important;
+                        right: 16px !important;
+                        box-sizing: border-box !important;
+                    }}
+
                     /* Hover State */
                     div[class*="st-key-btn_org_"] button:hover {{
                         border-color: #3fd9ff !important;
                         background-color: rgba(255, 255, 255, 0.02) !important;
+                        box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                        opacity: 1 !important;
+                        color: #ffffff !important;
                     }}
 
                     /* ----- SUBFOLDERS SPECIFIC ----- */
@@ -1801,7 +1798,7 @@ div[class*="st-key-card1_include_section"] {{
                     div.st-key-btn_org_subfolders button::after {{
                         content: "Organize files exactly as they appear in Canvas." !important;
                         font-size: 0.85rem !important;
-                        line-height: 1.2 !important;
+                        line-height: 1.1 !important;
                         color: #a0a0a0 !important;
                         margin-top: -1px !important;
                         font-weight: 400 !important;
@@ -1814,7 +1811,7 @@ div[class*="st-key-card1_include_section"] {{
                     div.st-key-btn_org_flat button::after {{
                         content: "Place all files together in the course folder." !important;
                         font-size: 0.85rem !important;
-                        line-height: 1.2 !important;
+                        line-height: 1.1 !important;
                         color: #a0a0a0 !important;
                         margin-top: -1px !important;
                         font-weight: 400 !important;
@@ -1822,13 +1819,19 @@ div[class*="st-key-card1_include_section"] {{
 
                     /* Active State Highlight */
                     div.st-key-btn_org_{active_btn_key} button {{
-                        border: 2px solid {border_color} !important;
+                        border: 1px solid {border_color} !important;
                         background-color: rgba(56, 189, 248, 0.05) !important;
+                        box-shadow: inset 0 0 0 1px {border_color}, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                        opacity: 1 !important;
+                        color: #ffffff !important;
                     }}
                     /* Protect Active State from generic Hover Overrides */
                     div.st-key-btn_org_{active_btn_key} button:hover {{
-                        border: 2px solid {border_color} !important;
+                        border: 1px solid {border_color} !important;
                         background-color: rgba(56, 189, 248, 0.08) !important;
+                        box-shadow: inset 0 0 0 1px {border_color}, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                        opacity: 1 !important;
+                        color: #ffffff !important;
                     }}
                     div[class*="st-key-btn_org_"] button:hover::before {{ border-color: #3fd9ff !important; }}
                     div.st-key-btn_org_{active_btn_key} button:hover::before {{ border-color: transparent !important; }}

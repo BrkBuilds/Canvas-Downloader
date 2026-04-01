@@ -5,14 +5,6 @@
 - **Geometric Symmetery**: Card 1 and Card 2 are aligned with the new 150px vertical footprint.
 
 ## Recent Changes (Session 2026-04-01 — Hover Displacement & Geometric Lockdown)
-- **The Filter-Position Containment Fix (`app.py`)**:
-    - **Discovery**: A persistent 2px "jump" of the radio button on hover was traced to a browser-level quirk where CSS `filter: grayscale()` creates a temporary "containing block" for absolutely positioned children.
-    - **Solution**: Injected `position: relative !important;` into the main button cards. This forces the button to remain the rigid anchor for the `::before` radio dots regardless of whether filters are applied or stripped during hover.
-- **The Inset Box-Shadow Border Hack (`app.py`)**:
-    - **Problem**: Changing `border-width` from 1px (inactive) to 2px (active/hover) physically shrinks the button's padding-box, displacing the `top/right` corner coordinates.
-    - **Solution**: Locked the physical border to a constant `1px solid`. Achieved the "thick 2px" aesthetic for active states by injecting `box-shadow: inset 0 0 0 1px {color}`. This "grows" the border inward over the background without affecting the element's layout dimensions.
-- **Card 1 Compact Footprint Refinement**:
-    - **Geometry**: Adjusted the "Native Button Card" constants to allow Card 2 (flex-synced) to wrap more tightly. 
     - **Specs**: Height: `150px`, Icon Scale: `55px`, Padding-Top: `85px`, Title Margin: `0px`, Subtitle line-height: `1.1`.
 - **Pseudo-Element Anchor Hardening**:
     - **Stability**: Stripped all dynamic hover-offset logic and locked all radio button states to a unified `top: 16px !important; right: 16px !important; box-sizing: border-box !important;`.
