@@ -700,6 +700,15 @@
   - Added programmatic course headers (e.g., `=== Post-Processing: CourseName ===`) injected into the single session log, preventing file overwrites during multi-course syncs.
 - **Cancel UX Safety**: Added `try...except` guards around `progress_container.progress()` to prevent `NameError` crashes if a user cancels a download before the UI placeholder has fully rendered.
 
+## Recent Changes (Session 2026-04-01 - Review & Output UI Redesign)
+- **Review & Output Card Consolidation**:
+  - **Shared Badge Renderer Extraction**: Created `render_config_summary_badges` in `ui_shared.py`, combining dynamic tag UI logic into a single callable function capable of receiving explicit dictionaries instead of locked session state objects.
+  - **Adapter Pattern for Sync DB**: Implemented an explicit adapter in `sync_ui.py` modifying saved SQLite configuration data into runtime session keys (`dl_island_pages` -> `dl_pages`) so they can seamlessly execute the new central badge renderer without mutation.
+  - **CSS 3-Column Grid**: Overhauled the badge presentation from a vertical list to a `display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr` layout keeping horizontal space tight across Core, Canvas, and AI content.
+- **Escape Hatch for CSS Bleed**:
+  - **Widget Tagging Strategy**: Discovered an unintended CSS wildcard inheritance (`div[class*="st-key-btn_"]`) hijacking primary buttons at the bottom of Step 2. Actively renamed all such layout triggers to `action_dl_*` (bypassing the toggle selector namespace) while correctly hoisting the CSS rules vertically upward.
+  - **Action Button Grid Collapsing**: Forced negative `-15px !important` top margins specifically targeting the horizontal block wrappers surrounding standard buttons using `:has(.st-key-action_dl_confirm)` layout hooks.
+
 ## Recent Changes (Session 2026-03-01 Revision)
 - **Step 2 Download Settings Overhaul**:
   - **Terminology Pivot**: Changed "Full" download structure to "Flat" for better user clarity.

@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.21: Step 2 Review & Output Card Redesign** (2026-04-01):
+    - [x] **Consolidated Summary Badges**: Extracted the dynamic color-coded preset HTML generator into `ui_shared.py` (`render_config_summary_badges`), establishing a single source of truth for config previews across the app.
+    - [x] **Adapter Pattern**: Engineered a dictionary adapter in `sync_ui.py` to bridge the legacy SQLite `sync_contract` schema with the modernized `st.session_state` keys required by the new universal badge renderer.
+    - [x] **Grid Architecture**: Replaced vertical badge stacking with a strict 3-column `display: grid` layout (`0.8fr 1.1fr 1.1fr`) containing dynamically wrapping inline-flex tags to maximize horizontal efficiency.
+    - [x] **Trojan CSS Hoisting & Name Escaping**: Renamed Step 2 action widget keys explicitly to `action_dl_*` (bypassing legacy wildcard CSS leaks affecting `btn_*`) and hoisted their associated margin-collapsing logic directly below the `step == 2` block initialization to prevent unmounting flashes during layout transitions.
 - [x] **Phase 6.20: Card 1 Stabilization & Geometric Lockdown** (2026-04-01):
     - [x] **Filter Conflict Resolution**: Diagnosed and fixed the 2px radio button jump caused by CSS `filter` grayscale creating/destroying containing blocks. Injected `position: relative !important` to lock the absolute anchor.
     - [x] **Inset Box-Shadow Hack**: Implemented fixed 1px borders with inward-growing inset box-shadows to simulate 2px active states without displacing the `padding-box` or layout coordinates.
