@@ -1,6 +1,10 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.20: Card 1 Stabilization & Geometric Lockdown** (2026-04-01):
+    - [x] **Filter Conflict Resolution**: Diagnosed and fixed the 2px radio button jump caused by CSS `filter` grayscale creating/destroying containing blocks. Injected `position: relative !important` to lock the absolute anchor.
+    - [x] **Inset Box-Shadow Hack**: Implemented fixed 1px borders with inward-growing inset box-shadows to simulate 2px active states without displacing the `padding-box` or layout coordinates.
+    - [x] **Geometric Alignment**: Refined Card 1 to a 150px vertical footprint with 55px icons, allowing Card 2 (flex-synced) to wrap more tightly and maintaining perfect horizontal symmetry across the Step 2 wizard.
 - [x] **Phase 6.16: Eradicate Archive Ghost Stubs** (2026-03-28):
     - [x] **Pure Deletion**: Refactored `archive_extractor.py` to eradicate the 0-byte `.extracted` ghost stub pattern. Note the transition from 0-byte stubs to the Sync Engine Bypass to guarantee 100% NotebookLM bulk-upload compatibility.
     - [x] **Engine Extension Traps**: Engineered an `_is_archive_path` helper within `sync_manager.py`. The sync diffing engine now verifies `convert_zip` in the contract and intelligently ignores missing `.zip`, `.tar.gz`, and `.tar` payloads during Phase 1 (Existence), Phase 2 (Not Newer), and Step 5 (Canvas Deletions).

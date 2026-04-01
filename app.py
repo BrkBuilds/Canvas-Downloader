@@ -26,6 +26,7 @@ from ui_helpers import esc, friendly_course_name, parse_cbs_metadata, render_dow
 from ui_shared import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
+    render_config_summary_badges
 )
 
 # Page Config
@@ -767,76 +768,7 @@ with _main_content.container():
     # Preset Dialogs (defined here so they are accessible from any step)
     # ===================================================================
 
-    def _render_settings_preview_html(settings, download_path=None):
-        """Render a rich HTML preview of a preset's active settings without a container shell."""
-        
-        # Build Blue Core Badges
-        _mode_disp = "Modules (With Subfolders)" if settings.get('download_mode') == 'modules' else "All in One Folder"
-        _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
-        
-        c_core = "#3fd9ff"
-        core_html = f"""
-<div style='margin-bottom:12px;'>
-    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Core Settings</div>
-    <div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
-    <div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span></div>
-</div>
-"""
-        
-        # Build Green Canvas Content Badges
-        c_canvas = "#2DFFA0"
-        _sec_mode_disp = "Separate Folders" if settings.get('dl_isolate_secondary') else "Matching Core Settings"
-        sec_org_badge = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(45, 255, 160, 0.05); color:{c_canvas}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.7);'>📁 {_sec_mode_disp}</span>"
-        
-        _sec_on = [k.replace('dl_', '').replace('_', ' ').title() for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
-        if _sec_on:
-            sec_badges_list = "".join([f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
-            sec_badges = f"<div>{sec_org_badge}</div><div>{sec_badges_list}</div>"
-        else:
-            sec_badges = f"<div><span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span></div>"
-            
-        content_html = f"""
-<div style='margin-bottom:12px;'>
-    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Canvas Content</div>
-    {sec_badges}
-</div>
-"""
-        
-        # Build Orange AI Optimization Badges
-        c_ai = "#FF9838"
-        conv_mapping = {
-            'convert_zip': 'Unpack Archives (.zip)',
-            'convert_pptx': 'PPTX ➡ PDF',
-            'convert_word': 'Legacy Word ➡ PDF',
-            'convert_excel': 'Excel ➡ PDF & Data',
-            'convert_html': 'HTML ➡ PDF',
-            'convert_code': 'Code ➡ .TXT',
-            'convert_urls': 'Links ➡ TXT',
-            'convert_video': 'Video ➡ MP3'
-        }
-        _conv_on = [conv_mapping.get(k, k) for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
-        if _conv_on:
-            conv_badges = "".join([f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
-        else:
-            conv_badges = f"<span style='display:inline-block; padding:3px 10px; margin:0 6px 6px 0; background-color:rgba(255, 255, 255, 0.05); color:#64748b; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 255, 255, 0.1);'>None Selected</span>"
-            
-        conv_html = f"""
-<div style='margin-bottom:12px;'>
-    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>AI Optimization & Conversions</div>
-    {conv_badges}
-</div>
-"""
-        
-        path_html = ""
-        if download_path:
-            path_html = f"""
-<div style='margin-bottom:4px;'>
-    <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Saved Path</div>
-    <div style='background-color:rgba(0,0,0,0.3); color:#cbd5e1; padding:6px 10px; border-radius:6px; font-size:0.78rem; font-family:monospace; border:1px dashed rgba(255,255,255,0.2); word-break: break-all;'>{esc(download_path)}</div>
-</div>
-"""
-            
-        return f"{core_html}{content_html}{conv_html}{path_html}"
+
 
     def _build_preset_summary(settings):
         """Build a dynamic, grammar-correct summary string for a preset's settings."""
@@ -898,7 +830,10 @@ with _main_content.container():
             _summary_label = _build_preset_summary(settings)
             with st.expander(_summary_label):
                 path = str(preset.get('download_path', '')) if preset.get('include_path') else None
-                st.markdown(_render_settings_preview_html(settings, path), unsafe_allow_html=True)
+                _s = settings.copy()
+                if path:
+                    _s['download_path'] = path
+                st.markdown(render_config_summary_badges(_s, show_path=bool(path)), unsafe_allow_html=True)
 
             # Action buttons
             if is_builtin:
@@ -965,7 +900,10 @@ with _main_content.container():
             with st.expander("📋 Current settings being saved"):
                 _preview = mgr.capture_current_settings(st.session_state)
                 path = str(st.session_state.get('download_path', '')) if include_path else None
-                st.markdown(_render_settings_preview_html(_preview, path), unsafe_allow_html=True)
+                _p = _preview.copy()
+                if path:
+                    _p['download_path'] = path
+                st.markdown(render_config_summary_badges(_p, show_path=bool(path)), unsafe_allow_html=True)
 
         # Action buttons
         col_create, col_cancel = st.columns([1, 1])
@@ -1315,6 +1253,16 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
     # STEP 2: DOWNLOAD SETTINGS
     elif st.session_state['step'] == 2:
         render_download_wizard(st, 2)
+        
+        # Hoisted CSS Overrides for Step 2 UI Component geometry
+        st.markdown("""
+        <style>
+        div[data-testid="stHorizontalBlock"]:has(.st-key-action_dl_back),
+        div[data-testid="stHorizontalBlock"]:has(.st-key-action_dl_confirm) {
+            margin-top: -15px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
         # Consume pending toasts from preset dialogs
         if 'pending_toast' in st.session_state:
@@ -2440,26 +2388,25 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
                             with col:
                                 st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
-            # 2. Destination (Columns have weird padding)
-            st.markdown("<h3 style='margin-top: 5px; margin-bottom: -15px;'>Destination</h3>", unsafe_allow_html=True)
-            
-            # 3. Extreme ratio to kill dead space, small gap for a ~20px distance
-            col1, col2 = st.columns([1, 6], gap="small") 
-
-            with col1:
-                # 28px spacer pushes the button down to align with the text box (ignoring the "Path" label)
-                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                if st.button('📂 Select Folder'):
-                    select_folder()
-            with col2:
-                st.text_input('Path', value=st.session_state['download_path'], disabled=True)
+            # 2. Review & Output Card (Replaces legacy Destination)
+            with st.container(border=True, key="review_output_card"):
+                st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>Review & Output</h3>", unsafe_allow_html=True)
+                st.markdown(render_config_summary_badges(st.session_state, show_path=False), unsafe_allow_html=True)
+                
+                col1, col2 = st.columns([1, 6], vertical_alignment="center") 
+                with col1:
+                    # Added explicit key for CSS targeting and state management
+                    if st.button('📂 Select Folder', key='action_dl_folder'):
+                        select_folder()
+                with col2:
+                    st.text_input('Path', value=st.session_state['download_path'], disabled=True, key='dl_path_input')
 
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             col_back, col_conf, _ = st.columns([0.66, 1.2, 5])
             with col_conf:
                 # Button label changes based on mode
                 button_label = 'Sync (Download) Selected Files' if st.session_state['current_mode'] == 'sync' else 'Confirm and Download'
-                if st.button(button_label, type="primary", use_container_width=True):
+                if st.button(button_label, type="primary", use_container_width=True, key='action_dl_confirm'):
                     try:
                         # Initialize download state
                         all_courses = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False)
@@ -2512,7 +2459,7 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
                         st.error(f"Error initializing: {e}")
 
             with col_back:
-                if st.button('Back', use_container_width=True):
+                if st.button('Back', use_container_width=True, key='action_dl_back'):
                     st.session_state['step'] = 1
                     st.rerun()
 
