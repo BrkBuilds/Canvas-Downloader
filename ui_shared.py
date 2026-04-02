@@ -209,7 +209,7 @@ def render_pp_warning(pp_failure_count: int):
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     """Render a rich HTML preview of active settings using color-coded badges."""
     # Build Blue Core Badges
-    _mode_disp = "Modules (With Subfolders)" if settings.get('download_mode') == 'modules' else "All in One Folder"
+    _mode_disp = "With Subfolders" if settings.get('download_mode') == 'modules' else "All in One Folder"
     _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
     
     c_core = "#3fd9ff"
@@ -217,7 +217,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
     <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Core Settings</div>
     <div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
-    <span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>📦 {_filter_disp}</span>
+    <span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>{_filter_disp}</span>
 </div>
 """
     
@@ -231,7 +231,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         sec_badges_list = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
         sec_badges = f"<div style='width: 100%;'>{sec_org_badge}</div>{sec_badges_list}"
     else:
-        sec_badges = f"<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>∅ None selected</span></div>"
+        sec_badges = f"<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
         
     content_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
@@ -256,7 +256,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     if _conv_on:
         conv_badges = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
     else:
-        conv_badges = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>∅ None selected</span>"
+        conv_badges = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span>"
         
     conv_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
