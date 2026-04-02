@@ -95,10 +95,16 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Component Constriction**: Use fractional columns to limit component width on large screens.
 - **Radio Widget Granular Tooltips Pattern**:
     - *Problem*: Streamlit's native `st.radio` component supports a single global `help` parameter, but does not allow tooltips on individual radio options, limiting complex contextual choices.
-    - *Solution*: Avoid writing custom React components. Instead, inject a styled `st.markdown` HTML block directly beneath the radio component utilizing `ⓘ` icons, `font-size: 0.78rem`, `color: #6b7280`, and `line-height: 1.5` to visually mimic native Streamlit granular hint text per option.
+    - *Solution*: Avoid writing custom React components. Instead, inject a styled `st.markdown` HTML block directly beneath the radio component utilizing `ⓘ` icons, `font-size: 0.78rem`, `color: #6b7280`, and `line-height: 1.5` to visually mimic native Streamlit granular hint text.
 - **Hitbox Margin Defeat Pattern**:
     - *Problem*: Pulling text labels tight against active UI widgets (checkboxes, radios) using aggressive `margin-bottom: -15px` causes the transparent DOM bounding box of the text `<p>` to overlay on top of the widget, physically blocking mouse clicks and creating "dead" unresponsive UI zones.
     - *Solution*: Never push negative bottom margins into interactive hitboxes. Instead, use a zero-bottom margin (`margin-bottom: 0px`) on the text label and construct tightness by actively pulling the *container* upward or utilizing negative top margins (`margin-top: -5px`) on non-interactive adjacent elements.
+- **Unified Course Dropdown Pattern (`app.py`)**:
+    - *Problem*: Using `st.expander` for dynamic lists often causes ID shifts and state loss on rerun. Moving it from a small column to a full-width block improved layout stability.
+    - *Solution*: Use native HTML `<details>` and `<summary>` via `st.markdown(..., unsafe_allow_html=True)`. This preserves the open/closed state across reruns. Scaling the typography and margins ensures it acts as a prominent final check before the primary action buttons.
+- **Read-Only UI Affordance Pattern**:
+    - *Problem*: Plain text paths can be mistaken for editable inputs, while standard input boxes feel "broken" if they are read-only.
+    - *Solution*: Style the path display with a dashed border (`border: 2px dashed rgba(255, 255, 255, 0.2)`), dimmed text (`opacity: 0.7`), and `cursor: default`. This immediately signals to the user that the content is non-editable but deliberately placed.
 - **Design Token Centralization (`theme.py`)**:
     - *Problem*: Hardcoded hex colors (e.g., `#ffffff`, `#8A91A6`) scattered across UI files create maintenance debt and brittle aesthetic updates.
     - *Solution*: Extract all colors into a centralized `theme.py` module as semantic tokens (e.g., `theme.TEXT_PRIMARY`, `theme.BG_CARD`). Inject them into CSS blocks and HTML spans using standard f-strings (`f"color: {theme.ERROR};"`).

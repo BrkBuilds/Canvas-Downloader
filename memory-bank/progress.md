@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 6.22: Step 2 UI Refinements & Unified Dropdown** (2026-04-02):
+    - [x] **Dropdown Relocation**: Relocated the "Unified Course Dropdown" from the Step 2 header to a full-width summary block between the Output Path and Action Buttons.
+    - [x] **Aesthetic Overhaul**: Implemented a 100% width layout with scaled typography (`1.05rem` summary, `1.3rem` chevron) and refined vertical spacing (`10px` top, `35px` bottom).
+    - [x] **Read-Only Path Styling**: Restyled the Output Path box with a dashed border and dimmed text to signify non-editable state.
+    - [x] **Neutral Button Styling**: Updated the "Select Folder" button to a neutral grey background to distinguish it from the primary action path.
 - [x] **Phase 6.21: Step 2 Review & Output Card Redesign** (2026-04-01):
     - [x] **Consolidated Summary Badges**: Extracted the dynamic color-coded preset HTML generator into `ui_shared.py` (`render_config_summary_badges`), establishing a single source of truth for config previews across the app.
     - [x] **Adapter Pattern**: Engineered a dictionary adapter in `sync_ui.py` to bridge the legacy SQLite `sync_contract` schema with the modernized `st.session_state` keys required by the new universal badge renderer.

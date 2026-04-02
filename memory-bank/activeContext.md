@@ -2,9 +2,30 @@
 
 ## Current Focus
 - **UI Stabilized**: "Core Course Files & Structure" (Card 1) architecture is now mathematically locked against hover-induced regressions.
-- **Geometric Symmetery**: Card 1 and Card 2 are aligned with the new 150px vertical footprint.
+- **Geometric Symmetry**: Card 1 and Card 2 are aligned with the new 150px vertical footprint.
+- **Unified Step 2 Layout**: The "Unified Course Dropdown" now acts as a full-width summary block above the action buttons, providing a final check of selected courses.
+- **Output Path Real-time Scaling**: Implemented the "Nuclear Flex Row" pattern for the Output Path UI, ensuring the input box hugs text content perfectly and truncates gracefully while keeping the selection button adjacent.
+
+## Recent Changes (Session 2026-04-02 — Step 2 UI Refinements & Unified Dropdown)
+- **Unified Course Dropdown Relocation (`app.py`)**:
+    - **Relocation**: Moved the course summary from the Step 2 header to the bottom of the page, acting as a final summary. It now sits between the "Output Path" card and the Action Buttons.
+    - **Full-Width Aesthetics**: Scaled the dropdown to `100%` width. Increased summary text size (`1.05rem`), chevron size (`1.3rem`), and vertical padding (`12px 16px`) for better visual presence.
+    - **Alignment & Spacing**: Refined `ul.course-list-box` padding to `0 16px` to pull list items flush with the chevron. Adjusted vertical margins to `10px` top and `35px` bottom to balance the layout.
+    - **Styling**: Implemented a dark theme (`#111418` background when open), pure white text for course names, and a custom dark scrollbar.
+- **Output Path Read-Only Affordance**:
+    - **Aesthetics**: Restyled the "Output Path" display box with a dashed border (`rgba(255, 255, 255, 0.2)`), dimmed text (`opacity: 0.7`), and `cursor: default` to clearly signal it is read-only.
+    - **Button Styling**: Updated the "Select Folder" button to a neutral grey background (`rgba(255, 255, 255, 0.05)`) to distinguish it from the path display and the primary "Next/Confirm" buttons.
+
+## Recent Changes (Session 2026-04-02 — Output Path UI Stabilization)
+- **Nuclear Flex Row Pattern (`app.py`)**:
+    - **Problem**: Streamlit's `st.text_input` and `st.columns` are hostile to "content-hugging" layouts. Columns pre-divide space into fractions, and inputs always stretch to 100%, causing either massive empty space or text clipping on wide screens.
+    - **Solution**: Abandoned `st.columns` and `st.text_input`. Rendered the path as a styled HTML `inline-block` (providing native content-length measurement) and used "Nuclear CSS" to flip the parent `st-key` container's flex-direction to `row` at every intermediate DOM depth.
+    - **Architecture**: Targeted `div.st-key-X` down through 3 levels of `> div` to hit the `stVerticalBlock` regardless of Streamlit's internal nesting changes.
+    - **Safety**: Applied `text-overflow: ellipsis` and `max-width: calc(100% - 180px)` to the path container to ensure the "Select Folder" button is never pushed off-screen by extreme path lengths.
+    - **Alignment**: Synchronized the button height to 44px and used a 7px `margin-top` to achieve perfect vertical parity with the custom-styled path box.
 
 ## Recent Changes (Session 2026-04-01 — Hover Displacement & Geometric Lockdown)
+- **Geometric Alignment**:
     - **Specs**: Height: `150px`, Icon Scale: `55px`, Padding-Top: `85px`, Title Margin: `0px`, Subtitle line-height: `1.1`.
 - **Pseudo-Element Anchor Hardening**:
     - **Stability**: Stripped all dynamic hover-offset logic and locked all radio button states to a unified `top: 16px !important; right: 16px !important; box-sizing: border-box !important;`.

@@ -1272,6 +1272,8 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         _hdr_left, _hdr_right = st.columns([0.6, 0.4])
         with _hdr_left:
             st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
+
+
         with _hdr_right:
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
             _pb1, _pb2 = st.columns(2, gap="small")
@@ -2396,24 +2398,206 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
                             with col:
                                 st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
-            # 2. Review & Output Card (Replaces legacy Destination)
+            # 2. Output Card
             with st.container(border=True, key="review_output_card"):
-                st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>Review & Output</h3>", unsafe_allow_html=True)
-                st.markdown(render_config_summary_badges(st.session_state, show_path=False), unsafe_allow_html=True)
-                st.markdown("<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>", unsafe_allow_html=True)
+                st.markdown("<h3 style='margin-top: -15px; margin-bottom: -35px;'>Output Path</h3>", unsafe_allow_html=True)
                 
-                # Adjust spacing and vertical alignment for the output path
-                st.markdown("<style>div.st-key-dl_path_input { transform: translateY(-10px); }</style>", unsafe_allow_html=True)
-                
-                col1, col2 = st.columns([0.65, 5], vertical_alignment="center") 
-                with col1:
-                    # Added explicit key for CSS targeting and state management
-                    if st.button('📂 Select Folder', key='action_dl_folder'):
-                        select_folder()
-                with col2:
-                    st.text_input('Path', value=st.session_state['download_path'], disabled=True, key='dl_path_input')
+                dl_path = st.session_state['download_path']
+                dl_path_escaped = dl_path.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#39;").replace('"', "&quot;")
 
-            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+                # Render path + button side-by-side.
+                # Nuclear CSS: apply flex-direction:row at EVERY DOM depth to hit whatever
+                # level Streamlit nests the element-containers at. The `> div` chain covers
+                # stVerticalBlockBorderWrapper, stVerticalBlock, and any other intermediates.
+                st.markdown("""<style>
+div.st-key-path_display_row,
+div.st-key-path_display_row > div,
+div.st-key-path_display_row > div > div,
+div.st-key-path_display_row > div > div > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    width: auto !important;
+}
+div.st-key-path_display_row div[data-testid="element-container"],
+div.st-key-path_display_row div.stElementContainer {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin-bottom: 12px !important;
+
+}
+div.st-key-path_display_row div[data-testid="element-container"]:first-child,
+div.st-key-path_display_row div.stElementContainer:first-child {
+    max-width: calc(100% - 180px) !important;
+}
+div.st-key-path_display_row button {
+    white-space: nowrap !important;
+    height: 42px !important;
+    padding: 0 20px !important;
+    margin-bottom: -8px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.13) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+div.st-key-path_display_row button:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+</style>""", unsafe_allow_html=True)
+
+                with st.container(key="path_display_row"):
+                    st.markdown(f"""<div>
+<label style="font-size: 0.82rem; color: rgba(250,250,250,0.6); margin-bottom: 4px; display: block;">Path</label>
+<div style="
+    display: inline-block;
+    max-width: 100%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    color: rgba(250, 250, 250, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    font-family: 'Source Sans Pro', sans-serif;
+    box-sizing: border-box;
+    cursor: default;
+    user-select: none;
+">{dl_path_escaped}</div>
+</div>""", unsafe_allow_html=True)
+                    st.button('📂 Select Folder', key='action_dl_folder', on_click=select_folder)
+
+            # --- Unified Course Summary Dropdown (full-width, native <details>) ---
+            _dl_courses = st.session_state.get('courses_to_download', [])
+            if not _dl_courses:
+                try:
+                    _all_c = fetch_courses(st.session_state['api_token'], st.session_state['api_url'], False)
+                    _sel_ids = set(st.session_state.get('selected_course_ids', []))
+                    _dl_courses = [c for c in _all_c if c.id in _sel_ids]
+                except Exception:
+                    _dl_courses = []
+            _dl_count = len(_dl_courses)
+            _dl_plural = "s" if _dl_count != 1 else ""
+
+            _dl_list_html = "".join([
+                f"<li class='course-item'><span class='num'>{i}.</span> <span class='name'>{esc(c.get('name', 'Unknown Course') if isinstance(c, dict) else getattr(c, 'name', 'Unknown Course'))}</span></li>"
+                for i, c in enumerate(_dl_courses, 1)
+            ])
+
+            _dl_details_html = f"""
+<style>
+details.unified-course-dropdown {{
+    margin-top: 0px;
+    margin-bottom: 60px;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: transparent;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}}
+details.unified-course-dropdown[open] {{
+    background: #111418;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}}
+details.unified-course-dropdown summary {{
+    cursor: pointer;
+    padding: 12px 16px;
+    list-style: none;
+    user-select: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}}
+details.unified-course-dropdown summary::-webkit-details-marker {{
+    display: none;
+}}
+.summary-chevron {{
+    color: #a0a0a0;
+    font-size: 1.3rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}}
+details.unified-course-dropdown[open] .summary-chevron {{
+    transform: rotate(90deg);
+}}
+.summary-text {{
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 500;
+}}
+.summary-text strong {{
+    font-weight: bold;
+    color: #ffffff;
+}}
+.dropdown-body {{
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 0 10px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}}
+ul.course-list-box {{
+    margin: 0;
+    padding: 0 16px 0 16px;
+    list-style-type: none;
+}}
+li.course-item {{
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}}
+li.course-item:last-child {{
+    border-bottom: none;
+}}
+li.course-item .num {{
+    color: #888888;
+    font-size: 0.9rem;
+    min-width: 20px;
+}}
+li.course-item .name {{
+    color: #ffffff;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+.dropdown-body::-webkit-scrollbar {{
+    width: 6px;
+}}
+.dropdown-body::-webkit-scrollbar-track {{
+    background: transparent;
+}}
+.dropdown-body::-webkit-scrollbar-thumb {{
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}}
+.dropdown-body::-webkit-scrollbar-thumb:hover {{
+    background-color: rgba(255, 255, 255, 0.25);
+}}
+</style>
+
+<details class="unified-course-dropdown">
+<summary>
+<div class="summary-chevron">▸</div>
+<div class="summary-text">Courses to be downloaded: <strong>{_dl_count}</strong></div>
+</summary>
+<div class="dropdown-body">
+<ul class="course-list-box">
+{_dl_list_html}
+</ul>
+</div>
+</details>
+"""
+
+            st.markdown(_dl_details_html, unsafe_allow_html=True)
             col_back, col_conf, _ = st.columns([0.66, 1.2, 5])
             with col_conf:
                 # Button label changes based on mode
