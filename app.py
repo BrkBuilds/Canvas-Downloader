@@ -1718,6 +1718,11 @@ div[class*="st-key-card1_include_section"] {{
                     def update_org_state(mode):
                         st.session_state['download_mode'] = 'modules' if mode == 'subfolders' else mode
 
+                    st.markdown(
+                        "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 0px; margin-bottom: 0px;'>Choose how files should be organized:</p>", 
+                        unsafe_allow_html=True
+                    )
+
                     btn_left, btn_right = st.columns(2)
                     b64_subfolders = get_base64_image("assets/icon_subfolders.png")
                     b64_flat = get_base64_image("assets/icon_flat.png")
@@ -2395,8 +2400,12 @@ f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} 
             with st.container(border=True, key="review_output_card"):
                 st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>Review & Output</h3>", unsafe_allow_html=True)
                 st.markdown(render_config_summary_badges(st.session_state, show_path=False), unsafe_allow_html=True)
+                st.markdown("<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>", unsafe_allow_html=True)
                 
-                col1, col2 = st.columns([1, 6], vertical_alignment="center") 
+                # Adjust spacing and vertical alignment for the output path
+                st.markdown("<style>div.st-key-dl_path_input { transform: translateY(-10px); }</style>", unsafe_allow_html=True)
+                
+                col1, col2 = st.columns([0.65, 5], vertical_alignment="center") 
                 with col1:
                     # Added explicit key for CSS targeting and state management
                     if st.button('📂 Select Folder', key='action_dl_folder'):
