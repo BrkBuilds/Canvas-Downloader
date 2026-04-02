@@ -1,10 +1,23 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **UI Stabilized**: "Core Course Files & Structure" (Card 1) architecture is now mathematically locked against hover-induced regressions.
-- **Geometric Symmetry**: Card 1 and Card 2 are aligned with the new 150px vertical footprint.
-- **Unified Step 2 Layout**: The "Unified Course Dropdown" now acts as a full-width summary block above the action buttons, providing a final check of selected courses.
-- **Output Path Real-time Scaling**: Implemented the "Nuclear Flex Row" pattern for the Output Path UI, ensuring the input box hugs text content perfectly and truncates gracefully while keeping the selection button adjacent.
+- **Architectural Simplification**: Surgically removed the legacy 3-Tier "Sync Mode & Settings" feature to enforce a strict "Manual Sync uses Default Sync" directive.
+- **Unified Sync Handoff**: Manual Sync and Quick Sync are now architecturally identical, both relying exclusively on the per-course SQLite `sync_contract` established in Step 2.
+- **UI Decoupled**: The sync review UI is now purely informational (selection-based), with all configuration logic hosted in the "Download Settings" interface.
+- **Clean State Management**: Eradicated all 3-tier transient session state keys (`ind_*`, `_sync_config_mode`), ensuring zero state pollution between sessions.
+
+## Recent Changes (Session 2026-04-03 — Surgical Removal of 3-Tier Sync UI Architecture)
+- **UI Deletion (`sync_ui.py`)**:
+    - **Switchboard Removal**: Deleted the entire "Sync Mode & Settings" switchboard, including the 3-mode tab row and all associated configuration panels.
+    - **Diff Table Removal**: Removed the "Mixed Settings Detected" HTML diff table and its associated logic.
+    - **Per-Course UI Removal**: Deleted the individual course selectboxes and per-course settings override checkboxes.
+    - **CSS Pruning**: Stripped all CSS injections related to the tree-view styling and the legacy diff table layout.
+- **Backend/Logic Cleanup (`sync_ui.py`)**:
+    - **Initialization Sweep Removal**: Eradicated the startup logic that scanned all courses to pre-populate session state for Custom Sync modes.
+    - **Handoff Simplification**: Refactored the `_show_sync_confirmation` handoff to unconditionally use the SQLite contract extraction, removing the `_config_mode` branching logic.
+    - **State Sanitization**: Updated `_cleanup_sync_state` to wipe all trace of the 3-tier system keys, preventing state amnesia or cross-contamination.
+- **Architectural Directive**:
+    - Established that the "Download Settings" (Step 2) is the sole authoritative source of truth for sync configurations. Manual Sync no longer supports "on-the-fly" overrides in the final review stage.
 
 ## Recent Changes (Session 2026-04-02 — Step 2 UI Refinements & Unified Dropdown)
 - **Unified Course Dropdown Relocation (`app.py`)**:

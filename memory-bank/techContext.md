@@ -56,16 +56,15 @@ Canvas_LMS_batch_file_downloader/
 ```
 
 ## Sync Implementation Details
-- **Robustness**: Uses `robust_filename_normalize` helper to handle Windows case-insensitivity vs Canvas case-sensitivity. Falls back to Levenshtein distance matching when size collisions occur during missing file detection.
-- **Manifest Database**: `.canvas_sync.db` (per course folder, standard SQLite3)
-    - **Tables**: `sync_manifest` (files) and `sync_metadata` (configuration k/v store).
-    - **Attributes**: `canvas_file_id`, `canvas_filename`, `local_path`, `canvas_updated_at`, `downloaded_at`, `original_size`, `is_ignored`.
+- **Sync Contract Extraction**: The synchronization review process in `sync_ui.py` is now strictly decoupled from configuration logic.
+- **SQLite Single Source of Truth**: `_show_sync_confirmation` now unconditionally extracts the `sync_contract` for every course in a batch from the `.canvas_sync.db` using the `SyncManager`.
+- **Handoff Contract**: The extracted JSON contract is bound to `st.session_state['res_data']['contract']` for each course, ensuring the post-processing engine (Phase 3) receives the correct, persistent settings.
+- **Architectural Cleanup**: All legacy branching logic (Mode 0, 1, 2) and associated transient session state keys (`_config_mode`, `ind_*`) have been removed to ensure a predictable, deterministic sync flow.
     - **Windows**: Hidden via `ctypes.windll.kernel32.SetFileAttributesW`.
 - **Sync Pairs/Groups Files**: 
     - `canvas_sync_pairs.json` — stores active `local_folder`, `course_id`, `course_name`, `last_synced`.
     - `saved_sync_groups.json` — managed by `SavedGroupsManager`, stores reusable multi-course groups with unique `group_id`s.
 - **Sync History File**: `canvas_sync_history.json` — last 50 entries with timestamp, files_synced, courses, errors.
-- **ACID Consistency (Await-and-Inject)**: 
     - During Sniper Retries, the system enforces a strict synchronous discovery phase for secondary entities. 
     - Parent metadata is unpacked and committed to the manifest *before* attachment download tasks are injected into the async queue.
     - This prevents orphaned children if the application crashes between parent recording and child processing.
