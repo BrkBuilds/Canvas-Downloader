@@ -1,7 +1,5 @@
 import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
-from post_processing import run_all_conversions, UIBridge
-from sync_manager import SyncManager
 from preset_manager import PresetManager
 import asyncio
 import base64
@@ -34,6 +32,8 @@ from core.state_registry import (
     NOTEBOOK_SUB_KEYS, SECONDARY_CONTENT_KEYS, TOTAL_SECONDARY_SUBS,
 )
 from core.cancellation import cancel_download, is_download_cancelled
+from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard, render_terminal_log
+from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
@@ -2645,75 +2645,31 @@ li.course-item .name {{
                 total_items = st.session_state.get('total_items', 1)
                 total_mb = st.session_state.get('total_mb', 0)
                 
+                # Build the shared dashboard placeholders dataclass
+                _dp = DashboardPlaceholders(
+                    header=header_placeholder,
+                    progress=progress_placeholder,
+                    metrics=metrics_placeholder,
+                    active_file=active_file_placeholder,
+                    log=log_placeholder,
+                )
+
                 def render_dashboard():
-                    # Calculate current progress
                     current_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
-                    current_files = st.session_state.get('downloaded_items', 0) + st.session_state.get('failed_items', 0)
-                    
                     is_retry = st.session_state.get('download_status') == 'isolated_retry'
                     active_total = st.session_state.get('total_items', total_items)
-                    active_current = st.session_state.get('retry_downloaded_items', current_files) if is_retry else st.session_state.get('downloaded_items', current_files)
+                    active_current = st.session_state.get('retry_downloaded_items', 0) if is_retry else st.session_state.get('downloaded_items', 0)
                     active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
-                    active_total_mb = st.session_state.get('total_mb', total_mb)
-
-                    if active_total > 0:
-                        percent = int((active_current / active_total) * 100)
-                        percent = min(100, percent) # Clamp to max 100
-                        if active_current >= active_total:
-                            percent = 100
-                    else:
-                        percent = 0
-
-                    # Calculate Speed & ETA
-                    elapsed = time.time() - start_time
-                    speed_mb_s = (current_mb / elapsed) if elapsed > 0 else 0.0
-                    remaining_mb = max(0, active_total_mb - current_mb) # prevent negative remaining mb
-                    eta_seconds = (remaining_mb / speed_mb_s) if speed_mb_s > 0 else 0
-                    eta_string = time.strftime('%M:%S', time.gmtime(max(0, eta_seconds)))
-                    
-                    header_placeholder.markdown(f'''
-                    <div style="margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Downloading Courses</p>
-                        <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(course.name)}</h3>
-                    </div>
-                    ''', unsafe_allow_html=True)
-
-                    progress_placeholder.markdown(f'''
-                    <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                        <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
-                            {percent}%
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    metrics_placeholder.markdown(f'''
-                    <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total_mb:.1f} MB</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
-                            <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-                            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{active_current} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total}</span></span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
-                            <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    log_content = "<br>".join(reversed(list(log_deque)))
-                    log_placeholder.markdown(f'''
-                    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                        {log_content}
-                    </div>
-                    ''', unsafe_allow_html=True)
+                    render_full_dashboard(
+                        _dp, log_deque,
+                        header_label="📦 Downloading Courses",
+                        course_name=esc(course.name),
+                        current_files=active_current,
+                        total_files=active_total,
+                        downloaded_mb=current_mb,
+                        total_mb=st.session_state.get('total_mb', total_mb),
+                        start_time=start_time,
+                    )
                 
                 # Render initial state
                 render_dashboard()
@@ -2913,7 +2869,6 @@ li.course-item .name {{
                 course_name = cm._sanitize_filename(course.name)
                 course_folder_for_debug = root_dir / course_name
                 debug_file = (root_dir / "debug_log.txt") if debug_mode else None
-                db_path = course_folder_for_debug / ".canvas_sync.db"
 
                 # Inject course header into the global debug log (append, never overwrite)
                 if debug_file:
@@ -2923,57 +2878,20 @@ li.course-item .name {{
                     except Exception:
                         pass
 
-                # --- Post-Download Conversion Pipeline (Shared Module) ---
-                from post_processing import run_all_conversions, UIBridge
-                from sync_manager import SyncManager
-
+                # --- Post-Download Conversion Pipeline (via engine) ---
                 course_name_sanitized = cm._sanitize_filename(course.name)
                 course_folder = Path(st.session_state['download_path']) / course_name_sanitized
 
                 if course_folder.exists():
-                    _convert_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-                                     'convert_html', 'convert_code', 'convert_urls', 'convert_video']
-                    contract = {k: st.session_state.get(f'persistent_{k}', False) for k in _convert_keys}
-
-                    if any(contract.values()) and not (st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled')):
-                        pp_sm = SyncManager(course_folder, course.id, course.name)
-                        pp_ui = UIBridge(
-                            header_placeholder=header_placeholder,
-                            progress_placeholder=progress_placeholder,
-                            metrics_placeholder=metrics_placeholder,
-                            log_placeholder=log_placeholder,
-                            active_file_placeholder=active_file_placeholder,
-                            log_lines=log_deque,
-                            is_cancelled=lambda: st.session_state.get('download_cancelled', False),
-                            error_log_path=Path(st.session_state['download_path']),
-                        )
-                        run_all_conversions(
-                            course_folder=course_folder,
-                            sm=pp_sm,
-                            contract=contract,
-                            ui=pp_ui,
-                            course_name=course.name,
-                        )
-                        # Track post-processing failures for the completion screen (M-7)
-                        st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
-                        # --- Inject post-processing sidecars into UI ledger ---
-                        _sidecar_paths = pp_ui.generated_sidecar_paths
-                        if _sidecar_paths:
-                            _ledger = st.session_state.get('download_file_details', {})
-                            _course_key = course.name
-                            if _course_key not in _ledger:
-                                _ledger[_course_key] = []
-                            _existing_paths = set(_ledger[_course_key])
-                            _new_count = 0
-                            for sp in _sidecar_paths:
-                                if sp not in _existing_paths:
-                                    _ledger[_course_key].append(sp)
-                                    _existing_paths.add(sp)
-                                    _new_count += 1
-                            if _new_count > 0:
-                                st.session_state['download_file_details'] = _ledger
-                                st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + _new_count
-                                st.session_state['total_items'] = st.session_state.get('total_items', 0) + _new_count
+                    invoke_post_processing(
+                        course_folder=course_folder,
+                        course_id=course.id,
+                        course_name=course.name,
+                        placeholders=_dp,
+                        log_deque=log_deque,
+                        error_log_path=Path(st.session_state['download_path']),
+                        mode='download',
+                    )
                 # --- End Post-Download Conversion Pipeline ---
                 # Clear the blue status text so it doesn't linger on completion
                 active_file_placeholder.empty()
@@ -3064,65 +2982,31 @@ li.course-item .name {{
             for err in queue:
                 queue_by_course.setdefault(err.course_name, []).append(err)
             
+            # Build the retry dashboard placeholders
+            _dp = DashboardPlaceholders(
+                header=header_placeholder,
+                progress=progress_placeholder,
+                metrics=metrics_placeholder,
+                active_file=active_file_placeholder,
+                log=log_placeholder,
+            )
+
             def render_dashboard(current_course_name):
-                # Calculate current progress
-                current_files = st.session_state.get('retry_downloaded_items', 0) + st.session_state.get('retry_failed_items', 0)
-                
-                is_retry = st.session_state.get('download_status') == 'isolated_retry'
-                active_total = st.session_state.get('total_items', 1)
-                active_current = st.session_state.get('retry_downloaded_items', current_files) if is_retry else st.session_state.get('downloaded_items', current_files)
-                active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
-                
-                percent = int((active_current / max(1, active_total)) * 100)
-                percent = min(100, percent)
-                if active_current >= active_total:
-                    percent = 100
-                
-                # Metrics Extraction for Parity
                 bytes_down = st.session_state.get('retry_mb_tracker', {}).get('bytes_downloaded', 0)
                 current_mb = bytes_down / (1024 * 1024)
-                elapsed = time.time() - st.session_state.get('start_time', time.time())
-                speed_mb_s = current_mb / elapsed if elapsed > 0 else 0
-
-                header_placeholder.markdown(f'''
-                <div style="margin-bottom: 0.5rem;">
-                    <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">📦 Retrying Failed Items</p>
-                    <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(current_course_name)}</h3>
-                </div>
-                ''', unsafe_allow_html=True)
-
-                progress_placeholder.markdown(f'''
-                <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-                    <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
-                        {percent}%
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-                metrics_placeholder.markdown(f'''
-                <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">MB</span></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
-                        <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files Processed</span>
-                        <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{active_current} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {active_total}</span></span>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-                
-                log_content = "<br>".join(reversed(list(log_deque)))
-                log_placeholder.markdown(f'''
-                <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-                    {log_content}
-                </div>
-                ''', unsafe_allow_html=True)
+                active_total = st.session_state.get('total_items', 1)
+                active_current = st.session_state.get('retry_downloaded_items', 0) + st.session_state.get('retry_failed_items', 0)
+                render_full_dashboard(
+                    _dp, log_deque,
+                    header_label="📦 Retrying Failed Items",
+                    course_name=esc(current_course_name),
+                    current_files=active_current,
+                    total_files=active_total,
+                    downloaded_mb=current_mb,
+                    total_mb=st.session_state.get('total_mb', total_mb),
+                    start_time=st.session_state.get('start_time', time.time()),
+                    show_total_mb=False,
+                )
             
             # Use same update_ui logic to append errors/successes
             def update_ui(msg, progress_type='log', **kwargs):
@@ -3239,7 +3123,7 @@ li.course-item .name {{
                 if dropped_errors:
                     st.session_state['skipped_discovery_errors'] = st.session_state.get('skipped_discovery_errors', 0) + dropped_errors
             
-            # --- NEW Post-Processing Pipeline for Retry ---
+            # --- Post-Processing Pipeline for Retry (via engine) ---
             if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
                 if not getattr(st.session_state, '_sync_cancel_warning_shown', False):
                     st.warning("Retry cancelled. Skipping post-processing.")
@@ -3252,9 +3136,7 @@ li.course-item .name {{
                     course_folder = Path(st.session_state['download_path']) / course_name_sanitized
     
                     if course_folder.exists():
-                        _convert_keys = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-                                         'convert_html', 'convert_code', 'convert_urls', 'convert_video']
-                        contract = {k: st.session_state.get(f'persistent_{k}', False) for k in _convert_keys}
+                        contract = build_conversion_contract()
     
                         if any(contract.values()):
                             # --- FIX: Post-Processing Overkill Pipeline Swaps ---
@@ -3262,7 +3144,6 @@ li.course-item .name {{
                             if not success_names:
                                 continue  # Skip post-processing entirely if nothing actually succeeded during this retry
                                 
-                            from pathlib import Path
                             success_paths = []
                             for n in success_names:
                                 if Path(n).is_absolute():
@@ -3271,44 +3152,17 @@ li.course-item .name {{
                                     success_paths.append(str((course_folder / cm._sanitize_filename(n)).resolve()))
                             
                             st.session_state['is_post_processing'] = True
-                            pp_sm = SyncManager(course_folder, course.id, course.name)
-                            pp_ui = UIBridge(
-                                header_placeholder=header_placeholder,
-                                progress_placeholder=progress_placeholder,
-                                metrics_placeholder=metrics_placeholder,
-                                log_placeholder=log_placeholder,
-                                active_file_placeholder=active_file_placeholder,
-                                log_lines=log_deque,
-                                is_cancelled=lambda: st.session_state.get('download_cancelled', False),
-                                error_log_path=Path(st.session_state['download_path']),
-                            )
-                            run_all_conversions(
+                            invoke_post_processing(
                                 course_folder=course_folder,
-                                sm=pp_sm,
-                                contract=contract,
-                                ui=pp_ui,
+                                course_id=course.id,
                                 course_name=course.name,
-                                explicit_files=success_paths
+                                placeholders=_dp,
+                                log_deque=log_deque,
+                                error_log_path=Path(st.session_state['download_path']),
+                                mode='download',
+                                contract=contract,
+                                explicit_files=success_paths,
                             )
-                            st.session_state['pp_failure_count'] = st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
-                            # --- Inject post-processing sidecars into UI ledger ---
-                            _sidecar_paths = pp_ui.generated_sidecar_paths
-                            if _sidecar_paths:
-                                _ledger = st.session_state.get('download_file_details', {})
-                                _course_key = course.name
-                                if _course_key not in _ledger:
-                                    _ledger[_course_key] = []
-                                _existing_paths = set(_ledger[_course_key])
-                                _new_count = 0
-                                for sp in _sidecar_paths:
-                                    if sp not in _existing_paths:
-                                        _ledger[_course_key].append(sp)
-                                        _existing_paths.add(sp)
-                                        _new_count += 1
-                                if _new_count > 0:
-                                    st.session_state['download_file_details'] = _ledger
-                                    st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + _new_count
-                                    st.session_state['total_items'] = st.session_state.get('total_items', 0) + _new_count
             # --- End Post-Processing Pipeline ---
 
             # --- Success Metrics Rehydration & Error Resolution ---
