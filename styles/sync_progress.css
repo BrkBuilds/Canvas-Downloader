@@ -1,0 +1,11 @@
+/* ═══════════════════════════════════════════════
+   Sync Progress — Stale Element Hiding
+   Source: sync_ui.py L4790-4795 (extracted Phase 0)
+
+   During blocking asyncio.run(), Streamlit cannot
+   clean up leftover elements from the previous step.
+   This rule hides siblings after the progress marker.
+   ═══════════════════════════════════════════════ */
+[data-testid="stVerticalBlock"] > div:has(.sync-progress-end-marker) ~ div {
+    display: none !important;
+}
