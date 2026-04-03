@@ -1230,13 +1230,13 @@ div.st-key-btn_include_{active_include_key} button::before {{
             # HOISTED CALLBACKS
             def _toggle_secondary_sub(target_key):
                 st.session_state[target_key] = not st.session_state.get(target_key, False)
-                active = sum(st.session_state.get(k, False) for k in _SECONDARY_CONTENT_KEYS)
+                active = sum(st.session_state.get(k, False) for k in SECONDARY_CONTENT_KEYS)
                 st.session_state['dl_secondary_master'] = (active == TOTAL_SECONDARY_SUBS)
 
             def _toggle_secondary_master():
                 new_state = not st.session_state.get('dl_secondary_master', False)
                 st.session_state['dl_secondary_master'] = new_state
-                for k in _SECONDARY_CONTENT_KEYS:
+                for k in SECONDARY_CONTENT_KEYS:
                     st.session_state[k] = new_state
 
             def _set_isolate_secondary(is_subfolders: bool):
@@ -1621,7 +1621,7 @@ div[class*="st-key-card1_include_section"] {{
             with col2:
                 with st.container(border=True, key="card_native_content"):
                     m_active = st.session_state.get('dl_secondary_master', False)
-                    _sec_active = sum(1 for k in _SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
+                    _sec_active = sum(1 for k in SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
                     has_active_items2 = _sec_active > 0 or m_active
                     
                     _c2_is_exp = st.session_state.get('card2_expanded', False)
@@ -2396,7 +2396,7 @@ li.course-item .name {{
                         st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
                         
                         # Task 1b: Save secondary content state on button click
-                        for _sck in _SECONDARY_CONTENT_KEYS:
+                        for _sck in SECONDARY_CONTENT_KEYS:
                             st.session_state[f'persistent_{_sck}'] = st.session_state.get(_sck, False)
                         st.session_state['persistent_dl_isolate_secondary'] = st.session_state.get('dl_isolate_secondary', True)
 
