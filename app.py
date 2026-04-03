@@ -28,41 +28,22 @@ from ui_shared import (
     render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
     render_config_summary_badges
 )
+from styles import inject_css
+from core.state_registry import (
+    ensure_download_state, cleanup_download_state,
+    NOTEBOOK_SUB_KEYS, SECONDARY_CONTENT_KEYS, TOTAL_SECONDARY_SUBS,
+)
+from core.cancellation import cancel_download, is_download_cancelled
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
 
-# Custom CSS
-st.markdown("""
-    <style>
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-    }
-    .success-text { color: #28a745; font-weight: bold; }
-    .error-text { color: #dc3545; font-weight: bold; }
-    .step-header { font-size: 1.5em; font-weight: bold; margin-bottom: 1em; }
-    /* Hide the "Press Enter to apply" / "Press Enter to submit" hints */
-    div[data-testid="InputInstructions"] { display: none !important; }
-    /* Hide the blinking cursor in the language dropdown to look like a static menu */
-    div[data-testid="stSelectbox"] input { caret-color: transparent; cursor: default !important; }
-    div[data-testid="stSelectbox"] > div { cursor: default !important; }
-    
-    /* Destructive buttons (Cancel / Remove) turn red on hover */
-    [class*="st-key-remove_pair"] button:hover,
-    [class*="st-key-cancel_pair"] button:hover {
-        border-color: #ff4b4b !important;
-        color: #ff4b4b !important;
-        background-color: rgba(255, 75, 75, 0.1) !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Custom CSS (extracted to styles/)
+inject_css('global.css')
 
-# Preset & Dialog CSS — f-string block for theme variable injection
+# Cancel button hover CSS (dynamic — requires theme variables)
 st.markdown(f"""
     <style>
-    /* Cancel buttons — scoped to specific cancel button keys only */
     .st-key-cancel_download_btn button:hover,
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
@@ -72,228 +53,14 @@ st.markdown(f"""
         color: {theme.ERROR} !important;
         transition: all 0.2s ease-in-out;
     }}
-
-    /* ═══════════════════════════════════════════════
-       Hide native dialog close button globally
-       ═══════════════════════════════════════════════ */
-    div[data-testid="stDialog"] button[aria-label="Close"] {{
-        display: none !important;
-    }}
-
-    /* ═══════════════════════════════════════════════
-       Preset Header Buttons — Indigo Colorway
-       ═══════════════════════════════════════════════ */
-    /* Shared compact sizing */
-    div.st-key-btn_save_config button,
-    div.st-key-btn_presets_hub button {{
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 6px 16px !important;
-        font-size: 0.95rem !important;
-        border-radius: 8px !important;
-        transition: all 0.2s ease !important;
-    }}
-    /* ⚙️ Presets button — Solid Indigo (hub opener) */
-    div.st-key-btn_presets_hub button {{
-        background-color: rgba(95, 100, 200, 0.35) !important;
-        border: 1px solid rgba(95, 100, 200, 0.6) !important;
-        color: #e0e7ff !important;
-    }}
-    div.st-key-btn_presets_hub button:hover {{
-        background-color: rgba(95, 100, 200, 0.55) !important;
-        border-color: rgba(95, 100, 200, 0.9) !important;
-        color: #ffffff !important;
-    }}
-    /* 💾 Save Configuration button — Ghost/Transparent Indigo */
-    div.st-key-btn_save_config button {{
-        background-color: rgba(95, 100, 200, 0.15) !important;
-        border: 1px solid rgba(95, 100, 200, 0.3) !important;
-        color: #cbd5e1 !important;
-    }}
-    div.st-key-btn_save_config button:hover {{
-        background-color: rgba(95, 100, 200, 0.3) !important;
-        border-color: rgba(95, 100, 200, 0.6) !important;
-        color: #ffffff !important;
-    }}
-
-    /* ═══════════════════════════════════════════════
-       Dialog Button Overrides — Preset Dialogs
-       ═══════════════════════════════════════════════ */
-    /* Apply buttons — Light Grey default, Indigo hover */
-    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button {{
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
-    }}
-    div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button:hover {{
-        background-color: rgba(95, 100, 200, 0.4) !important;
-        border-color: rgba(95, 100, 200, 1) !important;
-        color: #ffffff !important;
-    }}
-    /* Save Preset button — solid indigo */
-    div[data-testid="stDialog"] div.st-key-preset_save_create button {{
-        background-color: rgba(95, 100, 200, 0.35) !important;
-        border: 1px solid rgba(95, 100, 200, 0.6) !important;
-        color: #e0e7ff !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-preset_save_create button:hover {{
-        background-color: rgba(95, 100, 200, 0.55) !important;
-        border-color: rgba(95, 100, 200, 0.9) !important;
-        color: #ffffff !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-preset_save_create button[disabled] {{
-        opacity: 0.4 !important;
-        pointer-events: none !important;
-    }}
-
-    /* Delete buttons — recessed dark default, danger red hover */
-    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button {{
-        background-color: rgba(0, 0, 0, 0.25) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        color: rgba(255, 255, 255, 1) !important;
-    }}
-    div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button:hover {{
-        background-color: rgba(255, 75, 75, 0.15) !important;
-        border-color: #ff4b4b !important;
-        color: #ff4b4b !important;
-        transition: all 0.2s ease-in-out;
-    }}
-
-    /* ═══════════════════════════════════════════════
-       Preset Card Depth & Elevation
-       ═══════════════════════════════════════════════ */
-    div[class*="st-key-preset_card_"] {{
-        padding: 12px !important;
-        margin-bottom: 8px !important;
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    }}
-
-    /* ═══════════════════════════════════════════════
-       Preset Hub Tab Buttons
-       ═══════════════════════════════════════════════ */
-    /* Base styling (Default Inactive State) */
-    div[class*="st-key-preset_tab_"] button {{
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        padding: 6px 16px !important;
-        height: auto !important;
-        min-height: 40px !important;
-        border-radius: 6px !important;
-        background-color: transparent !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #e0e7ff !important;
-        transition: all 0.2s ease !important;
-    }}
-    
-    /* Hover State (All Tabs) - Solid Indigo */
-    div[class*="st-key-preset_tab_"] button:hover {{
-        background-color: rgba(95, 100, 200, 0.85) !important;
-        border-color: rgba(95, 100, 200, 1) !important;
-        color: #ffffff !important;
-    }}
-
-    /* Active Tab (Primary) Context styling */
-    div[class*="st-key-preset_tab_"] button[kind="primary"] {{
-        background-color: rgba(95, 100, 200, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-bottom: 3px solid rgba(140, 150, 255, 1) !important; /* Light indigo bottom border */
-        color: #ffffff !important;
-    }}
-
-    /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
-    div[class*="st-key-preset_tab_"] button[kind="primary"]:hover {{
-        background-color: rgba(95, 100, 200, 0.4) !important; 
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
-        color: #ffffff !important;
-    }}
-    /* Compact the expander inside preset cards */
-    div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary {{
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-        min-height: 0px !important;
-    }}
-    div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary p {{
-        font-size: 0.82rem !important;
-        color: #ffffff !important;
-    }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- Session State Initialization ---
-if 'api_token' not in st.session_state:
-    st.session_state['api_token'] = ""
-if 'api_url' not in st.session_state:
-    st.session_state['api_url'] = ""
-if 'is_authenticated' not in st.session_state:
-    st.session_state['is_authenticated'] = False
-if 'download_path' not in st.session_state:
-    st.session_state['download_path'] = str(Path.home() / "Downloads")
-if 'selected_course_ids' not in st.session_state:
-    st.session_state['selected_course_ids'] = []
-if 'step' not in st.session_state:
-    st.session_state['step'] = 1  # 1: Select, 2: Settings, 3: Progress
-if 'download_mode' not in st.session_state:
-    st.session_state['download_mode'] = "modules" # 'flat' or 'modules'
-if 'cancel_requested' not in st.session_state:
-    st.session_state['cancel_requested'] = False
-if 'download_cancelled' not in st.session_state:
-    st.session_state['download_cancelled'] = False
-if 'user_name' not in st.session_state:
-    st.session_state['user_name'] = ""
-if 'course_mb_downloaded' not in st.session_state:
-    st.session_state['course_mb_downloaded'] = {}
-if 'file_filter' not in st.session_state:
-    st.session_state['file_filter'] = 'all' # 'all' or 'study'
-# Sync mode session state
-if 'sync_mode' not in st.session_state:
-    st.session_state['sync_mode'] = False  # False = normal download, True = sync
-if 'analysis_result' not in st.session_state:
-    st.session_state['analysis_result'] = None
-if 'sync_selected_files' not in st.session_state:
-    st.session_state['sync_selected_files'] = {}
-if 'sync_manifest' not in st.session_state:
-    st.session_state['sync_manifest'] = None
-if 'sync_manager' not in st.session_state:
-    st.session_state['sync_manager'] = None
-if 'current_mode' not in st.session_state:
-    st.session_state['current_mode'] = 'download'  # 'download' or 'sync'
-# Sync pairs: list of dicts with keys: local_folder, course_id, course_name
-if 'sync_pairs' not in st.session_state:
-    st.session_state['sync_pairs'] = []
-if 'pending_sync_folder' not in st.session_state:
-    st.session_state['pending_sync_folder'] = None  # Temp storage for folder picker
+# Preset & Dialog CSS (extracted to styles/)
+inject_css('preset_dialogs.css')
 
-# NotebookLM Compatible Download toggles
-_NOTEBOOK_SUB_KEYS_INIT = [
-    'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-    'convert_html', 'convert_code', 'convert_urls', 'convert_video'
-]
-if 'notebooklm_master' not in st.session_state:
-    st.session_state['notebooklm_master'] = False
-for _nk in _NOTEBOOK_SUB_KEYS_INIT:
-    if _nk not in st.session_state:
-        st.session_state[_nk] = False
-
-# Secondary (Additional Course Content) toggles — all OFF by default in Download Mode
-_SECONDARY_CONTENT_KEYS = [
-    'dl_assignments', 'dl_syllabus', 'dl_announcements',
-    'dl_discussions', 'dl_quizzes', 'dl_rubrics', 'dl_submissions',
-]
-TOTAL_SECONDARY_SUBS = len(_SECONDARY_CONTENT_KEYS)
-for _sck in _SECONDARY_CONTENT_KEYS:
-    if _sck not in st.session_state:
-        st.session_state[_sck] = False
-if 'dl_secondary_master' not in st.session_state:
-    st.session_state['dl_secondary_master'] = False
-if 'dl_isolate_secondary' not in st.session_state:
-    st.session_state['dl_isolate_secondary'] = False  # Default: inline with modules
-if 'card2_expanded' not in st.session_state:
-    st.session_state['card2_expanded'] = False
-if 'card3_expanded' not in st.session_state:
-    st.session_state['card3_expanded'] = False
+# --- Session State Initialization (centralized in core/state_registry.py) ---
+ensure_download_state()
 
 # --- Helper Functions ---
 def resolve_path(path):
@@ -333,12 +100,12 @@ def select_sync_folder():
         st.session_state['pending_sync_folder'] = folder_path
 
 def check_cancellation():
-    return st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False)
+    """Backward-compatible alias for is_download_cancelled (used by canvas_logic.py)."""
+    return is_download_cancelled()
 
 def cancel_download_callback():
-    """Instant on_click callback — fires before Streamlit re-enters the main loop."""
-    st.session_state['download_cancelled'] = True
-    st.session_state['cancel_requested'] = True
+    """Backward-compatible alias for cancel_download (used in on_click= handlers)."""
+    cancel_download()
 
 @st.dialog("📄 Error Log", width="large")
 def _download_error_log_dialog(log_paths):
