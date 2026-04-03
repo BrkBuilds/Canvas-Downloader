@@ -1,0 +1,602 @@
+/* ═══════════════════════════════════════════════
+   Sync Hub Dialog CSS — Canvas Downloader
+   Source: sync_ui.py _inject_hub_global_css() L1222-1855
+   Extracted in Phase 0 of Monolith Teardown.
+
+   STATIC rules only. Dynamic overrides for theme.BLUE_PRIMARY
+   and theme.ERROR are injected inline in sync_ui.py.
+   theme.WHITE (#ffffff) is hardcoded since it is an immutable constant.
+   ═══════════════════════════════════════════════ */
+
+/* ---------------------------------------------------------
+   ALL HUB BUTTON CSS (Previously in col_hub)
+   --------------------------------------------------------- */
+/* 1. Strip default margins from the Hub button */
+div.st-key-btn_hub_main {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
+/* 2. Kill bottom margin on the row containing the Hub button */
+div[data-testid="stHorizontalBlock"]:has(.st-key-btn_hub_main) {
+    margin-bottom: -15px !important;
+    padding-bottom: 0px !important;
+}
+
+/* 3. Pull the main sync list container UP */
+div.st-key-sync_list_outline {
+    margin-top: -10px !important;
+}
+
+/* Dusty Slate-Indigo theme for Group features */
+div.st-key-btn_save_group_main button,
+div.st-key-btn_hub_main button {
+    background-color: rgba(95, 100, 200, 0.35) !important;
+    color: #e0e7ff !important;
+    border: 1px solid rgba(95, 100, 200, 0.6) !important;
+}
+
+div.st-key-btn_save_group_main button:hover,
+div.st-key-btn_hub_main button:hover {
+    background-color: rgba(95, 100, 200, 0.55) !important;
+    border-color: rgba(95, 100, 200, 0.9) !important;
+    color: #ffffff !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Disabled state for Save Group button */
+div.st-key-btn_save_group_main button[disabled] {
+    background-color: rgba(95, 100, 200, 0.15) !important;
+    border: 1px solid rgba(95, 100, 200, 0.3) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    cursor: not-allowed !important;
+}
+
+/* ---------------------------------------------------------
+   ALL DIALOG CSS (Layer 1, Layer 2, action buttons, etc.)
+   --------------------------------------------------------- */
+
+/* =========================================
+   LAYER 1: EXPANDER BULLET LIST ALIGNMENT (V2)
+   ========================================= */
+div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] div[data-testid="stMarkdownContainer"] ul,
+div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] .stMarkdown ul {
+    padding-left: 1.5rem !important;
+    margin-left: 0px !important;
+    margin-inline-start: 0px !important;
+    margin-top: -5px !important;
+    margin-bottom: 5px !important;
+}
+
+div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] div[data-testid="stMarkdownContainer"] ul li,
+div[data-testid="stDialog"] div[data-testid="stExpanderDetails"] .stMarkdown ul li {
+    padding-left: 0.2rem !important;
+    margin-left: 0px !important;
+}
+
+/* =========================================
+   LAYER 1: EXPANDER TITLE STYLING
+   ========================================= */
+div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p,
+div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Primary button: blue — NOTE: background-color set via dynamic override (theme.BLUE_PRIMARY) */
+div[data-testid="stDialog"] button[kind="primary"] {
+    color: white !important;
+    border: none !important;
+}
+div[data-testid="stDialog"] button[kind="primary"]:hover {
+    background-color: #60a5fa !important;
+}
+div[data-testid="stDialog"] button[kind="primary"][disabled] {
+    background-color: #1e3a8a !important;
+    opacity: 1 !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    cursor: not-allowed !important;
+}
+
+/* Secondary button baseline */
+div[data-testid="stDialog"] button[kind="secondary"] {
+    background-color: #262730 !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+div[data-testid="stDialog"] button[kind="secondary"]:hover {
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Cancel buttons inside dialog — NOTE: colors set via dynamic override (theme.ERROR) */
+
+/* Close Button (Normal Hover - Lighter Border) */
+div[data-testid="stDialog"] div.st-key-btn_hub_close button {
+    background-color: #262730 !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+div[data-testid="stDialog"] div.st-key-btn_hub_close button:hover {
+    background-color: #262730 !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* =========================================
+   LAYER 1: GROUP CARD BUTTONS HIERARCHY
+   ========================================= */
+
+/* 1. Default state for "Add to Sync List" & "Edit Group" (Light Grey) */
+div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button,
+div[data-testid="stDialog"] div[class*="st-key-hub_edit_"] button {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* 2. Hover state for "Edit Group" (Lighter Grey) */
+div[data-testid="stDialog"] div[class*="st-key-hub_edit_"] button:hover {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 3. Hover state for "Add to Sync List" (Indigo Theme) */
+div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
+    background-color: rgba(95, 100, 200, 0.4) !important;
+    border-color: rgba(95, 100, 200, 1) !important;
+    color: #ffffff !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 4. Default state for "Delete" (Dark Grey / Recessed) */
+div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button {
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: rgba(255, 255, 255, 1) !important;
+}
+
+/* 5. Hover state for "Delete" (Danger Red) */
+div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button:hover {
+    background-color: rgba(255, 75, 75, 0.15) !important;
+    border-color: #ff4b4b !important;
+    color: #ff4b4b !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Compact cards inside Layer 2 */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    padding: 12px 15px !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
+    gap: 0.3rem !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"] button {
+    min-height: 35px !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+}
+
+/* Clean positioning for Back buttons */
+div.st-key-btn_back_to_groups,
+div.st-key-btn_cancel_add_pair,
+div.st-key-hub_back_l3 {
+    margin-bottom: 10px !important;
+    margin-top: -30px !important;
+}
+
+/* Clean Tertiary Buttons (Universal Lowkey Style) */
+div[data-testid="stDialog"] button[kind="tertiary"] {
+    color: rgba(255, 255, 255, 0.75) !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0px !important;
+}
+div[data-testid="stDialog"] button[kind="tertiary"]:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Kill the massive margins on the Course Titles (h3) */
+div[data-testid="stDialog"] h3 {
+    margin-top: 0px !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 0px !important;
+}
+
+/* Pull the folder path text closer to the title and buttons */
+div[data-testid="stDialog"] p:has(span[style*="color: #a3a8b8"]) {
+    margin-top: 0px !important;
+    margin-bottom: 10px !important;
+}
+
+/* Restore breathing room around Add New Course button */
+div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair {
+    margin-top: 25px !important;
+    margin-bottom: 10px !important;
+}
+
+/* 1. Edit Group Meta Box */
+div.st-key-hub_edit_group_meta {
+    background-color: rgba(220, 210, 180, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    margin-bottom: 25px !important;
+    padding: 15px !important;
+}
+
+/* =========================================
+   LAYER 2: PAIR CARDS & BUTTON HIERARCHY
+   ========================================= */
+
+/* 1. Pair Cards Background */
+div[class*="st-key-hub_pair_card_"] {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    margin-bottom: 15px !important;
+    padding-top: 8px !important;
+}
+
+/* 2. Open Folder & Edit Pair Buttons (Lighter than card) */
+div[data-testid="stDialog"] div[class*="st-key-hub_open_"] button,
+div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+div[data-testid="stDialog"] div[class*="st-key-hub_open_"] button:hover,
+div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 3. Expander (See Configuration) matching Open/Edit buttons */
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 6px !important;
+    background-color: transparent !important;
+    overflow: hidden !important;
+}
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(255, 255, 255, 0.09) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+}
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    transition: all 0.2s ease-in-out;
+}
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details[open] summary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 4. Remove Button (Recessed Dark Default, Danger on Hover) */
+div[data-testid="stDialog"] div[class*="st-key-btn_hub_remove_pair_"] button {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    color: rgba(255, 255, 255, 1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+div[data-testid="stDialog"] div[class*="st-key-btn_hub_remove_pair_"] button:hover {
+    border-color: #ff4b4b !important;
+    color: #ff4b4b !important;
+    background-color: rgba(255, 75, 75, 0.15) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 5. Add New Course Button */
+div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: #93c5fd !important;
+    margin-top: 10px !important;
+}
+div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button:hover {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    color: #ffffff !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Shrink-wrap the View Mode columns for dynamic 10px spacing */
+div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] {
+    align-items: flex-end !important;
+    gap: 15px !important;
+}
+div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child {
+    width: auto !important;
+    flex: 0 1 auto !important;
+}
+div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin-bottom: -16px !important;
+}
+
+/* Style the small View Mode Edit button */
+div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    padding: 2px 12px !important;
+    min-height: 0px !important;
+    height: 32px !important;
+}
+div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Elevate Layer 1 Group Cards */
+div[class*="st-key-hub_group_item_"] {
+    background-color: rgba(255, 230, 150, 0.1) !important;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 230, 150, 0.3) !important;
+    margin-bottom: 15px !important;
+    border-radius: 8px !important;
+}
+
+/* Layer 1 Group Cards Top Padding Fix */
+div[class*="st-key-hub_group_item_"] {
+    padding-top: 10px !important;
+}
+
+/* =========================================
+   LAYER 1: BORDERLESS EXPANDER (Courses List)
+   ========================================= */
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details {
+    border: none !important;
+    background: transparent !important;
+    margin-bottom: -5px !important;
+}
+
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary {
+    padding: 0px !important;
+    min-height: 0px !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary p {
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    color: #e0e0e0 !important;
+    margin: 0px !important;
+}
+
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details summary:hover p {
+    color: #ffffff !important;
+}
+
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details[open] summary {
+    border-bottom: none !important;
+}
+
+/* =========================================
+   HUB LIST CARD SPACING
+   ========================================= */
+div[class*="st-key-hub_group_item_"],
+div[class*="st-key-hub_pair_item_"] {
+    margin-bottom: -2px !important;
+}
+
+/* Fix Expanded Content */
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
+    padding-left: 0px !important;
+    padding-top: 5px !important;
+    padding-bottom: 15px !important;
+}
+
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details div[data-testid="stMarkdownContainer"] {
+    color: #ffffff !important;
+    font-size: 0.9rem !important;
+}
+
+/* Pull bullets left and remove vertical margins */
+div[class*="st-key-hub_group_item_"] div[data-testid="stExpander"] details ul {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    padding-left: 18px !important;
+}
+
+/* =========================================
+   LAYER 1: EXPANDER TITLE & BULLET STYLING (RESTORED)
+   ========================================= */
+div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p,
+div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Nudge the bullet points right */
+div[data-testid="stDialog"] div[data-testid="stExpander"] ul {
+    padding-left: 1.5rem !important;
+    margin-bottom: 0px !important;
+}
+
+/* =========================================
+   INLINE ADD CARD BUTTONS (Fixing CSS Specificity)
+   ========================================= */
+/* 1. Folder, Course, and Cancel Buttons */
+div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button,
+div[data-testid="stDialog"] div.st-key-btn_inline_new_course button,
+div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button:hover,
+div[data-testid="stDialog"] div.st-key-btn_inline_new_course button:hover,
+div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
+}
+
+/* 2. Add to Group Button — NOTE: hover bg/border set via dynamic override (theme.BLUE_PRIMARY) */
+div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {
+    color: #ffffff !important;
+    transition: all 0.2s ease-in-out;
+}
+div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* =========================================
+   LAYER 1: PAIR CARDS (Single Pairs)
+   ========================================= */
+div[class*="st-key-hub_pair_item_"] {
+    background-color: rgba(180, 200, 220, 0.08) !important;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    margin-bottom: -2px !important;
+    border-radius: 8px !important;
+    padding-top: 10px !important;
+}
+
+/* =========================================
+   INLINE SAVE PAIR BUTTON (ABSOLUTE POSITION)
+   ========================================= */
+div[class*="st-key-save_pair_"] {
+    position: absolute !important;
+    top: 15px !important;
+    right: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: 0 !important;
+    overflow: visible !important;
+    z-index: 99;
+}
+
+div[class*="st-key-save_pair_"] button {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    font-size: 1.3rem !important;
+    line-height: 1 !important;
+    transition: transform 0.2s ease;
+}
+
+div[class*="st-key-save_pair_"] button:hover {
+    transform: scale(1.15);
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+}
+
+div[class*="st-key-save_pair_"] button:disabled {
+    opacity: 0.3 !important;
+    filter: grayscale(100%);
+}
+
+/* =========================================
+   TAB NAVIGATION STYLING
+   ========================================= */
+div.st-key-hub_tabs_container button {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+div.st-key-hub_tabs_container button p {
+    font-size: 0.95rem !important;
+}
+
+/* Hover State (All Tabs) - Solid Indigo */
+div.st-key-hub_tabs_container button:hover {
+    background-color: rgba(95, 100, 200, 0.85) !important;
+    border-color: rgba(95, 100, 200, 1) !important;
+    color: #ffffff !important;
+}
+
+/* --- ACTIVE TAB (PRIMARY) Context styling --- */
+div.st-key-hub_tabs_container button[kind="primary"] {
+    background-color: rgba(95, 100, 200, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
+    color: #ffffff !important;
+}
+
+div.st-key-hub_tabs_container button[kind="primary"]:hover {
+    background-color: rgba(95, 100, 200, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
+    color: #ffffff !important;
+}
+
+/* =========================================
+   MAIN SYNC LIST: PAIR CARD CONTAINERS
+   ========================================= */
+div[class*="st-key-sync_pair_card_"] {
+    background-color: #2d2d2d !important;
+    border: 1px solid #444 !important;
+    border-radius: 8px !important;
+    padding: 5px 12px 20px 12px !important;
+    overflow: visible !important;
+    position: relative;
+}
+div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {
+    gap: 10px !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+}
+
+/* =========================================
+   PAIR COURSE TEXT STYLING
+   ========================================= */
+div.pair-course-subtitle {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin-bottom: 15px !important;
+}
+
+/* =========================================
+   LAYER 2: PIN ADD BUTTON TO BOTTOM
+   ========================================= */
+div[data-testid="stDialog"] div[role="dialog"] > div:first-child > div {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    min-height: 100% !important;
+    height: auto !important;
+}
+
+div[class*="st-key-hub_layer2_add_btn_wrapper"] {
+    margin-top: auto !important;
+    padding-top: 25px !important;
+    padding-bottom: 5px !important;
+}
+
+/* =========================================
+   HIDE NATIVE DIALOG CLOSE BUTTON ('X')
+   ========================================= */
+div[data-testid="stDialog"] button[aria-label="Close"] {
+    display: none !important;
+}

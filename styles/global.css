@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════
+   Global Defaults — Canvas Downloader
+   Source: app.py L36-60 (extracted Phase 0)
+   ═══════════════════════════════════════════════ */
+
+/* Default button sizing */
+.stButton>button {
+    width: 100%;
+    border-radius: 5px;
+    height: 3em;
+}
+
+/* Status text helpers */
+.success-text { color: #28a745; font-weight: bold; }
+.error-text   { color: #dc3545; font-weight: bold; }
+
+/* Step header typography */
+.step-header { font-size: 1.5em; font-weight: bold; margin-bottom: 1em; }
+
+/* Hide the "Press Enter to apply" / "Press Enter to submit" hints */
+div[data-testid="InputInstructions"] { display: none !important; }
+
+/* Hide the blinking cursor in the language dropdown to look like a static menu */
+div[data-testid="stSelectbox"] input { caret-color: transparent; cursor: default !important; }
+div[data-testid="stSelectbox"] > div { cursor: default !important; }
+
+/* Destructive buttons (Cancel / Remove) turn red on hover */
+[class*="st-key-remove_pair"] button:hover,
+[class*="st-key-cancel_pair"] button:hover {
+    border-color: #ff4b4b !important;
+    color: #ff4b4b !important;
+    background-color: rgba(255, 75, 75, 0.1) !important;
+}
