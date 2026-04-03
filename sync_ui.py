@@ -67,6 +67,7 @@ from ui_shared import (
 from styles import inject_css
 from core.state_registry import ensure_sync_state, cleanup_sync_state
 from core.cancellation import cancel_sync, is_sync_cancelled
+from engine.progress_dashboard import build_metrics_html, build_terminal_html
 
 logger = logging.getLogger(__name__)
 
@@ -4190,34 +4191,12 @@ def _run_sync():
         return f"{m:02d}:{s:02d}"
 
     def render_metrics_html(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string):
-        return f"""
-        <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{d_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {t_mb:.1f} MB</span></span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
-                <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_file_idx} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_files}</span></span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
-                <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
-            </div>
-        </div>
-        """
+        """Backward-compatible alias for build_metrics_html (engine)."""
+        return build_metrics_html(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string)
         
     def render_terminal_html(lines):
-        joined = "<br>".join(reversed(lines)) if lines else "<span style='color: {theme.TEXT_MUTED};'>Waiting for files...</span>"
-        return f"""
-        <div style="background: #0e1117; border: 1px solid #222; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: #bbb; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-            {joined}
-        </div>
-        """
+        """Backward-compatible alias for build_terminal_html (engine)."""
+        return build_terminal_html(lines)
 
     async def download_sync_files_batch(sync_api_token, sync_api_url):
         cm = CanvasManager(sync_api_token, sync_api_url)
