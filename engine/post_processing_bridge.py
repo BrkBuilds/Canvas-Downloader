@@ -25,6 +25,7 @@ from typing import Optional, Sequence
 import streamlit as st
 
 from core.cancellation import is_download_cancelled, is_sync_cancelled
+from core.state_registry import NOTEBOOK_SUB_KEYS
 from engine.progress_dashboard import DashboardPlaceholders
 
 logger = logging.getLogger(__name__)
@@ -32,16 +33,6 @@ logger = logging.getLogger(__name__)
 # Intentionally lazy-imported at call time to avoid circular imports:
 #   from post_processing import run_all_conversions, UIBridge
 #   from sync_manager import SyncManager
-
-
-# ═══════════════════════════════════════════════
-# Constants
-# ═══════════════════════════════════════════════
-
-_CONVERT_KEYS = [
-    'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-    'convert_html', 'convert_code', 'convert_urls', 'convert_video',
-]
 
 
 # ═══════════════════════════════════════════════
@@ -54,7 +45,7 @@ def build_conversion_contract() -> dict:
     Returns a dict like ``{'convert_zip': True, ...}`` based on the
     ``persistent_*`` keys written at the start of Step 3.
     """
-    return {k: st.session_state.get(f'persistent_{k}', False) for k in _CONVERT_KEYS}
+    return {k: st.session_state.get(f'persistent_{k}', False) for k in NOTEBOOK_SUB_KEYS}
 
 
 def invoke_post_processing(

@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 _download_locks = {}
 _lock_mutex = asyncio.Lock()
 
+def safe_thread_wrapper(func, current_ctx, *args, **kwargs):
+    """
+    Safely executes a function in a separate thread while preserving Streamlit's 
+    ScriptRunContext. This ensures thread-bound session_state and UI renders 
+    don't throw missing context exceptions.
+    """
+    import threading
+    from streamlit.runtime.scriptrunner import add_script_run_ctx
+    if current_ctx:
+        add_script_run_ctx(threading.current_thread(), current_ctx)
+    return func(*args, **kwargs)
+
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -1517,10 +1529,6 @@ class CanvasManager:
         current_ctx = get_script_run_ctx()
         if not current_ctx:
             raise RuntimeError("CRITICAL THREAD LEAK: Streamlit ScriptRunContext is missing in download_isolated_batch_async.")
-            
-        def safe_thread_wrapper(func, *args, **kwargs):
-            add_script_run_ctx(threading.current_thread(), current_ctx)
-            return func(*args, **kwargs)
 
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
         sem = asyncio.Semaphore(concurrent_limit)
@@ -1605,6 +1613,7 @@ class CanvasManager:
                                 sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
                                     safe_thread_wrapper,
                                     self.download_secondary_entity,
+                                    current_ctx,
                                     course, file_obj, filepath.parent,
                                     sync_manager, secondary_settings,
                                     progress_callback, debug_file, Path(save_dir), course.name
@@ -1672,7 +1681,7 @@ class CanvasManager:
                                 if secondary_id_type(fetch_id) == 'attachment':
                                     fetch_id = abs(fetch_id) - SECONDARY_ID_OFFSETS['attachment']
                             
-                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, fetch_id)
+                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, current_ctx, fetch_id)
                             fresh_url = getattr(fresh_file, 'url', '')
                             if not fresh_url:
                                 raise ValueError("Canvas API returned an empty URL for this item.")

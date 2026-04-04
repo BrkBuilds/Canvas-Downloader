@@ -16,6 +16,11 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+from core.state_registry import (
+    SECONDARY_CONTENT_KEYS as _SECONDARY_CONTENT_KEYS,
+    NOTEBOOK_SUB_KEYS as _NOTEBOOK_SUB_KEYS,
+)
+
 PRESETS_FILENAME = "saved_download_presets.json"
 
 _presets_lock = threading.Lock()
@@ -25,15 +30,8 @@ class PresetManager:
     """CRUD operations for download-settings presets."""
 
     # ── The 19 session-state keys that define a preset ──────────────
-    SECONDARY_CONTENT_KEYS = [
-        'dl_assignments', 'dl_syllabus', 'dl_announcements',
-        'dl_discussions', 'dl_quizzes', 'dl_rubrics', 'dl_submissions',
-    ]
-
-    NOTEBOOK_SUB_KEYS = [
-        'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-        'convert_html', 'convert_code', 'convert_urls', 'convert_video',
-    ]
+    SECONDARY_CONTENT_KEYS = _SECONDARY_CONTENT_KEYS
+    NOTEBOOK_SUB_KEYS = _NOTEBOOK_SUB_KEYS
 
     SETTINGS_KEYS = [
         'download_mode', 'file_filter', 'dl_isolate_secondary',

@@ -17,6 +17,7 @@ import streamlit as st
 
 import theme
 from canvas_logic import CanvasManager
+from core.state_registry import NOTEBOOK_SUB_KEYS
 from sync_manager import SyncManager
 from ui_helpers import render_sync_wizard, friendly_course_name
 
@@ -275,14 +276,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
             st.session_state['qs_cancel_route'] = True # INDESTRUCTIBLE CANCEL FLAG
             
             # Inject "Start Sync" variables so Step 3 starts executing immediately
-            st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
-            st.session_state['persistent_convert_pptx'] = st.session_state.get('convert_pptx', False)
-            st.session_state['persistent_convert_html'] = st.session_state.get('convert_html', False)
-            st.session_state['persistent_convert_code'] = st.session_state.get('convert_code', False)
-            st.session_state['persistent_convert_urls'] = st.session_state.get('convert_urls', False)
-            st.session_state['persistent_convert_word'] = st.session_state.get('convert_word', False)
-            st.session_state['persistent_convert_video'] = st.session_state.get('convert_video', False)
-            st.session_state['persistent_convert_excel'] = st.session_state.get('convert_excel', False)
+            for _k in NOTEBOOK_SUB_KEYS:
+                st.session_state[f'persistent_{_k}'] = st.session_state.get(_k, False)
 
             # Do NOT pop `sync_quick_mode` here so the cancel routing knows we are in Quick Sync!
             st.rerun()

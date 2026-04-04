@@ -1,7 +1,6 @@
 import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
 import asyncio
-import base64
 import collections
 import os
 import logging
@@ -18,7 +17,8 @@ from sync_ui import render_sync_step1, render_sync_step4
 from ui_helpers import esc, render_download_wizard
 from ui_shared import (
     render_completion_card, render_folder_cards,
-    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS
+    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
+    error_log_dialog,
 )
 from styles import inject_css
 from core.state_registry import (
@@ -56,28 +56,6 @@ inject_css('preset_dialogs.css')
 ensure_download_state()
 
 # --- Helper Functions ---
-def resolve_path(path):
-    """Resolve path for frozen (PyInstaller) vs normal execution."""
-    if getattr(sys, 'frozen', False):
-        return os.path.join(sys._MEIPASS, path)
-    return path
-
-def get_base64_image(image_path):
-    """Reads a local file and returns its Base64 string representation."""
-    try:
-        with open(resolve_path(image_path), "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode()
-    except Exception as e:
-        logger.error(f"Failed to encode image {image_path}: {e}")
-        return ""
-
-def _get_chevron_base64(is_expanded):
-    if is_expanded:
-        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1792" height="1792" viewBox="0 0 1792 1792" id="chevron"><path d="m1683 808-742 741q-19 19-45 19t-45-19L109 808q-19-19-19-45.5t19-45.5l166-165q19-19 45-19t45 19l531 531 531-531q19-19 45-19t45 19l166 165q19 19 19 45.5t-19 45.5z"></path></svg>'''
-    else:
-        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1792" height="1792" viewBox="0 0 1792 1792" id="chevron"><path d="m1363 877-742 742q-19 19-45 19t-45-19l-166-166q-19-19-19-45t19-45l531-531-531-531q-19-19-19-45t19-45L531 45q19-19 45-19t45 19l742 742q19 19 19 45t-19 45z"></path></svg>'''
-    b64_str = base64.b64encode(svg.encode('utf-8')).decode()
-    return f"url('data:image/svg+xml;base64,{b64_str}')"
 
 def select_folder():
     from ui_helpers import native_folder_picker
@@ -100,39 +78,7 @@ def cancel_download_callback():
     """Backward-compatible alias for cancel_download (used in on_click= handlers)."""
     cancel_download()
 
-@st.dialog("📄 Error Log", width="large")
-def _download_error_log_dialog(log_paths):
-    """Display the contents of download_errors.txt files in a modal dialog."""
-    st.markdown("""
-        <style>
-            div.st-key-error_log_scroll_dl {
-                height: 55vh !important;
-                min-height: 55vh !important;
-                max-height: 55vh !important;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    with st.container(border=False, key="error_log_scroll_dl"):
-        found_any = False
-        for log_path in log_paths:
-            if log_path.exists():
-                try:
-                    content = log_path.read_text(encoding='utf-8').strip()
-                    if content:
-                        found_any = True
-                        st.markdown(f"**📁 {log_path.parent.name}**")
-                        st.code(content, language="text")
-                except Exception as e:
-                    st.warning(f"Could not read {log_path}: {e}")
-        
-        if not found_any:
-            st.info("No error log files found on disk.")
-    
-    if st.button("Close", type="primary", use_container_width=True):
-        st.rerun()
+
 
 @st.cache_data(ttl=600)  # 10-minute TTL — new courses appear after brief wait
 def fetch_courses(token, url, fav_only):
@@ -1061,7 +1007,7 @@ with _main_content.container():
 
             render_error_section(
                 download_errors, error_log_paths,
-                dialog_fn=_download_error_log_dialog,
+                dialog_fn=error_log_dialog,
                 key_prefix='dl',
             )
 
@@ -1194,29 +1140,8 @@ with _main_content.container():
             # Use "Go to front page" for both done and cancelled
             button_text = "🏠 " + 'Go to front page'
             if st.button(button_text, type="primary", use_container_width=True):
-                # We want to preserve heavy network caches to prevent the 1-3 second hang
-                # when returning to the front page
-                keys_to_keep = {
-                    'courses', 'course_names', 'api_token', 'api_url', 'api_configured',
-                    'sync_pairs', 'sync_pairs_loaded',
-                    'is_authenticated', 'user_name', 'token_loaded',
-                    'download_path', 'current_mode',
-                }
-
-                st.session_state['sync_cancelled'] = False
-                st.session_state['sync_cancel_requested'] = False
-                st.session_state['cancel_requested'] = False
-                st.session_state['download_cancelled'] = False
-
-                # Nuclear cache clearing on reset to destroy dead aiohttp sessions
-                st.cache_data.clear()
-
-                # Iterate over a list of keys to allow modifying the dictionary
-                for key in list(st.session_state.keys()):
-                    if key not in keys_to_keep and not key.startswith('FormSubmitter:'):
-                        del st.session_state[key]
-
-                st.session_state['step'] = 1
+                from core.state_registry import cleanup_download_state
+                cleanup_download_state()
                 st.rerun()
 
 

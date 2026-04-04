@@ -29,6 +29,7 @@ from ui_helpers import (
 )
 from core.state_registry import (
     SECONDARY_CONTENT_KEYS,
+    NOTEBOOK_SUB_KEYS,
     TOTAL_SECONDARY_SUBS,
 )
 
@@ -405,10 +406,7 @@ def render_download_settings(fetch_courses_fn):
             </style>
             """
 
-        notebook_sub_keys = [
-            'convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-            'convert_html', 'convert_code', 'convert_urls', 'convert_video'
-        ]
+        notebook_sub_keys = NOTEBOOK_SUB_KEYS
         TOTAL_NOTEBOOK_SUBS = len(notebook_sub_keys)
 
         def _toggle_conv_master():

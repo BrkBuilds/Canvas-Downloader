@@ -1,0 +1,159 @@
+/* Force Streamlit modal to vertically center */
+div[data-testid="stModal"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+div[data-testid="stModal"] > div[role="dialog"] {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    margin: auto !important;
+    max-width: 480px !important;
+    width: 90vw !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
+    background-color: #1a1c1e !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+/* Make the bulk action buttons inside expanders slightly shorter and subtle */
+[data-testid="stExpanderDetails"] button[kind="secondary"] {
+    min-height: 2rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+/* Reduce divider vertical margins */
+hr {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+/* Tightly align the caption */
+.tight-caption p {
+    margin-top: 0px !important;
+    padding-top: 0px !important;
+}
+
+/* Color-coded expander backgrounds */
+div[class*="st-key-cat_new"] div[data-testid="stExpander"] details summary { background-color: rgba(59, 130, 246, 0.1) !important; }
+div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary { background-color: rgba(16, 185, 129, 0.1) !important; }
+div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details summary { background-color: rgba(245, 158, 11, 0.1) !important; }
+div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary { background-color: rgba(139, 92, 246, 0.1) !important; }
+div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details summary { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+div[class*="st-key-cat_new"] div[data-testid="stExpander"] details { border: 1px solid rgba(59, 130, 246, 0.4) !important; }
+div[class*="st-key-cat_update"] div[data-testid="stExpander"] details { border: 1px solid rgba(16, 185, 129, 0.4) !important; }
+div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details { border: 1px solid rgba(245, 158, 11, 0.4) !important; }
+div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details { border: 1px solid rgba(167, 139, 250, 0.4) !important; } 
+div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details { border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+
+/* The 'Guy in the Corner' Ignored Files styling */
+div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary { 
+    background-color: rgba(20, 20, 20, 0.3) !important; 
+    border: 1px dashed #4B5563 !important;
+}
+
+/* 1. Squeeze the row boundaries to absolute minimums */
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] {
+    border-bottom: 1px dashed #3A415A !important;
+    padding-top: 0px !important;      
+    padding-bottom: 2px !important;   
+    margin-bottom: 0px !important;    
+    min-height: 0px !important;
+    align-items: center !important; 
+}
+
+/* 2. Completely eliminate gap between rows */
+div[class*="st-key-sync_review_file_list"] > div[data-testid="stVerticalBlock"] {
+    gap: 0px !important; 
+}
+
+/* 3. OVERRIDE STREAMLIT'S INVISIBLE MIN-HEIGHTS ON WIDGETS */
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stElementContainer"],
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stMarkdownContainer"],
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stCheckbox"],
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important; /* Kills the dead space forcing the row open */
+}
+
+/* 4. Compress the button's vertical footprint */
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] button {
+    margin: 0 !important;
+    min-height: 1.8rem !important; /* Shrinks the button's invisible boundary */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Original 1. Remove border and padding from the container */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
+.st-key-filetypes_flex_box {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+/* 2. Target the horizontal block created by st.columns and force wrap */
+.st-key-filetypes_flex_box div[data-testid="stHorizontalBlock"] {
+    flex-wrap: wrap !important;
+    row-gap: 5px !important;
+    column-gap: 15px !important;
+}
+
+/* 3. Shrink-wrap the columns */
+.st-key-filetypes_flex_box div[data-testid="stColumn"] {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+}
+
+/* 4. Remove inner gap of the column's vertical block so it's tight */
+.st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
+/* 5. Fix checkbox label margins */
+.st-key-filetypes_flex_box label[data-baseweb="checkbox"] {
+    margin-bottom: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 6. Tighten the outer filter box container */
+.st-key-sync_filter_box_outer > div[data-testid="stVerticalBlock"] {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    gap: 0 !important;
+}
+
+/* 7. Aggressively pull elements up */
+.st-key-sync_filter_box_outer div[data-testid="stElementContainer"] {
+    margin-top: -12px !important;
+}
+/* Add gap between label and the filetype checkboxes container */
+.st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:has(.st-key-filetypes_flex_box) {
+    margin-top: 5px !important;
+}
+/* Pull the toggle (first child) to the very top */
+.st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:first-child {
+    margin-top: -15px !important;
+}
+
+/* 8. Tighten separator and labels */
+.st-key-sync_filter_box_outer hr {
+    margin-top: -3px !important;
+    margin-bottom: 0 !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+.st-key-sync_filter_box_outer div[data-testid="stMarkdownContainer"] p {
+    margin-bottom: 0 !important;
+}
+
+/* Force top margin on the button row wrapper */
+.st-key-bulk_action_buttons {
+    margin-top: 10px !important;
+}
