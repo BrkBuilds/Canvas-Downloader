@@ -1,11 +1,11 @@
-"""
-ui.sync_review — Analysis review screen (Step 2 of sync flow).
+﻿"""
+ui.sync_review â€” Analysis review screen (Step 2 of sync flow).
 
 Extracted from ``sync_ui.py`` (Phase 5).
-Strict physical move — NO logic changes.
+Strict physical move â€” NO logic changes.
 
 Contains:
-  - ``show_analysis_review()`` — full review screen with per-course cards,
+  - ``show_analysis_review()`` â€” full review screen with per-course cards,
     file selection, sync confirmation trigger
 """
 
@@ -39,10 +39,7 @@ def _ignored_files_dialog(ignored_by_course):
     from ui.sync_dialogs import ignored_files_dialog_inner
     ignored_files_dialog_inner(ignored_by_course)
 
-def _show_sync_confirmation(*args, **kwargs):
-    """Lazy import wrapper to call the dialog registered in sync_ui.py."""
-    import sync_ui
-    sync_ui._show_sync_confirmation(*args, **kwargs)
+
 
 def _render_hub_config(pair):
     from ui.hub_dialog import render_hub_config
@@ -50,11 +47,11 @@ def _render_hub_config(pair):
 
 # ---- Analysis review ----
 
-def show_analysis_review():
+def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    st.markdown(f"<h3 style='margin-bottom: -15px; margin-top: 10px;'>🔍 {'Review Changes'}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='margin-bottom: -15px; margin-top: 10px;'>ðŸ” {'Review Changes'}</h3>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -210,7 +207,7 @@ def show_analysis_review():
         if not hasattr(pair_data['result'], 'ignored_files'):
             pair_data['result'].ignored_files = []
         
-        # Build lookup set of IDs being ignored (Fix: was undefined — NameError)
+        # Build lookup set of IDs being ignored (Fix: was undefined â€” NameError)
         file_ids_to_ignore = {get_id(item) for item in items_to_ignore}
             
         # Rebuild origin list directly safely
@@ -236,48 +233,7 @@ def show_analysis_review():
             if not any(f.canvas_file_id == fid for f in pair_data['result'].ignored_files):
                 pair_data['result'].ignored_files.append(sync_info)
 
-    st.markdown('''
-        <style>
-        /* Force Streamlit modal to vertically center */
-        div[data-testid="stModal"] {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            background-color: rgba(0, 0, 0, 0.7) !important;
-        }
-        div[data-testid="stModal"] > div[role="dialog"] {
-            position: relative !important;
-            top: 0 !important;
-            left: 0 !important;
-            transform: none !important;
-            margin: auto !important;
-            max-width: 480px !important;
-            width: 90vw !important;
-            border-radius: 20px !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
-            background-color: #1a1c1e !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-        }
-        /* Make the bulk action buttons inside expanders slightly shorter and subtle */
-        [data-testid="stExpanderDetails"] button[kind="secondary"] {
-            min-height: 2rem !important;
-            padding-top: 0.25rem !important;
-            padding-bottom: 0.25rem !important;
-        }
-        /* Reduce divider vertical margins */
-        hr {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        /* Tightly align the caption */
-        .tight-caption p {
-            margin-top: 0px !important;
-            padding-top: 0px !important;
-        }
-        </style>
-    ''', unsafe_allow_html=True)
+    
 
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
@@ -295,28 +251,7 @@ def show_analysis_review():
     total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in all_results)
     total_ignored = sum(len(r['result'].ignored_files) if hasattr(r['result'], 'ignored_files') else 0 for r in all_results)
 
-    st.markdown("""
-    <style>
-    /* Color-coded expander backgrounds */
-    div[class*="st-key-cat_new"] div[data-testid="stExpander"] details summary { background-color: rgba(59, 130, 246, 0.1) !important; }
-    div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary { background-color: rgba(16, 185, 129, 0.1) !important; }
-    div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details summary { background-color: rgba(245, 158, 11, 0.1) !important; }
-    div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary { background-color: rgba(139, 92, 246, 0.1) !important; }
-    div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details summary { background-color: rgba(239, 68, 68, 0.1) !important; }
-
-    div[class*="st-key-cat_new"] div[data-testid="stExpander"] details { border: 1px solid rgba(59, 130, 246, 0.4) !important; }
-    div[class*="st-key-cat_update"] div[data-testid="stExpander"] details { border: 1px solid rgba(16, 185, 129, 0.4) !important; }
-    div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details { border: 1px solid rgba(245, 158, 11, 0.4) !important; }
-    div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details { border: 1px solid rgba(167, 139, 250, 0.4) !important; } 
-    div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details { border: 1px solid rgba(239, 68, 68, 0.4) !important; }
-
-    /* The 'Guy in the Corner' Ignored Files styling */
-    div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary { 
-        background-color: rgba(20, 20, 20, 0.3) !important; 
-        border: 1px dashed #4B5563 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    
 
     # Summary logic
     if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
@@ -358,15 +293,15 @@ def show_analysis_review():
                 '''
 
             with c1:
-                st.markdown(_render_metric_card(total_new, lbl_new, "📄", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_new, lbl_new, "ðŸ“„", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
             with c2:
-                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd, lbl_upd, "ðŸ”„", theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_miss, lbl_miss, "âš ï¸", theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
-                st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "✂️", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "âœ‚ï¸", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
-                st.markdown(_render_metric_card(total_del, lbl_del, "🗑️", theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_del, lbl_del, "ðŸ—‘ï¸", theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
@@ -416,8 +351,7 @@ def show_analysis_review():
     if all_extensions:
         all_exts_sorted = sorted(list(all_extensions))
         
-        if 'sync_filter_all_exts' not in st.session_state:
-            st.session_state['sync_filter_all_exts'] = True
+
 
         def toggle_all_exts():
             if st.session_state.get('sync_filter_all_exts', True):
@@ -436,106 +370,7 @@ def show_analysis_review():
             if not new_state:
                 st.session_state['sync_filter_all_exts'] = False
 
-        st.markdown("""
-        <style>
-        /* 1. Squeeze the row boundaries to absolute minimums */
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] {
-            border-bottom: 1px dashed #3A415A !important;
-            padding-top: 0px !important;      
-            padding-bottom: 2px !important;   
-            margin-bottom: 0px !important;    
-            min-height: 0px !important;
-            align-items: center !important; 
-        }
-
-        /* 2. Completely eliminate gap between rows */
-        div[class*="st-key-sync_review_file_list"] > div[data-testid="stVerticalBlock"] {
-            gap: 0px !important; 
-        }
-
-        /* 3. OVERRIDE STREAMLIT'S INVISIBLE MIN-HEIGHTS ON WIDGETS */
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stElementContainer"],
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stMarkdownContainer"],
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stCheckbox"],
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label {
-            margin: 0 !important;
-            padding: 0 !important;
-            min-height: 0 !important; /* Kills the dead space forcing the row open */
-        }
-
-        /* 4. Compress the button's vertical footprint */
-        div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] button {
-            margin: 0 !important;
-            min-height: 1.8rem !important; /* Shrinks the button's invisible boundary */
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-        }
-
-        /* Original 1. Remove border and padding from the container */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
-        .st-key-filetypes_flex_box {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            background: transparent !important;
-        }
         
-        /* 2. Target the horizontal block created by st.columns and force wrap */
-        .st-key-filetypes_flex_box div[data-testid="stHorizontalBlock"] {
-            flex-wrap: wrap !important;
-            row-gap: 5px !important;
-            column-gap: 15px !important;
-        }
-        
-        /* 3. Shrink-wrap the columns */
-        .st-key-filetypes_flex_box div[data-testid="stColumn"] {
-            width: auto !important;
-            flex: 0 0 auto !important;
-            min-width: 0 !important;
-        }
-        
-        /* 4. Remove inner gap of the column's vertical block so it's tight */
-        .st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
-            gap: 0 !important;
-        }
-        
-        /* 5. Fix checkbox label margins */
-        .st-key-filetypes_flex_box label[data-baseweb="checkbox"] {
-            margin-bottom: 0 !important;
-            padding-right: 0 !important;
-        }
-
-        /* 6. Tighten the outer filter box container */
-        .st-key-sync_filter_box_outer > div[data-testid="stVerticalBlock"] {
-            padding-top: 5px !important;
-            padding-bottom: 5px !important;
-            gap: 0 !important;
-        }
-
-        /* 7. Aggressively pull elements up */
-        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"] {
-            margin-top: -12px !important;
-        }
-        /* Add gap between label and the filetype checkboxes container */
-        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:has(.st-key-filetypes_flex_box) {
-            margin-top: 5px !important;
-        }
-        /* Pull the toggle (first child) to the very top */
-        .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:first-child {
-            margin-top: -15px !important;
-        }
-
-        /* 8. Tighten separator and labels */
-        .st-key-sync_filter_box_outer hr {
-            margin-top: -3px !important;
-            margin-bottom: 0 !important;
-            border-color: rgba(255,255,255,0.1) !important;
-        }
-        .st-key-sync_filter_box_outer div[data-testid="stMarkdownContainer"] p {
-            margin-bottom: 0 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
 
         col_main, _ = st.columns([3.5, 8.5])
         with col_main:
@@ -575,14 +410,7 @@ def show_analysis_review():
                                 st.checkbox(ext_label, key=ext_key, disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
 
                 # Global Select All / Deselect All
-                st.markdown("""
-                <style>
-                /* Force top margin on the button row wrapper */
-                .st-key-bulk_action_buttons {
-                    margin-top: 10px !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key="bulk_action_buttons"):
                     btn_col1, btn_col2 = st.columns(2)
@@ -611,14 +439,14 @@ def show_analysis_review():
             folder_display = short_path(pair['local_folder'])
             
             # Build up-to-date status
-            # Strictly use uptodate_files only — do NOT add untracked_shortcuts
+            # Strictly use uptodate_files only â€” do NOT add untracked_shortcuts
             # as those are already counted in new_files or other actionable categories
             uptodate_count = len(result.uptodate_files)
             status_pill = ""
             if uptodate_count:
                 uptodate_label = f"Up to date ({uptodate_count} {('file' if uptodate_count == 1 else 'files')})"
-                uptodate_label = uptodate_label.lstrip('✅ ')
-                status_pill = f'<span style="font-size: 0.75rem; color: {theme.SUCCESS}; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
+                uptodate_label = uptodate_label.lstrip('âœ… ')
+                status_pill = f'<span style="font-size: 0.75rem; color: {theme.SUCCESS}; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">âœ… {uptodate_label}</span>'
 
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
             header_html = f"""
@@ -631,7 +459,7 @@ def show_analysis_review():
                 border-radius: 8px 8px 0 0;
             ">
                 <h4 style="margin: 0px 0px 2px 0px; font-weight: 600; font-size: 1.05rem; color: {theme.WHITE};">
-                    <span style="color: #60A5FA; margin-right: 4px;">{idx + 1}.</span>📁 {display_name} 
+                    <span style="color: #60A5FA; margin-right: 4px;">{idx + 1}.</span>ðŸ“ {display_name} 
                     {status_pill}
                 </h4>
                 <p style="margin: 0px; color: {theme.TEXT_SECONDARY}; font-size: 0.8rem;">{folder_display}</p>
@@ -651,25 +479,16 @@ def show_analysis_review():
 
 
 
-            # New files — always starts OPEN
+            # New files â€” always starts OPEN
             if result.new_files:
                 total_new = len(result.new_files)
                 selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
                 
-                st.markdown(f"""
-                <style>
-                div[class*="st-key-cat_new_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
-                    content: "\\00a0\\00a0 {selected_new} / {total_new} selected";
-                    color: {theme.TEXT_SECONDARY};
-                    font-weight: normal;
-                    font-size: 0.9rem;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key=f"cat_new_{pair['course_id']}"):
-                    with st.expander(f"🆕 {'New Files'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
+                    with st.expander(f"ðŸ†• {'New Files'}"):
+                        st.button("ðŸ§¹ Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
                             for file in result.new_files:
@@ -677,33 +496,22 @@ def show_analysis_review():
                                 icon = get_file_icon(file.filename)
                                 size = format_file_size(file.size) if file.size else ""
                                 key = f"sync_new_{pair['course_id']}_{file.id}"
-                                if key not in st.session_state:
-                                    st.session_state[key] = True
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
+                                    st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key, value=st.session_state.get(key, True))
                                 with col2:
-                                    st.button("🚫", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                                    st.button("ðŸš«", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
-            # Updated files — always starts OPEN
+            # Updated files â€” always starts OPEN
             if result.updated_files:
                 total_upd = len(result.updated_files)
                 selected_upd = sum(1 for f, _ in result.updated_files if st.session_state.get(f"sync_upd_{pair['course_id']}_{f.id}", True))
                 
-                st.markdown(f"""
-                <style>
-                div[class*="st-key-cat_update_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
-                    content: "\\00a0\\00a0 {selected_upd} / {total_upd} selected";
-                    color: {theme.TEXT_SECONDARY};
-                    font-weight: normal;
-                    font-size: 0.9rem;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key=f"cat_update_{pair['course_id']}"):
-                    with st.expander(f"🔄 {'Updates Available'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
+                    with st.expander(f"ðŸ”„ {'Updates Available'}"):
+                        st.button("ðŸ§¹ Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
                             for canvas_file, sync_info in result.updated_files:
@@ -711,34 +519,23 @@ def show_analysis_review():
                                 icon = get_file_icon(canvas_file.filename)
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                 key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
-                                if key not in st.session_state:
-                                    st.session_state[key] = True
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                    st.checkbox(f"{icon} {_disp} ({size})", key=key)
+                                    st.checkbox(f"{icon} {_disp} ({size})", key=key, value=st.session_state.get(key, True))
                                 with col2:
-                                    st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
+                                    st.button("ðŸš«", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
-            # Missing files — always starts OPEN
+            # Missing files â€” always starts OPEN
             if result.missing_files:
                 total_miss = len(result.missing_files)
                 selected_miss = sum(1 for f in result.missing_files if st.session_state.get(f"sync_miss_{pair['course_id']}_{f.canvas_file_id}", True))
                 
-                st.markdown(f"""
-                <style>
-                div[class*="st-key-cat_missing_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
-                    content: "\\00a0\\00a0 {selected_miss} / {total_miss} selected";
-                    color: {theme.TEXT_SECONDARY};
-                    font-weight: normal;
-                    font-size: 0.9rem;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key=f"cat_missing_{pair['course_id']}"):
-                    with st.expander(f"📦 {'Missing Files'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
+                    with st.expander(f"ðŸ“¦ {'Missing Files'}"):
+                        st.button("ðŸ§¹ Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_miss"):
                             for sync_info in result.missing_files:
@@ -747,32 +544,21 @@ def show_analysis_review():
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
                                     key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
-                                    if key not in st.session_state:
-                                        st.session_state[key] = True
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key)
+                                    st.checkbox(f"{icon} {_disp}", key=key, value=st.session_state.get(key, True))
                                 with col2:
-                                    st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
+                                    st.button("ðŸš«", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
                 total_locdel = len(result.locally_deleted_files)
                 selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", True))
                 
-                st.markdown(f"""
-                <style>
-                div[class*="st-key-cat_deleted_local_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
-                    content: "\\00a0\\00a0 {selected_locdel} / {total_locdel} selected";
-                    color: {theme.TEXT_SECONDARY};
-                    font-weight: normal;
-                    font-size: 0.9rem;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
-                    with st.expander("✂️ Locally Deleted"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
+                    with st.expander("âœ‚ï¸ Locally Deleted"):
+                        st.button("ðŸ§¹ Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                             for sync_info in result.locally_deleted_files:
@@ -780,34 +566,22 @@ def show_analysis_review():
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                                 
-                                if key not in st.session_state:
-                                    st.session_state[key] = True
-                                    
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key)
+                                    st.checkbox(f"{icon} {_disp}", key=key, value=st.session_state.get(key, True))
                                 with col2:
-                                    st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                                    st.button("ðŸš«", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
-            # Deleted files — always starts OPEN
+            # Deleted files â€” always starts OPEN
             if result.deleted_on_canvas:
                 lbl_del = "Deleted on Canvas (Ignored)"
                 total_del_canvas = len(result.deleted_on_canvas)
                 
-                st.markdown(f"""
-                <style>
-                div[class*="st-key-cat_deleted_canvas_{pair['course_id']}"] div[data-testid="stExpander"] details summary p::after {{
-                    content: "\\00a0\\00a0 ({total_del_canvas})";
-                    color: {theme.TEXT_SECONDARY};
-                    font-weight: normal;
-                    font-size: 0.9rem;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
+                
 
                 with st.container(key=f"cat_deleted_canvas_{pair['course_id']}"):
-                    with st.expander(f"🗑️ {lbl_del}"):
+                    with st.expander(f"ðŸ—‘ï¸ {lbl_del}"):
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
                             icon = get_file_icon(sync_info.canvas_filename)
@@ -818,9 +592,9 @@ def show_analysis_review():
                 is_ignored_open = st.session_state.get('keep_ignored_open', False)
                 st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # The physical isolation gap
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
-                    with st.expander(f"🚫 Ignored files &nbsp; :gray[({len(result.ignored_files)})]", expanded=is_ignored_open):
+                    with st.expander(f"ðŸš« Ignored files &nbsp; :gray[({len(result.ignored_files)})]", expanded=is_ignored_open):
                         st.session_state['keep_ignored_open'] = False
-                        st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
+                        st.button("â†©ï¸ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                         st.caption("These files are safely ignored and will not be synced.")
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
                             for sync_info in result.ignored_files:
@@ -829,7 +603,7 @@ def show_analysis_review():
                                 with col1:
                                     st.markdown(f"<div style='color:{theme.TEXT_SECONDARY}; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
                                 with col2:
-                                    st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
+                                    st.button("â†©ï¸", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
             
             # Inject 20px gap BETWEEN courses, inside the loop but outside the course's content
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
@@ -884,7 +658,7 @@ def show_analysis_review():
     
                 # Total count & size for confirmation
                 total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
-                # Compute total byte size — new and updated CanvasFileInfo have .size,
+                # Compute total byte size â€” new and updated CanvasFileInfo have .size,
                 # redownload items are SyncInfo; look up their size from canvas_files
                 total_bytes = 0
                 for s in sync_selections:
@@ -922,10 +696,71 @@ def show_analysis_review():
                             dest_folder = short_path(s['res_data']['pair']['local_folder'])
                             break
                 
-                _show_sync_confirmation( sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+                on_confirm_sync( sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
 
             with col_back:
                 if st.button('Back', use_container_width=True):
                     cleanup_sync_state()
                     st.rerun()
 
+
+def inject_dynamic_sync_review_css():
+    """Injects dynamic CSS for the sync review page (e.g. counters).
+    Must be called at the top of the orchestrator to prevent DOM flashing.
+    """
+    import streamlit as st
+    import theme
+    all_results = st.session_state.get('sync_analysis_results', [])
+    if not all_results:
+        return
+
+    css_blocks = []
+    for res_data in all_results:
+        pair = res_data['pair']
+        result = res_data['result']
+        cid = pair['course_id']
+        
+        if result.new_files:
+            total_new = len(result.new_files)
+            selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{cid}_{f.id}", True))
+            css_blocks.append(f"""
+            div[class*="st-key-cat_new_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 {selected_new} / {total_new} selected";
+                color: {theme.TEXT_SECONDARY};
+                font-weight: normal; font-size: 0.9rem;
+            }}""")
+            
+        if result.updated_files:
+            total_upd = len(result.updated_files)
+            selected_upd = sum(1 for f, _ in result.updated_files if st.session_state.get(f"sync_upd_{cid}_{f.id}", True))
+            css_blocks.append(f"""
+            div[class*="st-key-cat_update_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 {selected_upd} / {total_upd} selected";
+                color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            }}""")
+            
+        if result.missing_files:
+            total_miss = len(result.missing_files)
+            selected_miss = sum(1 for f in result.missing_files if st.session_state.get(f"sync_miss_{cid}_{f.canvas_file_id}", True))
+            css_blocks.append(f"""
+            div[class*="st-key-cat_missing_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 {selected_miss} / {total_miss} selected"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            }}""")
+            
+        if result.locally_deleted_files:
+            total_locdel = len(result.locally_deleted_files)
+            selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{cid}_{f.canvas_file_id}", True))
+            css_blocks.append(f"""
+            div[class*="st-key-cat_deleted_local_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 {selected_locdel} / {total_locdel} selected"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            }}""")
+            
+        if result.deleted_on_canvas:
+            total_del_canvas = len(result.deleted_on_canvas)
+            css_blocks.append(f"""
+            div[class*="st-key-cat_deleted_canvas_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 ({total_del_canvas}) ignored"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            }}""")
+
+    if css_blocks:
+        st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)

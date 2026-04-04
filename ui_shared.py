@@ -282,3 +282,42 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
 """
 
     return f"{grid_container}{path_html}"
+
+
+@st.dialog("📄 Error Log", width="large")
+def error_log_dialog(log_paths):
+    """Display the contents of download_errors.txt files in a modal dialog.
+
+    Unified dialog used by both the download completion screen (app.py)
+    and the sync completion screen (sync/completion.py).
+    """
+    st.markdown("""
+        <style>
+            div.st-key-error_log_scroll_shared {
+                height: 55vh !important;
+                min-height: 55vh !important;
+                max-height: 55vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    with st.container(border=False, key="error_log_scroll_shared"):
+        found_any = False
+        for log_path in log_paths:
+            if log_path.exists():
+                try:
+                    content = log_path.read_text(encoding='utf-8').strip()
+                    if content:
+                        found_any = True
+                        st.markdown(f"**📁 {log_path.parent.name}**")
+                        st.code(content, language="text")
+                except Exception as e:
+                    st.warning(f"Could not read {log_path}: {e}")
+
+        if not found_any:
+            st.info("No error log files found on disk.")
+
+    if st.button("Close", type="primary", use_container_width=True):
+        st.rerun()

@@ -46,9 +46,9 @@ from sync.execution import run_sync as _run_sync_impl
 from sync.completion import (
     show_sync_cancelled as _show_sync_cancelled_impl,
     show_sync_complete as _show_sync_complete_impl,
-    view_error_log_dialog as _view_error_log_dialog_impl,
     show_sync_errors as _show_sync_errors_impl,
 )
+from ui_shared import error_log_dialog as _view_error_log_dialog_impl
 
 logger = logging.getLogger(__name__)
 
@@ -849,6 +849,12 @@ def _render_pending_folder_ui(courses, course_names, course_options):
 
 def render_sync_step4( main_placeholder=None):
     """Render the entire sync Step 4: analysis → review → sync → done."""
+    from styles import inject_css
+    from ui.sync_review import inject_dynamic_sync_review_css
+    
+    inject_css('sync_review.css')
+    inject_dynamic_sync_review_css()
+
     sync_pairs = st.session_state.get('sync_pairs', [])
     if not sync_pairs:
         st.error('No folders added yet. Click "Add Course folder" to get started.')
@@ -956,7 +962,7 @@ def _run_analysis(sync_pairs, main_placeholder=None):
 def _show_analysis_review():
     """Delegate to ui.sync_review."""
     from ui.sync_review import show_analysis_review
-    show_analysis_review()
+    show_analysis_review(_show_sync_confirmation)
 
 
 # ---- Confirmation dialog ----

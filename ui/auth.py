@@ -28,11 +28,12 @@ logger = logging.getLogger(__name__)
 
 
 def _get_config_path() -> str:
-    """Return the path to the persistent config JSON file."""
+    """Return the path to the persistent config JSON file (lazy import)."""
     from ui_helpers import get_config_dir
     return os.path.join(get_config_dir(), 'canvas_downloader_settings.json')
 
-
+# Evaluated once at first render (not at import-time of the module).
+# All reads/writes use CONFIG_FILE as a stable module-level constant.
 CONFIG_FILE = _get_config_path()
 KEYRING_SERVICE = "CanvasDownloader"
 
@@ -50,7 +51,7 @@ def render_sidebar(fetch_courses_fn):
     st.title('Canvas Downloader')
 
     # ── Auto-load token (only once per session) ─────────────────────────
-    if 'token_loaded' not in st.session_state:
+    if not st.session_state['token_loaded']:
         st.session_state['token_loaded'] = True
         if os.path.exists(CONFIG_FILE):
             try:

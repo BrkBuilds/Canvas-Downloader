@@ -66,6 +66,15 @@ DOWNLOAD_DEFAULTS = {
     # Card expansion state
     'card2_expanded': False,
     'card3_expanded': False,
+    'token_loaded': False,
+    'hub_view_mode': 'View All',
+    'hub_layer': 'layer_1',
+    'hub_editing_pair_idx': None,
+    'hub_is_adding_new_pair': False,
+    'hub_cs_selected_id': None,
+    'sync_dialog_selected_id': None,
+    'sync_filter_all_exts': True,
+    'preset_hub_tab': 'user',
 }
 
 SYNC_DEFAULTS = {
@@ -77,6 +86,15 @@ SYNC_DEFAULTS = {
     'sync_manager': None,
     'sync_mode': False,
     'sync_cancelled': False,
+    'sync_cancel_requested': False,
+    'hub_view_mode': 'View All',
+    'hub_layer': 'layer_1',
+    'hub_editing_pair_idx': None,
+    'hub_is_adding_new_pair': False,
+    'preset_hub_tab': 'user',
+    'hub_cs_selected_id': None,
+    'sync_dialog_selected_id': None,
+    'sync_filter_all_exts': True,
 }
 
 # Keys created transiently during download execution
