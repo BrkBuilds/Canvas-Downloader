@@ -922,8 +922,8 @@ def render_download_settings(fetch_courses_fn):
 
                 if c2_exp:
                     st.markdown(f"""{final_html}
-    <p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Save information, pages and other content from Canvas to your local Course folder.</p>
-    <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Save information, pages and other content from Canvas to your local Course folder.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                     st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
 
                     with st.container(key="secondary_cards_grid"):
@@ -1185,8 +1185,8 @@ def render_download_settings(fetch_courses_fn):
 
             if c3_exp:
                 st.markdown(f"""{conv_css_html}
-    <p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Automatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
-    <hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Automatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
                 st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
 
                 with st.container(key="conversion_cards_grid"):
