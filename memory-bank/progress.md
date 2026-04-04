@@ -1,6 +1,20 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Build Phase — Distribution Documentation** (2026-04-04):
+    - [x] **`MACOS_BUILD_GUIDE.md`**: Created comprehensive macOS build instructions covering venv setup, `pyinstaller --clean Canvas_Downloader_macOS.spec`, and free ad-hoc `codesign --force --deep -s -` signing for Apple Silicon compatibility.
+    - [x] **`README_INSTALL.md`**: Created professional end-user installation guide covering Windows SmartScreen bypass, macOS Gatekeeper right-click bypass, `xattr -cr` quarantine clearing for the "damaged app" false positive, and API token generation.
+    - [x] **`requirements.txt` fix**: Added missing `pywebview>=5.1` dependency (required by the unified `start.py` launcher but was absent from the manifest).
+    - [x] **Phase 1: PyInstaller Spec Parity**: Rewrote `Canvas_Downloader_macOS.spec` to synchronize with Windows, injecting 25+ `datas`, 16 `collect_all` packages, and bundling the macOS FFmpeg binary, rescuing the build from being dead-on-arrival.
+    - [x] **Phase 2: Unified Native Architecture**: Rewrote `start.py` to eradicate the legacy AppleScript lifecycle controller. Both OSes now deploy the exact same architecture: Streamlit in a daemon thread, and `pywebview` running the native window loop on the main thread (satisfying macOS Cocoa constraints).
+    - [x] **Phase 3: AppleScript Bridge & Pipeline Polish**: Extracted 66 lines of triplicated `osascript` logic from Excel, Word, and PDF converters into a single shared `engine/applescript_bridge.py`. Fixed critical exceptions (e.g. `except str`) and extraction string literal bugs.
+    - [x] **Phase 4: Auth & Sandbox Security**: Transitioned `import keyring` to lazy-loading across Windows branches to prevent macOS crashes. Defended the logout sequence against disk-tearing via an atomic `.tmp` swap pattern. Documented a future `pyobjc SecItemAdd` security upgrade.
+- [x] **Modular Architecture Audit Remediation** (2026-04-04):
+    - [x] **State Cleanup**: Replaced 25-line whitelist cleanup in `app.py` with 2-line `cleanup_download_state()` utilizing the safer blacklist pattern.
+    - [x] **Constant Consolidation**: Stripped 4 duplicate lists of `NOTEBOOK_SUB_KEYS` and `SECONDARY_CONTENT_KEYS`, routing `preset_manager.py`, `download_settings.py`, and `post_processing_bridge.py` to a single source of truth in `state_registry.py`.
+    - [x] **Dialog Topology**: Prevented `DuplicateWidgetID` crashes by centralizing `error_log_dialog` to `ui_shared.py` and sharing it across the main app and sync loops.
+    - [x] **CSS Disk Cache**: Engineered an in-memory `_CSS_CACHE` preventing redundant disk I/O during standard `st.markdown("<style>")` injections on reruns.
+    - [x] **Code & Dependency Hygiene**: Cleared out unreferenced helper functions (`resolve_path`, `get_base64_image`) originally stranded in `app.py` during the monolith teardown. Added lazy evaluation to `CONFIG_FILE` in `ui/auth.py`.
 - [x] **Phase 8.0: Sync UI Modularization & Context Fixes** (2026-04-04):
     - [x] **Streamlit Context Injection**: Elevated `safe_thread_wrapper` in `canvas_logic.py` and wrapped `sync/execution.py` network operations, completely protecting asynchronous UI states from cross-thread leakage.
     - [x] **Dynamic CSS Hoisting**: Extracted inline CSS blocks from `ui/sync_review.py` into a unified `inject_dynamic_sync_review_css()` helper placed at the very top of the `sync_ui.py` orchestrator, neutralizing DOM paint flashes.

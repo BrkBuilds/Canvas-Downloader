@@ -1,10 +1,44 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Architectural Simplification**: Surgically removed the legacy 3-Tier "Sync Mode & Settings" feature to enforce a strict "Manual Sync uses Default Sync" directive.
-- **Unified Sync Handoff**: Manual Sync and Quick Sync are now architecturally identical, both relying exclusively on the per-course SQLite `sync_contract` established in Step 2.
-- **UI Decoupled**: The sync review UI is now purely informational (selection-based), with all configuration logic hosted in the "Download Settings" interface.
-- **Clean State Management**: Eradicated all 3-tier transient session state keys (`ind_*`, `_sync_config_mode`), ensuring zero state pollution between sessions.
+- **macOS Parity & Stability**: Executed the remediation plan to eliminate discrepancies between Windows and macOS. Addressed critical build parity, unified native architecture, fixed AppleScript pipelines, and fortified sandboxing.
+- **Audit Remediation & Stabilization**: Systematically resolved all 17 findings (CRIT, MAJ, MIN) from the post-modularization architectural audit.
+- **State Cleanliness**: Enforced a blacklist approach for session state cleanup to prevent 'state amnesia' across the newly modularized architecture.
+- **Constant Consolidation**: Established `NOTEBOOK_SUB_KEYS` and `SECONDARY_CONTENT_KEYS` as single sources of truth in `core/state_registry.py`, eradicating 4 redundant definitions.
+- **Dialog Topology**: Unified duplicate `@st.dialog` decorators into `ui_shared.py` to definitively prevent `DuplicateWidgetID` Streamlit crashes.
+- **Target Validation**: Achieved 100% AST syntax validation across all modified UI and Engine files.
+
+## Recent Changes (Session 2026-04-04 — macOS Parity Remediation)
+- **Phase 1: PyInstaller Spec Parity**:
+    - Rewrote `Canvas_Downloader_macOS.spec` to synchronize `datas`, `collect_all`, and `hiddenimports` with the Windows version.
+    - Integrated macOS FFmpeg binary via `imageio_ffmpeg` for video post-processing.
+- **Phase 2: Native Architecture Unification**:
+    - Re-architected `start.py` to completely eliminate the legacy macOS AppleScript lifecycle loop.
+    - Both operating systems now run the identical sequence: daemonized background Streamlit Thread + main thread `pywebview.start()` for native Edge/Cocoa rendering.
+- **Phase 3: AppleScript Bridge Extraction**:
+    - Eliminated code duplication across `pdf_converter.py`, `word_converter.py`, and `excel_converter.py` by centralizing the `osascript` payload runner to `engine/applescript_bridge.py`.
+    - Patched structural Python bugs (`except str`) and AppleScript literal line breaks inside Excel data extraction (`\n`).
+- **Phase 4: Auth & Sandbox Security**:
+    - Converted `import keyring` to platform-dependent lazy loads deeply nested inside `ui/auth.py` functions to prevent Darwin `ImportError` / permission cascades.
+    - Stabilized user logout sequence via an atomic `.tmp` swap pattern against JSON configuration files.
+
+## Recent Changes (Session 2026-04-04 — Modular Architecture Audit Remediation)
+- **Phase 1: State Cleanup Architecture**:
+    - Centralized blacklist cleanup adopted in `app.py` via `cleanup_download_state()`.
+    - Initialized defensive `sync_cancel_requested` flag natively in `SYNC_DEFAULTS` to protect against missing `.get()` fallbacks.
+- **Phase 2: Constant Consolidation**:
+    - Replaced local list variables in `post_processing_bridge.py`, `ui/download_settings.py`, and `sync/analysis.py`.
+    - Rewired `PresetManager` class attributes to draw from the registry natively.
+- **Phase 3: CSS & DOM Stability**:
+    - Removed broken/redundant cancel button hover CSS blocks from `sync/execution.py` and consolidated missing selectors.
+    - Added `theme.py` constants uniformly mapping to `engine/progress_dashboard.py` terminal HTML output.
+    - Added `_CSS_CACHE` dictionary to `styles/__init__.py` to eliminate redundant disk I/O on every UI rerun.
+- **Phase 4: Dialog Topology (`DuplicateWidgetID` Fix)**:
+    - Centralized `error_log_dialog()` inside `ui_shared.py` using uniquely keyed containers.
+    - Stripped duplicate local dialog wrapper functions actively imported by `app.py`, `sync/completion.py`, and `sync_ui.py`.
+- **Phase 5: Dependency Hygiene**:
+    - Deferred `CONFIG_FILE` path evaluation in `ui/auth.py` to minimize import-time footprint.
+    - Purged dead code helper functions (`resolve_path`, `get_base64_image`, `_get_chevron_base64`) from `app.py`.
 
 ## Recent Changes (Session 2026-04-04 — Monolith Teardown Completion: Phases 0–7)
 - **Phase 0: CSS Extraction (`styles/`)**:

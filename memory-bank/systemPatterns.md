@@ -42,11 +42,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Windows PyInstaller Native Dialogue Parity**:
     - *Policy*: Avoid using `tkinter` in Streamlit applications when compiled via PyInstaller, as invoking it outside the main thread frequently causes application segfaults.
     - *Implementation*: `native_folder_picker()` on Windows uses a `subprocess.run` to spawn `powershell -Command` loading `System.Windows.Forms.FolderBrowserDialog`. This perfectly natively executes the Windows folder picker in a totally isolated OS process, ensuring the Streamlit background runner never hangs or crashes.
-- **AppleScript Lifecycle Controller Parity (macOS)**:
-    - *Policy*: Avoid terminal-bound infinite loops or unstable Tkinter root windows to manage the application lifecycle on macOS.
-    - *Implementation*: The `start.py` launcher uses a synchronous `osascript` dialog ("Open Browser", "Stop Server") executed via `subprocess.run()`. This acts as a native blocking controller for the `os.urandom` daemon thread, keeping the Streamlit server alive while allowing a graceful, user-friendly shutdown without zombie processes.
-- **AppleScript Defensive Execution**:
-    - *Pattern*: `osascript` subprocesses are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
+- **Unified Native WebView Lifecycle**:
+    - *Policy*: Avoid terminal-bound infinite loops, unstable Tkinter root windows, or fragmented legacy AppleScript `display dialog` controllers to manage the application lifecycle.
+    - *Implementation*: The `start.py` launcher unites Windows and macOS under `pywebview`. A daemonized `threading.Thread` hosts the Streamlit server and implicitly terminates when the parent thread dies. The main thread halts via `webview.start()`, satisfying macOS Cocoa constraints to run its native UI loop exclusively on the primary thread. Both OSes now have an identically encapsulated desktop-app experience.
+- **AppleScript Defensive Execution & Extraction**:
+    - *Pattern*: All `osascript` subprocess calls for Office automation are centralized into `engine/applescript_bridge.py` rather than triplicated across converters. They are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
     - *Path Formatting*: AppleScript blocks natively accept `POSIX file "/Users/..."` strings. Paths are escaped (`path.replace('"', '\\"')`) for injection defense-in-depth.
 - **Code-Signing Bundle Safety**:
     - *Policy*: Persistent settings files (`.json`) must never be written relative to `app.py` when compiled as a macOS `.app` bundle, as the `Contents/MacOS/` directory is code-signed and read-only.
@@ -57,7 +57,7 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 ## Security & State Patterns
 - **Hybrid OS-Native Credential Storage (`keyring` & Obfuscated JSON)**: 
     - *Policy*: Never store sensitive API tokens in plaintext files (JSON/YAML) unless operating system UX constraints demand an explicit fallback.
-    - *Implementation*: On Windows (`nt`), use Python's `keyring` module to securely delegate token storage to the Windows Credential Manager. On macOS (`Darwin`), `keyring` triggers repeated blocking "Keychain Access" UI modals for unsigned Python apps. Therefore, macOS explicitly pivots to Base64-encoded token storage alongside standard settings in JSON to guarantee a seamless, zero-prompt UX.
+    - *Implementation*: On Windows (`nt`), use Python's `keyring` module to securely delegate token storage to the Windows Credential Manager. `keyring` imports are aggressively lazy-loaded deeply within function bodies. On macOS (`Darwin`), `keyring` triggers repeated blocking "Keychain Access" UI modals for unsigned Python apps. Therefore, macOS explicitly pivots to Base64-encoded token storage alongside standard settings in JSON to guarantee a seamless, zero-prompt UX. *(TODO: Upgrade to native `pyobjc SecItemAdd` security once the Apple `.app` sequence is code-signed).*
 - **Defensive Exception Handling**:
     - *Policy*: Never use bare `except:` clauses.
     - *Implementation*: Always catch `Exception` explicitly (`except Exception as e:`) to prevent silently dropping vital OS-level interrupts like `KeyboardInterrupt` or `SystemExit`.
