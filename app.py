@@ -1,18 +1,13 @@
 import streamlit as st
 from canvas_logic import CanvasManager, DownloadError
-from preset_manager import PresetManager
 import asyncio
 import base64
 import collections
-import json
 import os
 import logging
-import platform
-import re
 import sys
 import time
 from datetime import datetime
-import keyring
 
 import theme
 from version import __version__
@@ -20,11 +15,10 @@ from version import __version__
 logger = logging.getLogger(__name__)
 from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
-from ui_helpers import esc, friendly_course_name, parse_cbs_metadata, render_download_wizard
+from ui_helpers import esc, render_download_wizard
 from ui_shared import (
     render_completion_card, render_folder_cards,
-    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
-    render_config_summary_badges
+    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS
 )
 from styles import inject_css
 from core.state_registry import (
@@ -175,12 +169,6 @@ _main_content = st.empty()
 with _main_content.container():
 
     # Preset Dialogs (delegated to ui.presets)
-    from ui.presets import _save_config_dialog, _presets_hub_dialog
-
-
-    # ===================================================================
-    # Preset Dialogs (delegated to ui.presets)
-    # ===================================================================
     from ui.presets import _save_config_dialog, _presets_hub_dialog
 
     # STEP 1: Different UI based on mode
