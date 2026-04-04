@@ -25,6 +25,7 @@ from ui_helpers import (
 from ui_shared import (
     render_completion_card, render_folder_cards,
     render_pp_warning,
+    error_log_dialog,
 )
 from core.state_registry import cleanup_sync_state
 
@@ -215,39 +216,7 @@ def show_sync_complete():
         st.rerun()
 
 
-@st.dialog("📄 Error Log", width="large")
-def view_error_log_dialog(log_paths):
-    """Display the contents of download_errors.txt files in a modal dialog."""
-    st.markdown("""
-        <style>
-            div.st-key-error_log_scroll {
-                height: 55vh !important;
-                min-height: 55vh !important;
-                max-height: 55vh !important;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    with st.container(border=False, key="error_log_scroll"):
-        found_any = False
-        for log_path in log_paths:
-            if log_path.exists():
-                try:
-                    content = log_path.read_text(encoding='utf-8').strip()
-                    if content:
-                        found_any = True
-                        st.markdown(f"**📁 {log_path.parent.name}**")
-                        st.code(content, language="text")
-                except Exception as e:
-                    st.warning(f"Could not read {log_path}: {e}")
-        
-        if not found_any:
-            st.info("No error log files found on disk.")
-    
-    if st.button("Close", type="primary", use_container_width=True):
-        st.rerun()
+
 
 
 def show_sync_errors():
@@ -282,7 +251,7 @@ def show_sync_errors():
             col_log, _ = st.columns([0.3, 0.7])
             with col_log:
                 if st.button("📄 View Full Error Log", key="sync_view_error_log", use_container_width=True):
-                    view_error_log_dialog(error_log_paths)
+                    error_log_dialog(error_log_paths)
 
 
 def _cleanup_sync_state():

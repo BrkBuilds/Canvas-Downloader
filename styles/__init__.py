@@ -13,10 +13,14 @@ import streamlit as st
 from pathlib import Path
 
 _STYLES_DIR = Path(__file__).parent
+_CSS_CACHE: dict[str, str] = {}
 
 
 def inject_css(filename: str) -> None:
     """Read a .css file from the styles/ directory and inject via st.markdown.
+
+    Uses a module-level cache to avoid re-reading files from disk on
+    every Streamlit rerun.
 
     Args:
         filename: Name of the CSS file (e.g., 'global.css').
@@ -24,8 +28,9 @@ def inject_css(filename: str) -> None:
     Raises:
         FileNotFoundError: If the CSS file does not exist.
     """
-    css_path = _STYLES_DIR / filename
-    if not css_path.exists():
-        raise FileNotFoundError(f"CSS file not found: {css_path}")
-    css_content = css_path.read_text(encoding='utf-8')
-    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+    if filename not in _CSS_CACHE:
+        css_path = _STYLES_DIR / filename
+        if not css_path.exists():
+            raise FileNotFoundError(f"CSS file not found: {css_path}")
+        _CSS_CACHE[filename] = css_path.read_text(encoding='utf-8')
+    st.markdown(f"<style>{_CSS_CACHE[filename]}</style>", unsafe_allow_html=True)

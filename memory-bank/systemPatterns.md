@@ -92,7 +92,7 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Implementation*: Offload all heavy synchronous database and filesystem I/O into native background threads using `await asyncio.to_thread(func, *args)`.
 - **Streamlit Async Context Safety (`safe_thread_wrapper`)**:
     - *Problem*: Asynchronous `asyncio.to_thread` calls lose the Streamlit `ScriptRunContext`, causing `StreamlitAPIException` when background threads attempt to access `st.session_state` or UI placeholders.
-    - *Implementation*: Implement a `safe_thread_wrapper` using `streamlit.runtime.scriptrunner.add_script_run_ctx`. Capture the context in the main async thread via `get_script_run_ctx()` and inject it into the worker thread before dispatching. Ensure Streamlit-specific imports remain deferred inside the function for framework independence in `canvas_logic.py`.
+    - *Implementation*: Implement a module-level `safe_thread_wrapper` using `streamlit.runtime.scriptrunner.add_script_run_ctx`. Capture the context in the main async thread via `get_script_run_ctx()` and universally inject it into all worker threads (Canvas API fetchers, file downloaders, sync engines) before dispatching to maintain identical state propagation.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
@@ -149,6 +149,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Callback & CSS Hoisting Pattern**:
     - *Problem*: Defining `@st.fragment` callback functions or `<style>` blocks inside `st.columns` or `st.container` blocks can cause Streamlit to unmount and re-re-render those elements when the parent container's state changes. This leads to "flapping" UI or lost widget focus.
     - *Solution*: Always hoist fragments, callbacks, and CSS definitions to the absolute top of the parent render function, *before* any layout containers (`columns`, `tabs`, `expanders`) are instantiated. This ensures the logic and styling remain stable regardless of the layout's internal branch mutations.
+- **Dependency Injection Over Lazy Importing Pattern**:
+    - *Problem*: Streamlit UIs split across multiple files often create circular dependencies (e.g. `app.py` imports `ui/sync_review.py` which needs `app.py`'s confirmation function). Using `import` inside the function execution block (lazy imports) is technically valid but creates highly brittle architecture, hides performance costs, and obscures testing.
+    - *Solution*: Eradicate lazy imports using dependency injection. The higher-level orchestrator (e.g. `sync_ui.py`) imports the lower-level UI module (`show_analysis_review`) and passes its own callback functions (e.g., `on_confirm_sync=my_local_dialog_function`) directly as structural parameters. This enforces a strict top-down dependency tree.
 - **Dialog Function Global Hoisting (`@st.dialog`)**:
     - *Problem*: If a dialog function is defined structurally inside an `if st.session_state['step'] == 1:` block, it effectively ceases to exist in the global Python namespace when the UI advances to `elif step == 2:`, crashing the application when a Step 2 button attempts to invoke the modal.
     - *Solution*: Dialog definitions (`def _my_dialog():`) decorated with `@st.dialog` must be hoisted to the absolute top of the parent container wrapper (before any step-routing logical branches). This ensures they are compiled and accessible universally regardless of the user's current progression in the wizard.

@@ -1,6 +1,10 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 8.0: Sync UI Modularization & Context Fixes** (2026-04-04):
+    - [x] **Streamlit Context Injection**: Elevated `safe_thread_wrapper` in `canvas_logic.py` and wrapped `sync/execution.py` network operations, completely protecting asynchronous UI states from cross-thread leakage.
+    - [x] **Dynamic CSS Hoisting**: Extracted inline CSS blocks from `ui/sync_review.py` into a unified `inject_dynamic_sync_review_css()` helper placed at the very top of the `sync_ui.py` orchestrator, neutralizing DOM paint flashes.
+    - [x] **Dependency Injection**: Stripped cyclical module-level and function-level `sync_ui.py` lazy imports from `ui/sync_review.py` by converting dialog confirmations into pure callback delegates.
 - [x] **Phase 7.0: App.py Orchestrator Refactor & Convergence** (2026-04-04):
     - [x] **Thin Orchestrator**: Extracted the sidebar global logic (Auth, Debug, Target Selection) into `ui/auth.py`. Deflated `app.py` from 3,400+ lines down to ~1,200 lines.
     - [x] **Dependency Injection**: Solved circular import deadlocks between `app.py` and `ui/` layer by utilizing a parameterized handoff of cached `fetch_courses_fn`.
@@ -386,6 +390,7 @@
 - Application UI is professional, high-performance, and feature-complete, with robust sync analysis and real-time download dashboards.
 - Sync engine handles all file types including synthetic shortcuts, with high-fidelity UI tracking.
 - Post-processing pipeline now has complete observability via dual logging to `debug_log.txt` and `download_errors.txt`.
+- Core files (`app.py`, `sync_ui.py`) have been efficiently modularized into `ui/` and `sync/` directories with top-level dependency injection.
 
 ## Pending Tasks
 - [ ] **STRETCH**: Establish an automated test suite (unit + integration tests) to prevent silent regressions.

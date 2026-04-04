@@ -319,9 +319,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             return
 
         # --- Tab Buttons (View All / Groups / Pairs) ---
-        if 'hub_view_mode' not in st.session_state:
-            st.session_state.hub_view_mode = "View All"
-        _vm = st.session_state.hub_view_mode
+        _vm = st.session_state.get('hub_view_mode', 'View All')
         # Callback to update state BEFORE rendering
         def set_view_mode(mode):
             st.session_state.hub_view_mode = mode
@@ -330,17 +328,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             t1, t2, t3 = st.columns(3)
             with t1:
                 st.button("View All", 
-                          type="primary" if st.session_state.hub_view_mode == "View All" else "secondary", 
+                          type="primary" if _vm == "View All" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("View All",))
             with t2:
                 st.button("Groups", 
-                          type="primary" if st.session_state.hub_view_mode == "Groups" else "secondary", 
+                          type="primary" if _vm == "Groups" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("Groups",))
             with t3:
                 st.button("Pairs", 
-                          type="primary" if st.session_state.hub_view_mode == "Pairs" else "secondary", 
+                          type="primary" if _vm == "Pairs" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("Pairs",))
 

@@ -111,7 +111,8 @@ def run_sync():
     .st-key-cancel_download_btn button:hover,
     .st-key-cancel_pp_download button:hover,
     .st-key-cancel_sync_btn button:hover,
-    .st-key-cancel_pp_btn button:hover {{
+    .st-key-cancel_pp_btn button:hover,
+    .st-key-cancel_pp_btn_sync_phase3 button:hover {{
         border-color: {theme.ERROR} !important;
         background-color: {theme.ERROR_BG} !important;
         color: {theme.ERROR} !important;
@@ -156,6 +157,10 @@ def run_sync():
         return build_terminal_html(lines)
 
     async def download_sync_files_batch(sync_api_token, sync_api_url):
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        from canvas_logic import safe_thread_wrapper
+        current_ctx = get_script_run_ctx()
+        
         cm = CanvasManager(sync_api_token, sync_api_url)
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
         
@@ -234,7 +239,7 @@ def run_sync():
                     terminal_log.append(f"<span style='color:{theme.TEXT_SECONDARY}'>[ℹ️] Establishing secure connection to {esc(course_name)}...</span>")
                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                     try:
-                        course = await asyncio.to_thread(cm.get_course, pair['course_id'])
+                        course = await asyncio.to_thread(safe_thread_wrapper, cm.get_course, current_ctx, pair['course_id'])
                         res_data['course'] = course
                     except Exception as e:
                         err_str = f"Connection failure to {esc(course_name)}: {str(e)}"
@@ -372,13 +377,16 @@ def run_sync():
                                 _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
 
                                 try:
-                                    sec_filepath, sec_id, sec_attachments, canvas_updated = cm.download_secondary_entity(
-                                        course=res_data['course'],
-                                        canvas_file_info=file,
-                                        base_path=Path(local_path),
-                                        sync_manager=sync_mgr,
-                                        secondary_content_settings=_sec_settings,
-                                        course_name=course_name,
+                                    sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
+                                        safe_thread_wrapper,
+                                        cm.download_secondary_entity,
+                                        current_ctx,
+                                        res_data['course'],
+                                        file,
+                                        Path(local_path),
+                                        sync_mgr,
+                                        _sec_settings,
+                                        None, None, Path(local_path), course_name
                                     )
                                 except Exception as _sec_err:
                                     # Let the error bubble up to the outer retry loop
@@ -500,7 +508,7 @@ def run_sync():
                                 from sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
                                 if secondary_id_type(real_id) == 'attachment':
                                     real_id = abs(real_id) - SECONDARY_ID_OFFSETS['attachment']
-                            fresh_file = course.get_file(real_id)
+                            fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, current_ctx, real_id)
                             fresh_url = getattr(fresh_file, 'url', '')
                             if fresh_url:
                                 download_url = fresh_url
@@ -810,21 +818,7 @@ def run_sync():
     cancel_placeholder.empty()
     active_file_placeholder.empty()
 
-    # 2. Inject cancel button hover CSS
-    st.markdown("""
-    <style>
-    .st-key-cancel_download_btn button:hover,
-    .st-key-cancel_pp_download button:hover,
-    .st-key-cancel_sync_btn button:hover,
-    .st-key-cancel_pp_btn button:hover,
-    .st-key-cancel_pp_btn_sync_phase3 button:hover {
-        border-color: {theme.ERROR} !important;
-        background-color: {theme.ERROR_BG} !important;
-        color: {theme.ERROR} !important;
-        transition: all 0.2s ease-in-out;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Cancel button hover CSS already injected at top of run_sync() — no duplicate needed.
 
     st.session_state['is_post_processing'] = True
 

@@ -228,7 +228,7 @@ def build_terminal_html(lines) -> str:
     """Return the terminal-log HTML as a string (for sync_ui.py)."""
     joined = "<br>".join(reversed(list(lines))) if lines else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     return f"""
-    <div style="background: #0e1117; border: 1px solid #222; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: #bbb; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+    <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {joined}
     </div>
     """

@@ -554,8 +554,8 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     # We implement "Single Select" by using a session state key that acts as the single source of truth
     # key: "sync_dialog_selected_id"
     
-    # Initialize if not set
-    if "sync_dialog_selected_id" not in st.session_state:
+    # Initialize if not set natively, or if it is None
+    if st.session_state["sync_dialog_selected_id"] is None:
         st.session_state["sync_dialog_selected_id"] = current_selected_id
 
     # We need to be able to Unselect? Or just switch? 
