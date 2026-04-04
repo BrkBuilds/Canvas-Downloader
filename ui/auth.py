@@ -17,7 +17,6 @@ import logging
 import os
 import platform
 
-import keyring
 import streamlit as st
 
 import theme
@@ -77,6 +76,7 @@ def render_sidebar(fetch_courses_fn):
                     else:
                         # Windows: Load token from OS keyring (secure)
                         try:
+                            import keyring
                             keyring_user = st.session_state['api_url'] or 'default'
                             loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
                         except Exception:
@@ -87,6 +87,7 @@ def render_sidebar(fetch_courses_fn):
                             loaded_token = config['api_token']
                             # Migrate to keyring and strip from JSON
                             try:
+                                import keyring
                                 keyring_user = st.session_state['api_url'] or 'default'
                                 keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
                                 config.pop('api_token', None)
@@ -168,6 +169,9 @@ def _render_login_form():
 
             # Save token — macOS vs Windows
             if platform.system() == 'Darwin':
+                # TODO: Implement pyobjc SecItemAdd for native Keychain access
+                # once the .app bundle is code-signed. Base64 is obfuscation,
+                # not encryption — acceptable only until signing is in place.
                 try:
                     encoded = base64.b64encode(st.session_state['api_token'].encode('utf-8')).decode('utf-8')
                     config_data['mac_api_token'] = encoded
@@ -175,6 +179,7 @@ def _render_login_form():
                     st.warning(f"Could not obfuscate token: {e}")
             else:
                 try:
+                    import keyring
                     keyring_user = st.session_state['api_url'] or 'default'
                     keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
                 except Exception as e:
@@ -356,6 +361,7 @@ def _render_authenticated_nav(fetch_courses_fn):
         # Wipe token from OS keyring
         if platform.system() != 'Darwin':
             try:
+                import keyring
                 keyring_user = st.session_state.get('api_url', '') or 'default'
                 keyring.delete_password(KEYRING_SERVICE, keyring_user)
             except Exception:
@@ -373,8 +379,11 @@ def _render_authenticated_nav(fetch_courses_fn):
                     config_data = json.load(f)
                 config_data.pop('api_token', None)
                 config_data.pop('mac_api_token', None)
-                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                # Atomic .tmp swap pattern — prevents disk-tearing on logout
+                tmp_path = CONFIG_FILE + '.tmp'
+                with open(tmp_path, 'w', encoding='utf-8') as f:
                     json.dump(config_data, f)
+                os.replace(tmp_path, CONFIG_FILE)
             except Exception as e:
                 logger.warning(f"Could not update config on logout: {e}")
         st.rerun()

@@ -82,25 +82,9 @@ class WordToPDF:
     # ── AppleScript bridge (macOS) ─────────────────────────────────
     @staticmethod
     def _convert_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
-        """Run an AppleScript via osascript to convert a file to PDF."""
-        try:
-            result = subprocess.run(
-                ['osascript', '-e', script],
-                capture_output=True, text=True, timeout=120
-            )
-            if result.returncode != 0:
-                logger.error(f"[AppleScript] {app_name} failed: {result.stderr.strip()}")
-                return False
-            return dst.exists()
-        except FileNotFoundError:
-            logger.error("[AppleScript] osascript not found (not on macOS?)")
-            return False
-        except subprocess.TimeoutExpired:
-            logger.error(f"[AppleScript] {app_name} conversion timed out after 120s")
-            return False
-        except Exception as e:
-            logger.error(f"[AppleScript] {app_name} error: {e}")
-            return False
+        """Delegate to the shared AppleScript bridge (engine/applescript_bridge.py)."""
+        from engine.applescript_bridge import run_applescript
+        return run_applescript(src, dst, app_name, script)
 
     def _convert_applescript_word(self, src: Path, dst: Path) -> bool:
         """Convert a Word document to PDF via AppleScript on macOS."""

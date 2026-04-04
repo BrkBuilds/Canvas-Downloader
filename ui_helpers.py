@@ -78,6 +78,12 @@ def office_safe_path(original_path: Path):
     resolved = original_path.resolve()
     original_pdf = original_path.with_suffix('.pdf')
 
+    # macOS/Linux: MAX_PATH is not a concern — always pass-through.
+    # This context manager exists exclusively for Win32 COM API limitations.
+    if platform.system() != 'Windows':
+        yield original_path, original_pdf, original_pdf
+        return
+
     if len(str(resolved)) < _MAX_PATH_THRESHOLD:
         # Short path — pass-through, zero overhead
         yield original_path, original_pdf, original_pdf
