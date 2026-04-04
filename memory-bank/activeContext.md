@@ -6,6 +6,35 @@
 - **UI Decoupled**: The sync review UI is now purely informational (selection-based), with all configuration logic hosted in the "Download Settings" interface.
 - **Clean State Management**: Eradicated all 3-tier transient session state keys (`ind_*`, `_sync_config_mode`), ensuring zero state pollution between sessions.
 
+## Recent Changes (Session 2026-04-04 — Monolith Teardown Completion: Phases 0–7)
+- **Phase 0: CSS Extraction (`styles/`)**:
+    - Decoupled ~1,800 lines of inline CSS from both `app.py` and `sync_ui.py` into dedicated `.css` files.
+    - Implemented `inject_css` and `inject_css_template` strategies.
+- **Phase 1: Core Systems (`core/`)**:
+    - Centralized all single-source-of-truth session variables in `core/state_registry.py`.
+    - Consolidated global cancellation boolean trackers and polling logic into `core/cancellation.py`.
+- **Phase 2 & 3: Engine Abstractions (`engine/`)**:
+    - Extracted identical terminal log and visual dashboard UI into `engine/progress_dashboard.py`.
+    - Unified the heavy post-processing initialization blocks across Sync/Download into `engine/post_processing_bridge.py`.
+    - Maintained async integrity by strictly separating `update_ui` patterns between the distinct aiohttp vs canvasapi event loops (`Option B Enforced`).
+- **Phase 4: Sync Engine Extrication (`sync/`)**:
+    - Disentangled background execution logic from `sync_ui.py`.
+    - Migrated atomic persistence loops (`os.replace` + `threading.Lock`) to `sync/persistence.py`.
+    - Shifted sync diffing and async downloading logic to `sync/analysis.py` and `sync/execution.py`.
+- **Phase 5: Sync UI Components (`sync_ui.py` -> `ui/`)**:
+    - Migrated all sync configurations into `ui/sync_dialogs.py` and `ui/hub_dialog.py`.
+    - Extracted the analysis review and pre-flight confirmation UI into `ui/sync_review.py` and `ui/sync_confirmation.py`.
+    - Successfully completed the 77% line reduction of `sync_ui.py`.
+- **Phase 6: Download UI Component Extraction (`app.py` -> `ui/`)**:
+    - **Presets**: Migrated the entire preset engine, hub, and UI controls into `ui/presets.py`.
+    - **Step 1 UI**: Extracted the course selector list, CBS metadata filters, and check logic into `ui/course_selector.py`.
+    - **Step 2 UI**: Moved the massive 1,400-line download settings page (Card 1 Core, Card 2 Canvas Native, Card 3 AI Conversions, Output Path) into `ui/download_settings.py`.
+- **Phase 7: Auth & App.py Orchestrator Refactor (`app.py` -> `ui/auth.py`)**:
+    - Extracted the globally-persistent sidebar logic (Auth, Debug Mode, Concurrent Downloads, Nav) into `ui/auth.py`.
+    - Reduced `app.py` line count by 64% (from 3,464 to 1,241 lines), finalizing its transition into a thin orchestrator routing to shared UI and Engine modules.
+- **Architectural Circular Import Defenses**:
+    - Enforced a parameterized "Delegation Pattern" (e.g. `render_download_settings(fetch_courses_fn)`) to strictly prevent circular imports between the central `app.py` orchestrator and its extracted `ui/` components.
+
 ## Recent Changes (Session 2026-04-04 — Final Modularization Audit & Cleanup)
 - **Resolved Static Analysis Issues (`canvas_logic.py`)**:
     - Fixed `NameError` crash in `download_isolated_batch_async` by hoisting the `debug_file` assignment above the `try` block initializing `SyncManager`.

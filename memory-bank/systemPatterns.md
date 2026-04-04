@@ -4,8 +4,13 @@
 Modular design centered around Streamlit for UI and CanvasAPI for backend communication.
 
 ### File Structure
-- **`app.py`**: Main entry point, UI controller.
-- **`sync_ui.py`**: All sync-related UI logic.
+- **`app.py`**: Thin orchestrator and entry point for Download flow.
+- **`sync_ui.py`**: Thin orchestrator for Sync flow.
+- **`core/`**: Shared state (`state_registry.py`) and control flow (`cancellation.py`).
+- **`engine/`**: Reusable systems (`progress_dashboard.py`, `post_processing_bridge.py`).
+- **`sync/`**: Backend sync engine (`persistence.py`, `analysis.py`, `execution.py`, `completion.py`).
+- **`ui/`**: Extracted Streamlit UI components for auth, presets, course selection, and dialogs.
+- **`styles/`**: Static CSS extraction.
 - **`ui_helpers.py`**: Shared UI utilities (disk check, path utils).
 - **`canvas_logic.py`**: Canvas API interactions.
 - **`sync_manager.py`**: Sync backend (SQLite manifest, MD5 hashing, analysis engine).

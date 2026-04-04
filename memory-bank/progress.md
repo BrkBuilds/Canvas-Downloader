@@ -1,6 +1,21 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Phase 7.0: App.py Orchestrator Refactor & Convergence** (2026-04-04):
+    - [x] **Thin Orchestrator**: Extracted the sidebar global logic (Auth, Debug, Target Selection) into `ui/auth.py`. Deflated `app.py` from 3,400+ lines down to ~1,200 lines.
+    - [x] **Dependency Injection**: Solved circular import deadlocks between `app.py` and `ui/` layer by utilizing a parameterized handoff of cached `fetch_courses_fn`.
+- [x] **Phase 6.24: Download Settings Teardown & UI Extraction** (2026-04-03):
+    - [x] **Preset Engine Isolation**: Extracted `_build_preset_summary`, dynamic hub rendering, and save logic directly into `ui/presets.py`.
+    - [x] **Step 1 Modulation**: Extracted Step 1 Course Checkboxes and Select All toggles to `ui/course_selector.py`.
+    - [x] **Step 2 Abstraction**: Extracted the full 1,400-line Step 2 configuration view into `ui/download_settings.py`.
+- [x] **Phase 5.0: Sync UI Components Extraction** (2026-04-03):
+    - [x] **Extracted logic**: `ui/hub_dialog.py`, `ui/sync_dialogs.py`, `ui/sync_review.py`, `ui/sync_confirmation.py` extracted from `sync_ui.py`.
+- [x] **Phase 4.0: Sync Business Logic Extraction** (2026-04-03):
+    - [x] **Extracted logic**: `sync/persistence.py`, `sync/analysis.py`, `sync/execution.py`, `sync/completion.py`.
+- [x] **Phases 2.0 & 3.0: Shared Engine Abstractions** (2026-04-03):
+    - [x] **Extracted logic**: `engine/progress_dashboard.py` and `engine/post_processing_bridge.py`.
+- [x] **Phases 0 & 1: Core System & Styles Extrication** (2026-04-03):
+    - [x] **Extracted logic**: `styles/` (~1,800 lines of CSS), `core/state_registry.py`, `core/cancellation.py`.
 - [x] **Phase 6.23: Surgical Removal of 3-Tier Sync UI Architecture** (2026-04-03)
 - [x] **Phase 6.22: Step 2 UI Refinements & Unified Dropdown** (2026-04-02):
     - [x] **Dropdown Relocation**: Relocated the "Unified Course Dropdown" from the Step 2 header to a full-width summary block between the Output Path and Action Buttons.
