@@ -120,13 +120,13 @@ def _render_login_form():
     st.subheader('Authentication')
 
     with st.form("auth_form", clear_on_submit=False):
-        url_input = st.text_input(
+        st.text_input(
             'Enter Canvas URL',
             key="url_input",
             placeholder="https://your-school.instructure.com"
         )
 
-        token_input = st.text_input(
+        st.text_input(
             'Enter Canvas API Token',
             type="password",
             key="token_input"

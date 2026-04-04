@@ -21,26 +21,13 @@ from pathlib import Path
 import streamlit as st
 
 import theme
-from preset_manager import PresetManager
 from ui_helpers import (
     esc,
-    friendly_course_name,
     render_download_wizard,
     native_folder_picker,
-    short_path,
-    check_disk_space,
+    get_base64_image,
 )
-from ui_shared import (
-    render_completion_card,
-    render_folder_cards,
-    render_error_section,
-    render_pp_warning,
-    SECONDARY_ENTITY_ICONS,
-    render_config_summary_badges,
-)
-from styles import inject_css
 from core.state_registry import (
-    NOTEBOOK_SUB_KEYS,
     SECONDARY_CONTENT_KEYS,
     TOTAL_SECONDARY_SUBS,
 )
@@ -122,12 +109,6 @@ def render_download_settings(fetch_courses_fn):
     b64_icon_study = _load_b64("assets/icon_study_files.png")
     active_include = st.session_state.get('file_filter', 'all')
     active_include_key = "all" if active_include == 'all' else "study"
-    try:
-        import theme
-        bg_color_active = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(0, 123, 255, 0.1)"
-    except Exception:
-        bg_color_active = "rgba(0, 123, 255, 0.1)"
-
     st.markdown(f'''
     <style>
     /* GLOBAL CHECKBOX PSEUDO-ELEMENT BASE */
@@ -317,10 +298,6 @@ def render_download_settings(fetch_courses_fn):
 
             is_sub = st.session_state.get('dl_isolate_secondary', False)
             active_key = "subfolders" if is_sub else "inline"
-
-            # Use current theme colors
-            bg_active = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(104, 212, 163, 0.15)"
-            border_active = "#68d4a3"
 
             return f"""
             <style>
@@ -566,10 +543,8 @@ def render_download_settings(fetch_courses_fn):
 
                 try:
                     border_color = theme.PRIMARY_BLUE if hasattr(theme, 'PRIMARY_BLUE') else theme.ACCENT_LINK
-                    bg_color = theme.BG_CARD_HOVER if hasattr(theme, 'BG_CARD_HOVER') else "rgba(0, 123, 255, 0.1)"
                 except Exception:
                     border_color = "#007bff"
-                    bg_color = "rgba(0, 123, 255, 0.1)"
 
                 st.markdown(f'''
                 <style>
@@ -878,7 +853,6 @@ def render_download_settings(fetch_courses_fn):
                 m_ledge_border = "#68d4a3" if m_active else m_border
                 b64_m = safe_b64('icon_select_all.png')
                 m_img_rule = f"background-image: url('data:image/png;base64,{b64_m}') !important;" if b64_m else ""
-                m_icon_filter = "grayscale(0%) opacity(100%)" if m_active else "grayscale(25%) opacity(50%)"
 
                 css_blocks.append(f'''
                 div.st-key-btn_dl_secondary_master button {{
@@ -900,7 +874,7 @@ def render_download_settings(fetch_courses_fn):
                     ''')
 
                 if m_active:
-                    css_blocks.append(f'''
+                    css_blocks.append('''
                     /* Master button checkbox intentionally hidden by global rule. Left empty here for compatibility. */
                     ''')
 
@@ -1067,18 +1041,17 @@ def render_download_settings(fetch_courses_fn):
             m_ledge_border = "#f97316" if m_active else m_border
             b64_conv_m = safe_b64('icon_conv_select_all.png')
             m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
-            m_conv_icon_filter = "none" if m_active else "grayscale(100%) opacity(40%)"
 
             conv_css_blocks.append(
     f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 1px solid {m_ledge_border} !important; box-shadow: inset 0 -3px 0 0 {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
             )
             if not m_active:
                 conv_css_blocks.append(
-    f'div.st-key-btn_convert_master button:hover {{ border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }}\n'
+    'div.st-key-btn_convert_master button:hover { border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }\n'
                 )
             if m_active:
                 conv_css_blocks.append(
-    f'/* Master button checkbox intentionally hidden by global rule. */\n'
+    '/* Master button checkbox intentionally hidden by global rule. */\n'
                 )
 
             # Child button CSS (per-toggle)
@@ -1086,7 +1059,6 @@ def render_download_settings(fetch_courses_fn):
                 is_conv_active = st.session_state.get(conv_key, False)
                 c_bg = "rgba(249, 115, 22, 0.15)" if is_conv_active else "rgba(255, 255, 255, 0.02)"
                 c_border = "#f97316" if is_conv_active else "rgba(255, 255, 255, 0.1)"
-                c_icon_filter = "none" if is_conv_active else "grayscale(100%) opacity(40%)"
                 b64_conv_c = safe_b64(conv_icon)
                 c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
 
@@ -1307,7 +1279,6 @@ def render_download_settings(fetch_courses_fn):
             except Exception:
                 _dl_courses = []
         _dl_count = len(_dl_courses)
-        _dl_plural = "s" if _dl_count != 1 else ""
 
         _dl_list_html = "".join([
             f"<li class='course-item'><span class='num'>{i}.</span> <span class='name'>{esc(c.get('name', 'Unknown Course') if isinstance(c, dict) else getattr(c, 'name', 'Unknown Course'))}</span></li>"

@@ -15,59 +15,24 @@ Comprehensive overhaul with:
 """
 
 import base64
-import json
-import os
-import platform
-import shutil
-import time
-import asyncio
 import logging
-import traceback
 from pathlib import Path
-from datetime import datetime
-from urllib.parse import unquote_plus
-import urllib.parse
-from contextlib import asynccontextmanager
 
-logger = logging.getLogger(__name__)
-
-# --- Concurrency Mutexes ---
-
-from typing import Dict, List
 import streamlit as st
-import aiohttp
 from collections import defaultdict
-import sqlite3
-import aiofiles
 
 import theme
 
-
-from canvas_logic import CanvasManager
-from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon, format_file_size, SyncFileInfo
+from sync_manager import SyncManager, SavedGroupsManager
 from ui_helpers import (
-    esc,
-    load_sync_pairs,
-    atomic_update_sync_pairs,
-    check_disk_space,
     open_folder,
-    render_progress_bar,
     render_sync_wizard,
     friendly_course_name,
     short_path,
-    robust_filename_normalize,
-    parse_cbs_metadata,
-    make_long_path,
 )
 
-from ui_shared import (
-    render_completion_card, render_folder_cards,
-    render_error_section, render_pp_warning,
-)
-from styles import inject_css
 from core.state_registry import ensure_sync_state, cleanup_sync_state
-from core.cancellation import cancel_sync, is_sync_cancelled
-from engine.progress_dashboard import build_metrics_html, build_terminal_html
+from core.cancellation import cancel_sync
 from sync.persistence import (
     load_persistent_pairs as _load_persistent_pairs_impl,
     add_pair as _add_pair_impl,

@@ -13,15 +13,11 @@ from __future__ import annotations
 
 import json
 import urllib.parse
-from pathlib import Path
-
 import streamlit as st
 
 import theme
 from sync_manager import SyncManager, get_file_icon
 from ui_helpers import (
-    esc,
-    render_sync_wizard,
     friendly_course_name,
     format_file_size,
 )
