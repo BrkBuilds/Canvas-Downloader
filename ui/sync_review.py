@@ -11,7 +11,6 @@ Contains:
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 from urllib.parse import unquote_plus
@@ -19,17 +18,14 @@ from urllib.parse import unquote_plus
 import streamlit as st
 
 import theme
-from sync_manager import SyncManager, SavedGroupsManager, SyncFileInfo, get_file_icon
+from sync_manager import get_file_icon
 from ui_helpers import (
-    esc,
     render_sync_wizard,
     friendly_course_name,
     format_file_size,
-    make_long_path,
     short_path,
     check_disk_space,
 )
-from styles import inject_css
 from core.state_registry import cleanup_sync_state
 
 
@@ -375,7 +371,6 @@ def show_analysis_review():
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
         # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
-        TOTAL_NOTEBOOK_SUBS = 8
 
 
 
@@ -614,8 +609,6 @@ def show_analysis_review():
 
             display_name = friendly_course_name(pair['course_name'])
             folder_display = short_path(pair['local_folder'])
-
-            has_changes = result.new_files or result.updated_files or result.missing_files or result.deleted_on_canvas or result.locally_deleted_files
             
             # Build up-to-date status
             # Strictly use uptodate_files only — do NOT add untracked_shortcuts

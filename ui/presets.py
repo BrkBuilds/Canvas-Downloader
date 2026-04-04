@@ -291,8 +291,6 @@ def render_preset_buttons(get_base64_image_fn):
     if 'pending_toast' in st.session_state:
         st.toast(st.session_state.pop('pending_toast'))
 
-    b64_save = get_base64_image_fn("assets/icon_save.png")
-    b64_load = get_base64_image_fn("assets/icon_load.png")
 
     col_save, col_load, _ = st.columns([1, 1, 7])
 

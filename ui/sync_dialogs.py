@@ -15,7 +15,6 @@ Contains:
 
 from __future__ import annotations
 
-import json as _json
 import os
 import urllib.parse
 from collections import defaultdict
@@ -25,15 +24,12 @@ from pathlib import Path
 import streamlit as st
 
 import theme
-from sync_manager import SyncManager, SyncHistoryManager, SavedGroupsManager, get_file_icon
+from sync_manager import SyncHistoryManager, get_file_icon
 from ui_helpers import (
     esc,
     friendly_course_name,
-    get_config_dir,
-    native_folder_picker,
-    make_long_path,
+    parse_cbs_metadata,
 )
-from styles import inject_css
 
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _select_sync_folder_lazy():
@@ -500,7 +496,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
         return
 
     # CBS Filters
-    show_filters = st.toggle(f'Enable CBS Filters', key="sync_dialog_show_cbs")
+    show_filters = st.toggle('Enable CBS Filters', key="sync_dialog_show_cbs")
     
     filtered_courses = visible_courses
     
@@ -521,14 +517,14 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 
         # Render Widgets
         with st.container(border=True, key="sync_dialog_cbs_container"):
-             st.markdown(f"**{f'Filter Criteria'}**")
+             st.markdown("**Filter Criteria**")
              c1, c2, c3 = st.columns(3)
              with c1:
-                 sel_types = st.multiselect(f'Class Type', options=sorted(list(all_types)), key="sync_d_type")
+                 sel_types = st.multiselect('Class Type', options=sorted(list(all_types)), key="sync_d_type")
              with c2:
-                 sel_sem = st.multiselect(f'Semester', options=sorted(list(all_semesters)), key="sync_d_sem")
+                 sel_sem = st.multiselect('Semester', options=sorted(list(all_semesters)), key="sync_d_sem")
              with c3:
-                 sel_years = st.multiselect(f'Year', options=sorted(list(all_years), reverse=True), key="sync_d_year")
+                 sel_years = st.multiselect('Year', options=sorted(list(all_years), reverse=True), key="sync_d_year")
         
         # Apply Logic
         if sel_types or sel_sem or sel_years:
@@ -544,7 +540,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
              filtered_courses = temp_filtered
              
              if not filtered_courses:
-                 st.info(f'No courses match the selected filters.')
+                 st.info('No courses match the selected filters.')
 
     # Sorting
     # current selection first (weight 0), then alphabetical (weight 1)
@@ -664,9 +660,9 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         
         # Determine button label based on mode
         if editing_idx is not None:
-             btn_label = f'Change Course'
+             btn_label = 'Change Course'
         else:
-             btn_label = f'Select Course'
+             btn_label = 'Select Course'
         
         # Two columns like folder row: [1, 1, 1] to keep it left-aligned
         # REVISED: [1, 1, 1] — relying on CSS flex auto-width to handle content size

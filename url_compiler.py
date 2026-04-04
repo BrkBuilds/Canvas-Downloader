@@ -1,4 +1,3 @@
-import os
 import platform
 import plistlib
 from pathlib import Path

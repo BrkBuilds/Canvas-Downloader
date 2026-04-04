@@ -6,6 +6,16 @@
 - **UI Decoupled**: The sync review UI is now purely informational (selection-based), with all configuration logic hosted in the "Download Settings" interface.
 - **Clean State Management**: Eradicated all 3-tier transient session state keys (`ind_*`, `_sync_config_mode`), ensuring zero state pollution between sessions.
 
+## Recent Changes (Session 2026-04-04 — Final Modularization Audit & Cleanup)
+- **Resolved Static Analysis Issues (`canvas_logic.py`)**:
+    - Fixed `NameError` crash in `download_isolated_batch_async` by hoisting the `debug_file` assignment above the `try` block initializing `SyncManager`.
+    - Eliminated pyflakes warnings across asynchronous fetch loops by removing unused exception assignments (`except Exception as e:` -> `except Exception:`), deleting unused proxy flags (`files_access_failed`), and cleaning up unformatted f-strings.
+- **Orphaned Import Sweep (Global)**:
+    - Executed an exhaustive codebase sweep utilizing `pyflakes` to identify and remove stale namespace bindings resulting from the Monolith Teardown.
+    - Cleaned `ui/hub_dialog.py`, `ui/presets.py`, `ui/sync_confirmation.py`, `ui/sync_review.py`, `sync_ui.py`, `ui_shared.py`, `url_compiler.py`, and `word_converter.py`, significantly reducing cognitive load and lowering cyclic dependency risks.
+- **Removed Legacy Modules**:
+    - Verified the removal of temporary architecture files (`ui/_extract_step2.py`) as they were no longer required post-modularization.
+
 ## Recent Changes (Session 2026-04-03 — Surgical Removal of 3-Tier Sync UI Architecture)
 - **UI Deletion (`sync_ui.py`)**:
     - **Switchboard Removal**: Deleted the entire "Sync Mode & Settings" switchboard, including the 3-mode tab row and all associated configuration panels.

@@ -20,11 +20,29 @@ import threading
 import uuid
 
 import urllib.parse
+import base64
 from sync_manager import format_file_size
 
 _sync_pairs_lock = threading.Lock()
 
 logger = logging.getLogger(__name__)
+
+def resolve_path(path):
+    """Resolve path for frozen (PyInstaller) vs normal execution."""
+    if getattr(sys, 'frozen', False):
+        return os.path.join(sys._MEIPASS, path)
+    return path
+
+def get_base64_image(image_path):
+    """Reads a local file and returns its Base64 string representation."""
+    try:
+        with open(resolve_path(image_path), "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    except Exception as e:
+        logger.error(f"Failed to encode image {image_path}: {e}")
+        return ""
+
+
 
 
 def make_long_path(p: str | Path) -> str:

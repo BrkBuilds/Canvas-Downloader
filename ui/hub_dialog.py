@@ -14,7 +14,6 @@ Contains:
 
 from __future__ import annotations
 
-import json as _json
 from pathlib import Path
 
 import streamlit as st
@@ -24,9 +23,8 @@ from sync_manager import SyncManager, SavedGroupsManager
 from ui_helpers import (
     esc,
     friendly_course_name,
-    get_config_dir,
-    native_folder_picker,
     open_folder,
+    parse_cbs_metadata,
 )
 from styles import inject_css
 
@@ -229,7 +227,6 @@ def confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
 def saved_groups_hub_dialog_inner(courses, course_names):
     """3-layered SPA dialog for managing saved sync groups."""
     from ui_helpers import get_config_dir
-    import json as _json
 
     mgr = SavedGroupsManager(get_config_dir())
     layer = st.session_state.get('hub_layer', 'layer_1')
@@ -901,7 +898,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     selected_cname = friendly_course_name(c_obj.name)
         st.button("Confirm Selection", key="hub_cs_confirm_btn", type="primary",
                   use_container_width=True, disabled=not bool(selected_cid),
-                  on_click=_confirm_course_selection_cb,
+                  on_click=confirm_course_selection_cb,
                   args=(selected_cid, selected_cname, course_names, courses))
 
     # =================================================================

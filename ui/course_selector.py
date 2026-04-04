@@ -41,7 +41,7 @@ def render_course_selector(fetch_courses_fn):
         st.stop()
 
     # CBS Metadata Filters
-    show_filters = st.toggle(f'Enable CBS Filters', key="dl_show_cbs_filters")
+    show_filters = st.toggle('Enable CBS Filters', key="dl_show_cbs_filters")
 
     filtered_courses = list(courses)
 
@@ -81,7 +81,7 @@ def render_course_selector(fetch_courses_fn):
             filtered_courses = temp_filtered
 
             if not filtered_courses:
-                st.info(f'No courses match the selected filters.')
+                st.info('No courses match the selected filters.')
 
     # Select All / Clear buttons
     visible_ids = {c.id for c in filtered_courses}
