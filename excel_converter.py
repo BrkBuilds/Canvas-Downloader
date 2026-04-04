@@ -99,25 +99,9 @@ class ExcelToPDF:
     # ── AppleScript bridge (macOS) ─────────────────────────────────
     @staticmethod
     def _convert_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
-        """Run an AppleScript via osascript to convert a file to PDF."""
-        try:
-            result = subprocess.run(
-                ['osascript', '-e', script],
-                capture_output=True, text=True, timeout=120
-            )
-            if result.returncode != 0:
-                logger.error(f"[AppleScript] {app_name} failed: {result.stderr.strip()}")
-                return False
-            return dst.exists()
-        except FileNotFoundError:
-            logger.error("[AppleScript] osascript not found (not on macOS?)")
-            return False
-        except subprocess.TimeoutExpired:
-            logger.error(f"[AppleScript] {app_name} conversion timed out after 120s")
-            return False
-        except Exception as e:
-            logger.error(f"[AppleScript] {app_name} error: {e}")
-            return False
+        """Delegate to the shared AppleScript bridge (engine/applescript_bridge.py)."""
+        from engine.applescript_bridge import run_applescript
+        return run_applescript(src, dst, app_name, script)
 
     def _convert_applescript_excel(self, src: Path, dst: Path) -> bool:
         """Convert an Excel file to PDF via AppleScript on macOS."""
@@ -135,7 +119,7 @@ class ExcelToPDF:
                         set (fit to pages tall) to false
                     end tell
                 end try
-                save as theBook filename POSIX file "{posix_dst}" file format PDF file format
+                save as theBook filename POSIX file "{posix_dst}" file format PDF
                 close theBook saving no
             end tell
         '''
@@ -395,7 +379,7 @@ class ExcelToData:
             )
             sheets = []
             if result.returncode == 0:
-                sheet_names = [s.strip() for s in result.stdout.split('\\n') if s.strip()]
+                sheet_names = [s.strip() for s in result.stdout.split('\n') if s.strip()]
                 for s_name in sheet_names:
                     csv_path = temp_dir / f"{s_name}.csv"
                     if csv_path.exists():
@@ -409,15 +393,12 @@ class ExcelToData:
 
                         # Skip completely empty sheets
                         if csv_text.strip():
-                            sheets.append((s_name, csv_text.strip() + '\\n'))
+                            sheets.append((s_name, csv_text.strip() + '\n'))
                             
             else:
                 logger.error(f"[AppleScript] Excel data extraction failed: {result.stderr.strip()}")
             return sheets
 
-        except str as e:
-            logger.error(f"[AppleScript] fatal error {e}")
-            return []
         except FileNotFoundError:
             logger.error("[AppleScript] osascript not found")
             return []
