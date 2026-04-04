@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 import theme
-from version import __version__
+import version
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -22,11 +22,10 @@ from ui_shared import (
 )
 from styles import inject_css
 from core.state_registry import (
-    ensure_download_state, cleanup_download_state,
-    NOTEBOOK_SUB_KEYS, SECONDARY_CONTENT_KEYS, TOTAL_SECONDARY_SUBS,
+    ensure_download_state,
 )
 from core.cancellation import cancel_download, is_download_cancelled
-from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard, render_terminal_log
+from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 
 # Page Config
@@ -368,7 +367,7 @@ with _main_content.container():
                     # Guard against API returning literal None for size which breaks sum()
                     total_mb += sum((getattr(f, 'size', 0) or 0) for f in filtered_files) / (1024 * 1024)
                     
-                except Exception as e:
+                except Exception:
                     # Fallback to older count_course_items if Hybrid fetch fails critically
                     total_items += cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
                     total_mb += cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
@@ -625,8 +624,6 @@ with _main_content.container():
                 )
 
                 # --- Post-Processing: Setup logging for NotebookLM hooks ---
-                from canvas_debug import log_debug
-
                 save_dir = st.session_state['download_path']
                 debug_mode = st.session_state.get('debug_mode', False)
                 root_dir = Path(save_dir)

@@ -4,7 +4,7 @@ Extracted to ensure perfect visual parity between both modes.
 """
 import streamlit as st
 from pathlib import Path
-from ui_helpers import open_folder, esc, short_path, friendly_course_name
+from ui_helpers import open_folder, esc, short_path
 from sync_manager import format_file_size
 import theme
 from preset_manager import PresetManager
@@ -231,7 +231,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         sec_badges_list = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
         sec_badges = f"<div style='width: 100%;'>{sec_org_badge}</div>{sec_badges_list}"
     else:
-        sec_badges = f"<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
+        sec_badges = "<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
         
     content_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
@@ -256,7 +256,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     if _conv_on:
         conv_badges = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
     else:
-        conv_badges = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span>"
+        conv_badges = "<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span>"
         
     conv_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>

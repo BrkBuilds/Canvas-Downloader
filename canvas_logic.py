@@ -1500,6 +1500,8 @@ class CanvasManager:
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
         
+        debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
+        
         # We instantiate a local sync_manager so files downloaded here are logged
         try:
             sync_manager = SyncManager(base_path, course.id, course.name)
@@ -1527,7 +1529,7 @@ class CanvasManager:
         
         if mb_tracker is None:
             mb_tracker = {'bytes_downloaded': 0}
-        debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
+
 
         if debug_mode:
             log_debug(f"\n{'='*50}\n--- Isolated Retry Mode for {course.name} ---\n{'='*50}", debug_file)
@@ -1780,7 +1782,7 @@ class CanvasManager:
         tasks = []
         downloaded = []
         log_debug(f"Starting Flat Download for {course.name}", debug_file)
-        files_access_failed = False
+        
         
         try:
             files = None
@@ -1789,14 +1791,13 @@ class CanvasManager:
                     files = course.get_files()
                     files = list(files) 
                     break
-                except Exception as e:
+                except Exception:
                     if attempt < 2:
                         await asyncio.sleep(RETRY_DELAY * (attempt + 1))
                     else:
-                        files_access_failed = True
                         files = []
                         # Log warning
-                        if progress_callback: progress_callback(f"Files tab restricted, trying modules...", progress_type='log')
+                        if progress_callback: progress_callback("Files tab restricted, trying modules...", progress_type='log')
                         log_debug("Files tab restricted (401?), falling back to module scan.", debug_file)
 
             downloaded_ids = set()
