@@ -1,6 +1,19 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Course Selection Toggle Modernization** (2026-04-05):
+    - [x] **Segmented Control Refactor**: Replaced the rigid `st.radio` component in `ui/course_selector.py` with a premium, button-based segmented control architecture.
+    - [x] **Native Button Architecture**: Leveraged `st.button` and `on_click` callbacks inside a width-constrained (`380px`) tray for superior aesthetic control.
+    - [x] **Modern Visuals**: Implemented dark rounded-square trays, active blue tints (`rgba(56, 189, 248, 0.3)`), and dynamic SVG icon swapping (Star/List).
+    - [x] **Container Key Fix**: Documented and implemented the "Border Strip" trick to force Streamlit to generate `st-key-` CSS classes on containers.
+    - [x] **Static Hoisting**: Enforced CSS hoisting to eliminate visual flickering during state-change reruns.
+- [x] **UI Encoding Remediation (Mojibake Purge)** (2026-04-05):
+    - [x] **Global UTF-8 Encoding Guardrail**: Established a mandatory workspace rule to explicitly enforce `encoding='utf-8'` for all file I/O operations and script-based writes.
+    - [x] **Mojibake Purge & Emoji Restoration**: Identified and repaired extensive character corruption in `ui/sync_review.py`, restoring 10+ visual indicator emojis (🆕, 🔄, ⚠️, 🗑️, 🚫, 🎓, etc.) to their correct UTF-8 counterparts.
+    - [x] **Verification**: Confirmed clean UI rendering and zero character corruption across the entire UI codebase.
+- [x] **Stabilizing Course Selection UI** (2026-04-04):
+    - [x] **Eradication of Dynamic Sorting**: Modified `ui/course_selector.py`, `ui/sync_dialogs.py`, and `ui/hub_dialog.py` to remove lambda sorting keys that prioritized selected items (which caused the list to jump and destroy spatial memory).
+    - [x] **Strict Alphabetical Sort**: Enforced a static, strict alphabetical sort based on the course's display name (`(c.name or "").lower()`) across all selection lists.
 - [x] **Build Phase — Distribution Documentation** (2026-04-04):
     - [x] **`MACOS_BUILD_GUIDE.md`**: Created comprehensive macOS build instructions covering venv setup, `pyinstaller --clean Canvas_Downloader_macOS.spec`, and free ad-hoc `codesign --force --deep -s -` signing for Apple Silicon compatibility.
     - [x] **`README_INSTALL.md`**: Created professional end-user installation guide covering Windows SmartScreen bypass, macOS Gatekeeper right-click bypass, `xattr -cr` quarantine clearing for the "damaged app" false positive, and API token generation.

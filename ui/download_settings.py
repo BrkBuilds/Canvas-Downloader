@@ -849,7 +849,7 @@ def render_download_settings(fetch_courses_fn):
                 m_border = "rgba(255, 255, 255, 0.1)"
                 m_ledge = "#68d4a3" if m_active else "transparent"
                 m_ledge_border = "#68d4a3" if m_active else m_border
-                b64_m = safe_b64('icon_select_all.png')
+                b64_m = safe_b64('icon_canvas_content_select_all.png')
                 m_img_rule = f"background-image: url('data:image/png;base64,{b64_m}') !important;" if b64_m else ""
 
                 css_blocks.append(f'''

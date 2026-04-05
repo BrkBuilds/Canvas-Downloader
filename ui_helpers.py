@@ -467,6 +467,33 @@ def friendly_course_name(raw_name: str) -> str:
     return name if name else raw_name
 
 
+def get_course_display_parts(course) -> tuple[str, str]:
+    """Extract a clean display name and course code from a Canvas course.
+
+    The display name is built by applying ``friendly_course_name()`` to
+    strip Canvas metadata and append class-type codes (e.g. "(LA)").
+
+    Prefers ``friendly_name`` (user-set nickname) when present, otherwise
+    falls back to ``name``.  All attribute access is guarded with
+    ``getattr`` so the app never crashes on incomplete course objects.
+
+    Returns:
+        (display_name, course_code) — both guaranteed to be strings (never None).
+        display_name: Cleaned name with class codes, e.g. "Regnskab (LA)"
+        course_code:  Raw Canvas code, e.g. "BINTO1060U.LA_E25"
+    """
+    raw_name = (getattr(course, 'friendly_name', None)
+                or getattr(course, 'name', '') or '')
+    display_name = friendly_course_name(raw_name)
+    code = getattr(course, 'course_code', '') or ''
+    # Canvas often appends the course name to the code field, e.g.
+    # "BINTO1078U.LA_E25 (Introduction to Information Systems)"
+    # Strip everything from the first '(' to keep only the code.
+    if '(' in code:
+        code = code[:code.index('(')].strip()
+    return display_name, code
+
+
 def short_path(full_path: str) -> str:
     """Return just the folder name from a full path.
     

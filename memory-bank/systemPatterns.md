@@ -113,6 +113,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Design Token Centralization (`theme.py`)**:
     - *Problem*: Hardcoded hex colors (e.g., `#ffffff`, `#8A91A6`) scattered across UI files create maintenance debt and brittle aesthetic updates.
     - *Solution*: Extract all colors into a centralized `theme.py` module as semantic tokens (e.g., `theme.TEXT_PRIMARY`, `theme.BG_CARD`). Inject them into CSS blocks and HTML spans using standard f-strings (`f"color: {theme.ERROR};"`).
+- **Dual-Layer CSS Injection Strategy**:
+    - *Problem*: Streamlit's `st.markdown("<style>")` triggers costly disk re-reads and full re-renders if standard CSS relies on file I/O operations constantly.
+    - *Solution*: Divide CSS into two operational layers:
+        1. **Static CSS**: All static, structural CSS lives in `.css` files clustered in the `styles/` folder. These are injected precisely during boot via `styles.inject_css('filename.css')` which utilizes an in-memory dictionary `_CSS_CACHE` to avoid disk reads on every subsequent UI rerun loop.
+        2. **Dynamic CSS**: CSS requiring python state logic (e.g., Theme tokens via f-string, boolean session conditions) MUST remain physically inline as raw `<style>` text blocks specifically inside the nested `ui/*.py` templates. These must follow the CSS Hoisting Pattern ensuring injection prior to widget instantiation.
 - **Strict HTML Escaping (`esc()`)**:
     - *Problem*: Passing raw user-controlled variables (Course Names, File Names, Error Messages) into `st.markdown(unsafe_allow_html=True)` immediately opens the application to XSS and DOM-corruption if a Canvas server returns payload strings containing `<script>` or unclosed HTML tags `</div>`.
     - *Solution*: Universally wrap all interpolated variables inside HTML structures with the custom `esc()` utility (from `ui_helpers.py`), which safely standardizes `html.escape` behavior across the codebase.
@@ -205,7 +210,17 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 ### Native Button Card Architecture
 To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.
 
-#### 1. Wildcard Header/Styling
+#### 4. Button-Based Segmented Control Pattern
+- **Problem**: Native `st.radio` is too rigid for premium UI designs (special icons, active blue tints, uneven spacing).
+- **Architecture**: Use `st.container(border=True, key="...")` as a tray. Inside, use `st.columns` and `st.button` for each segment.
+- **State Management**: Use an `on_click` callback to update `st.session_state`.
+- **CSS Hoisting**: Inject CSS *before* the buttons are rendered to prevent "grey flashes" during reruns.
+- **Icon Sizing**: Use `background-image` (Data URI) with `18px` width and `padding-left: 40px` to position text correctly.
+
+#### 5. Container Key Generation Fix
+- **Problem**: `st.container(key="...")` fails to generate the `st-key-` CSS class in the DOM unless it has a visible property.
+- **Solution**: Force `border=True` on the container to trigger key generation, then immediately strip the border in CSS using `border: none !important`.
+
 When managing multiple related buttons (e.g., Conversion Settings), use a wildcard CSS selector based on the button key prefix:
 ```css
 div[class*="st-key-btn_convert_"] button {
@@ -257,9 +272,10 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
 - **The CSS `{{` Escaping Trap**:
     - *Problem*: In Streamlit, if you put `{{` and `}}` in a raw `st.markdown(""" ... """)` string to escape the braces, they render identically as literal `{{` into the HTML DOM, breaking all CSS inside the block because standard browser CSS only accepts single `{`. Conversely, if you use an f-string `st.markdown(f"""...{theme.ERROR}...""")`, you *must* double bracket `{{` for raw CSS blocks, otherwise python throws a `KeyError`.
     - *Solution*: Strictly separate raw static CSS from dynamic variable-injected CSS. Create two distinct `st.markdown` blocks: one plain string using standard `{` brackets, and one `f`-string block that safely uses `{{` and accepts dynamic `{variables}`. This guarantees that all styling applies successfully.
-- **Base64 Tab/Button Icon Pattern**:
-    - *Problem*: Native `st.tabs` or `st.button` lack support for embedding rich image assets alongside the text label without fragile and complex DOM manipulation.
-    - *Solution*: Convert image assets to Base64 via `get_base64_image()`. Target the exact widget's key-wrapper in CSS and inject the image via `background-image: url('data:image/png;base64,...');` onto the `::before` pseudo-element. Apply `position: absolute; left: 12px;` to properly anchor the icon independently of the button text.
+- **Base64 Tab/Button Icon Pattern (Asset Loading Strategy)**:
+    - *Problem*: Referencing external project images physically inside native Streamlit CSS headers (`background-image: url('assets/icon.png')`) frequently fails in production binaries due to Streamlit static server routing and standalone PyInstaller directory structures.
+    - *Solution*: Use the centralized utility `get_base64_image("assets/icon.png")` injected directly via an un-indented Python f-string into standard Streamlit CSS `<style>` blocks to replace raw OS URIs.
+    - *Implementation Check*: When rendering clickable widget cards, inject the raw string dynamically onto the button's `background-image` or `::before` pseudo-element: `st.markdown(f"... url('data:image/png;base64,{b64_str}'); ...")`. State manipulation (`disabled`/`active`/`hover`) over these image colors MUST be managed natively using standard CSS `filter: grayscale(...) opacity(...)` to leverage client-side GPU manipulation rather than mutating assets.
 - **Sniper Retry Sandboxing Pattern**:
     - *Problem*: "Success Amnesia" occurs when global session state variables (like `downloaded_items`) are reset for a retry, losing the context of the initial successful run.
     - *Solution*: Instantiate an isolated `retry_` sandbox in `st.session_state`. Bifurcate the UI progress callback (`update_ui`) to route increments to the sandbox if `download_status == 'isolated_retry'`. This keeps the global state immutable during the retry and allows for a "Synthesis" phase to merge results purely at the end of the operation.
