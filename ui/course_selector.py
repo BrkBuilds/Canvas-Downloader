@@ -37,7 +37,7 @@ _STAR_BLUE = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
     "19.01L17.37 13.88L21.28 10.25C22.03 9.56 21.62 8.29 20.6 "
     "8.16L15.38 7.51L13.13 2.69C12.9 2.24 12.45 2 11.99 2Z'"
     "/%3E%3C/svg%3E")
-_STAR_GREY = _STAR_BLUE.replace("%2338bdf8", "%236b7280")
+_STAR_GREY = _STAR_BLUE.replace("%2338bdf8", "%23cbd5e1")
 
 _LIST_BLUE = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
     "viewBox='0 0 512 512'%3E"
@@ -48,7 +48,7 @@ _LIST_BLUE = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
     "%3Crect x='48' y='364' width='96' height='96' rx='24' fill='%2338bdf8'/%3E"
     "%3Crect x='184' y='376' width='280' height='72' rx='36' fill='%2338bdf8'/%3E"
     "%3C/svg%3E")
-_LIST_GREY = _LIST_BLUE.replace("%2338bdf8", "%236b7280")
+_LIST_GREY = _LIST_BLUE.replace("%2338bdf8", "%23cbd5e1")
 
 
 def inject_course_selector_css():
@@ -72,6 +72,11 @@ def inject_course_selector_css():
         background-color: rgba(56, 189, 248, 0.15) !important;
         border: 1px solid rgba(56, 189, 248, 0.3) !important;
         color: #e2e8f0 !important;
+    }}
+    /* ── Toggle Switch ────────── */
+    div[class*="st-key-"][class$="_show_cbs_filters"] {{
+        margin-top: 15px !important;
+        margin-bottom: 15px !important;
     }}
     </style>""", unsafe_allow_html=True)
 
@@ -127,8 +132,8 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
         border: 1px solid transparent !important;
         border-radius: 8px !important;
         padding: 10px 16px 10px 40px !important;
-        color: #a0a0a0 !important;
-        opacity: 0.75 !important;
+        color: #cbd5e1 !important;
+        opacity: 0.9 !important;
         transition: all 0.2s ease !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
@@ -170,6 +175,8 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
         opacity: 1 !important;
         color: #ffffff !important;
+        padding-left: 42px !important;
+        padding-right: 20px !important;
     }}
     /* Specificity shield — protect active from hover degradation */
     div.st-key-btn_fav_{active_key}_{namespace} button:hover {{
@@ -208,12 +215,13 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     return st.session_state[state_key] == "favorites"
 
 
-def render_cbs_filters(courses: list, namespace: str) -> list:
+def render_cbs_filters(courses: list, namespace: str, custom_toggle_container=None) -> list:
     """Render CBS toggle + filter criteria and return the filtered course list.
 
     Args:
         courses: Canvas course objects to filter.
         namespace: Unique prefix for widget keys (e.g. ``'dl'``, ``'sync_d'``).
+        custom_toggle_container: Optional container to place the toggle inside.
 
     Returns:
         Filtered list of courses (unchanged if CBS filters are disabled globally).
@@ -222,8 +230,11 @@ def render_cbs_filters(courses: list, namespace: str) -> list:
     if not st.session_state.get('enable_cbs_filters', False):
         return list(courses)
 
-    show_filters = st.toggle('CBS Filters', key=f"{namespace}_show_cbs_filters")
-
+    if custom_toggle_container:
+        with custom_toggle_container:
+            show_filters = st.toggle('CBS Filters', key=f"{namespace}_show_cbs_filters")
+    else:
+        show_filters = st.toggle('CBS Filters', key=f"{namespace}_show_cbs_filters")
     filtered_courses = list(courses)
 
     if show_filters:
@@ -320,36 +331,80 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
         if sid not in visible_ids:
             new_selected_ids.append(sid)
 
+    # ――― Inject global CSS for this list ―――
+    st.markdown(f"""<style>
+    div[class*="st-key-{namespace}_chk_"] {{
+        border-radius: 6px !important;
+        transition: background-color 0.2s !important;
+        margin-bottom: -8px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }}
+    div[class*="st-key-{namespace}_chk_"]:hover {{
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }}
+    /* Row Background when checked */
+    div[class*="st-key-{namespace}_chk_"]:has(input[type="checkbox"]:checked) {{
+        background-color: rgba(56, 189, 248, 0.08) !important;
+    }}
+    
+    /* Make sure checkbox area fills row */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] {{
+        width: 100% !important;
+        align-items: flex-start !important;
+        cursor: pointer !important;
+    }}
+    
+    /* Title Styling */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] p {{
+        font-size: 1.05em !important;
+        font-weight: 400 !important;
+        color: #e2e8f0 !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }}
+    
+    /* Center the checkbox itself vertically with the first line */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
+        margin-top: 3px !important; 
+    }}
+    </style>""", unsafe_allow_html=True)
+
+    dynamic_css = []
+
     for course in courses:
         base_name, code = get_course_display_parts(course)
-        display_str = f"{base_name} ({code})" if code else base_name
-        code_html = (
-            f' <span style="color:{theme.TEXT_DIM}; font-size:0.9em;">'
-            f'({esc(code)})</span>' if code else ''
-        )
-
+        code_clean = code.strip("()") if code else ""
         chk_key = f"{namespace}_chk_{course.id}"
 
-        c1, c2 = st.columns([0.02, 0.98], gap="small")
-        with c1:
-            if chk_key not in st.session_state:
-                checked = st.checkbox(
-                    display_str, value=(course.id in selected_ids),
-                    key=chk_key, label_visibility="collapsed")
-            else:
-                checked = st.checkbox(
-                    display_str, key=chk_key, label_visibility="collapsed")
+        # Inject code subtext via CSS
+        if code_clean:
+            dynamic_css.append(f"""
+            div.st-key-{chk_key} label[data-baseweb="checkbox"] div[data-testid="stMarkdownContainer"]::after {{
+                content: "{esc(code_clean)}";
+                display: block !important;
+                color: #94a3b8 !important;
+                font-size: 0.72em !important;
+                font-weight: 400 !important;
+                margin-top: -2px !important;
+            }}
+            """)
 
-        with c2:
-            st.markdown(
-                f'<div style="margin-top: 8px;">'
-                f'<strong>{esc(base_name)}</strong>{code_html}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        # NO columns! Just st.checkbox
+        if chk_key not in st.session_state:
+            checked = st.checkbox(
+                base_name, value=(course.id in selected_ids),
+                key=chk_key)
+        else:
+            checked = st.checkbox(base_name, key=chk_key)
 
         if checked:
             new_selected_ids.append(course.id)
+
+    if dynamic_css:
+        st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
 
     st.session_state['selected_course_ids'] = new_selected_ids
     return new_selected_ids
@@ -359,17 +414,67 @@ def _render_single_select_list(courses: list, namespace: str):
     """Single-select radio-like checkbox list (Sync / Hub dialogs)."""
     selected_key = f"{namespace}_selected_id"
 
+    # ――― Inject global CSS for this list ―――
+    st.markdown(f"""<style>
+    div[class*="st-key-{namespace}_chk_"] {{
+        border-radius: 6px !important;
+        transition: background-color 0.2s !important;
+        margin-bottom: -8px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }}
+    div[class*="st-key-{namespace}_chk_"]:hover {{
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }}
+    /* Row Background when checked */
+    div[class*="st-key-{namespace}_chk_"]:has(input[type="checkbox"]:checked) {{
+        background-color: rgba(56, 189, 248, 0.08) !important;
+    }}
+    
+    /* Make sure checkbox area fills row */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] {{
+        width: 100% !important;
+        align-items: flex-start !important;
+        cursor: pointer !important;
+    }}
+    
+    /* Title Styling */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] p {{
+        font-size: 1.05em !important;
+        font-weight: 400 !important;
+        color: #e2e8f0 !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }}
+    
+    /* Center the checkbox itself vertically with the first line */
+    div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
+        margin-top: 3px !important; 
+    }}
+    </style>""", unsafe_allow_html=True)
+
+    dynamic_css = []
+
     for course in courses:
         base_name, code = get_course_display_parts(course)
-        code_html = (
-            f' <span style="color:{theme.TEXT_DIM}; font-size:0.9em;">'
-            f'({esc(code)})</span>' if code else ''
-        )
-
-        is_checked = (st.session_state.get(selected_key) == course.id)
+        code_clean = code.strip("()") if code else ""
         chk_key = f"{namespace}_chk_{course.id}"
 
-        # Force widget state to match single-source-of-truth before render
+        if code_clean:
+            dynamic_css.append(f"""
+            div.st-key-{chk_key} label[data-baseweb="checkbox"] div[data-testid="stMarkdownContainer"]::after {{
+                content: "{esc(code_clean)}";
+                display: block !important;
+                color: #94a3b8 !important;
+                font-size: 0.72em !important;
+                font-weight: 400 !important;
+                margin-top: -2px !important;
+            }}
+            """)
+
+        is_checked = (st.session_state.get(selected_key) == course.id)
         st.session_state[chk_key] = is_checked
 
         def _on_toggle(cid, ns=namespace):
@@ -380,20 +485,10 @@ def _render_single_select_list(courses: list, namespace: str):
             elif st.session_state.get(sk) == cid:
                 st.session_state[sk] = None
 
-        c1, c2 = st.columns([0.03, 0.97], gap="small")
-        with c1:
-            st.checkbox(
-                "Select", key=chk_key,
-                on_change=_on_toggle, args=(course.id,),
-                label_visibility="collapsed"
-            )
-        with c2:
-            st.markdown(
-                f'<div style="margin-top: -2px; width: 100%;">'
-                f'<strong>{esc(base_name)}</strong>{code_html}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        st.checkbox(base_name, key=chk_key, on_change=_on_toggle, args=(course.id,))
+
+    if dynamic_css:
+        st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -486,18 +581,23 @@ def render_course_selector(fetch_courses_fn):
         st.warning('No courses found.')
         st.stop()
 
-    # --- CBS Filters (centralized) ---
+    # --- 1. CBS Filters (Own Row) ---
     filtered_courses = render_cbs_filters(courses, "dl")
 
-    # --- Select All / Clear buttons ---
+    # --- 2. Action Buttons (Own Row below filters) ---
+    col_select_all, col_clear, col_spacer = st.columns([0.65, 0.8, 3])
+    with col_select_all: 
+        select_all_clicked = st.button('Select All', key="btn_course_select_all", use_container_width=True)
+    with col_clear: 
+        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection", use_container_width=True)
+
+    # --- 3. Separator before course list ---
+    st.markdown('<div style="margin-top: 5px; margin-bottom: -22px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
+
     visible_ids = {c.id for c in filtered_courses}
 
-    with st.container(key="action_buttons_row"):
-        select_all_clicked = st.button('Select All', key="btn_course_select_all")
-        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
-
     if select_all_clicked:
-        current_ids = set(st.session_state['selected_course_ids'])
+        current_ids = set(st.session_state.get('selected_course_ids', []))
         new_ids = current_ids.union(visible_ids)
         st.session_state['selected_course_ids'] = list(new_ids)
         for cid in visible_ids:
@@ -514,7 +614,7 @@ def render_course_selector(fetch_courses_fn):
     render_course_list(filtered_courses, "dl", multi_select=True)
 
     # --- Continue ---
-    st.markdown("---")
+    st.markdown('<div style="margin-top: -18px !important; margin-bottom: 15px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
     error_container = st.empty()
 
     c1, c2 = st.columns([1, 3])
