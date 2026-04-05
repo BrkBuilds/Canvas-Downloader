@@ -39,6 +39,32 @@
     * **Problem:** Attempting to build deep ancestor flex-chain selectors like `div:has(> div > div > [class*="st-key-my_card"])` often fails silently (`NO MATCH` in browser) because browser CSS engines struggle with deeply nested `:has()` pseudo-classes attached to partial attribute selectors within complex DOMs like Streamlit's.
     * **Rule:** Never guess Streamlit wrapper depths. Map the exact DOM, and write minimal `parent:has(> child)` CSS selectors targeting precisely the bottleneck identified (like `stLayoutWrapper`).
 * **Crushing Streamlit Column Gaps:** st.columns(gap="small") still enforces a rigid 0.5rem minimum gap. **Rule:** To pull segmented controls or cards tightly together, target the specific wrapper's flexbox container: `div[class*="st-key-my_wrapper"] [data-testid="stHorizontalBlock"] { gap: 4px !important; }`.
+* **Side-By-Side Button Layouts (The Flex Row Hack):**
+    * **Problem:** Placing auto-sized widgets (like `st.button`) side-by-side using `st.columns()` forces them into rigid, screen-proportional grids. On large screens, this creates a massive, ugly gap. On small screens, the columns become too small and the buttons overlap or wrap improperly.
+    * **Rule:** Do NOT use `st.columns()` to place standard buttons side-by-side if you want them to naturally hug their content and maintain a fixed gap.
+    * **Solution:** Place both buttons inside a single `st.container(key="my_button_row")`. Remove `use_container_width=True` from the buttons in Python so they natively render as `width: auto`. Then, add the static structural CSS to `styles/global.css` (adhering to the Dual-Layer CSS strategy in Section 9) to force the container into a flex row:
+        ```css
+        /* Force the container into a flex row (Place in styles/global.css) */
+        div.st-key-my_button_row,
+        div.st-key-my_button_row > div,
+        div.st-key-my_button_row > div > div, 
+        div.st-key-my_button_row > div > div > div {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 12px !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+        }
+        /* Defeat Streamlit's 100% block width applied to elements */
+        div.st-key-my_button_row div[data-testid="element-container"],
+        div.st-key-my_button_row div.stElementContainer {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            margin-bottom: 0px !important;
+        }
+        ```
+        This completely destroys Streamlit's strict scaling and establishes standard web-native behavior. The buttons will maintain exactly a 12px gap at all screen sizes, hugging their own text lengths natively, and smartly dropping to the next line (`flex-wrap: wrap`) on mobile screens without overlapping.
 #### 4. State Management, Reactivity & Lifecycle
 * **First-Render Checkbox Hydration:** Stuffing `True` into `st.session_state["my_key"]` before declaring `st.checkbox` often fails visually on the first frame (the box flashes or appears unchecked). **Rule:** Always explicitly define the parameter: `st.checkbox("Label", key="my_key", value=st.session_state.get("my_key", False))` to guarantee 100% visual parity on the initial draw.
 * **Widget Cleanup Bypass:** Navigating away from a step destroys its widgets and deletes their keys from `st.session_state`. **Rule:** Capture crucial widget booleans into custom `persistent_` state keys explicitly inside the `if st.button('Next'):` block, right before the `st.rerun()` trigger.
@@ -153,3 +179,68 @@ All CSS overrides that structurally alter or mask Streamlit components must be h
 4. **Instantiate the Target:** *Then* execute the `st.button` or container.
 
 With the CSS already loaded into the browser memory before React is asked to re-render the Native Button, there is a 0ms vulnerability window. The Rerun completely bypasses rendering the default styles and directly inherits the custom masks.
+
+***
+#### 9. The Modularized UI Architecture & CSS Strategy
+* **God-File Teardown & Module Routing:** The original monolithic `app.py` has been decomposed. UI templates now strictly reside in the `ui/` directory (e.g., `ui/course_selector.py`, `ui/download_settings.py`, `ui/auth.py`). `app.py` handles route orchestration, session state initialization, and the global layout wrapper, while delegating all granular UI rendering to specialized functions imported from the `ui/` namespace.
+* **Static vs Dynamic CSS Dual-Layer:** 
+    * **Static CSS:** All static, structural CSS (base layout styles that do not rely on Python execution logic or `st.session_state`) has been extracted into physical `.css` files located in the `styles/` directory (e.g., `global.css`, `preset_dialogs.css`). It is injected globally via the custom `styles.inject_css('filename.css')` interface, which caches the CSS in memory (`_CSS_CACHE`) to bypass disk reads during Streamlit's rapid rerun loop.
+    * **Dynamic CSS:** Any CSS that inherently requires Python context (like f-string evaluation for Theme colors, `st.session_state` boolean logic, or base-64 image strings) MUST remain inline inside the respective `ui/` module functions. It must be injected using `st.markdown(f'<style>...</style>', unsafe_allow_html=True)` and strictly abide by the "Static Hoisting" (Pre-Injection) rule described in Section 8.
+
+#### 10. Custom Base64 Icon Workflow
+* **The Problem:** Referencing external images directly via path in Streamlit CSS (e.g., `background-image: url('assets/icon.png')`) often fails in production because of the Streamlit static server routing and PyInstaller binary bundling. 
+* **The Solution (Base64 CSS Injection):** All custom icons used inside our "Clickable Card" architecture (Section 6) must be injected as raw Base64 strings.
+* **Implementation Workflow:**
+    1. **Store Physical Assets:** Save your transparent `.png` or `.svg` icons in the project's root `assets/` folder.
+    2. **Convert at Runtime:** Inside your UI module (e.g., `ui/download_settings.py`), import the centralized helper: `from ui_helpers import get_base64_image`.
+    3. **Generate String:** `b64_icon = get_base64_image("assets/my_custom_icon.png")` (this helper automatically handles reading and `b64encode`).
+    4. **Inject via F-String:** Embed the resulting string into your Python-generated `<style>` block: 
+       ```python
+       st.markdown(f'''
+           <style>
+           div.st-key-my_card button {{
+               background-image: url('data:image/png;base64,{b64_icon}') !important;
+           }}
+           </style>
+       ''', unsafe_allow_html=True)
+       ```
+    5. **Apply Image Filters:** To manage disabled or active states, use CSS `filter`, such as `filter: grayscale(100%) opacity(50%);`, rather than modifying the asset itself.
+#### 11. The Button-Based Segmented Control & Container Key Bug
+*   **The Container Key Generation Bug:**
+    *   **Problem:** In this Streamlit version, calling `st.container(key="my_tray")` does *not* reliably generate a corresponding `st-key-my_tray` class in the DOM unless the container is "active" in some way (like having a border). This makes it impossible to target the outer tray for background/radius styling via CSS.
+    *   **Rule:** To guarantee CSS-targetability for a container, always use `st.container(border=True, key="...")`.
+    *   **Solution (The "Border Strip" Trick):** Immediately strip the unwanted native Streamlit border and padding in your hoisted CSS:
+        ```css
+        div[class*="st-key-my_tray"] {
+            border: none !important; /* Strips native Streamlit border */
+            padding: 4px !important;  /* Apply custom tray padding */
+            background: rgba(0,0,0,0.25) !important;
+            border-radius: 12px !important;
+            max-width: 380px !important; /* Prevents full-width stretch */
+        }
+        ```
+
+*   **Segmented Button Architecture (Better than `st.radio`):**
+    *   **Problem:** Native `st.radio` has a rigid DOM structure that is extremely difficult to style as a premium segmented control (e.g., adding icons, custom active blue tints, or unequal column widths).
+    *   **Architecture:** Use `st.columns` inside a keyed container, and render standard `st.button` widgets in each column. Use an `on_click` callback to update the active state in `st.session_state`.
+    *   **Rule:** Always use "Static Hoisting" (Section 8) to inject the button's background-image (icons) and active-state colors *before* the buttons are rendered. This prevents the "Grey Flash" when React re-renders the buttons during a state-toggle rerun.
+    *   **Icon Injection (Data URIs):** Inject SVG or PNG icons directly into the button's `background-image` property using data URIs. Use `padding-left: 40px !important` or similar to push the button text away from the icon.
+        ```css
+        div[class*="st-key-btn_fav_favorites"] button {
+            background-image: url("data:image/svg+xml,...") !important;
+            background-repeat: no-repeat !important;
+            background-position: 14px center !important;
+            background-size: 18px !important;
+        }
+        ```
+    *   **Active State Identification:** Since individual buttons stay in the DOM, targeting "the currently active" button requires passing a dynamic key to the button that includes the active state name, or using a specific class-prefix targeting the active button's key. 
+        ```python
+        # In Python:
+        st.button("Label", key=f"btn_{mode}_{namespace}")
+        # In CSS (Hoisted):
+        div.st-key-btn_{active_mode}_{namespace} button {
+            background-color: rgba(56, 189, 248, 0.1) !important;
+            border-color: rgba(56,189,248,0.3) !important;
+            color: #ffffff !important;
+        }
+        ```

@@ -31,3 +31,24 @@ div[data-testid="stSelectbox"] > div { cursor: default !important; }
     color: #ff4b4b !important;
     background-color: rgba(255, 75, 75, 0.1) !important;
 }
+
+/* ═══════════════════════════════════════════════
+   Flex Row Hack (Standardizing Side-by-Side Buttons)
+   ═══════════════════════════════════════════════ */
+div.st-key-action_buttons_row,
+div.st-key-action_buttons_row > div,
+div.st-key-action_buttons_row > div > div,
+div.st-key-action_buttons_row > div > div > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+div.st-key-action_buttons_row div[data-testid="element-container"],
+div.st-key-action_buttons_row div.stElementContainer {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin-bottom: 0px !important;
+}

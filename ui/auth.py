@@ -64,6 +64,9 @@ def render_sidebar(fetch_courses_fn):
                     if 'debug_mode' in config:
                         st.session_state['debug_mode'] = config.get('debug_mode', False)
 
+                    if 'enable_cbs_filters' in config:
+                        st.session_state['enable_cbs_filters'] = config.get('enable_cbs_filters', False)
+
                     loaded_token = ''
                     if platform.system() == 'Darwin':
                         # macOS: Avoid keychain permission prompts by loading from config json via base64
@@ -251,69 +254,80 @@ def _render_authenticated_nav(fetch_courses_fn):
     # ── Global Settings dialog ─────────────────────────────────────
     @st.dialog("⚙️ Settings", width="large")
     def _global_settings_dialog():
-        st.markdown("""
-            <style>
-                div.st-key-settings_scroll_container {
-                    height: 65vh !important;
-                    min-height: 65vh !important;
-                    max-height: 65vh !important;
-                    overflow-y: auto !important;
-                    overflow-x: hidden !important;
-                    padding-right: 5px;
-                }
-            </style>
-        """, unsafe_allow_html=True)
+        # ── Dark grey card CSS (scoped to dialog) ──────────────────
+        st.markdown("""<style>
+            div[data-testid="stDialog"] div[class*="st-key-settings_card_"] {
+                background-color: rgba(255, 255, 255, 0.04) !important;
+            }
+            div.st-key-settings_scroll_container {
+                height: 65vh !important;
+                min-height: 65vh !important;
+                max-height: 65vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding-right: 5px;
+            }
+        </style>""", unsafe_allow_html=True)
 
         with st.container(border=False, key="settings_scroll_container"):
-            col1, col2 = st.columns(2, gap="large")
+            # ── Download Settings ───────────────────────────────────
+            st.markdown("<h4 style='margin-bottom: 10px;'>📥 Download Settings</h4>", unsafe_allow_html=True)
 
-            with col1:
-                st.markdown("<h4 style='margin-bottom: 10px;'>📥 Download Settings</h4>", unsafe_allow_html=True)
-
-                # Card 1: Concurrent Downloads
-                with st.container(border=True):
-                    st.markdown("""
-                        <div style='margin-bottom: -20px;'>
-                            <h4 style='font-size: 1.05rem; margin: 0px 0px 2px 0px;'>Download Speed: Max Concurrent Downloads</h4>
-                            <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 8px;'>Controls how many files are downloaded simultaneously.</p>
-                            <p style='font-size: 0.85rem; color: #fbbf24; margin-top: 0px; margin-bottom: 5px; line-height: 1.4;'>
-                                ⚠️ <b>Warning:</b> Canvas has strict rate limits. Setting this too high (e.g., 15) may cause the download/sync to crash due to server blocks. If you experience crashes or failed downloads, reduce this number and try again.
-                            </p>
-                            <div style='margin-top: 12px; margin-bottom: 0px;'>
-                                <span style='background-color: #1e293b; color: #94a3b8; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid #334155;'>Default: 5</span>
-                            </div>
+            # Card 1: Concurrent Downloads
+            with st.container(border=True, key="settings_card_speed"):
+                st.markdown("""
+                    <div style='margin-bottom: -20px;'>
+                        <h4 style='font-size: 1.05rem; margin: 0px 0px 2px 0px;'>Download Speed: Max Concurrent Downloads</h4>
+                        <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 8px;'>Controls how many files are downloaded simultaneously.</p>
+                        <p style='font-size: 0.85rem; color: #fbbf24; margin-top: 0px; margin-bottom: 5px; line-height: 1.4;'>
+                            ⚠️ <b>Warning:</b> Canvas has strict rate limits. Setting this too high (e.g., 15) may cause the download/sync to crash due to server blocks. If you experience crashes or failed downloads, reduce this number and try again.
+                        </p>
+                        <div style='margin-top: 12px; margin-bottom: 0px;'>
+                            <span style='background-color: #1e293b; color: #94a3b8; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid #334155;'>Default: 5</span>
                         </div>
-                    """, unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
-                    st.markdown("""
-                        <style>
-                        div.stSlider > div[data-baseweb="slider"] > div > div > div {
-                            background-color: {theme.ACCENT_LINK} !important;
-                        }
-                        div.stSlider > div[data-baseweb="slider"] > div > div[role="slider"] {
-                            background-color: {theme.ACCENT_LINK} !important;
-                            border-color: {theme.ACCENT_LINK} !important;
-                        }
-                        </style>
-                    """, unsafe_allow_html=True)
+                st.markdown("""
+                    <style>
+                    div.stSlider > div[data-baseweb="slider"] > div > div > div {
+                        background-color: {theme.ACCENT_LINK} !important;
+                    }
+                    div.stSlider > div[data-baseweb="slider"] > div > div[role="slider"] {
+                        background-color: {theme.ACCENT_LINK} !important;
+                        border-color: {theme.ACCENT_LINK} !important;
+                    }
+                    </style>
+                """, unsafe_allow_html=True)
 
-                    temp_max = st.slider("Simultaneous Files", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
+                temp_max = st.slider("Simultaneous Files", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
 
-                # Card 2: Debug Mode
-                with st.container(border=True):
-                    st.markdown("""
-                        <div style='margin-bottom: -10px;'>
-                            <h4 style='font-size: 1.05rem; margin-top: 0px; margin-bottom: 2px;'>Debug Mode</h4>
-                            <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 10px;'>Enable advanced terminal logging for troubleshooting.</p>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    temp_debug = st.checkbox("Enable Troubleshooting Mode", value=st.session_state.get('debug_mode', False), key="temp_debug_mode")
+            # Card 2: Debug Mode
+            with st.container(border=True, key="settings_card_debug"):
+                st.markdown("""
+                    <div style='margin-bottom: -10px;'>
+                        <h4 style='font-size: 1.05rem; margin-top: 0px; margin-bottom: 2px;'>Debug Mode</h4>
+                        <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 10px;'>Enable advanced terminal logging for troubleshooting.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                temp_debug = st.checkbox("Enable Troubleshooting Mode", value=st.session_state.get('debug_mode', False), key="temp_debug_mode")
 
-            with col2:
-                st.markdown("<h4 style='margin-bottom: 10px;'>🔄 Sync Settings</h4>", unsafe_allow_html=True)
+            # ── UI Settings ─────────────────────────────────────────
+            st.markdown("<h4 style='margin-bottom: 10px; margin-top: 20px;'>🖥️ UI Settings</h4>", unsafe_allow_html=True)
 
-                with st.container(border=True):
-                    st.info("Future sync optimizations and configuration options will appear here.")
+            # Card 3: CBS Filter Toggle
+            with st.container(border=True, key="settings_card_cbs"):
+                st.markdown("""
+                    <div style='margin-bottom: -5px;'>
+                        <h4 style='font-size: 1.05rem; margin-top: 0px; margin-bottom: 2px;'>CBS Course Filters</h4>
+                        <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; margin-bottom: 10px;'>
+                            Enable Copenhagen Business School specific metadata filtering in course lists.<br>
+                            When enabled, a filter toggle appears in all course selection views allowing you to
+                            filter by Class Type (LA/XB), Semester (E/F), and Year.
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
+                temp_cbs = st.checkbox("Enable CBS Filters", value=st.session_state.get('enable_cbs_filters', False), key="temp_cbs_filters")
 
         st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
@@ -322,6 +336,7 @@ def _render_authenticated_nav(fetch_courses_fn):
             if st.button("Save Settings", type="primary", use_container_width=True):
                 st.session_state['concurrent_downloads'] = temp_max
                 st.session_state['debug_mode'] = temp_debug
+                st.session_state['enable_cbs_filters'] = temp_cbs
 
                 # Persist to config
                 if os.path.exists(CONFIG_FILE):
@@ -337,6 +352,7 @@ def _render_authenticated_nav(fetch_courses_fn):
                 config_data.pop('api_token', None)  # Never write token to JSON
                 config_data['concurrent_downloads'] = temp_max
                 config_data['debug_mode'] = temp_debug
+                config_data['enable_cbs_filters'] = temp_cbs
 
                 try:
                     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:

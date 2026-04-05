@@ -24,7 +24,6 @@ from ui_helpers import (
     esc,
     friendly_course_name,
     open_folder,
-    parse_cbs_metadata,
 )
 from styles import inject_css
 
@@ -776,18 +775,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                   on_click=change_hub_layer, kwargs={'target_layer': 'layer_2'})
         st.markdown("<h3 style='font-size: 1.5rem; margin-top: 0px;'>Select Course</h3>", unsafe_allow_html=True)
 
-        # --- Filters (Favorites / All) ---
-        col_filters, _ = st.columns([0.7, 0.3])
-        with col_filters:
-            filter_mode = st.radio(
-                "Filter Mode",
-                ["Favorites", "All Courses"],
-                index=0 if st.session_state.get('hub_cs_filter_favorites', True) else 1,
-                horizontal=True,
-                label_visibility="collapsed",
-                key="hub_cs_filter_mode"
-            )
-        st.session_state['hub_cs_filter_favorites'] = (filter_mode == "Favorites")
+        # --- Favorites / All Courses pill toggle ---
+        from ui.course_selector import render_favorites_pill
+        favorites_only = render_favorites_pill(
+            "hub_cs",
+            default_favorites=st.session_state.get('hub_cs_filter_favorites', True)
+        )
+        st.session_state['hub_cs_filter_favorites'] = favorites_only
 
         visible_courses = courses
         if st.session_state['hub_cs_filter_favorites']:
@@ -797,91 +791,20 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             st.warning("No courses found with the current filter.")
             return
 
-        # --- CBS Filters ---
-        show_filters = st.toggle("Enable CBS Filters", key="hub_cs_show_cbs")
+        # --- CBS Filters (centralized) ---
+        from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list
+        inject_course_selector_css()
+        filtered_courses = render_cbs_filters(visible_courses, "hub_cs")
 
-        filtered_courses = visible_courses
-
-        if show_filters:
-            course_meta = {}
-            all_types = set()
-            all_semesters = set()
-            all_years = set()
-
-            for c in visible_courses:
-                full_name_str = f"{c.name} ({c.course_code})" if hasattr(c, 'course_code') else c.name
-                meta = parse_cbs_metadata(full_name_str)
-                course_meta[c.id] = meta
-                if meta['type']: all_types.add(meta['type'])
-                if meta['semester']: all_semesters.add(meta['semester'])
-                if meta['year_full']: all_years.add(meta['year_full'])
-
-            with st.container(border=True, key="hub_cs_cbs_container"):
-                st.markdown("**Filter Criteria**")
-                c1, c2, c3 = st.columns(3)
-                with c1:
-                    sel_types = st.multiselect("Class Type", options=sorted(list(all_types)), key="hub_cs_type")
-                with c2:
-                    sel_sem = st.multiselect("Semester", options=sorted(list(all_semesters)), key="hub_cs_sem")
-                with c3:
-                    sel_years = st.multiselect("Year", options=sorted(list(all_years), reverse=True), key="hub_cs_year")
-
-            if sel_types or sel_sem or sel_years:
-                temp_filtered = []
-                for c in visible_courses:
-                    meta = course_meta[c.id]
-                    match_type = meta['type'] in sel_types if sel_types else True
-                    match_sem = meta['semester'] in sel_sem if sel_sem else True
-                    match_year = meta['year_full'] in sel_years if sel_years else True
-                    if match_type and match_sem and match_year:
-                        temp_filtered.append(c)
-                filtered_courses = temp_filtered
-                if not filtered_courses:
-                    st.info("No courses match the selected filters.")
-
-        # --- Sorting: selected first, then alphabetical ---
-        active_selection = st.session_state.get('hub_cs_selected_id', current_selected_id)
-        filtered_courses.sort(key=lambda c: (0 if c.id == active_selection else 1, (c.name or "").lower()))
+        # --- Initialize single-select state ---
+        if 'hub_cs_selected_id' not in st.session_state or st.session_state.get('hub_cs_selected_id') is None:
+            st.session_state['hub_cs_selected_id'] = current_selected_id
 
         st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
-        # --- Initialize single-select state ---
-        if 'hub_cs_selected_id' not in st.session_state:
-            st.session_state['hub_cs_selected_id'] = current_selected_id
-
-        # --- Scrollable course list ---
+        # --- Scrollable course list (centralized single-select) ---
         with st.container(height=400, border=False, key="hub_cs_scroll_container"):
-            for course in filtered_courses:
-                full_name_str = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
-                friendly = friendly_course_name(full_name_str)
-                is_checked = (st.session_state['hub_cs_selected_id'] == course.id)
-
-                c1, c2 = st.columns([0.05, 0.95])
-                with c1:
-                    st.session_state[f"hub_cs_chk_{course.id}"] = is_checked
-
-                    def _hub_course_toggled(cid):
-                        if st.session_state.get(f"hub_cs_chk_{cid}"):
-                            st.session_state['hub_cs_selected_id'] = cid
-                        elif st.session_state.get('hub_cs_selected_id') == cid:
-                            st.session_state['hub_cs_selected_id'] = None
-
-                    st.checkbox(
-                        "Select",
-                        key=f"hub_cs_chk_{course.id}",
-                        on_change=_hub_course_toggled,
-                        args=(course.id,),
-                        label_visibility="collapsed"
-                    )
-
-                with c2:
-                    st.markdown(
-                        f'<div style="margin-top: -2px; width: 100%;">'
-                        f'<strong>{friendly}</strong> '
-                        f'<br><span style="color:{theme.TEXT_DIM}; font-size:0.85em;">{full_name_str}</span>'
-                        f'</div>',
-                        unsafe_allow_html=True
-                    )
+            render_course_list(filtered_courses, "hub_cs", multi_select=False)
 
         # --- Confirm Selection ---
         st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
