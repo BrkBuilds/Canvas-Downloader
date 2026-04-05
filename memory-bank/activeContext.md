@@ -9,6 +9,12 @@
 - **Dialog Topology**: Unified duplicate `@st.dialog` decorators into `ui_shared.py` to definitively prevent `DuplicateWidgetID` Streamlit crashes.
 - **Target Validation**: Achieved 100% AST syntax validation across all modified UI and Engine files.
 
+## Recent Changes (Session 2026-04-05 — Course Selection List Redesign)
+- **CSS Architecture Pivot**: Completely abandoned Streamlit's `st.columns` nested structural hierarchy for checklist rendering. Transitioned to a native full-width `<st.checkbox>` to drastically increase the native hit area for row selection without hacky invisible labels.
+- **Pseudo-Element Data Injection**: Solved the challenge of "stacked" text inside checkboxes by utilizing CSS `::after` pseudo-elements injected onto the Streamlit Markdown container. This dynamically pulls the `course_code` to a secondary line beneath the `course_name` with independent typography (subdued grey) while preserving the single-click hierarchy.
+- **Interactive Pseudo-Classes**: Implemented `:has(input[type="checkbox"]:checked)` container queries to natively apply background highlighting (`rgba(56, 189, 248, 0.08)`) and border-indicators upon row selection dynamically.
+- **Action Button Relocation**: Restyled the bulky "Select All" and "Clear Selection" bulk actions into lightweight text links and isolated them natively parallel to the "CBS Filters" toggle switch for optimal grouping.
+
 ## Recent Changes (Session 2026-04-05 — Course Selection Toggle Modernization)
 - **Segmented Control Refactor**: Abandoned the rigid `st.radio` component in `ui/course_selector.py` in favor of a premium, button-based segmented control architecture.
 - **Native Button Architecture**: Implemented `st.button` inside `st.columns` with `on_click` callbacks to manage toggle state (`favorites` vs `all`), achieving superior styling control and responsiveness.
