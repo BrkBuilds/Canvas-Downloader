@@ -28,7 +28,6 @@ from sync_manager import SyncHistoryManager, get_file_icon
 from ui_helpers import (
     esc,
     friendly_course_name,
-    parse_cbs_metadata,
 )
 
 # Lazy imports to avoid circular dependency with sync_ui.py
@@ -435,178 +434,63 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
 
 @st.dialog("Select Course to sync", width="large")
 def select_course_dialog_inner(courses, current_selected_id, ):
-    # We use a purely static CSS string so React NEVER unmounts it during re-renders.
-    # Instead, we use the CSS `:has()` pseudo-class to sniff the native HTML checkbox state 
-    # of the Streamlit toggle and shift the height instantly, completely bypassing the Python backend rendering lag.
+    from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list, render_favorites_pill
+
+    # Static CSS: scroll-container height sniffing for the CBS toggle
     st.markdown("""
         <style>
-            /* Default closed state: 65vh */
             div.st-key-course_list_scroll_container {
                 height: 65vh !important;
                 min-height: 65vh !important;
                 max-height: 65vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
-                padding-right: 5px; /* Leave room for scrollbar */
+                padding-right: 5px;
             }
-            
-            /* Open state: Sniff the native toggle checkbox. If checked, force 55vh instantly! */
-            html:has(div.st-key-sync_dialog_show_cbs input:checked) div.st-key-course_list_scroll_container {
+            html:has(div.st-key-sync_d_show_cbs_filters input:checked) div.st-key-course_list_scroll_container {
                 height: 55vh !important;
                 min-height: 55vh !important;
                 max-height: 55vh !important;
             }
-            
-            /* Trim dead space beneath the standard CBS Filter toggle */
-            div.st-key-sync_dialog_show_cbs {
-                margin-bottom: -15px !important;
-            }
-            
-            /* Trim dead space beneath the active CBS Filter selection grid container */
-            div.st-key-sync_dialog_cbs_container {
-                margin-bottom: -15px !important;
-            }
         </style>
     """, unsafe_allow_html=True)
 
-    # 1. Filters similar to main app
-    col_filters, _ = st.columns([0.7, 0.3])
-    with col_filters:
-        filter_mode = st.radio(
-            "Filter Mode",
-            ['Favorites Only', 'All Courses'],
-            index=1 if not st.session_state.get('sync_filter_favorites', True) else 0,
-            horizontal=True,
-            label_visibility="collapsed",
-            key="sync_dialog_filter_mode"
-        )
-    
-    # Update preference
-    st.session_state['sync_filter_favorites'] = (filter_mode == 'Favorites Only')
-    
-    # Filter by favorites
+    inject_course_selector_css()
+
+    # 1. Favorites / All Courses pill toggle
+    favorites_only = render_favorites_pill(
+        "sync_d",
+        default_favorites=st.session_state.get('sync_filter_favorites', True)
+    )
+    st.session_state['sync_filter_favorites'] = favorites_only
+
     visible_courses = courses
     if st.session_state['sync_filter_favorites']:
         visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
-        
+
     if not visible_courses:
         st.warning('No courses found.')
         if st.button("Close"):
              st.rerun()
         return
 
-    # CBS Filters
-    show_filters = st.toggle('Enable CBS Filters', key="sync_dialog_show_cbs")
-    
-    filtered_courses = visible_courses
-    
-    if show_filters:
-        # metadata parsing
-        course_meta = {}
-        all_types = set()
-        all_semesters = set()
-        all_years = set()
-        
-        for c in visible_courses:
-             full_name_str = f"{c.name} ({c.course_code})" if hasattr(c, 'course_code') else c.name
-             meta = parse_cbs_metadata(full_name_str)
-             course_meta[c.id] = meta
-             if meta['type']: all_types.add(meta['type'])
-             if meta['semester']: all_semesters.add(meta['semester'])
-             if meta['year_full']: all_years.add(meta['year_full'])
+    # 2. CBS Filters (centralized)
+    filtered_courses = render_cbs_filters(visible_courses, "sync_d")
 
-        # Render Widgets
-        with st.container(border=True, key="sync_dialog_cbs_container"):
-             st.markdown("**Filter Criteria**")
-             c1, c2, c3 = st.columns(3)
-             with c1:
-                 sel_types = st.multiselect('Class Type', options=sorted(list(all_types)), key="sync_d_type")
-             with c2:
-                 sel_sem = st.multiselect('Semester', options=sorted(list(all_semesters)), key="sync_d_sem")
-             with c3:
-                 sel_years = st.multiselect('Year', options=sorted(list(all_years), reverse=True), key="sync_d_year")
-        
-        # Apply Logic
-        if sel_types or sel_sem or sel_years:
-             temp_filtered = []
-             for c in visible_courses:
-                 meta = course_meta[c.id]
-                 match_type = meta['type'] in sel_types if sel_types else True
-                 match_sem = meta['semester'] in sel_sem if sel_sem else True
-                 match_year = meta['year_full'] in sel_years if sel_years else True
-                 
-                 if match_type and match_sem and match_year:
-                     temp_filtered.append(c)
-             filtered_courses = temp_filtered
-             
-             if not filtered_courses:
-                 st.info('No courses match the selected filters.')
+    # Initialize single-select state
+    if "sync_d_selected_id" not in st.session_state or st.session_state.get("sync_d_selected_id") is None:
+        st.session_state["sync_d_selected_id"] = current_selected_id
 
-    # Sorting
-    # current selection first (weight 0), then alphabetical (weight 1)
-    active_selection = st.session_state.get("sync_dialog_selected_id", current_selected_id)
-    filtered_courses.sort(key=lambda c: (0 if c.id == active_selection else 1, (c.name or "").lower()))
-    
-    # We use a raw HTML line instead of st.markdown("---") to eradicate Streamlit's implicit Markdown wrapper padding that generates massive dead space above it.
     st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
-    
-    # Render List
-    # We implement "Single Select" by using a session state key that acts as the single source of truth
-    # key: "sync_dialog_selected_id"
-    
-    # Initialize if not set natively, or if it is None
-    if st.session_state["sync_dialog_selected_id"] is None:
-        st.session_state["sync_dialog_selected_id"] = current_selected_id
 
-    # We need to be able to Unselect? Or just switch? 
-    # Usually strictly one course is good.
-    
+    # 3. Course list (centralized single-select)
     with st.container(border=False, key="course_list_scroll_container"):
-        for course in filtered_courses:
-            # Calculate display names
-            full_name_str = f"{course.name} ({course.course_code})" if hasattr(course, 'course_code') else course.name
-            friendly = friendly_course_name(full_name_str)
-            
-            # Determine if checked
-            is_checked = (st.session_state["sync_dialog_selected_id"] == course.id)
-            
-            # Layout
-            c1, c2 = st.columns([0.05, 0.95])
-            with c1:
-                 # Checkbox that behaves like radio
-                 
-                 # Ensure widget state matches our single source of truth before rendering
-                 st.session_state[f"sync_chk_{course.id}"] = is_checked
+        render_course_list(filtered_courses, "sync_d", multi_select=False)
 
-                 def course_toggled(cid):
-                     if st.session_state.get(f"sync_chk_{cid}"):
-                         st.session_state["sync_dialog_selected_id"] = cid
-                     elif st.session_state.get("sync_dialog_selected_id") == cid:
-                         st.session_state["sync_dialog_selected_id"] = None
-
-                 st.checkbox(
-                     "Select",
-                     key=f"sync_chk_{course.id}",
-                     on_change=course_toggled,
-                     args=(course.id,),
-                     label_visibility="collapsed"
-                 )
-
-            with c2:
-                 # Styled Text (appended immediately after checkbox as an inline-block)
-                 st.markdown(
-                     f'<div style="margin-top: -2px; width: 100%;">'
-                     f'<strong>{friendly}</strong> '
-                     f'<br><span style="color:{theme.TEXT_DIM}; font-size:0.85em;">{full_name_str}</span>'
-                     f'</div>',
-                     unsafe_allow_html=True
-                 )
-            # st.markdown("<div style='margin-bottom:5px'></div>", unsafe_allow_html=True) # Spacer
-
-    # Use HTML hr to eradicate padding above the Confirm button separator
+    # 4. Confirm
     st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
     if st.button("Confirm Selection", key="sync_confirm_btn", type="primary", use_container_width=True):
-        st.session_state["sync_selected_return_id"] = st.session_state["sync_dialog_selected_id"]
+        st.session_state["sync_selected_return_id"] = st.session_state["sync_d_selected_id"]
         st.rerun()
 
 
@@ -678,7 +562,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             
         with col_c_btn:
             if st.button(btn_label, key="btn_open_course_dialog"):
-                st.session_state["sync_dialog_selected_id"] = selected_course_id
+                st.session_state["sync_d_selected_id"] = selected_course_id
                 select_course_dialog_inner(courses, selected_course_id)
         
         with col_c_spacer:

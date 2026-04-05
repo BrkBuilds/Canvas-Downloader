@@ -72,9 +72,10 @@ DOWNLOAD_DEFAULTS = {
     'hub_editing_pair_idx': None,
     'hub_is_adding_new_pair': False,
     'hub_cs_selected_id': None,
-    'sync_dialog_selected_id': None,
+    'sync_d_selected_id': None,
     'sync_filter_all_exts': True,
     'preset_hub_tab': 'user',
+    'enable_cbs_filters': False,
 }
 
 SYNC_DEFAULTS = {
@@ -93,7 +94,7 @@ SYNC_DEFAULTS = {
     'hub_is_adding_new_pair': False,
     'preset_hub_tab': 'user',
     'hub_cs_selected_id': None,
-    'sync_dialog_selected_id': None,
+    'sync_d_selected_id': None,
     'sync_filter_all_exts': True,
 }
 

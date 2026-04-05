@@ -28,6 +28,7 @@ from ui_helpers import (
     open_folder,
     render_sync_wizard,
     friendly_course_name,
+    get_course_display_parts,
     short_path,
 )
 
@@ -284,7 +285,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     name_counts = defaultdict(int)
     
     for c in courses:
-        raw_name = f"{c.name} ({c.course_code})" if hasattr(c, 'course_code') else c.name
+        base_name, code = get_course_display_parts(c)
+        raw_name = f"{base_name} ({code})" if code else base_name
         friendly = friendly_course_name(raw_name)
         temp_names[c.id] = {'friendly': friendly, 'raw': raw_name}
         name_counts[friendly] += 1
