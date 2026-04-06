@@ -773,7 +773,19 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
         st.button("\u2190 Back to Edit", key="btn_hub_back_from_course_sel", type="tertiary",
                   on_click=change_hub_layer, kwargs={'target_layer': 'layer_2'})
-        st.markdown("<h3 style='font-size: 1.5rem; margin-top: 0px;'>Select Course</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size: 1.5rem; margin-top: -20px; margin-bottom: -5px;'>Select Course</h3>", unsafe_allow_html=True)
+
+        # Compact spacing CSS for hub course selector
+        st.markdown("""<style>
+        /* Crush the Show: label margin */
+        div.st-key-fav_seg_hub_cs { margin-top: -10px !important; margin-bottom: -10px !important; }
+        div.st-key-hub_cs_show_cbs_filters { margin-top: 0px !important; margin-bottom: 0px !important; }
+        /* Reduce the Streamlit vertical block gap that spaces out all elements */
+        div.st-key-btn_hub_back_from_course_sel ~ div[data-testid="stVerticalBlock"],
+        div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
+            gap: 0.3rem !important;
+        }
+        </style>""", unsafe_allow_html=True)
 
         # --- Favorites / All Courses pill toggle ---
         from ui.course_selector import render_favorites_pill
@@ -784,7 +796,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         st.session_state['hub_cs_filter_favorites'] = favorites_only
 
         visible_courses = courses
-        if st.session_state['hub_cs_filter_favorites']:
+        if favorites_only:
             visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
 
         if not visible_courses:

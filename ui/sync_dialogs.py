@@ -436,7 +436,7 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
 def select_course_dialog_inner(courses, current_selected_id, ):
     from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list, render_favorites_pill
 
-    # Static CSS: scroll-container height sniffing for the CBS toggle
+    # Static CSS: scroll-container height sniffing + compact spacing for dialog
     st.markdown("""
         <style>
             div.st-key-course_list_scroll_container {
@@ -452,6 +452,14 @@ def select_course_dialog_inner(courses, current_selected_id, ):
                 min-height: 55vh !important;
                 max-height: 55vh !important;
             }
+            /* Compact dialog spacing — crush Streamlit's default element gaps */
+            div[role="dialog"] div[data-testid="stElementContainer"] {
+                margin-bottom: -20px !important;
+            }
+            /* Restore spacing for course list items inside scroll container */
+            div.st-key-course_list_scroll_container div[data-testid="stElementContainer"] {
+                margin-bottom: 0px !important;
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -465,7 +473,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     st.session_state['sync_filter_favorites'] = favorites_only
 
     visible_courses = courses
-    if st.session_state['sync_filter_favorites']:
+    if favorites_only:
         visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
 
     if not visible_courses:
