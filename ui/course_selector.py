@@ -75,8 +75,8 @@ def inject_course_selector_css():
     }}
     /* ── Toggle Switch ────────── */
     div[class*="st-key-"][class$="_show_cbs_filters"] {{
-        margin-top: 15px !important;
-        margin-bottom: 15px !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
     }}
     </style>""", unsafe_allow_html=True)
 
@@ -105,16 +105,17 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     star_url = _STAR_BLUE if active_key == "favorites" else _STAR_GREY
     list_url = _LIST_BLUE if active_key == "all" else _LIST_GREY
 
-    # ── HOISTED CSS (Section 8 guardrail: inject BEFORE buttons) ─
+    # ── HOISTED CSS FOR SEGMENTED CONTROL LIST VIEW TOGGLE) ─
     st.markdown(f"""<style>
     /* ── Outer tray (border=True used purely for st-key- class) ── */
     div[class*="st-key-fav_seg_"] {{
         background-color: rgba(0, 0, 0, 0.25) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 12px !important;
-        padding: 4px !important;
-        margin-top: 2px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 14px !important;
+        padding: 6px !important;
+        margin-top: -30px !important;
         max-width: 380px !important;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.025) !important;
     }}
     div[class*="st-key-fav_seg_"] [data-testid="stHorizontalBlock"] {{
         gap: 4px !important;
@@ -131,13 +132,12 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
         background-color: transparent !important;
         border: 1px solid transparent !important;
         border-radius: 8px !important;
-        padding: 10px 16px 10px 40px !important;
         color: #cbd5e1 !important;
-        opacity: 0.9 !important;
+        opacity: 0.75 !important;
         transition: all 0.2s ease !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
-        background-size: 18px !important;
+        background-size: 22px !important;
     }}
     div[class*="st-key-btn_fav_"] button p {{
         font-size: 1rem !important;
@@ -156,7 +156,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     /* ── Hover (inactive buttons) ────────────────────────────── */
     div[class*="st-key-btn_fav_"] button:hover {{
         background-color: rgba(255, 255, 255, 0.05) !important;
-        border-color: rgba(56, 189, 248, 0.3) !important;
+        border-color: transparent !important;
         opacity: 1 !important;
         color: #ffffff !important;
     }}
@@ -172,7 +172,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     div.st-key-btn_fav_{active_key}_{namespace} button {{
         background-color: rgba(56, 189, 248, 0.1) !important;
         border: 1px solid rgba(56, 189, 248, 0.3) !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+        box-shadow: 0 0 16px rgba(0, 0, 0, 1) !important;
         opacity: 1 !important;
         color: #ffffff !important;
         padding-left: 42px !important;
@@ -190,7 +190,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     # ── "Show:" label ──────────────────────────────────────────
     st.markdown(
         "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; "
-        "margin-top: 0px; margin-bottom: 2px;'>Show:</p>",
+        "margin-top: -35px; margin-bottom: 0px;'>Show:</p>",
         unsafe_allow_html=True
     )
 
@@ -336,7 +336,7 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
     div[class*="st-key-{namespace}_chk_"] {{
         border-radius: 6px !important;
         transition: background-color 0.2s !important;
-        margin-bottom: -8px !important;
+        margin-bottom: -10px !important;
         padding-top: 4px !important;
         padding-bottom: 4px !important;
         padding-left: 10px !important;
@@ -419,7 +419,7 @@ def _render_single_select_list(courses: list, namespace: str):
     div[class*="st-key-{namespace}_chk_"] {{
         border-radius: 6px !important;
         transition: background-color 0.2s !important;
-        margin-bottom: -8px !important;
+        margin-bottom: -10px !important;
         padding-top: 4px !important;
         padding-bottom: 4px !important;
         padding-left: 10px !important;
@@ -517,18 +517,18 @@ def render_course_selector(fetch_courses_fn):
     /* Button base styles */
     div.st-key-btn_course_select_all button,
     div.st-key-btn_course_clear_selection button {{
-        background-color: rgba(255, 255, 255, 0.03) !important;
+        background-color: rgba(255, 255, 255, 0) !important;
         border-radius: 8px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border: 0px solid rgba(255, 255, 255, 0.1) !important;
         min-height: 38px !important;
         height: 38px !important;
-        padding-left: 16px !important;
-        padding-right: 16px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }}
     div.st-key-btn_course_select_all button:hover,
     div.st-key-btn_course_clear_selection button:hover {{
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-color: rgba(255, 255, 255, 0.15) !important;
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(255, 255, 255, 0.00) !important;
     }}
     div.st-key-btn_course_select_all button > div,
     div.st-key-btn_course_select_all button div[data-testid="stMarkdownContainer"],
@@ -554,8 +554,8 @@ def render_course_selector(fetch_courses_fn):
     div.st-key-btn_course_clear_selection button p::before {{
         content: "" !important;
         display: inline-block !important;
-        width: 20px !important;
-        height: 20px !important;
+        width: 18px !important;
+        height: 18px !important;
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
@@ -585,14 +585,14 @@ def render_course_selector(fetch_courses_fn):
     filtered_courses = render_cbs_filters(courses, "dl")
 
     # --- 2. Action Buttons (Own Row below filters) ---
-    col_select_all, col_clear, col_spacer = st.columns([0.65, 0.8, 3])
+    col_select_all, col_clear, col_spacer = st.columns([0.3, 0.4, 3])
     with col_select_all: 
         select_all_clicked = st.button('Select All', key="btn_course_select_all", use_container_width=True)
     with col_clear: 
         clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection", use_container_width=True)
 
     # --- 3. Separator before course list ---
-    st.markdown('<div style="margin-top: 5px; margin-bottom: -22px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top: -10px; margin-bottom: -22px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
 
     visible_ids = {c.id for c in filtered_courses}
 
