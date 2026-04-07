@@ -1,6 +1,11 @@
 # Progress: Canvas Downloader
 
 ## Completed Milestones
+- [x] **Hub UI Modernization & Modal Header Hack** (2026-04-07):
+    - [x] **Icon Modernization**: Replaced all legacy emojis in the Sync Hub with custom Base64-encoded PNG assets.
+    - [x] **Zero-Width Space Hack**: Implemented `\u200b` titles for `@st.dialog` to satisfy Streamlit 1.51+ while rendering custom HTML headers.
+    - [x] **CSS Precision**: Fine-tuned vertical rhythm with `-70px` negative margins and targeted close-button hiding.
+    - [x] **Pseudo-Element Injection**: Refactored `btn_hub_main` to use CSS pseudo-elements for icon management.
 - [x] **Course Selection Toggle Modernization** (2026-04-05):
     - [x] **Segmented Control Refactor**: Replaced the rigid `st.radio` component in `ui/course_selector.py` with a premium, button-based segmented control architecture.
     - [x] **Native Button Architecture**: Leveraged `st.button` and `on_click` callbacks inside a width-constrained (`380px`) tray for superior aesthetic control.
