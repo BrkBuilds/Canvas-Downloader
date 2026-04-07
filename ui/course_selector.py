@@ -65,7 +65,7 @@ def inject_course_selector_css():
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 8px !important;
         margin-top: -5px !important;
-        margin-bottom: 5px !important;
+        margin-bottom: -5px !important;
     }}
     /* ── CBS Filter Tags: Subtle blue highlight ──────────────── */
     div[class*="st-key-cbs_container_"] span[data-baseweb="tag"] {{
@@ -190,7 +190,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     # ── "Show:" label ──────────────────────────────────────────
     st.markdown(
         "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; "
-        "margin-top: -35px; margin-bottom: 0px;'>Show:</p>",
+        "margin-top: -50px; margin-bottom: 25px;'>Show:</p>",
         unsafe_allow_html=True
     )
 
@@ -338,9 +338,11 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
         transition: background-color 0.2s !important;
         margin-bottom: -10px !important;
         padding-top: 4px !important;
-        padding-bottom: 4px !important;
+        padding-bottom: 2px !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
+        width: 100% !important;
+        display: block !important;
     }}
     div[class*="st-key-{namespace}_chk_"]:hover {{
         background-color: rgba(255, 255, 255, 0.03) !important;
@@ -361,7 +363,7 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] p {{
         font-size: 1.05em !important;
         font-weight: 400 !important;
-        color: #e2e8f0 !important;
+        color: #ffffff !important;
         margin: 0 !important;
         line-height: 1.2 !important;
     }}
@@ -386,7 +388,7 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
                 content: "{esc(code_clean)}";
                 display: block !important;
                 color: #94a3b8 !important;
-                font-size: 0.72em !important;
+                font-size: 0.85em !important;
                 font-weight: 400 !important;
                 margin-top: -2px !important;
             }}
@@ -404,6 +406,11 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
             new_selected_ids.append(course.id)
 
     if dynamic_css:
+        if len(courses) > 0:
+            f_key = f"{namespace}_chk_{courses[0].id}"
+            dynamic_css.append(f"""
+            div.st-key-{f_key} {{ margin-top: -40px !important; }}
+            """)
         st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
 
     st.session_state['selected_course_ids'] = new_selected_ids
@@ -421,9 +428,11 @@ def _render_single_select_list(courses: list, namespace: str):
         transition: background-color 0.2s !important;
         margin-bottom: -10px !important;
         padding-top: 4px !important;
-        padding-bottom: 4px !important;
+        padding-bottom: 2px !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
+        width: 100% !important;
+        display: block !important;
     }}
     div[class*="st-key-{namespace}_chk_"]:hover {{
         background-color: rgba(255, 255, 255, 0.03) !important;
@@ -488,8 +497,12 @@ def _render_single_select_list(courses: list, namespace: str):
         st.checkbox(base_name, key=chk_key, on_change=_on_toggle, args=(course.id,))
 
     if dynamic_css:
+        if len(courses) > 0:
+            f_key = f"{namespace}_chk_{courses[0].id}"
+            dynamic_css.append(f"""
+            div.st-key-{f_key} {{ margin-top: -40px !important; }}
+            """)
         st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
-
 
 # ═══════════════════════════════════════════════════════════════════════
 # Download Mode — Step 1: Select Courses
@@ -514,6 +527,19 @@ def render_course_selector(fetch_courses_fn):
 
     st.markdown(f"""
     <style>
+    /* ── Action Buttons Row: reflow vertical stack → horizontal ── */
+    div[data-testid="stVerticalBlock"]:has(> div.st-key-btn_course_select_all) {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+        align-items: center !important;
+    }}
+    /* Set shrink-to-fit for the button containers */
+    div[data-testid="stVerticalBlock"]:has(> div.st-key-btn_course_select_all) > div {{
+        width: auto !important;
+        flex: 0 0 auto !important;
+    }}
     /* Button base styles */
     div.st-key-btn_course_select_all button,
     div.st-key-btn_course_clear_selection button {{
@@ -524,6 +550,9 @@ def render_course_selector(fetch_courses_fn):
         height: 38px !important;
         padding-left: 8px !important;
         padding-right: 8px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        min-width: max-content !important;
     }}
     div.st-key-btn_course_select_all button:hover,
     div.st-key-btn_course_clear_selection button:hover {{
@@ -534,9 +563,9 @@ def render_course_selector(fetch_courses_fn):
     div.st-key-btn_course_select_all button div[data-testid="stMarkdownContainer"],
     div.st-key-btn_course_clear_selection button > div,
     div.st-key-btn_course_clear_selection button div[data-testid="stMarkdownContainer"] {{
-        width: 100% !important;
+        width: auto !important;
         display: flex !important;
-        justify-content: center !important;
+        justify-content: left !important;
         align-items: center !important;
     }}
     div.st-key-btn_course_select_all button p,
@@ -546,7 +575,7 @@ def render_course_selector(fetch_courses_fn):
         justify-content: center !important;
         gap: 12px !important;
         margin: 0 !important;
-        width: 100% !important;
+        width: auto !important;
         line-height: 1 !important;
         white-space: nowrap !important;
     }}
@@ -584,15 +613,22 @@ def render_course_selector(fetch_courses_fn):
     # --- 1. CBS Filters (Own Row) ---
     filtered_courses = render_cbs_filters(courses, "dl")
 
-    # --- 2. Action Buttons (Own Row below filters) ---
-    col_select_all, col_clear, col_spacer = st.columns([0.3, 0.4, 3])
-    with col_select_all: 
-        select_all_clicked = st.button('Select All', key="btn_course_select_all", use_container_width=True)
-    with col_clear: 
-        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection", use_container_width=True)
+    # --- 2. Action Buttons (vertical stack reflowed into flex row via CSS) ---
+    with st.container(key="action_btns_row"):
+        select_all_clicked = st.button('Select All', key="btn_course_select_all")
+        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
 
     # --- 3. Separator before course list ---
-    st.markdown('<div style="margin-top: -10px; margin-bottom: -22px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="crs-list-sep-top" style="border-bottom: 1px solid rgba(255,255,255,0.1); margin-top: -25px;"></div>
+    <style>
+    div[data-testid="element-container"]:has(.crs-list-sep-top),
+    div:has(> div[data-testid="stMarkdownContainer"] .crs-list-sep-top) {
+        margin-bottom: -20px !important;
+        padding-bottom: 0px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     visible_ids = {c.id for c in filtered_courses}
 
@@ -614,7 +650,16 @@ def render_course_selector(fetch_courses_fn):
     render_course_list(filtered_courses, "dl", multi_select=True)
 
     # --- Continue ---
-    st.markdown('<div style="margin-top: -18px !important; margin-bottom: 15px !important; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="crs-list-sep-bot" style="border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;"></div>
+    <style>
+    div[data-testid="element-container"]:has(.crs-list-sep-bot),
+    div:has(> div[data-testid="stMarkdownContainer"] .crs-list-sep-bot) {
+        margin-top: -15px !important;
+        padding-top: 0px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     error_container = st.empty()
 
     c1, c2 = st.columns([1, 3])

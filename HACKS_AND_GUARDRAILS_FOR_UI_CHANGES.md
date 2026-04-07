@@ -205,7 +205,37 @@ With the CSS already loaded into the browser memory before React is asked to re-
        ''', unsafe_allow_html=True)
        ```
     5. **Apply Image Filters:** To manage disabled or active states, use CSS `filter`, such as `filter: grayscale(100%) opacity(50%);`, rather than modifying the asset itself.
-#### 11. The Button-Based Segmented Control & Container Key Bug
+#### 11. Custom Base64 Modal Headers (The Zero-Width Space Hack)
+* **The Problem:** Streamlit's `@st.dialog("Title")` decorator natively only accepts text strings or Unicode emojis. Passing an HTML `<img>` tag or Base64 string causes Streamlit to securely auto-escape it into literal text. Furthermore, passing an empty string `""` to hide the title crashes Streamlit 1.51.0+ (`StreamlitAPIException`) due to backend accessibility validation, and trying to hide the native title via CSS is highly brittle due to Streamlit's changing internal DOM IDs.
+* **The Solution:** The "Zero-Width Space Hack." We satisfy the Python backend's requirement for a non-empty string by passing a Unicode zero-width space, which renders completely invisible on the frontend. We then inject our own custom HTML header and pull it up into the empty void using negative margins.
+* **Implementation Workflow:**
+    1. **The Decorator Bypass:** Pass the unicode zero-width space `"\u200b"` into the dialog decorator. This prevents the API crash while rendering nothing.
+       ```python
+       @st.dialog("\u200b", width="large")
+       ```
+    2. **Encode the Asset:** Fetch your custom icon via Base64 at the top of the dialog function.
+       ```python
+       b64_icon = get_base64_image("assets/my_custom_icon.png")
+       ```
+    3. **Inject the Custom Header:** At the absolute top of the dialog's Python execution block, inject a custom `<div>` containing the image and the title.
+    4. **The Negative Margin Pull:** Apply a severe negative `margin-top` (e.g., `-70px`) to the injected `<div>` to pull your custom header upward, eating the dead padding space left by the invisible native title.
+
+    *Example Pattern:*
+    ```python
+    # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0px; margin-top: -70px;">
+            <img src="data:image/png;base64,{{b64_icon}}" style="width: 36px; height: 36px;" />
+            <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">My Custom Title</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    ```
+* **Guardrail:** ALWAYS strictly use a `<div>` for your custom title text (as shown above). Do NOT use `<h2>` or `<h3>` tags, as global Streamlit CSS or other injected styles targeting native headers might accidentally catch and alter your custom text.
+
+#### 12. The Button-Based Segmented Control & Container Key Bug
 *   **The Container Key Generation Bug:**
     *   **Problem:** In this Streamlit version, calling `st.container(key="my_tray")` does *not* reliably generate a corresponding `st-key-my_tray` class in the DOM unless the container is "active" in some way (like having a border). This makes it impossible to target the outer tray for background/radius styling via CSS.
     *   **Rule:** To guarantee CSS-targetability for a container, always use `st.container(border=True, key="...")`.
