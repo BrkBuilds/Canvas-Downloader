@@ -225,39 +225,124 @@ def confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
 
 def saved_groups_hub_dialog_inner(courses, course_names):
     """3-layered SPA dialog for managing saved sync groups."""
-    from ui_helpers import get_config_dir
+    from ui_helpers import get_config_dir, get_base64_image
 
     mgr = SavedGroupsManager(get_config_dir())
     layer = st.session_state.get('hub_layer', 'layer_1')
+
+    b64_view_all = get_base64_image("assets/icon_sync_view_all.png")
+    b64_groups = get_base64_image("assets/icon_sync_group.png")
+    b64_pairs = get_base64_image("assets/icon_sync_pair.png")
+    b64_hub_icon = get_base64_image("assets/icon_sync_hub.png")
 
     # 1. Safely consume and display any pending dialog toasts
     if 'hub_toast' in st.session_state:
         st.toast(st.session_state.pop('hub_toast'))
 
     # --- Dialog-wide CSS ---
-    st.markdown("""
+    st.markdown(f"""
         <style>
+            /* 2. Hide only the native close 'X' button to force state-aware closing */
+            div[data-testid="stDialog"] button[aria-label="Close"] {{
+                display: none !important; 
+            }}
+
+            /* Dynamic Icon Injections for Tab Buttons */
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button div[data-testid="stMarkdownContainer"] p {{
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }}
+
+            /* Base styling (Default Inactive State) */
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button {{
+                font-size: 1.1rem !important;
+                font-weight: 600 !important;
+                padding: 6px 16px !important;
+                height: auto !important;
+                min-height: 40px !important;
+                border-radius: 6px !important;
+                background-color: transparent !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                color: #e0e7ff !important;
+                transition: all 0.2s ease !important;
+            }}
+
+            /* Hover State (All Tabs) - Solid Indigo */
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button:hover {{
+                background-color: rgba(95, 100, 200, 0.85) !important;
+                border-color: rgba(95, 100, 200, 1) !important;
+                color: #ffffff !important;
+            }}
+
+            /* Active Tab (Primary) Context styling */
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"] {{
+                background-color: rgba(95, 100, 200, 0.15) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-bottom: 3px solid rgba(140, 150, 255, 1) !important; /* Light indigo bottom border */
+                color: #ffffff !important;
+            }}
+
+            /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:hover {{
+                background-color: rgba(95, 100, 200, 0.4) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
+                color: #ffffff !important;
+            }}
+            div[data-testid="stDialog"] div.st-key-btn_hub_tab_view_all button div[data-testid="stMarkdownContainer"] p::before {{
+                content: "";
+                display: inline-block;
+                width: 22px;
+                height: 22px;
+                margin-right: 8px;
+                background-image: url('data:image/png;base64,{b64_view_all}');
+                background-size: contain;
+                background-repeat: no-repeat;
+            }}
+            div[data-testid="stDialog"] div.st-key-btn_hub_tab_groups button div[data-testid="stMarkdownContainer"] p::before {{
+                content: "";
+                display: inline-block;
+                width: 22px;
+                height: 22px;
+                margin-right: 8px;
+                background-image: url('data:image/png;base64,{b64_groups}');
+                background-size: contain;
+                background-repeat: no-repeat;
+            }}
+            div[data-testid="stDialog"] div.st-key-btn_hub_tab_pairs button div[data-testid="stMarkdownContainer"] p::before {{
+                content: "";
+                display: inline-block;
+                width: 22px;
+                height: 22px;
+                margin-right: 8px;
+                background-image: url('data:image/png;base64,{b64_pairs}');
+                background-size: contain;
+                background-repeat: no-repeat;
+            }}
+
             /* Flexbox Left-Align for Inline Edit/Add Rows */
-            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] {
+            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] {{
                 align-items: center !important;
                 justify-content: flex-start !important;
                 gap: 10px !important;
-            }
-            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+
+            }}
+            div[class*="st-key-hub_inline_edit_row"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
                 width: auto !important;
                 flex: 0 1 auto !important;
-            }
+            }}
             /* Reduce vertical space between Folder row and Course row */
             div[class*="st-key-hub_inline_edit_row_folder"],
-            div[class*="st-key-hub_inline_edit_row_add_folder"] {
+            div[class*="st-key-hub_inline_edit_row_add_folder"] {{
                 margin-bottom: -6px !important;
-            }
+            }}
 
             /* Pull back buttons up to sit flush with dialog top */
             div.st-key-btn_back_to_groups,
-            div.st-key-btn_hub_back_from_course_sel {
+            div.st-key-btn_hub_back_from_course_sel {{
                 margin-top: -30px !important;
-            }
+            }}
 
             /* =========================================
                COMPACT PAIR CARDS & ACTION BUTTONS
@@ -265,39 +350,39 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             /* Shrink the Action Buttons (Open, Edit, Remove) to 32px height */
             div[class*="st-key-hub_open_"] button,
             div[class*="st-key-hub_editp_"] button,
-            div[class*="st-key-btn_hub_remove_pair_"] button {
+            div[class*="st-key-btn_hub_remove_pair_"] button {{
                 min-height: 32px !important;
                 height: 32px !important;
                 padding-top: 2px !important;
                 padding-bottom: 2px !important;
                 font-size: 0.9rem !important;
-            }
+            }}
 
             /* Reduce vertical padding inside the Pair Cards */
-            div[class*="st-key-hub_pair_card_"] {
+            div[class*="st-key-hub_pair_card_"] {{
                 padding-top: 8px !important;
                 padding-bottom: 12px !important; 
                 margin-bottom: 10px !important; /* Tighter gap between cards */
-            }
+            }}
 
             /* Compact the "See Configuration" expander summary */
-            div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {
+            div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {{
                 padding-top: 4px !important;
                 padding-bottom: 4px !important;
                 min-height: 0px !important;
-            }
+            }}
 
             /* Pull the action buttons closer to the text above them */
-            div[class*="st-key-hub_pair_card_"] div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
+            div[class*="st-key-hub_pair_card_"] div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {{
                 margin-top: -5px !important;
                 margin-bottom: 2px !important;
-            }
+            }}
 
             /* Fix Group Name Edit Box padding to prevent height jumps */
-            div.st-key-hub_edit_group_meta {
+            div.st-key-hub_edit_group_meta {{
                 padding: 8px 12px !important;
                 margin-bottom: 5px !important;
-            }
+            }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -305,6 +390,18 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     # =================================================================
     # LAYER 1 — Overview
     # =================================================================
+    
+    # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0px; margin-top: -70px;">
+            <img src="data:image/png;base64,{b64_hub_icon}" style="width: 36px; height: 36px;" />
+            <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">Saved Groups & Pairs</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
     if layer == 'layer_1':
         groups = mgr.load_groups()
         if not groups:
@@ -327,16 +424,19 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             t1, t2, t3 = st.columns(3)
             with t1:
                 st.button("View All", 
+                          key="btn_hub_tab_view_all",
                           type="primary" if _vm == "View All" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("View All",))
             with t2:
                 st.button("Groups", 
+                          key="btn_hub_tab_groups",
                           type="primary" if _vm == "Groups" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("Groups",))
             with t3:
                 st.button("Pairs", 
+                          key="btn_hub_tab_pairs",
                           type="primary" if _vm == "Pairs" else "secondary", 
                           use_container_width=True, 
                           on_click=set_view_mode, args=("Pairs",))
@@ -363,10 +463,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         pair = group.get('pairs', [{}])[0] if group.get('pairs') else {}
                         display_name = friendly_course_name(pair.get('course_name', group['group_name']))
 
-                        # Title: 🏷️ with same font size/weight as group expander summaries
+                        # Title: Base64 Pairs icon with same font size/weight as group expander summaries
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2; margin-bottom: 8px;'>\U0001F3F7\ufe0f {group['group_name']}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2; margin-bottom: 8px;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
                                 <div class='pair-course-subtitle'>Course: {display_name}</div>
                             </div>
                         """, unsafe_allow_html=True)
@@ -428,10 +528,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         pair_count = len(group.get('pairs', []))
                         course_word = 'course' if pair_count == 1 else 'courses'
                         
-                        # 1. Custom Title HTML (Fixed top margin to align centrally)
+                        # 1. Custom Title HTML (Fixed top margin to align centrally, Base64 Group icon)
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>\U0001F5C2\ufe0f {group['group_name']}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -600,8 +700,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             for p_idx, pair in enumerate(pairs):
                 # === INLINE EDIT MODE ===
                 if editing_idx is not None and editing_idx == p_idx:
-                    with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
-                        st.markdown("<div style='font-size: 1.25rem; font-weight: 600; margin-top: 5px; margin-bottom: -10px;'>\u270f\ufe0f Editing Pair</div>", unsafe_allow_html=True)
+                    with st.container(border=True, key=f"hub_compact_edit_form_{p_idx}"):
+                        st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>✏️ Editing Pair</h3>", unsafe_allow_html=True)
 
                         # --- Folder row ---
                         temp_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
@@ -616,7 +716,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     unsafe_allow_html=True,
                                 )
                             with col_f_btn:
-                                st.button("Change Folder", key=f"hub_edit_change_folder_{p_idx}",
+                                st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
                                           on_click=hub_pick_folder_cb)
 
                         # --- Course row ---
@@ -636,7 +736,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     unsafe_allow_html=True,
                                 )
                             with col_c_btn:
-                                st.button("Change Course", key=f"hub_edit_change_course_{p_idx}",
+                                st.button("Change Course", key=f"btn_hub_compact_change_course_{p_idx}",
                                           on_click=change_hub_layer,
                                           kwargs={'target_layer': 'layer_course_selector'})
 
@@ -698,8 +798,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
             # === INLINE ADD NEW PAIR (Hidden for single pairs) ===
             if not is_sp and is_adding:
-                with st.container(border=True, key="hub_add_new_pair_card"):
-                    st.markdown("<div style='font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;'>\u2795 Add a New Course/Folder Pair</div>", unsafe_allow_html=True)
+                with st.container(border=True, key="hub_compact_add_form"):
+                    st.markdown("<h3 style='margin-top: -25px; margin-bottom: 10px !important;'>✨ Add a New Course/Folder Pair</h3>", unsafe_allow_html=True)
 
                     # --- Folder row ---
                     add_folder = st.session_state.get('hub_edit_temp_folder', '')
@@ -712,9 +812,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 f'Folder:</span>'
                                 f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
                                 unsafe_allow_html=True,
-                            )
+                             )
                         with col_af_btn:
-                            st.button("Select Folder", key="btn_inline_new_folder",
+                            st.button("Select Folder", key="btn_hub_compact_change_folder_add",
                                       on_click=hub_pick_folder_cb)
 
                     # --- Course row ---
@@ -734,7 +834,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 unsafe_allow_html=True,
                             )
                         with col_ac_btn:
-                            st.button("Select Course", key="btn_inline_new_course",
+                            st.button("Select Course", key="btn_hub_compact_change_course_add",
                                       on_click=change_hub_layer,
                                       kwargs={'target_layer': 'layer_course_selector'})
 
@@ -944,7 +1044,7 @@ def render_hub_config(pair: dict):
         raw_secondary = sm._load_metadata('secondary_content_contract')
         
         if not raw_contract:
-            st.warning("⚠️ No sync contract stored. Run a sync to save settings.")
+            st.warning("⚠️ No configuration was found. Run a sync to restore it.")
             return
         contract = _json.loads(raw_contract)
         secondary = _json.loads(raw_secondary) if raw_secondary else {}
@@ -997,12 +1097,35 @@ def hub_cleanup():
 # ===================================================================
 def inject_hub_global_css():
     """Inject Hub Dialog styling: static CSS from file + dynamic theme overrides."""
+    from ui_helpers import get_base64_image
+    b64_hub_icon = get_base64_image("assets/icon_sync_hub.png")
+
     # Static CSS (extracted to styles/sync_hub.css)
     inject_css('sync_hub.css')
 
     # Dynamic overrides — only rules requiring Python theme variables
     st.markdown(f"""
     <style>
+    /* 1. Main Button Icon injected seamlessly next to text */
+    div.st-key-btn_hub_main button div[data-testid="stMarkdownContainer"] p {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div.st-key-btn_hub_main button div[data-testid="stMarkdownContainer"] p::before {{
+        content: "";
+        display: inline-block;
+        width: 28px !important;
+        height: 28px !important;
+        margin-right: 12px !important;
+        background-image: url('data:image/png;base64,{b64_hub_icon}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }}
+
+
+
     /* Primary button: theme.BLUE_PRIMARY */
     div[data-testid="stDialog"] button[kind="primary"] {{
         background-color: {theme.BLUE_PRIMARY} !important;
@@ -1010,8 +1133,8 @@ def inject_hub_global_css():
 
     /* Cancel save group hover: theme.ERROR */
     div[data-testid="stDialog"] div[class*="st-key-cancel_save_group"] button:hover {{
-        background-color: {theme.ERROR} !important;
-        border-color: {theme.ERROR} !important;
+        background-color: #2e2f3b !important;
+        border-color: #5d5e66 !important;
         color: white !important;
     }}
 
@@ -1019,6 +1142,41 @@ def inject_hub_global_css():
     div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {{
         background-color: {theme.BLUE_PRIMARY} !important;
         border-color: {theme.BLUE_PRIMARY} !important;
+    }}
+
+    /* =========================================
+       COMPACT HUB INLINE EDITOR (NEUTRALIZATION)
+       ========================================= */
+    /* Force compact dimensions for Change/Select Folder & Course buttons */
+    div[data-testid="stDialog"] div[class*="st-key-btn_hub_compact_change_"] button {{
+        min-height: auto !important;
+        height: 34px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }}
+
+    /* Ensure text in compact buttons is perfectly vertically centered */
+    div[data-testid="stDialog"] div[class*="st-key-btn_hub_compact_change_"] button p {{
+        margin: 0px !important;
+        line-height: 1.2 !important;
+    }}
+
+    /* Crush vertical gaps inside the compact edit/add forms */
+    div[class*="st-key-hub_compact_edit_form_"] [data-testid="stVerticalBlock"],
+    div[class*="st-key-hub_compact_add_form"] [data-testid="stVerticalBlock"] {{
+        gap: 8px !important; 
+    }}
+
+    /* Align row items centrally in the compact forms */
+    div[class*="st-key-hub_compact_edit_form_"] [data-testid="stHorizontalBlock"],
+    div[class*="st-key-hub_compact_add_form"] [data-testid="stHorizontalBlock"] {{
+        align-items: center !important;
+    }}
+
+    /* Crush native top padding on the inline edit/add bordered containers */
+    div[class*="st-key-hub_compact_edit_form_"],
+    div[class*="st-key-hub_compact_add_form"] {{
+        padding-top: 0.5rem !important;
     }}
     </style>
     """, unsafe_allow_html=True)

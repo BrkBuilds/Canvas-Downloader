@@ -30,6 +30,7 @@ from ui_helpers import (
     friendly_course_name,
     get_course_display_parts,
     short_path,
+    get_base64_image,
 )
 
 from core.state_registry import ensure_sync_state, cleanup_sync_state
@@ -201,7 +202,7 @@ def _confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
     confirm_course_selection_cb(cid, cname, course_names_map, courses_list)
 
 
-@st.dialog("\U0001F4DA Saved Groups & Pairs", width="large")
+@st.dialog("\u200b", width="large")
 def _saved_groups_hub_dialog(courses, course_names):
     """Delegate to ui.hub_dialog."""
     from ui.hub_dialog import saved_groups_hub_dialog_inner
@@ -245,6 +246,53 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # Inject all Hub Dialog + Main Button CSS unconditionally
     _inject_hub_global_css()
+
+    # --- Load Premium Assets & Hoist Sync Button CSS ---
+    b64_analyze = get_base64_image("assets/icon_sync_review.png")
+    b64_quick = get_base64_image("assets/icon_sync_quick.png")
+
+    st.markdown(f"""
+    <style>
+    div.st-key-btn_analyze_sync button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        position: relative !important;
+        top: 2px !important; /* Visual nudge for vertical centering relative to text */
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 5px !important;
+        background-image: url("data:image/png;base64,{b64_analyze}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+    }}
+    div.st-key-btn_quick_sync button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        position: relative !important;
+        top: 2px !important; /* Visual nudge for vertical centering relative to text */
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 5px !important;
+        background-image: url("data:image/png;base64,{b64_quick}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+    }}
+
+    /* Custom Quick Sync Colors */
+    div.st-key-btn_quick_sync button {{
+        background-color: #162742 !important;
+        border: 1px solid #2865c7 !important;
+        color: #ffffff !important;
+    }}
+
+    /* Specificity Shield: Quick Sync Hover State */
+    div.st-key-btn_quick_sync button:hover {{
+        background-color: #153566 !important; 
+        border: 1px solid #2865c7 !important;
+        color: #ffffff !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
     # --- Pending toast consumer (fires after dialog rerun) ---
     if 'pending_toast' in st.session_state:
@@ -313,7 +361,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             unsafe_allow_html=True,
         )
     with col_hub:
-        if st.button("\U0001F4DA Saved Groups & Pairs", key="btn_hub_main",
+        if st.button("Saved Groups & Pairs", key="btn_hub_main",
                      use_container_width=True):
             _reset_hub_state()
             _saved_groups_hub_dialog(courses, course_names)
@@ -345,9 +393,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         cursor: not-allowed !important;
     }
 
-    /* Cancel button styling */
-    button[data-testid="stBaseButton-secondary"]#cancel_pair {
-        /* Styled via app.py global CSS now */
+    /* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
+    div[class*="st-key-cancel_pair"] button:hover,
+    div[class*="st-key-cancel_add"] button:hover {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
     }
 
     /* ===== SYNC FOLDER ROW COMPACT LAYOUT =====
@@ -747,8 +798,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     
     with col_analyze:
         # Added key for symmetry and potential state stability
-        if st.button("🔍" + 'Analyze, Review & Sync', type="primary",
-                     key="btn_analyze",
+        if st.button('Analyze, Review & Sync', type="primary",
+                     key="btn_analyze_sync",
                      use_container_width=True,
                      disabled=not bool(sync_pairs)):
             # Nuclear reset of all cancel flags — stale flags from a previous download/sync
@@ -768,12 +819,10 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.rerun()
 
     with col_or:
-        # Removed manual margin-top hack, relying on vertical_alignment="center" and flex CSS above
         st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
-        # Removed help=... to prevent tooltip wrapper from breaking layout parity with the other button
-        if st.button("⚡" + 'Quick Sync All',
+        if st.button('Quick Sync All',
                      key="btn_quick_sync",
                      type="primary",
                      use_container_width=True,
