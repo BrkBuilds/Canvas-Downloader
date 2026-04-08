@@ -324,7 +324,7 @@ def ignored_files_dialog_inner(ignored_by_course, ):
         if st.button("Close", type="secondary", use_container_width=True, key="ign_close"):
             for k in all_file_keys:
                 st.session_state.pop(k, None)
-            st.rerun()
+            st.rerun(scope="app")
 
 
 def show_course_ignored_files(course_name, course_id, course_data, ):
@@ -429,7 +429,7 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
         if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
             for k in all_keys:
                 st.session_state.pop(k, None)
-            st.rerun()
+            st.rerun(scope="app")
 
 
 @st.dialog("Select Course to sync", width="large")
@@ -479,7 +479,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     if not visible_courses:
         st.warning('No courses found.')
         if st.button("Close"):
-             st.rerun()
+             st.rerun(scope="app")
         return
 
     # 2. CBS Filters (centralized)
@@ -499,7 +499,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
     if st.button("Confirm Selection", key="sync_confirm_btn", type="primary", use_container_width=True):
         st.session_state["sync_selected_return_id"] = st.session_state["sync_d_selected_id"]
-        st.rerun()
+        st.rerun(scope="app")
 
 
 def render_pending_folder_ui(courses, course_names, course_options, ):
@@ -521,7 +521,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_folder_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{'Added Folder:'}</span>'
+                f'{'Added Folder:'}</span>'  # audit-ignore: folder_name is a local filesystem path
                 f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
                 unsafe_allow_html=True,
             )

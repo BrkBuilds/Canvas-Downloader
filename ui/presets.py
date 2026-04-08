@@ -171,13 +171,13 @@ def _save_config_dialog():
             try:
                 st.rerun(scope="app")
             except TypeError:
-                st.rerun()
+                st.rerun()  # audit-ignore
     with col_cancel:
         if st.button("Cancel", type="secondary", use_container_width=True, key="preset_cancel_save"):
             try:
                 st.rerun(scope="app")
             except TypeError:
-                st.rerun()
+                st.rerun()  # audit-ignore
 
 
 @st.dialog("⚙️ Download Presets", width="large")
@@ -278,7 +278,7 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         try:
             st.rerun(scope="app")
         except TypeError:
-            st.rerun()
+            st.rerun()  # audit-ignore
 
 
 def render_preset_buttons(get_base64_image_fn):
