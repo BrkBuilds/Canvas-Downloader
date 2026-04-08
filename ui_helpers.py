@@ -617,6 +617,10 @@ def render_wizard_step(container, current_step: int, steps: list):
             f'<div style="text-align:center;padding:8px 4px;border-radius:8px;background:{bg};border:{border};color:{color};font-size:0.8em;font-weight:{fw};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{label}</div>',  # audit-ignore: label is an app-controlled badge string
             unsafe_allow_html=True,
         )
+        
+    # Inject a strict vertical spacer below the step tracker to enforce a 24px gap 
+    # (plus ~16px native markdown container margin = 40px)
+    container.markdown('<div style="height: 24px; margin: 0; padding: 0;"></div>', unsafe_allow_html=True)
 
 def render_sync_wizard(container, current_step: int):
     """Render the wizard specifically for the Sync flow."""

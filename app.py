@@ -35,7 +35,7 @@ st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", 
 inject_css('global.css')
 
 # Cancel button hover CSS (dynamic — requires theme variables)
-st.markdown(f"""
+st.html(f"""
     <style>
     .st-key-cancel_download_btn button:hover,
     .st-key-cancel_pp_download button:hover,
@@ -47,7 +47,7 @@ st.markdown(f"""
         transition: all 0.2s ease-in-out;
     }}
     </style>
-""", unsafe_allow_html=True)
+""")
 
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
