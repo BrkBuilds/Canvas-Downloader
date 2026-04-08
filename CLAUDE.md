@@ -33,7 +33,7 @@ sync/
 styles/
   global.css                # Static structural CSS
   preset_dialogs.css        # Preset/hub dialog CSS
-  __init__.py               # inject_css() with _CSS_CACHE (avoids disk re-reads on reruns)
+  __init__.py               # inject_css() via st.html() (no caching to allow dev hot-reloads)
 canvas_logic.py             # Canvas API wrapper, sanitization, async download engine
 sync_manager.py             # SQLite manifest engine (Levenshtein collision resolution)
 post_processing.py          # Unified conversion pipeline runner
@@ -55,8 +55,9 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 ## Streamlit UI Rules (Critical)
 
 ### CSS Injection
-- **Static CSS** → `styles/*.css` files, loaded via `styles.inject_css()`.
-- **Dynamic CSS** (depends on session state or Python vars) → inline `st.markdown(f'<style>...</style>')` inside `ui/` modules.
+- **Static CSS** → `styles/*.css` files, loaded via `styles.inject_css()` (uses `st.html()`, module caching disabled for dev).
+- **Dynamic CSS** (depends on session state or Python vars) → inline `st.html(f'<style>...</style>')` inside `ui/` modules.
+- **Headless Injection Rule**: Never use `st.markdown` for CSS, Base64 wrappers, or HTML spacers. Streamlit React forces `stMarkdownContainer` on it, injecting a 1rem bottom margin ("Ghost Box"). Always use `st.html()` for zero-footprint DOM injection.
 - **Always hoist** dynamic CSS injections *above* the widget they target — injecting below causes a ~100ms grey flash on rerun (React sub-frame race condition).
 - **Double-escape** all CSS braces in f-strings: `{{` and `}}`.
 - **Scope** all CSS to keyed containers (`div[class*="st-key-my_key"]`) to prevent global leakage.
@@ -85,7 +86,7 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - Use `::before` for icon layers in buttons next to text.
 
 ### HTML Safety
-- All Canvas data interpolated into `st.markdown(unsafe_allow_html=True)` must be wrapped with `esc()` (`html.escape`) to prevent XSS/DOM corruption.
+- All Canvas data interpolated into `st.html()` or `st.markdown(unsafe_allow_html=True)` must be wrapped with `esc()` (`html.escape`) to prevent XSS/DOM corruption.
 
 ## Platform Notes
 - **Windows**: `win32com.client` COM automation for Office → PDF conversions. `ctypes` to hide `.canvas_sync.db`.
