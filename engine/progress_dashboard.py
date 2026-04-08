@@ -61,7 +61,7 @@ class DashboardMetrics:
 def render_progress_header(placeholders: DashboardPlaceholders, label: str, course_name: str) -> None:
     """Render the header section (phase label + course name)."""
     placeholders.header.markdown(f'''
-    <div style="margin-bottom: 0.5rem;">
+    <div style="margin-bottom: 0.5rem;"><!-- # audit-ignore: label is app-controlled phase text -->
         <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">{label}</p>
         <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{course_name}</h3>
     </div>

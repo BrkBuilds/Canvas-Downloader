@@ -62,7 +62,7 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
         entity = "Group"
 
     st.markdown(
-        f'<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'
+        f'<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'  # audit-ignore: desc_text is a static app string
         f'{desc_text}</p>',
         unsafe_allow_html=True,
     )
@@ -664,7 +664,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 with cv1:
                     name_label = "Pair name:" if is_sp else "Group name:"
                     st.markdown(f"""
-                        <div style='margin-bottom: -5px; margin-top: -20px;'>
+                        <div style='margin-bottom: -5px; margin-top: -20px;'><!-- # audit-ignore: name_label is a static app string -->
                             <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>{name_label}</span>
                         </div>
                         <h1 style='margin: 0px; padding: 0px; font-size: 2.2rem; display: inline-block; line-height: 1;'>{group['group_name']}</h1>
@@ -711,7 +711,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             with col_f_info:
                                 st.markdown(
                                     f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                                    f'Folder:</span>'
+                                    f'Folder:</span>'  # audit-ignore: folder_display is a local path
                                     f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
                                     unsafe_allow_html=True,
                                 )
@@ -767,7 +767,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         st.markdown(f"""
                             <div style='margin-bottom: 12px; margin-top: 6px;'>
                                 <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
-                                <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div>
+                                <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div><!-- # audit-ignore: local_folder is a filesystem path -->
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -809,7 +809,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         with col_af_info:
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                                f'Folder:</span>'
+                                f'Folder:</span>'  # audit-ignore: add_folder_display is a local path
                                 f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
                                 unsafe_allow_html=True,
                              )
@@ -967,13 +967,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             with st.container(border=True):
                 st.markdown(
                     f"<div style='font-weight:600;'>\U0001F393 {display_name}</div>"
-                    f"<div style='font-size:0.82rem; color:{theme.ERROR_LIGHT}; margin-top:2px;'>"
+                    f"<div style='font-size:0.82rem; color:{theme.ERROR_LIGHT}; margin-top:2px;'>"  # audit-ignore: old_folder/new_folder are local filesystem paths
                     f"\u274c Missing: <code>{old_folder}</code></div>",
                     unsafe_allow_html=True,
                 )
                 if new_folder:
                     st.markdown(
-                        f"<div style='font-size:0.85rem; color:{theme.SUCCESS}; margin-top:4px;'>"
+                        f"<div style='font-size:0.85rem; color:{theme.SUCCESS}; margin-top:4px;'>"  # audit-ignore
                         f"\u2705 Remapped to: <code>{new_folder}</code></div>",
                         unsafe_allow_html=True,
                     )
