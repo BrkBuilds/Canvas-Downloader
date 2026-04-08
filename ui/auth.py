@@ -360,10 +360,10 @@ def _render_authenticated_nav(fetch_courses_fn):
                 except Exception as e:
                     st.error(f"⚠️ Could not save settings to disk: {e}")
 
-                st.rerun()
+                st.rerun(scope="app")
         with c_cancel:
             if st.button("Cancel", use_container_width=True):
-                st.rerun()
+                st.rerun(scope="app")
 
     # Settings button trigger
     if st.button("⚙️ Settings", use_container_width=True, key="nav_btn_settings"):

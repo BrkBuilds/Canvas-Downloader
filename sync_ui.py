@@ -587,7 +587,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
                                      help=_save_help):
                             _save_pair_dialog(pair)
-                        st.markdown(f"""<div style="font-size:0.85em;color:#ccc;margin-top:-5px;">\U0001F4C1 {folder_display}</div>
+                        st.markdown(f"""<div style="font-size:0.85em;color:#ccc;margin-top:-5px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
                             <div style="font-size:0.75em;color:{theme.TEXT_DIM};margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
