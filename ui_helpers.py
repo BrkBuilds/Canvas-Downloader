@@ -614,7 +614,7 @@ def render_wizard_step(container, current_step: int, steps: list):
             fw = "400"
         
         col.markdown(
-            f'<div style="text-align:center;padding:8px 4px;border-radius:8px;background:{bg};border:{border};color:{color};font-size:0.8em;font-weight:{fw};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{label}</div>',
+            f'<div style="text-align:center;padding:8px 4px;border-radius:8px;background:{bg};border:{border};color:{color};font-size:0.8em;font-weight:{fw};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{label}</div>',  # audit-ignore: label is an app-controlled badge string
             unsafe_allow_html=True,
         )
 

@@ -782,7 +782,7 @@ def render_download_settings(fetch_courses_fn):
                     try:
                         res = get_base64_image(f"assets/{name}")
                         return res if res else ""
-                    except:
+                    except Exception:
                         return ""
 
                 # Button data
