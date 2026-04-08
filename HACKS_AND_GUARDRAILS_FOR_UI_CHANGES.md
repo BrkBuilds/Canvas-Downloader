@@ -12,8 +12,8 @@
 * **Wildcard Selectors for Dynamic Widgets:** Standard class selectors fail on dynamic keys (e.g., `key=f"cat_new_{course.id}"`). **Rule:** Use CSS wildcard attribute selectors (`div[class*="st-key-cat_new"]`) to style identical dynamic widgets globally.
 * **Page-Level CSS Injection:** NEVER inject `<style>` tags inside an `st.empty().container()` context; Streamlit discards them during DOM transitions. **Rule:** All critical UI CSS must be injected at the PAGE level, outside dynamic empty containers.
 * **CSS Specificity & Leakage Prevention:** Avoid using the `:has()` pseudo-class combined with sibling combinators (`~`) to style main app components, as it climbs the DOM tree and inadvertently matches the Streamlit `stDialog` portal, leaking styles with devastating `(1,1,4)` specificity. **Rule:** ALWAYS prefix dialog button CSS with `div[data-testid="stDialog"]` to ensure bulletproof styling.
-* **Merged CSS/HTML Injection:** Separate `st.markdown` calls for `<style>` and HTML generate multiple hidden Streamlit wrapper `divs` that add unwanted vertical padding. **Rule:** Bundle the CSS `<style>` block and HTML tags into a *single* `st.markdown(unsafe_allow_html=True)` call.
-* **The F-String CSS Trap (Fatal NameErrors):** When injecting CSS via `st.markdown(f'''<style>...''')` to pass Python variables (like Base64 strings or Theme colors), standard CSS brackets `{` and `}` will be evaluated as Python code and crash the app with a `NameError`. **Rule:** You MUST double-escape all literal CSS brackets as `{{` and `}}` inside Python f-strings.
+* **The Headless Injection Rule (`st.html`):** Streamlit's React engine wraps `st.markdown("<style>...", unsafe_allow_html=True)` injections inside an `stMarkdownContainer`, which inherently carries a 1rem bottom margin, creating invisible "Ghost Boxes" that destroy vertical rhythm. **Rule:** `st.markdown` is strictly for Typography. It must NEVER be used to inject `<style>` blocks, structural spacers, or Base64 UI wrappers. `st.html()` is our dedicated Architecture tool. All dynamic CSS blocks and raw HTML UI structural hacks must use `st.html()` to guarantee zero-footprint DOM injection and prevent "Ghost Box" margin stacking.
+* **The F-String CSS Trap (Fatal NameErrors):** When injecting CSS via `st.html(f'''<style>...''')` to pass Python variables (like Base64 strings or Theme colors), standard CSS brackets `{` and `}` will be evaluated as Python code and crash the app with a `NameError`. **Rule:** You MUST double-escape all literal CSS brackets as `{{` and `}}` inside Python f-strings.
 * **The Specificity Shield (Active vs Hover states):** Streamlit's shadow DOM and your own generic `:hover` states (e.g., `div[class*="st-key-btn_"] button:hover`) carry heavy CSS specificity because of the pseudo-class. This will accidentally overwrite your active state styles (like blue borders) when the user hovers over an already-active button. **Rule:** Always create a Specificity Shield rule directly below your active state: `div.st-key-{active_key} button:hover { border-color: {active_color} !important; }` to protect it from generic hover degradation.
 * **Overriding Streamlit's Inner Button Wrappers:** Telling an `st.button` to be `text-align: left` or `display: flex` often fails because Streamlit injects a hidden `div[data-testid="stMarkdownContainer"]` inside the button that aggressively forces center-alignment. **Rule:** To force text alignment inside a custom button card, you must explicitly target the inner wrappers: `div.st-key-my_button button > div { text-align: left !important; width: 100% !important; justify-content: flex-start !important; }`.
 
@@ -175,7 +175,7 @@ All CSS overrides that structurally alter or mask Streamlit components must be h
 
 1. **Calculate State First:** Run your boolean logic (e.g., `is_expanded = st.session_state.get('toggle')`) at the top of the logic block.
 2. **Compute Colors Beforehand:** Derive your theme colors based on state (`c_base = "#f97316" if is_expanded else "#64748b"`).
-3. **Inject the Containerized Style Block:** Call `st.markdown(f"<style>...</style>", unsafe_allow_html=True)`.
+3. **Inject the Containerized Style Block:** Call `st.html(f"<style>...</style>")`.
 4. **Instantiate the Target:** *Then* execute the `st.button` or container.
 
 With the CSS already loaded into the browser memory before React is asked to re-render the Native Button, there is a 0ms vulnerability window. The Rerun completely bypasses rendering the default styles and directly inherits the custom masks.
@@ -185,7 +185,7 @@ With the CSS already loaded into the browser memory before React is asked to re-
 * **God-File Teardown & Module Routing:** The original monolithic `app.py` has been decomposed. UI templates now strictly reside in the `ui/` directory (e.g., `ui/course_selector.py`, `ui/download_settings.py`, `ui/auth.py`). `app.py` handles route orchestration, session state initialization, and the global layout wrapper, while delegating all granular UI rendering to specialized functions imported from the `ui/` namespace.
 * **Static vs Dynamic CSS Dual-Layer:** 
     * **Static CSS:** All static, structural CSS (base layout styles that do not rely on Python execution logic or `st.session_state`) has been extracted into physical `.css` files located in the `styles/` directory (e.g., `global.css`, `preset_dialogs.css`). It is injected globally via the custom `styles.inject_css('filename.css')` interface, which caches the CSS in memory (`_CSS_CACHE`) to bypass disk reads during Streamlit's rapid rerun loop.
-    * **Dynamic CSS:** Any CSS that inherently requires Python context (like f-string evaluation for Theme colors, `st.session_state` boolean logic, or base-64 image strings) MUST remain inline inside the respective `ui/` module functions. It must be injected using `st.markdown(f'<style>...</style>', unsafe_allow_html=True)` and strictly abide by the "Static Hoisting" (Pre-Injection) rule described in Section 8.
+    * **Dynamic CSS:** Any CSS that inherently requires Python context (like f-string evaluation for Theme colors, `st.session_state` boolean logic, or base-64 image strings) MUST remain inline inside the respective `ui/` module functions. It must be injected using `st.html(f'<style>...</style>')` and strictly abide by the "Static Hoisting" (Pre-Injection) rule described in Section 8.
 
 #### 10. Custom Base64 Icon Workflow
 * **The Problem:** Referencing external images directly via path in Streamlit CSS (e.g., `background-image: url('assets/icon.png')`) often fails in production because of the Streamlit static server routing and PyInstaller binary bundling. 
@@ -196,13 +196,13 @@ With the CSS already loaded into the browser memory before React is asked to re-
     3. **Generate String:** `b64_icon = get_base64_image("assets/my_custom_icon.png")` (this helper automatically handles reading and `b64encode`).
     4. **Inject via F-String:** Embed the resulting string into your Python-generated `<style>` block: 
        ```python
-       st.markdown(f'''
+       st.html(f'''
            <style>
            div.st-key-my_card button {{
                background-image: url('data:image/png;base64,{b64_icon}') !important;
            }}
            </style>
-       ''', unsafe_allow_html=True)
+       ''')
        ```
     5. **Apply Image Filters:** To manage disabled or active states, use CSS `filter`, such as `filter: grayscale(100%) opacity(50%);`, rather than modifying the asset itself.
 #### 11. Custom Base64 Modal Headers (The Zero-Width Space Hack)
@@ -223,14 +223,13 @@ With the CSS already loaded into the browser memory before React is asked to re-
     *Example Pattern:*
     ```python
     # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
-    st.markdown(
+    st.html(
         f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0px; margin-top: -70px;">
             <img src="data:image/png;base64,{{b64_icon}}" style="width: 36px; height: 36px;" />
             <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">My Custom Title</div>
         </div>
-        """, 
-        unsafe_allow_html=True
+        """
     )
     ```
 * **Guardrail:** ALWAYS strictly use a `<div>` for your custom title text (as shown above). Do NOT use `<h2>` or `<h3>` tags, as global Streamlit CSS or other injected styles targeting native headers might accidentally catch and alter your custom text.
