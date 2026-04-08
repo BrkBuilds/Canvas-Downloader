@@ -6,9 +6,10 @@
 /* ═══════════════════════════════════════════════
    The Nuclear Ghost Box Purge & Padding Clamp
    ═══════════════════════════════════════════════ */
-/* 0. Remove the native Header */
+/* 0. Remove the native Header clutter without breaking the sidebar toggle */
+/* 0. Remove the native Header clutter without breaking the sidebar toggle */
 header[data-testid="stHeader"] {
-    display: none !important;
+    background: transparent !important;
 }
 
 /* 1. Force the absolute top padding to 1rem */

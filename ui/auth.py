@@ -46,8 +46,18 @@ def render_sidebar(fetch_courses_fn):
         fetch_courses_fn: The ``@st.cache_data``-wrapped ``fetch_courses()``
             function from app.py.  Needed so logout can call ``.clear()``.
     """
-    st.markdown("---")
-    st.title('Canvas Downloader')
+    from ui_helpers import get_base64_image
+    icon_b64 = get_base64_image("assets/icon.png")
+
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 14px; padding: 4px 8px 12px 4px; margin-top: -24px;">
+        <img src="data:image/png;base64,{icon_b64}" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block;" />
+        <div style="display: flex; flex-direction: column; justify-content: center; height: 36px;">
+            <span style="font-weight: 700; font-size: 1.25rem; color: #f3f4f6; line-height: 1; margin: 0; padding-top: 4px;">Canvas Downloader</span>
+        </div>
+    </div>
+    <hr style="margin: 0px -1.5rem 12px -1.5rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);" />
+    """, unsafe_allow_html=True)
 
     # ── Auto-load token (only once per session) ─────────────────────────
     if not st.session_state['token_loaded']:
@@ -209,23 +219,116 @@ def _render_login_form():
 def _render_authenticated_nav(fetch_courses_fn):
     """Render the authenticated sidebar: user label, navigation buttons,
     settings dialog, logout, and version badge."""
-    st.success(st.session_state['user_name'])
-
     # ── Navigation buttons ─────────────────────────────────────────
-    st.markdown("---")
     mode = st.session_state.get('current_mode', 'download')
 
+    from ui_helpers import get_base64_image
+    icon_dl_b64 = get_base64_image("assets/icon_download.png")
+    icon_sync_b64 = get_base64_image("assets/icon_sync.png")
+
+    # Determine which button is active
+    active_css = ""
+    if mode in ['download', 'sync']:
+        active_key = f"st-key-nav_btn_{mode}"
+        active_css = f"""
+        div.{active_key} button {{ background-color: #2a2e35 !important; }}
+        div.{active_key} button p {{ color: #ffffff !important; font-weight: 600 !important; }}
+        div.{active_key} button p::before,
+        div.{active_key} button:hover p::before {{ filter: brightness(0) invert(1) !important; }}
+        /* Ensure active item doesn't show standard hover background */
+        div.{active_key} button:hover {{ background-color: #2a2e35 !important; }}
+        """
+
+    st.markdown(f"""
+    <style>
+    /* ── 1. Geometric Structure & Layout (Full Width Pill) ── */
+    div[class*="st-key-nav_btn_"] button {{
+        background: transparent !important;
+        border: none !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        width: 100% !important; /* Fuldt udstrakt */
+        margin: 2px 0 !important;
+        height: auto !important;
+        min-height: 48px !important; /* Forstørret knap */
+        padding: 0 !important;
+        transition: all 0.2s ease-in-out;
+    }}
+    
+    /* ── Hitbox & Flex Alignment ── */
+    div[class*="st-key-nav_btn_"] button p {{
+        color: #9ca3af !important;
+        font-weight: 500 !important;
+        font-size: 1.05rem !important; /* Forstørret tekst */
+        margin: 0;
+        padding: 12px 14px !important; /* Større indvendigt rum */
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        transition: all 0.2s ease-in-out;
+    }}
+    
+    /* ── 2. Icon Injection ── */
+    div[class*="st-key-nav_btn_"] button p::before {{
+        content: '';
+        display: inline-block;
+        flex-shrink: 0;
+        width: 22px; /* Forstørret ikon */
+        height: 22px;
+        margin-right: 14px; 
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(0.65);
+        transition: all 0.2s ease-in-out;
+    }}
+    
+    /* ── Specific Asset Bindings ── */
+    div.st-key-nav_btn_download button p::before {{
+        background-image: url("data:image/png;base64,{icon_dl_b64}");
+    }}
+    div.st-key-nav_btn_sync button p::before {{
+        background-image: url("data:image/png;base64,{icon_sync_b64}");
+    }}
+    div.st-key-nav_btn_settings button p::before {{
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'%3E%3C/path%3E%3Ccircle cx='12' cy='12' r='3'%3E%3C/circle%3E%3C/svg%3E");
+    }}
+    div.st-key-nav_btn_logout button p::before {{
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'%3E%3C/path%3E%3Cpolyline points='16 17 21 12 16 7'%3E%3C/polyline%3E%3Cline x1='21' y1='12' x2='9' y2='12'%3E%3C/line%3E%3C/svg%3E");
+    }}
+    
+    /* ── 3. Hover State ── */
+    div[class*="st-key-nav_btn_"] button:hover {{
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }}
+    div[class*="st-key-nav_btn_"] button:hover p {{
+        color: #d1d5db !important;
+    }}
+    div[class*="st-key-nav_btn_"] button:hover p::before {{
+        filter: brightness(0) invert(0.85);
+    }}
+    
+    /* ── 4. Active State (Overrides Hover) ── */
+    {active_css}
+
+    /* ── 5. Distinct Log Out Hover ── */
+    div.st-key-nav_btn_logout button:hover {{
+        background-color: rgba(239, 68, 68, 0.1) !important; 
+    }}
+    div.st-key-nav_btn_logout button:hover p {{
+        color: #fca5a5 !important;
+    }}
+    /* Soft red filter hack using invert+sepia cascade */
+    div.st-key-nav_btn_logout button:hover p::before {{
+        filter: brightness(0) saturate(100%) invert(67%) sepia(51%) saturate(2321%) hue-rotate(313deg) brightness(108%) contrast(98%) !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
     # Download mode button
-    download_label = "📥 " + 'Download Courses'
-    if mode == 'download':
-        st.markdown(f"""
-        <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
-                    padding: 8px 16px; text-align: center; margin-bottom: 8px;">
-            <span style="color: {theme.WHITE}; font-weight: 500;">{download_label}</span>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        if st.button(download_label, use_container_width=True, key="nav_btn_download"):
+    if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
+        if mode != 'download':
             st.session_state['current_mode'] = 'download'
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = False
@@ -233,23 +336,15 @@ def _render_authenticated_nav(fetch_courses_fn):
             st.rerun()
 
     # Sync mode button
-    sync_label = "🔄 " + 'Sync Local Folders'
-    if mode == 'sync':
-        st.markdown(f"""
-        <div style="background-color: #3a3a3a; border: 1px solid #555; border-radius: 6px; 
-                    padding: 8px 16px; text-align: center; margin-bottom: 8px;">
-            <span style="color: {theme.WHITE}; font-weight: 500;">{sync_label}</span>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        if st.button(sync_label, use_container_width=True, key="nav_btn_sync"):
+    if st.button('Sync Local Folders', use_container_width=True, key="nav_btn_sync"):
+        if mode != 'sync':
             st.session_state['current_mode'] = 'sync'
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = True
             st.session_state['sync_pairs'] = []
             st.rerun()
 
-    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: calc(100vh - 475px); min-height: 60px;'></div>", unsafe_allow_html=True)
 
     # ── Global Settings dialog ─────────────────────────────────────
     @st.dialog("⚙️ Settings", width="large")
@@ -366,47 +461,98 @@ def _render_authenticated_nav(fetch_courses_fn):
                 st.rerun(scope="app")
 
     # Settings button trigger
-    if st.button("⚙️ Settings", use_container_width=True, key="nav_btn_settings"):
+    if st.button("Settings", use_container_width=True, key="nav_btn_settings"):
         _global_settings_dialog()
 
     # ── Logout ─────────────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown("")  # Spacer
-    st.markdown("")
-    if st.button('Log Out / Edit Token', use_container_width=True):
-        # Wipe token from OS keyring
-        if platform.system() != 'Darwin':
-            try:
-                import keyring
-                keyring_user = st.session_state.get('api_url', '') or 'default'
-                keyring.delete_password(KEYRING_SERVICE, keyring_user)
-            except Exception:
-                pass
-
-        st.session_state['is_authenticated'] = False
-        st.session_state['api_token'] = ""
-        st.session_state['step'] = 1
-        st.session_state['current_mode'] = 'download'
-        # Clear the course cache to prevent showing old user's courses
-        fetch_courses_fn.clear()
-        if os.path.exists(CONFIG_FILE):
-            try:
-                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                    config_data = json.load(f)
-                config_data.pop('api_token', None)
-                config_data.pop('mac_api_token', None)
-                # Atomic .tmp swap pattern — prevents disk-tearing on logout
-                tmp_path = CONFIG_FILE + '.tmp'
-                with open(tmp_path, 'w', encoding='utf-8') as f:
-                    json.dump(config_data, f)
-                os.replace(tmp_path, CONFIG_FILE)
-            except Exception as e:
-                logger.warning(f"Could not update config on logout: {e}")
-        st.rerun()
+    st.markdown("<hr style='margin: 8px -1.5rem 16px -1.5rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />", unsafe_allow_html=True)
+    
+    user_name = st.session_state.get('user_name', '')
+    display_user = user_name.replace("Logged in as:", "").replace("Logged in as", "").strip()
+    
+    st.markdown("""
+    <style>
+    /* Styling for the 3-dot popover button in sidebar */
+    [data-testid="stSidebar"] [data-testid="stPopover"] > button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #9ca3af !important;
+        font-size: 1.4rem !important;
+        line-height: 1 !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0px 0px 8px 0px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        transition: all 0.1s ease-in-out;
+    }
+    [data-testid="stSidebar"] [data-testid="stPopover"] > button:hover {
+        color: #ffffff !important;
+        background: rgba(255,255,255,0.08) !important;
+    }
+    /* Popover body */
+    div[data-testid="stPopoverBody"] {
+        background-color: #1e2530 !important;
+        border: 1px solid #3e454f !important;
+        border-radius: 8px !important;
+        padding: 6px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    col_text, col_dots = st.columns([0.85, 0.15], gap="small", vertical_alignment="center")
+    
+    with col_text:
+        if display_user:
+            st.markdown(f"""
+            <div style="line-height: 1.4;">
+                <div style="color: #6b7280; font-size: 0.85rem;">Logged in as</div>
+                <div style="color: #f3f4f6; font-size: 1.0rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{display_user}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    with col_dots:
+        with st.popover("⋯", use_container_width=True):
+            if st.button('Log out', use_container_width=True, key="nav_btn_logout"):
+                # Wipe token from OS keyring
+                if platform.system() != 'Darwin':
+                    try:
+                        import keyring
+                        keyring_user = st.session_state.get('api_url', '') or 'default'
+                        keyring.delete_password(KEYRING_SERVICE, keyring_user)
+                    except Exception:
+                        pass
+        
+                st.session_state['is_authenticated'] = False
+                st.session_state['api_token'] = ""
+                st.session_state['step'] = 1
+                st.session_state['current_mode'] = 'download'
+                # Clear the course cache to prevent showing old user's courses
+                fetch_courses_fn.clear()
+                if os.path.exists(CONFIG_FILE):
+                    try:
+                        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                            config_data = json.load(f)
+                        config_data.pop('api_token', None)
+                        config_data.pop('mac_api_token', None)
+                        # Atomic .tmp swap pattern — prevents disk-tearing on logout
+                        tmp_path = CONFIG_FILE + '.tmp'
+                        with open(tmp_path, 'w', encoding='utf-8') as f:
+                            json.dump(config_data, f)
+                        os.replace(tmp_path, CONFIG_FILE)
+                    except Exception as e:
+                        logger.warning(f"Could not update config on logout: {e}")
+                st.rerun()
 
     # Version badge
     st.markdown(
+        f"<hr style='margin: 16px -1.5rem 10px -1.5rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.06);' />"
         f"<div style='text-align:center;color:{theme.TEXT_MUTED};font-size:0.75rem;"
-        f"padding:20px 0 5px 0;'>Canvas Downloader v{__version__}</div>",
+        f"padding:0px 0 5px 0;'>Canvas Downloader v{__version__}</div>",
         unsafe_allow_html=True,
     )
