@@ -291,9 +291,9 @@ div.st-key-nav_btn_logout button:hover::after {{
 
 def _render_login_form():
     """Render the un-authenticated login form."""
-    st.subheader('Authentication')
+    st.markdown("<div style='padding: 0 20px; margin-top: 10px; margin-bottom: 25px;'><span style='color: #ffffff; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em;'>Authentication</span></div>", unsafe_allow_html=True)
 
-    with st.form("auth_form", clear_on_submit=False):
+    with st.form("auth_form", clear_on_submit=False, border=False):
         st.text_input(
             'Enter Canvas URL',
             key="url_input",
@@ -366,6 +366,8 @@ def _render_login_form():
             st.rerun()
         else:
             st.error(message)
+
+    st.html("<hr style='margin: 10px 0 20px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />")
 
     # Help expanders
     with st.expander('How to get a Token?'):
