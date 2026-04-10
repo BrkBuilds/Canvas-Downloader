@@ -17,14 +17,16 @@ _CSS_CACHE: dict[str, str] = {}
 
 
 def inject_css(filename: str) -> None:
-    """Read a .css file from the styles/ directory and inject via st.html.
+    """Read a .css file from the styles/ directory and inject via st.markdown.
     
-    Bypasses module-level caching to ensure CSS hot-reloads properly 
-    without requiring a full Streamlit server restart.
+    Uses st.markdown(unsafe_allow_html=True) instead of st.html() because
+    st.html() renders inside an iframe, meaning its <style> tags cannot
+    reach the parent page DOM (sidebar, main content, etc.).
+    st.markdown injects directly into the page DOM.
     """
     css_path = _STYLES_DIR / filename
     if not css_path.exists():
         raise FileNotFoundError(f"CSS file not found: {css_path}")
     
     css_content = css_path.read_text(encoding='utf-8')
-    st.html(f"<style>{css_content}</style>")
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
