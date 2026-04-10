@@ -1,11 +1,14 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Sidebar Flexbox Architecture**: Completely eradicated the legacy "dynamic spacing injector" hack (`height: calc(100vh - 680px)`) used in the Streamlit sidebar.
+- **Native CSS Hoisting**: Migrated the sidebar to a robust, responsive CSS Flexbox architecture. Wrapped all bottom-anchored elements (Settings, Auth, Version) inside a designated `st-key-sidebar_bottom_block` container and utilized global CSS to force the parent `stSidebarContent` block to behave as a `flex-grow: 1` column.
 - **Hub UI Modernization & Branding**: Completed a high-fidelity visual overhaul of the "Saved Groups & Pairs" Sync Hub, replacing legacy Unicode emojis (📚) with custom, Base64-encoded "Organizer Tray" PNG assets across trigger buttons, dialog headers, and cards.
 - **The Zero-Width Space Hack**: Engineered a robust architectural workaround for Streamlit 1.51.0+ dialog title constraints. Bypassed the `StreamlitAPIException` (empty title crash) by passing a Unicode zero-width space (`\u200b`) to the decorator and injecting a custom HTML/Base64 header pulled into position via severe negative margins (`-70px`).
 - **Pseudo-Element Icon Injection**: Migrated the main Hub trigger button (`btn_hub_main`) and View All tab to use `::before` pseudo-elements for icon injection, ensuring 100% alignment parity with the Presets Hub without DOM bloat.
 - **Targeted Header Nuke**: Refined the CSS guardrails to specifically hide only the native "Close" button (`aria-label="Close"`) rather than the entire `header` element, ensuring stability across Streamlit's internal React reconciliation cycles.
 
+- **Pyinstaller Module Syncing**: Added recently modularized component folders (core, engine, sync, ui, styles) to the Canvas_Downloader.spec datas array, preventing ModuleNotFoundError crashes natively in the Windows standalone executable.
 
 - **Session 2026-04-07: Hub UI Modernization & The Zero-Width Space Hack**
     - Done: Replaced legacy emojis with custom Base64 PNG assets in the Sync Hub.
@@ -933,3 +936,4 @@
 - **Separator Tightening**: Targeting `hr` within keyed containers allows for pixel-perfect vertical positioning of logical dividers.
 - **Idempotent Data Mutation**: When writing state callbacks tied to `st.button` `on_click` events in Streamlit, always ensure the array manipulations are strictly idempotent. Rapidly double-clicking buttons triggers the event twice before the rendering loop executes, leading to duplicate entities in session-state arrays which subsequently crashes Streamlit if those entries dynamically generate widget keys.
 - **Frontend Yield for Dialogs**: When starting a heavy, blocking task immediately after closing an `st.dialog`, use a hidden button click triggered via `components.html` with a small JS timeout (e.g., 200ms). This allows the Streamlit frontend to receive the "unmount modal" command and clear the UI before the Python server locks up on the heavy processing loop.
+- **Edge-to-Edge Layout Constraints (W3C)**: The W3C CSS Spec dictates that containers with `overflow-y: auto` also act as horizontal clipping masks. Because Streamlit sidebars use `overflow-y` by default, Windows OS physically reserves ~16px for a scroll track, rendering full-width edge-to-edge buttons mathematically impossible regardless of padding zeroing. **Solution**: Force `overflow-y: hidden !important` on `stSidebar`, `stSidebarUserContent`, and `stSidebarContent` explicitly. Since our Application Sidebar is static and requires no scroll, this obliterates the scrollbar gap, handing back the 16px to our buttons and allowing perfect geometric symmetry.

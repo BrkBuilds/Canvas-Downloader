@@ -7,16 +7,19 @@
    The Nuclear Ghost Box Purge & Padding Clamp
    ═══════════════════════════════════════════════ */
 /* 0. Remove the native Header clutter without breaking the sidebar toggle */
-/* 0. Remove the native Header clutter without breaking the sidebar toggle */
 header[data-testid="stHeader"] {
     background: transparent !important;
+    height: 0px !important;
+    min-height: 0px !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* 1. Force the absolute top padding to 1rem */
-.block-container, 
-div[data-testid="stMainBlockContainer"], 
+.block-container,
+div[data-testid="stMainBlockContainer"],
 div[data-testid="stAppViewBlockContainer"] {
-    padding-top: 1rem !important;
+    padding-top: 10px !important;
     padding-bottom: 2rem !important;
     max-width: 100% !important;
 }
@@ -83,3 +86,234 @@ div.st-key-action_buttons_row div.stElementContainer {
     flex: 0 0 auto !important;
     margin-bottom: 0px !important;
 }
+
+
+/* ═══════════════════════════════════════════════
+   Sidebar Layout — Zero-Padding Strategy
+   ═══════════════════════════════════════════════
+   Instead of keeping native 1.5rem padding and trying to burst
+   buttons out with negative margins, we ZERO all sidebar padding
+   and add it back only to text elements that need breathing room.
+   Buttons naturally span 100% width in a zero-padded container.
+   ═══════════════════════════════════════════════ */
+
+/* 1. Zero ALL padding + kill scrollbars + kill gutter */
+section[data-testid="stSidebar"] div[data-testid="stSidebarContent"] {
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    scrollbar-gutter: unset !important;
+    scrollbar-width: none !important;
+    padding: 0 !important; /* Kill ALL native padding including top 6rem default */
+    /* Make stSidebarContent a flex column so stSidebarUserContent
+       can take flex:1 to fill remaining space AFTER the header */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+}
+/* Sidebar width constraints — resizable within bounds */
+section[data-testid="stSidebar"][aria-expanded="true"] {
+    min-width: 235px !important;
+    max-width: 360px !important;
+}
+/* Collapse the sidebar header (collapse button) to ZERO height — take it OUT of flow.
+   The collapse button floats in the top-right corner via absolute positioning. */
+section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    position: relative !important;
+}
+section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    z-index: 100 !important;
+}
+/* Also kill gutter on the stSidebar section itself */
+section[data-testid="stSidebar"] {
+    scrollbar-gutter: unset !important;
+}
+
+/* 2. Flexbox column chain —
+      stSidebarContent (100vh, flex col)
+        └─ stSidebarHeader (auto height)
+        └─ stSidebarUserContent (flex: 1 → fills remaining space)
+             └─ stVerticalBlock (flex: 1, flex col) */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
+    flex: 1 !important;
+    min-height: 0 !important; /* Allow shrinking below content size */
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] > div[data-testid="stVerticalBlock"] {
+    flex: 1 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important; /* Kill default gap between flex children */
+}
+
+/* Kill gap on ALL vertical blocks inside the sidebar */
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
+/* 3. Strip top margin/padding from sidebar_top container */
+div[class*="st-key-sidebar_top"] {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* 4. Position bottom block at the absolute bottom of the sidebar.
+      Flexbox margin-top:auto fails because invisible DOM elements
+      (from @st.dialog, st.markdown CSS injection) sit AFTER 
+      sidebar_bottom_block, preventing it from being :last-child. 
+      Absolute positioning bypasses this entirely. */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
+    position: relative !important;
+}
+div[class*="st-key-sidebar_bottom_block"] {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding-bottom: 1rem !important;
+    background: inherit !important; /* Inherit sidebar background */
+    overflow: visible !important;
+}
+/* Reserve space at the bottom of the top content so it doesn't overlap */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] > div[data-testid="stVerticalBlock"] {
+    padding-bottom: 180px !important; /* Reserve space for absolute-positioned bottom block */
+}
+
+/* ═══════════════════════════════════════════════
+   Nuclear Container Padding Purge
+   ═══════════════════════════════════════════════
+   Kill ALL internal padding on every container/wrapper inside the sidebar. */
+section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+/* Kill the padding shim div between BorderWrapper and VerticalBlock */
+section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] > div {
+    padding: 0 !important;
+}
+/* Kill all element-container margins in the sidebar */
+section[data-testid="stSidebar"] div[data-testid="element-container"],
+section[data-testid="stSidebar"] div.stElementContainer {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Collapse stHtml iframe wrappers to their content height — no extra space */
+section[data-testid="stSidebar"] [data-testid="stHtml"] {
+    height: auto !important;
+    min-height: 0 !important;
+}
+section[data-testid="stSidebar"] [data-testid="stHtml"] iframe {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* 25px gap between header/separator and first button */
+div[class*="st-key-sidebar_top"] [data-testid="stHtml"] {
+    margin-bottom: 25px !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Button Full-Width + Hover Fix
+   ═══════════════════════════════════════════════
+   With zero padding everywhere, buttons only need width: 100%
+   and border-radius: 0 to span edge-to-edge with full hover. */
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"] .stButton,
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"] button {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0px !important;
+    border: none !important;
+}
+/* Kill border-radius on ALL inner elements of nav buttons */
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button,
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button * {
+    border-radius: 0px !important;
+}
+
+/* Specific logout button override — keep it compact */
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout .stButton,
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout button {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Sidebar Interior Spacing
+   ═══════════════════════════════════════════════
+   With zero padding on the container, add breathing room
+   back to text elements that shouldn't be flush against the edges. */
+
+/* Sidebar buttons need slight vertical spacing between them */
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"] {
+    margin-bottom: 0px !important;
+}
+
+/* User info row — position context for absolute logout button */
+section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] {
+    position: relative !important;
+    min-height: 40px !important;
+    overflow: visible !important;
+}
+/* Logout button — absolutely positioned. left offset injected dynamically by Python. */
+section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-nav_btn_logout {
+    position: absolute !important;
+    top: 60% !important;
+    transform: translateY(-50%) !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Login-form indent (unauthenticated)
+   ═══════════════════════════════════════════════ */
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] {
+    padding: 0 1.5rem !important;
+}
+[data-testid="stSidebarUserContent"] .stExpander {
+    padding: 0 1.5rem !important;
+}
+[data-testid="stSidebarUserContent"] h3[data-testid="stHeading"] {
+    padding: 0 1.5rem !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Scrollbar annihilation (backup)
+   ═══════════════════════════════════════════════ */
+[data-testid="stSidebarUserContent"]::-webkit-scrollbar,
+[data-testid="stSidebarContent"]::-webkit-scrollbar,
+[data-testid="stSidebar"]::-webkit-scrollbar {
+    width: 0px !important;
+    background: transparent !important;
+    display: none !important;
+}
+[data-testid="stSidebarUserContent"],
+[data-testid="stSidebarContent"],
+[data-testid="stSidebar"] {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
