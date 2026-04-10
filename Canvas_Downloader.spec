@@ -25,6 +25,12 @@ datas = [
     ('version.py', '.'),
     ('theme.py', '.'),
     ('assets', 'assets'),
+    # Modularized packages (added during The Convergence refactor)
+    ('core', 'core'),
+    ('engine', 'engine'),
+    ('sync', 'sync'),
+    ('ui', 'ui'),
+    ('styles', 'styles'),
 ]
 
 # Automatically locate the ffmpeg binary provided by imageio_ffmpeg
