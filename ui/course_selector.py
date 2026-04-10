@@ -283,6 +283,7 @@ def render_course_list(
     courses: list,
     namespace: str,
     multi_select: bool = True,
+    first_item_top_offset: str = "-40px",
 ) -> list | None:
     """Render a course selection list with checkboxes.
 
@@ -294,6 +295,13 @@ def render_course_list(
         namespace: Unique key prefix to prevent ``DuplicateWidgetID``.
         multi_select: ``True`` for multi-checkbox (Download);
                       ``False`` for radio-like single select (Sync/Hub).
+        first_item_top_offset: CSS length applied as ``margin-top`` on the
+            first course's element box. Used to pull the list flush against
+            whatever the caller renders directly above it (an ``<hr>`` in
+            the hub/sync dialogs, the buttons-row border in download mode).
+            Prefer ``rem`` units so the offset scales with the surrounding
+            ``stVerticalBlock`` gap and stays correct across DPI / zoom
+            levels. Pass ``"0"`` to disable the offset entirely.
 
     Multi-select:
         Reads/writes ``st.session_state['selected_course_ids']``.
@@ -314,13 +322,17 @@ def render_course_list(
         courses, key=lambda c: (getattr(c, 'name', '') or '').lower())
 
     if multi_select:
-        return _render_multi_select_list(sorted_courses, namespace)
+        return _render_multi_select_list(
+            sorted_courses, namespace, first_item_top_offset)
     else:
-        _render_single_select_list(sorted_courses, namespace)
+        _render_single_select_list(
+            sorted_courses, namespace, first_item_top_offset)
         return None
 
 
-def _render_multi_select_list(courses: list, namespace: str) -> list:
+def _render_multi_select_list(
+    courses: list, namespace: str, first_item_top_offset: str = "-40px"
+) -> list:
     """Multi-select checkbox list (Download mode)."""
     selected_ids = st.session_state.get('selected_course_ids', [])
     visible_ids = {c.id for c in courses}
@@ -406,10 +418,10 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
             new_selected_ids.append(course.id)
 
     if dynamic_css:
-        if len(courses) > 0:
+        if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
             f_key = f"{namespace}_chk_{courses[0].id}"
             dynamic_css.append(f"""
-            div.st-key-{f_key} {{ margin-top: -40px !important; }}
+            div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
             """)
         st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
 
@@ -417,7 +429,9 @@ def _render_multi_select_list(courses: list, namespace: str) -> list:
     return new_selected_ids
 
 
-def _render_single_select_list(courses: list, namespace: str):
+def _render_single_select_list(
+    courses: list, namespace: str, first_item_top_offset: str = "-40px"
+):
     """Single-select radio-like checkbox list (Sync / Hub dialogs)."""
     selected_key = f"{namespace}_selected_id"
 
@@ -497,10 +511,10 @@ def _render_single_select_list(courses: list, namespace: str):
         st.checkbox(base_name, key=chk_key, on_change=_on_toggle, args=(course.id,))
 
     if dynamic_css:
-        if len(courses) > 0:
+        if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
             f_key = f"{namespace}_chk_{courses[0].id}"
             dynamic_css.append(f"""
-            div.st-key-{f_key} {{ margin-top: -40px !important; }}
+            div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
             """)
         st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
 
@@ -596,6 +610,38 @@ def render_course_selector(fetch_courses_fn):
     div.st-key-btn_course_clear_selection button p::before {{
         background-image: url('data:image/png;base64,{b64_clear}') !important;
     }}
+    /* ── Action Buttons Row container ──
+       Strip the native st.container border and replace with a single
+       hairline border-bottom that acts as the TOP section separator.
+       Anchoring the separator to the row's OWN box (instead of a sibling
+       div pulled up with negative margins) makes alignment DPI- and
+       zoom-independent: the border is literally the bottom edge of the
+       box that contains the buttons, with no inter-element gap to
+       compensate for. */
+    div.st-key-action_btns_row {{
+        border: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }}
+    /* ── Course List Box container ──
+       Wraps the course checkbox list. Strip the native border and apply
+       a single hairline border-bottom — this is the BOTTOM separator
+       and is structurally identical to the top separator above. Pulled
+       up by -1rem to cancel the parent stVerticalBlock's natural gap,
+       so the top edge sits flush against the buttons-row's
+       border-bottom (the top separator). */
+    div.st-key-course_list_box {{
+        border: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        margin-top: -1rem !important;
+        box-sizing: border-box !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -614,21 +660,13 @@ def render_course_selector(fetch_courses_fn):
     filtered_courses = render_cbs_filters(courses, "dl")
 
     # --- 2. Action Buttons (vertical stack reflowed into flex row via CSS) ---
-    with st.container(key="action_btns_row"):
+    # NOTE: border=True is required so the st-key-action_btns_row class is
+    # reliably emitted (per CLAUDE.md "Border Strip" rule). The default border
+    # is stripped in CSS above and replaced with a border-bottom that serves
+    # as the section separator — see comment in the <style> block.
+    with st.container(key="action_btns_row", border=True):
         select_all_clicked = st.button('Select All', key="btn_course_select_all")
         clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
-
-    # --- 3. Separator before course list ---
-    st.markdown("""
-    <div class="crs-list-sep-top" style="border-bottom: 1px solid rgba(255,255,255,0.1); margin-top: -25px;"></div>
-    <style>
-    div[data-testid="element-container"]:has(.crs-list-sep-top),
-    div:has(> div[data-testid="stMarkdownContainer"] .crs-list-sep-top) {
-        margin-bottom: -20px !important;
-        padding-bottom: 0px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
     visible_ids = {c.id for c in filtered_courses}
 
@@ -647,19 +685,44 @@ def render_course_selector(fetch_courses_fn):
         st.rerun()
 
     # --- Course list (centralized) ---
-    render_course_list(filtered_courses, "dl", multi_select=True)
+    # Wrap the course list in its own bordered container so the bottom
+    # separator becomes a ``border-bottom`` on the SAME kind of box as the
+    # top separator (the buttons-row's border-bottom). With padding: 0 on
+    # both containers and ``margin-top: -1rem`` on this one (to cancel the
+    # parent stVerticalBlock gap), the top of the course list box sits
+    # flush against the buttons-row, and the first/last checkboxes sit at
+    # the box's content edges — so the visible top and bottom gaps both
+    # reduce to the checkbox's own intrinsic padding, which is symmetric
+    # by construction.
+    #
+    # The shared per-row CSS in _render_multi_select_list applies
+    # ``margin-bottom: -10px`` to EVERY ``dl_chk_*`` row as a row-tightening
+    # hack. That shrinks the outer box of every row by 10px, including the
+    # LAST row — so the box's border-bottom (the bottom separator) sits
+    # ~10px closer to the last row's visible text than it would naturally.
+    # The first row has no equivalent top-shrink, so the top gap reads
+    # ~10px LOOSER than the bottom — exactly the asymmetry visible in the
+    # screenshot.
+    #
+    # Mirror that 10px shrink at the first row's top edge by passing
+    # ``first_item_top_offset="-10px"``. This routes through the existing
+    # render_course_list parameter, which targets the first checkbox by
+    # its actual ``div.st-key-dl_chk_{first_course_id}`` class — not by
+    # ``:first-child`` (which would hit the invisible CSS-injection element
+    # that ``st.markdown`` plants as the first DOM child). With both ends
+    # of the box tightened by the same 10px, the visible top and bottom
+    # gaps match by construction.
+    #
+    # Note: ``-10px`` is the right unit here precisely BECAUSE it mirrors
+    # an existing px-based hack — both sides will scale together under
+    # DPI/zoom (a px-based shrink doesn't scale, but it doesn't need to,
+    # since the thing it's mirroring also doesn't scale).
+    with st.container(key="course_list_box", border=True):
+        render_course_list(
+            filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
+        )
 
     # --- Continue ---
-    st.markdown("""
-    <div class="crs-list-sep-bot" style="border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;"></div>
-    <style>
-    div[data-testid="element-container"]:has(.crs-list-sep-bot),
-    div:has(> div[data-testid="stMarkdownContainer"] .crs-list-sep-bot) {
-        margin-top: -15px !important;
-        padding-top: 0px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
     error_container = st.empty()
 
     c1, c2 = st.columns([1, 3])
