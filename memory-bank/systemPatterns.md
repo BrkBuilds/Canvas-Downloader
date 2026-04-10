@@ -110,6 +110,13 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Read-Only UI Affordance Pattern**:
     - *Problem*: Plain text paths can be mistaken for editable inputs, while standard input boxes feel "broken" if they are read-only.
     - *Solution*: Style the path display with a dashed border (`border: 2px dashed rgba(255, 255, 255, 0.2)`), dimmed text (`opacity: 0.7`), and `cursor: default`. This immediately signals to the user that the content is non-editable but deliberately placed.
+- **Flat Mechanical Sidebar Notifications Pattern**:
+    - *Problem*: Streamlit's default notifications (`st.error`, `st.warning`) have rounded corners and internal margins that break the established "mechanical/flat" aesthetic of the custom sidebar.
+    - *Solution*: Neutralize rounding and force edge-to-edge alignment via high-specificity CSS targeting the sidebar container.
+    - *Implementation*:
+        1. Set `border-radius: 0px !important` on `[data-testid="stNotification"]` and its descendants.
+        2. Neutralize margins on `div[data-testid="stAlertContainer"]` and apply symmetrical horizontal padding (20px) to ensure text aligns with sidebar content while the colored background spans the full width.
+        3. Reorder rendering logic in `ui/auth.py` so notifications are injected before any horizontal separators (`<hr>`) to maintain logical grouping.
 - **Design Token Centralization (`theme.py`)**:
     - *Problem*: Hardcoded hex colors (e.g., `#ffffff`, `#8A91A6`) scattered across UI files create maintenance debt and brittle aesthetic updates.
     - *Solution*: Extract all colors into a centralized `theme.py` module as semantic tokens (e.g., `theme.TEXT_PRIMARY`, `theme.BG_CARD`). Inject them into CSS blocks and HTML spans using standard f-strings (`f"color: {theme.ERROR};"`).

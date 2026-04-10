@@ -1,4 +1,9 @@
 # Progress: Canvas Downloader
+- [x] **Sidebar Authentication UI Finalization** (2026-04-10):
+    - [x] **Edge-to-Edge Aesthetic**: Implemented pure flat corners (`0px` radius) for sidebar error/warning messages matching the mechanical design language.
+    - [x] **Width Alignment**: Enforced 20px horizontal padding to align notifications flush with the sidebar’s visual rhythm while maintaining internal text alignment.
+    - [x] **Logical Reordering**: Repositioned authentication error displays above the separator in `ui/auth.py` for a cohesive "Login-Error-System" hierarchy.
+    - [x] **High-Specificity Selectors**: Successfully targeted and neutralized Streamlit default rounding/margins for sidebar alerts using scoped CSS.
 
 ## Completed Milestones
 - [x] **Hub UI Modernization & Modal Header Hack** (2026-04-07):

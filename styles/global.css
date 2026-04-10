@@ -288,16 +288,157 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 }
 
 /* ═══════════════════════════════════════════════
-   Login-form indent (unauthenticated)
+   Login-form indent & Premium Styling (unauthenticated)
    ═══════════════════════════════════════════════ */
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] {
-    padding: 0 1.5rem !important;
+    padding: 5px 20px 15px 20px !important;
+    background: transparent !important;
+    border: none !important;
 }
-[data-testid="stSidebarUserContent"] .stExpander {
-    padding: 0 1.5rem !important;
+
+/* Premium Inputs */
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"] {
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"]:focus-within {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3) !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"] > div {
+    background-color: transparent !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"] input {
+    color: #f3f4f6 !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-testid="stTextInput"] label {
+    padding-bottom: 2px !important;
+    margin-bottom: 0px !important;
+    color: #cbd5e1 !important;
+    font-size: 0.9rem !important;
+}
+
+/* Form Gap / Element Spacing */
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div.stElementContainer {
+    margin-bottom: 15px !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div.stElementContainer:last-child {
+    margin-bottom: 0px !important;
+}
+
+/* Log In Button */
+[data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] {
+    margin-top: 5px !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] button {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    height: 44px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    margin-top: 0px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] button:hover {
+    background-color: #2563eb !important;
+    box-shadow: none !important;
+}
+
+/* Premium Expanders — target raw <details> since Streamlit uses emotion classes, not .stExpander */
+section[data-testid="stSidebar"] details {
+    margin: 0 20px 0px 20px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0px !important;
+    background-color: transparent !important;
+    overflow: hidden !important;
+    width: auto !important;
+    box-shadow: none !important;
+}
+section[data-testid="stSidebar"] details summary {
+    padding: 10px 0px !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+}
+section[data-testid="stSidebar"] details summary:hover {
+    background: transparent !important;
+    opacity: 1 !important;
+}
+section[data-testid="stSidebar"] details summary:hover *,
+section[data-testid="stSidebar"] details summary:hover p,
+section[data-testid="stSidebar"] details summary:hover span {
+    color: #ffffff !important;
+}
+section[data-testid="stSidebar"] details summary span,
+section[data-testid="stSidebar"] details summary > span {
+    display: flex !important;
+    align-items: center !important;
+}
+section[data-testid="stSidebar"] details summary p,
+section[data-testid="stSidebar"] details summary span,
+section[data-testid="stSidebar"] details summary div,
+section[data-testid="stSidebar"] details summary * {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 1.12rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+/* Expander content: zero left padding so text aligns with the
+   summary chevron at 20px from the sidebar's left edge. */
+section[data-testid="stSidebar"] details > div {
+    padding: 10px 0px 10px 0px !important;
+}
+section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] {
+    padding: 0px !important;
+}
+section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] p,
+section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] li {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.92rem !important;
+    line-height: 1.55 !important;
+}
+
 [data-testid="stSidebarUserContent"] h3[data-testid="stHeading"] {
-    padding: 0 1.5rem !important;
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Sidebar Alert (st.error / st.warning) — flat, edge-to-edge
+   ═══════════════════════════════════════════════
+   The login-failed notification rendered by st.error() defaults to
+   rounded corners + horizontal margin. Strip both so it matches the
+   flat sidebar aesthetic and spans the full width. */
+section[data-testid="stSidebar"] div[data-testid="stAlert"],
+section[data-testid="stSidebar"] div[data-testid="stAlertContainer"],
+section[data-testid="stSidebar"] div[data-testid="stAlert"] > div,
+section[data-testid="stSidebar"] div[data-baseweb="notification"] {
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 5px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+/* Indent the alert text so it lines up with the rest of the sidebar
+   content (20px from the left edge). Padding is applied to the alert
+   container itself — not the inner markdown — so the red background
+   still spans edge-to-edge. */
+section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-testid="stMarkdownContainer"],
+section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-testid="stMarkdownContainer"] p {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
 }
 
 /* ═══════════════════════════════════════════════

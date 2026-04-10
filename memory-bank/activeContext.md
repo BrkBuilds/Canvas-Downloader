@@ -1,6 +1,9 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Sidebar Authentication UI Design**: Finalized the authentication sidebar aesthetic with a premium, mechanical look. Notifications (Errors/Warnings) are now edge-to-edge with zero rounded corners (`border-radius: 0px`), perfectly integrated between the Log In button and the horizontal separator.
+- **Notification Style Override**: Successfully bypassed Streamlit's default alert rounding and spacing within the sidebar scope using high-specificity CSS targeting `div[data-testid="stAlertContainer"]` and `[data-testid="stNotification"]`.
+- **Auth Flow Reordering**: Re-architected `ui/auth.py` to render validation messages *before* the sidebar separator, ensuring a professional vertical hierarchy.
 - **Sidebar Flexbox Architecture**: Completely eradicated the legacy "dynamic spacing injector" hack (`height: calc(100vh - 680px)`) used in the Streamlit sidebar.
 - **Native CSS Hoisting**: Migrated the sidebar to a robust, responsive CSS Flexbox architecture. Wrapped all bottom-anchored elements (Settings, Auth, Version) inside a designated `st-key-sidebar_bottom_block` container and utilized global CSS to force the parent `stSidebarContent` block to behave as a `flex-grow: 1` column.
 - **Hub UI Modernization & Branding**: Completed a high-fidelity visual overhaul of the "Saved Groups & Pairs" Sync Hub, replacing legacy Unicode emojis (📚) with custom, Base64-encoded "Organizer Tray" PNG assets across trigger buttons, dialog headers, and cards.
@@ -9,6 +12,11 @@
 - **Targeted Header Nuke**: Refined the CSS guardrails to specifically hide only the native "Close" button (`aria-label="Close"`) rather than the entire `header` element, ensuring stability across Streamlit's internal React reconciliation cycles.
 
 - **Pyinstaller Module Syncing**: Added recently modularized component folders (core, engine, sync, ui, styles) to the Canvas_Downloader.spec datas array, preventing ModuleNotFoundError crashes natively in the Windows standalone executable.
+
+- **Session 2026-04-10: Sidebar Authentication UI Finalization**
+    - Done: Implemented edge-to-edge, flat-corner styling for sidebar notifications (`border-radius: 0px`).
+    - Done: Reordered `ui/auth.py` logic to place error messages above the separator.
+    - Done: Standardized sidebar padding (20px) for all notification variants.
 
 - **Session 2026-04-07: Hub UI Modernization & The Zero-Width Space Hack**
     - Done: Replaced legacy emojis with custom Base64 PNG assets in the Sync Hub.
