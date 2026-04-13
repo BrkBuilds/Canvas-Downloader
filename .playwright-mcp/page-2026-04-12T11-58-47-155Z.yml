@@ -1,0 +1,44 @@
+- generic [ref=e2]:
+  - generic [ref=e20]:
+    - generic [ref=e22]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - img [ref=e26]
+          - generic [ref=e28]: Canvas Downloader
+        - separator [ref=e29]
+      - button "Download Courses" [ref=e32] [cursor=pointer]:
+        - paragraph [ref=e34]: Download Courses
+      - button "Sync Local Folders" [ref=e37] [cursor=pointer]:
+        - paragraph [ref=e39]: Sync Local Folders
+    - generic [ref=e40]:
+      - button "Settings" [ref=e43] [cursor=pointer]:
+        - paragraph [ref=e45]: Settings
+      - separator [ref=e48]
+      - generic [ref=e50]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: Logged in as
+          - generic [ref=e55]: Birk
+        - button "Log out" [ref=e58] [cursor=pointer]
+      - generic [ref=e60]:
+        - separator [ref=e61]
+        - generic [ref=e62]: Canvas Downloader v2.0.0
+  - generic [ref=e3]:
+    - banner
+    - generic [ref=e66]:
+      - generic [ref=e68]:
+        - generic [ref=e74]: 📝 Select Courses
+        - generic [ref=e80]: ⚙️ Download Settings
+        - generic [ref=e86]: ⬇️ Downloading...
+        - generic [ref=e92]: ✅ Complete!
+      - generic [ref=e100]: "Step 1: Select Courses"
+      - paragraph [ref=e102]: "Show:"
+      - generic [ref=e106]:
+        - button "Favorites Only" [ref=e111] [cursor=pointer]:
+          - paragraph [ref=e113]: Favorites Only
+        - button "All Courses" [ref=e118] [cursor=pointer]:
+          - paragraph [ref=e120]: All Courses
+      - generic [ref=e122]:
+        - button "Select All" [ref=e125] [cursor=pointer]:
+          - paragraph [ref=e127]: Select All
+        - button "Clear Selection" [ref=e130] [cursor=pointer]:
+          - paragraph [ref=e132]: Clear Selection
