@@ -1,0 +1,151 @@
+- generic:
+  - generic:
+    - generic [ref=e2]:
+      - generic [ref=e20]:
+        - generic [ref=e22]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - img [ref=e26]
+              - generic [ref=e28]: Canvas Downloader
+            - separator [ref=e29]
+          - button "Download Courses" [ref=e32] [cursor=pointer]:
+            - paragraph [ref=e34]: Download Courses
+          - button "Sync Local Folders" [ref=e37] [cursor=pointer]:
+            - paragraph [ref=e39]: Sync Local Folders
+        - generic [ref=e40]:
+          - button "Settings" [ref=e43] [cursor=pointer]:
+            - paragraph [ref=e45]: Settings
+          - separator [ref=e48]
+          - generic [ref=e50]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: Logged in as
+              - generic [ref=e55]: Birk
+            - button "Log out" [ref=e58] [cursor=pointer]
+          - generic [ref=e60]:
+            - separator [ref=e61]
+            - generic [ref=e62]: Canvas Downloader v2.0.0
+      - generic [ref=e3]:
+        - banner
+        - generic [ref=e66]:
+          - generic [ref=e704]:
+            - generic [ref=e710]: 📁 Select Folders
+            - generic [ref=e716]: 🔍 Review Changes
+            - generic [ref=e722]: ⬇️ Syncing
+            - generic [ref=e728]: ✅ Complete
+          - generic [ref=e737]:
+            - heading "Canvas Courses to Sync" [level=3] [ref=e744]: Canvas Courses to Sync
+            - button "Saved Groups & Pairs" [ref=e750] [cursor=pointer]:
+              - paragraph [ref=e752]: Saved Groups & Pairs
+          - generic [ref=e754]:
+            - generic [ref=e756]:
+              - generic [ref=e760]:
+                - paragraph [ref=e764]:
+                  - strong [ref=e765]: "Course: Programmering og udvikling af små systemer samt databaser (LA)"
+                - button "💾" [ref=e770] [cursor=pointer]:
+                  - paragraph [ref=e772]: 💾
+                - generic [ref=e775]:
+                  - generic [ref=e776]: 📁 Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+                  - generic [ref=e777]: "🕓 Last synced: 2026-04-08 10:15"
+              - button "📂 Open Folder" [ref=e782] [cursor=pointer]:
+                - paragraph [ref=e784]: 📂 Open Folder
+              - button "✏️ Edit" [ref=e789] [cursor=pointer]:
+                - paragraph [ref=e791]: ✏️ Edit
+              - button "🚫 Ignored Files (0)" [disabled] [ref=e796]:
+                - paragraph [ref=e798]: 🚫 Ignored Files (0)
+              - button "🗑️ Remove" [ref=e803] [cursor=pointer]:
+                - paragraph [ref=e805]: 🗑️ Remove
+            - generic [ref=e807]:
+              - generic [ref=e816]:
+                - paragraph [ref=e822]: Added Folder:📁 Uge 9 Forelæsning 14. Design, Arkitektur
+                - button "Change Folder" [ref=e827] [cursor=pointer]:
+                  - paragraph [ref=e829]: Change Folder
+              - generic [ref=e831]:
+                - paragraph [ref=e837]: "Course: Select Canvas Course"
+                - button "Select Course" [ref=e842] [cursor=pointer]:
+                  - paragraph [ref=e844]: Select Course
+              - generic [ref=e846]:
+                - button "✓ Confirm and Add" [ref=e851] [cursor=pointer]:
+                  - paragraph [ref=e853]: ✓ Confirm and Add
+                - button "Cancel" [ref=e858] [cursor=pointer]:
+                  - paragraph [ref=e860]: Cancel
+          - generic [ref=e864]:
+            - button "Analyze, Review & Sync" [ref=e869] [cursor=pointer]:
+              - paragraph [ref=e871]: Analyze, Review & Sync
+            - generic [ref=e877]: OR
+            - button "Quick Sync All" [ref=e882] [cursor=pointer]:
+              - paragraph [ref=e884]: Quick Sync All
+          - separator [ref=e888]
+          - group [ref=e891]:
+            - generic "keyboard_arrow_right 📖 How Smart Sync Works" [ref=e892] [cursor=pointer]:
+              - generic [ref=e893]:
+                - generic [ref=e895]: keyboard_arrow_right
+                - paragraph [ref=e898]: 📖 How Smart Sync Works
+          - group [ref=e901]:
+            - generic "keyboard_arrow_right 📜 Sync History" [ref=e902] [cursor=pointer]:
+              - generic [ref=e903]:
+                - generic [ref=e905]: keyboard_arrow_right
+                - paragraph [ref=e908]: 📜 Sync History
+    - dialog "dialog" [ref=e911]:
+      - paragraph [ref=e915]: Select Course to sync
+      - generic [ref=e919]:
+        - paragraph [ref=e922]: "Show:"
+        - generic [ref=e926]:
+          - button "Favorites Only" [active] [ref=e931] [cursor=pointer]:
+            - paragraph [ref=e933]: Favorites Only
+          - button "All Courses" [ref=e938] [cursor=pointer]:
+            - paragraph [ref=e940]: All Courses
+        - separator [ref=e943]
+        - generic [ref=e945]:
+          - generic [ref=e948] [cursor=pointer]:
+            - checkbox "Indføring i organisationers opbygning og funktion (LA)"
+            - generic [ref=e952]:
+              - paragraph [ref=e953]: Indføring i organisationers opbygning og funktion (LA)
+              - text: BINTO1060U.LA_E25
+          - generic [ref=e956] [cursor=pointer]:
+            - checkbox "Indføring i organisationers opbygning og funktion (XB)"
+            - generic [ref=e960]:
+              - paragraph [ref=e961]: Indføring i organisationers opbygning og funktion (XB)
+              - text: BINTO1060U.XB_E25
+          - generic [ref=e964] [cursor=pointer]:
+            - checkbox "Introduction to Information Systems (LA)"
+            - generic [ref=e968]:
+              - paragraph [ref=e969]: Introduction to Information Systems (LA)
+              - text: BINTO1078U.LA_E25
+          - generic [ref=e972] [cursor=pointer]:
+            - checkbox "Introduction to Information Systems (XB)"
+            - generic [ref=e976]:
+              - paragraph [ref=e977]: Introduction to Information Systems (XB)
+              - text: BINTO1078U.XB_E25
+          - generic [ref=e980] [cursor=pointer]:
+            - checkbox "IT-projektledelse (LA)"
+            - generic [ref=e984]:
+              - paragraph [ref=e985]: IT-projektledelse (LA)
+              - text: BINTO1059U.LA_F26
+          - generic [ref=e988] [cursor=pointer]:
+            - checkbox "IT-projektledelse (XB)"
+            - generic [ref=e992]:
+              - paragraph [ref=e993]: IT-projektledelse (XB)
+              - text: BINTO1059U.XB_F26
+          - generic [ref=e996] [cursor=pointer]:
+            - checkbox "Programmering og udvikling af små systemer samt databaser (LA)"
+            - generic [ref=e1000]:
+              - paragraph [ref=e1001]: Programmering og udvikling af små systemer samt databaser (LA)
+              - text: BINTO1064U.LA_E25
+          - generic [ref=e1004] [cursor=pointer]:
+            - checkbox "Programmering og udvikling af små systemer samt databaser (XC)"
+            - generic [ref=e1008]:
+              - paragraph [ref=e1009]: Programmering og udvikling af små systemer samt databaser (XC)
+              - text: BINTO1064U.XC_E25
+          - generic [ref=e1012] [cursor=pointer]:
+            - 'checkbox "Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA)"'
+            - generic [ref=e1016]:
+              - paragraph [ref=e1017]: "Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA)"
+              - text: BINTO2063U.LA_E25
+          - generic [ref=e1020] [cursor=pointer]:
+            - 'checkbox "Virksomhedens økonomiske styring (2): Regnskabsvæsen (LA)"'
+            - generic [ref=e1024]:
+              - paragraph [ref=e1025]: "Virksomhedens økonomiske styring (2): Regnskabsvæsen (LA)"
+              - text: BINTO1057U.LA_F26
+        - separator [ref=e1028]
+        - button "Confirm Selection" [ref=e1031] [cursor=pointer]:
+          - paragraph [ref=e1033]: Confirm Selection

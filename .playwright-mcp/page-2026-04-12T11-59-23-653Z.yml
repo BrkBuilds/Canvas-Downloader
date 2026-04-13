@@ -1,0 +1,79 @@
+- generic [ref=e2]:
+  - generic [ref=e17]:
+    - button "keyboard_double_arrow_left" [ref=e236] [cursor=pointer]:
+      - generic [ref=e238]: keyboard_double_arrow_left
+    - generic [ref=e20]:
+      - generic [ref=e22]:
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e28]: Canvas Downloader
+          - separator [ref=e29]
+        - button "Download Courses" [ref=e32] [cursor=pointer]:
+          - paragraph [ref=e34]: Download Courses
+        - button "Sync Local Folders" [active] [ref=e37]:
+          - paragraph [ref=e39]: Sync Local Folders
+      - generic [ref=e40]:
+        - button "Settings" [ref=e43] [cursor=pointer]:
+          - paragraph [ref=e45]: Settings
+        - separator [ref=e48]
+        - generic [ref=e50]:
+          - generic [ref=e53]:
+            - generic [ref=e54]: Logged in as
+            - generic [ref=e55]: Birk
+          - button "Log out" [ref=e58] [cursor=pointer]
+        - generic [ref=e60]:
+          - separator [ref=e61]
+          - generic [ref=e62]: Canvas Downloader v2.0.0
+  - generic [ref=e3]:
+    - banner
+    - generic [ref=e66]:
+      - generic [ref=e240]:
+        - generic [ref=e246]: 📁 Select Folders
+        - generic [ref=e252]: 🔍 Review Changes
+        - generic [ref=e258]: ⬇️ Syncing
+        - generic [ref=e264]: ✅ Complete
+      - generic [ref=e104]:
+        - heading "Canvas Courses to Sync" [level=3] [ref=e285]: Canvas Courses to Sync
+        - button "Saved Groups & Pairs" [ref=e291] [cursor=pointer]:
+          - paragraph [ref=e293]: Saved Groups & Pairs
+      - generic [ref=e122]:
+        - generic [ref=e295]:
+          - generic [ref=e299]:
+            - paragraph [ref=e303]:
+              - strong [ref=e304]: "Course: Programmering og udvikling af små systemer samt databaser (LA)"
+            - button "💾" [ref=e309] [cursor=pointer]:
+              - paragraph [ref=e311]: 💾
+            - generic [ref=e314]:
+              - generic [ref=e315]: 📁 Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+              - generic [ref=e316]: "🕓 Last synced: 2026-04-08 10:15"
+          - button "📂 Open Folder" [ref=e321] [cursor=pointer]:
+            - paragraph [ref=e323]: 📂 Open Folder
+          - button "✏️ Edit" [ref=e328] [cursor=pointer]:
+            - paragraph [ref=e330]: ✏️ Edit
+          - button "🚫 Ignored Files (0)" [disabled] [ref=e335]:
+            - paragraph [ref=e337]: 🚫 Ignored Files (0)
+          - button "🗑️ Remove" [ref=e342] [cursor=pointer]:
+            - paragraph [ref=e344]: 🗑️ Remove
+        - generic [ref=e346]:
+          - button "➕ Add Course folder to Sync" [ref=e351] [cursor=pointer]:
+            - paragraph [ref=e353]: ➕ Add Course folder to Sync
+          - button "💾 Save List as Group" [disabled] [ref=e358]:
+            - paragraph [ref=e360]: 💾 Save List as Group
+      - generic [ref=e134]:
+        - button "Analyze, Review & Sync" [ref=e365] [cursor=pointer]:
+          - paragraph [ref=e367]: Analyze, Review & Sync
+        - generic [ref=e373]: OR
+        - button "Quick Sync All" [ref=e378] [cursor=pointer]:
+          - paragraph [ref=e380]: Quick Sync All
+      - separator [ref=e384]
+      - group [ref=e387]:
+        - generic "keyboard_arrow_right 📖 How Smart Sync Works" [ref=e388] [cursor=pointer]:
+          - generic [ref=e389]:
+            - generic [ref=e391]: keyboard_arrow_right
+            - paragraph [ref=e394]: 📖 How Smart Sync Works
+      - group [ref=e397]:
+        - generic "keyboard_arrow_right 📜 Sync History" [ref=e398] [cursor=pointer]:
+          - generic [ref=e399]:
+            - generic [ref=e401]: keyboard_arrow_right
+            - paragraph [ref=e404]: 📜 Sync History

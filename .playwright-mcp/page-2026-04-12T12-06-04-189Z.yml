@@ -1,0 +1,101 @@
+- generic:
+  - generic:
+    - generic [ref=e2]:
+      - generic [ref=e20]:
+        - generic [ref=e22]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - img [ref=e26]
+              - generic [ref=e28]: Canvas Downloader
+            - separator [ref=e29]
+          - button "Download Courses" [ref=e32] [cursor=pointer]:
+            - paragraph [ref=e34]: Download Courses
+          - button "Sync Local Folders" [ref=e37] [cursor=pointer]:
+            - paragraph [ref=e39]: Sync Local Folders
+        - generic [ref=e40]:
+          - button "Settings" [ref=e43] [cursor=pointer]:
+            - paragraph [ref=e45]: Settings
+          - separator [ref=e48]
+          - generic [ref=e50]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: Logged in as
+              - generic [ref=e55]: Birk
+            - button "Log out" [ref=e58] [cursor=pointer]
+          - generic [ref=e60]:
+            - separator [ref=e61]
+            - generic [ref=e62]: Canvas Downloader v2.0.0
+      - generic [ref=e3]:
+        - banner
+        - generic [ref=e66]:
+          - generic [ref=e1190]:
+            - generic [ref=e1196]: 📁 Select Folders
+            - generic [ref=e1202]: 🔍 Review Changes
+            - generic [ref=e1208]: ⬇️ Syncing
+            - generic [ref=e1214]: ✅ Complete
+          - generic [ref=e1218]:
+            - heading "Canvas Courses to Sync" [level=3] [ref=e1225]: Canvas Courses to Sync
+            - button "Saved Groups & Pairs" [ref=e1231] [cursor=pointer]:
+              - paragraph [ref=e1233]: Saved Groups & Pairs
+          - generic [ref=e754]:
+            - generic [ref=e1235]:
+              - generic [ref=e1237]:
+                - paragraph [ref=e1243]: Added Folder:📁 Uge 9 Forelæsning 14. Design, Arkitektur
+                - button "Change Folder" [ref=e1248] [cursor=pointer]:
+                  - paragraph [ref=e1250]: Change Folder
+              - generic [ref=e1252]:
+                - paragraph [ref=e1258]: "Course: Select Canvas Course"
+                - button "Select Course" [ref=e1263] [cursor=pointer]:
+                  - paragraph [ref=e1265]: Select Course
+              - generic [ref=e1267]:
+                - button "✓ Confirm and Add" [ref=e1272] [cursor=pointer]:
+                  - paragraph [ref=e1274]: ✓ Confirm and Add
+                - button "Cancel" [ref=e1279] [cursor=pointer]:
+                  - paragraph [ref=e1281]: Cancel
+            - generic [ref=e1287]:
+              - img "Canvas Downloader Logo" [ref=e1289]
+              - generic [ref=e1290]: Ready to sync? Add a local folder and map it to a Canvas course to get started!
+          - generic [ref=e864]:
+            - button "Analyze, Review & Sync" [disabled] [ref=e1295]:
+              - paragraph [ref=e1297]: Analyze, Review & Sync
+            - generic [ref=e1303]: OR
+            - button "Quick Sync All" [disabled] [ref=e1308]:
+              - paragraph [ref=e1310]: Quick Sync All
+          - separator [ref=e1314]
+          - group [ref=e1317]:
+            - generic "keyboard_arrow_right 📖 How Smart Sync Works" [ref=e1318] [cursor=pointer]:
+              - generic [ref=e1319]:
+                - generic [ref=e1321]: keyboard_arrow_right
+                - paragraph [ref=e1324]: 📖 How Smart Sync Works
+          - group [ref=e1327]:
+            - generic "keyboard_arrow_right 📜 Sync History" [ref=e1328] [cursor=pointer]:
+              - generic [ref=e1329]:
+                - generic [ref=e1331]: keyboard_arrow_right
+                - paragraph [ref=e1334]: 📜 Sync History
+    - dialog "dialog" [ref=e1462]:
+      - paragraph [ref=e1466]
+      - generic [ref=e1470]:
+        - generic [ref=e1473]:
+          - img [ref=e1474]
+          - generic [ref=e1475]: Saved Groups & Pairs
+        - button "← Back to overview" [ref=e1542] [cursor=pointer]:
+          - paragraph [ref=e1544]: ← Back to overview
+        - generic [ref=e1504]:
+          - generic [ref=e1549]:
+            - generic [ref=e1550]: "Pair name:"
+            - heading "wdasd" [level=1] [ref=e1551]
+          - button "✏️ Edit" [active] [ref=e1556] [cursor=pointer]:
+            - paragraph [ref=e1558]: ✏️ Edit
+        - generic [ref=e1565]:
+          - generic [ref=e1569]:
+            - generic [ref=e1570]: Programmering og udvikling af små systemer samt databaser (XC)
+            - generic [ref=e1571]: 📁 C:/Users/birkl/Downloads/prut
+          - generic [ref=e1573]:
+            - button "📂 Open Folder" [disabled] [ref=e1578]:
+              - paragraph [ref=e1580]: 📂 Open Folder
+            - button "✏️ Edit Pair" [ref=e1585] [cursor=pointer]:
+              - paragraph [ref=e1587]: ✏️ Edit Pair
+          - group [ref=e1590]:
+            - generic "keyboard_arrow_right ⚙️ See Configuration" [ref=e1591] [cursor=pointer]:
+              - generic [ref=e1592]:
+                - generic [ref=e1594]: keyboard_arrow_right
+                - paragraph [ref=e1597]: ⚙️ See Configuration

@@ -58,7 +58,7 @@ def inject_course_selector_css():
     Uses wildcard attribute selectors so the same stylesheet governs
     every instance regardless of namespace.
     """
-    st.markdown(f"""<style>
+    st.html(f"""<style>
     /* ── Premium Elevated Tray: CBS Filter Container ────────── */
     div[class*="st-key-cbs_container_"] {{
         background-color: rgba(255, 255, 255, 0.02) !important;
@@ -78,10 +78,10 @@ def inject_course_selector_css():
         margin-top: 8px !important;
         margin-bottom: 8px !important;
     }}
-    </style>""", unsafe_allow_html=True)
+    </style>""")
 
 
-def render_favorites_pill(namespace: str, default_favorites: bool = True) -> bool:
+def render_favorites_pill(namespace: str, default_favorites: bool = True, in_dialog: bool = False) -> bool:
     """Render a segmented favorites / all-courses toggle with icons.
 
     Uses the proven 'Native Button Segmented Control' architecture
@@ -90,6 +90,11 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     Args:
         namespace: Unique key prefix (e.g. ``'dl'``, ``'sync_d'``, ``'hub_cs'``).
         default_favorites: Initial selection on first render.
+        in_dialog: Pass ``True`` when rendering inside a dialog or SPA sub-page.
+            In that context the large negative margins that compensate for the
+            download-mode wizard header are incorrect and will push content into
+            the dialog title area.  When ``True``, the "Show:" label and
+            segmented-control container use neutral (non-negative) margins.
 
     Returns:
         ``True`` if *Favorites Only* is selected.
@@ -106,14 +111,22 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     list_url = _LIST_BLUE if active_key == "all" else _LIST_GREY
 
     # ── HOISTED CSS FOR SEGMENTED CONTROL LIST VIEW TOGGLE) ─
-    st.markdown(f"""<style>
+    # In dialog mode, "Show:" uses st.html (margin-bottom: 0), so fav_seg sits
+    # immediately after the stVerticalBlock gap — no negative compensation needed.
+    _seg_margin_top = "0px" if in_dialog else "-30px"
+    # In dialog portals, Streamlit's own button CSS wins at equal specificity
+    # (loaded later in the cascade). Prefix with div[role="dialog"] to boost
+    # our specificity to (0,2,*) so we always win regardless of source order.
+    # Download mode (in_dialog=False) uses no prefix — it works as-is.
+    _bp = 'div[role="dialog"] ' if in_dialog else ''
+    st.html(f"""<style>
     /* ── Outer tray (border=True used purely for st-key- class) ── */
     div[class*="st-key-fav_seg_"] {{
         background-color: rgba(0, 0, 0, 0.25) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 14px !important;
         padding: 6px !important;
-        margin-top: -30px !important;
+        margin-top: {_seg_margin_top} !important;
         max-width: 380px !important;
         box-shadow: 0 0 8px rgba(255, 255, 255, 0.025) !important;
     }}
@@ -128,7 +141,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
     }}
 
     /* ── Base button ─────────────────────────────────────────── */
-    div[class*="st-key-btn_fav_"] button {{
+    {_bp}div[class*="st-key-btn_fav_"] button {{
         background-color: transparent !important;
         border: 1px solid transparent !important;
         border-radius: 8px !important;
@@ -138,38 +151,40 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
         background-size: 22px !important;
+        padding-left: 42px !important;
+        padding-right: 20px !important;
     }}
-    div[class*="st-key-btn_fav_"] button p {{
+    {_bp}div[class*="st-key-btn_fav_"] button p {{
         font-size: 1rem !important;
         font-weight: 500 !important;
         color: inherit !important;
     }}
 
     /* ── Icon assignment (dynamic: blue=active, grey=inactive) ── */
-    div[class*="st-key-btn_fav_favorites"] button {{
+    {_bp}div[class*="st-key-btn_fav_favorites"] button {{
         background-image: url("{star_url}") !important;
     }}
-    div[class*="st-key-btn_fav_all"] button {{
+    {_bp}div[class*="st-key-btn_fav_all"] button {{
         background-image: url("{list_url}") !important;
     }}
 
     /* ── Hover (inactive buttons) ────────────────────────────── */
-    div[class*="st-key-btn_fav_"] button:hover {{
+    {_bp}div[class*="st-key-btn_fav_"] button:hover {{
         background-color: rgba(255, 255, 255, 0.05) !important;
         border-color: transparent !important;
         opacity: 1 !important;
         color: #ffffff !important;
     }}
     /* Hover always shows blue icons */
-    div[class*="st-key-btn_fav_favorites"] button:hover {{
+    {_bp}div[class*="st-key-btn_fav_favorites"] button:hover {{
         background-image: url("{_STAR_BLUE}") !important;
     }}
-    div[class*="st-key-btn_fav_all"] button:hover {{
+    {_bp}div[class*="st-key-btn_fav_all"] button:hover {{
         background-image: url("{_LIST_BLUE}") !important;
     }}
 
     /* ── Active state ────────────────────────────────────────── */
-    div.st-key-btn_fav_{active_key}_{namespace} button {{
+    {_bp}div.st-key-btn_fav_{active_key}_{namespace} button {{
         background-color: rgba(56, 189, 248, 0.1) !important;
         border: 1px solid rgba(56, 189, 248, 0.3) !important;
         box-shadow: 0 0 16px rgba(0, 0, 0, 1) !important;
@@ -179,19 +194,24 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True) -> boo
         padding-right: 20px !important;
     }}
     /* Specificity shield — protect active from hover degradation */
-    div.st-key-btn_fav_{active_key}_{namespace} button:hover {{
+    {_bp}div.st-key-btn_fav_{active_key}_{namespace} button:hover {{
         background-color: rgba(56, 189, 248, 0.15) !important;
         border-color: rgba(56, 189, 248, 0.4) !important;
         opacity: 1 !important;
         color: #ffffff !important;
     }}
-    </style>""", unsafe_allow_html=True)
+    </style>""")
 
     # ── "Show:" label ──────────────────────────────────────────
-    st.markdown(
-        "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; "
-        "margin-top: -50px; margin-bottom: 25px;'>Show:</p>",
-        unsafe_allow_html=True
+    # Use st.html() (not st.markdown) so the wrapper is a stHtml element with
+    # margin-bottom: 0 (per global.css rule 3). st.markdown wraps in
+    # stMarkdownContainer which adds 1rem bottom ghost margin, causing large
+    # visual gaps in dialog contexts where compensation margins don't apply.
+    _label_margin_top = "0px" if in_dialog else "-50px"
+    _label_margin_bottom = "0px" if in_dialog else "25px"
+    st.html(
+        f"<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; "
+        f"margin-top: {_label_margin_top}; margin-bottom: {_label_margin_bottom};'>Show:</p>"
     )
 
     # ── Callbacks ──────────────────────────────────────────────
@@ -363,14 +383,14 @@ def _render_multi_select_list(
     div[class*="st-key-{namespace}_chk_"]:has(input[type="checkbox"]:checked) {{
         background-color: rgba(56, 189, 248, 0.08) !important;
     }}
-    
+
     /* Make sure checkbox area fills row */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] {{
         width: 100% !important;
         align-items: flex-start !important;
         cursor: pointer !important;
     }}
-    
+
     /* Title Styling */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] p {{
         font-size: 1.05em !important;
@@ -379,10 +399,10 @@ def _render_multi_select_list(
         margin: 0 !important;
         line-height: 1.2 !important;
     }}
-    
+
     /* Center the checkbox itself vertically with the first line */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
-        margin-top: 3px !important; 
+        margin-top: 3px !important;
     }}
     </style>""", unsafe_allow_html=True)
 
@@ -455,14 +475,14 @@ def _render_single_select_list(
     div[class*="st-key-{namespace}_chk_"]:has(input[type="checkbox"]:checked) {{
         background-color: rgba(56, 189, 248, 0.08) !important;
     }}
-    
+
     /* Make sure checkbox area fills row */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] {{
         width: 100% !important;
         align-items: flex-start !important;
         cursor: pointer !important;
     }}
-    
+
     /* Title Styling */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] p {{
         font-size: 1.05em !important;
@@ -471,10 +491,10 @@ def _render_single_select_list(
         margin: 0 !important;
         line-height: 1.2 !important;
     }}
-    
+
     /* Center the checkbox itself vertically with the first line */
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
-        margin-top: 3px !important; 
+        margin-top: 3px !important;
     }}
     </style>""", unsafe_allow_html=True)
 
