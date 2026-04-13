@@ -436,39 +436,58 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
 def select_course_dialog_inner(courses, current_selected_id, ):
     from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list, render_favorites_pill
 
-    # Static CSS: scroll-container height sniffing + compact spacing for dialog
-    st.markdown("""
+    # Static CSS: scroll-container + compact dialog spacing
+    st.html("""
         <style>
+            /* Scroll container: border=True gives reliable st-key-* class.
+               Strip the native border here; height auto + max-height + overflow
+               so the container shrinks to fit short lists and scrolls long ones. */
             div.st-key-course_list_scroll_container {
-                height: 65vh !important;
-                min-height: 65vh !important;
-                max-height: 65vh !important;
+                border: none !important;
+                border-radius: 0 !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: 58vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
-                padding-right: 5px;
+                padding: 0 !important;
+                padding-right: 5px !important;
+            }
+            /* Strip padding from the inner stVerticalBlock so the first/last
+               course item sits flush against the container edges. */
+            div.st-key-course_list_scroll_container > div[data-testid="stVerticalBlock"] {
+                padding: 0 !important;
             }
             html:has(div.st-key-sync_d_show_cbs_filters input:checked) div.st-key-course_list_scroll_container {
-                height: 55vh !important;
-                min-height: 55vh !important;
-                max-height: 55vh !important;
+                max-height: 48vh !important;
             }
-            /* Compact dialog spacing — crush Streamlit's default element gaps */
-            div[role="dialog"] div[data-testid="stElementContainer"] {
-                margin-bottom: -20px !important;
+            /* Compact dialog: reduce stVerticalBlock gap between chrome elements
+               (favorites pill, CBS toggle, hr, list, hr, Confirm button) from
+               Streamlit's default ~1rem to 0.4rem. */
+            div[role="dialog"] div[data-testid="stVerticalBlock"] {
+                gap: 0.4rem !important;
             }
-            /* Restore spacing for course list items inside scroll container */
-            div.st-key-course_list_scroll_container div[data-testid="stElementContainer"] {
-                margin-bottom: 0px !important;
+            /* Restore natural gap for the checkbox rows inside the course list.
+               The rows already use margin-bottom:-10px tightening; a 0.4rem gap
+               on top would cause them to overlap. */
+            div[data-testid="stVerticalBlock"]:has(div[class*="st-key-sync_d_chk_"]) {
+                gap: 1rem !important;
+            }
+            /* Reduce dialog scrollable body top padding so content sits closer
+               to the dialog title bar. */
+            div[role="dialog"] [data-testid="stDialogScrollableBody"] {
+                padding-top: 0.25rem !important;
             }
         </style>
-    """, unsafe_allow_html=True)
+    """)
 
     inject_course_selector_css()
 
     # 1. Favorites / All Courses pill toggle
     favorites_only = render_favorites_pill(
         "sync_d",
-        default_favorites=st.session_state.get('sync_filter_favorites', True)
+        default_favorites=st.session_state.get('sync_filter_favorites', True),
+        in_dialog=True,
     )
     st.session_state['sync_filter_favorites'] = favorites_only
 
@@ -489,14 +508,17 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     if "sync_d_selected_id" not in st.session_state or st.session_state.get("sync_d_selected_id") is None:
         st.session_state["sync_d_selected_id"] = current_selected_id
 
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+    st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
 
     # 3. Course list (centralized single-select)
-    with st.container(border=False, key="course_list_scroll_container"):
-        render_course_list(filtered_courses, "sync_d", multi_select=False)
+    # border=True required so the st-key-* CSS class is reliably emitted
+    # (CLAUDE.md "Border Strip" rule). The border is stripped in CSS above.
+    with st.container(border=True, key="course_list_scroll_container"):
+        render_course_list(filtered_courses, "sync_d", multi_select=False,
+                           first_item_top_offset="0")
 
     # 4. Confirm
-    st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+    st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
     if st.button("Confirm Selection", key="sync_confirm_btn", type="primary", use_container_width=True):
         st.session_state["sync_selected_return_id"] = st.session_state["sync_d_selected_id"]
         st.rerun(scope="app")
