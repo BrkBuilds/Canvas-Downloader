@@ -52,7 +52,7 @@ def render_sidebar(fetch_courses_fn):
     icon_sync_b64 = get_base64_image("assets/icon_sync.png")
 
     # ── Single consolidated CSS block for all sidebar nav elements ──────
-    st.markdown(f"""
+    st.html(f"""
 <style>
 /* ── Nav button containers: natural 100% width (zero side padding on parent) ── */
 [data-testid="stSidebarUserContent"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) > div.stButton {{
@@ -196,7 +196,7 @@ div.st-key-nav_btn_logout button:hover::after {{
 }}
 
 </style>
-""", unsafe_allow_html=True)
+""")
 
     with st.container(border=False, key="sidebar_top"):
         # ── Header: icon + title + separator (single HTML block) ─────────
@@ -385,14 +385,14 @@ def _render_authenticated_nav_top():
     # Active-state CSS is dynamic (depends on session state) — inject separately
     if mode in ['download', 'sync']:
         active_key = f"st-key-nav_btn_{mode}"
-        st.markdown(f"""<style>
+        st.html(f"""<style>
         section[data-testid="stSidebar"] div.{active_key} button {{ background-color: rgba(255, 255, 255, 0.10) !important; }}
         section[data-testid="stSidebar"] div.{active_key} button p {{ color: #ffffff !important; font-weight: 600 !important; }}
         section[data-testid="stSidebar"] div.{active_key} button p::before,
         section[data-testid="stSidebar"] div.{active_key} button:hover p::before {{ filter: brightness(0) invert(1) !important; }}
         section[data-testid="stSidebar"] div.{active_key} button:hover {{ background-color: rgba(255, 255, 255, 0.10) !important; cursor: default !important; }}
         section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
-        </style>""", unsafe_allow_html=True)
+        </style>""")
 
     # Download mode button
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
