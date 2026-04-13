@@ -899,21 +899,34 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             padding-top: 3px !important;
             padding-bottom: 3px !important;
         }
-        /* Scroll container: auto height so short lists don't leave empty space.
+        /* Scroll container: height:auto lets the list shrink to fit short
+           Favorites lists; max-height caps growth so the dialog never
+           overflows the viewport — All Courses scrolls internally via
+           overflow-y:auto once content exceeds max-height.
            border=True used for reliable st-key-* class; border stripped here. */
         div.st-key-hub_cs_scroll_container {
             border: none !important;
             border-radius: 0 !important;
             height: auto !important;
-            min-height: 0 !important;
-            max-height: 58vh !important;
+            min-height: 30vh !important;
+            max-height: 40vh !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
             padding: 0 !important;
             padding-right: 5px !important;
+            margin-top: -0.25rem !important;
+            margin-bottom: -0.25rem !important;
         }
         div.st-key-hub_cs_scroll_container > div[data-testid="stVerticalBlock"] {
             padding: 0 !important;
+        }
+        /* When CBS filters are expanded they add ~100px of extra chrome (filter
+           box + toggle). Shrink both max-height and min-height to compensate so
+           the dialog stays within the viewport. min-height must not exceed
+           max-height, hence both are reduced together. */
+        html:has(div.st-key-hub_cs_show_cbs_filters input:checked) div.st-key-hub_cs_scroll_container {
+            max-height: 25vh !important;
+            min-height: 20vh !important;
         }
         /* Reduce dialog scrollable body top padding so "Back to Edit" sits close
            to the dialog title bar. */
@@ -954,7 +967,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         # border=True for reliable st-key-* class; border stripped + max-height set in CSS above.
         with st.container(border=True, key="hub_cs_scroll_container"):
             render_course_list(filtered_courses, "hub_cs", multi_select=False,
-                               first_item_top_offset="0")
+                               first_item_top_offset="-10px")
 
         # --- Confirm Selection ---
         st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')

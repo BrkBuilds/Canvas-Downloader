@@ -250,6 +250,15 @@ section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logo
 section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button * {
     border-radius: 0px !important;
 }
+/* Force left-alignment on Streamlit's inner button wrappers (DIV > SPAN chain).
+   Without this, Streamlit's default justify-content: center on the inner flex
+   containers causes the icon+text to appear centered on narrow sidebars. */
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button > div,
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button > div > span {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    width: 100% !important;
+}
 
 /* Specific logout button override — keep it compact */
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout .stButton,

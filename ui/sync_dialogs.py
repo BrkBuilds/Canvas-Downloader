@@ -440,26 +440,32 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     st.html("""
         <style>
             /* Scroll container: border=True gives reliable st-key-* class.
-               Strip the native border here; height auto + max-height + overflow
-               so the container shrinks to fit short lists and scrolls long ones. */
+               Strip the native border here. height:auto lets the list shrink
+               to fit short Favorites lists; max-height caps growth so the
+               dialog never overflows the viewport — All Courses scrolls
+               internally via overflow-y:auto once content exceeds max-height. */
             div.st-key-course_list_scroll_container {
                 border: none !important;
                 border-radius: 0 !important;
                 height: auto !important;
-                min-height: 0 !important;
-                max-height: 58vh !important;
+                min-height: 30vh !important;
+                max-height: 45vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 padding: 0 !important;
                 padding-right: 5px !important;
+                margin-top: -0.4rem !important;
+                margin-bottom: -0.4rem !important;
             }
             /* Strip padding from the inner stVerticalBlock so the first/last
                course item sits flush against the container edges. */
             div.st-key-course_list_scroll_container > div[data-testid="stVerticalBlock"] {
                 padding: 0 !important;
             }
+            /* When CBS filters are expanded they take up ~80px above the list;
+               shrink the max-height by the same amount to keep dialog within viewport. */
             html:has(div.st-key-sync_d_show_cbs_filters input:checked) div.st-key-course_list_scroll_container {
-                max-height: 48vh !important;
+                max-height: 35vh !important;
             }
             /* Compact dialog: reduce stVerticalBlock gap between chrome elements
                (favorites pill, CBS toggle, hr, list, hr, Confirm button) from
@@ -515,7 +521,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     # (CLAUDE.md "Border Strip" rule). The border is stripped in CSS above.
     with st.container(border=True, key="course_list_scroll_container"):
         render_course_list(filtered_courses, "sync_d", multi_select=False,
-                           first_item_top_offset="0")
+                           first_item_top_offset="-10px")
 
     # 4. Confirm
     st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
