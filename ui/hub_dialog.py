@@ -873,25 +873,61 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
         st.button("\u2190 Back to Edit", key="btn_hub_back_from_course_sel", type="tertiary",
                   on_click=change_hub_layer, kwargs={'target_layer': 'layer_2'})
-        st.markdown("<h3 style='font-size: 1.5rem; margin-top: -20px; margin-bottom: -5px;'>Select Course</h3>", unsafe_allow_html=True)
+        # Use st.html() so the h3 has zero ghost-box margin (st.markdown wraps in
+        # stMarkdownContainer which adds 1rem bottom margin, pushing "Show:" far down).
+        st.html("<h3 style='font-size: 1.5rem; margin-top: -12px; margin-bottom: 0px;'>Select Course</h3>")
 
-        # Compact spacing CSS for hub course selector
-        st.markdown("""<style>
-        /* Crush the Show: label margin */
-        div.st-key-fav_seg_hub_cs { margin-top: -10px !important; margin-bottom: -10px !important; }
+        # Compact spacing CSS for hub course selector (st.html = zero ghost-box footprint)
+        st.html("""<style>
         div.st-key-hub_cs_show_cbs_filters { margin-top: 0px !important; margin-bottom: 0px !important; }
-        /* Reduce the Streamlit vertical block gap that spaces out all elements */
-        div.st-key-btn_hub_back_from_course_sel ~ div[data-testid="stVerticalBlock"],
-        div[data-testid="stMainBlockContainer"] > div > div[data-testid="stVerticalBlock"] {
-            gap: 0.3rem !important;
+        /* Reduce stVerticalBlock gap for the course-selector layer.
+           :has() guard scopes this to when the back button is present so the
+           rule self-deactivates when the user navigates to other hub layers. */
+        div[role="dialog"]:has(.st-key-btn_hub_back_from_course_sel) div[data-testid="stVerticalBlock"] {
+            gap: 0.25rem !important;
         }
-        </style>""", unsafe_allow_html=True)
+        /* Restore natural gap for checkbox rows in the course list; they already
+           use margin-bottom:-10px tightening so 0.25rem would cause overlap. */
+        div[role="dialog"] div[data-testid="stVerticalBlock"]:has(div[class*="st-key-hub_cs_chk_"]) {
+            gap: 1rem !important;
+        }
+        /* Compact "Back to Edit" button — shrink to content height so it doesn't
+           create a large visual gap before the "Select Course" heading. */
+        div[role="dialog"]:has(.st-key-btn_hub_back_from_course_sel) div.st-key-btn_hub_back_from_course_sel button {
+            height: auto !important;
+            min-height: 0 !important;
+            padding-top: 3px !important;
+            padding-bottom: 3px !important;
+        }
+        /* Scroll container: auto height so short lists don't leave empty space.
+           border=True used for reliable st-key-* class; border stripped here. */
+        div.st-key-hub_cs_scroll_container {
+            border: none !important;
+            border-radius: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: 58vh !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 0 !important;
+            padding-right: 5px !important;
+        }
+        div.st-key-hub_cs_scroll_container > div[data-testid="stVerticalBlock"] {
+            padding: 0 !important;
+        }
+        /* Reduce dialog scrollable body top padding so "Back to Edit" sits close
+           to the dialog title bar. */
+        div[role="dialog"] [data-testid="stDialogScrollableBody"] {
+            padding-top: 0.25rem !important;
+        }
+        </style>""")
 
         # --- Favorites / All Courses pill toggle ---
         from ui.course_selector import render_favorites_pill
         favorites_only = render_favorites_pill(
             "hub_cs",
-            default_favorites=st.session_state.get('hub_cs_filter_favorites', True)
+            default_favorites=st.session_state.get('hub_cs_filter_favorites', True),
+            in_dialog=True,
         )
         st.session_state['hub_cs_filter_favorites'] = favorites_only
 
@@ -912,14 +948,16 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         if 'hub_cs_selected_id' not in st.session_state or st.session_state.get('hub_cs_selected_id') is None:
             st.session_state['hub_cs_selected_id'] = current_selected_id
 
-        st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+        st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
 
         # --- Scrollable course list (centralized single-select) ---
-        with st.container(height=400, border=False, key="hub_cs_scroll_container"):
-            render_course_list(filtered_courses, "hub_cs", multi_select=False)
+        # border=True for reliable st-key-* class; border stripped + max-height set in CSS above.
+        with st.container(border=True, key="hub_cs_scroll_container"):
+            render_course_list(filtered_courses, "hub_cs", multi_select=False,
+                               first_item_top_offset="0")
 
         # --- Confirm Selection ---
-        st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
+        st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
         selected_cid = st.session_state.get('hub_cs_selected_id')
         selected_cname = ''
         if selected_cid:
