@@ -1,4 +1,12 @@
-# Progress: Canvas Downloader
+- [x] **Sync UI "Physical Volume" Button Overhaul** (2026-04-14):
+    - [x] **Premium Tactile Styling**: Implemented a dramatic Dark Blue-to-Teal gradient for Quick Sync and a solid primary blue for Analyze, both featuring 3D inset beveled lips.
+    - [x] **Synchronized Transitions**: Standardized all primary buttons to a snappy **0.2s duration** and implemented the `filter: brightness()` escape to enable smooth gradient transitions.
+    - [x] **Soft Active Glow**: Applied subtle 0.2 opacity outer glows on hover to reinforce the premium, "hardware volume" aesthetic.
+- [x] **Plus Emoji Replacement Migration** (2026-04-13):
+    - [x] **Universal Emoji Purge**: Systematically removed all ➕ emojis from synchronization buttons across `sync_ui.py` and `ui/hub_dialog.py`.
+    - [x] **Premium Icon Integration**: Replaced emojis with high-fidelity `icon_add.png` (Base64) injected via CSS `::before` pseudo-elements.
+    - [x] **Architectural Alignment**: Enforced "Static Hoisting" and "Native Button is the Card" patterns to guarantee layout stability and responsive performance.
+    - [x] **Code Zero-Emoji Verification**: Verified the codebase is 100% free of legacy ➕ emojis and `\u2795` escape characters.
 - [x] **Sidebar Authentication UI Finalization** (2026-04-10):
     - [x] **Edge-to-Edge Aesthetic**: Implemented pure flat corners (`0px` radius) for sidebar error/warning messages matching the mechanical design language.
     - [x] **Width Alignment**: Enforced 20px horizontal padding to align notifications flush with the sidebar’s visual rhythm while maintaining internal text alignment.
