@@ -1,17 +1,24 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Sidebar Authentication UI Design**: Finalized the authentication sidebar aesthetic with a premium, mechanical look. Notifications (Errors/Warnings) are now edge-to-edge with zero rounded corners (`border-radius: 0px`), perfectly integrated between the Log In button and the horizontal separator.
-- **Notification Style Override**: Successfully bypassed Streamlit's default alert rounding and spacing within the sidebar scope using high-specificity CSS targeting `div[data-testid="stAlertContainer"]` and `[data-testid="stNotification"]`.
-- **Auth Flow Reordering**: Re-architected `ui/auth.py` to render validation messages *before* the sidebar separator, ensuring a professional vertical hierarchy.
-- **Sidebar Flexbox Architecture**: Completely eradicated the legacy "dynamic spacing injector" hack (`height: calc(100vh - 680px)`) used in the Streamlit sidebar.
-- **Native CSS Hoisting**: Migrated the sidebar to a robust, responsive CSS Flexbox architecture. Wrapped all bottom-anchored elements (Settings, Auth, Version) inside a designated `st-key-sidebar_bottom_block` container and utilized global CSS to force the parent `stSidebarContent` block to behave as a `flex-grow: 1` column.
-- **Hub UI Modernization & Branding**: Completed a high-fidelity visual overhaul of the "Saved Groups & Pairs" Sync Hub, replacing legacy Unicode emojis (📚) with custom, Base64-encoded "Organizer Tray" PNG assets across trigger buttons, dialog headers, and cards.
-- **The Zero-Width Space Hack**: Engineered a robust architectural workaround for Streamlit 1.51.0+ dialog title constraints. Bypassed the `StreamlitAPIException` (empty title crash) by passing a Unicode zero-width space (`\u200b`) to the decorator and injecting a custom HTML/Base64 header pulled into position via severe negative margins (`-70px`).
-- **Pseudo-Element Icon Injection**: Migrated the main Hub trigger button (`btn_hub_main`) and View All tab to use `::before` pseudo-elements for icon injection, ensuring 100% alignment parity with the Presets Hub without DOM bloat.
-- **Targeted Header Nuke**: Refined the CSS guardrails to specifically hide only the native "Close" button (`aria-label="Close"`) rather than the entire `header` element, ensuring stability across Streamlit's internal React reconciliation cycles.
+- **"Physical Volume" Button Aesthetic**: Re-engineered the primary sync action buttons with a premium, tactile "Physical Volume" look. This includes high-saturation 135° gradients (Dark Blue to Teal for Quick Sync), 3D inset beveled lips (`box-shadow: inset ...`), and subtle 0.2 opacity outer glows on hover.
+- **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
+- **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
 
-- **Pyinstaller Module Syncing**: Added recently modularized component folders (core, engine, sync, ui, styles) to the Canvas_Downloader.spec datas array, preventing ModuleNotFoundError crashes natively in the Windows standalone executable.
+- **Session 2026-04-14: Sync UI Button Overhaul & Transition Synchronization**
+    - Done: Implemented "Physical Volume" tactile styling for `btn_quick_sync` and `btn_analyze_sync`.
+    - Done: Engineered the `filter: brightness()` CSS trick to allow smooth transitions on gradient backgrounds.
+    - Done: Synchronized all primary buttons to a 0.2s duration.
+    - Done: Finalized `icon_add.png` migration for all "Add Course" buttons in `sync_ui.py`.
+    - Done: Added `letter-spacing: 0.75px` to the "Output Path" display div in `ui/download_settings.py` for improved path readability.
+    - Done: Updated Card 2 and Card 3 chevron colors to use a consistent gray scheme, removing misleading active colors when expanded.
+    - Done: Propagated "Analyze, Review & Sync" premium layout to the "Confirm and Download" button (minus icon) and resized the "Save Preset" column to ~75% width.
+
+- **Session 2026-04-13: Plus Emoji Replacement Migration**
+    - Done: Loaded `icon_add.png` as Base64 across `sync_ui.py` and `ui/hub_dialog.py`.
+    - Done: Implemented `::before` pseudo-element injection for `btn_add_folder`, `btn_add_folder_empty`, `hub_add_...`, and `btn_hub_add_new_pair`.
+    - Done: Removed all ➕ emojis from button text labels to finalize the modern aesthetic.
+    - Done: Verified zero "Ghost Flashes" by applying Static Hoisting to all new CSS blocks.
 
 - **Session 2026-04-10: Sidebar Authentication UI Finalization**
     - Done: Implemented edge-to-edge, flat-corner styling for sidebar notifications (`border-radius: 0px`).

@@ -215,6 +215,23 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
         - **Mutually Exclusive**: Circular indicators (`border-radius: 50%`).
     - *Implementation*: Use `::before` for the indicator box and `mask-image` for the inner icon (check vs dot).
 
+#### 6. "Physical Volume" Button Aesthetic
+- **Problem**: Standard flat buttons lack the tactile and "premium" feel required for a high-end application.
+- **Pattern**: Combine high-saturation gradients with mechanical depth effects to simulate physical hardware controls.
+- **Implementation**:
+    1.  **Gradients**: Use dramatic 135° linear gradients (e.g., `#1e3a8a` to `#06b6d4` for Quick Sync).
+    2.  **Inset Bevel Lip**: Apply `box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important` to create a 3D "top-lit" beveled edge.
+    3.  **Soft Active Glow**: On hover, apply an outer glow with exactly **0.2 opacity** (`rgba(..., 0.2)`) and an intensified inset bevel.
+    4.  **No Borders**: Use `border: none !important` to allow the gradient and bevel to define the geometry natively.
+
+#### 7. Gradient Transition Pattern
+- **Problem**: CSS `transition` does not natively support `linear-gradient` (it is treated as an image, causing "instant" hover jumps).
+- **Pattern**: Transition the **`filter: brightness()`** property instead of the background image to simulate a transition from "Dark" to "Glow".
+- **Implementation**:
+    - **Base State**: `transition: filter 0.2s ease-in-out !important;`
+    - **Hover State**: `filter: brightness(1.15) !important;` (or matched value to lighten the gradient).
+- **Benefit**: Achieves smooth, hardware-like fading transitions for complex high-saturation gradients without DOM bloat or pseudo-element overlays.
+
 ### Native Button Card Architecture
 To ensure 100% click reliability across the entire card surface, we style native `st.button` widgets into cards.
 
