@@ -5,6 +5,14 @@
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
 - **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
 
+- **Session 2026-04-14: sync_review.py — Smart Select Card Restyling**
+    - Done: Restyled the "Smart Select" filetype checkbox card in `ui/sync_review.py` with dark card background, rounded corners, and shadow.
+    - Done: Fixed horizontal button layout — replaced unreliable `:has()` CSS flex hack with `st.columns([1,1])` + `use_container_width=True` for a true 50/50 split.
+    - Done: Tuned checkbox ↔ label gap using `gap` on the `label` flex container (confirmed `display: flex !important` is required). Final value: `gap: 0` + `margin-left: -2px` on text wrapper div.
+    - Done: Fixed checkbox vertical misalignment with `position: relative; top: -1px` on the visual checkbox `span`.
+    - Done: Fixed separator spacing — `margin` on `<hr>` inside `st.html()` is swallowed by the shadow root. Fix: wrap with `<div style='padding: 10px 0'>` so the padding is real layout height.
+    - Done: Renamed "Clear Selection" → "Deselect All".
+
 - **Session 2026-04-14: Sync UI Button Overhaul & Transition Synchronization**
     - Done: Implemented "Physical Volume" tactile styling for `btn_quick_sync` and `btn_analyze_sync`.
     - Done: Engineered the `filter: brightness()` CSS trick to allow smooth transitions on gradient backgrounds.
