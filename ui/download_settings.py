@@ -90,7 +90,7 @@ def render_download_settings(fetch_courses_fn):
 
     with _hdr_right:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        _pb1, _pb2 = st.columns(2, gap="small")
+        _pb1, _pb2 = st.columns([3, 5], gap="small")
         with _pb1:
             if st.button("💾 Save Preset", key="btn_save_config", use_container_width=True):
                 _save_config_dialog()
@@ -683,8 +683,8 @@ def render_download_settings(fetch_courses_fn):
                 c_filter = "grayscale(0%) brightness(100%)" if has_active_items2 else "grayscale(100%) brightness(60%)"
 
                 # Compute chevron colors BEFORE the button renders
-                c2_base_color = "#68d4a3" if c2_exp else "#64748b"
-                c2_hover_color = "#86e0b8" if c2_exp else "#94a3b8"
+                c2_base_color = "#94a3b8" if c2_exp else "#64748b"
+                c2_hover_color = "#cbd5e1" if c2_exp else "#94a3b8"
 
                 # THE FIX: Inject chevron CSS BEFORE the button to prevent ghost flash
                 st.markdown(f'''<style>
@@ -1086,8 +1086,8 @@ def render_download_settings(fetch_courses_fn):
             m_conv_active = st.session_state.get('notebooklm_master', False)
             has_active_items3 = _conv_active > 0 or m_conv_active
             c3_filter = "grayscale(0%) brightness(100%)" if has_active_items3 else "grayscale(100%) brightness(60%)"
-            c3_base_color = "#f97316" if c3_exp else "#64748b"
-            c3_hover_color = "#fb923c" if c3_exp else "#94a3b8"
+            c3_base_color = "#94a3b8" if c3_exp else "#64748b"
+            c3_hover_color = "#cbd5e1" if c3_exp else "#94a3b8"
 
             # THE FIX: Inject chevron CSS BEFORE the button to prevent ghost flash
             st.markdown(f'''<style>
@@ -1255,6 +1255,7 @@ def render_download_settings(fetch_courses_fn):
         padding: 10px 14px;
         font-size: 0.875rem;
         color: rgba(250, 250, 250, 0.5);
+        letter-spacing: 0.75px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1390,6 +1391,25 @@ def render_download_settings(fetch_courses_fn):
     </ul>
     </div>
     </details>
+
+    <style>
+    /* Custom Confirm and Download Colors - Solid Physical Volume */
+    div.st-key-action_dl_confirm button {{
+        background-color: #1f77b4 !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }}
+
+    /* Confirm and Download Hover - Glow + Lighter Shift */
+    div.st-key-action_dl_confirm button:hover {{
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2), 
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }}
+    </style>
     """
 
         st.markdown(_dl_details_html, unsafe_allow_html=True)
