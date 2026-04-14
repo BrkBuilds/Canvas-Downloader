@@ -250,6 +250,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # --- Load Premium Assets & Hoist Sync Button CSS ---
     b64_analyze = get_base64_image("assets/icon_sync_review.png")
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
+    b64_add = get_base64_image("assets/icon_add.png")
 
     st.markdown(f"""
     <style>
@@ -278,18 +279,53 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         background-size: contain !important;
     }}
 
-    /* Custom Quick Sync Colors */
-    div.st-key-btn_quick_sync button {{
-        background-color: #162742 !important;
-        border: 1px solid #2865c7 !important;
+    /* Custom Analyze Review & Sync Colors - Solid Physical Volume */
+    div.st-key-btn_analyze_sync button {{
+        background-color: #1f77b4 !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }}
+
+    /* Analyze Sync Hover - Glow + Lighter Shift */
+    div.st-key-btn_analyze_sync button:hover {{
+        background-color: #2b8cbe !important;
+        box_shadow: 0 4px 15px rgba(31, 119, 180, 0.2), 
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
     }}
 
-    /* Specificity Shield: Quick Sync Hover State */
-    div.st-key-btn_quick_sync button:hover {{
-        background-color: #153566 !important; 
-        border: 1px solid #2865c7 !important;
+    /* Custom Quick Sync Colors - Dramatic Teal Gradient Physical Volume */
+    div.st-key-btn_quick_sync button {{
+        background: linear-gradient(135deg, #1e3a8a 0%, #06b6d4 100%) !important;
+        border: none !important;
         color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: filter 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }}
+
+    /* Quick Sync Hover - Glow (0.2 Opacity) + Lighter Gradient Shift via Filter */
+    div.st-key-btn_quick_sync button:hover {{
+        filter: brightness(1.15) !important;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2), 
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }}
+
+    /* ===== ADD COURSE BUTTON — Base64 Icon via ::before ===== */
+    div.st-key-btn_add_folder button p::before,
+    div.st-key-btn_add_folder_empty button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        position: relative !important;
+        top: 2px !important;
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 6px !important;
+        background-image: url("data:image/png;base64,{b64_add}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -647,7 +683,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
                     
-                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder", use_container_width=True):
+                    if st.button('Add Course folder to Sync', key="btn_add_folder", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -709,7 +745,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
     
-                    if st.button("➕ " + 'Add Course folder to Sync', key="btn_add_folder_empty", use_container_width=True):
+                    if st.button('Add Course folder to Sync', key="btn_add_folder_empty", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)

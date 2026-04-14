@@ -234,6 +234,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     b64_groups = get_base64_image("assets/icon_sync_group.png")
     b64_pairs = get_base64_image("assets/icon_sync_pair.png")
     b64_hub_icon = get_base64_image("assets/icon_sync_hub.png")
+    b64_add = get_base64_image("assets/icon_add.png")
 
     # 1. Safely consume and display any pending dialog toasts
     if 'hub_toast' in st.session_state:
@@ -383,6 +384,21 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 padding: 8px 12px !important;
                 margin-bottom: 5px !important;
             }}
+
+            /* ===== ADD BUTTONS — Base64 Icon via ::before ===== */
+            div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button p::before,
+            div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button p::before {{
+                content: "" !important;
+                display: inline-block !important;
+                position: relative !important;
+                top: 2px !important;
+                width: 16px !important;
+                height: 16px !important;
+                margin-right: 6px !important;
+                background-image: url("data:image/png;base64,{b64_add}") !important;
+                background-repeat: no-repeat !important;
+                background-size: contain !important;
+            }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -483,7 +499,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # Pair action buttons (same as groups)
                         c1, c2, c3 = st.columns([1, 1, 1], gap="small")
                         with c1:
-                            if st.button("\u2795 Add to Sync List", key=f"hub_add_{g_idx}",
+                            if st.button("Add to Sync List", key=f"hub_add_{g_idx}",
                                          use_container_width=True,
                                          disabled=_pair_on_list, help=_add_help_sp):
                                 # --- Single Pair Append Logic (Step 5) ---
@@ -562,7 +578,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # Spacer removed to make buttons compact against the expander
                         c1, c2, c3 = st.columns([1, 1, 1], gap="small")
                         with c1:
-                            if st.button("\u2795 Add to Sync List", key=f"hub_add_{g_idx}",
+                            if st.button("Add to Sync List", key=f"hub_add_{g_idx}",
                                          use_container_width=True,
                                          disabled=_group_on_list, help=_add_help_g):
                                 # --- Phase 3: Pre-Flight Engine ---
@@ -861,7 +877,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     st.session_state.pop('hub_edit_temp_course_id', None)
                     st.session_state.pop('hub_edit_temp_course_name', None)
                 with st.container(key="hub_layer2_add_btn_wrapper"):
-                    st.button("➕ Add a new course to the group", key="btn_hub_add_new_pair",
+                    st.button("Add a new course to the group", key="btn_hub_add_new_pair",
                               use_container_width=True, on_click=_start_adding)
 
     # =================================================================
