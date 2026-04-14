@@ -1,3 +1,10 @@
+- [x] **sync_review Smart Select Card Restyling** (2026-04-14):
+    - [x] Dark card with rounded corners, shadow, and scoped CSS keyed to `sync_filter_box_outer`.
+    - [x] True 50/50 button row via `st.columns([1,1])` + `use_container_width=True` — replaced broken `:has()` CSS flex hack.
+    - [x] Checkbox gap: `display: flex; gap: 0` on label, `margin-left: -2px` on text wrapper div for sub-zero visual tightness.
+    - [x] Checkbox vertical fix: `position: relative; top: -1px` on the visual checkbox `span`.
+    - [x] Separator spacing: padded via wrapping `<div>` inside `st.html()` (not HR margin — shadow root isolates it).
+    - [x] "Clear Selection" renamed to "Deselect All".
 - [x] **Sync UI "Physical Volume" Button Overhaul** (2026-04-14):
     - [x] **Premium Tactile Styling**: Implemented a dramatic Dark Blue-to-Teal gradient for Quick Sync and a solid primary blue for Analyze, both featuring 3D inset beveled lips.
     - [x] **Synchronized Transitions**: Standardized all primary buttons to a snappy **0.2s duration** and implemented the `filter: brightness()` escape to enable smooth gradient transitions.
