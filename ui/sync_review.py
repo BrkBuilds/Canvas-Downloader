@@ -25,6 +25,7 @@ from ui_helpers import (
     format_file_size,
     short_path,
     check_disk_space,
+    get_base64_image,
 )
 from core.state_registry import cleanup_sync_state
 
@@ -274,18 +275,20 @@ def show_analysis_review(on_confirm_sync):
                     bg_style = f"background: linear-gradient(135deg, {hex_start}, {hex_end}); box-shadow: 0 10px 20px -5px {shadow_color}; border: 1px solid transparent;"
                     text_opacity = "1"
                     icon_bg = "rgba(0,0,0,0.15)"
+                    filter_style = ""
                 else:
-                    # Muted state: 10% opacity gradient, 25% opacity border, 50% text opacity
+                    # Muted state: 10% opacity gradient, 25% opacity border, 50% text opacity, 50% greyscale
                     bg_style = f"background: linear-gradient(135deg, {hex_start}1A, {hex_end}1A); border: 1px solid {hex_start}40; box-shadow: none;"
                     text_opacity = "0.5"
                     icon_bg = f"{hex_start}26"
+                    filter_style = "filter: grayscale(50%);"
 
                 icon_css = f"position:absolute; top:14px; right:14px; background:{icon_bg}; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.5em; opacity: {text_opacity};"
                 num_css = f"font-size:2.7em; font-weight:700; color:rgba(255,255,255,{text_opacity}); line-height:1;"
                 lbl_css = f"font-size:0.95em; color:rgba(255,255,255,{text_opacity}); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
 
                 return f'''
-                <div style="{base_card_css} {bg_style}">
+                <div style="{base_card_css} {bg_style} {filter_style}">
                     <div style="{num_css}">{val}</div>
                     <div style="{lbl_css}">{lbl}</div>
                     <div style="{icon_css}">{icon}</div>
@@ -353,35 +356,123 @@ def show_analysis_review(on_confirm_sync):
         
 
 
-        def toggle_all_exts():
-            if st.session_state.get('sync_filter_all_exts', True):
-                for ext in all_exts_sorted:
-                    st.session_state[f"sync_filter_ext_{ext}"] = True
-                    for file_key in files_by_ext[ext]:
-                        if file_key.startswith('sync_'):
-                            st.session_state[file_key] = True
-        
         def toggle_single_ext(ext_name):
             new_state = st.session_state.get(f'sync_filter_ext_{ext_name}', True)
             ext_files = [k for k in files_by_ext[ext_name] if k.startswith('sync_')]
             for file_key in ext_files:
                 st.session_state[file_key] = new_state
-            
-            if not new_state:
-                st.session_state['sync_filter_all_exts'] = False
 
-        
+        b64_select_all = get_base64_image("assets/icon_select_all.png")
+        b64_clear = get_base64_image("assets/icon_clear_selection.png")
 
         col_main, _ = st.columns([3.5, 8.5])
         with col_main:
+            # Hoist CSS above card (CLAUDE.md: inject above target)
+            # st-key-* class sits directly on stVerticalBlockBorderWrapper — target it flat.
+            st.html(f"""<style>
+            /* Card */
+            div.st-key-sync_filter_box_outer {{
+                background-color: {theme.BG_DARK} !important;
+                border: none !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+                margin-top: 8px !important;
+                padding-top: 6px !important;
+            }}
+            /* Filetype box: strip border, pull up tight below the label */
+            div.st-key-filetypes_flex_box {{
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-top: -14px !important;
+            }}
+            /* Checkbox ↔ label gap: use gap on the label flex container */
+            div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label {{
+                display: flex !important;
+                align-items: center !important;
+                gap: 0px !important;
+                column-gap: 0px !important;
+            }}
+            div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label > div {{
+                margin-left: -2px !important;
+            }}
+            /* Visual checkbox span — nudge up 1px for optical vertical alignment */
+            div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label > span {{
+                position: relative !important;
+                top: -1px !important;
+            }}
+            div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label p {{
+                margin: 0 !important;
+                padding: 0 !important;
+            }}
+            /* Buttons row: strip border */
+            div.st-key-bulk_btns_row {{
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }}
+            div.st-key-bulk_btns_row > div[data-testid="stVerticalBlock"] {{
+                gap: 0 !important;
+                padding-bottom: 0 !important;
+            }}
+            /* Button styles */
+            div.st-key-btn_bulk_select_all button,
+            div.st-key-btn_bulk_deselect_all button {{
+                background-color: rgba(255, 255, 255, 0.07) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                height: 44px !important;
+                min-height: 44px !important;
+                padding-left: 12px !important;
+                padding-right: 14px !important;
+                white-space: nowrap !important;
+                width: 100% !important;
+                transition: background-color 0.15s ease !important;
+            }}
+            div.st-key-btn_bulk_select_all button:hover,
+            div.st-key-btn_bulk_deselect_all button:hover {{
+                background-color: rgba(255, 255, 255, 0.15) !important;
+                color: #ffffff !important;
+            }}
+            div.st-key-btn_bulk_select_all button p,
+            div.st-key-btn_bulk_deselect_all button p {{
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                margin: 0 !important;
+                width: auto !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+            }}
+            div.st-key-btn_bulk_select_all button p::before,
+            div.st-key-btn_bulk_deselect_all button p::before {{
+                content: "" !important;
+                display: inline-block !important;
+                width: 16px !important;
+                height: 16px !important;
+                background-size: contain !important;
+                background-repeat: no-repeat !important;
+                background-position: center !important;
+                flex-shrink: 0 !important;
+            }}
+            div.st-key-btn_bulk_select_all button p::before {{
+                background-image: url('data:image/png;base64,{b64_select_all}') !important;
+            }}
+            div.st-key-btn_bulk_deselect_all button p::before {{
+                background-image: url('data:image/png;base64,{b64_clear}') !important;
+            }}
+            </style>""")
+
             with st.container(border=True, key="sync_filter_box_outer"):
-                st.markdown("<h3 style='margin-top: 0px; margin-bottom: 15px;'>Bulk Selection Tools</h3>", unsafe_allow_html=True)
-                include_all = st.checkbox("Include ALL filetypes", key="sync_filter_all_exts", on_change=toggle_all_exts)
-                
+                st.html("<h3 style='margin-top: 15px; margin-bottom: 0px; font-size: 1.1rem; font-weight: 700;'>Smart Select</h3>")
+
                 if all_exts_sorted:
-                    st.markdown("<hr style='margin-top: 10px; margin-bottom: 15px; border-color: {theme.BG_CARD};' />", unsafe_allow_html=True)
-                    st.markdown("<div style='font-size: 0.95em; padding-bottom: 10px; margin-top: 12px; font-weight: bold;'>Or select specific types:</div>", unsafe_allow_html=True)
-                    
+                    st.html("<div style='font-size: 0.82em; padding-top: 0px; padding-bottom: 6px; color: rgba(255,255,255,0.5); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;'>By filetype</div>")
+
                     with st.container(border=True, key="filetypes_flex_box"):
                         safe_len = min(len(all_exts_sorted), 90)
                         cols = st.columns(safe_len)
@@ -389,11 +480,11 @@ def show_analysis_review(on_confirm_sync):
                             col_idx = i % safe_len
                             ext_files = [k for k in files_by_ext[ext] if k.startswith('sync_')]
                             total_ext_files = len(ext_files)
-                            
+
                             if total_ext_files > 0:
                                 selected_ext_files = sum(1 for k in ext_files if st.session_state.get(k, True))
-                                expected_val = True if selected_ext_files > 0 else False
-                                
+                                expected_val = selected_ext_files > 0
+
                                 if 0 < selected_ext_files < total_ext_files:
                                     ext_label = f"{ext} :gray[({selected_ext_files}/{total_ext_files})]"
                                 else:
@@ -401,21 +492,22 @@ def show_analysis_review(on_confirm_sync):
                             else:
                                 expected_val = False
                                 ext_label = f"{ext}"
-                                
+
                             ext_key = f"sync_filter_ext_{ext}"
                             if ext_key not in st.session_state or st.session_state[ext_key] != expected_val:
                                 st.session_state[ext_key] = expected_val
-                                
+
                             with cols[col_idx]:
-                                st.checkbox(ext_label, key=ext_key, disabled=include_all, on_change=toggle_single_ext, kwargs={'ext_name': ext})
+                                st.checkbox(ext_label, key=ext_key, on_change=toggle_single_ext, kwargs={'ext_name': ext})
 
-                # Global Select All / Deselect All
-                
+                # Separator + action buttons — padding wraps hr inside shadow root so spacing is real
+                st.html("<div style='padding: 10px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
 
-                with st.container(key="bulk_action_buttons"):
-                    btn_col1, btn_col2 = st.columns(2)
-                    with btn_col1:
-                        if st.button("Select All Files", type="primary", use_container_width=True):
+                # border=True required for st-key class to be reliably emitted (CLAUDE.md Border Strip rule)
+                with st.container(border=True, key="bulk_btns_row"):
+                    col_sel, col_clr = st.columns([1, 1])
+                    with col_sel:
+                        if st.button("Select All", key="btn_bulk_select_all", use_container_width=True):
                             for k in sum(files_by_ext.values(), []):
                                 if k.startswith('sync_locdel_'):
                                     ignore_key = k.replace('sync_locdel_', 'ignore_')
@@ -423,8 +515,8 @@ def show_analysis_review(on_confirm_sync):
                                         continue
                                 st.session_state[k] = True
                             st.rerun()
-                    with btn_col2:
-                        if st.button("Deselect All Files", use_container_width=True):
+                    with col_clr:
+                        if st.button("Deselect All", key="btn_bulk_deselect_all", use_container_width=True):
                             for k in sum(files_by_ext.values(), []):
                                 st.session_state[k] = False
                             st.rerun()
@@ -438,14 +530,29 @@ def show_analysis_review(on_confirm_sync):
             display_name = friendly_course_name(pair['course_name'])
             folder_display = short_path(pair['local_folder'])
             
-            # Build up-to-date status
+            # Build status pill — pending takes priority over up-to-date
             # Strictly use uptodate_files only — do NOT add untracked_shortcuts
             # as those are already counted in new_files or other actionable categories
             uptodate_count = len(result.uptodate_files)
+            pending_count = (
+                len(result.new_files)
+                + len(result.updated_files)
+                + len(result.missing_files)
+                + len(result.locally_deleted_files)
+            )
+            _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
+            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:14px; height:14px; vertical-align:middle; margin-right:5px; margin-top:0px; filter: brightness(0) saturate(100%) invert(55%) sepia(100%) saturate(1500%) hue-rotate(355deg) brightness(120%);" />'
             status_pill = ""
-            if uptodate_count:
-                uptodate_label = f"Up to date ({uptodate_count} {('file' if uptodate_count == 1 else 'files')})"
-                uptodate_label = uptodate_label.lstrip('✅ ')
+            if pending_count:
+                pending_word = "file" if pending_count == 1 else "files"
+                secondary = f'<span style="color: {theme.TEXT_SECONDARY}; font-weight: normal; margin-left: 6px; font-size: 0.75rem;">(<b>{uptodate_count}</b> {("file" if uptodate_count == 1 else "files")} up to date)</span>' if uptodate_count else ""
+                status_pill = (
+                    f'<span style="font-size: 0.85rem; color: #ff8c00; background-color: rgba(245, 158, 11, 0.12); '
+                    f'padding: 2px 10px; border-radius: 4px; margin-left: 12px; font-weight: 500; border: 1px solid rgba(245, 158, 11, 0.3); display:inline-flex; align-items:center;">'
+                    f'{_sync_icon_html}{pending_count} {pending_word} pending sync</span>{secondary}'
+                )
+            elif uptodate_count:
+                uptodate_label = f"Up to date ({uptodate_count} {'file' if uptodate_count == 1 else 'files'})"
                 status_pill = f'<span style="font-size: 0.75rem; color: {theme.SUCCESS}; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
 
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
@@ -453,13 +560,13 @@ def show_analysis_review(on_confirm_sync):
             <div style="
                 margin: -16px -16px 4px -16px; /* Reduced bottom margin from 16px to 4px to pull expanders UP */
                 padding: 10px 16px; /* Tightened vertical padding to make the header slimmer */
-                background-color: #2A2E3D; 
-                border: 1px solid #4B5563; 
-                border-bottom: 1px solid #4B5563; 
+                background-color: #2A2E3D;
+                border: 1px solid #4B5563;
+                border-bottom: 1px solid #4B5563;
                 border-radius: 8px 8px 0 0;
             ">
                 <h4 style="margin: 0px 0px 2px 0px; font-weight: 600; font-size: 1.05rem; color: {theme.WHITE};">
-                    <span style="color: #60A5FA; margin-right: 4px;">{idx + 1}.</span>🎓 {display_name} 
+                    <span style="color: {theme.WHITE}; font-weight: 700; margin-right: 4px;">{idx + 1}.</span>🎓 {display_name}
                     {status_pill}
                 </h4>
                 <p style="margin: 0px; color: {theme.TEXT_SECONDARY}; font-size: 0.8rem;">{folder_display}</p>
@@ -551,7 +658,6 @@ def show_analysis_review(on_confirm_sync):
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
-                total_locdel = len(result.locally_deleted_files)
                 selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", True))
                 
                 
@@ -576,7 +682,6 @@ def show_analysis_review(on_confirm_sync):
             # Deleted files — always starts OPEN
             if result.deleted_on_canvas:
                 lbl_del = "Deleted on Canvas (Ignored)"
-                total_del_canvas = len(result.deleted_on_canvas)
                 
                 
 
@@ -610,9 +715,19 @@ def show_analysis_review(on_confirm_sync):
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- Action buttons (Sync left, Back right) ---
+    # --- Action buttons (Back left, Sync right) ---
     total_active_files = sum(len(pd['result'].new_files) + len(pd['result'].updated_files) + len(pd['result'].missing_files) + len(pd['result'].locally_deleted_files) for pd in all_results)
-    
+
+    # Count only the files the user has actually checked
+    total_selected_files = 0
+    for pd in all_results:
+        cid = pd['pair']['course_id']
+        result = pd['result']
+        total_selected_files += sum(1 for f in result.new_files if st.session_state.get(f'sync_new_{cid}_{f.id}', True))
+        total_selected_files += sum(1 for f, _ in result.updated_files if st.session_state.get(f'sync_upd_{cid}_{f.id}', True))
+        total_selected_files += sum(1 for si in result.missing_files if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False))
+        total_selected_files += sum(1 for si in result.locally_deleted_files if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False))
+
     if total_active_files == 0:
         st.success("All pending files have been addressed or ignored. You are fully up to date!")
         if st.button("Done - Return to Front Page", type="primary", use_container_width=True):
@@ -620,88 +735,90 @@ def show_analysis_review(on_confirm_sync):
             st.rerun()
     else:
 
-        col_sync, col_back, _ = st.columns([1.2, 1, 5])
+        col_back, col_sync, _ = st.columns([1, 1.2, 5])
         with col_sync:
-            if st.button('Sync (Download) Selected Files', type="primary", use_container_width=True):
-                # Collect selections
-                sync_selections = []
-                for idx, res_data in enumerate(all_results):
-                    result = res_data['result']
-                    cid = res_data['pair']['course_id']
-                    selected_new = [
-                        f for f in result.new_files
-                        if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
-                    ]
-                    selected_upd = [
-                        f for f, _ in result.updated_files
-                        if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
-                    ]
-                    selected_miss = [
-                        si for si in result.missing_files
-                        if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
-                    ]
-                    selected_locdel = [
-                        si for si in result.locally_deleted_files
-                        if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
-                    ]
-                    # Combine both missing and locally deleted files that the user opted to redownload
-                    selected_miss.extend(selected_locdel)
-                                       
-                    sync_selections.append({
-                        'pair_idx': idx,
-                        'res_data': res_data,
-                        'new': selected_new,
-                        'updates': selected_upd,
-                        'redownload': selected_miss,
-                        'ignore': [], # Let it pass empty, ignore was handled by immediate DB updates
-                    })
-    
-                # Total count & size for confirmation
-                total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
-                # Compute total byte size — new and updated CanvasFileInfo have .size,
-                # redownload items are SyncInfo; look up their size from canvas_files
-                total_bytes = 0
-                for s in sync_selections:
-                    total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
-                    total_bytes += sum(getattr(f, 'size', 0) or 0 for f, info in s['updates'])
-                    
-                    # For redownloads, we need to map back to the Canvas file to get the real size (SyncFileInfo lacks size)
-                    cfmap = {str(f.id): f for f in s['res_data']['canvas_files']}
-                    for si in s['redownload']:
-                        cf = cfmap.get(str(si.canvas_file_id))
-                        total_bytes += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
-    
-                if total_count == 0:
-                    st.info('Nothing to sync - all files are up to date!')
-                    st.stop()
-    
-                # Disk space check (use first pair's folder)
-                first_folder = sync_selections[0]['res_data']['pair']['local_folder']
-                has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
-                if not has_space:
-                    st.error('Insufficient disk space on the target drive. Need at least 1 GB free to proceed safely.')
-                    st.stop()
-    
-                folders_count = len(set(
-                    s['res_data']['pair']['local_folder'] for s in sync_selections
-                    if s['new'] or s['updates'] or s['redownload']
-                ))
-                
-                # Extract destination folder from the first selection
-                dest_folder = "Multiple folders"
-                if folders_count == 1:
-                    # Find the single folder used
-                    for s in sync_selections:
-                        if s['new'] or s['updates'] or s['redownload']:
-                            dest_folder = short_path(s['res_data']['pair']['local_folder'])
-                            break
-                
-                on_confirm_sync( sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+            with st.container(key="btn_sync_selected"):
+                sync_label = f'Sync {total_selected_files} selected {"file" if total_selected_files == 1 else "files"}'
+                if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected_files == 0):
+                    # Collect selections
+                    sync_selections = []
+                    for idx, res_data in enumerate(all_results):
+                        result = res_data['result']
+                        cid = res_data['pair']['course_id']
+                        selected_new = [
+                            f for f in result.new_files
+                            if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
+                        ]
+                        selected_upd = [
+                            f for f, _ in result.updated_files
+                            if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
+                        ]
+                        selected_miss = [
+                            si for si in result.missing_files
+                            if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
+                        ]
+                        selected_locdel = [
+                            si for si in result.locally_deleted_files
+                            if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
+                        ]
+                        # Combine both missing and locally deleted files that the user opted to redownload
+                        selected_miss.extend(selected_locdel)
 
-            with col_back:
-                if st.button('Back', use_container_width=True):
-                    cleanup_sync_state()
-                    st.rerun()
+                        sync_selections.append({
+                            'pair_idx': idx,
+                            'res_data': res_data,
+                            'new': selected_new,
+                            'updates': selected_upd,
+                            'redownload': selected_miss,
+                            'ignore': [], # Let it pass empty, ignore was handled by immediate DB updates
+                        })
+
+                    # Total count & size for confirmation
+                    total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
+                    # Compute total byte size — new and updated CanvasFileInfo have .size,
+                    # redownload items are SyncInfo; look up their size from canvas_files
+                    total_bytes = 0
+                    for s in sync_selections:
+                        total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
+                        total_bytes += sum(getattr(f, 'size', 0) or 0 for f, info in s['updates'])
+
+                        # For redownloads, we need to map back to the Canvas file to get the real size (SyncFileInfo lacks size)
+                        cfmap = {str(f.id): f for f in s['res_data']['canvas_files']}
+                        for si in s['redownload']:
+                            cf = cfmap.get(str(si.canvas_file_id))
+                            total_bytes += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
+
+                    if total_count == 0:
+                        st.info('Nothing to sync - all files are up to date!')
+                        st.stop()
+
+                    # Disk space check (use first pair's folder)
+                    first_folder = sync_selections[0]['res_data']['pair']['local_folder']
+                    has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
+                    if not has_space:
+                        st.error('Insufficient disk space on the target drive. Need at least 1 GB free to proceed safely.')
+                        st.stop()
+
+                    folders_count = len(set(
+                        s['res_data']['pair']['local_folder'] for s in sync_selections
+                        if s['new'] or s['updates'] or s['redownload']
+                    ))
+
+                    # Extract destination folder from the first selection
+                    dest_folder = "Multiple folders"
+                    if folders_count == 1:
+                        # Find the single folder used
+                        for s in sync_selections:
+                            if s['new'] or s['updates'] or s['redownload']:
+                                dest_folder = short_path(s['res_data']['pair']['local_folder'])
+                                break
+
+                    on_confirm_sync(sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+
+        with col_back:
+            if st.button('Back', use_container_width=True):
+                cleanup_sync_state()
+                st.rerun()
 
 
 def inject_dynamic_sync_review_css():
@@ -762,5 +879,26 @@ def inject_dynamic_sync_review_css():
                 content: "\\00a0\\00a0 ({total_del_canvas}) ignored"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
 
+    css_blocks.append("""
+    div.st-key-btn_sync_selected button {
+        background-color: #1f77b4 !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }
+    div.st-key-btn_sync_selected button:hover:not(:disabled) {
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }
+    div.st-key-btn_sync_selected button:disabled {
+        background-color: #3a3a3a !important;
+        color: #6b6b6b !important;
+        box-shadow: none !important;
+        border: 1px solid #4a4a4a !important;
+    }
+    """)
+
     if css_blocks:
-        st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)
+        st.html(f"<style>{''.join(css_blocks)}</style>")
