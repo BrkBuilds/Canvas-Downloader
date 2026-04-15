@@ -422,12 +422,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # Inject ignore icon CSS for "Ignored Files" buttons (needs f-string for b64 variable)
     st.html(f"""<style>
-    div[class*="st-key-ignored_btn_"] button::before,
-    div.st-key-btn_manage_ignored button::before {{
+    div[class*="st-key-ignored_btn_"] button p::before {{
         content: '';
         display: inline-block;
-        width: 16px;
-        height: 16px;
+        width: 19px;
+        height: 19px;
         background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
         background-size: contain;
         background-repeat: no-repeat;
@@ -551,40 +550,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         min-height: 50vh !important;
     }
 
-    /* Enabled state (White text) */
-    div[class*="st-key-ignored_btn_"] button:not([disabled]) {
-        border: 1px dashed rgba(255, 255, 255, 0.4) !important;
-        background-color: transparent !important;
-        color: {theme.WHITE} !important;
-        opacity: 1 !important;
-    }
-    div[class*="st-key-ignored_btn_"] button:not([disabled]) p,
-    div[class*="st-key-ignored_btn_"] button:not([disabled]) span {
-        color: {theme.WHITE} !important;
-        opacity: 1 !important;
-    }
+    /* Ignored Files button: match standard action button border style */
 
-    /* Disabled state (Grey text) */
-    div[class*="st-key-ignored_btn_"] button[disabled] {
-        border: 1px dashed rgba(255, 255, 255, 0.2) !important;
-        background-color: transparent !important;
-        color: rgba(255, 255, 255, 0.4) !important; /* Dimmed grey text */
-        opacity: 0.7 !important;
-    }
-    div[class*="st-key-ignored_btn_"] button[disabled] p,
-    div[class*="st-key-ignored_btn_"] button[disabled] span {
-        color: rgba(255, 255, 255, 0.4) !important;
-        opacity: 0.7 !important;
-    }
-    div[class*="st-key-ignored_btn_"] button:hover {
-        border-color: rgba(255, 255, 255, 0.6) !important;
-        color: {theme.WHITE} !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-    # --- Pre-compute ignored files per course (needed for per-course buttons AND global button) ---
-    total_ignored = 0
+    # --- Pre-compute ignored files per course (needed for per-course buttons) ---
     ignored_by_course = {}
     if sync_pairs:
         for pair in sync_pairs:
@@ -599,7 +570,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         'files': ignored,
                         'sync_manager': sm
                     }
-                    total_ignored += len(ignored)
 
     with st.container(border=True, key="sync_list_outline"):
         if sync_pairs:
@@ -668,7 +638,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
-                    if st.button(f"Ignored Files ({ignored_count})", key=f"ignored_btn_{idx}",
+                    if st.button(f"Ignored Files \u00A0:gray[({ignored_count})]", key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True):
                         course_data = ignored_by_course[pair['course_id']]
                         _show_course_ignored_files(
@@ -797,10 +767,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             )
 
     # --- (5) Analyze + Quick Sync action buttons ---
-    # ignored_by_course already computed above the course row loop
-    if total_ignored > 0:
-        if st.button(f"Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
-            _ignored_files_dialog(ignored_by_course)
 
     if sync_pairs:
         invalid = [p for p in sync_pairs if not Path(p['local_folder']).exists()]
@@ -923,11 +889,6 @@ def _render_filetype_selector(all_files, prefix, file_key_fn):
     return render_filetype_selector(all_files, prefix, file_key_fn)
 
 
-@st.dialog("Ignored Files", width="large")
-def _ignored_files_dialog(ignored_by_course):
-    """Delegate to ui.sync_dialogs."""
-    from ui.sync_dialogs import ignored_files_dialog_inner
-    ignored_files_dialog_inner(ignored_by_course)
 
 
 def _show_course_ignored_files(course_name, course_id, course_data):
