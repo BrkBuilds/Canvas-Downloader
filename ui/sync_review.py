@@ -260,6 +260,8 @@ def show_analysis_review(on_confirm_sync):
     _b64_icon_miss   = get_base64_image("assets/Icon_Sync_Review_Missing_File.png")
     _b64_icon_locdel = get_base64_image("assets/Icon_Sync_Review_Locally_Deleted.png")
     _b64_icon_del    = get_base64_image("assets/Icon_Sync_Review_Deleted_On_Canvas.png")
+    _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
+    _b64_icon_eye    = get_base64_image("assets/Icon_Eye.svg")
 
     def _sync_icon_img(b64, size=26):
         return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
@@ -603,6 +605,123 @@ def show_analysis_review(on_confirm_sync):
         position: relative;
         top: -1px;
     }}
+    div[class*="st-key-cat_ignored_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+        filter: brightness(0) invert(1) opacity(0.9);
+    }}
+
+    /* ===== INLINE IGNORE ICON BUTTONS ===== */
+    /* Right-align: cascade flex through the keyed container AND Streamlit's stButton wrapper */
+    div[class*="st-key-ign_new_"],
+    div[class*="st-key-ign_upd_"],
+    div[class*="st-key-ign_miss_"],
+    div[class*="st-key-ign_locdel_"] {{
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+    }}
+    div[class*="st-key-ign_new_"] div[data-testid="stButton"],
+    div[class*="st-key-ign_upd_"] div[data-testid="stButton"],
+    div[class*="st-key-ign_miss_"] div[data-testid="stButton"],
+    div[class*="st-key-ign_locdel_"] div[data-testid="stButton"] {{
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+    }}
+    div[class*="st-key-ign_new_"] button,
+    div[class*="st-key-ign_upd_"] button,
+    div[class*="st-key-ign_miss_"] button,
+    div[class*="st-key-ign_locdel_"] button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div[class*="st-key-ign_new_"] button p,
+    div[class*="st-key-ign_upd_"] button p,
+    div[class*="st-key-ign_miss_"] button p,
+    div[class*="st-key-ign_locdel_"] button p {{
+        display: none !important;
+    }}
+    /* Default state: eye icon — nudged up 1px to align visual center with the taller ignore icon */
+    div[class*="st-key-ign_new_"] button::before,
+    div[class*="st-key-ign_upd_"] button::before,
+    div[class*="st-key-ign_miss_"] button::before,
+    div[class*="st-key-ign_locdel_"] button::before {{
+        content: '';
+        position: absolute;
+        width: 21px;
+        height: 21px;
+        background-image: url('data:image/svg+xml;base64,{_b64_icon_eye}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1) opacity(0.9);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        opacity: 1;
+        transform: translateY(-1px) scale(1);
+        transform-origin: center;
+    }}
+    /* Hover state: ignore icon (eye with slash) — scales in from 1→1.2 as it fades in */
+    div[class*="st-key-ign_new_"] button::after,
+    div[class*="st-key-ign_upd_"] button::after,
+    div[class*="st-key-ign_miss_"] button::after,
+    div[class*="st-key-ign_locdel_"] button::after {{
+        content: '';
+        position: absolute;
+        width: 21px;
+        height: 21px;
+        background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) saturate(100%) invert(35%) sepia(100%) saturate(1500%) hue-rotate(330deg) brightness(140%);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        opacity: 0;
+        transform: scale(1);
+        transform-origin: center;
+    }}
+    div[class*="st-key-ign_new_"] button:hover,
+    div[class*="st-key-ign_upd_"] button:hover,
+    div[class*="st-key-ign_miss_"] button:hover,
+    div[class*="st-key-ign_locdel_"] button:hover {{
+        background: transparent !important;
+        border: none !important;
+    }}
+    /* On hover: eye fades out while ALSO scaling to 1.2 — so the "grow" is continuous across both icons */
+    div[class*="st-key-ign_new_"] button:hover::before,
+    div[class*="st-key-ign_upd_"] button:hover::before,
+    div[class*="st-key-ign_miss_"] button:hover::before,
+    div[class*="st-key-ign_locdel_"] button:hover::before {{
+        opacity: 0;
+        transform: translateY(-1px) scale(1.2);
+    }}
+    div[class*="st-key-ign_new_"] button:hover::after,
+    div[class*="st-key-ign_upd_"] button:hover::after,
+    div[class*="st-key-ign_miss_"] button:hover::after,
+    div[class*="st-key-ign_locdel_"] button:hover::after {{
+        opacity: 1;
+        transform: scale(1.2);
+    }}
     </style>""")
 
     # Per-folder results
@@ -687,11 +806,12 @@ def show_analysis_review(on_confirm_sync):
                                 icon = get_file_icon(file.filename)
                                 size = format_file_size(file.size) if file.size else ""
                                 key = f"sync_new_{pair['course_id']}_{file.id}"
+                                st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key, value=st.session_state.get(key, True))
+                                    st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
                                 with col2:
-                                    st.button("🚫", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                                    st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
             # Updated files — always starts OPEN
             if result.updated_files:
@@ -710,12 +830,13 @@ def show_analysis_review(on_confirm_sync):
                                 icon = get_file_icon(canvas_file.filename)
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                 key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
+                                st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                    st.checkbox(f"{icon} {_disp} ({size})", key=key, value=st.session_state.get(key, True))
+                                    st.checkbox(f"{icon} {_disp} ({size})", key=key)
                                 with col2:
-                                    st.button("🚫", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
+                                    st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
             # Missing files — always starts OPEN
             if result.missing_files:
@@ -732,13 +853,14 @@ def show_analysis_review(on_confirm_sync):
                             for sync_info in result.missing_files:
                                 ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
                                 icon = get_file_icon(sync_info.canvas_filename)
+                                key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
+                                st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key, value=st.session_state.get(key, True))
+                                    st.checkbox(f"{icon} {_disp}", key=key)
                                 with col2:
-                                    st.button("🚫", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
+                                    st.button("\u200b", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
@@ -755,13 +877,13 @@ def show_analysis_review(on_confirm_sync):
                                 ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
-                                
+                                st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
                                     _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key, value=st.session_state.get(key, True))
+                                    st.checkbox(f"{icon} {_disp}", key=key)
                                 with col2:
-                                    st.button("🚫", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                                    st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
             # Deleted files — always starts OPEN
             if result.deleted_on_canvas:
@@ -781,7 +903,7 @@ def show_analysis_review(on_confirm_sync):
                 is_ignored_open = st.session_state.get('keep_ignored_open', False)
                 st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # The physical isolation gap
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
-                    with st.expander(f"🚫 Ignored files &nbsp; :gray[({len(result.ignored_files)})]", expanded=is_ignored_open):
+                    with st.expander(f"Ignored files &nbsp; :gray[({len(result.ignored_files)})]", expanded=is_ignored_open):
                         st.session_state['keep_ignored_open'] = False
                         st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                         st.caption("These files are safely ignored and will not be synced.")
