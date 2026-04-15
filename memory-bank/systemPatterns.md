@@ -96,6 +96,10 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
+- **Action on Right, Cancel on Left (Standard)**: 
+    - *Policy*: Standardized across all wizards, dialogs, and bulk action bars. 
+    - *Geometry*: Primary action (Continue, Sync, Confirm, Save) MUST be on the right. Secondary/destructive action (Back, Cancel, Close) MUST be on the left.
+    - *Implementation*: Uses `st.columns()` with ratios like `[3, 1]` for two-button footers or `[5, 1, 1.2]` for three-button footers to anchor main actions to the far right.
 - **Interactive Lists**: Use HTML `<details>` and `<summary>` inside modals to handle large file lists without overwhelming the main view.
 - **Component Constriction**: Use fractional columns to limit component width on large screens.
 - **Radio Widget Granular Tooltips Pattern**:

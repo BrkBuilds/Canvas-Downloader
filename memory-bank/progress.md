@@ -1,3 +1,9 @@
+- [x] **Application-Wide UX Standardization** (2026-04-15):
+    - [x] **"Action on Right, Cancel on Left" Refactor**: Standardized the entire application (Step 1, Step 2, Sync Review, and all Dialogs) to follow professional UI layout standards.
+    - [x] **Primary Action Alignment**: Ensured "Continue", "Confirm & Download", "Sync Selected", and "Save" buttons are always on the far right.
+    - [x] **Secondary/Cancel Alignment**: Positioned "Back", "Deselect All", and "Cancel" buttons on the left or secondary positions.
+    - [x] **Icon & Spacing Polish**: Standardized the "Ignored Files" icon to 19px with a 2px greyed-out counter spacing.
+    - [x] **Standardized Column Layouts**: Implemented consistent `st.columns` ratios (e.g., `[3, 1]`) for footer button bars.
 - [x] **sync_review Smart Select Card Restyling** (2026-04-14):
     - [x] Dark card with rounded corners, shadow, and scoped CSS keyed to `sync_filter_box_outer`.
     - [x] True 50/50 button row via `st.columns([1,1])` + `use_container_width=True` — replaced broken `:has()` CSS flex hack.

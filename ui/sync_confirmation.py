@@ -269,7 +269,10 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     )
     st.markdown(html_content, unsafe_allow_html=True)
 
-    col_yes, col_no = st.columns([1, 1], gap="medium")
+    col_no, col_yes = st.columns([1, 1], gap="medium")
+    with col_no:
+        if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
+            st.rerun()
     with col_yes:
         if st.button("Yes, Start Sync", type="primary", use_container_width=True):
             st.session_state['sync_selections'] = sync_selections
@@ -291,8 +294,5 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             for k in _CONVERT_KEYS_HANDOFF:
                 st.session_state[f'persistent_{k}'] = False
 
-            st.rerun()
-    with col_no:
-        if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
             st.rerun()
 
