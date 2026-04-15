@@ -262,6 +262,7 @@ def show_analysis_review(on_confirm_sync):
     _b64_icon_del    = get_base64_image("assets/Icon_Sync_Review_Deleted_On_Canvas.png")
     _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
     _b64_icon_eye    = get_base64_image("assets/Icon_Eye.svg")
+    _b64_icon_restore = get_base64_image("assets/icon_restore.png")
 
     def _sync_icon_img(b64, size=26):
         return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
@@ -722,6 +723,76 @@ def show_analysis_review(on_confirm_sync):
         opacity: 1;
         transform: scale(1.2);
     }}
+
+    /* ===== INLINE RESTORE ICON BUTTONS ===== */
+    div[class*="st-key-restitem_"] {{
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+    }}
+    div[class*="st-key-restitem_"] div[data-testid="stButton"] {{
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+    }}
+    div[class*="st-key-restitem_"] button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div[class*="st-key-restitem_"] button p {{
+        display: none !important;
+    }}
+    /* Default state: restore icon */
+    div[class*="st-key-restitem_"] button::before {{
+        content: '';
+        position: absolute;
+        width: 17px;
+        height: 17px;
+        background-image: url('data:image/png;base64,{_b64_icon_restore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1) opacity(0.9);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        opacity: 1;
+        transform: translateY(-1px) scale(1);
+        transform-origin: center;
+    }}
+    div[class*="st-key-restitem_"] button:hover {{
+        background: transparent !important;
+        border: none !important;
+    }}
+    /* On hover: scale to 1.2 */
+    div[class*="st-key-restitem_"] button:hover::before {{
+        transform: translateY(-1px) scale(1.2);
+    }}
+
+    /* ===== 'RESTORE ALL IGNORED FILES' BULK BUTTON ===== */
+    div[class*="st-key-restore_all_"] button p::before {{
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        background-image: url('data:image/png;base64,{_b64_icon_restore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1) opacity(0.9);
+        position: relative;
+        vertical-align: middle;
+        transform: translateY(-2px);
+    }}
     </style>""")
 
     # Per-folder results
@@ -896,25 +967,25 @@ def show_analysis_review(on_confirm_sync):
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
                             icon = get_file_icon(sync_info.canvas_filename)
-                            st.markdown(f"<div style='color:{theme.TEXT_SECONDARY}; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
 
             # Ignored files Bucket
             if hasattr(result, 'ignored_files') and result.ignored_files:
                 is_ignored_open = st.session_state.get('keep_ignored_open', False)
                 st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # The physical isolation gap
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
-                    with st.expander(f"Ignored files &nbsp; :gray[({len(result.ignored_files)})]", expanded=is_ignored_open):
+                    with st.expander(f"Ignored Files ({len(result.ignored_files)})", expanded=is_ignored_open):
                         st.session_state['keep_ignored_open'] = False
-                        st.button("↩️ Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
+                        st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                         st.caption("These files are safely ignored and will not be synced.")
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
                             for sync_info in result.ignored_files:
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.markdown(f"<div style='color:{theme.TEXT_SECONDARY}; font-size:0.9em; padding:4px 0;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                                    st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
                                 with col2:
-                                    st.button("↩️", key=f"restore_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync queue", on_click=handle_restore, args=(idx, sync_info))
+                                    st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
             
             # Inject 20px gap BETWEEN courses, inside the loop but outside the course's content
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)

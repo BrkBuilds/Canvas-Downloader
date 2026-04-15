@@ -500,7 +500,10 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
         st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);" />', unsafe_allow_html=True)
 
-        c_save, c_cancel = st.columns([1, 1])
+        c_cancel, c_save = st.columns([1, 1])
+        with c_cancel:
+            if st.button("Cancel", use_container_width=True):
+                st.rerun(scope="app")
         with c_save:
             if st.button("Save Settings", type="primary", use_container_width=True):
                 st.session_state['concurrent_downloads'] = temp_max
@@ -529,9 +532,6 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 except Exception as e:
                     st.error(f"⚠️ Could not save settings to disk: {e}")
 
-                st.rerun(scope="app")
-        with c_cancel:
-            if st.button("Cancel", use_container_width=True):
                 st.rerun(scope="app")
 
     user_name = st.session_state.get('user_name', '')

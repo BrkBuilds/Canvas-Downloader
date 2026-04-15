@@ -22,9 +22,13 @@ div[data-testid="stModal"] > div[role="dialog"] {
 }
 /* Make the bulk action buttons inside expanders slightly shorter and subtle */
 [data-testid="stExpanderDetails"] button[kind="secondary"] {
-    min-height: 2rem !important;
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 /* Reduce divider vertical margins */
 hr {
@@ -52,8 +56,13 @@ div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details { 
 
 /* The 'Guy in the Corner' Ignored Files styling */
 div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary { 
-    background-color: rgba(20, 20, 20, 0.3) !important; 
-    border: 1px dashed #4B5563 !important;
+    background-color: rgba(18, 18, 22, 0.9) !important; 
+    border: none !important;
+}
+div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details { 
+    border: 1px solid rgba(75, 85, 99, 0.4) !important; 
+    background-color: rgba(15, 15, 18, 0.85) !important;
+    border-radius: 8px !important;
 }
 
 /* 1. Squeeze the row boundaries to absolute minimums */

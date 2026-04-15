@@ -159,7 +159,13 @@ def _save_config_dialog():
             st.markdown(render_config_summary_badges(_p, show_path=bool(path)), unsafe_allow_html=True)
 
     # Action buttons
-    col_create, col_cancel = st.columns([1, 1])
+    col_cancel, col_create = st.columns([1, 1])
+    with col_cancel:
+        if st.button("Cancel", type="secondary", use_container_width=True, key="preset_cancel_save"):
+            try:
+                st.rerun(scope="app")
+            except TypeError:
+                st.rerun()  # audit-ignore
     with col_create:
         create_disabled = not preset_name or not preset_name.strip()
         if st.button("Save Preset", use_container_width=True,
@@ -168,12 +174,6 @@ def _save_config_dialog():
             _path = st.session_state.get('download_path', '') if include_path else ''
             mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
             st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
-            try:
-                st.rerun(scope="app")
-            except TypeError:
-                st.rerun()  # audit-ignore
-    with col_cancel:
-        if st.button("Cancel", type="secondary", use_container_width=True, key="preset_cancel_save"):
             try:
                 st.rerun(scope="app")
             except TypeError:

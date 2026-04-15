@@ -303,7 +303,13 @@ def ignored_files_dialog_inner(ignored_by_course, ):
         }
     </style>""", unsafe_allow_html=True)
 
-    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
+    col_cancel, col_restore = st.columns([1, 1], vertical_alignment="bottom")
+    with col_cancel:
+        if st.button("Close", type="secondary", use_container_width=True, key="ign_close"):
+            for k in all_file_keys:
+                st.session_state.pop(k, None)
+            st.rerun(scope="app")
+
     with col_restore:
         def _on_restore_all():
             files_restored = 0
@@ -319,12 +325,6 @@ def ignored_files_dialog_inner(ignored_by_course, ):
 
         st.button(btn_text, type="primary", disabled=(checked_count == 0),
                   use_container_width=True, on_click=_on_restore_all)
-
-    with col_cancel:
-        if st.button("Close", type="secondary", use_container_width=True, key="ign_close"):
-            for k in all_file_keys:
-                st.session_state.pop(k, None)
-            st.rerun(scope="app")
 
 
 def show_course_ignored_files(course_name, course_id, course_data, ):
@@ -408,7 +408,13 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
         }
     </style>""", unsafe_allow_html=True)
 
-    col_restore, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
+    col_cancel, col_restore = st.columns([1, 1], vertical_alignment="bottom")
+    with col_cancel:
+        if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
+            for k in all_keys:
+                st.session_state.pop(k, None)
+            st.rerun(scope="app")
+
     with col_restore:
         def _on_restore_course():
             to_restore = [
@@ -424,12 +430,6 @@ def show_course_ignored_files_inner(course_name, course_id, course_data, ):
 
         st.button(btn_text, type="primary", disabled=(checked_count == 0),
                   use_container_width=True, key=f"{prefix}_restore", on_click=_on_restore_course)
-
-    with col_cancel:
-        if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
-            for k in all_keys:
-                st.session_state.pop(k, None)
-            st.rerun(scope="app")
 
 
 @st.dialog("Select Course to sync", width="large")
@@ -677,7 +677,16 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
 
         # (3) Confirm + Cancel — compact, side-by-side, cancel has red tint
         # Made columns narrower (10% each) to reduce button width significantly (per user request)
-        col_add, col_cancel, _ = st.columns([1.5, 1, 7.5])
+        col_cancel, col_add, _ = st.columns([1, 1.5, 7.5])
+        
+        with col_cancel:
+            if st.button('Cancel', key="cancel_pair",
+                         use_container_width=True):
+                st.session_state['pending_sync_folder'] = None
+                st.session_state.pop('editing_pair_idx', None)
+                st.session_state.pop('_prev_course_search', None)
+                st.rerun()
+
         with col_add:
             if st.button("✓ " + 'Confirm and Add', key="confirm_pair",
                          type="primary", use_container_width=True):
@@ -735,13 +744,6 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         """, 
                         unsafe_allow_html=True
                     )
-        with col_cancel:
-            if st.button('Cancel', key="cancel_pair",
-                         use_container_width=True):
-                st.session_state['pending_sync_folder'] = None
-                st.session_state.pop('editing_pair_idx', None)
-                st.session_state.pop('_prev_course_search', None)
-                st.rerun()
 
 
 # ===================================================================
