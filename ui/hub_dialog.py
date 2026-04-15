@@ -74,8 +74,11 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
 
     # Dialog button CSS now lives in inject_hub_global_css() for bulletproof rendering.
 
-    # Action buttons — Create left, Cancel right
-    col_create, col_cancel = st.columns([1, 1], vertical_alignment="bottom")
+    # Action buttons — Cancel left, Create right
+    col_cancel, col_create = st.columns([1, 1], vertical_alignment="bottom")
+    with col_cancel:
+        if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
+            st.rerun()
     with col_create:
         create_disabled = not item_name or not item_name.strip()
         if st.button("Create", type="primary", use_container_width=True,
@@ -87,9 +90,6 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
             else:
                 mgr.save_group(item_name.strip(), sync_pairs)
             st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
-            st.rerun()
-    with col_cancel:
-        if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
             st.rerun()
 
 
@@ -691,16 +691,16 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         else:
             # EDIT MODE (Ultra-compact to prevent dialog height jump)
             with st.container(border=True, key="hub_edit_group_meta"):
-                col_name, col_save, col_cancel = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
+                col_name, col_cancel, col_save = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
                     new_name = st.text_input(f"{entity_label} Name", value=group['group_name'],
                                              key="hub_edit_name_input", label_visibility="collapsed")
+                with col_cancel:
+                    st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
                 with col_save:
                     name_changed = new_name.strip() and new_name.strip() != group['group_name']
                     st.button("💾 Save", disabled=not name_changed,
                               use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
-                with col_cancel:
-                    st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
 
         st.markdown("")
 
@@ -757,7 +757,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                           kwargs={'target_layer': 'layer_course_selector'})
 
                         # --- Save / Cancel ---
-                        col_save, col_cancel, _ = st.columns([1, 1, 3])
+                        col_cancel, col_save, _ = st.columns([1, 1, 3])
+                        with col_cancel:
+                            st.button("Cancel", key=f"hub_cancel_edit_{p_idx}",
+                                      use_container_width=True, on_click=hub_cancel_edit)
                         with col_save:
                             final_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
                             final_cid = st.session_state.get('hub_edit_temp_course_id', pair.get('course_id'))
@@ -770,9 +773,6 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                       key=f"hub_save_edit_{p_idx}", disabled=not has_changes,
                                       on_click=save_inline_edit_cb,
                                       args=(mgr, gid, p_idx, final_folder, final_cid, final_cname))
-                        with col_cancel:
-                            st.button("Cancel", key=f"hub_cancel_edit_{p_idx}",
-                                      use_container_width=True, on_click=hub_cancel_edit)
 
                 # === NORMAL VIEW MODE ===
                 else:
@@ -857,15 +857,15 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     # --- Add / Cancel ---
                     can_add = bool(add_folder) and bool(add_course_id)
                     add_cname_final = add_course_name if add_course_name else course_names.get(add_course_id, '')
-                    col_add, col_cancel_add, _ = st.columns([1, 1, 3])
+                    col_cancel_add, col_add, _ = st.columns([1, 1, 3])
+                    with col_cancel_add:
+                        st.button("Cancel", key="btn_inline_new_cancel",
+                                  use_container_width=True, on_click=hub_cancel_edit)
                     with col_add:
                         st.button("💾 Add to Group", use_container_width=True,
                                   key="btn_inline_new_confirm", disabled=not can_add,
                                   on_click=save_inline_add_cb,
                                   args=(mgr, gid, add_folder, add_course_id, add_cname_final))
-                    with col_cancel_add:
-                        st.button("Cancel", key="btn_inline_new_cancel",
-                                  use_container_width=True, on_click=hub_cancel_edit)
 
             # --- "Add a new course" button (only when not already adding, hidden for single pairs) ---
             if not is_sp and not is_adding:

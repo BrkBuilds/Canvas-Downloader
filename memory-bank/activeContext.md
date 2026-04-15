@@ -1,9 +1,17 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Action on Right, Cancel on Left Standardization**: Conducted a comprehensive UX audit and remediation, enforcing a "Primary Action on Right, Secondary/destructive on Left" pattern across all wizards, dialogs, and bulk action bars.
 - **"Physical Volume" Button Aesthetic**: Re-engineered the primary sync action buttons with a premium, tactile "Physical Volume" look. This includes high-saturation 135° gradients (Dark Blue to Teal for Quick Sync), 3D inset beveled lips (`box-shadow: inset ...`), and subtle 0.2 opacity outer glows on hover.
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
 - **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
+
+- **Session 2026-04-15: Application-Wide UX Standardization & Polish**
+    - Done: Refactored all button layouts to enforce **"Action on Right, Cancel on Left"** pattern across Download Step 1/2, Sync Review, and all Modal Dialogs.
+    - Done: Standardized "Ignored Files" button icon size to **19px** and adjusted counter spacing to **2px** with greyed-out parentheses/numbers.
+    - Done: Swapped "Select All" / "Clear Selection" (or "Deselect All") positions in Step 1 and Sync Review to keep triggers left-aligned near checklists.
+    - Done: Standardized footer button columns (e.g., `st.columns([3, 1])` or `[5, 1, 1.2]`) ensuring consistent alignment for primary confirm/save buttons on the far right.
+    - Done: Applied "Action-Right" rule to Presets Hub, Authentication Sidebar, and Sync Confirmation dialogs.
 
 - **Session 2026-04-14: sync_review.py — Smart Select Card Restyling**
     - Done: Restyled the "Smart Select" filetype checkbox card in `ui/sync_review.py` with dark card background, rounded corners, and shadow.
