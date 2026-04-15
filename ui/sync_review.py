@@ -52,7 +52,7 @@ def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    st.markdown(f"<h3 style='margin-bottom: -15px; margin-top: 10px;'>🔍  {'Review Changes'}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='margin-bottom: 12px; margin-top: -5px;'>🔍  {'Review Changes'}</h3>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -254,13 +254,23 @@ def show_analysis_review(on_confirm_sync):
 
     
 
+    # Load sync-type icons for metric cards and expander headers
+    _b64_icon_new    = get_base64_image("assets/Icon_Sync_Review_New_File.png")
+    _b64_icon_upd    = get_base64_image("assets/Icon_Sync_Review_Update.png")
+    _b64_icon_miss   = get_base64_image("assets/Icon_Sync_Review_Missing_File.png")
+    _b64_icon_locdel = get_base64_image("assets/Icon_Sync_Review_Locally_Deleted.png")
+    _b64_icon_del    = get_base64_image("assets/Icon_Sync_Review_Deleted_On_Canvas.png")
+
+    def _sync_icon_img(b64, size=26):
+        return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
+
     # Summary logic
     if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
-        
+
         sum_cols = st.columns([3, 2])
         with sum_cols[0]:
             c1, c2, c3, c4, c5 = st.columns(5)
-            
+
             # Determine labels safely based on lang
             lbl_new = "New files"
             lbl_upd = "Updates available"
@@ -270,7 +280,7 @@ def show_analysis_review(on_confirm_sync):
 
             def _render_metric_card(val, lbl, icon, hex_start, hex_end, shadow_color):
                 base_card_css = "border-radius:12px; padding:18px 14px; position:relative; overflow:hidden; min-height: 95px; transition: all 0.2s ease-in-out;"
-                
+
                 if val > 0:
                     bg_style = f"background: linear-gradient(135deg, {hex_start}, {hex_end}); box-shadow: 0 10px 20px -5px {shadow_color}; border: 1px solid transparent;"
                     text_opacity = "1"
@@ -283,7 +293,7 @@ def show_analysis_review(on_confirm_sync):
                     icon_bg = f"{hex_start}26"
                     filter_style = "filter: grayscale(50%);"
 
-                icon_css = f"position:absolute; top:14px; right:14px; background:{icon_bg}; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.5em; opacity: {text_opacity};"
+                icon_css = f"position:absolute; top:14px; right:14px; background:{icon_bg}; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; opacity: {text_opacity};"
                 num_css = f"font-size:2.7em; font-weight:700; color:rgba(255,255,255,{text_opacity}); line-height:1;"
                 lbl_css = f"font-size:0.95em; color:rgba(255,255,255,{text_opacity}); font-weight:500; margin-top:8px; line-height:1.2; word-wrap:break-word;"
 
@@ -296,15 +306,15 @@ def show_analysis_review(on_confirm_sync):
                 '''
 
             with c1:
-                st.markdown(_render_metric_card(total_new, lbl_new, "🆕", "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_new, lbl_new, _sync_icon_img(_b64_icon_new), "#4a90e2", "#2980b9", "rgba(74, 144, 226, 0.35)"), unsafe_allow_html=True)
             with c2:
-                st.markdown(_render_metric_card(total_upd, lbl_upd, "🔄", theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd, lbl_upd, _sync_icon_img(_b64_icon_upd), theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(_render_metric_card(total_miss, lbl_miss, "⚠️", theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_miss, lbl_miss, _sync_icon_img(_b64_icon_miss), theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
-                st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, "🗑️", "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, _sync_icon_img(_b64_icon_locdel), "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
-                st.markdown(_render_metric_card(total_del, lbl_del, "🚫", theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_del, lbl_del, _sync_icon_img(_b64_icon_del), theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
@@ -425,8 +435,8 @@ def show_analysis_review(on_confirm_sync):
                 border: none !important;
                 border-radius: 8px !important;
                 color: #ffffff !important;
-                height: 44px !important;
-                min-height: 44px !important;
+                height: 33px !important;
+                min-height: 33px !important;
                 padding-left: 12px !important;
                 padding-right: 14px !important;
                 white-space: nowrap !important;
@@ -468,10 +478,10 @@ def show_analysis_review(on_confirm_sync):
             </style>""")
 
             with st.container(border=True, key="sync_filter_box_outer"):
-                st.html("<h3 style='margin-top: 15px; margin-bottom: 0px; font-size: 1.1rem; font-weight: 700;'>Smart Select</h3>")
+                st.html("<h3 style='margin-top: 15px; margin-bottom: 0px; font-size: 1.25rem; font-weight: 700;'>Smart Select</h3>")
 
                 if all_exts_sorted:
-                    st.html("<div style='font-size: 0.82em; padding-top: 0px; padding-bottom: 6px; color: rgba(255,255,255,0.5); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;'>By filetype</div>")
+                    st.html("<div style='font-size: 0.75em; padding-top: 0px; padding-bottom: 6px; color: rgba(255,255,255,0.45); font-weight: 400;'>By filetype</div>")
 
                     with st.container(border=True, key="filetypes_flex_box"):
                         safe_len = min(len(all_exts_sorted), 90)
@@ -520,6 +530,80 @@ def show_analysis_review(on_confirm_sync):
                             for k in sum(files_by_ext.values(), []):
                                 st.session_state[k] = False
                             st.rerun()
+
+    # Inject base64 icons into expander category headers via CSS ::before
+    st.html(f"""<style>
+    div[class*="st-key-cat_new_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/png;base64,{_b64_icon_new}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+    }}
+    div[class*="st-key-cat_update_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/png;base64,{_b64_icon_upd}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+    }}
+    div[class*="st-key-cat_missing_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/png;base64,{_b64_icon_miss}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+    }}
+    div[class*="st-key-cat_deleted_local_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/png;base64,{_b64_icon_locdel}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+    }}
+    div[class*="st-key-cat_deleted_canvas_"] details > summary p::before {{
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background-image: url('data:image/png;base64,{_b64_icon_del}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+        margin-right: 7px;
+        position: relative;
+        top: -1px;
+    }}
+    </style>""")
 
     # Per-folder results
     for idx, res_data in enumerate(all_results):
@@ -594,7 +678,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_new_{pair['course_id']}"):
-                    with st.expander(f"🆕 {'New Files'}"):
+                    with st.expander(f"{'New Files'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
@@ -617,7 +701,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_update_{pair['course_id']}"):
-                    with st.expander(f"🔄 {'Updates Available'}"):
+                    with st.expander(f"{'Updates Available'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
@@ -641,7 +725,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_missing_{pair['course_id']}"):
-                    with st.expander(f"⚠️ {'Missing Files'}"):
+                    with st.expander(f"{'Missing Files'}"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_miss"):
@@ -663,7 +747,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
-                    with st.expander("🗑️ Locally Deleted"):
+                    with st.expander("Locally Deleted"):
                         st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
@@ -686,7 +770,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_deleted_canvas_{pair['course_id']}"):
-                    with st.expander(f"🚫 {lbl_del}"):
+                    with st.expander(f"{lbl_del}"):
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
                             icon = get_file_icon(sync_info.canvas_filename)
