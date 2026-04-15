@@ -417,6 +417,30 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         for _sp in _sg.get('pairs', []):
             _saved_pair_sigs.add((_sp.get('course_id'), _sp.get('local_folder', '')))
 
+    # Load ignore icon for CSS injection
+    _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
+
+    # Inject ignore icon CSS for "Ignored Files" buttons (needs f-string for b64 variable)
+    st.html(f"""<style>
+    div[class*="st-key-ignored_btn_"] button::before,
+    div.st-key-btn_manage_ignored button::before {{
+        content: '';
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1) opacity(0.9);
+        vertical-align: middle;
+        margin-right: 6px;
+        flex-shrink: 0;
+        position: relative;
+        top: -1px;
+    }}
+    </style>""")
+
     # --- (4) Pair action-button CSS: Remove fixed height, let flex align handle it ---
     st.markdown("""
     <style>
@@ -644,7 +668,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
-                    if st.button(f"🚫 Ignored Files ({ignored_count})", key=f"ignored_btn_{idx}",
+                    if st.button(f"Ignored Files ({ignored_count})", key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True):
                         course_data = ignored_by_course[pair['course_id']]
                         _show_course_ignored_files(
@@ -775,7 +799,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # --- (5) Analyze + Quick Sync action buttons ---
     # ignored_by_course already computed above the course row loop
     if total_ignored > 0:
-        if st.button(f"🚫 Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
+        if st.button(f"Manage All Ignored Files ({total_ignored})", key="btn_manage_ignored", use_container_width=True):
             _ignored_files_dialog(ignored_by_course)
 
     if sync_pairs:
