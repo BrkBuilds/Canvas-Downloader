@@ -244,6 +244,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     _init_sync_session_state()
     _load_persistent_pairs()
 
+    # Step wizard — must be rendered BEFORE any inject_css() calls.
+    # inject_hub_global_css() calls inject_css() via st.markdown which creates a
+    # 1rem ghost-box margin; rendering the wizard first pins it flush to the top.
+    render_sync_wizard(st, 1)
+
     # Inject all Hub Dialog + Main Button CSS unconditionally
     _inject_hub_global_css()
 
@@ -252,13 +257,13 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
     b64_add = get_base64_image("assets/icon_add.png")
 
-    st.markdown(f"""
-    <style>
+    # Use st.html (not st.markdown) to avoid ghost-box 1rem margin above the stepper.
+    st.html(f"""<style>
     div.st-key-btn_analyze_sync button p::before {{
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important; /* Visual nudge for vertical centering relative to text */
+        top: 2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -270,7 +275,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important; /* Visual nudge for vertical centering relative to text */
+        top: 2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -291,7 +296,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     /* Analyze Sync Hover - Glow + Lighter Shift */
     div.st-key-btn_analyze_sync button:hover {{
         background-color: #2b8cbe !important;
-        box_shadow: 0 4px 15px rgba(31, 119, 180, 0.2), 
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
     }}
@@ -308,7 +313,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     /* Quick Sync Hover - Glow (0.2 Opacity) + Lighter Gradient Shift via Filter */
     div.st-key-btn_quick_sync button:hover {{
         filter: brightness(1.15) !important;
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2), 
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
     }}
@@ -327,16 +332,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         background-repeat: no-repeat !important;
         background-size: contain !important;
     }}
-    </style>
-    """, unsafe_allow_html=True)
+    </style>""")
 
     # --- Pending toast consumer (fires after dialog rerun) ---
     if 'pending_toast' in st.session_state:
         st.toast(st.session_state.pop('pending_toast'))
-
-    # Step wizard
-    render_sync_wizard(st, 1)
-    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
     # (7) Removed "Select Folders to Sync" header — wizard is enough context.
 
@@ -393,7 +393,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="center")
     with col_heading:
         st.markdown(
-            f'<h3 style="margin-top: -10px; margin-bottom: 0px; padding-bottom: 0px;">{'Canvas Courses to Sync'}</h3>',
+            '<h2 style="margin-top: -30px; margin-bottom: 0px; padding-bottom: 0px;">Canvas Courses to Sync</h2>',
             unsafe_allow_html=True,
         )
     with col_hub:

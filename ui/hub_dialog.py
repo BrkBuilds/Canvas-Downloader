@@ -1171,8 +1171,8 @@ def inject_hub_global_css():
     inject_css('sync_hub.css')
 
     # Dynamic overrides — only rules requiring Python theme variables
-    st.markdown(f"""
-    <style>
+    # Use st.html (not st.markdown) to avoid ghost-box 1rem margin above the stepper.
+    st.html(f"""<style>
     /* 1. Main Button Icon injected seamlessly next to text */
     div.st-key-btn_hub_main button div[data-testid="stMarkdownContainer"] p {{
         display: flex !important;
@@ -1245,6 +1245,5 @@ def inject_hub_global_css():
     div[class*="st-key-hub_compact_add_form"] {{
         padding-top: 0.5rem !important;
     }}
-    </style>
-    """, unsafe_allow_html=True)
+    </style>""")
 
