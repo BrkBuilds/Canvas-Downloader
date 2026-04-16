@@ -71,10 +71,7 @@ def run_sync():
     # Step wizard
     render_sync_wizard(st, 3)
 
-    st.markdown(
-        f'<div class="step-header">{"Syncing..."}</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="step-header">Syncing...</div>', unsafe_allow_html=True)
 
     sync_selections = st.session_state.get('sync_selections', [])
     if not sync_selections:

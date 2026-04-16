@@ -551,9 +551,7 @@ def render_course_selector(fetch_courses_fn):
     """
     inject_course_selector_css()
     render_download_wizard(st, 1)
-    st.markdown(
-        f'<div class="step-header">{"Step 1: Select Courses"}</div>',
-        unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Select Courses</div>', unsafe_allow_html=True)
 
     # --- Select All / Clear button icons (download-mode specific) ---
     b64_select_all = get_base64_image("assets/icon_select_all.png")

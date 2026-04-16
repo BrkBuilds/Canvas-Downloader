@@ -143,11 +143,11 @@ with _main_content.container():
         current_status = st.session_state.get('download_status', 'scanning')
         
         if current_status == 'done':
-            st.markdown(f'<div class="step-header">{'Step 4: Complete!'}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="step-header">Complete!</div>', unsafe_allow_html=True)
         elif current_status == 'cancelled':
             pass
         else:
-            st.markdown(f'<div class="step-header">{'Step 3: Downloading...'}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="step-header">Downloading...</div>', unsafe_allow_html=True)
         
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
