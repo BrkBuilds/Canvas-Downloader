@@ -15,11 +15,11 @@ header[data-testid="stHeader"] {
     margin: 0 !important;
 }
 
-/* 1. Force the absolute top padding to 1rem */
+/* 1. Step tracker sits flush at the top edge — no top padding */
 .block-container,
 div[data-testid="stMainBlockContainer"],
 div[data-testid="stAppViewBlockContainer"] {
-    padding-top: 10px !important;
+    padding-top: 0 !important;
     padding-bottom: 2rem !important;
     max-width: 100% !important;
 }
@@ -34,6 +34,7 @@ div[data-testid="element-container"]:has(> div[data-testid="stMarkdownContainer"
 
 /* 3. Catch raw HTML injections acting as spacers that might have default margins */
 div[data-testid="stHtml"] {
+    margin-top: 0px !important;
     margin-bottom: 0px !important;
 }
 

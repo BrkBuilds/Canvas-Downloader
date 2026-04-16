@@ -52,7 +52,7 @@ def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    st.markdown(f"<h3 style='margin-bottom: 12px; margin-top: -5px;'>🔍  {'Review Changes'}</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-bottom: 12px; margin-top: -5px;'>Review Changes</h2>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
