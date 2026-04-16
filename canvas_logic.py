@@ -2031,20 +2031,21 @@ class CanvasManager:
                 except Exception:
                     pass
 
+            # Create lightweight dictionary for session state JSON serialization safety
+            safe_file_dict = {
+                'filename': getattr(file_obj, 'filename', ''),
+                'id': getattr(file_obj, 'id', ''),
+                'url': getattr(file_obj, 'url', ''),
+                'size': getattr(file_obj, 'size', 0),
+                'content-type': getattr(file_obj, 'content-type', ''),
+                'display_name': getattr(file_obj, 'display_name', ''),
+                'modified_at': getattr(file_obj, 'modified_at', None),
+                'md5': getattr(file_obj, 'md5', None),
+                'folder_id': getattr(file_obj, 'folder_id', None)
+            }
+
             url = file_obj.url
             if not url:
-                # Create lightweight dictionary for session state JSON serialization safety
-                safe_file_dict = {
-                    'filename': getattr(file_obj, 'filename', ''),
-                    'id': getattr(file_obj, 'id', ''),
-                    'url': getattr(file_obj, 'url', ''),
-                    'size': getattr(file_obj, 'size', 0),
-                    'content-type': getattr(file_obj, 'content-type', ''),
-                    'display_name': getattr(file_obj, 'display_name', ''),
-                    'modified_at': getattr(file_obj, 'modified_at', None),
-                    'md5': getattr(file_obj, 'md5', None),
-                    'folder_id': getattr(file_obj, 'folder_id', None)
-                }
                 
                 # Check for LTI/Media streams
                 ext_lower = filepath.suffix.lower()
