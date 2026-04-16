@@ -6,12 +6,32 @@
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
 - **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
 
+- **Session 2026-04-16: Smart Select Refinement & Layout Harmony (Phase 5/6)**
+    - Done: Refactored legacy `ui/sync_review.py` Smart Select file-type filters from checkboxes into dynamic styled tag buttons (`st.button`).
+    - Done: Implemented 3-state CSS injection for tag buttons—OFF (deep black, pure white text), PARTIAL (dark navy), ON (bright blue).
+    - Done: Leveraged Streamlit markdown to embed dynamic fractional counts natively within tags: `(all)`, `(none)`, `(1/2)` mapped directly inside `:grey[...]`.
+    - Done: Tuned tag size (`height: 28px`, `padding: 2px 14px`), optimized typography (`0.7rem` weight 400 for suffixes), and replaced transparency-based hover effects (`brightness()`) with solid color transitions to prevent bleeding.
+    - Done: Enforced mathematical layout flex rules (`row-gap: 8px`, `column-gap: 8px`) ensuring perfect symmetrical grid flow when file extensions exceed the 1-row card width.
+    - Done: Perfected the `ui/sync_review.py` expander card margins, notably rectifying the zero-padding issue on the top expander and ensuring the "Ignored Files" separator maintains symmetrical `16px` vertical breathing room.
+    - Verified: Confirmed `handle_restore` and `handle_restore_all` explicitly force their target files to `st.session_state = True`, securely auto-selecting them upon restoration.
+
 - **Session 2026-04-15: Application-Wide UX Standardization & Polish**
     - Done: Refactored all button layouts to enforce **"Action on Right, Cancel on Left"** pattern across Download Step 1/2, Sync Review, and all Modal Dialogs.
     - Done: Standardized "Ignored Files" button icon size to **19px** and adjusted counter spacing to **2px** with greyed-out parentheses/numbers.
     - Done: Swapped "Select All" / "Clear Selection" (or "Deselect All") positions in Step 1 and Sync Review to keep triggers left-aligned near checklists.
     - Done: Standardized footer button columns (e.g., `st.columns([3, 1])` or `[5, 1, 1.2]`) ensuring consistent alignment for primary confirm/save buttons on the far right.
     - Done: Applied "Action-Right" rule to Presets Hub, Authentication Sidebar, and Sync Confirmation dialogs.
+
+- **Session 2026-04-15: Sync Review Tooltips & Dialog Polish**
+    - Done: Implemented high-fidelity, unclippable hover tooltips for the Sync Review screen using static positioning relative to the hover target rather than cursor tracking.
+    - Done: Engineered precise 175ms debounce delays for both the appearance and disappearance of tooltips, providing a premium, non-jittery UX.
+    - Done: Streamlined the Sync UI by permanently removing the redundant and buggy "manage all ignored files" global dialog.
+    - Done: Standardized the inline "ignored files" button presentation across the UI, and removed the distracting dotted border from the "Ignored Files" expander card.
+    - Done: Refined application toasts, ensuring modal-driven responses correctly trigger global session states and seamlessly surface to the user.
+
+- **Session 2026-04-14: Emojis & Settings Menu Auditing**
+    - Done: Conducted a global audit of application emojis, replacing legacy text-based emojis with modern, custom Base64-encoded SVG/PNG icons using CSS `::before` pseudo-element injection for buttons.
+    - Done: Modernized the "Settings" menu UI, introducing non-intrusive and toggleable settings that improve the UX while adhering to the established clean design language.
 
 - **Session 2026-04-14: sync_review.py — Smart Select Card Restyling**
     - Done: Restyled the "Smart Select" filetype checkbox card in `ui/sync_review.py` with dark card background, rounded corners, and shadow.

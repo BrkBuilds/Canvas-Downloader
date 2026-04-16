@@ -1,9 +1,20 @@
+- [x] **Smart Select Refinement & Layout Harmony (Phase 5/6)** (2026-04-16):
+    - [x] **Dynamic Tag UI**: Refactored legacy `ui/sync_review.py` Smart Select file-type filters from checkboxes to dynamic tag buttons (`st.button`).
+    - [x] **State-Driven Styling**: Implemented 3-state CSS injection for tags: OFF (black, white text), PARTIAL (dark navy), ON (bright blue).
+    - [x] **Typography & Sizing**: Embedded dynamic fractional counts `(all)`, `(none)`, `(1/2)` natively inside tags, tuned sizes (`height: 28px`), optimized typography (`0.7rem` weight 400), and replaced transparency-hover effects with solid color transitions.
+    - [x] **Flex Layout Constraints**: Enforced mathematical layout flex rules (`row-gap: 8px`, `column-gap: 8px`) ensuring perfect symmetrical grid flow for extending file types.
+    - [x] **Auto-Selection**: Updated backend logic so restored files from "Ignored Files" automatically select their extensions in the tags.
 - [x] **Application-Wide UX Standardization** (2026-04-15):
     - [x] **"Action on Right, Cancel on Left" Refactor**: Standardized the entire application (Step 1, Step 2, Sync Review, and all Dialogs) to follow professional UI layout standards.
     - [x] **Primary Action Alignment**: Ensured "Continue", "Confirm & Download", "Sync Selected", and "Save" buttons are always on the far right.
     - [x] **Secondary/Cancel Alignment**: Positioned "Back", "Deselect All", and "Cancel" buttons on the left or secondary positions.
     - [x] **Icon & Spacing Polish**: Standardized the "Ignored Files" icon to 19px with a 2px greyed-out counter spacing.
     - [x] **Standardized Column Layouts**: Implemented consistent `st.columns` ratios (e.g., `[3, 1]`) for footer button bars.
+- [x] **Sync Review Tooltips & UI Polish** (2026-04-15):
+    - [x] **High-Fidelity Tooltips**: Implemented static positioning, un-clippable hover tooltips for the Sync Review screen.
+    - [x] **Debounce Execution**: Engineered precise 175ms debounce delays for both appearance and disappearance of tooltips for a non-intrusive feel.
+    - [x] **Decluttered Interfaces**: Removed the redundant "manage all ignored files" global dialog and the dashed border on the "ignored files" expander natively.
+    - [x] **State-Aware Toasts**: Optimized toast configurations to correctly navigate Streamlit's dialog-run scoping and surface accurately after closing modals.
 - [x] **sync_review Smart Select Card Restyling** (2026-04-14):
     - [x] Dark card with rounded corners, shadow, and scoped CSS keyed to `sync_filter_box_outer`.
     - [x] True 50/50 button row via `st.columns([1,1])` + `use_container_width=True` — replaced broken `:has()` CSS flex hack.
