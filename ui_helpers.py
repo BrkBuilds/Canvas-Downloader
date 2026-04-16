@@ -21,7 +21,8 @@ import uuid
 
 import urllib.parse
 import base64
-from sync_manager import format_file_size
+
+from sync_manager import format_file_size  # re-exported for ui.sync_review / ui.sync_confirmation  # noqa: F401
 
 _sync_pairs_lock = threading.Lock()
 
@@ -585,60 +586,202 @@ def render_progress_bar(container, current: int, total: int,
 
 # --- Step Wizard ---
 
-def render_wizard_step(container, current_step: int, steps: list):
-    """Render a horizontal step wizard indicator.
-    
-    Args:
-        container: Streamlit container to render into
-        current_step: Current step number
-        steps: List of (step_num, label) tuples
-    """
-    cols = container.columns(len(steps))
-    for col, (step_num, label) in zip(cols, steps):
-        if step_num < current_step:
-            color = "#2ecc71"
-            bg = "rgba(46,204,113,0.15)"
-            border = "1px solid rgba(46,204,113,0.4)"
-            fw = "400"
+# SVG icon paths (Lucide/Heroicons style, 24×24 viewBox).
+# Shapes that should be filled use the placeholder __FILL__ — replaced at render time
+# with the cutout colour so they appear as solid filled shapes inside the circle.
+_ICON_FOLDER = (
+    '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>'
+)
+_ICON_SEARCH = (
+    '<circle cx="11" cy="11" r="8"/>'
+    '<line x1="21" y1="21" x2="16.65" y2="16.65"/>'
+)
+_ICON_SYNC = (
+    '<polyline points="1 4 1 10 7 10"/>'
+    '<polyline points="23 20 23 14 17 14"/>'
+    '<path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>'
+)
+_ICON_CHECK_CIRCLE = (
+    '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>'
+    '<polyline points="22 4 12 14.01 9 11.01"/>'
+)
 
-            label = f"✓ {label}"
+_ICON_DOC = (
+    '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>'
+    '<polyline points="14 2 14 8 20 8"/>'
+    '<line x1="16" y1="13" x2="8" y2="13"/>'
+    '<line x1="16" y1="17" x2="8" y2="17"/>'
+)
+# _ICON_GEAR — standard 24×24 sliders icon (Feather/Lucide, fully stroke-based)
+_ICON_GEAR = (
+    '<line x1="4" y1="21" x2="4" y2="14"/>'
+    '<line x1="4" y1="10" x2="4" y2="3"/>'
+    '<line x1="12" y1="21" x2="12" y2="12"/>'
+    '<line x1="12" y1="8" x2="12" y2="3"/>'
+    '<line x1="20" y1="21" x2="20" y2="16"/>'
+    '<line x1="20" y1="12" x2="20" y2="3"/>'
+    '<line x1="1" y1="14" x2="7" y2="14"/>'
+    '<line x1="9" y1="8" x2="15" y2="8"/>'
+    '<line x1="17" y1="16" x2="23" y2="16"/>'
+)
+_ICON_DOWNLOAD = (
+    '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>'
+    '<polyline points="7 10 12 15 17 10"/>'
+    '<line x1="12" y1="15" x2="12" y2="3"/>'
+)
+# List icon: three bullet dots + horizontal lines (from user-supplied SVG)
+# The x1=x2 zero-length lines render as round dots via stroke-linecap="round".
+_ICON_LIST = (
+    '<line x1="4" y1="6" x2="4.01" y2="6"/>'
+    '<line x1="4" y1="12" x2="4.01" y2="12"/>'
+    '<line x1="4" y1="18" x2="4.01" y2="18"/>'
+    '<line x1="9" y1="6" x2="21" y2="6"/>'
+    '<line x1="9" y1="12" x2="21" y2="12"/>'
+    '<line x1="9" y1="18" x2="21" y2="18"/>'
+)
+
+
+def _wizard_icon_bg(icon_svg, color: str, size: int = 15, circle_bg: str = None) -> str:
+    """Return a CSS background-image value for an SVG icon encoded as a base64 data URI.
+
+    Using CSS background-image bypasses Streamlit's HTML sanitiser which strips
+    inline <svg> child elements from st.html() content.
+
+    icon_svg may be:
+      - a plain string  → standard 0 0 24 24 viewBox
+      - a (svg_inner, viewbox) tuple → custom viewBox (e.g. the settings-sliders icon)
+
+    Placeholder substitutions applied to the SVG inner content:
+      __FILL__      → *color*      (solid cutout colour for filled shapes)
+      __CIRCLE_BG__ → *circle_bg*  (circle background colour, used for centre holes)
+    """
+    if isinstance(icon_svg, tuple):
+        svg_inner, viewbox = icon_svg
+    else:
+        svg_inner, viewbox = icon_svg, '0 0 24 24'
+
+    hole = circle_bg if circle_bg else color
+    resolved = svg_inner.replace('__FILL__', color).replace('__CIRCLE_BG__', hole)
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'width="{size}" height="{size}" viewBox="{viewbox}" '
+        f'fill="none" stroke="{color}" stroke-width="3" '
+        f'stroke-linecap="round" stroke-linejoin="round">'
+        f'{resolved}</svg>'
+    )
+    b64 = base64.b64encode(svg.encode('utf-8')).decode('ascii')
+    return f"url('data:image/svg+xml;base64,{b64}')"
+
+
+def render_wizard_step(container, current_step: int, steps: list):
+    """Render a horizontal step tracker.
+
+    No circles, no pill shape.  Each step is [icon] N. Label — purely informational.
+    Renders flush to the top of the page (global.css padding-top:0 on the block container).
+    Separator lines flex-grow to fill full page width evenly.
+
+    States:
+      done  — soft light-blue; icon + text, slightly faded to signal "already visited"
+      active — cool near-white, bold, icon slightly larger; drop-shadow glow below
+      idle  — medium-dark blue-grey; visible but clearly inactive
+
+    Args:
+        container:    Streamlit container to render into.
+        current_step: Current active step number.
+        steps:        List of (step_num, label, svg_path) tuples.
+    """
+    DONE_COLOR   = '#8dbecc'   # completed — soft accent blue
+    ACTIVE_COLOR = '#cce0e8'   # current    — cool near-white (slightly muted)
+    IDLE_COLOR   = '#607d8b'   # future     — medium-dark blue-grey, legible but receded
+    DONE_SEP     = '#3a6070'   # separator after a completed step
+    IDLE_SEP     = '#1a2d3d'   # separator before a future step
+
+    parts = [
+        '<style>:host{display:block!important;margin:0!important;padding:0!important}</style>'
+        '<div style="width:100%;display:flex;align-items:center;">'
+    ]
+
+    for i, (step_num, label, icon_svg) in enumerate(steps):
+        if step_num < current_step:
+            state = 'done'
         elif step_num == current_step:
-            color = "#3498db"
-            bg = "rgba(52,152,219,0.15)"
-            border = "2px solid rgba(52,152,219,0.6)"
-            fw = "600"
+            state = 'active'
         else:
-            color = "#666"
-            bg = "rgba(255,255,255,0.03)"
-            border = "1px solid #444"
-            fw = "400"
-        
-        col.markdown(
-            f'<div style="text-align:center;padding:8px 4px;border-radius:8px;background:{bg};border:{border};color:{color};font-size:0.8em;font-weight:{fw};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{label}</div>',  # audit-ignore: label is an app-controlled badge string
-            unsafe_allow_html=True,
+            state = 'idle'
+
+        if state == 'done':
+            icon_size   = '13px'
+            icon_color  = DONE_COLOR
+            text_color  = DONE_COLOR
+            font_size   = '0.87rem'
+            font_weight = '500'
+            opacity     = '0.75'
+            extra_style = ''
+        elif state == 'active':
+            icon_size   = '15px'
+            icon_color  = ACTIVE_COLOR
+            text_color  = ACTIVE_COLOR
+            font_size   = '0.92rem'
+            font_weight = '700'
+            opacity     = '1'
+            # Centered drop-shadow glow — blurry bright spot at 37.5% opacity
+            extra_style = 'filter:drop-shadow(0px 0px 14px rgba(141,190,204,0.375));'
+        else:
+            icon_size   = '12px'
+            icon_color  = IDLE_COLOR
+            text_color  = IDLE_COLOR
+            font_size   = '0.83rem'
+            font_weight = '400'
+            opacity     = '0.65'
+            extra_style = ''
+
+        icon_bg = _wizard_icon_bg(icon_svg, icon_color)
+
+        parts.append(
+            f'<div style="display:inline-flex;align-items:center;gap:5px;'
+            f'flex-shrink:0;opacity:{opacity};{extra_style}">'
+            f'<div style="width:{icon_size};height:{icon_size};flex-shrink:0;'
+            f'background-image:{icon_bg};background-size:contain;'
+            f'background-repeat:no-repeat;background-position:center;"></div>'
+            f'<span style="font-size:{font_size};color:{text_color};'
+            f'font-weight:{font_weight};white-space:nowrap;letter-spacing:0.01em;">'
+            f'{step_num}. {label}</span>'
+            f'</div>'
         )
-        
-    # Inject a strict vertical spacer below the step tracker to enforce a 24px gap 
-    # (plus ~16px native markdown container margin = 40px)
-    container.markdown('<div style="height: 24px; margin: 0; padding: 0;"></div>', unsafe_allow_html=True)
+
+        if i < len(steps) - 1:
+            if step_num < current_step:
+                # Gradient: fades from transparent at the done end to solid at the active end
+                sep_bg = f'linear-gradient(to right,{DONE_SEP}80,{DONE_SEP})'
+            else:
+                sep_bg = IDLE_SEP
+            parts.append(
+                f'<div style="flex:1;height:2px;background:{sep_bg};'
+                f'margin:0 12px;min-width:8px;"></div>'
+            )
+
+    parts.append('</div>')
+    container.html(''.join(parts))
+
 
 def render_sync_wizard(container, current_step: int):
-    """Render the wizard specifically for the Sync flow."""
+    """Render the wizard for the Sync flow."""
     steps = [
-        (1, '📁 Select Folders'),
-        (2, '🔍 Review Changes'),
-        (3, '⬇️ Syncing'),
-        (4, '✅ Complete'),
+        (1, 'Select Courses', _ICON_LIST),
+        (2, 'Review Changes',  _ICON_SEARCH),
+        (3, 'Syncing',         _ICON_SYNC),
+        (4, 'Complete',        _ICON_CHECK_CIRCLE),
     ]
     render_wizard_step(container, current_step, steps)
 
+
 def render_download_wizard(container, current_step: int):
-    """Render the wizard specifically for the Download flow."""
+    """Render the wizard for the Download flow."""
     steps = [
-        (1, '📝 Select Courses'),
-        (2, '⚙️ Download Settings'),
-        (3, '⬇️ Downloading...'),
-        (4, '✅ Complete!'),
+        (1, 'Select Courses',    _ICON_LIST),
+        (2, 'Download Settings', _ICON_GEAR),
+        (3, 'Downloading',       _ICON_DOWNLOAD),
+        (4, 'Complete',          _ICON_CHECK_CIRCLE),
     ]
     render_wizard_step(container, current_step, steps)
 

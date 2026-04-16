@@ -69,14 +69,13 @@ def render_download_settings(fetch_courses_fn):
     render_download_wizard(st, 2)
 
     # Hoisted CSS Overrides for Step 2 UI Component geometry
-    st.markdown("""
-    <style>
+    # Use st.html (not st.markdown) to avoid ghost-box 1rem margin below the stepper.
+    st.html("""<style>
     div[data-testid="stHorizontalBlock"]:has(.st-key-action_dl_back),
     div[data-testid="stHorizontalBlock"]:has(.st-key-action_dl_confirm) {
         margin-top: -15px !important;
     }
-    </style>
-    """, unsafe_allow_html=True)
+    </style>""")
 
     # Consume pending toasts from preset dialogs
     if 'pending_toast' in st.session_state:
@@ -85,7 +84,7 @@ def render_download_settings(fetch_courses_fn):
     # Step 2 Header with Preset Buttons
     _hdr_left, _hdr_right = st.columns([0.6, 0.4])
     with _hdr_left:
-        st.markdown("<h2 style='margin-bottom: -10px;'>Step 2: Download Settings</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='margin-bottom: -10px;'>Download Settings</h2>", unsafe_allow_html=True)
 
 
     with _hdr_right:
