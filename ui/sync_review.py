@@ -403,13 +403,13 @@ def show_analysis_review(on_confirm_sync):
                 margin-top: 8px !important;
                 padding-top: 6px !important;
             }}
-            /* Filetype box: strip border, pull up tight below the label */
+            /* Filetype box: strip border */
             div.st-key-filetypes_flex_box {{
                 border: none !important;
                 background: transparent !important;
                 box-shadow: none !important;
                 padding: 0 !important;
-                margin-top: -14px !important;
+                margin-top: 0px !important;
             }}
             /* Checkbox ↔ label gap: use gap on the label flex container */
             div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label {{
@@ -492,10 +492,10 @@ def show_analysis_review(on_confirm_sync):
             </style>""")
 
             with st.container(border=True, key="sync_filter_box_outer"):
-                st.html("<h3 style='margin-top: 15px; margin-bottom: 0px; font-size: 1.25rem; font-weight: 700;'>Smart Select</h3>")
+                st.html("<h3 style='margin-top: 18px; margin-bottom: 0px; font-size: 1.25rem; font-weight: 700;'>Smart Select</h3>")
 
                 if all_exts_sorted:
-                    st.html("<div style='font-size: 0.75em; padding-top: 0px; padding-bottom: 6px; color: rgba(255,255,255,0.45); font-weight: 400;'>By filetype</div>")
+                    st.html("<div style='font-size: 0.75em; padding-top: 0px; padding-bottom: 3px; color: rgba(255,255,255,0.45); font-weight: 400;'>By filetype</div>")
 
                     css_blocks = []
                     css_blocks.append("""
@@ -506,11 +506,13 @@ def show_analysis_review(on_confirm_sync):
                         flex-wrap: wrap !important;
                         row-gap: 8px !important;
                         column-gap: 8px !important;
+                        margin-bottom: -16px !important;
                     }
                     div.st-key-filetypes_flex_box div[data-testid="stColumn"] {
                         width: auto !important;
                         flex: 0 0 auto !important;
                         min-width: 0 !important;
+                        padding-bottom: 16px !important;
                     }
                     div.st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
                         gap: 0 !important;
@@ -603,7 +605,7 @@ def show_analysis_review(on_confirm_sync):
                         st.html(f"<style>{''.join(css_blocks)}</style>")
 
                 # Separator + action buttons — padding wraps hr inside shadow root so spacing is real
-                st.html("<div style='padding: 10px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
+                st.html("<div style='padding: 5px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
 
                 # border=True required for st-key class to be reliably emitted (CLAUDE.md Border Strip rule)
                 with st.container(border=True, key="bulk_btns_row"):
@@ -1054,35 +1056,55 @@ def show_analysis_review(on_confirm_sync):
                 + len(result.locally_deleted_files)
             )
             _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
-            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:14px; height:14px; vertical-align:middle; margin-right:5px; margin-top:0px; filter: brightness(0) saturate(100%) invert(55%) sepia(100%) saturate(1500%) hue-rotate(355deg) brightness(120%);" />'
-            status_pill = ""
+            # Dimmed white sync icon for the pending-sync label
+            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.5);" />'
+            # Inline checkmark SVG for the up-to-date label
+            _checkmark_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px; flex-shrink:0;"><polyline points="2,9 6,13 14,3"/></svg>'
+            # No background — plain grey text labels stacked on the right
+            _tag_style = (
+                "font-size: 0.73rem; color: rgba(255,255,255,0.45); font-weight: 500; "
+                "display:inline-flex; align-items:center; white-space:nowrap;"
+            )
+
+            pending_pill = ""
+            uptodate_pill = ""
             if pending_count:
                 pending_word = "file" if pending_count == 1 else "files"
-                secondary = f'<span style="color: {theme.TEXT_SECONDARY}; font-weight: normal; margin-left: 6px; font-size: 0.75rem;">(<b>{uptodate_count}</b> {("file" if uptodate_count == 1 else "files")} up to date)</span>' if uptodate_count else ""
-                status_pill = (
-                    f'<span style="font-size: 0.85rem; color: #ff8c00; background-color: rgba(245, 158, 11, 0.12); '
-                    f'padding: 2px 10px; border-radius: 4px; margin-left: 12px; font-weight: 500; border: 1px solid rgba(245, 158, 11, 0.3); display:inline-flex; align-items:center;">'
-                    f'{_sync_icon_html}{pending_count} {pending_word} pending sync</span>{secondary}'
-                )
-            elif uptodate_count:
-                uptodate_label = f"Up to date ({uptodate_count} {'file' if uptodate_count == 1 else 'files'})"
-                status_pill = f'<span style="font-size: 0.75rem; color: {theme.SUCCESS}; background-color: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 12px; font-weight: normal;">✅ {uptodate_label}</span>'
+                pending_pill = f'<span style="{_tag_style}">{_sync_icon_html}{pending_count} {pending_word} pending sync</span>'
+            if uptodate_count:
+                uptodate_word = "file" if uptodate_count == 1 else "files"
+                uptodate_pill = f'<span style="{_tag_style}">{_checkmark_svg}{uptodate_count} {uptodate_word} up to date</span>'
 
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
+            # Light-to-dark grey gradient (dark at top, lighter grey at bottom near expanders).
+            # Tags stacked vertically on the far right with no background.
             header_html = f"""
             <div style="
-                margin: -16px -16px 16px -16px; /* 16px bottom margin ensures the gap to first expander matches standard inter-expander gap */
-                padding: 10px 16px; /* Tightened vertical padding to make the header slimmer */
-                background-color: #2A2E3D;
-                border: 1px solid #4B5563;
-                border-bottom: 1px solid #4B5563;
+                margin: -16px -16px 16px -16px;
+                padding: 16px 16px;
+                background: linear-gradient(180deg, #252830 0%, #32363f 100%);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-bottom: 1px solid rgba(255,255,255,0.06);
                 border-radius: 8px 8px 0 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
             ">
-                <h4 style="margin: 0px 0px 2px 0px; font-weight: 600; font-size: 1.05rem; color: {theme.WHITE};">
-                    <span style="color: {theme.WHITE}; font-weight: 700; margin-right: 4px;">{idx + 1}.</span>🎓 {display_name}
-                    {status_pill}
-                </h4>
-                <p style="margin: 0px; color: {theme.TEXT_SECONDARY}; font-size: 0.8rem;">{folder_display}</p>
+                <div style="min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                    <div style="display: flex; align-items: baseline; overflow: hidden; white-space: nowrap;">
+                        <span style="color: {theme.WHITE}; font-size: 1rem; font-weight: 700; min-width: 26px; flex-shrink: 0;">{idx + 1}.</span>
+                        <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{display_name}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; overflow: hidden; padding-left: 25px;">
+                        <span style="font-size: 0.88rem; flex-shrink: 0; color: initial; filter: none; line-height: 1; margin-right: 5px;">📁</span>
+                        <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">
+                    {pending_pill}
+                    {uptodate_pill}
+                </div>
             </div>
             """
             st.markdown(header_html, unsafe_allow_html=True)
