@@ -99,6 +99,9 @@ def show_analysis_review(on_confirm_sync):
         # 2. Append to ignored list ONLY if not already there
         if not any(f.canvas_file_id == canvas_file_id for f in pair_data['result'].ignored_files):
             pair_data['result'].ignored_files.append(sync_info)
+            
+        _fname_clean, _ = os.path.splitext(unquote_plus(fname))
+        st.toast(f"🚫 Ignored '{_fname_clean}'")
 
     def handle_restore(pair_idx, sync_info):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -133,6 +136,10 @@ def show_analysis_review(on_confirm_sync):
         prefix = prefixes.get(origin, 'sync_miss')
         st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
         st.session_state['keep_ignored_open'] = True
+        
+        fname = getattr(original_item, 'display_name', getattr(original_item, 'filename', getattr(sync_info, 'canvas_filename', 'file')))
+        _fname_clean, _ = os.path.splitext(unquote_plus(fname))
+        st.toast(f"↩️ Restored '{_fname_clean}'")
 
     def handle_restore_all(pair_idx):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -170,6 +177,8 @@ def show_analysis_review(on_confirm_sync):
             
         pair_data['result'].ignored_files.clear()
         st.session_state['keep_ignored_open'] = True
+        
+        st.toast(f"♻️ Restored {len(file_ids)} ignored files")
 
     def handle_sweep(pair_idx, source_list_name, item_key_prefix):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -233,6 +242,8 @@ def show_analysis_review(on_confirm_sync):
             # append safely
             if not any(f.canvas_file_id == fid for f in pair_data['result'].ignored_files):
                 pair_data['result'].ignored_files.append(sync_info)
+                
+        st.toast(f"🚫 Ignored {len(items_to_ignore)} deselected files")
 
     
 
@@ -290,11 +301,11 @@ def show_analysis_review(on_confirm_sync):
                     icon_bg = "rgba(0,0,0,0.15)"
                     filter_style = ""
                 else:
-                    # Muted state: 10% opacity gradient, 25% opacity border, 50% text opacity, 50% greyscale
-                    bg_style = f"background: linear-gradient(135deg, {hex_start}1A, {hex_end}1A); border: 1px solid {hex_start}40; box-shadow: none;"
-                    text_opacity = "0.5"
-                    icon_bg = f"{hex_start}26"
-                    filter_style = "filter: grayscale(50%);"
+                    # Muted state: 3% white background, 8% opacity border, 30% text opacity, 100% greyscale
+                    bg_style = f"background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: none;"
+                    text_opacity = "0.3"
+                    icon_bg = "rgba(255, 255, 255, 0.04)"
+                    filter_style = "filter: grayscale(100%) brightness(0.8);"
 
                 icon_css = f"position:absolute; top:14px; right:14px; background:{icon_bg}; border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; opacity: {text_opacity};"
                 num_css = f"font-size:2.7em; font-weight:700; color:rgba(255,255,255,{text_opacity}); line-height:1;"
@@ -486,32 +497,110 @@ def show_analysis_review(on_confirm_sync):
                 if all_exts_sorted:
                     st.html("<div style='font-size: 0.75em; padding-top: 0px; padding-bottom: 6px; color: rgba(255,255,255,0.45); font-weight: 400;'>By filetype</div>")
 
+                    css_blocks = []
+                    css_blocks.append("""
+                    div.st-key-filetypes_flex_box {
+                        margin-top: 2px !important; /* Move down from the By filetype subtitle */
+                    }
+                    div.st-key-filetypes_flex_box div[data-testid="stHorizontalBlock"] {
+                        flex-wrap: wrap !important;
+                        row-gap: 8px !important;
+                        column-gap: 8px !important;
+                    }
+                    div.st-key-filetypes_flex_box div[data-testid="stColumn"] {
+                        width: auto !important;
+                        flex: 0 0 auto !important;
+                        min-width: 0 !important;
+                    }
+                    div.st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
+                        gap: 0 !important;
+                    }
+                    """)
+
                     with st.container(border=True, key="filetypes_flex_box"):
                         safe_len = min(len(all_exts_sorted), 90)
                         cols = st.columns(safe_len)
                         for i, ext in enumerate(all_exts_sorted):
                             col_idx = i % safe_len
                             ext_files = [k for k in files_by_ext[ext] if k.startswith('sync_')]
-                            total_ext_files = len(ext_files)
+                            total = len(ext_files)
+                            
+                            safe_ext = ext.replace('.', '')
+                            btn_key = f"sync_filter_btn_{safe_ext}"
 
-                            if total_ext_files > 0:
-                                selected_ext_files = sum(1 for k in ext_files if st.session_state.get(k, True))
-                                expected_val = selected_ext_files > 0
-
-                                if 0 < selected_ext_files < total_ext_files:
-                                    ext_label = f"{ext} :gray[({selected_ext_files}/{total_ext_files})]"
-                                else:
-                                    ext_label = f"{ext}"
+                            if total > 0:
+                                selected = sum(1 for k in ext_files if st.session_state.get(k, True))
                             else:
-                                expected_val = False
-                                ext_label = f"{ext}"
+                                selected = 0
 
-                            ext_key = f"sync_filter_ext_{ext}"
-                            if ext_key not in st.session_state or st.session_state[ext_key] != expected_val:
-                                st.session_state[ext_key] = expected_val
+                            def _on_unit_click(ext_name=ext):
+                                e_files = [k for k in files_by_ext[ext_name] if k.startswith('sync_')]
+                                tot = len(e_files)
+                                sel = sum(1 for k in e_files if st.session_state.get(k, True))
+                                new_val = False if sel == tot else True
+                                for k in e_files:
+                                    st.session_state[k] = new_val
+
+                            ext_label = ext[1:].upper() if ext.startswith('.') else ext.upper()
+
+                            if selected == 0:
+                                final_label = f"{ext_label} :grey[(none)]"
+                                bg_color = "#11141a"
+                                bg_color_hover = "#1a1e28"
+                                border_color = "rgba(255, 255, 255, 0.25)"
+                                border_color_hover = "rgba(255, 255, 255, 0.4)"
+                                text_color = "#ffffff"
+                            elif selected == total:
+                                final_label = f"{ext_label} :grey[(all)]"
+                                bg_color = "#1f486b"
+                                bg_color_hover = "#285b86"
+                                border_color = "#3498db"
+                                border_color_hover = "#5dade2"
+                                text_color = "#ffffff"
+                            else:
+                                final_label = f"{ext_label} :grey[({selected}/{total})]"
+                                bg_color = "#0d1b2a"
+                                bg_color_hover = "#142838"
+                                border_color = "#3498db"
+                                border_color_hover = "#5dade2"
+                                text_color = "#ffffff"
+
+                            css_blocks.append(f"""
+                            div.st-key-{btn_key} button {{
+                                background-color: {bg_color} !important;
+                                border: 1px solid {border_color} !important;
+                                color: {text_color} !important;
+                                padding: 2px 14px !important;
+                                min-height: 28px !important;
+                                height: 28px !important;
+                                border-radius: 6px !important;
+                                transition: all 0.15s ease !important;
+                                box-shadow: none !important;
+                            }}
+                            div.st-key-{btn_key} button:hover {{
+                                background-color: {bg_color_hover} !important;
+                                border-color: {border_color_hover} !important;
+                            }}
+                            div.st-key-{btn_key} button p {{
+                                font-size: 0.8rem !important;
+                                font-weight: 500 !important;
+                                margin: 0 !important;
+                            }}
+                            /* Fix vertical alignment and styling for the grey tag partial numbers */
+                            div.st-key-{btn_key} button p span {{
+                                font-size: 0.7rem !important;
+                                font-weight: 400 !important;
+                                color: rgba(255, 255, 255, 0.55) !important;
+                                margin-left: 3px !important;
+                                letter-spacing: 0.3px !important;
+                            }}
+                            """)
 
                             with cols[col_idx]:
-                                st.checkbox(ext_label, key=ext_key, on_change=toggle_single_ext, kwargs={'ext_name': ext})
+                                st.button(final_label, key=btn_key, on_click=_on_unit_click)
+
+                    if css_blocks:
+                        st.html(f"<style>{''.join(css_blocks)}</style>")
 
                 # Separator + action buttons — padding wraps hr inside shadow root so spacing is real
                 st.html("<div style='padding: 10px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
@@ -620,6 +709,122 @@ def show_analysis_review(on_confirm_sync):
         position: relative;
         top: -1px;
         filter: brightness(0) invert(1) opacity(0.9);
+    }}
+    }}
+    </style>""")
+    
+    import streamlit.components.v1 as components
+    components.html("""
+        <script>
+            const doc = window.parent.document;
+            
+            // Protect against duplicate injection on React rerender
+            if (!doc.getElementById('premium-hover-tooltip')) {
+                const tooltip = doc.createElement('div');
+                tooltip.id = 'premium-hover-tooltip';
+                
+                Object.assign(tooltip.style, {
+                    position: 'fixed',
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    color: '#e2e8f0',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.82rem',
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    zIndex: '9999999',
+                    pointerEvents: 'none',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    opacity: '0',
+                    transition: 'opacity 0.15s ease',
+                    top: '0px',
+                    left: '0px'
+                });
+                
+                doc.body.appendChild(tooltip);
+                
+                // High-performance static tooltip tracker with UX debounce delays
+                let activeSummary = null;
+                let showTimer = null;
+                let hideTimer = null;
+                
+                doc.addEventListener('mouseover', function(e) {
+                    const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
+                    
+                    if (summary) {
+                        // Cancel any pending hide timers immediately upon re-entry
+                        clearTimeout(hideTimer);
+                        hideTimer = null;
+                        
+                        if (activeSummary === summary) return;
+                        
+                        let text = "";
+                        if(summary.closest('div[class*="st-key-cat_new_"]')) text = "Brand new files available on Canvas";
+                        else if(summary.closest('div[class*="st-key-cat_update_"]')) text = "Files with a newer timestamp on Canvas";
+                        else if(summary.closest('div[class*="st-key-cat_missing_"]')) text = "Files that are missing from your computer";
+                        else if(summary.closest('div[class*="st-key-cat_deleted_local_"]')) text = "Files you deleted locally (will not be re-downloaded)";
+                        else if(summary.closest('div[class*="st-key-cat_deleted_canvas_"]')) text = "Files the teacher removed from Canvas (preserved locally for your safety)";
+                        else if(summary.closest('div[class*="st-key-cat_ignored_"]')) text = "Files you permanently ignored from syncing";
+                        
+                        if (text) {
+                            // Queue the tooltip to show after a brief purposeful hover delay (200ms)
+                            clearTimeout(showTimer);
+                            showTimer = setTimeout(() => {
+                                activeSummary = summary;
+                                tooltip.innerText = text;
+                                tooltip.style.left = e.clientX + 'px';
+                                tooltip.style.top = (e.clientY - 45) + 'px';
+                                tooltip.style.opacity = '1';
+                            }, 200);
+                        }
+                    }
+                });
+                
+                doc.addEventListener('mouseout', function(e) {
+                    const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
+                    if (summary) {
+                        // Keep tooltip alive if moving gracefully between nested HTML elements
+                        if (e.relatedTarget && summary.contains(e.relatedTarget)) {
+                            return;
+                        }
+                        
+                        // The user cleanly exited the element boundaries
+                        clearTimeout(showTimer);
+                        showTimer = null;
+                        
+                        // Add a let-go grace period before physically hiding the tooltip
+                        clearTimeout(hideTimer);
+                        hideTimer = setTimeout(() => {
+                            activeSummary = null;
+                            tooltip.style.opacity = '0';
+                        }, 200);
+                    }
+                });
+            }
+        </script>
+    """, height=0, width=0)
+    
+    st.html(f"""<style>
+    /* ===== FILE SIZE AND EXTENSION TAGS ===== */
+    div[class*="st-key-cat_"] del {{
+        text-decoration: none !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.70rem !important;
+        font-weight: 500 !important;
+        margin-left: 6px !important;
+    }}
+    div[class*="st-key-cat_"] code {{
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        color: #9ca3af !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.70rem !important;
+        font-weight: 500 !important;
+        border: none !important;
+        margin-left: 6px !important;
     }}
 
     /* ===== INLINE IGNORE ICON BUTTONS ===== */
@@ -793,6 +998,40 @@ def show_analysis_review(on_confirm_sync):
         vertical-align: middle;
         transform: translateY(-2px);
     }}
+    div[class*="st-key-restore_all_"] button:disabled p::before {{
+        opacity: 0.3 !important;
+    }}
+
+    /* ===== 'IGNORE UNCHECKED' BULK BUTTONS ===== */
+    div[class*="st-key-sweep_"] button p::before {{
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1) opacity(0.9);
+        position: relative;
+        vertical-align: middle;
+        transform: translateY(-2px);
+    }}
+    div[class*="st-key-sweep_"] button:disabled p::before {{
+        opacity: 0.3 !important;
+    }}
+    div[class*="st-key-sweep_"] button p em {{
+        color: #9ca3af !important;
+        font-style: normal !important;
+        font-size: 0.88em !important;
+        margin-left: 5px !important;
+        vertical-align: baseline !important;
+    }}
+    /* Dim the counter when button is disabled to match parent text */
+    div[class*="st-key-sweep_"] button:disabled p em {{
+        color: rgba(255, 255, 255, 0.3) !important;
+    }}
     </style>""")
 
     # Per-folder results
@@ -832,7 +1071,7 @@ def show_analysis_review(on_confirm_sync):
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
             header_html = f"""
             <div style="
-                margin: -16px -16px 4px -16px; /* Reduced bottom margin from 16px to 4px to pull expanders UP */
+                margin: -16px -16px 16px -16px; /* 16px bottom margin ensures the gap to first expander matches standard inter-expander gap */
                 padding: 10px 16px; /* Tightened vertical padding to make the header slimmer */
                 background-color: #2A2E3D;
                 border: 1px solid #4B5563;
@@ -869,7 +1108,8 @@ def show_analysis_review(on_confirm_sync):
 
                 with st.container(key=f"cat_new_{pair['course_id']}"):
                     with st.expander(f"{'New Files'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_new_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="Ignore all files in this section that are currently unchecked")
+                        deselected_new = total_new - selected_new
+                        st.button(f"Move deselected files to Ignored *({deselected_new})*", key=f"sweep_new_{pair['course_id']}", use_container_width=True, disabled=(selected_new == total_new), on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="These files will be moved to the Ignored Files section and skipped during sync.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
                             for file in result.new_files:
@@ -880,7 +1120,11 @@ def show_analysis_review(on_confirm_sync):
                                 st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.checkbox(f"{icon} {unquote_plus(file.display_name or file.filename)} ({size})", key=key)
+                                    _disp_raw = unquote_plus(file.display_name or file.filename)
+                                    _name, _ext = os.path.splitext(_disp_raw)
+                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                    _size_clean = f" `{size}`" if size else ""
+                                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                 with col2:
                                     st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
@@ -893,7 +1137,8 @@ def show_analysis_review(on_confirm_sync):
 
                 with st.container(key=f"cat_update_{pair['course_id']}"):
                     with st.expander(f"{'Updates Available'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="Ignore all files in this section that are currently unchecked")
+                        deselected_upd = total_upd - selected_upd
+                        st.button(f"Move deselected files to Ignored *({deselected_upd})*", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, disabled=(selected_upd == total_upd), on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="These files will be moved to the Ignored Files section and skipped during sync.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
                             for canvas_file, sync_info in result.updated_files:
@@ -904,8 +1149,11 @@ def show_analysis_review(on_confirm_sync):
                                 st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                    st.checkbox(f"{icon} {_disp} ({size})", key=key)
+                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
+                                    _name, _ext = os.path.splitext(_disp_raw)
+                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                    _size_clean = f" `{size}`" if size else ""
+                                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                 with col2:
                                     st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
@@ -918,7 +1166,8 @@ def show_analysis_review(on_confirm_sync):
 
                 with st.container(key=f"cat_missing_{pair['course_id']}"):
                     with st.expander(f"{'Missing Files'}"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="Ignore all files in this section that are currently unchecked")
+                        deselected_miss = total_miss - selected_miss
+                        st.button(f"Move deselected files to Ignored *({deselected_miss})*", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, disabled=(selected_miss == total_miss), on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="These files will be moved to the Ignored Files section and skipped during sync.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_miss"):
                             for sync_info in result.missing_files:
@@ -928,20 +1177,24 @@ def show_analysis_review(on_confirm_sync):
                                 st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key)
+                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                    _name, _ext = os.path.splitext(_disp_raw)
+                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                    st.checkbox(f"{_name}{_ext_clean}", key=key)
                                 with col2:
                                     st.button("\u200b", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
+                total_locdel = len(result.locally_deleted_files)
                 selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", True))
                 
                 
 
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
                     with st.expander("Locally Deleted"):
-                        st.button("🧹 Ignore Unchecked", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="Ignore all files in this section that are currently unchecked")
+                        deselected_locdel = total_locdel - selected_locdel
+                        st.button(f"Move deselected files to Ignored *({deselected_locdel})*", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, disabled=(selected_locdel == total_locdel), on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="These files will be moved to the Ignored Files section and skipped during sync.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                             for sync_info in result.locally_deleted_files:
@@ -951,8 +1204,10 @@ def show_analysis_review(on_confirm_sync):
                                 st.session_state.setdefault(key, True)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    _disp = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    st.checkbox(f"{icon} {_disp}", key=key)
+                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                    _name, _ext = os.path.splitext(_disp_raw)
+                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                    st.checkbox(f"{_name}{_ext_clean}", key=key)
                                 with col2:
                                     st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
@@ -967,14 +1222,16 @@ def show_analysis_review(on_confirm_sync):
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
                             icon = get_file_icon(sync_info.canvas_filename)
-                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                            _disp_raw = unquote_plus(sync_info.canvas_filename)
+                            _name, _ext = os.path.splitext(_disp_raw)
+                            _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
 
             # Ignored files Bucket
             if hasattr(result, 'ignored_files') and result.ignored_files:
                 is_ignored_open = st.session_state.get('keep_ignored_open', False)
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # The physical isolation gap
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
-                    with st.expander(f"Ignored Files ({len(result.ignored_files)})", expanded=is_ignored_open):
+                    with st.expander(f"Ignored Files", expanded=is_ignored_open):
                         st.session_state['keep_ignored_open'] = False
                         st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
                         st.caption("These files are safely ignored and will not be synced.")
@@ -983,12 +1240,15 @@ def show_analysis_review(on_confirm_sync):
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                 with col1:
-                                    st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{icon} &nbsp; {unquote_plus(sync_info.canvas_filename)}</div>", unsafe_allow_html=True)
+                                    _disp_raw = unquote_plus(sync_info.canvas_filename)
+                                    _name, _ext = os.path.splitext(_disp_raw)
+                                    _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                    st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
                                 with col2:
                                     st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
             
-            # Inject 20px gap BETWEEN courses, inside the loop but outside the course's content
-            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        # Inject 20px gap BETWEEN courses, outside the course's content container
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
@@ -1015,7 +1275,7 @@ def show_analysis_review(on_confirm_sync):
         col_back, col_sync, _ = st.columns([1, 1.2, 5])
         with col_sync:
             with st.container(key="btn_sync_selected"):
-                sync_label = f'Sync {total_selected_files} selected {"file" if total_selected_files == 1 else "files"}'
+                sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'
                 if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected_files == 0):
                     # Collect selections
                     sync_selections = []
@@ -1119,7 +1379,7 @@ def inject_dynamic_sync_review_css():
             selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{cid}_{f.id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_new_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 {selected_new} / {total_new} selected";
+                content: "\\00a0\\00a0 ({selected_new} / {total_new} selected)";
                 color: {theme.TEXT_SECONDARY};
                 font-weight: normal; font-size: 0.9rem;
             }}""")
@@ -1129,7 +1389,7 @@ def inject_dynamic_sync_review_css():
             selected_upd = sum(1 for f, _ in result.updated_files if st.session_state.get(f"sync_upd_{cid}_{f.id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_update_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 {selected_upd} / {total_upd} selected";
+                content: "\\00a0\\00a0 ({selected_upd} / {total_upd} selected)";
                 color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
             
@@ -1138,7 +1398,7 @@ def inject_dynamic_sync_review_css():
             selected_miss = sum(1 for f in result.missing_files if st.session_state.get(f"sync_miss_{cid}_{f.canvas_file_id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_missing_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 {selected_miss} / {total_miss} selected"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+                content: "\\00a0\\00a0 ({selected_miss} / {total_miss} selected)"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
             
         if result.locally_deleted_files:
@@ -1146,7 +1406,7 @@ def inject_dynamic_sync_review_css():
             selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{cid}_{f.canvas_file_id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_deleted_local_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 {selected_locdel} / {total_locdel} selected"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+                content: "\\00a0\\00a0 ({selected_locdel} / {total_locdel} selected)"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
             
         if result.deleted_on_canvas:
@@ -1154,6 +1414,27 @@ def inject_dynamic_sync_review_css():
             css_blocks.append(f"""
             div[class*="st-key-cat_deleted_canvas_{cid}"] div[data-testid="stExpander"] details summary p::after {{
                 content: "\\00a0\\00a0 ({total_del_canvas}) ignored"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            }}""")
+
+        has_ignored_files = hasattr(result, 'ignored_files') and bool(result.ignored_files)
+        if has_ignored_files:
+            ignored_count = len(result.ignored_files)
+            css_blocks.append(f"""
+            div[class*="st-key-cat_ignored_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 ({ignored_count})"; 
+                color: {theme.TEXT_SECONDARY}; 
+                font-weight: normal; 
+                font-size: 0.9rem;
+            }}
+            /* Perfect symmetrical divider above Ignored Files container */
+            div[class*="st-key-cat_ignored_{cid}"] {{
+                border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+                padding-top: 16px !important;
+            }}
+            /* Slight tonal background diff for the Exact expander header */
+            div[class*="st-key-cat_ignored_{cid}"] div[data-testid="stExpander"] details summary {{
+                background-color: rgba(255, 255, 255, 0.01) !important;
+                border-radius: 8px !important;
             }}""")
 
     css_blocks.append("""
