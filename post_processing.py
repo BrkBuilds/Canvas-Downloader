@@ -539,19 +539,26 @@ def run_video_conversion(files, ui: UIBridge):
 # Convenience: Glob + Run All (for app.py Download flow)
 # ─────────────────────────────────────────────────────
 
+_PACKAGE_DIRS = {
+    'node_modules', '.git', '__pycache__', '.cache',
+    'venv', '.venv', 'env', '.env',
+    'site-packages', 'dist-packages',
+}
+
 def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None) -> list:
-    """Glob course folder for files matching extensions, filtering OS junk."""
+    """Glob course folder for files matching extensions, filtering OS junk and package dirs."""
     if not course_folder.exists():
         return []
-        
+
     explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
-    
+
     return [
         f for f in course_folder.rglob('*')
         if f.is_file()
         and not f.name.startswith('._')
         and not f.name.startswith('~$')
         and "__MACOSX" not in f.parts
+        and not _PACKAGE_DIRS.intersection(f.parts)
         and f.suffix.lower() in extensions
         and (not explicit_set or f.resolve() in explicit_set)
     ]

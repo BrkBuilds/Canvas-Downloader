@@ -107,18 +107,23 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
     background: transparent !important;
 }
 
-/* 2. Target the horizontal block created by st.columns and force wrap */
+/* 2. Target the horizontal block created by st.columns and force wrap.
+   margin-bottom: -16px cancels the padding-bottom of the last row so no
+   extra whitespace appears below the final row of tags. */
 .st-key-filetypes_flex_box div[data-testid="stHorizontalBlock"] {
     flex-wrap: wrap !important;
     row-gap: 5px !important;
     column-gap: 15px !important;
+    margin-bottom: -16px !important;
 }
 
-/* 3. Shrink-wrap the columns */
+/* 3. Shrink-wrap the columns; padding-bottom creates row spacing on wrap
+   (row-gap on stHorizontalBlock is overridden by Streamlit's cascade) */
 .st-key-filetypes_flex_box div[data-testid="stColumn"] {
     width: auto !important;
     flex: 0 0 auto !important;
     min-width: 0 !important;
+    padding-bottom: 16px !important;
 }
 
 /* 4. Remove inner gap of the column's vertical block so it's tight */
@@ -139,13 +144,19 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
     gap: 0 !important;
 }
 
-/* 7. Aggressively pull elements up */
+/* 7. Pull top-level card children up slightly */
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"] {
-    margin-top: -12px !important;
+    margin-top: -4px !important;
 }
-/* Add gap between label and the filetype checkboxes container */
+/* Add gap between label and the filetype tag container */
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:has(.st-key-filetypes_flex_box) {
-    margin-top: 5px !important;
+    margin-top: 6px !important;
+}
+/* Reset margin for elements nested inside the tag flex grid and the bulk buttons row
+   — the broad rule above must not clobber individual button/column element containers */
+.st-key-filetypes_flex_box div[data-testid="stElementContainer"],
+.st-key-bulk_btns_row div[data-testid="stElementContainer"] {
+    margin-top: 0 !important;
 }
 /* Pull the toggle (first child) to the very top */
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:first-child {
