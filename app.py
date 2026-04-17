@@ -143,11 +143,11 @@ with _main_content.container():
         current_status = st.session_state.get('download_status', 'scanning')
         
         if current_status == 'done':
-            st.markdown('<div class="step-header">Complete!</div>', unsafe_allow_html=True)
+            st.markdown('<h2 class="step-header">Download Complete!</h2>', unsafe_allow_html=True)
         elif current_status == 'cancelled':
             pass
         else:
-            st.markdown('<div class="step-header">Downloading...</div>', unsafe_allow_html=True)
+            st.markdown('<h2 class="step-header">Downloading...</h2>', unsafe_allow_html=True)
         
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
@@ -613,8 +613,7 @@ with _main_content.container():
                 # Check if we're done
                 if st.session_state['current_course_index'] >= total:
                     st.session_state['download_status'] = 'done'
-                    st.balloons()
-                
+
                 # Auto-rerun instantly to process next course or done screen
                 st.rerun()
             else:
@@ -951,7 +950,6 @@ with _main_content.container():
                 st.session_state['download_status'] = 'cancelled'
             else:
                 st.session_state['download_status'] = 'done'
-                st.balloons()
             st.rerun()
 
         elif st.session_state['download_status'] == 'done':
@@ -1138,7 +1136,7 @@ with _main_content.container():
         if st.session_state['download_status'] in ['done', 'cancelled']:
             st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
             # Use "Go to front page" for both done and cancelled
-            button_text = "🏠 " + 'Go to front page'
+            button_text = 'Go to front page'
             if st.button(button_text, type="primary", use_container_width=True):
                 from core.state_registry import cleanup_download_state
                 cleanup_download_state()

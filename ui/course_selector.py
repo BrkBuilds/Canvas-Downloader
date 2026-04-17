@@ -207,7 +207,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True, in_dia
     # margin-bottom: 0 (per global.css rule 3). st.markdown wraps in
     # stMarkdownContainer which adds 1rem bottom ghost margin, causing large
     # visual gaps in dialog contexts where compensation margins don't apply.
-    _label_margin_top = "0px" if in_dialog else "-50px"
+    _label_margin_top = "-10px" if in_dialog else "-25px"
     _label_margin_bottom = "0px" if in_dialog else "25px"
     st.html(
         f"<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; "
@@ -551,7 +551,7 @@ def render_course_selector(fetch_courses_fn):
     """
     inject_course_selector_css()
     render_download_wizard(st, 1)
-    st.markdown('<div class="step-header">Select Courses</div>', unsafe_allow_html=True)
+    st.markdown('<h2 class="step-header" style="margin-bottom: 10px !important;">Select Courses</h2>', unsafe_allow_html=True)
 
     # --- Select All / Clear button icons (download-mode specific) ---
     b64_select_all = get_base64_image("assets/icon_select_all.png")
