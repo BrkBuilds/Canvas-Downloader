@@ -28,6 +28,7 @@ from ui_shared import (
     error_log_dialog,
 )
 from core.state_registry import cleanup_sync_state
+from engine.notifications import play_completion_beep
 
 
 def show_sync_cancelled():
@@ -91,6 +92,15 @@ def show_sync_cancelled():
 
 def show_sync_complete():
     """Render the sync-complete screen with results and retry options."""
+    # Completion beep — fired exactly once per sync via session sentinel.
+    # cleanup_sync_state() resets this flag, so the next sync rearms it.
+    if (
+        st.session_state.get('notifications_enabled', True)
+        and not st.session_state.get('completion_beep_fired', False)
+    ):
+        play_completion_beep()
+        st.session_state['completion_beep_fired'] = True
+
     # Step wizard
     render_sync_wizard(st, 4)
     st.markdown('<h2 class="step-header">Sync Complete!</h2>', unsafe_allow_html=True)

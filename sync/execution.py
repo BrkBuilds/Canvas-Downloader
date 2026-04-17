@@ -164,6 +164,14 @@ def run_sync():
         # Respect global concurrency limit from session state
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
         sem = asyncio.Semaphore(concurrent_limit)
+
+        # Max-file-size gate (0/None = disabled). Read once up-front so the
+        # entire sync batch applies a consistent limit.
+        if st.session_state.get('max_file_size_enabled', False):
+            _mb_limit = int(st.session_state.get('max_file_size_mb', 0) or 0)
+            max_file_size_bytes = _mb_limit * 1024 * 1024 if _mb_limit > 0 else None
+        else:
+            max_file_size_bytes = None
         
         # Track synced files per pair for the results screen dropdowns
         # Key: pair_idx (int), Value: list of strings (filenames)
@@ -308,7 +316,28 @@ def run_sync():
 
                     current_file += 1
                     display_file_name = file.display_name or file.filename
-                    
+
+                    # Max-file-size gate: skip oversized files silently
+                    # (counts as a non-error skip, keeps progress totals honest).
+                    # Only applies to real Canvas files (positive id) — synthetic
+                    # entities like Pages or secondary content carry size=0 anyway.
+                    _f_size = getattr(file, 'size', 0) or 0
+                    if (
+                        max_file_size_bytes
+                        and _f_size > max_file_size_bytes
+                        and getattr(file, 'id', 0) > 0
+                    ):
+                        _f_mb = _f_size / (1024 * 1024)
+                        total_files = max(0, total_files - 1)  # keep denominator accurate
+                        current_file -= 1  # undo the increment — this file never ran
+                        terminal_log.append(
+                            f"<span style='color:{theme.TEXT_SECONDARY}'>[⏭️] Skipped (too large): </span>"
+                            f"{esc(display_file_name)} "
+                            f"<span style='color:{theme.TEXT_MUTED}'>({_f_mb:.1f} MB)</span>"
+                        )
+                        log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                        continue
+
                     # UNCONDITIONAL status text update — fires instantly for every file (no throttle)
                     active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {esc(display_file_name)}...</div>", unsafe_allow_html=True)
                     

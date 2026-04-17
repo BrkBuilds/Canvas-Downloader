@@ -32,3 +32,7 @@ test-results/
 .DS_Store
 Thumbs.db
 
+#claude
+.claude/*
+!.claude/commands/
+.claude/worktrees/
