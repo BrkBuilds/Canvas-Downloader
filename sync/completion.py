@@ -84,7 +84,7 @@ def show_sync_cancelled():
     show_sync_errors()
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🏠 " + 'Go to front page', type="primary", use_container_width=True):
+    if st.button('Go to front page', type="primary", use_container_width=True):
         _cleanup_sync_state()
         st.rerun()
 
@@ -93,6 +93,7 @@ def show_sync_complete():
     """Render the sync-complete screen with results and retry options."""
     # Step wizard
     render_sync_wizard(st, 4)
+    st.markdown('<h2 class="step-header">Sync Complete!</h2>', unsafe_allow_html=True)
 
     synced_count = st.session_state.get('synced_count', 0)
     sync_errors = st.session_state.get('sync_errors', [])
@@ -129,9 +130,9 @@ def show_sync_complete():
     if local_del > 0 or canvas_del > 0:
         parts = []
         if local_del > 0:
-            parts.append(f"{local_del} locally deleted files")
+            parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
         if canvas_del > 0:
-            parts.append(f"{canvas_del} files deleted on Canvas")
+            parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
             
         joined_parts = " and ".join(parts)
         st.warning(f"⚠️ Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
@@ -211,7 +212,7 @@ def show_sync_complete():
     render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete')
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🏠 " + 'Go to front page', type="primary", use_container_width=True):
+    if st.button('Go to front page', type="primary", use_container_width=True):
         _cleanup_sync_state()
         st.rerun()
 
