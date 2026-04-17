@@ -1094,6 +1094,15 @@ class CanvasManager:
         import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit dependency
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
         sem = asyncio.Semaphore(concurrent_limit)
+
+        # Read max-file-size gate from session state once, store on the
+        # manager so every _download_file_async call can apply it without
+        # plumbing a parameter through ~7 dispatch sites.
+        if st.session_state.get('max_file_size_enabled', False):
+            _mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
+            self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
+        else:
+            self._max_file_size_bytes = None
         
         tasks = []
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
@@ -1189,8 +1198,8 @@ class CanvasManager:
                                         
                                         page_obj = course.get_page(item.page_url)
                                         page_id = getattr(page_obj, 'page_id', getattr(page_obj, 'id', 0))
-                                        filepath, _ = self._save_secondary_entity(
-                                            'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '', 
+                                        filepath, _, _ = self._save_secondary_entity(
+                                            'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '',
                                             base_path, course_base_path=base_path, sync_manager=sync_manager,
                                             canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                             progress_callback=progress_callback, debug_file=debug_file, error_root_path=Path(save_dir) if 'save_dir' in locals() else None,
@@ -1534,7 +1543,15 @@ class CanvasManager:
         sem = asyncio.Semaphore(concurrent_limit)
         tasks = []
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
-        
+
+        # Mirror the size-gate setup from download_course_async so the
+        # retry path honors the same limit.
+        if st.session_state.get('max_file_size_enabled', False):
+            _mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
+            self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
+        else:
+            self._max_file_size_bytes = None
+
         if mb_tracker is None:
             mb_tracker = {'bytes_downloaded': 0}
 
@@ -1902,8 +1919,8 @@ class CanvasManager:
                                 if not hasattr(item, 'page_url') or not item.page_url: continue
                                 page_obj = course.get_page(item.page_url)
                                 page_id = getattr(page_obj, 'page_id', getattr(page_obj, 'id', 0))
-                                filepath, _ = self._save_secondary_entity(
-                                    'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '', 
+                                filepath, _, _ = self._save_secondary_entity(
+                                    'page', getattr(page_obj, 'title', 'Untitled Page'), getattr(page_obj, 'body', '') or '',
                                     base_path, course_base_path=base_path, sync_manager=sync_manager,
                                     canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                     progress_callback=progress_callback, debug_file=debug_file, error_root_path=error_root_path,
@@ -1988,7 +2005,26 @@ class CanvasManager:
 
         # Check duplication by size
         file_size_bytes = getattr(file_obj, 'size', 0) or 0
-        
+
+        # Max-file-size gate (opt-in, configured in the Settings dialog).
+        # Files over the user-specified limit are counted as successful
+        # skips rather than errors — they're an intentional user choice.
+        max_bytes = getattr(self, '_max_file_size_bytes', None)
+        if max_bytes and file_size_bytes > max_bytes:
+            size_mb_display = file_size_bytes / (1024 * 1024)
+            log_debug(
+                f"Skipping {filename}: {size_mb_display:.1f} MB exceeds user limit of "
+                f"{max_bytes / (1024 * 1024):.0f} MB.",
+                debug_file,
+            )
+            if progress_callback:
+                progress_callback(
+                    f"{filename} ({size_mb_display:.1f} MB)",
+                    progress_type='size_skipped',
+                    file_size=file_size_bytes,
+                )
+            return
+
         async with manage_download_lock(filepath):
             # Re-check existence inside lock
             if filepath.exists():
@@ -2485,7 +2521,7 @@ class CanvasManager:
 
         Returns
         -------
-        ``(filepath, synthetic_id)`` on success, ``(None, None)`` on failure.
+        ``(filepath, synthetic_id, canvas_updated_at)`` on success, ``(None, None, None)`` on failure.
         """
         target_dir, display_name = self._resolve_secondary_path(
             entity_type, entity_name, base_path,

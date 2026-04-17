@@ -76,6 +76,15 @@ DOWNLOAD_DEFAULTS = {
     'sync_filter_all_exts': True,
     'preset_hub_tab': 'user',
     'enable_cbs_filters': False,
+    # File-size filter (Settings dialog)
+    'max_file_size_enabled': False,
+    'max_file_size_mb': 500,
+    # Persistent default download folder (Settings dialog; empty = use ~/Downloads)
+    'default_download_path': '',
+    # Completion sound/notification (Settings dialog)
+    'notifications_enabled': True,
+    # One-shot sentinel to prevent replaying the completion beep on every rerun
+    'completion_beep_fired': False,
 }
 
 SYNC_DEFAULTS = {
@@ -174,6 +183,8 @@ def cleanup_download_state() -> None:
     # Nuclear reset: force all cancel flags to False
     st.session_state['cancel_requested'] = False
     st.session_state['download_cancelled'] = False
+    # Re-arm the completion-sound sentinel for the next run.
+    st.session_state['completion_beep_fired'] = False
 
     # Nuclear cache clearing to destroy dead aiohttp sessions
     st.cache_data.clear()
@@ -196,6 +207,8 @@ def cleanup_sync_state() -> None:
     st.session_state['sync_cancel_requested'] = False
     st.session_state['cancel_requested'] = False
     st.session_state['download_cancelled'] = False
+    # Re-arm the completion-sound sentinel for the next sync run.
+    st.session_state['completion_beep_fired'] = False
 
     # Nuclear cache clearing to destroy dead aiohttp sessions
     st.cache_data.clear()

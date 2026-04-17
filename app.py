@@ -27,6 +27,7 @@ from core.state_registry import (
 from core.cancellation import cancel_download, is_download_cancelled
 from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
+from engine.notifications import play_completion_beep
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
@@ -414,6 +415,17 @@ with _main_content.container():
                                     st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
 
+                        elif progress_type == 'size_skipped':
+                            # Oversized file skip: shrink the denominator so progress
+                            # math stays honest (file was never queued to download).
+                            # Also subtract its size from total_mb for ETA accuracy.
+                            sz = kwargs.get('file_size', 0) or 0
+                            st.session_state['total_items'] = max(0, st.session_state.get('total_items', total_items) - 1)
+                            st.session_state['total_mb'] = max(0.0, st.session_state.get('total_mb', total_mb) - (sz / (1024 * 1024)))
+                            if msg:
+                                log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped (too large): {msg}</span>")
+                            render_dashboard()
+
                         elif progress_type == 'attachment_discovered':
                             size = kwargs.get('size', 0)
                             st.session_state['total_mb'] = st.session_state.get('total_mb', total_mb) + (size / (1024 * 1024))
@@ -748,6 +760,13 @@ with _main_content.container():
                                     st.session_state['download_file_details'] = st.session_state['download_file_details']
                         render_dashboard(course_name_ref)
 
+                    elif progress_type == 'size_skipped':
+                        if msg:
+                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped (too large): {msg}</span>")
+                        # In the retry path the total_items denominator is the length
+                        # of the retry queue, not the global total, so we leave it alone.
+                        render_dashboard(course_name_ref)
+
                     elif progress_type == 'attachment_discovered':
                         st.session_state['total_items'] = st.session_state.get('total_items', 1) + 1
                         render_dashboard(course_name_ref)
@@ -953,6 +972,16 @@ with _main_content.container():
             st.rerun()
 
         elif st.session_state['download_status'] == 'done':
+            # Completion beep — fired exactly once per run via a session
+            # sentinel. Cleaned up by cleanup_download_state() when the user
+            # returns to Step 1, which arms it again for the next download.
+            if (
+                st.session_state.get('notifications_enabled', True)
+                and not st.session_state.get('completion_beep_fired', False)
+            ):
+                play_completion_beep()
+                st.session_state['completion_beep_fired'] = True
+
             # --- Premium Completion Screen (Parity with Sync) ---
             download_errors = st.session_state.get('download_errors_list', [])
             failed_count = st.session_state.get('failed_items', 0)
