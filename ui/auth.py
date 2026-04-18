@@ -440,74 +440,95 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
 
     # ── Global Settings dialog ─────────────────────────────────────
+    def _stg_ico(path_d):
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="{path_d}" fill="#a0aec0"/></svg>'
+        return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+    _stg_i_speed  = _stg_ico("M7 2v11h3v9l7-12h-4l4-8z")
+    _stg_i_filter = _stg_ico("M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z")
+    _stg_i_folder = _stg_ico("M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z")
+    _stg_i_bell   = _stg_ico("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
+    _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
+
     @st.dialog("\u200b", width="large")
     def _global_settings_dialog():
         st.html("""<style>
         div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }
 
-        /* ── Strip ALL borders from the scroll wrapper ── */
-        div[data-testid="stDialog"] div.st-key-stg_scroll,
-        div[data-testid="stDialog"] div.st-key-stg_scroll > div,
-        div[data-testid="stDialog"] div.st-key-stg_scroll > div:first-child {
-            border: none !important; background: transparent !important;
-            padding: 0 !important; box-shadow: none !important;
+        /* Tight dialog body padding */
+        div[data-testid="stDialog"] [data-testid="stDialogScrollableBody"] {
+            padding-top: 0.1rem !important; padding-bottom: 0.25rem !important;
         }
-        /* Scroll lives on the BorderWrapper */
-        div[data-testid="stDialog"] div.st-key-stg_scroll [data-testid="stVerticalBlockBorderWrapper"] {
-            border: none !important; background: transparent !important;
-            padding: 0 2px 0 0 !important; box-shadow: none !important;
-            max-height: 56vh !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-        }
+        /* Tight global vertical gap */
+        div[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap: 0.3rem !important; }
 
         /* ── Cards ── */
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
-            background: rgba(255,255,255,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.13) !important;
+            background: #2D3248 !important;
+            border: 1px solid rgba(255,255,255,0.14) !important;
             border-radius: 10px !important;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
+            position: relative !important;
+            padding: 11px !important;
         }
-        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] > div:first-child {
-            background: transparent !important; border: none !important;
-            padding: 0 !important; box-shadow: none !important;
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stVerticalBlock"] {
+            gap: 0.25rem !important;
         }
-        /* Equal-height download row cards */
-        div[data-testid="stDialog"] div.st-key-stg_card_speed [data-testid="stVerticalBlockBorderWrapper"],
-        div[data-testid="stDialog"] div.st-key-stg_card_maxsize [data-testid="stVerticalBlockBorderWrapper"] {
-            min-height: 168px !important;
+
+        /* ── Equal height download cards (HACKS doc flex chain) ── */
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_speed"]) { flex: 1 !important; }
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_maxsize"]) { flex: 1 !important; }
+        div[class*="st-key-stg_card_speed"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_maxsize"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_speed"] [data-testid="stVerticalBlockBorderWrapper"],
+        div[class*="st-key-stg_card_maxsize"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_speed"]) {
+            align-items: stretch !important;
         }
 
         /* ── Toggles ── */
-        div[data-testid="stDialog"] [data-testid="stToggle"] {
-            width: 100% !important; margin-bottom: 0 !important;
-        }
+        div[data-testid="stDialog"] [data-testid="stToggle"] { width: 100% !important; }
         div[data-testid="stDialog"] [data-testid="stToggle"] label {
             display: flex !important; flex-direction: row-reverse !important;
             justify-content: space-between !important; align-items: center !important;
-            width: 100% !important; padding: 4px 0 0 0 !important; cursor: pointer !important;
+            width: 100% !important; padding: 2px 0 0 0 !important; cursor: pointer !important;
+            font-size: 0.66rem !important; color: #64748b !important; font-weight: 400 !important;
         }
-        div[data-testid="stDialog"] [data-testid="stToggle"] label > p {
-            font-size: 0.82rem !important; color: #94a3b8 !important;
-            font-weight: 500 !important; margin: 0 !important;
+        div[data-testid="stDialog"] [data-testid="stToggle"] label > div,
+        div[data-testid="stDialog"] [data-testid="stToggle"] label > div p,
+        div[data-testid="stDialog"] [data-testid="stToggle"] label p,
+        div[data-testid="stDialog"] [data-testid="stToggle"] label > p,
+        div[data-testid="stDialog"] [data-testid="stToggle"] p {
+            font-size: 0.66rem !important; color: #64748b !important;
+            font-weight: 400 !important; margin: 0 !important; line-height: 1.3 !important;
         }
 
         /* ── Number input ── */
-        div[data-testid="stDialog"] [data-testid="stNumberInput"] { margin-top: 8px !important; }
+        div[data-testid="stDialog"] [data-testid="stNumberInput"] { margin-top: 4px !important; }
         div[data-testid="stDialog"] [data-testid="stNumberInput"] label p {
             font-size: 0.78rem !important; color: #64748b !important;
+        }
+        /* Dim the whole number input block when disabled (Skip large files toggle off) */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_maxsize"] [data-testid="stNumberInput"]:has(input:disabled) {
+            opacity: 0.35 !important;
+            pointer-events: none !important;
         }
 
         /* ── Folder buttons ── */
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button,
         div[data-testid="stDialog"] div.st-key-stg_btn_clear button {
-            background: rgba(255,255,255,0.09) !important;
-            border: 1px solid rgba(255,255,255,0.16) !important;
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            min-height: unset !important;
+            height: auto !important;
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+            font-size: 0.8rem !important;
         }
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button:hover,
         div[data-testid="stDialog"] div.st-key-stg_btn_clear button:hover {
-            background: rgba(255,255,255,0.15) !important;
-            border-color: rgba(255,255,255,0.24) !important;
+            background: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.18) !important;
         }
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button::before {
             content: ''; display: inline-block; width: 14px; height: 14px;
@@ -524,48 +545,49 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         </style>""")
 
         st.markdown("""
-<div style="display:flex;align-items:center;gap:10px;margin-top:-70px;margin-bottom:16px;">
-<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-<span style="font-size:1.9rem;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em;">Settings</span>
+<div style="display:flex;align-items:center;gap:10px;margin-top:-70px;margin-bottom:8px;">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+<span style="font-size:1.6rem;font-weight:600;color:#f1f5f9;letter-spacing:-0.01em;">Settings</span>
 </div>
 """, unsafe_allow_html=True)
 
-        with st.container(border=True, key="stg_scroll"):
+        with st.container(height=600, border=False):
 
             # ── DOWNLOAD ──────────────────────────────────────────────
-            st.html("""<div style="padding:2px 0 10px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DOWNLOAD</span></div>""")
+            st.html("""<div style="padding:2px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DOWNLOAD</span></div>""")
 
             _dc1, _dc2 = st.columns(2)
             with _dc1:
                 with st.container(border=True, key="stg_card_speed"):
-                    st.html("""<div style="padding:2px 0 8px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8b9db8" xmlns="http://www.w3.org/2000/svg"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg><span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;">Download speed</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;margin-bottom:6px;">How many files download at once. Lower this if Canvas blocks your download.</div><div style="font-size:0.75rem;color:#f59e0b;line-height:1.35;">High values can hit Canvas rate limits. Recommended: 3-8.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_speed}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Simultaneous downloads</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;margin-bottom:4px;">Choose how many files download at once. Higher values may increase download speed.</div><div style="font-size:0.75rem;color:#f59e0b;line-height:1.3;">Lower this if you encounter download issues.<br>Default = 5.</div></div>""")
                     temp_max = st.slider("Speed", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
             with _dc2:
                 with st.container(border=True, key="stg_card_maxsize"):
-                    st.html("""<div style="padding:2px 0 8px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8b9db8" xmlns="http://www.w3.org/2000/svg"><path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"/></svg><span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Ignore files above a set size - useful for skipping Zoom recordings or large datasets.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.</div></div>""")
                     temp_size_enabled = st.toggle("Enable limit", value=st.session_state.get('max_file_size_enabled', False), key="temp_max_size_enabled")
                     temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=50, value=int(st.session_state.get('max_file_size_mb', 500)), key="temp_max_size_mb", disabled=not temp_size_enabled)
 
             # ── SAVE FOLDER ───────────────────────────────────────────
-            st.html("""<div style="padding:14px 0 10px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
+            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
 
             with st.container(border=True, key="stg_card_path"):
-                st.html("""<div style="padding:2px 0 8px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8b9db8" xmlns="http://www.w3.org/2000/svg"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Where the app starts when you pick a download folder. Defaults to system Downloads.</div></div>""")
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Default = system downloads folder.</div></div>""")
 
                 if '_temp_default_path' not in st.session_state:
                     st.session_state['_temp_default_path'] = st.session_state.get('default_download_path', '') or ''
 
                 _display_path = st.session_state['_temp_default_path'] or "Set to default: Downloads folder"
                 _esc_path = (_display_path.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#39;").replace('"', "&quot;"))
-                st.html(f"""<div style="padding:0 0 8px 0;"><div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 12px;font-size:0.79rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">{_esc_path}</div></div>""")
+                st.html(f"""<div style="padding:0 0 6px 0;"><div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 12px;font-size:0.79rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">{_esc_path}</div></div>""")
 
-                _pc1, _pc2 = st.columns(2)
+                _pc1, _pc2 = st.columns([3, 1])
                 with _pc1:
                     if st.button("Choose Folder", key="stg_btn_pick", use_container_width=True):
                         from ui_helpers import native_folder_picker
                         picked = native_folder_picker()
                         if picked:
                             st.session_state['_temp_default_path'] = picked
+                            st.session_state['_stg_reopen_dialog'] = True
                             st.rerun(scope="app")
                 with _pc2:
                     if st.button("Clear", key="stg_btn_clear", use_container_width=True,
@@ -574,20 +596,20 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                         st.rerun(scope="app")
 
             # ── PREFERENCES ───────────────────────────────────────────
-            st.html("""<div style="padding:14px 0 10px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PREFERENCES</span></div>""")
+            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PREFERENCES</span></div>""")
 
             _p1, _p2 = st.columns(2)
             with _p1:
                 with st.container(border=True, key="stg_card_sound"):
-                    st.html("""<div style="padding:2px 0 8px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8b9db8" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;">Completion sound</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">A short beep when your download or sync finishes, so you can tab away while it runs.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Completion sound</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Be notified when a download or sync finishes, so you can focus on what matters.</div></div>""")
                     temp_notifications = st.toggle("Play sound", value=st.session_state.get('notifications_enabled', True), key="temp_notifications_enabled")
             with _p2:
                 with st.container(border=True, key="stg_card_cbs"):
-                    st.html("""<div style="padding:2px 0 8px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8b9db8" xmlns="http://www.w3.org/2000/svg"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg><span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds CBS-specific filters (LA/XB class type, E/F semester, year) to all course lists.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")
                     temp_cbs = st.toggle("Enable CBS filters", value=st.session_state.get('enable_cbs_filters', False), key="temp_cbs_filters")
 
         # ── Sticky footer ─────────────────────────────────────────────
-        st.html("""<div style="padding:10px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:8px 0 0 0;"></div>""")
+        st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
 
         c_cancel, c_save = st.columns([1, 1])
         with c_cancel:
@@ -598,6 +620,15 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             if st.button("Save Settings", type="primary", use_container_width=True):
                 new_default_path = st.session_state.get('_temp_default_path', '') or ''
                 prev_default_path = st.session_state.get('default_download_path', '') or ''
+
+                _changed = (
+                    temp_max != st.session_state.get('concurrent_downloads', 5)
+                    or temp_cbs != st.session_state.get('enable_cbs_filters', False)
+                    or temp_size_enabled != st.session_state.get('max_file_size_enabled', False)
+                    or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
+                    or temp_notifications != st.session_state.get('notifications_enabled', True)
+                    or new_default_path != prev_default_path
+                )
 
                 st.session_state['concurrent_downloads'] = temp_max
                 st.session_state['enable_cbs_filters'] = temp_cbs
@@ -637,15 +668,22 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     st.error(f"Could not save settings: {e}")
 
                 st.session_state.pop('_temp_default_path', None)
+                if _changed:
+                    st.session_state['_stg_saved_toast'] = True
                 st.rerun(scope="app")
 
     user_name = st.session_state.get('user_name', '')
     display_user = user_name.replace("Logged in as:", "").replace("Logged in as", "").strip()
 
     with st.container(border=False, key="sidebar_bottom_block"):
-        # Settings button
+        # Settings button — also auto-reopens after native folder picker closes the dialog
         if st.button("Settings", use_container_width=True, key="nav_btn_settings"):
             _global_settings_dialog()
+        elif st.session_state.pop('_stg_reopen_dialog', False):
+            _global_settings_dialog()
+
+        if st.session_state.pop('_stg_saved_toast', False):
+            st.toast("✅ Settings saved")
 
         # Separator
         st.html("<hr style='margin: 8px 0 16px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />")
