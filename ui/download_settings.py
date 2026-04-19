@@ -89,12 +89,33 @@ def render_download_settings(fetch_courses_fn):
 
     with _hdr_right:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        # Hoist Base64 icon CSS for the Presets button BEFORE it renders (Static Hoisting)
+        _b64_preset_btn_icon = get_base64_image("assets/icon_preset_user.png")
+        if _b64_preset_btn_icon:
+            st.html(f"""<style>
+            div.st-key-btn_presets_hub button div[data-testid="stMarkdownContainer"] p {{
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }}
+            div.st-key-btn_presets_hub button div[data-testid="stMarkdownContainer"] p::before {{
+                content: "";
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                min-width: 20px;
+                margin-right: 6px;
+                background-image: url('data:image/png;base64,{_b64_preset_btn_icon}');
+                background-size: contain;
+                background-repeat: no-repeat;
+            }}
+            </style>""")
         _pb1, _pb2 = st.columns([3, 5], gap="small")
         with _pb1:
             if st.button("💾 Save Preset", key="btn_save_config", use_container_width=True):
                 _save_config_dialog()
         with _pb2:
-            if st.button("⚙️ Presets", key="btn_presets_hub", use_container_width=True):
+            if st.button("Presets", key="btn_presets_hub", use_container_width=True):
                 _presets_hub_dialog()
 
     def _load_b64(path):
@@ -772,7 +793,7 @@ def render_download_settings(fetch_courses_fn):
 
                 with st.container(key="header_wrap_card2"):
                     st.button("\u200B", key="toggle_card2", on_click=toggle_card2)
-                    st.markdown(f"""<div style='display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Canvas Content <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c2_tag_bg}; color: {c2_tag_col}; border: {c2_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{dynamic_tag}</span></div>""", unsafe_allow_html=True)
+                    st.markdown(f"""<div style='display: flex; align-items: center; justify-content: space-between; padding-right: 10px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Canvas Content <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c2_tag_bg}; color: {c2_tag_col}; border: {c2_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{dynamic_tag}</span></div>""", unsafe_allow_html=True)
 
                 css_blocks = []
 
@@ -1175,7 +1196,7 @@ def render_download_settings(fetch_courses_fn):
 
             with st.container(key="header_wrap_card3"):
                 st.button("\u200B", key="toggle_card3", on_click=toggle_card3)
-                st.markdown(f"""<div style='display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Optimize for AI Tools <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c3_tag_bg}; color: {c3_tag_col}; border: {c3_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{conv_tag}</span></div>""", unsafe_allow_html=True)
+                st.markdown(f"""<div style='display: flex; align-items: center; justify-content: space-between; padding-right: 10px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Optimize for AI Tools <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c3_tag_bg}; color: {c3_tag_col}; border: {c3_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{conv_tag}</span></div>""", unsafe_allow_html=True)
 
             # --- CSS injection (separate call, zero-indentation) ---
             conv_css_html = "<style>\n" + "".join(conv_css_blocks) + "</style>"
@@ -1195,7 +1216,7 @@ def render_download_settings(fetch_courses_fn):
 
         # 2. Output Card
         with st.container(border=True, key="review_output_card"):
-            st.markdown("<h3 style='margin-top: -15px; margin-bottom: -35px;'>Output Path</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='margin-top: -15px; margin-bottom: -35px;'>Output Folder</h3>", unsafe_allow_html=True)
 
             dl_path = st.session_state['download_path']
             dl_path_escaped = dl_path.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#39;").replace('"', "&quot;")
@@ -1244,7 +1265,7 @@ def render_download_settings(fetch_courses_fn):
 
             with st.container(key="path_display_row"):
                 st.markdown(f"""<div>
-    <label style="font-size: 0.82rem; color: rgba(250,250,250,0.6); margin-bottom: 4px; display: block;">Path</label>
+    <label style="font-size: 0.82rem; color: rgba(250,250,250,0.6); margin-top: 3px; margin-bottom: 0px; display: block;">Path</label>
     <div style="
         display: inline-block;
         max-width: 100%;

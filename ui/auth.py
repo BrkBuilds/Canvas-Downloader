@@ -231,6 +231,9 @@ div.st-key-nav_btn_logout button:hover::after {{
                         if 'enable_cbs_filters' in config:
                             st.session_state['enable_cbs_filters'] = config.get('enable_cbs_filters', False)
 
+                        if 'error_log_enabled' in config:
+                            st.session_state['error_log_enabled'] = config.get('error_log_enabled', True)
+
                         if 'max_file_size_enabled' in config:
                             st.session_state['max_file_size_enabled'] = config.get('max_file_size_enabled', False)
                         if 'max_file_size_mb' in config:
@@ -449,6 +452,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_folder = _stg_ico("M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z")
     _stg_i_bell   = _stg_ico("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
     _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
+    _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
 
     @st.dialog("\u200b", width="large")
     def _global_settings_dialog():
@@ -478,10 +482,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         /* ── Equal height download cards (HACKS doc flex chain) ── */
         div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_speed"]) { flex: 1 !important; }
         div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_maxsize"]) { flex: 1 !important; }
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_errlog"]) { flex: 1 !important; }
         div[class*="st-key-stg_card_speed"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_maxsize"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_errlog"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_speed"] [data-testid="stVerticalBlockBorderWrapper"],
-        div[class*="st-key-stg_card_maxsize"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+        div[class*="st-key-stg_card_maxsize"] [data-testid="stVerticalBlockBorderWrapper"],
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
         div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_speed"]) {
             align-items: stretch !important;
         }
@@ -545,33 +552,37 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         </style>""")
 
         st.markdown("""
-<div style="display:flex;align-items:center;gap:10px;margin-top:-70px;margin-bottom:8px;">
+<div style="display:flex;align-items:center;gap:10px;margin-top:-70px;">
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
 <span style="font-size:1.6rem;font-weight:600;color:#f1f5f9;letter-spacing:-0.01em;">Settings</span>
 </div>
 """, unsafe_allow_html=True)
 
-        with st.container(height=600, border=False):
+        with st.container(height=620, border=False):
 
             # ── DOWNLOAD ──────────────────────────────────────────────
             st.html("""<div style="padding:2px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DOWNLOAD</span></div>""")
 
-            _dc1, _dc2 = st.columns(2)
+            _dc1, _dc2, _dc3 = st.columns(3)
             with _dc1:
                 with st.container(border=True, key="stg_card_speed"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_speed}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Simultaneous downloads</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;margin-bottom:4px;">Choose how many files download at once. Higher values may increase download speed.</div><div style="font-size:0.75rem;color:#f59e0b;line-height:1.3;">Lower this if you encounter download issues.<br>Default = 5.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_speed}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Simultaneous downloads</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;margin-bottom:4px;">Choose how many files download at once. Higher values may increase download speed.</div><div style="font-size:0.75rem;color:#f59e0b;line-height:1.3;">Lower this if you encounter download issues.<br>Default = 5.</div></div>""")
                     temp_max = st.slider("Speed", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
             with _dc2:
                 with st.container(border=True, key="stg_card_maxsize"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.</div></div>""")
                     temp_size_enabled = st.toggle("Enable limit", value=st.session_state.get('max_file_size_enabled', False), key="temp_max_size_enabled")
                     temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=50, value=int(st.session_state.get('max_file_size_mb', 500)), key="temp_max_size_mb", disabled=not temp_size_enabled)
+            with _dc3:
+                with st.container(border=True, key="stg_card_errlog"):
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Error log file</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Create a <code style="font-size:0.72rem;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">download_errors.txt</code> summarizing any failed downloads or conversion errors in the output folder.</div></div>""")
+                    temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', True), key="temp_error_log_enabled")
 
             # ── SAVE FOLDER ───────────────────────────────────────────
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
 
             with st.container(border=True, key="stg_card_path"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Default = system downloads folder.</div></div>""")
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Default = system downloads folder.</div></div>""")
 
                 if '_temp_default_path' not in st.session_state:
                     st.session_state['_temp_default_path'] = st.session_state.get('default_download_path', '') or ''
@@ -601,11 +612,11 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             _p1, _p2 = st.columns(2)
             with _p1:
                 with st.container(border=True, key="stg_card_sound"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Completion sound</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Be notified when a download or sync finishes, so you can focus on what matters.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Completion sound</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Be notified when a download or sync finishes, so you can focus on what matters.</div></div>""")
                     temp_notifications = st.toggle("Play sound", value=st.session_state.get('notifications_enabled', True), key="temp_notifications_enabled")
             with _p2:
                 with st.container(border=True, key="stg_card_cbs"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")
                     temp_cbs = st.toggle("Enable CBS filters", value=st.session_state.get('enable_cbs_filters', False), key="temp_cbs_filters")
 
         # ── Sticky footer ─────────────────────────────────────────────
@@ -627,6 +638,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_size_enabled != st.session_state.get('max_file_size_enabled', False)
                     or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
                     or temp_notifications != st.session_state.get('notifications_enabled', True)
+                    or temp_error_log != st.session_state.get('error_log_enabled', True)
                     or new_default_path != prev_default_path
                 )
 
@@ -635,6 +647,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['max_file_size_enabled'] = temp_size_enabled
                 st.session_state['max_file_size_mb'] = int(temp_size_mb)
                 st.session_state['notifications_enabled'] = temp_notifications
+                st.session_state['error_log_enabled'] = temp_error_log
                 st.session_state['default_download_path'] = new_default_path
 
                 from pathlib import Path as _Path
@@ -659,6 +672,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['max_file_size_enabled'] = bool(temp_size_enabled)
                 config_data['max_file_size_mb'] = int(temp_size_mb)
                 config_data['notifications_enabled'] = bool(temp_notifications)
+                config_data['error_log_enabled'] = bool(temp_error_log)
                 config_data['default_download_path'] = new_default_path
 
                 try:

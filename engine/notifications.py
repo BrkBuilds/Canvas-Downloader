@@ -20,10 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 def _play_windows():
-    """Windows: MB_ICONASTERISK is the 'task complete' chime."""
+    """Windows: Play the standard system notification sound instead of an error beep."""
     try:
         import winsound
-        winsound.MessageBeep(winsound.MB_ICONASTERISK)
+        import os
+        sound_path = r"C:\Windows\Media\Windows Notify System Generic.wav"
+        if os.path.exists(sound_path):
+            # SND_NODEFAULT prevents fallback to the default (error) beep if file is missing
+            winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_NODEFAULT)
+        else:
+            # Safe fallback that plays a standard positive 'ding', not an error
+            winsound.MessageBeep(winsound.MB_OK)
     except Exception as e:
         logger.debug(f"Windows completion beep failed: {e}")
 
