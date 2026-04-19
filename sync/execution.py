@@ -159,6 +159,7 @@ def run_sync():
         current_ctx = get_script_run_ctx()
         
         cm = CanvasManager(sync_api_token, sync_api_url)
+        cm.error_log_enabled = st.session_state.get('error_log_enabled', True)
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state

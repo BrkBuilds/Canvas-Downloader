@@ -270,7 +270,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         path_html = f"""
 <div style='margin-bottom:4px;'>
     <div style='font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;'>Saved Path</div>
-    <div style='background-color:rgba(0,0,0,0.3); color:#cbd5e1; padding:6px 10px; border-radius:6px; font-size:0.78rem; font-family:monospace; border:1px dashed rgba(255,255,255,0.2); word-break: break-all;'>{esc(settings.get('download_path'))}</div>
+    <div style='background-color:rgba(0,0,0,0.3); color:#cbd5e1; padding:6px 10px; border-radius:6px; font-size:0.78rem; font-family:monospace; border:none; word-break: break-all; margin-bottom:10px;'>{esc(settings.get('download_path'))}</div>
 </div>
 """
     grid_container = f"""
