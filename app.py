@@ -387,7 +387,7 @@ with _main_content.container():
                 def _clean_display_name(raw_msg):
                     """Strip progress-callback prefixes so only the bare filename is stored."""
                     s = str(raw_msg)
-                    for prefix in ('Downloading file: ', 'Created link: ', 'Saved: '):
+                    for prefix in ('Downloading file: ', 'Created link: ', 'Creating link: ', 'Saved: '):
                         if s.startswith(prefix):
                             return s[len(prefix):]
                     return s
@@ -795,21 +795,30 @@ with _main_content.container():
                         render_dashboard(course_name_ref)
                     
                     elif progress_type == 'error':
-                        if is_retry:
-                            st.session_state['retry_failed_items'] = st.session_state.get('retry_failed_items', 0) + 1
-                        else:
+                        if not is_retry:
                             st.session_state['failed_items'] += 1
                             st.session_state['total_items'] = max(st.session_state.get('total_items', 1), st.session_state.get('downloaded_items', 0) + st.session_state['failed_items'])
                         if msg:
                             if isinstance(msg, DownloadError): error_obj = msg
                             else: error_obj = DownloadError(course_name_ref, "Unknown Item", "Generic Error", str(msg))
                             
-                            # Deduplicate identical errors to prevent log spam
-                            sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
+                            # Deduplicate errors to prevent log spam.
+                            # During retry, use course_name|item_name only (no error_type)
+                            # so that a file with 'No URL' (initial) and 'URL Expiration'
+                            # (retry) is recognized as the same underlying failure.
+                            if is_retry:
+                                sig = f"{error_obj.course_name}|{error_obj.item_name}"
+                            else:
+                                sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
                             seen = st.session_state.get('seen_error_sigs', set())
                             if sig not in seen:
                                 seen.add(sig)
                                 st.session_state['seen_error_sigs'] = seen
+                                
+                                # Increment retry counter INSIDE dedup guard so
+                                # suppressed duplicates don't inflate the count.
+                                if is_retry:
+                                    st.session_state['retry_failed_items'] = st.session_state.get('retry_failed_items', 0) + 1
                                 
                                 if 'download_errors_list' not in st.session_state: st.session_state['download_errors_list'] = []
                                 st.session_state['download_errors_list'].append(error_obj)
@@ -965,6 +974,11 @@ with _main_content.container():
             st.session_state['downloaded_items'] = st.session_state.get('downloaded_items', 0) + st.session_state.get('retry_downloaded_items', 0)
             st.session_state['failed_items'] = max(0, st.session_state.get('failed_items', 0) - resolved_count)
 
+            # Record retry outcome for the completion screen feedback card
+            st.session_state['retry_attempted'] = True
+            st.session_state['retry_resolved_count'] = resolved_count
+            st.session_state['retry_total_attempted'] = len(st.session_state.get('isolated_retry_queue', []))
+
             # Post-retry cleanup
             # --- FIX: Cancel-to-Done Bypass ---
             if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
@@ -981,14 +995,20 @@ with _main_content.container():
                 st.session_state.get('notifications_enabled', True)
                 and not st.session_state.get('completion_beep_fired', False)
             ):
-                play_completion_beep()
+                _dl_count = st.session_state.get('downloaded_items', 0)
+                _dl_courses = len(st.session_state.get('courses_to_download', []))
+                _dl_summary = f"Downloaded {_dl_count} file{'s' if _dl_count != 1 else ''} across {_dl_courses} course{'s' if _dl_courses != 1 else ''}."
+                play_completion_beep(mode='download', summary=_dl_summary)
                 st.session_state['completion_beep_fired'] = True
 
             # --- Premium Completion Screen (Parity with Sync) ---
             download_errors = st.session_state.get('download_errors_list', [])
             failed_count = st.session_state.get('failed_items', 0)
-            total_mb = st.session_state.get('total_mb', 0)
-            total_bytes = int(total_mb * 1024 * 1024)
+            # Use ACTUAL downloaded bytes (tracked by mb_progress callback),
+            # not the estimated total from the scanning phase which can be 0
+            # if Canvas API returns null sizes, and gets overwritten by retry.
+            actual_downloaded_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
+            total_bytes = int(actual_downloaded_mb * 1024 * 1024)
 
             # Build the set of failed filenames so we can filter them out of the
             # file-detail list. This ensures the card count matches the expander.
@@ -1019,8 +1039,22 @@ with _main_content.container():
             # Hybrid Discovery Warning (Surfaced explicitly in UI)
             skipped_discovery = st.session_state.get('skipped_discovery_errors', 0)
             if skipped_discovery > 0:
-                st.warning(f"{skipped_discovery} item(s) failed during the discovery phase and could not be isolated for retry. A full course rescan is required to retry them.", icon="⚠️")
+                _f_word = 'file' if skipped_discovery == 1 else 'files'
+                _it_word = 'it' if skipped_discovery == 1 else 'them'
+                st.warning(f"{skipped_discovery} {_f_word} could not be downloaded because Canvas did not provide enough information to locate {_it_word}. Try downloading the course again to pick {_it_word} up.", icon="⚠️")
 
+
+            # Post-retry feedback: inform the user when retry didn't resolve any errors
+            retry_attempted = st.session_state.get('retry_attempted', False)
+            if retry_attempted:
+                retry_resolved = st.session_state.get('retry_resolved_count', 0)
+                retry_total = st.session_state.get('retry_total_attempted', 0)
+                if retry_resolved == 0 and retry_total > 0:
+                    st.info(f"Retry attempted for {retry_total} {'item' if retry_total == 1 else 'items'}, but {'it' if retry_total == 1 else 'none'} could not be downloaded. These files may not be available for download from Canvas.", icon="ℹ️")
+                elif retry_resolved > 0 and retry_resolved < retry_total:
+                    st.success(f"Retry recovered {retry_resolved} of {retry_total} failed {'item' if retry_total == 1 else 'items'}!", icon="✅")
+                elif retry_resolved > 0:
+                    st.success(f"Retry successfully recovered all {retry_resolved} previously failed {'item' if retry_resolved == 1 else 'items'}!", icon="✅")
 
             # 2. Post-processing warning
             render_pp_warning(st.session_state.get('pp_failure_count', 0))
@@ -1078,6 +1112,7 @@ with _main_content.container():
                             st.session_state['retry_isolated_details'] = {}
                             st.session_state['retry_downloaded_items'] = 0
                             st.session_state['retry_failed_items'] = 0
+                            st.session_state['retry_attempted'] = False  # Reset; set to True after rehydration
                             
                             # --- FIX: Prevent Zombie Cancel Loop ---
                             st.session_state['cancel_requested'] = False
@@ -1085,7 +1120,15 @@ with _main_content.container():
                             
                             # Note: We NO LONGER wipe global `downloaded_items`, `failed_items`, `download_errors_list`,
                             # or `download_file_details` so history is preserved if user cancels.
-                            # We also keep `seen_error_sigs` intact so identical repeat errors don't flood UI.
+                            # Rebuild seen_error_sigs using course_name|item_name only (no error_type)
+                            # so that retry errors for the same file are suppressed regardless of
+                            # whether the error_type changed (e.g., 'No URL' → 'URL Expiration').
+                            existing_errors = list(st.session_state.get('download_errors_list', []))
+                            normalized_sigs = set()
+                            for _err in existing_errors:
+                                if hasattr(_err, 'course_name') and hasattr(_err, 'item_name'):
+                                    normalized_sigs.add(f"{_err.course_name}|{_err.item_name}")
+                            st.session_state['seen_error_sigs'] = normalized_sigs
                             st.session_state['skipped_discovery_errors'] = structural_count
                             st.session_state['pp_failure_count'] = 0
                             st.session_state['pp_success_count'] = 0

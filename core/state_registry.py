@@ -117,6 +117,7 @@ DOWNLOAD_TRANSIENT_KEYS = {
     # Isolated retry keys
     'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
     'retry_isolated_details', 'retry_mb_tracker',
+    'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],

@@ -1,3 +1,9 @@
+- [x] **Native OS Notifications & Branded Toast Alerts** (2026-04-19):
+    - [x] **Branded Windows Toasts**: Integrated `win11toast` with custom "Canvas Downloader" AUMID branding and non-blocking delivery.
+    - [x] **Focus-on-Click**: Implemented `ctypes` based window restoration to bring the app to the foreground when a notification is clicked.
+    - [x] **Premium Audio**: Replaced standard error beeps with the native "Windows Notify Calendar" chime for a pleasant, consistent finish.
+    - [x] **macOS Native Alerts**: Implemented AppleScript notifications with automatic app-icon support for compiled bundles.
+    - [x] **Clean UI Standards**: Optimized Windows toasts for a sleek, text-only body to match modern OS notification standards.
 - [x] **Smart Select Refinement & Layout Harmony (Phase 5/6)** (2026-04-16):
     - [x] **Dynamic Tag UI**: Refactored legacy `ui/sync_review.py` Smart Select file-type filters from checkboxes to dynamic tag buttons (`st.button`).
     - [x] **State-Driven Styling**: Implemented 3-state CSS injection for tags: OFF (black, white text), PARTIAL (dark navy), ON (bright blue).

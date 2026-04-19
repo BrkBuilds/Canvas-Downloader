@@ -864,6 +864,14 @@ def run_sync():
     def _on_detail_update(ctx, old_name, new_name):
         update_synced_detail(ctx, old_name, new_name)
 
+    # Resolve error_log_path for post-processing: respect the toggle,
+    # and use the first sync pair's local_path as the error log directory.
+    _sync_error_log_path = None
+    if st.session_state.get('error_log_enabled', True) and sync_selections:
+        _first_sm = sync_selections[0].get('res_data', {}).get('sync_manager')
+        if _first_sm and hasattr(_first_sm, 'local_path'):
+            _sync_error_log_path = _first_sm.local_path
+
     pp_ui = UIBridge(
         header_placeholder=status_text,
         progress_placeholder=progress_container,
@@ -873,6 +881,7 @@ def run_sync():
         log_lines=_download_log_history,
         is_cancelled=lambda: st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False),
         on_detail_update=_on_detail_update,
+        error_log_path=_sync_error_log_path,
     )
 
     # 6. Run each converter with per-course contract evaluation via get_synced_file_paths

@@ -6,6 +6,15 @@
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
 - **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
 
+- **Session 2026-04-19: Native OS Notifications & Branded Toast Alerts**
+    - Done: Replaced generic system error beeps with the premium "Windows Notify Calendar" chime (`.wav`) for a more pleasant user experience.
+    - Done: Integrated `win11toast` for native Windows 10/11 notifications, correctly branded as "Canvas Downloader" to build user trust.
+    - Done: Implemented a native focus-on-click mechanism for Windows toasts using `ctypes` (`SetForegroundWindow`) to bring the existing PyWebView window to the front, avoiding redundant browser instances.
+    - Done: Refined Windows toast aesthetics by removing oversized body icons, resulting in a clean, professional header-only icon layout matching OS standards.
+    - Done: Implemented native macOS notifications via `osascript`, ensuring consistent feedback and automatic app-icon integration for compiled bundles.
+    - Done: Updated the "Settings" UI (`ui/auth.py`) to reflect the new notification system, renaming the section and clarifying the dual sound/toast functionality.
+    - Done: Fixed PyInstaller sound/icon compilation bugs. Hoisted `winsound` and `win11toast` imports to module level to ensure static bundling, and redirected compiled Windows toasts to use `sys.executable` as the `app_id` to dynamically inherit the embedded executable icon in the notification header.
+
 - **Session 2026-04-16: Smart Select Refinement & Layout Harmony (Phase 5/6)**
     - Done: Refactored legacy `ui/sync_review.py` Smart Select file-type filters from checkboxes into dynamic styled tag buttons (`st.button`).
     - Done: Implemented 3-state CSS injection for tag buttons—OFF (deep black, pure white text), PARTIAL (dark navy), ON (bright blue).

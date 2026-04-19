@@ -56,7 +56,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg'
+    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast'
 ]
 for package in packages_to_collect:
     try:
@@ -84,6 +84,7 @@ hiddenimports += [
     'webview.platforms.edgechromium',
     'moviepy.audio.fx.all',
     'moviepy.video.fx.all',
+    'winsound',
 ]
 
 a = Analysis(
@@ -115,7 +116,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Canvas_Downloader',
+    name='Canvas Downloader',
     icon='assets/icon.ico',
     debug=False,
     bootloader_ignore_signals=False,
