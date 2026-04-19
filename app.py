@@ -532,6 +532,7 @@ with _main_content.container():
                 
 
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                cm.error_log_enabled = st.session_state.get('error_log_enabled', True)
                 # Build the Sync Contract — all settings for this download
                 _pp_settings = {
                     'file_filter': st.session_state.get('file_filter', 'all'),
@@ -608,7 +609,7 @@ with _main_content.container():
                         course_name=course.name,
                         placeholders=_dp,
                         log_deque=log_deque,
-                        error_log_path=Path(st.session_state['download_path']),
+                        error_log_path=Path(st.session_state['download_path']) if st.session_state.get('error_log_enabled', True) else None,
                         mode='download',
                     )
                 # --- End Post-Download Conversion Pipeline ---
@@ -633,7 +634,7 @@ with _main_content.container():
                 st.session_state['download_status'] = 'done'
                 
                 # --- NEW: Force-write session error log (Backup/Guaranteed file) ---
-                if 'download_errors_list' in st.session_state and st.session_state['download_errors_list']:
+                if 'download_errors_list' in st.session_state and st.session_state['download_errors_list'] and st.session_state.get('error_log_enabled', True):
                     try:
                         from pathlib import Path
                         root_path = Path(st.session_state['download_path'])
@@ -825,6 +826,7 @@ with _main_content.container():
                     pass
 
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+            cm.error_log_enabled = st.session_state.get('error_log_enabled', True)
             
             if 'retry_mb_tracker' not in st.session_state:
                 st.session_state['retry_mb_tracker'] = {'bytes_downloaded': 0}
@@ -883,7 +885,7 @@ with _main_content.container():
                                 course_name=course.name,
                                 placeholders=_dp,
                                 log_deque=log_deque,
-                                error_log_path=Path(st.session_state['download_path']),
+                                error_log_path=Path(st.session_state['download_path']) if st.session_state.get('error_log_enabled', True) else None,
                                 mode='download',
                                 contract=contract,
                                 explicit_files=success_paths,
@@ -947,7 +949,7 @@ with _main_content.container():
                         # Guardrail 3: Safe Directory Resolution (fallback to course folder if err_filepath missing)
                         save_dir = Path(err_filepath).parent if err_filepath else Path(st.session_state['download_path']) / temp_cm._sanitize_filename(c_name)
                         log_file = save_dir / "download_errors.txt"
-                        if log_file.exists():
+                        if log_file.exists() and st.session_state.get('error_log_enabled', True):
                             try:
                                 with open(log_file, "a", encoding="utf-8") as f:
                                     f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [RESOLVED] Successfully downloaded: {err_item_name}\n")

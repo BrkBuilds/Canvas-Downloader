@@ -49,6 +49,15 @@ div.st-key-btn_save_config button:hover {
 /* ═══════════════════════════════════════════════
    Dialog Button Overrides — Preset Dialogs
    ═══════════════════════════════════════════════ */
+/* Compact button height for preset card actions (75% of default) */
+div[class*="st-key-preset_card_"] div[class*="st-key-preset_apply_"] button,
+div[class*="st-key-preset_card_"] div[class*="st-key-preset_delete_"] button {
+    height: 45 !important;
+    min-height: 0px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
 /* Apply buttons — Light Grey default, Indigo hover */
 div[data-testid="stDialog"] div[class*="st-key-preset_apply_"] button {
     background-color: rgba(255, 255, 255, 0.1) !important;
@@ -94,6 +103,7 @@ div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button:hover {
    ═══════════════════════════════════════════════ */
 div[class*="st-key-preset_card_"] {
     padding: 12px !important;
+    padding-bottom: 12px !important;
     margin-bottom: 8px !important;
     background-color: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -148,4 +158,13 @@ div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary 
 div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details summary p {
     font-size: 0.82rem !important;
     color: #ffffff !important;
+}
+/* Expanded expander summary — lighter background than card */
+div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details[open] summary {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 6px 6px 0 0 !important;
+}
+/* Collapsed expander summary — transparent (same as card) */
+div[class*="st-key-preset_card_"] div[data-testid="stExpander"] details:not([open]) summary {
+    background-color: transparent !important;
 }

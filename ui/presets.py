@@ -74,7 +74,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
 
         if desc:
             st.markdown(
-                f"<p style='color:#aaa; font-size:0.85rem; margin-top: -8px;'>{esc(desc)}</p>",
+                f"<p style='color:#aaa; font-size:0.85rem; margin-top: -5px; margin-bottom: 0px;'>{esc(desc)}</p>",
                 unsafe_allow_html=True,
             )
 
@@ -89,9 +89,9 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
 
         # Action buttons
         if is_builtin:
-            col_apply, _ = st.columns([1, 2])
+            col_apply, _ = st.columns([1, 1])
         else:
-            col_apply, col_del, _ = st.columns([1, 1, 1])
+            col_apply, col_del = st.columns([1, 1])
 
         with col_apply:
             if st.button("Apply Preset", key=f"preset_apply_{preset['preset_id']}",
@@ -112,33 +112,34 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
 
         if not is_builtin:
             with col_del:
-                if st.button("🗑️ Delete", key=f"preset_delete_{preset['preset_id']}",
-                             use_container_width=True):
-                    mgr.delete_preset(preset['preset_id'])
-                    st.session_state['preset_hub_toast'] = f"🗑️ Preset '{esc(name)}' deleted."
-                    st.rerun()
+                def _do_delete(pid=preset['preset_id'], pname=name):
+                    mgr.delete_preset(pid)
+                    st.session_state['preset_hub_toast'] = f"🗑️ Preset '{esc(pname)}' deleted."
+                    
+                st.button("🗑️ Delete", key=f"preset_delete_{preset['preset_id']}",
+                          use_container_width=True, on_click=_do_delete)
 
 
-@st.dialog("💾 Save Configuration")
+@st.dialog("💾 Save Settings as Preset")
 def _save_config_dialog():
     from ui_helpers import get_config_dir
     mgr = PresetManager(get_config_dir())
 
     st.markdown(
-        '<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'
+        '<p style="color:#aaa; font-size:0.9rem; margin-bottom:20px; margin-top: -20px;">'
         'Save your current Download Settings as a reusable preset.</p>',
         unsafe_allow_html=True,
     )
 
     preset_name = st.text_input(
-        "Preset name:",
-        placeholder="e.g., AI Study Pack",
+        "Preset title:",
+        placeholder="Your preset title here",
         key="preset_save_name_input",
     )
 
     preset_desc = st.text_input(
-        "Description (optional):",
-        placeholder="e.g., All conversions for NotebookLM uploads",
+        "Description :gray[(optional)]:",
+        placeholder="Your description here",
         key="preset_save_desc_input",
     )
 
@@ -180,7 +181,7 @@ def _save_config_dialog():
                 st.rerun()  # audit-ignore
 
 
-@st.dialog("⚙️ Download Presets", width="large")
+@st.dialog("\u200b", width="large")
 def _presets_hub_dialog():
     from ui_helpers import get_config_dir
     mgr = PresetManager(get_config_dir())
@@ -198,6 +199,16 @@ def _presets_hub_dialog():
     _b64_user = _load_b64("assets/icon_preset_user.png")
     _b64_builtin = _load_b64("assets/icon_preset_builtin.png")
 
+    # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
+    st.html(
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: -70px;">
+            <img src="data:image/png;base64,{_b64_user}" style="width: 36px; height: 36px;" />
+            <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">Download Presets</div>
+        </div>
+        """
+    )
+
     # Consume in-dialog toasts
     if 'preset_hub_toast' in st.session_state:
         st.toast(st.session_state.pop('preset_hub_toast'))
@@ -210,8 +221,13 @@ def _presets_hub_dialog():
         st.session_state['preset_hub_tab'] = tab_key
 
     # Inject tab-specific CSS for Base64 icons via ::before pseudo-elements
+    # Also crush dialog element container margins to close the header→tabs gap
     st.markdown(f"""
 <style>
+/* Crush the gap between the custom header and tabs in the dialog */
+div[data-testid="stDialog"] div.st-key-preset_tabs_row {{
+    margin-top: -40px !important;
+}}
 div[class*="st-key-preset_tab_"] button div[data-testid="stMarkdownContainer"] p {{
     display: flex !important;
     align-items: center !important;
