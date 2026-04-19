@@ -23,7 +23,8 @@ SECONDARY_ENTITY_ICONS = {
 
 
 def render_completion_card(synced_count: int, error_count: int,
-                           total_bytes: int, mode: str = 'download'):
+                           total_bytes: int, mode: str = 'download',
+                           size_skipped_count: int = 0, size_limit_mb: int = 0):
     """Render the premium success/warning/error summary card.
     
     Args:
@@ -31,10 +32,18 @@ def render_completion_card(synced_count: int, error_count: int,
         error_count: Number of errors encountered.
         total_bytes: Total bytes downloaded.
         mode: 'download' or 'sync' — controls label text.
+        size_skipped_count: Number of files skipped due to size limit.
+        size_limit_mb: The MB limit the user set (for display).
     """
     action_word = 'Downloaded' if mode == 'download' else 'Synced'
     file_word = 'file' if synced_count == 1 else 'files'
     error_word = 'error' if error_count == 1 else 'errors'
+
+    # Build the skip annotation that gets folded into the summary line
+    skip_note = ''
+    if size_skipped_count > 0:
+        _sw = 'file' if size_skipped_count == 1 else 'files'
+        skip_note = f" · {size_skipped_count} {_sw} skipped (exceeds {size_limit_mb} MB limit)"
 
     if synced_count == 0 and error_count > 0:
         # Full failure
@@ -44,7 +53,7 @@ def render_completion_card(synced_count: int, error_count: int,
     elif synced_count > 0 and error_count > 0:
         # Partial success — yellow card
         title = f"Partial Success! {action_word} {synced_count} {file_word} with {error_count} {error_word}"
-        summary = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.'
+        summary = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.{skip_note}'
         st.markdown(f"""
         <div style="background-color:#3a2a1a;border:1px solid {theme.WARNING_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
             <div style="color:{theme.WARNING_ALT};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
@@ -59,7 +68,7 @@ def render_completion_card(synced_count: int, error_count: int,
     elif synced_count > 0:
         # Full success — green card
         title = f'{action_word} {synced_count} {file_word} successfully!'
-        summary = f"{format_file_size(total_bytes)} downloaded."
+        summary = f"{format_file_size(total_bytes)} downloaded.{skip_note}"
         st.markdown(f"""
         <div style="background-color:#1a3a2a;border:1px solid {theme.SUCCESS_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
             <div style="color:{theme.SUCCESS_ALT};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
