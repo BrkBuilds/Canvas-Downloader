@@ -2018,6 +2018,17 @@ class CanvasManager:
                 f"{max_bytes / (1024 * 1024):.0f} MB.",
                 debug_file,
             )
+            # Register as ignored in the sync DB so future syncs
+            # don't surface these files as "new".
+            if sync_manager:
+                try:
+                    await asyncio.to_thread(
+                        sync_manager.ignore_file,
+                        file_obj.id,
+                        getattr(file_obj, 'filename', '')
+                    )
+                except Exception:
+                    pass  # Non-fatal: don't break download for DB issues
             if progress_callback:
                 progress_callback(
                     f"{filename} ({size_mb_display:.1f} MB)",

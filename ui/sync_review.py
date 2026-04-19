@@ -336,8 +336,10 @@ def show_analysis_review(on_confirm_sync):
 
 
 
-    # Nothing to sync
-    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0 and total_ignored == 0:
+    # Nothing actionable to sync — redirect to completion screen.
+    # When only ignored files exist, the student manages those from the Sync Hub,
+    # not from the review page.
+    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0:
         # Advance to the completion screen (step 4) with zero-file success state
         st.session_state['synced_count'] = 0
         st.session_state['synced_bytes'] = 0
@@ -345,6 +347,8 @@ def show_analysis_review(on_confirm_sync):
         st.session_state['synced_details'] = {}
         st.session_state['retry_selections'] = []
         st.session_state['up_to_date_file_count'] = total_uptodate
+        if total_ignored > 0:
+            st.session_state['sync_has_ignored_files'] = True
         st.session_state['download_status'] = 'sync_complete'
         st.session_state['step'] = 4
         st.rerun()
@@ -1058,8 +1062,11 @@ def show_analysis_review(on_confirm_sync):
             _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
             # Dimmed white sync icon for the pending-sync label
             _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.5);" />'
-            # Inline checkmark SVG for the up-to-date label
-            _checkmark_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px; flex-shrink:0;"><polyline points="2,9 6,13 14,3"/></svg>'
+            # Inline checkmark for the up-to-date label (base64 to avoid Streamlit SVG sanitization)
+            import base64 as _b64
+            _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
+            _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
+            _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0;" />'
             # No background — plain grey text labels stacked on the right
             _tag_style = (
                 "font-size: 0.73rem; color: rgba(255,255,255,0.45); font-weight: 500; "

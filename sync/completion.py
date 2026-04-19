@@ -128,11 +128,16 @@ def show_sync_complete():
     # Summary card logic
     total_bytes = st.session_state.get('synced_bytes', 0)
     
+    size_skipped = st.session_state.get('size_skipped_files', [])
+    limit_mb = st.session_state.get('max_file_size_mb', 0)
+
     render_completion_card(
         synced_count=synced_count,
         error_count=len(sync_errors),
         total_bytes=total_bytes,
-        mode='sync'
+        mode='sync',
+        size_skipped_count=len(size_skipped),
+        size_limit_mb=limit_mb,
     )
 
     # UN-TRAPPED QUICK SYNC WARNING:
@@ -173,6 +178,10 @@ def show_sync_complete():
 
     # We use sync_ui's custom show_sync_errors wrapper which sets up its own expander
     show_sync_errors()
+
+    # Ignored files note — shown when the course has ONLY ignored files and no actionable changes
+    if st.session_state.get('sync_has_ignored_files'):
+        st.info("Some files are marked as ignored and were not synced. You can manage ignored files from the Sync Hub after adding this course to your sync list.", icon="ℹ️")
 
     if sync_errors and retry_selections:
         st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
@@ -235,6 +244,13 @@ def show_sync_complete():
 
 def show_sync_errors():
     """Render sync errors in an expander with error log viewer button."""
+    # Size-skipped files detail expander (count is folded into the summary card)
+    size_skipped = st.session_state.get('size_skipped_files', [])
+    if size_skipped:
+        with st.expander(f"See {len(size_skipped)} skipped {'file' if len(size_skipped) == 1 else 'files'}"):
+            for _sf in size_skipped:
+                st.markdown(f"⏭️ {_sf}")
+
     sync_errors = st.session_state.get('sync_errors', [])
     if sync_errors:
         # The summary card handles the warning/error banner.
