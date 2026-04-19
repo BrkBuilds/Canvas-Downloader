@@ -612,8 +612,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             _p1, _p2 = st.columns(2)
             with _p1:
                 with st.container(border=True, key="stg_card_sound"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Completion sound</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Be notified when a download or sync finishes, so you can focus on what matters.</div></div>""")
-                    temp_notifications = st.toggle("Play sound", value=st.session_state.get('notifications_enabled', True), key="temp_notifications_enabled")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Notifications</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Get a sound and a native notification when a download or sync finishes, so you can focus on what matters.</div></div>""")
+                    temp_notifications = st.toggle("Enable notifications", value=st.session_state.get('notifications_enabled', True), key="temp_notifications_enabled")
             with _p2:
                 with st.container(border=True, key="stg_card_cbs"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")

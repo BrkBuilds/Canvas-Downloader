@@ -189,7 +189,8 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 st.markdown(f"❌ {err}")
         if len(error_list) > 20:
             st.caption(f"  ... and {len(error_list) - 20} more")
-        st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
+        if st.session_state.get('error_log_enabled', True):
+            st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
 
     if error_log_paths and dialog_fn:
         valid_paths = [p for p in error_log_paths if p.exists()]
@@ -204,7 +205,8 @@ def render_pp_warning(pp_failure_count: int):
     """Render post-processing failure warning if applicable."""
     if pp_failure_count > 0:
         word = "file" if pp_failure_count == 1 else "files"
-        st.warning(f"⚠️ {pp_failure_count} {word} failed during post-processing (conversion/extraction). Check download_errors.txt for details.")
+        detail_hint = " Check download_errors.txt for details." if st.session_state.get('error_log_enabled', True) else ""
+        st.warning(f"⚠️ {pp_failure_count} {word} failed during post-processing (conversion/extraction).{detail_hint}")
 
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     """Render a rich HTML preview of active settings using color-coded badges."""

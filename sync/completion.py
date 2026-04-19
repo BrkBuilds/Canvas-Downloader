@@ -98,7 +98,10 @@ def show_sync_complete():
         st.session_state.get('notifications_enabled', True)
         and not st.session_state.get('completion_beep_fired', False)
     ):
-        play_completion_beep()
+        _sync_count = st.session_state.get('synced_count', 0)
+        _sync_courses = len(st.session_state.get('sync_selections', []))
+        _sync_summary = f"Synced {_sync_count} file{'s' if _sync_count != 1 else ''} across {_sync_courses} course{'s' if _sync_courses != 1 else ''}."
+        play_completion_beep(mode='sync', summary=_sync_summary)
         st.session_state['completion_beep_fired'] = True
 
     # Step wizard
@@ -243,7 +246,8 @@ def show_sync_errors():
             if len(sync_errors) > 20:
                 st.caption(f"  ... and {len(sync_errors) - 20} more")
             
-            st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
+            if st.session_state.get('error_log_enabled', True):
+                st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
         
         # In-App Error Log Viewer button
         sync_selections = st.session_state.get('sync_selections', [])

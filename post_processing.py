@@ -237,7 +237,7 @@ def run_pptx_conversion(files, ui: UIBridge):
     from pdf_converter import PowerPointToPDF
 
     total = len(files)
-    pptx_error_log = ui.error_log_path or files[0][1].local_path
+    pptx_error_log = ui.error_log_path
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>[ 🪄 ] Converting {total} PowerPoint files to PDF...</span>")
     _render_dashboard(ui, 0, total, "PowerPoint files")
