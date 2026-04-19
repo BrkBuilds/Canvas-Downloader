@@ -416,6 +416,11 @@ with _main_content.container():
                             render_dashboard()
 
                         elif progress_type == 'size_skipped':
+                            # Track for completion screen display
+                            if 'size_skipped_files' not in st.session_state:
+                                st.session_state['size_skipped_files'] = []
+                            if msg:
+                                st.session_state['size_skipped_files'].append(msg)
                             # Oversized file skip: shrink the denominator so progress
                             # math stays honest (file was never queued to download).
                             # Also subtract its size from total_mb for ETA accuracy.
@@ -762,7 +767,11 @@ with _main_content.container():
                         render_dashboard(course_name_ref)
 
                     elif progress_type == 'size_skipped':
+                        # Track for completion screen display
+                        if 'size_skipped_files' not in st.session_state:
+                            st.session_state['size_skipped_files'] = []
                         if msg:
+                            st.session_state['size_skipped_files'].append(msg)
                             log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>[⏭️] Skipped (too large): {msg}</span>")
                         # In the retry path the total_items denominator is the length
                         # of the retry queue, not the global total, so we leave it alone.
@@ -1028,12 +1037,16 @@ with _main_content.container():
 
             success_count = sum(len(v) for v in file_details.values())
 
-            # 1. Summary card
+            # 1. Summary card (with optional size-skipped annotation folded in)
+            size_skipped = st.session_state.get('size_skipped_files', [])
+            limit_mb = st.session_state.get('max_file_size_mb', 0)
             render_completion_card(
                 synced_count=success_count,
                 error_count=len(download_errors),
                 total_bytes=total_bytes,
                 mode='download',
+                size_skipped_count=len(size_skipped),
+                size_limit_mb=limit_mb,
             )
 
             # Hybrid Discovery Warning (Surfaced explicitly in UI)
@@ -1058,6 +1071,12 @@ with _main_content.container():
 
             # 2. Post-processing warning
             render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+            # Size-skipped files detail expander (no separate bar — count is in the success card)
+            if size_skipped:
+                with st.expander(f"See {len(size_skipped)} skipped {'file' if len(size_skipped) == 1 else 'files'}"):
+                    for _sf in size_skipped:
+                        st.markdown(f"⏭️ {_sf}")
 
             # 3. Error section
             download_path = Path(st.session_state['download_path'])
