@@ -1708,7 +1708,7 @@ class CanvasManager:
                             if debug_mode: log_debug(f"Successfully refreshed URL for {file_obj.filename}", debug_file)
                         except Exception as e:
                             # HARD-FAIL CONSTRAINT: Do NOT fallback to stale URL. It will just trigger 403 backoff loops.
-                            err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "URL Expiration", f"Could not refresh expired URL: {e}", raw_error=e)
+                            err = DownloadError(course.name, filepath.name, "URL Expiration", f"Could not refresh expired URL: {e}", raw_error=e)
                             if progress_callback: progress_callback(err, progress_type='error', file_size=file_obj.size)
                             self._log_error(save_dir, err)
                             continue # Skip to the next file immediately
