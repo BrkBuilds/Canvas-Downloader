@@ -118,6 +118,7 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
     'retry_isolated_details', 'retry_mb_tracker',
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
+    'size_skipped_files',
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
@@ -131,6 +132,7 @@ SYNC_TRANSIENT_KEYS = {
     'sync_single_pair_idx', 'sync_confirm_count', 'sync_confirm_size',
     'sync_confirm_folders', 'is_post_processing',
     'retry_selections', 'analysis_pass',
+    'size_skipped_files', 'sync_has_ignored_files',
 }
 
 

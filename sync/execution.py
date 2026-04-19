@@ -329,6 +329,10 @@ def run_sync():
                         and getattr(file, 'id', 0) > 0
                     ):
                         _f_mb = _f_size / (1024 * 1024)
+                        # Track for completion screen display
+                        if 'size_skipped_files' not in st.session_state:
+                            st.session_state['size_skipped_files'] = []
+                        st.session_state['size_skipped_files'].append(f"{display_file_name} ({_f_mb:.1f} MB)")
                         total_files = max(0, total_files - 1)  # keep denominator accurate
                         current_file -= 1  # undo the increment — this file never ran
                         terminal_log.append(

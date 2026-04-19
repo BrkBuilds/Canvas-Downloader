@@ -1444,6 +1444,22 @@ def render_download_settings(fetch_courses_fn):
                     course_map = {c.id: c for c in all_courses}
                     courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
 
+                    # ── RESET all transient download state before starting fresh ──
+                    # Without this, data from the PREVIOUS download (file lists,
+                    # error counts, discovery warnings) bleeds into the new one.
+                    for _stale_key in [
+                        'download_file_details', 'download_errors_list', 'failed_items',
+                        'downloaded_items', 'log_deque', 'skipped_discovery_errors',
+                        'size_skipped_files', 'pp_failure_count', 'pp_success_count',
+                        'log_content', 'seen_error_sigs', 'course_mb_downloaded',
+                        'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
+                        'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
+                        'retry_isolated_details', 'retry_mb_tracker', 'is_post_processing',
+                        'start_time', 'total_items', 'total_mb',
+                        'sync_has_ignored_files',
+                    ]:
+                        st.session_state.pop(_stale_key, None)
+
                     st.session_state['courses_to_download'] = courses_to_download
                     st.session_state['current_course_index'] = 0
                     st.session_state['cancel_requested'] = False
