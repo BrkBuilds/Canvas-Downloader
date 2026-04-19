@@ -24,7 +24,7 @@ SECONDARY_ENTITY_ICONS = {
 
 def render_completion_card(synced_count: int, error_count: int,
                            total_bytes: int, mode: str = 'download',
-                           size_skipped_count: int = 0, size_limit_mb: int = 0):
+                           size_skipped_files: list = None, size_limit_mb: int = 0):
     """Render the premium success/warning/error summary card.
     
     Args:
@@ -32,9 +32,11 @@ def render_completion_card(synced_count: int, error_count: int,
         error_count: Number of errors encountered.
         total_bytes: Total bytes downloaded.
         mode: 'download' or 'sync' — controls label text.
-        size_skipped_count: Number of files skipped due to size limit.
+        size_skipped_files: List of file names skipped due to size limit.
         size_limit_mb: The MB limit the user set (for display).
     """
+    size_skipped_files = size_skipped_files or []
+    size_skipped_count = len(size_skipped_files)
     action_word = 'Downloaded' if mode == 'download' else 'Synced'
     file_word = 'file' if synced_count == 1 else 'files'
     error_word = 'error' if error_count == 1 else 'errors'
@@ -50,35 +52,50 @@ def render_completion_card(synced_count: int, error_count: int,
         st.error(f'{action_word.replace("ed", "")} failed for all files.')
         return
 
-    elif synced_count > 0 and error_count > 0:
+    if synced_count > 0 and error_count > 0:
         # Partial success — yellow card
         title = f"Partial Success! {action_word} {synced_count} {file_word} with {error_count} {error_word}"
         summary = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.{skip_note}'
+        
         st.markdown(f"""
         <div style="background-color:#3a2a1a;border:1px solid {theme.WARNING_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
             <div style="color:{theme.WARNING_ALT};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
                 ⚠️ {title}
             </div><!-- # audit-ignore -->
-            <div style="color:#ccc;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
+            <div style="color:#d1d5db;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
                 {summary}
             </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        if size_skipped_count > 0:
+            with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
+                st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
+                for _sf in size_skipped_files:
+                    st.markdown(f"⏭️ {_sf}")
 
     elif synced_count > 0:
         # Full success — green card
         title = f'{action_word} {synced_count} {file_word} successfully!'
         summary = f"{format_file_size(total_bytes)} downloaded.{skip_note}"
+        
         st.markdown(f"""
         <div style="background-color:#1a3a2a;border:1px solid {theme.SUCCESS_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:{theme.SUCCESS_ALT};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
+            <div style="color:{theme.SUCCESS};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
                 🎉 {title}
             </div><!-- # audit-ignore -->
-            <div style="color:#aaa;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
+            <div style="color:#d1d5db;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
                 {summary}
             </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        if size_skipped_count > 0:
+            with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
+                st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
+                for _sf in size_skipped_files:
+                    st.markdown(f"⏭️ {_sf}")
+                    
         st.balloons()
 
     else:
