@@ -210,6 +210,7 @@ class CanvasManager:
             
         self.user = None
         self._logged_error_sigs = set()  # Dedup cache: prevents same error being logged twice in one run
+        self.error_log_enabled = True    # Toggled via Settings; when False, download_errors.txt is not created
 
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
@@ -3844,6 +3845,8 @@ class CanvasManager:
     def clear_error_log(self, base_path):
         """Wipe download_errors.txt to start fresh for a new run."""
         self._logged_error_sigs = set()  # Reset dedup cache
+        if not self.error_log_enabled:
+            return
         if not base_path: return
         path = Path(base_path)
         log_file = path / "download_errors.txt"
@@ -3866,6 +3869,8 @@ class CanvasManager:
         self._logged_error_sigs.add(error_sig)
 
         # 'error' can be a DownloadError object or a string (legacy support)
+        if not self.error_log_enabled:
+            return
         if not base_path: return
         
         path = Path(base_path)
