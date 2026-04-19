@@ -136,7 +136,7 @@ def show_sync_complete():
         error_count=len(sync_errors),
         total_bytes=total_bytes,
         mode='sync',
-        size_skipped_count=len(size_skipped),
+        size_skipped_files=size_skipped,
         size_limit_mb=limit_mb,
     )
 
@@ -244,12 +244,7 @@ def show_sync_complete():
 
 def show_sync_errors():
     """Render sync errors in an expander with error log viewer button."""
-    # Size-skipped files detail expander (count is folded into the summary card)
-    size_skipped = st.session_state.get('size_skipped_files', [])
-    if size_skipped:
-        with st.expander(f"See {len(size_skipped)} skipped {'file' if len(size_skipped) == 1 else 'files'}"):
-            for _sf in size_skipped:
-                st.markdown(f"⏭️ {_sf}")
+    # Size-skipped files are now rendered inside render_completion_card
 
     sync_errors = st.session_state.get('sync_errors', [])
     if sync_errors:

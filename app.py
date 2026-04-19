@@ -1045,7 +1045,7 @@ with _main_content.container():
                 error_count=len(download_errors),
                 total_bytes=total_bytes,
                 mode='download',
-                size_skipped_count=len(size_skipped),
+                size_skipped_files=size_skipped,
                 size_limit_mb=limit_mb,
             )
 
@@ -1072,11 +1072,7 @@ with _main_content.container():
             # 2. Post-processing warning
             render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
-            # Size-skipped files detail expander (no separate bar — count is in the success card)
-            if size_skipped:
-                with st.expander(f"See {len(size_skipped)} skipped {'file' if len(size_skipped) == 1 else 'files'}"):
-                    for _sf in size_skipped:
-                        st.markdown(f"⏭️ {_sf}")
+            # Size-skipped files are now rendered inside render_completion_card
 
             # 3. Error section
             download_path = Path(st.session_state['download_path'])
