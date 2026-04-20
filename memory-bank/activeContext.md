@@ -6,6 +6,11 @@
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
 - **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
 
+- **Session 2026-04-20: Add Course Button Aesthetic Refinement**
+    - Done: Refined the "Add Course folder to Sync" buttons in `sync_ui.py` to use a solid `#4a7a9b` background color with no transparency and removed the border.
+    - Done: Updated hover states to a lighter `#6a9abb` solid background to maintain interactive feedback without transparency.
+    - Verified: Confirmed the SVG/PNG base64 icons are preserved and correctly aligned within the new solid button structure.
+
 - **Session 2026-04-19: Native OS Notifications & Branded Toast Alerts**
     - Done: Replaced generic system error beeps with the premium "Windows Notify Calendar" chime (`.wav`) for a more pleasant user experience.
     - Done: Integrated `win11toast` for native Windows 10/11 notifications, correctly branded as "Canvas Downloader" to build user trust.
