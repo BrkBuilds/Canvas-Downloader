@@ -550,6 +550,16 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         min-height: 50vh !important;
     }
 
+    /* 12. Sync Pair Cards Gradient Styling */
+    div[class*="st-key-sync_pair_card_"] {
+        background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 8px !important;
+        padding-top: 5px !important;
+        padding-bottom: 20px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+
     /* Ignored Files button: match standard action button border style */
 
     </style>
@@ -617,8 +627,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
                                      help=_save_help):
                             _save_pair_dialog(pair)
-                        st.markdown(f"""<div style="font-size:0.85em;color:#ccc;margin-top:-5px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
-                            <div style="font-size:0.75em;color:{theme.TEXT_DIM};margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
+                            <div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
@@ -663,21 +673,26 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     # Clean, isolated CSS for "Add Course" using its Streamlit key
                     st.markdown("""<style>
                     div.st-key-btn_add_folder button {
-                        border: 1px solid #4a7a9b !important;
-                        background-color: #2a3a4a !important;
-                        color: #cde !important;
+                        border: none !important;
+                        background-color: #0b5a6e !important;
+                        color: #ffffff !important;
                         margin-top: -50px !important;
                         position: relative;
                         z-index: 1;
+                        opacity: 1 !important;
+                        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+                        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
                     }
                     div.st-key-btn_add_folder button:hover {
-                         background-color: #3a4a5a !important;
-                         border-color: #6a9abb !important;
-                         color: {theme.WHITE} !important;
+                         background-color: #106e85 !important;
+                         border: none !important;
+                         color: #ffffff !important;
+                         box-shadow: 0 4px 15px rgba(11, 90, 110, 0.25),
+                                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
                     }
                     </style>""", unsafe_allow_html=True)
                     
-                    if st.button('Add Course folder to Sync', key="btn_add_folder", use_container_width=True):
+                    if st.button('Add Course', key="btn_add_folder", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
@@ -691,7 +706,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     # Clean, isolated CSS for "Save List" using its Streamlit key
                     st.markdown("""<style>
                     div.st-key-btn_save_group_main button {
-                        background-color: rgba(95, 100, 200, 0.1) !important;
+                        background-color: rgba(95, 100, 200, 0.075) !important;
                         color: #e0e7ff !important;
                         border: 1px solid rgba(95, 100, 200, 0.75) !important;
                         margin-top: -50px !important;
@@ -699,7 +714,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         z-index: 1;
                     }
                     div.st-key-btn_save_group_main button:hover {
-                        background-color: rgba(95, 100, 200, 0.4) !important;
+                        background-color: rgba(95, 100, 200, 0.2) !important;
                         border-color: rgba(95, 100, 200, 1) !important;
                         color: {theme.WHITE} !important;
                         transition: all 0.2s ease-in-out;
@@ -712,7 +727,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
 
-                    if st.button("💾 Save List as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True):
+                    if st.button("💾 Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True):
                         _save_group_dialog(sync_pairs)
 
         else:
@@ -727,19 +742,24 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     /* Scoped to the button's own key — NO :has() to prevent
                        leaking into dialog portals via ancestor climbing */
                     div.st-key-btn_add_folder_empty button {
-                        border: 1px solid #4a7a9b !important;
-                        background-color: #2a3a4a !important;
-                        color: #cde !important;
+                        border: none !important;
+                        background-color: #0b5a6e !important;
+                        color: #ffffff !important;
                         margin-top: -15px !important;
+                        opacity: 1 !important;
+                        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+                        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
                     }
                     div.st-key-btn_add_folder_empty button:hover {
-                         background-color: #3a4a5a !important;
-                         border-color: #6a9abb !important;
-                         color: {theme.WHITE} !important;
+                         background-color: #106e85 !important;
+                         border: none !important;
+                         color: #ffffff !important;
+                         box-shadow: 0 4px 15px rgba(11, 90, 110, 0.25),
+                                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
                     }
                     </style>""", unsafe_allow_html=True)
     
-                    if st.button('Add Course folder to Sync', key="btn_add_folder_empty", use_container_width=True):
+                    if st.button('Add Course', key="btn_add_folder_empty", use_container_width=True):
                         _select_sync_folder()
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)

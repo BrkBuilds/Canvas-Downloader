@@ -537,8 +537,16 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
     editing_idx = st.session_state.get('editing_pair_idx')
 
     # (1) Everything inside one bordered container
-    # (1) Everything inside one bordered container
     with st.container(border=True, key="edit_form_container"):
+        st.html("""<style>
+            /* Reduce vertical margins between elements inside the inline edit form */
+            .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
+                gap: 0.25rem !important;
+            }
+            div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-edit_form_container) {
+                padding: 12px 16px !important;
+            }
+        </style>""")
         # (3) CSS for cancel button red styling (Moved to render_sync_step1 for global scope/no flash)
 
         # Two auto-width columns + spacer, vertically centered
@@ -688,7 +696,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.rerun()
 
         with col_add:
-            if st.button("✓ " + 'Confirm and Add', key="confirm_pair",
+            if st.button('Confirm and Add', key="confirm_pair",
                          type="primary", use_container_width=True):
                 if selected_course_name and selected_course_name != course_options[0]:
                     selected_course_id = None
