@@ -1,3 +1,7 @@
+- [x] **Add Course Button Aesthetic Refinement** (2026-04-20):
+    - [x] **Solid Background**: Removed button border and replaced it with a solid `#4a7a9b` background color for "Add Course folder to Sync" buttons.
+    - [x] **No Transparency**: Enforced full opacity and solid colors to prevent the perceived transparency effect from border/background contrast.
+    - [x] **Hover Consistency**: Standardized hover background to `#6a9abb` for a premium interaction feel.
 - [x] **Native OS Notifications & Branded Toast Alerts** (2026-04-19):
     - [x] **Branded Windows Toasts**: Integrated `win11toast` with custom "Canvas Downloader" AUMID branding and non-blocking delivery.
     - [x] **Focus-on-Click**: Implemented `ctypes` based window restoration to bring the app to the foreground when a notification is clicked.
