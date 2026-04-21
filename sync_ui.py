@@ -650,10 +650,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
                     if st.button(f"Ignored Files \u00A0:gray[({ignored_count})]", key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True):
-                        course_data = ignored_by_course[pair['course_id']]
-                        _show_course_ignored_files(
-                            friendly_course_name(pair['course_name']),
-                            pair['course_id'], course_data)
+                        course_data = ignored_by_course.get(pair['course_id'])
+                        if course_data:
+                            _show_course_ignored_files(
+                                friendly_course_name(pair['course_name']),
+                                pair['course_id'], course_data)
 
                 with col_remove:
                     if st.button("🗑️ " + 'Remove', 
@@ -903,12 +904,6 @@ def _render_sync_history():
     render_sync_history()
 
 
-def _render_filetype_selector(all_files, prefix, file_key_fn):
-    """Delegate to ui.sync_dialogs."""
-    from ui.sync_dialogs import render_filetype_selector
-    return render_filetype_selector(all_files, prefix, file_key_fn)
-
-
 
 
 def _show_course_ignored_files(course_name, course_id, course_data):
@@ -917,10 +912,6 @@ def _show_course_ignored_files(course_name, course_id, course_data):
     show_course_ignored_files(course_name, course_id, course_data)
 
 
-def _show_course_ignored_files_inner(course_name, course_id, course_data):
-    """Delegate to ui.sync_dialogs."""
-    from ui.sync_dialogs import show_course_ignored_files_inner
-    show_course_ignored_files_inner(course_name, course_id, course_data)
 
 
 @st.dialog("Select Course", width="large")
