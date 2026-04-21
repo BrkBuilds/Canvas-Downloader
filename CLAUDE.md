@@ -58,9 +58,11 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - **Static CSS** → `styles/*.css` files, loaded via `styles.inject_css()` (uses `st.html()`, module caching disabled for dev).
 - **Dynamic CSS** (depends on session state or Python vars) → inline `st.html(f'<style>...</style>')` inside `ui/` modules.
 - **Headless Injection Rule**: Never use `st.markdown` for CSS, Base64 wrappers, or HTML spacers. Streamlit React forces `stMarkdownContainer` on it, injecting a 1rem bottom margin ("Ghost Box"). Always use `st.html()` for zero-footprint DOM injection.
-- **Always hoist** dynamic CSS injections *above* the widget they target — injecting below causes a ~100ms grey flash on rerun (React sub-frame race condition).
+- **Always hoist** dynamic CSS (especially for widget-dependent logic like colors/masks) to the absolute top of the function call before any containers or widgets are declared. Injecting inside/below deep containers (especially in modals) causes Streamlit to drop the payload.
 - **Double-escape** all CSS braces in f-strings: `{{` and `}}`.
 - **Scope** all CSS to keyed containers (`div[class*="st-key-my_key"]`) to prevent global leakage.
+- **Key Lowercasing Rule**: Streamlit lowercases widget `key` strings when generating DOM classes (e.g. `st-key-PDF` becomes `st-key-pdf`). Always apply `.lower()` to keys used in CSS selectors.
+- **Modal Specificity Rule**: Standard CSS often fails inside `@st.dialog` because modals live in a separate high-specificity portal. Always prepend `div[data-testid="stDialog"] ` to modal-targeted CSS selectors.
 - Never use `:has()` + sibling combinators (`~`) on main-app components — it leaks into `stDialog` portals with high specificity.
 - **`st.html()` shadow root isolates `margin`**: `margin` on elements inside `st.html()` (e.g. `<hr style='margin:15px 0'>`) does NOT create external layout space — it is absorbed by the shadow root. To add real spacing around injected HTML, wrap in `<div style='padding: Xpx 0'>` instead; padding inflates the shadow root's rendered height.
 - **Side-by-side buttons**: Use `st.columns([1,1])` + `use_container_width=True` in Python. Never use CSS `:has()` flex hacks on `stVerticalBlock` — unreliable and leaks specificity.
