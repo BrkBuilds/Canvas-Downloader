@@ -30,21 +30,9 @@ from ui_helpers import (
 from core.state_registry import cleanup_sync_state
 
 
-# Lazy imports to avoid circular dependency with sync_ui.py
-def _get_filetype_selector(all_files, prefix, file_key_fn):
-    from ui.sync_dialogs import render_filetype_selector
-    return render_filetype_selector(all_files, prefix, file_key_fn)
-
-def _ignored_files_dialog(ignored_by_course):
-    """Lazy import wrapper to call the dialog in ui.sync_dialogs."""
-    from ui.sync_dialogs import ignored_files_dialog_inner
-    ignored_files_dialog_inner(ignored_by_course)
 
 
 
-def _render_hub_config(pair):
-    from ui.hub_dialog import render_hub_config
-    render_hub_config(pair)
 
 # ---- Analysis review ----
 
@@ -754,7 +742,13 @@ def show_analysis_review(on_confirm_sync):
                 let showTimer = null;
                 let hideTimer = null;
                 
-                doc.addEventListener('mouseover', function(e) {
+                function onMouseOver(e) {
+                    // Guard: bail if the Sync Review containers no longer exist in the DOM
+                    if (!doc.querySelector('div[class*="st-key-cat_"]')) {
+                        teardown();
+                        return;
+                    }
+
                     const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
                     
                     if (summary) {
@@ -784,9 +778,9 @@ def show_analysis_review(on_confirm_sync):
                             }, 200);
                         }
                     }
-                });
+                }
                 
-                doc.addEventListener('mouseout', function(e) {
+                function onMouseOut(e) {
                     const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
                     if (summary) {
                         // Keep tooltip alive if moving gracefully between nested HTML elements
@@ -805,7 +799,29 @@ def show_analysis_review(on_confirm_sync):
                             tooltip.style.opacity = '0';
                         }, 200);
                     }
+                }
+
+                doc.addEventListener('mouseover', onMouseOver);
+                doc.addEventListener('mouseout', onMouseOut);
+
+                // Self-cleanup: remove tooltip + listeners when Sync Review leaves the DOM
+                function teardown() {
+                    clearTimeout(showTimer);
+                    clearTimeout(hideTimer);
+                    doc.removeEventListener('mouseover', onMouseOver);
+                    doc.removeEventListener('mouseout', onMouseOut);
+                    const el = doc.getElementById('premium-hover-tooltip');
+                    if (el) el.remove();
+                    if (observer) observer.disconnect();
+                }
+
+                // MutationObserver: detect when Sync Review containers disappear
+                const observer = new MutationObserver(() => {
+                    if (!doc.querySelector('div[class*="st-key-cat_"]')) {
+                        teardown();
+                    }
                 });
+                observer.observe(doc.body, { childList: true, subtree: true });
             }
         </script>
     """, height=0, width=0)
