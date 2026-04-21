@@ -252,6 +252,9 @@ def show_course_ignored_files(course_name, course_id, course_data):
         # Per-extension CSS is computed inline after buttons render
         # (mirrors sync_review.py pattern for reliable styling).
 
+        is_expanded = st.session_state.get(f"{prefix}_chevron", False)
+        bottom_padding = "14px" if is_expanded else "4px"
+
         _css = f"""<style>
             /* -- Dialog compact gaps -- */
             div[role="dialog"] [data-testid="stDialogScrollableBody"] > div[data-testid="stVerticalBlock"] {{
@@ -260,9 +263,9 @@ def show_course_ignored_files(course_name, course_id, course_data):
             /* Smart Select outer card */
             div[class*="st-key-{prefix}_filter_box"] {{
                 background: rgba(255,255,255,0.03) !important;
-                border: 1px solid rgba(255,255,255,0.06) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
                 border-radius: 10px !important;
-                padding: 4px 14px 14px 14px !important;
+                padding: 4px 14px {bottom_padding} 14px !important;
                 margin-top: -10px !important;
                 margin-bottom: -10px !important;
             }}
@@ -299,7 +302,6 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 display: inline-block !important;
                 font-size: 1.25rem !important;
                 margin-right: 12px !important;
-                transition: transform 0.2s ease !important;
                 color: rgba(255,255,255,0.5) !important;
             }}
             div[class*="st-key-{prefix}_chevron"]:has(input:checked) label p::before {{
@@ -370,22 +372,29 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 background-image: url('data:image/png;base64,{b64_restore}') !important;
                 background-size: contain !important; background-repeat: no-repeat !important;
                 background-position: center !important; flex-shrink: 0 !important;
-                margin-right: 10px !important; 
+                margin-right: 8px !important; 
                 vertical-align: middle !important;
                 position: relative !important;
-                top: -1px !important;
+                top: -2px !important;
             }}
-            /* Custom disabled state for Restore */
-            div[class*="st-key-{prefix}_restore"] button[disabled] {{
-                background-color: rgba(255, 255, 255, 0.05) !important;
-                color: rgba(255, 255, 255, 0.3) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            /* Action Buttons Explicit Match */
+            div[class*="st-key-{prefix}_close"] button,
+            div[class*="st-key-{prefix}_restore"] button {{
+                height: 48px !important;
+                min-height: 48px !important;
+                border-radius: 8px !important;
             }}
-            div[class*="st-key-{prefix}_restore"] button[disabled] p {{
-                color: rgba(255, 255, 255, 0.3) !important;
+            /* Explicit disabled state for Restore button */
+            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button:disabled,
+            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button[disabled] {{
+                background-color: rgba(255, 255, 255, 0.075) !important;
+                border: 1px solid rgba(255, 255, 255, 0.075) !important;
+                color: rgba(255, 255, 255, 0.2) !important;
             }}
-            div[class*="st-key-{prefix}_restore"] button[disabled] p::before {{
-                opacity: 0.3 !important;
+            /* Dim the icon when disabled */
+            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button:disabled p::before,
+            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button[disabled] p::before {{
+                opacity: 0.4 !important;
                 filter: grayscale(100%) !important;
             }}
             /* File list tags */
@@ -456,13 +465,14 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 Ignored Files
             </div>
         </div>
-        <div style="color:rgba(255,255,255,0.9);font-size:0.85rem;margin-top:4px;margin-bottom:12px;">
-            Course: {esc(course_name)}
+        <div style="color:rgba(255,255,255,0.9);font-size:1rem;font-weight:600;margin-top:4px;">
+            Course: <span style="font-weight:400;color:rgba(255,255,255,0.9);">{esc(course_name)}</span>
         </div>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin-top: 10px;" />
         """)
 
         # ── 2. Help text ──────────────────────────────────────────────
-        st.html("<div style='font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:2px;'>Select files to restore. Restored files will appear in your next sync run.</div>")
+        st.html("<div style='font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:-10px;margin-bottom:10px;'>Select files to restore & remove from ignored list. Restored files will appear in your next sync run for this course.</div>")
 
         # -- 3. Smart Select Card (Collapsible chevron) -----------------
         with st.container(border=True, key=f"{prefix}_filter_box"):
@@ -545,7 +555,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
             btn_text = f"Restore {checked_count} files"
 
         # ── 7. Action buttons (Cancel left, Action right) ─────────────
-        col_cancel, col_restore = st.columns([1, 1], vertical_alignment="bottom")
+        col_cancel, col_restore = st.columns([1, 1])
         with col_cancel:
             if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
                 for k in all_keys:
@@ -568,11 +578,12 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     for fid in to_restore:
                         st.session_state.pop(f"{prefix}_{fid}", None)
 
+            btn_help = "Select files to restore" if checked_count == 0 else "Remove selected files from the ignored list so they are included in future syncs"
             st.button(
                 btn_text, type="primary", disabled=(checked_count == 0),
                 use_container_width=True, key=f"{prefix}_restore",
                 on_click=_on_restore_course,
-                help="Remove selected files from the ignored list so they are included in future syncs",
+                help=btn_help,
             )
 
     _dialog()
