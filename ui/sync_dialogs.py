@@ -249,147 +249,203 @@ def show_course_ignored_files(course_name, course_id, course_data):
         b64_clear = get_base64_image("assets/icon_clear_selection.png")
         b64_restore = get_base64_image("assets/icon_restore.png")
 
-        css_ext_blocks = []
-        for ext in all_exts_sorted:
-            safe_ext = ext.replace('.', '')
-            btn_key = f"{prefix}_filter_btn_{safe_ext}"
-            ext_keys = ext_to_keys[ext]
-            total = len(ext_keys)
-            selected = sum(1 for k in ext_keys if st.session_state.get(k, False))
-            if selected == 0:
-                bg, bg_h = "#11141a", "#1a1e28"
-                bd, bd_h = "rgba(255,255,255,0.25)", "rgba(255,255,255,0.4)"
-            elif selected == total:
-                bg, bg_h = "#1f486b", "#285b86"
-                bd, bd_h = "#3498db", "#5dade2"
-            else:
-                bg, bg_h = "#0d1b2a", "#142838"
-                bd, bd_h = "#3498db", "#5dade2"
-            css_ext_blocks.append(f"""
-            div.st-key-{btn_key} button {{
-                background-color: {bg} !important;
-                border: 1px solid {bd} !important;
-                color: #ffffff !important;
-                padding: 2px 14px !important;
-                min-height: 28px !important; height: 28px !important;
-                border-radius: 6px !important;
-                transition: all 0.15s ease !important;
-                box-shadow: none !important;
-            }}
-            div.st-key-{btn_key} button:hover {{
-                background-color: {bg_h} !important;
-                border-color: {bd_h} !important;
-            }}
-            div.st-key-{btn_key} button p {{
-                font-size: 0.8rem !important; font-weight: 500 !important; margin: 0 !important;
-            }}
-            div.st-key-{btn_key} button p span {{
-                font-size: 0.7rem !important; font-weight: 400 !important;
-                color: rgba(255,255,255,0.55) !important;
-                margin-left: 3px !important; letter-spacing: 0.3px !important;
-            }}""")
+        # Per-extension CSS is computed inline after buttons render
+        # (mirrors sync_review.py pattern for reliable styling).
 
         _css = f"""<style>
-            /* Smart Select outer card — flat dark bg, visual depth */
-            div.st-key-{prefix}_filter_box {{
+            /* -- Dialog compact gaps -- */
+            div[role="dialog"] [data-testid="stDialogScrollableBody"] > div[data-testid="stVerticalBlock"] {{
+                gap: 0.25rem !important;
+            }}
+            /* Smart Select outer card */
+            div[class*="st-key-{prefix}_filter_box"] {{
                 background: rgba(255,255,255,0.03) !important;
                 border: 1px solid rgba(255,255,255,0.06) !important;
                 border-radius: 10px !important;
-                padding: 10px 14px 6px 14px !important;
-                margin-bottom: 4px !important;
+                padding: 4px 14px 14px 14px !important;
+                margin-top: -10px !important;
+                margin-bottom: -10px !important;
             }}
-            div.st-key-{prefix}_filter_box > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            div[class*="st-key-{prefix}_filter_box"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
                 border: none !important; padding: 0 !important;
             }}
-            div.st-key-{prefix}_filter_box div[data-testid="stVerticalBlock"] {{
-                gap: 0.35rem !important;
+            div[class*="st-key-{prefix}_filter_box"] div[data-testid="stVerticalBlock"] {{
+                gap: 0.1rem !important;
+            }}
+            /* -- Custom Chevron Toggle -- */
+            div[class*="st-key-{prefix}_chevron"] {{
+                margin: 0 !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] {{
+                padding: 2px 0 !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                gap: 0 !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] > span:first-child {{
+                display: none !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] > div {{
+                margin-left: 0 !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label p {{
+                font-size: 1.05rem !important;
+                font-weight: 700 !important;
+                color: #fff !important;
+                margin: 0 !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label p::before {{
+                content: "▸" !important;
+                display: inline-block !important;
+                font-size: 1.25rem !important;
+                margin-right: 12px !important;
+                transition: transform 0.2s ease !important;
+                color: rgba(255,255,255,0.5) !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"]:has(input:checked) label p::before {{
+                transform: rotate(90deg) !important;
             }}
             /* Filetypes flex */
-            div.st-key-{prefix}_ft_flex {{
+            div[class*="st-key-{prefix}_ft_flex"] {{
                 border: none !important; background: transparent !important;
-                box-shadow: none !important; padding: 0 !important; margin-top: 0 !important;
+                box-shadow: none !important; padding: 0 !important; margin-top: -6px !important;
             }}
-            div.st-key-{prefix}_ft_flex > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            div[class*="st-key-{prefix}_ft_flex"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
                 border: none !important; padding: 0 !important;
             }}
-            div.st-key-{prefix}_ft_flex div[data-testid="stHorizontalBlock"] {{
+            div[class*="st-key-{prefix}_ft_flex"] div[data-testid="stHorizontalBlock"] {{
                 flex-wrap: wrap !important; row-gap: 6px !important; column-gap: 6px !important;
                 margin-bottom: -12px !important;
             }}
-            div.st-key-{prefix}_ft_flex div[data-testid="stColumn"] {{
+            div[class*="st-key-{prefix}_ft_flex"] div[data-testid="stColumn"] {{
                 width: auto !important; flex: 0 0 auto !important; min-width: 0 !important;
                 padding-bottom: 12px !important;
             }}
-            div.st-key-{prefix}_ft_flex div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{
+            div[class*="st-key-{prefix}_ft_flex"] div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{
                 gap: 0 !important;
             }}
             /* Bulk buttons row */
-            div.st-key-{prefix}_bulk_btns {{
+            div[class*="st-key-{prefix}_bulk_btns"] {{
                 border: none !important; background: transparent !important;
                 box-shadow: none !important; padding: 0 !important; margin: 0 !important;
             }}
-            div.st-key-{prefix}_bulk_btns > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            div[class*="st-key-{prefix}_bulk_btns"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
                 border: none !important; padding: 0 !important;
             }}
-            div.st-key-{prefix}_bulk_btns > div[data-testid="stVerticalBlock"] {{
+            div[class*="st-key-{prefix}_bulk_btns"] > div[data-testid="stVerticalBlock"] {{
                 gap: 0 !important; padding-bottom: 0 !important;
             }}
             /* Select All / Deselect All */
-            div.st-key-{prefix}_btn_sa button, div.st-key-{prefix}_btn_da button {{
+            div[class*="st-key-{prefix}_btn_sa"] button, div[class*="st-key-{prefix}_btn_da"] button {{
                 background-color: rgba(255,255,255,0.07) !important; border: none !important;
                 border-radius: 8px !important; color: #fff !important;
-                height: 33px !important; min-height: 33px !important;
+                height: 35px !important; min-height: 35px !important;
                 padding-left: 12px !important; padding-right: 14px !important;
                 white-space: nowrap !important; width: 100% !important;
                 transition: background-color 0.15s ease !important;
             }}
-            div.st-key-{prefix}_btn_sa button:hover, div.st-key-{prefix}_btn_da button:hover {{
+            div[class*="st-key-{prefix}_btn_sa"] button:hover, div[class*="st-key-{prefix}_btn_da"] button:hover {{
                 background-color: rgba(255,255,255,0.15) !important;
             }}
-            div.st-key-{prefix}_btn_sa button p, div.st-key-{prefix}_btn_da button p {{
+            div[class*="st-key-{prefix}_btn_sa"] button p, div[class*="st-key-{prefix}_btn_da"] button p {{
                 display: flex !important; align-items: center !important; gap: 10px !important;
                 margin: 0 !important; line-height: 1 !important; white-space: nowrap !important;
             }}
-            div.st-key-{prefix}_btn_sa button p::before, div.st-key-{prefix}_btn_da button p::before {{
+            div[class*="st-key-{prefix}_btn_sa"] button p::before, div[class*="st-key-{prefix}_btn_da"] button p::before {{
                 content: "" !important; display: inline-block !important;
                 width: 16px !important; height: 16px !important;
                 background-size: contain !important; background-repeat: no-repeat !important;
                 background-position: center !important; flex-shrink: 0 !important;
             }}
-            div.st-key-{prefix}_btn_sa button p::before {{
+            div[class*="st-key-{prefix}_btn_sa"] button p::before {{
                 background-image: url('data:image/png;base64,{b64_select_all}') !important;
             }}
-            div.st-key-{prefix}_btn_da button p::before {{
+            div[class*="st-key-{prefix}_btn_da"] button p::before {{
                 background-image: url('data:image/png;base64,{b64_clear}') !important;
             }}
             /* Restore button icon */
-            div.st-key-{prefix}_restore button p::before {{
+            div[class*="st-key-{prefix}_restore"] button p::before {{
                 content: "" !important; display: inline-block !important;
-                width: 16px !important; height: 16px !important;
+                width: 14px !important; height: 14px !important;
                 background-image: url('data:image/png;base64,{b64_restore}') !important;
                 background-size: contain !important; background-repeat: no-repeat !important;
                 background-position: center !important; flex-shrink: 0 !important;
-                margin-right: 6px; vertical-align: middle;
+                margin-right: 10px !important; 
+                vertical-align: middle !important;
+                position: relative !important;
+                top: -1px !important;
+            }}
+            /* Custom disabled state for Restore */
+            div[class*="st-key-{prefix}_restore"] button[disabled] {{
+                background-color: rgba(255, 255, 255, 0.05) !important;
+                color: rgba(255, 255, 255, 0.3) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }}
+            div[class*="st-key-{prefix}_restore"] button[disabled] p {{
+                color: rgba(255, 255, 255, 0.3) !important;
+            }}
+            div[class*="st-key-{prefix}_restore"] button[disabled] p::before {{
+                opacity: 0.3 !important;
+                filter: grayscale(100%) !important;
             }}
             /* File list tags */
-            div.st-key-{prefix}_filelist del {{
+            div[class*="st-key-{prefix}_filelist"] del {{
                 text-decoration: none !important; background-color: rgba(255,255,255,0.1) !important;
                 color: #fff !important; padding: 2px 6px !important; border-radius: 4px !important;
                 font-size: 0.70rem !important; font-weight: 500 !important; margin-left: 6px !important;
             }}
-            div.st-key-{prefix}_filelist code {{
+            div[class*="st-key-{prefix}_filelist"] code {{
                 background-color: rgba(0,0,0,0.25) !important; color: #9ca3af !important;
                 padding: 2px 6px !important; border-radius: 4px !important;
                 font-size: 0.70rem !important; font-weight: 500 !important;
                 border: none !important; margin-left: 6px !important;
             }}
-            /* Action row button heights */
-            div.st-key-{prefix}_close button, div.st-key-{prefix}_restore button {{
-                min-height: 42px !important; height: 42px !important;
+"""
+        tag_css_blocks = []
+        if all_exts_sorted:
+            for ext in all_exts_sorted:
+                safe_ext = ext.replace('.', '')
+                btn_key = f"{prefix}_filter_btn_{safe_ext}"
+                ext_keys = ext_to_keys[ext]
+                total = len(ext_keys)
+                selected = sum(1 for k in ext_keys if st.session_state.get(k, False))
+                if selected == 0:
+                    bg, bg_h = "#11141a", "#1a1e28"
+                    bd, bd_h = "rgba(255,255,255,0.25)", "rgba(255,255,255,0.4)"
+                elif selected == total:
+                    bg, bg_h = "#1f486b", "#285b86"
+                    bd, bd_h = "#3498db", "#5dade2"
+                else:
+                    bg, bg_h = "#0d1b2a", "#142838"
+                    bd, bd_h = "#3498db", "#5dade2"
+                _k_low = btn_key.lower()
+                _k_hyp = btn_key.lower().replace('_', '-')
+                tag_css_blocks.append(f"""
+            div[data-testid="stDialog"] div.st-key-{_k_low} button, div[role="dialog"] div[class*="st-key-{_k_low}"] button,
+            div[class*="st-key-{_k_low}"] button, div[class*="st-key-{_k_hyp}"] button {{
+                background-color: {bg} !important; border: 1px solid {bd} !important;
+                color: #ffffff !important; padding: 2px 14px !important;
+                min-height: 28px !important; height: 28px !important;
+                border-radius: 6px !important; transition: all 0.15s ease !important;
+                box-shadow: none !important;
             }}
-            {''.join(css_ext_blocks)}
-        </style>"""
-        st.markdown(_css, unsafe_allow_html=True)
+            div[data-testid="stDialog"] div.st-key-{_k_low} button:hover, div[role="dialog"] div[class*="st-key-{_k_low}"] button:hover,
+            div[class*="st-key-{_k_low}"] button:hover, div[class*="st-key-{_k_hyp}"] button:hover {{
+                background-color: {bg_h} !important; border-color: {bd_h} !important;
+            }}
+            div[data-testid="stDialog"] div.st-key-{_k_low} button p, div[role="dialog"] div[class*="st-key-{_k_low}"] button p,
+            div[class*="st-key-{_k_low}"] button p, div[class*="st-key-{_k_hyp}"] button p {{
+                font-size: 0.8rem !important; font-weight: 500 !important; margin: 0 !important;
+            }}
+            div[data-testid="stDialog"] div.st-key-{_k_low} button p span, div[role="dialog"] div[class*="st-key-{_k_low}"] button p span,
+            div[class*="st-key-{_k_low}"] button p span, div[class*="st-key-{_k_hyp}"] button p span {{
+                font-size: 0.7rem !important; font-weight: 400 !important;
+                color: rgba(255,255,255,0.55) !important;
+                margin-left: 3px !important; letter-spacing: 0.3px !important;
+            }}""")
+
+        _css += "".join(tag_css_blocks) + "</style>"
+        st.html(_css)
 
         # ── 1. Custom Header ──────────────────────────────────────────
         st.html(f"""
@@ -400,63 +456,68 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 Ignored Files
             </div>
         </div>
-        <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:4px;margin-bottom:12px;">
-            {esc(course_name)}
+        <div style="color:rgba(255,255,255,0.9);font-size:0.85rem;margin-top:4px;margin-bottom:12px;">
+            Course: {esc(course_name)}
         </div>
         """)
 
-        # ── 2. Smart Select Card ──────────────────────────────────────
-        with st.container(border=True, key=f"{prefix}_filter_box"):
-            st.html("<div style='font-size:0.95rem;font-weight:700;margin:0 0 2px 0;color:#fff;'>Smart Select</div>")
-
-            if all_exts_sorted:
-                st.html("<div style='font-size:0.72em;padding:0 0 2px 0;color:rgba(255,255,255,0.45);font-weight:400;'>By filetype</div>")
-
-                with st.container(border=True, key=f"{prefix}_ft_flex"):
-                    safe_len = min(len(all_exts_sorted), 90)
-                    cols = st.columns(safe_len)
-                    for i, ext in enumerate(all_exts_sorted):
-                        safe_ext = ext.replace('.', '')
-                        btn_key = f"{prefix}_filter_btn_{safe_ext}"
-                        ext_keys = ext_to_keys[ext]
-                        total = len(ext_keys)
-                        selected = sum(1 for k in ext_keys if st.session_state.get(k, False))
-                        ext_label = ext[1:].upper() if ext.startswith('.') else ext.upper()
-                        if selected == 0:
-                            final_label = f"{ext_label} :grey[(none)]"
-                        elif selected == total:
-                            final_label = f"{ext_label} :grey[(all)]"
-                        else:
-                            final_label = f"{ext_label} :grey[({selected}/{total})]"
-
-                        def _on_tag_click(ext_name=ext):
-                            ek = ext_to_keys[ext_name]
-                            tot = len(ek)
-                            sel = sum(1 for k in ek if st.session_state.get(k, False))
-                            new_val = False if sel == tot else True
-                            for k in ek:
-                                st.session_state[k] = new_val
-
-                        with cols[i % safe_len]:
-                            st.button(final_label, key=btn_key, on_click=_on_tag_click)
-
-            st.html("<div style='padding:2px 0 4px 0;'><hr style='border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0;' /></div>")
-
-            with st.container(border=True, key=f"{prefix}_bulk_btns"):
-                col_sel, col_clr = st.columns([1, 1])
-                with col_sel:
-                    def _select_all():
-                        for k in all_keys:
-                            st.session_state[k] = True
-                    st.button("Select All", key=f"{prefix}_btn_sa", use_container_width=True, on_click=_select_all)
-                with col_clr:
-                    def _deselect_all():
-                        for k in all_keys:
-                            st.session_state[k] = False
-                    st.button("Deselect All", key=f"{prefix}_btn_da", use_container_width=True, on_click=_deselect_all)
-
-        # ── 3. Help text ──────────────────────────────────────────────
+        # ── 2. Help text ──────────────────────────────────────────────
         st.html("<div style='font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:2px;'>Select files to restore. Restored files will appear in your next sync run.</div>")
+
+        # -- 3. Smart Select Card (Collapsible chevron) -----------------
+        with st.container(border=True, key=f"{prefix}_filter_box"):
+            # Custom chevron toggle (checkbox styled as rotating arrow header)
+            chevron_key = f"{prefix}_chevron"
+            if chevron_key not in st.session_state:
+                st.session_state[chevron_key] = False  # start collapsed
+            st.checkbox("Smart Select", key=chevron_key)
+
+            if st.session_state[chevron_key]:
+                if all_exts_sorted:
+                    st.html("<div style='font-size:0.72em;padding:0;color:rgba(255,255,255,0.45);font-weight:400;margin-top:-15px;margin-bottom:-5px;'>By filetype</div>")
+
+                    with st.container(border=True, key=f"{prefix}_ft_flex"):
+                        safe_len = min(len(all_exts_sorted), 90)
+                        cols = st.columns(safe_len)
+                        for i, ext in enumerate(all_exts_sorted):
+                            safe_ext = ext.replace('.', '')
+                            btn_key = f"{prefix}_filter_btn_{safe_ext}"
+                            ext_keys = ext_to_keys[ext]
+                            total = len(ext_keys)
+                            selected = sum(1 for k in ext_keys if st.session_state.get(k, False))
+                            ext_label = ext[1:].upper() if ext.startswith('.') else ext.upper()
+                            if selected == 0:
+                                final_label = f"{ext_label} :grey[(none)]"
+                            elif selected == total:
+                                final_label = f"{ext_label} :grey[(all)]"
+                            else:
+                                final_label = f"{ext_label} :grey[({selected}/{total})]"
+
+                            def _on_tag_click(ext_name=ext):
+                                ek = ext_to_keys[ext_name]
+                                tot = len(ek)
+                                sel = sum(1 for k in ek if st.session_state.get(k, False))
+                                new_val = False if sel == tot else True
+                                for k in ek:
+                                    st.session_state[k] = new_val
+
+                            with cols[i % safe_len]:
+                                st.button(final_label, key=btn_key, on_click=_on_tag_click)
+
+                st.html("<div style='padding:0; margin-top:-5px; margin-bottom:-5px;'><hr style='border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0;' /></div>")
+
+                with st.container(border=True, key=f"{prefix}_bulk_btns"):
+                    col_sel, col_clr = st.columns([1, 1])
+                    with col_sel:
+                        def _select_all():
+                            for k in all_keys:
+                                st.session_state[k] = True
+                        st.button("Select All", key=f"{prefix}_btn_sa", use_container_width=True, on_click=_select_all)
+                    with col_clr:
+                        def _deselect_all():
+                            for k in all_keys:
+                                st.session_state[k] = False
+                        st.button("Deselect All", key=f"{prefix}_btn_da", use_container_width=True, on_click=_deselect_all)
 
         # ── 4. File list with extension + size tags ───────────────────
         with st.container(height=400, border=True, key=f"{prefix}_filelist"):
@@ -530,7 +591,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
                to fit short Favorites lists; max-height caps growth so the
                dialog never overflows the viewport — All Courses scrolls
                internally via overflow-y:auto once content exceeds max-height. */
-            div.st-key-course_list_scroll_container {
+            div[class*="st-key-course_list_scroll_container"] {
                 border: none !important;
                 border-radius: 0 !important;
                 height: auto !important;
@@ -545,12 +606,12 @@ def select_course_dialog_inner(courses, current_selected_id, ):
             }
             /* Strip padding from the inner stVerticalBlock so the first/last
                course item sits flush against the container edges. */
-            div.st-key-course_list_scroll_container > div[data-testid="stVerticalBlock"] {
+            div[class*="st-key-course_list_scroll_container"] > div[data-testid="stVerticalBlock"] {
                 padding: 0 !important;
             }
             /* When CBS filters are expanded they take up ~80px above the list;
                shrink the max-height by the same amount to keep dialog within viewport. */
-            html:has(div.st-key-sync_d_show_cbs_filters input:checked) div.st-key-course_list_scroll_container {
+            html:has(div[class*="st-key-sync_d_show_cbs_filters"] input:checked) div[class*="st-key-course_list_scroll_container"] {
                 max-height: 35vh !important;
             }
             /* Compact dialog: reduce stVerticalBlock gap between chrome elements
