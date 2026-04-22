@@ -409,6 +409,40 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 font-size: 0.70rem !important; font-weight: 500 !important;
                 border: none !important; margin-left: 6px !important;
             }}
+            /* Clickable rows for ignored files list */
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] {{
+                border-radius: 8px !important;
+                transition: background-color 0.2s ease !important;
+                padding: 0px 12px !important;
+                margin-top: -6px !important;
+                margin-bottom: -6px !important;
+            }}
+            /* Strip the inner border wrapper Streamlit adds for keyed containers */
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
+                border: none !important;
+                padding: 0 !important;
+            }}
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"]:hover {{
+                background-color: rgba(255, 255, 255, 0.04) !important;
+                cursor: pointer !important;
+            }}
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"]:has(input[type="checkbox"]:checked) {{
+                background-color: rgba(56, 189, 248, 0.06) !important;
+            }}
+            /* Force the stElementContainer (checkbox wrapper) to fill the row width */
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] .stElementContainer:has([data-testid="stCheckbox"]) {{
+                width: 100% !important;
+            }}
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] [data-testid="stCheckbox"] {{
+                width: 100% !important;
+            }}
+            /* Move vertical padding INTO the label so the entire row height is clickable */
+            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] label[data-baseweb="checkbox"] {{
+                width: 100% !important;
+                cursor: pointer !important;
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
+            }}
 """
         tag_css_blocks = []
         if all_exts_sorted:
@@ -538,7 +572,8 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 _size_clean = ""
                 if f.original_size and f.original_size > 0:
                     _size_clean = f" `{format_file_size(f.original_size)}`"
-                st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                with st.container(key=f"ign_row_{course_id}_{f.canvas_file_id}"):
+                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
 
         # ── 5. Count + success feedback ───────────────────────────────
         checked_count = sum(1 for k in all_keys if st.session_state.get(k, False))

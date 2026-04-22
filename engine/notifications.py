@@ -196,12 +196,15 @@ def play_completion_beep(
     """
     if mode == 'sync':
         title = 'Sync Complete'
+    elif mode == 'sync_review':
+        title = 'Sync Review Ready'
     else:
         title = 'Download Complete'
 
     body = summary or (
         'Your files are ready.' if mode == 'download'
-        else 'Your courses are up to date.'
+        else 'Your courses are up to date.' if mode == 'sync'
+        else 'Course analysis completed. Waiting for your review.'
     )
 
     system = platform.system()

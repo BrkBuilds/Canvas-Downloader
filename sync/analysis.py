@@ -20,6 +20,7 @@ from canvas_logic import CanvasManager
 from core.state_registry import NOTEBOOK_SUB_KEYS
 from sync_manager import SyncManager
 from ui_helpers import render_sync_wizard, friendly_course_name
+from engine.notifications import play_completion_beep
 
 logger = logging.getLogger(__name__)
 
@@ -282,4 +283,28 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # Do NOT pop `sync_quick_mode` here so the cancel routing knows we are in Quick Sync!
             st.rerun()
     else:
+        # Tally files for sync review notification
+        total_new = 0
+        total_updated = 0
+        total_missing = 0
+        
+        for res_data in all_results:
+            result = res_data.get('result')
+            if result:
+                total_new += len(getattr(result, 'new_files', []))
+                total_updated += len(getattr(result, 'updated_files', []))
+                total_missing += len(getattr(result, 'missing_files', []))
+                
+        parts = []
+        if total_new > 0:
+            parts.append(f"{total_new} new file{'s' if total_new != 1 else ''}")
+        if total_updated > 0:
+            parts.append(f"{total_updated} update{'s' if total_updated != 1 else ''}")
+        if total_missing > 0:
+            parts.append(f"{total_missing} missing file{'s' if total_missing != 1 else ''}")
+            
+        summary = ", ".join(parts) + (" found." if parts else " No changes found.")
+        
+        play_completion_beep(mode='sync_review', summary=summary.strip())
+        
         st.session_state['download_status'] = 'analyzed'

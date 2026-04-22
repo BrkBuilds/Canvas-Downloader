@@ -827,6 +827,125 @@ def show_analysis_review(on_confirm_sync):
     """, height=0, width=0)
     
     st.html(f"""<style>
+    /* ===== CLICKABLE ROW HOVER / CHECKED STATES ===== */
+    div[class*="st-key-sync_row_"] {{
+        border-radius: 6px !important;
+        transition: background-color 0.2s ease !important;
+        padding: 0px 8px !important;
+        margin-bottom: -10px !important;
+    }}
+    /* Strip the inner border wrapper Streamlit adds for keyed containers */
+    div[class*="st-key-sync_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
+        border: none !important;
+        padding: 0 !important;
+    }}
+    div[class*="st-key-sync_row_"]:hover {{
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        cursor: pointer !important;
+    }}
+    div[class*="st-key-sync_row_"]:has(input[type="checkbox"]:checked) {{
+        background-color: rgba(56, 189, 248, 0.06) !important;
+    }}
+
+    /* ===== FULL-HEIGHT CLICKABILITY FIX =====
+       Root cause: sync_review.css had align-items:center on stHorizontalBlock
+       which prevented columns from stretching. Now it's stretch.
+       We kill column margin and stretch the checkbox chain so the label
+       fills the full row height, making every pixel clickable.
+       All internal content is vertically centered via justify-content/align-items. */
+    div[class*="st-key-sync_row_"] .stHorizontalBlock {{
+        align-items: stretch !important;
+        border-bottom: none !important;
+        border: none !important;
+    }}
+    /* Both columns: stretch to full height, center content vertically */
+    div[class*="st-key-sync_row_"] [data-testid="stColumn"] {{
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }}
+    div[class*="st-key-sync_row_"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
+    div[class*="st-key-sync_row_"] [data-testid="stColumn"] [data-testid="stVerticalBlock"] {{
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        flex: 1 !important;
+    }}
+    /* Checkbox column: stretch the entire chain so label fills the column height */
+    div[class*="st-key-sync_row_"] .stElementContainer:has([data-testid="stCheckbox"]) {{
+        width: 100% !important;
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+    div[class*="st-key-sync_row_"] [data-testid="stCheckbox"] {{
+        width: 100% !important;
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+    div[class*="st-key-sync_row_"] label[data-baseweb="checkbox"] {{
+        width: 100% !important;
+        cursor: pointer !important;
+        flex: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+    }}
+    /* Checkbox icon: nudge up 1px */
+    div[class*="st-key-sync_row_"] label[data-baseweb="checkbox"] > div:first-child {{
+        margin-top: -1px !important;
+    }}
+    /* Checkbox text: nudge down 2px */
+    div[class*="st-key-sync_row_"] label[data-baseweb="checkbox"] > div:last-child {{
+        margin-top: 2px !important;
+    }}
+    /* Non-checkbox containers: just center content, don't stretch */
+    div[class*="st-key-sync_row_"] .stElementContainer:not(:has([data-testid="stCheckbox"])) {{
+        display: flex !important;
+        align-items: center !important;
+    }}
+
+    /* ===== REMOVE DOTTED SEPARATOR LINES FROM ALL FILE LIST CONTAINERS ===== */
+    div[class*="st-key-sync_review_file_list_"] .stHorizontalBlock {{
+        border-bottom: none !important;
+        border: none !important;
+    }}
+
+    /* ===== IGNORED FILES — RESTORE ROW HOVER (button-triggered) ===== */
+    div[class*="st-key-ign_restore_row_"] {{
+        border-radius: 6px !important;
+        transition: background-color 0.2s ease !important;
+        padding: 0px 6px !important;
+        margin-bottom: -10px !important;
+    }}
+    div[class*="st-key-ign_restore_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
+        border: none !important;
+        padding: 0 !important;
+    }}
+    /* Only highlight the row when user hovers the restore button */
+    div[class*="st-key-ign_restore_row_"]:has(button:hover) {{
+        background-color: rgba(255, 255, 255, 0.04) !important;
+    }}
+    /* Remove dotted separator from ignored file rows too */
+    div[class*="st-key-ign_restore_row_"] .stHorizontalBlock {{
+        border-bottom: none !important;
+        border: none !important;
+    }}
+
+    /* ===== IGNORED FILES EXPANDER — BULLET POINTS & WHITE TEXT ===== */
+    /* Add white bullet point before each ignored file name */
+    div[class*="st-key-cat_ignored"] div[class*="st-key-ign_restore_row_"] .stHorizontalBlock [data-testid="stColumn"]:first-child div[data-testid="stMarkdownContainer"] > div::before {{
+        content: "•" !important;
+        margin-right: 14px !important;
+        color: #ffffff !important;
+        font-size: 18px !important;
+    }}
+    /* Make ignored file text fully white */
+    div[class*="st-key-cat_ignored"] div[class*="st-key-ign_restore_row_"] .stHorizontalBlock [data-testid="stMarkdownContainer"] div {{
+        color: #ffffff !important;
+    }}
+
     /* ===== FILE SIZE AND EXTENSION TAGS ===== */
     div[class*="st-key-cat_"] del {{
         text-decoration: none !important;
@@ -1163,15 +1282,16 @@ def show_analysis_review(on_confirm_sync):
                                 size = format_file_size(file.size) if file.size else ""
                                 key = f"sync_new_{pair['course_id']}_{file.id}"
                                 st.session_state.setdefault(key, True)
-                                col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                with col1:
-                                    _disp_raw = unquote_plus(file.display_name or file.filename)
-                                    _name, _ext = os.path.splitext(_disp_raw)
-                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                    _size_clean = f" `{size}`" if size else ""
-                                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
-                                with col2:
-                                    st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                                with st.container(key=f"sync_row_new_{pair['course_id']}_{file.id}"):
+                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                    with col1:
+                                        _disp_raw = unquote_plus(file.display_name or file.filename)
+                                        _name, _ext = os.path.splitext(_disp_raw)
+                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                        _size_clean = f" `{size}`" if size else ""
+                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                    with col2:
+                                        st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
             # Updated files — always starts OPEN
             if result.updated_files:
@@ -1192,15 +1312,16 @@ def show_analysis_review(on_confirm_sync):
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                 key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
                                 st.session_state.setdefault(key, True)
-                                col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                with col1:
-                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                    _name, _ext = os.path.splitext(_disp_raw)
-                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                    _size_clean = f" `{size}`" if size else ""
-                                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
-                                with col2:
-                                    st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
+                                with st.container(key=f"sync_row_upd_{pair['course_id']}_{canvas_file.id}"):
+                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                    with col1:
+                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
+                                        _name, _ext = os.path.splitext(_disp_raw)
+                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                        _size_clean = f" `{size}`" if size else ""
+                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                    with col2:
+                                        st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
 
             # Missing files — always starts OPEN
             if result.missing_files:
@@ -1220,14 +1341,15 @@ def show_analysis_review(on_confirm_sync):
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
                                 st.session_state.setdefault(key, True)
-                                col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                with col1:
-                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    _name, _ext = os.path.splitext(_disp_raw)
-                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                    st.checkbox(f"{_name}{_ext_clean}", key=key)
-                                with col2:
-                                    st.button("\u200b", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
+                                with st.container(key=f"sync_row_miss_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                    with col1:
+                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                        _name, _ext = os.path.splitext(_disp_raw)
+                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                        st.checkbox(f"{_name}{_ext_clean}", key=key)
+                                    with col2:
+                                        st.button("\u200b", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
@@ -1247,14 +1369,15 @@ def show_analysis_review(on_confirm_sync):
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                                 st.session_state.setdefault(key, True)
-                                col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                with col1:
-                                    _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                    _name, _ext = os.path.splitext(_disp_raw)
-                                    _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                    st.checkbox(f"{_name}{_ext_clean}", key=key)
-                                with col2:
-                                    st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                                with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                    with col1:
+                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                        _name, _ext = os.path.splitext(_disp_raw)
+                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                        st.checkbox(f"{_name}{_ext_clean}", key=key)
+                                    with col2:
+                                        st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
             # Deleted files — always starts OPEN
             if result.deleted_on_canvas:
@@ -1283,14 +1406,15 @@ def show_analysis_review(on_confirm_sync):
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
                             for sync_info in result.ignored_files:
                                 icon = get_file_icon(sync_info.canvas_filename)
-                                col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                with col1:
-                                    _disp_raw = unquote_plus(sync_info.canvas_filename)
-                                    _name, _ext = os.path.splitext(_disp_raw)
-                                    _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                                    st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
-                                with col2:
-                                    st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
+                                with st.container(key=f"ign_restore_row_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                    with col1:
+                                        _disp_raw = unquote_plus(sync_info.canvas_filename)
+                                        _name, _ext = os.path.splitext(_disp_raw)
+                                        _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
+                                    with col2:
+                                        st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
             
         # Inject 20px gap BETWEEN courses, outside the course's content container
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
