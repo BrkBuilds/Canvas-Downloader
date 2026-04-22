@@ -468,6 +468,19 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
 - **Blind 200 Guarding (Content-Type)**: Do not blindly trust `status == 200` for binary file downloads. Canvas LMS often returns 200 OK with `text/html` payloads containing server error messages. Always validate the response `Content-Type` against the expected file extension before opening a local `.part` file handler.
 
 ## UI Component Patterns
+- **Unified Completion Dashboard Pattern (`render_completion_card`)**:
+    - *Problem*: Separate status bars (Success, Warnings, Errors, Cancelled) stacking on top of each other creates a cluttered, confusing "skittles" effect with multiple primary colors drawing the eye simultaneously.
+    - *Solution*: Route all completion states through a single monolithic `render_completion_card` wrapper. The wrapper computes the dominant state (Error > Cancelled > Success) and renders a single unified header, with specific diagnostic breakdowns (e.g. `2 warnings`, `skipped files`) nested cohesively inside.
+- **Embedded Contextual Retry Pattern**:
+    - *Problem*: Placing the "Retry Failed Items" button at the bottom of the screen or outside the error list creates cognitive dissonance. The user sees errors, then has to hunt for the recovery action.
+    - *Solution*: Embed the retry button directly inside the `render_error_section` panel alongside the error list. The component accepts a `retry_btn_callback` to decouple the UI from the orchestrator state resets (e.g., zeroing out fail counters), keeping the rendering pure while enabling immediate contextual action.
+- **Structural Retry Guard (`has_retriable_errors`)**:
+    - *Problem*: Allowing users to retry structural failures (e.g. 401 Unauthorized on the Course root) creates infinite loops since these are API access issues, not file drops.
+    - *Solution*: The error section dynamically evaluates if the `errors` array contains any objects with valid physical `filepath` properties. If false, it explicitly hides the Retry button and renders a "Full Rescan Required" warning.
+- **Compact Filetype Breakdown Pattern (`_render_filetype_summary`)**:
+    - *Problem*: Rendering a line-by-line list of 500 successfully downloaded files creates an unreadable wall of text that lags the DOM.
+    - *Solution*: Aggregate the download payload by extension. Use `collections.Counter` to group filetypes, then render a compact grid of CSS-styled pills utilizing Base64-injected SVG icons (PDF, HTML, ZIP, etc.) to provide high-density analytical feedback.
+
 - **Un-Throttled Per-File Status Indicator**:
     - *Problem*: High-speed asynchronous download loops often exceed Streamlit's UI rerun budget (rerunning every 10ms for 100 small files would crash the browser). Throttling the *entire* UI block (e.g., `if time.time() - last_ui_update > 0.4:`) causes the "Currently downloading: filename" text to lag behind the terminal log.
     - *Solution*: Segregate heavy UI updates (progress bars, terminal logs, metrics) into a throttled block, but keep the per-file status text (`active_file_placeholder`) **outside** the throttle. This ensures the user receives instantaneous feedback on precisely which file is active while preserving overall browser performance.
@@ -481,3 +494,4 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
     - *Solution 3 (Surgical Directory Guards)*: Inside the `download_isolated_batch_async` loop, always execute `Path(filepath.parent).mkdir(parents=True, exist_ok=True)` before initiating the download task for each item. This guarantees folder existence even if the environment was modified between the initial scan and the retry attempt.
     - *Solution 4 (Download Retry State Reset)*: The standard "Retry Failed Items" button safely sets `download_status = 'isolated_retry'` (ensuring the full dashboard renders without blanking) and defensively resets `cancel_requested = False`, `download_cancelled = False`, `retry_downloaded_items = 0`, and `retry_failed_items = 0`.
     - *Solution 5 (Sync Retry State Reset)*: The Sync Tab's "Retry Failed Downloads" button resets `sync_cancel_requested = False` and `sync_cancelled = False` while forcing `download_status = 'syncing'` and `step = 3`, perfectly re-routing the pipeline back into the execution phase with a clean slate.
+    - *UI Clickability (The Flex-Stretch Chain)*: When building lists with checkboxes in `st.columns`, Streamlit's `vertical_alignment="center"` forces `margin: 5px 0` on columns and `align-items: center` on the parent, causing unclickable vertical dead zones. To fix this, kill the margin (`margin: 0 !important`), set `align-items: stretch` on the parent, and apply a contiguous `display: flex; flex-direction: column; flex: 1 !important` chain down through all Streamlit wrappers to the native HTML `<label>`, making the hit area 100% of the row height. Vertically align the inner text/icon using `align-items: center` on the label.

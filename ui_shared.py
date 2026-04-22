@@ -24,98 +24,115 @@ SECONDARY_ENTITY_ICONS = {
 
 def render_completion_card(synced_count: int, error_count: int,
                            total_bytes: int, mode: str = 'download',
-                           size_skipped_files: list = None, size_limit_mb: int = 0):
-    """Render the premium success/warning/error summary card.
-    
-    Args:
-        synced_count: Number of files successfully processed.
-        error_count: Number of errors encountered.
-        total_bytes: Total bytes downloaded.
-        mode: 'download' or 'sync' — controls label text.
-        size_skipped_files: List of file names skipped due to size limit.
-        size_limit_mb: The MB limit the user set (for display).
+                           size_skipped_files: list = None, size_limit_mb: int = 0,
+                           retry_attempted: bool = False, retry_resolved: int = 0,
+                           retry_total: int = 0, discovery_skipped: int = 0):
+    """Render the unified completion summary card.
+
+    Single card that absorbs all status info: success/partial/failure,
+    retry results, discovery warnings, and size-skipped annotations.
     """
+    from styles import inject_css
+    inject_css('completion.css')
+
     size_skipped_files = size_skipped_files or []
     size_skipped_count = len(size_skipped_files)
     action_word = 'Downloaded' if mode == 'download' else 'Synced'
     file_word = 'file' if synced_count == 1 else 'files'
-    error_word = 'error' if error_count == 1 else 'errors'
 
-    # Build the skip annotation that gets folded into the summary line
-    skip_note = ''
-    if size_skipped_count > 0:
-        _sw = 'file' if size_skipped_count == 1 else 'files'
-        skip_note = f" · {size_skipped_count} {_sw} skipped (exceeds {size_limit_mb} MB limit)"
-
+    # Determine card variant
     if synced_count == 0 and error_count > 0:
-        # Full failure
-        st.error(f'{action_word.replace("ed", "")} failed for all files.')
+        card_class = 'failure'
+        title = f'{action_word.replace("ed", "")} failed for all {error_count} files'
+    elif error_count > 0:
+        card_class = 'partial'
+        title = f'{action_word} {synced_count} {file_word} with {error_count} {"error" if error_count == 1 else "errors"}'
+    elif synced_count > 0:
+        card_class = 'success'
+        title = f'{action_word} {synced_count} {file_word} successfully!'
+    else:
+        st.success("Nothing to download - all files are up to date!")
         return
 
-    if synced_count > 0 and error_count > 0:
-        # Partial success — yellow card
-        title = f"Partial Success! {action_word} {synced_count} {file_word} with {error_count} {error_word}"
-        summary = f'{format_file_size(total_bytes)} downloaded. Please check the errors below.{skip_note}'
-        
-        st.markdown(f"""
-        <div style="background-color:#3a2a1a;border:1px solid {theme.WARNING_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:{theme.WARNING_ALT};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
-                ⚠️ {title}
-            </div><!-- # audit-ignore -->
-            <div style="color:#d1d5db;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
-                {summary}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if size_skipped_count > 0:
-            with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
-                st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
-                for _sf in size_skipped_files:
-                    st.markdown(f"⏭️ {_sf}")
+    # Summary line
+    parts = [f'{format_file_size(total_bytes)} downloaded']
+    if error_count > 0:
+        parts.append(f'{error_count} {"error" if error_count == 1 else "errors"} - see details below')
+    if size_skipped_count > 0:
+        _sw = 'file' if size_skipped_count == 1 else 'files'
+        parts.append(f'{size_skipped_count} {_sw} skipped (exceeds {size_limit_mb} MB limit)')
+    summary = ' · '.join(parts)
 
-    elif synced_count > 0:
-        # Full success — green card
-        title = f'{action_word} {synced_count} {file_word} successfully!'
-        summary = f"{format_file_size(total_bytes)} downloaded.{skip_note}"
-        
-        st.markdown(f"""
-        <div style="background-color:#1a3a2a;border:1px solid {theme.SUCCESS_ALT};border-radius:8px;padding:12px 16px;margin:8px 0;">
-            <div style="color:{theme.SUCCESS};font-weight:600;font-size:1.05em;"><!-- # audit-ignore: title/summary are app-assembled count strings -->
-                🎉 {title}
-            </div><!-- # audit-ignore -->
-            <div style="color:#d1d5db;font-size:0.85em;margin-top:4px;"><!-- # audit-ignore -->
-                {summary}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if size_skipped_count > 0:
-            with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
-                st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
-                for _sf in size_skipped_files:
-                    st.markdown(f"⏭️ {_sf}")
-                    
+    # Optional notes (retry + discovery, folded inline)
+    notes_html = ''
+    if retry_attempted and retry_total > 0:
+        if retry_resolved == 0:
+            notes_html += (
+                f'<div class="retry-note">'
+                f'<span class="retry-badge retry-fail">Retry</span> '
+                f'Attempted for {retry_total} {"item" if retry_total == 1 else "items"}, '
+                f'but {"it" if retry_total == 1 else "none"} could not be downloaded. '
+                f'These files may not be available on Canvas.'
+                f'</div>'
+            )
+        elif retry_resolved < retry_total:
+            notes_html += (
+                f'<div class="retry-note">'
+                f'<span class="retry-badge retry-success">Retry</span> '
+                f'Recovered {retry_resolved} of {retry_total} failed {"item" if retry_total == 1 else "items"}!'
+                f'</div>'
+            )
+        else:
+            notes_html += (
+                f'<div class="retry-note">'
+                f'<span class="retry-badge retry-success">Retry</span> '
+                f'Successfully recovered all {retry_resolved} previously failed {"item" if retry_resolved == 1 else "items"}!'
+                f'</div>'
+            )
+
+    if discovery_skipped > 0:
+        _fw = 'file' if discovery_skipped == 1 else 'files'
+        _it = 'it' if discovery_skipped == 1 else 'them'
+        notes_html += (
+            f'<div class="card-note">'
+            f'{discovery_skipped} {_fw} could not be downloaded because Canvas did not provide '
+            f'enough information to locate {_it}. Try downloading the course again to pick {_it} up.'
+            f'</div>'
+        )
+
+    st.markdown(f"""
+    <div class="completion-card {card_class}">
+        <div class="card-title">{esc(title)}</div>
+        <div class="card-summary">{summary}</div>
+        {notes_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+    if size_skipped_count > 0:
+        with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
+            st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
+            for _sf in size_skipped_files:
+                st.markdown(f"- {_sf}")
+
+    if card_class == 'success':
         st.balloons()
-
-    else:
-        st.success("Nothing to download — all files are up to date!")
 
 
 def render_folder_cards(file_details: dict, folder_paths: dict,
                         key_prefix: str = 'dl'):
-    """Render per-folder cards with file list dropdowns and Open Folder buttons.
-    
+    """Render per-folder cards with filetype summary and Open Folder buttons.
+
     Args:
         file_details: Dict mapping folder_key -> list of filenames.
         folder_paths: Dict mapping folder_key -> absolute folder path string.
         key_prefix: Unique prefix for Streamlit widget keys ('dl' or 'sync').
     """
+    import os
     has_files = any(len(files) > 0 for files in file_details.values())
     if not has_files:
         return
 
-    st.markdown("#### 📁 Folders Updated")
+    st.markdown('<div class="completion-section-header">Folders Updated</div>', unsafe_allow_html=True)
 
     for idx, (folder_key, files) in enumerate(file_details.items()):
         if not files:
@@ -125,16 +142,9 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
         folder_display = short_path(folder_path) if folder_path else folder_key
 
         with st.container(border=True):
-            # CSS: remove inner expander border & tighten spacing
             st.markdown(f"""<style>
-            div[data-testid="stExpander"] {{
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin-top: 0 !important;
-            }}
             div[data-testid="stVerticalBlock"]:has(span#{key_prefix}_folder_{idx}) {{
-                padding-top: 5px !important;
+                padding-top: 2px !important;
             }}
             div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) {{
                 align-items: center !important;
@@ -178,53 +188,209 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
 
             c1, c2, c3 = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
             with c1:
-                st.markdown(f'<span id="{key_prefix}_folder_{idx}"></span>**📁 {folder_display}**', unsafe_allow_html=True)  # audit-ignore: folder_display is a local filesystem path
+                st.markdown(f'<span id="{key_prefix}_folder_{idx}"></span>**{folder_display}**', unsafe_allow_html=True)  # audit-ignore: folder_display is a local filesystem path
             with c2:
                 if folder_path and Path(folder_path).exists():
-                    if st.button('📂 Open folder', key=f"{key_prefix}_open_{idx}"):
+                    if st.button('\U0001f4c2 Open folder', key=f"{key_prefix}_open_{idx}"):
                         open_folder(folder_path)
             with c3:
                 st.empty()
 
-            with st.expander(f'See {len(files)} downloaded files'):
-                for fname in files:
-                    st.markdown(f"<div style='font-size:0.85em;color:#ccc;'>✅ {fname}</div>", unsafe_allow_html=True)
-                st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+            # Filetype breakdown summary instead of individual file list
+            _render_filetype_summary(files, f"{key_prefix}_ft_{idx}")
+
+
+
+# --- Base64 SVG icons for filetype pills ---
+_FILETYPE_SVGS = {
+    'pdf': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fca5a5'/%3E%3Ctext x='7' y='17' font-size='6' font-weight='bold' fill='white'%3EPDF%3C/text%3E%3C/svg%3E",
+    'pptx': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fdba74'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EPPT%3C/text%3E%3C/svg%3E",
+    'ppt': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fdba74'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EPPT%3C/text%3E%3C/svg%3E",
+    'docx': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2393c5fd'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EDOC%3C/text%3E%3C/svg%3E",
+    'doc': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2393c5fd'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EDOC%3C/text%3E%3C/svg%3E",
+    'xlsx': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EXLS%3C/text%3E%3C/svg%3E",
+    'xls': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EXLS%3C/text%3E%3C/svg%3E",
+    'zip': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b5cf6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23c4b5fd'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EZIP%3C/text%3E%3C/svg%3E",
+    'html': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2367e8f9'/%3E%3Ctext x='4' y='17' font-size='5' font-weight='bold' fill='white'%3EHTML%3C/text%3E%3C/svg%3E",
+    'txt': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23d1d5db'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3ETXT%3C/text%3E%3C/svg%3E",
+    'jpg': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eab308'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fde047'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EJPG%3C/text%3E%3C/svg%3E",
+    'jpeg': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eab308'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fde047'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EJPG%3C/text%3E%3C/svg%3E",
+    'png': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314b8a6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%235eead4'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EPNG%3C/text%3E%3C/svg%3E",
+    'mp4': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec4899'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23f9a8d4'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EMP4%3C/text%3E%3C/svg%3E",
+    'mp3': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23d8b4fe'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EMP3%3C/text%3E%3C/svg%3E",
+    'csv': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3ECSV%3C/text%3E%3C/svg%3E",
+    'url': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%237dd3fc'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EURL%3C/text%3E%3C/svg%3E",
+}
+_FILETYPE_SVG_DEFAULT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234b5563'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%239ca3af'/%3E%3C/svg%3E"
+
+
+def _render_filetype_summary(files: list, key: str):
+    """Render a compact filetype breakdown as pill badges."""
+    import os
+    from collections import Counter
+    ext_counts = Counter()
+    for f in files:
+        ext = os.path.splitext(f)[1].lower().lstrip('.')
+        ext_counts[ext or 'other'] += 1
+
+    # Sort by count descending
+    sorted_exts = sorted(ext_counts.items(), key=lambda x: -x[1])
+    total = sum(ext_counts.values())
+
+    pills_html = ''
+    for ext, count in sorted_exts:
+        icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+        pills_html += (
+            f'<div class="filetype-pill">'
+            f'<img class="ft-icon" src="{icon_url}" alt="{ext}"/>'
+            f'<span class="ft-label">{esc(ext.upper())}</span>'
+            f'<span class="ft-count">{count}</span>'
+            f'</div>'
+        )
+
+    st.markdown(
+        f'<div style="font-size:0.82em;color:#9ca3af;margin-bottom:4px;">{total} {"file" if total == 1 else "files"} downloaded</div>'
+        f'<div class="filetype-summary">{pills_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+# --- Error type to human-friendly message mapping ---
+_ERROR_TRANSLATIONS = {
+    'No URL': 'This file has no download link on Canvas',
+    'LTI/Media Stream': 'This is a streamed video that cannot be downloaded directly',
+    'URL Expiration': 'The download link expired and could not be refreshed',
+    'Network Error': 'Network connection failed after multiple retries',
+    'Write Error': 'Could not save the file to disk',
+    '401 Unauthorized': 'Access denied - you may not have permission to download this file',
+}
+
+def _friendly_error_reason(err) -> str:
+    """Translate a DownloadError into a human-readable reason string."""
+    if not hasattr(err, 'error_type'):
+        return 'Download failed'
+
+    error_type = err.error_type or ''
+
+    # Direct match
+    if error_type in _ERROR_TRANSLATIONS:
+        return _ERROR_TRANSLATIONS[error_type]
+
+    # HTTP status codes
+    if error_type.startswith('HTTP '):
+        code = error_type.replace('HTTP ', '')
+        if code == '401':
+            return 'Access denied - you may not have permission to download this file'
+        if code == '403':
+            return 'Access forbidden by Canvas'
+        if code == '404':
+            return 'File not found on Canvas - it may have been removed'
+        return f'Canvas returned an error (HTTP {code})'
+
+    # Check message for common patterns
+    msg = (getattr(err, 'message', '') or '').lower()
+    if 'unauthorized' in msg or 'not authorised' in msg:
+        return 'Access denied - you may not have permission to download this file'
+    if 'not found' in msg:
+        return 'File not found on Canvas - it may have been removed'
+    if 'timeout' in msg:
+        return 'Connection timed out while downloading'
+
+    return 'Download failed - see error log for technical details'
+
+
+# SVG chevron for error panel toggle
+_CHEVRON_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
+# SVG alert circle for error rows
+_ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E"
 
 
 def render_error_section(error_list: list, error_log_paths: list = None,
-                         dialog_fn=None, key_prefix: str = 'dl'):
-    """Render error details expander and optional 'View Full Error Log' button.
-    
+                         dialog_fn=None, key_prefix: str = 'dl',
+                         retry_btn_callback=None, has_retriable_errors: bool = False):
+    """Render error details as a custom CSS panel with human-friendly messages.
+
     Args:
         error_list: List of error messages or DownloadError objects.
         error_log_paths: Optional list of Path objects to download_errors.txt files.
         dialog_fn: Optional callable; if provided, called with error_log_paths.
         key_prefix: Unique prefix for Streamlit widget keys.
+        retry_btn_callback: If provided, renders the retry button inside the panel.
+        has_retriable_errors: Whether retriable errors exist (controls retry btn visibility).
     """
     if not error_list:
         return
 
-    st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-    with st.expander("📋 View Error Details", expanded=True):
-        for err in error_list[:20]:
-            if hasattr(err, 'message'):
-                item_label = f"{err.item_name}: " if hasattr(err, 'item_name') and err.item_name else ""
-                st.markdown(f"❌ {item_label}{err.message}", unsafe_allow_html=True)
-            else:
-                st.markdown(f"❌ {err}")
-        if len(error_list) > 20:
-            st.caption(f"  ... and {len(error_list) - 20} more")
-        if st.session_state.get('error_log_enabled', True):
-            st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
+    import os
+    count = len(error_list)
+    display_errors = error_list[:20]
 
+    # Build error rows HTML
+    rows_html = ''
+    for err in display_errors:
+        if hasattr(err, 'item_name'):
+            fname = err.item_name or 'Unknown file'
+            reason = _friendly_error_reason(err)
+            ext = os.path.splitext(fname)[1].lower().lstrip('.')
+            ext_badge = f'<span class="err-ext-badge">.{esc(ext)}</span>' if ext else ''
+        else:
+            fname = str(err)
+            reason = ''
+            ext_badge = ''
+
+        rows_html += (
+            f'<div class="error-row">'
+            f'<img class="err-icon" src="{_ALERT_SVG}" alt="error"/>'
+            f'<div class="err-body">'
+            f'<div class="err-filename">{esc(fname)}{ext_badge}</div>'
+        )
+        if reason:
+            rows_html += f'<div class="err-reason">{esc(reason)}</div>'
+        rows_html += '</div></div>'
+
+    if count > 20:
+        rows_html += f'<div class="error-row" style="justify-content:center;color:#6b7280;font-size:0.82em;">... and {count - 20} more errors</div>'
+
+    # Footer
+    footer_html = ''
+    if st.session_state.get('error_log_enabled', True):
+        footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
+
+    # Render the custom panel via st.html (not iframe - use markdown)
+    st.markdown(f"""
+    <div class="error-panel">
+        <div class="error-panel-header" onclick="this.parentElement.classList.toggle('collapsed');this.querySelector('.chevron').classList.toggle('open')">
+            <img class="chevron open" src="{_CHEVRON_SVG}" alt="toggle"/>
+            <span class="ep-title">Error Details</span>
+            <span class="ep-badge">{count}</span>
+        </div>
+        <div class="error-panel-body">
+            {rows_html}
+            {footer_html}
+        </div>
+    </div>
+    <style>
+    .error-panel.collapsed .error-panel-body {{ display: none; }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Error log viewer button
     if error_log_paths and dialog_fn:
         valid_paths = [p for p in error_log_paths if p.exists()]
         if valid_paths:
             col_log, _ = st.columns([0.3, 0.7])
             with col_log:
-                if st.button("📄 View Full Error Log", key=f"{key_prefix}_view_error_log", use_container_width=True):
+                if st.button("View Full Error Log", key=f"{key_prefix}_view_error_log", use_container_width=True):
                     dialog_fn(valid_paths)
+
+    # Retry button inside the error section
+    if has_retriable_errors and retry_btn_callback:
+        st.markdown("<div style='margin-top: 8px; margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+        col_retry, _ = st.columns([0.3, 0.7])
+        with col_retry:
+            if st.button("Retry Failed Items", type="secondary", key=f"{key_prefix}_retry_failed_btn",
+                         use_container_width=True):
+                retry_btn_callback()
 
 
 def render_pp_warning(pp_failure_count: int):

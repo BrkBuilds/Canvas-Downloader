@@ -24,7 +24,7 @@ from ui_helpers import (
 )
 from ui_shared import (
     render_completion_card, render_folder_cards,
-    render_pp_warning,
+    render_pp_warning, render_error_section,
     error_log_dialog,
 )
 from core.state_registry import cleanup_sync_state
@@ -151,10 +151,10 @@ def show_sync_complete():
             parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
         if canvas_del > 0:
             parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
-            
+
         joined_parts = " and ".join(parts)
-        st.warning(f"⚠️ Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
-        
+        st.warning(f"Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
+
         # Cleanup
         if 'qs_skipped' in st.session_state:
             del st.session_state['qs_skipped']
@@ -170,54 +170,67 @@ def show_sync_complete():
     )
     if total_structural_errors > 0:
         st.warning(
-            f"⚠️ {total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
+            f"{total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
             icon="⚠️"
         )
 
     retry_selections = st.session_state.get('retry_selections', [])
 
-    # We use sync_ui's custom show_sync_errors wrapper which sets up its own expander
-    show_sync_errors()
-
-    # Ignored files note — shown when the course has ONLY ignored files and no actionable changes
+    # Ignored files note
     if st.session_state.get('sync_has_ignored_files'):
         st.info("Some files are marked as ignored and were not synced. You can manage ignored files from the Sync Hub after adding this course to your sync list.", icon="ℹ️")
 
-    if sync_errors and retry_selections:
-        st.markdown("<div style='margin-top: -15px; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
-        col_retry, _ = st.columns([0.25, 0.75])
-        with col_retry:
-            if st.button("🔄 Retry Failed Downloads", type="secondary", use_container_width=True):
-                # Critical Re-hydration: We leave course as None, safely offloading API calls to the async pipeline
-                for r_sel in retry_selections:
-                    pair_info = r_sel['res_data']['pair']
-                    r_sel['res_data']['course'] = None
-                    try:
-                        r_sel['res_data']['sync_manager'] = SyncManager(
-                            local_path=pair_info['local_folder'],
-                            course_id=pair_info['course_id'],
-                            course_name=pair_info['course_name']
-                        )
-                    except Exception:
-                        r_sel['res_data']['sync_manager'] = None
-                
-                st.session_state['sync_selections'] = retry_selections
-                st.session_state['download_status'] = 'syncing'
-                st.session_state['step'] = 3
-                st.session_state['sync_errors'] = []
-                st.session_state['sync_cancel_requested'] = False
-                st.session_state['sync_cancelled'] = False
-                st.rerun()
+    # Build error log paths for the error section
+    _sync_error_log_paths = []
+    for sel in st.session_state.get('sync_selections', []):
+        try:
+            sm = sel.get('res_data', {}).get('sync_manager')
+            if sm and sm.local_path.exists():
+                log_file = sm.local_path / 'download_errors.txt'
+                if log_file.exists():
+                    _sync_error_log_paths.append(log_file)
+        except Exception:
+            pass
 
-    # Folders updated — card style with dropdown
+    # Retry callback
+    def _do_sync_retry():
+        for r_sel in retry_selections:
+            pair_info = r_sel['res_data']['pair']
+            r_sel['res_data']['course'] = None
+            try:
+                r_sel['res_data']['sync_manager'] = SyncManager(
+                    local_path=pair_info['local_folder'],
+                    course_id=pair_info['course_id'],
+                    course_name=pair_info['course_name']
+                )
+            except Exception:
+                r_sel['res_data']['sync_manager'] = None
+
+        st.session_state['sync_selections'] = retry_selections
+        st.session_state['download_status'] = 'syncing'
+        st.session_state['step'] = 3
+        st.session_state['sync_errors'] = []
+        st.session_state['sync_cancel_requested'] = False
+        st.session_state['sync_cancelled'] = False
+        st.rerun()
+
+    _has_sync_retry = bool(sync_errors and retry_selections)
+
+    render_error_section(
+        sync_errors, _sync_error_log_paths,
+        dialog_fn=error_log_dialog,
+        key_prefix='sync_complete',
+        retry_btn_callback=_do_sync_retry if _has_sync_retry else None,
+        has_retriable_errors=_has_sync_retry,
+    )
+
+    # Folders updated - card style with filetype summary
     sync_pairs = st.session_state.get('sync_pairs', [])
     sync_selections = st.session_state.get('sync_selections', [])
-    
-    # Translate synced_details format to match render_folder_cards API
-    # synced_details holds pair_idx -> list of filenames
+
     file_dropdown_details = {}
     folder_paths_map = {}
-    
+
     if sync_selections:
         for sel in sync_selections:
             pair_idx = sel['pair_idx']
@@ -225,12 +238,11 @@ def show_sync_complete():
                 continue
             pair = sync_pairs[pair_idx]
             display_name = friendly_course_name(pair['course_name'])
-            
-            # Use display_name suffix to avoid key collisions on similar names
+
             f_key = f"{display_name} ({pair_idx})"
             file_dropdown_details[f_key] = synced_details.get(pair_idx, [])
             folder_paths_map[f_key] = pair['local_folder']
-            
+
     render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete')
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
