@@ -67,12 +67,11 @@ div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details {
 
 /* 1. Squeeze the row boundaries to absolute minimums */
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] {
-    border-bottom: 1px dashed #3A415A !important;
     padding-top: 0px !important;      
     padding-bottom: 2px !important;   
     margin-bottom: 0px !important;    
     min-height: 0px !important;
-    align-items: center !important; 
+    align-items: stretch !important; 
 }
 
 /* 2. Completely eliminate gap between rows */
@@ -84,7 +83,7 @@ div[class*="st-key-sync_review_file_list"] > div[data-testid="stVerticalBlock"] 
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stElementContainer"],
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stMarkdownContainer"],
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] div[data-testid="stCheckbox"],
-div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label {
+div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label:not([data-baseweb="checkbox"]) {
     margin: 0 !important;
     padding: 0 !important;
     min-height: 0 !important; /* Kills the dead space forcing the row open */
