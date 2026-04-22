@@ -43,25 +43,59 @@ def render_completion_card(synced_count: int, error_count: int,
     # Determine card variant
     if synced_count == 0 and error_count > 0:
         card_class = 'failure'
-        title = f'{action_word.replace("ed", "")} failed for all {error_count} files'
+        title = 'Download Failed' if mode == 'download' else 'Sync Failed'
+        subtitle = f'{action_word.replace("ed", "")} failed for all {error_count} files'
     elif error_count > 0:
         card_class = 'partial'
-        title = f'{action_word} {synced_count} {file_word} with {error_count} {"error" if error_count == 1 else "errors"}'
+        title = 'Partial Success' if mode == 'download' else 'Sync Completed with Errors'
+        subtitle = f'{action_word} {synced_count} {file_word} with {error_count} {"error" if error_count == 1 else "errors"}'
     elif synced_count > 0:
         card_class = 'success'
-        title = f'{action_word} {synced_count} {file_word} successfully!'
+        title = 'Download Success' if mode == 'download' else 'Sync Success'
+        subtitle = f'{action_word} {synced_count} {file_word} successfully!'
     else:
         st.success("Nothing to download - all files are up to date!")
         return
 
-    # Summary line
-    parts = [f'{format_file_size(total_bytes)} downloaded']
+    # Stats grid
+    file_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>"
+    error_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>"
+    size_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='12' cy='5' rx='9' ry='3'></ellipse><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'></path><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'></path></svg>"
+    
+    size_parts = format_file_size(total_bytes).split(" ", 1)
+    size_val = size_parts[0]
+    size_unit = size_parts[1] if len(size_parts) > 1 else "Bytes"
+
+    stats_html = (
+'<div class="completion-stats-grid">'
+'<div class="stat-card">'
+f'<div class="stat-icon-wrapper">{file_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{synced_count}</div>'
+f'<div class="stat-label">{"File" if synced_count == 1 else "Files"} Downloaded</div>'
+'</div>'
+'</div>'
+'<div class="stat-card">'
+f'<div class="stat-icon-wrapper">{size_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{size_val}</div>'
+f'<div class="stat-label">{size_unit} Downloaded</div>'
+'</div>'
+'</div>'
+    )
+    
     if error_count > 0:
-        parts.append(f'{error_count} {"error" if error_count == 1 else "errors"} - see details below')
-    if size_skipped_count > 0:
-        _sw = 'file' if size_skipped_count == 1 else 'files'
-        parts.append(f'{size_skipped_count} {_sw} skipped (exceeds {size_limit_mb} MB limit)')
-    summary = ' · '.join(parts)
+        stats_html += (
+'<div class="stat-card stat-error">'
+f'<div class="stat-icon-wrapper">{error_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{error_count}</div>'
+f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
+'</div>'
+'</div>'
+        )
+        
+    stats_html += '</div>'
 
     # Optional notes (retry + discovery, folded inline)
     notes_html = ''
@@ -71,7 +105,7 @@ def render_completion_card(synced_count: int, error_count: int,
                 f'<div class="retry-note">'
                 f'<span class="retry-badge retry-fail">Retry</span> '
                 f'Attempted for {retry_total} {"item" if retry_total == 1 else "items"}, '
-                f'but {"it" if retry_total == 1 else "none"} could not be downloaded. '
+                f'but {"it" if retry_total == 1 else "none"} could be downloaded. '
                 f'These files may not be available on Canvas.'
                 f'</div>'
             )
@@ -90,20 +124,42 @@ def render_completion_card(synced_count: int, error_count: int,
                 f'</div>'
             )
 
-    if discovery_skipped > 0:
-        _fw = 'file' if discovery_skipped == 1 else 'files'
-        _it = 'it' if discovery_skipped == 1 else 'them'
+        
+    if size_skipped_count > 0:
+        _sw = 'file' if size_skipped_count == 1 else 'files'
         notes_html += (
             f'<div class="card-note">'
-            f'{discovery_skipped} {_fw} could not be downloaded because Canvas did not provide '
-            f'enough information to locate {_it}. Try downloading the course again to pick {_it} up.'
+            f'{size_skipped_count} {_sw} skipped because they exceeded the {size_limit_mb} MB limit.'
             f'</div>'
         )
+
+    if card_class == 'failure':
+        bg_color = '#2c1616'
+        border_color = 'rgba(239, 68, 68, 0.4)'
+    elif card_class == 'partial':
+        bg_color = '#261e17'
+        border_color = 'rgba(241, 196, 15, 0.4)'
+    else:
+        bg_color = '#1a3a2a'
+        border_color = 'rgba(46, 204, 113, 0.4)'
+
+    st.html(f"""
+    <style>
+    div[class*="st-key-completion_dashboard"] {{
+        background-color: {bg_color} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 12px;
+    }}
+    </style>
+    """)
 
     st.markdown(f"""
     <div class="completion-card {card_class}">
         <div class="card-title">{esc(title)}</div>
-        <div class="card-summary">{summary}</div>
+        <div class="card-subtitle">{esc(subtitle)}</div>
+        {stats_html}
         {notes_html}
     </div>
     """, unsafe_allow_html=True)
@@ -307,7 +363,8 @@ _ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 
 def render_error_section(error_list: list, error_log_paths: list = None,
                          dialog_fn=None, key_prefix: str = 'dl',
-                         retry_btn_callback=None, has_retriable_errors: bool = False):
+                         retry_btn_callback=None, has_retriable_errors: bool = False,
+                         discovery_skipped: int = 0):
     """Render error details as a custom CSS panel with human-friendly messages.
 
     Args:
@@ -333,6 +390,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             reason = _friendly_error_reason(err)
             ext = os.path.splitext(fname)[1].lower().lstrip('.')
             ext_badge = f'<span class="err-ext-badge">.{esc(ext)}</span>' if ext else ''
+            fname = os.path.splitext(fname)[0] if ext else fname
         else:
             fname = str(err)
             reason = ''
@@ -349,7 +407,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         rows_html += '</div></div>'
 
     if count > 20:
-        rows_html += f'<div class="error-row" style="justify-content:center;color:#6b7280;font-size:0.82em;">... and {count - 20} more errors</div>'
+        rows_html += f'<div class="error-row" style="justify-content:center;color:#c7b8ad;font-size:0.82em;">... and {count - 20} more errors</div>'
 
     # Footer
     footer_html = ''
@@ -358,20 +416,20 @@ def render_error_section(error_list: list, error_log_paths: list = None,
 
     # Render the custom panel via st.html (not iframe - use markdown)
     st.markdown(f"""
-    <div class="error-panel">
-        <div class="error-panel-header" onclick="this.parentElement.classList.toggle('collapsed');this.querySelector('.chevron').classList.toggle('open')">
-            <img class="chevron open" src="{_CHEVRON_SVG}" alt="toggle"/>
-            <span class="ep-title">Error Details</span>
-            <span class="ep-badge">{count}</span>
-        </div>
+    <details class="error-panel">
+        <summary class="error-panel-header">
+            <div class="ep-header-row">
+                <img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>
+                <span class="ep-title">Error Details</span>
+                <span class="ep-badge">{count}</span>
+            </div>
+            {f'<div class="ep-discovery">{discovery_skipped} {"file" if discovery_skipped == 1 else "files"} could not be downloaded because Canvas did not provide enough information to locate {"it" if discovery_skipped == 1 else "them"}. Try downloading the course again to pick {"it" if discovery_skipped == 1 else "them"} up.</div>' if discovery_skipped > 0 else ''}
+        </summary>
         <div class="error-panel-body">
             {rows_html}
             {footer_html}
         </div>
-    </div>
-    <style>
-    .error-panel.collapsed .error-panel-body {{ display: none; }}
-    </style>
+    </details>
     """, unsafe_allow_html=True)
 
     # Error log viewer button
@@ -385,10 +443,17 @@ def render_error_section(error_list: list, error_log_paths: list = None,
 
     # Retry button inside the error section
     if has_retriable_errors and retry_btn_callback:
-        st.markdown("<div style='margin-top: 8px; margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+        retriable_count = sum(
+            1 for err in error_list 
+            if isinstance(getattr(err, 'context', None), dict) 
+            and err.context.get('filepath') 
+            and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+        )
+        btn_text = f"Retry Failed Files ({retriable_count})" if retriable_count > 0 else "Retry Failed Files"
+        st.markdown("<div style='margin-top: 3px; margin-bottom: 8px;'></div>", unsafe_allow_html=True)
         col_retry, _ = st.columns([0.3, 0.7])
         with col_retry:
-            if st.button("Retry Failed Items", type="secondary", key=f"{key_prefix}_retry_failed_btn",
+            if st.button(btn_text, type="secondary", key=f"{key_prefix}_retry_failed_btn",
                          use_container_width=True):
                 retry_btn_callback()
 

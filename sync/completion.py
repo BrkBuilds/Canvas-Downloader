@@ -131,98 +131,100 @@ def show_sync_complete():
     size_skipped = st.session_state.get('size_skipped_files', [])
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
-    render_completion_card(
-        synced_count=synced_count,
-        error_count=len(sync_errors),
-        total_bytes=total_bytes,
-        mode='sync',
-        size_skipped_files=size_skipped,
-        size_limit_mb=limit_mb,
-    )
-
-    # UN-TRAPPED QUICK SYNC WARNING:
-    skipped_data = st.session_state.get('qs_skipped', {})
-    local_del = skipped_data.get('local_del', 0)
-    canvas_del = skipped_data.get('canvas_del', 0)
-
-    if local_del > 0 or canvas_del > 0:
-        parts = []
-        if local_del > 0:
-            parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
-        if canvas_del > 0:
-            parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
-
-        joined_parts = " and ".join(parts)
-        st.warning(f"Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
-
-        # Cleanup
-        if 'qs_skipped' in st.session_state:
-            del st.session_state['qs_skipped']
-
-    # Post-processing failure warning
-    render_pp_warning(st.session_state.get('pp_failure_count', 0))
-
-    # Surface Structural Discovery Errors gracefully
-    total_structural_errors = sum(
-        res['res_data']['result'].structural_errors
-        for res in st.session_state.get('sync_selections', [])
-        if res.get('res_data') and hasattr(res['res_data'].get('result'), 'structural_errors')
-    )
-    if total_structural_errors > 0:
-        st.warning(
-            f"{total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
-            icon="⚠️"
+    with st.container(border=True, key='completion_dashboard'):
+        render_completion_card(
+            synced_count=synced_count,
+            error_count=len(sync_errors),
+            total_bytes=total_bytes,
+            mode='sync',
+            size_skipped_files=size_skipped,
+            size_limit_mb=limit_mb,
         )
 
-    retry_selections = st.session_state.get('retry_selections', [])
+        # UN-TRAPPED QUICK SYNC WARNING:
+        skipped_data = st.session_state.get('qs_skipped', {})
+        local_del = skipped_data.get('local_del', 0)
+        canvas_del = skipped_data.get('canvas_del', 0)
 
-    # Ignored files note
-    if st.session_state.get('sync_has_ignored_files'):
-        st.info("Some files are marked as ignored and were not synced. You can manage ignored files from the Sync Hub after adding this course to your sync list.", icon="ℹ️")
+        if local_del > 0 or canvas_del > 0:
+            parts = []
+            if local_del > 0:
+                parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
+            if canvas_del > 0:
+                parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
 
-    # Build error log paths for the error section
-    _sync_error_log_paths = []
-    for sel in st.session_state.get('sync_selections', []):
-        try:
-            sm = sel.get('res_data', {}).get('sync_manager')
-            if sm and sm.local_path.exists():
-                log_file = sm.local_path / 'download_errors.txt'
-                if log_file.exists():
-                    _sync_error_log_paths.append(log_file)
-        except Exception:
-            pass
+            joined_parts = " and ".join(parts)
+            st.warning(f"Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
 
-    # Retry callback
-    def _do_sync_retry():
-        for r_sel in retry_selections:
-            pair_info = r_sel['res_data']['pair']
-            r_sel['res_data']['course'] = None
+            # Cleanup
+            if 'qs_skipped' in st.session_state:
+                del st.session_state['qs_skipped']
+
+        # Post-processing failure warning
+        render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+        # Surface Structural Discovery Errors gracefully
+        total_structural_errors = sum(
+            res['res_data']['result'].structural_errors
+            for res in st.session_state.get('sync_selections', [])
+            if res.get('res_data') and hasattr(res['res_data'].get('result'), 'structural_errors')
+        )
+        if total_structural_errors > 0:
+            st.warning(
+                f"{total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
+                icon="⚠️"
+            )
+
+        retry_selections = st.session_state.get('retry_selections', [])
+
+        # Ignored files note
+        if st.session_state.get('sync_has_ignored_files'):
+            st.info("Some files are marked as ignored and were not synced. You can manage ignored files from the Sync Hub after adding this course to your sync list.", icon="ℹ️")
+
+        # Build error log paths for the error section
+        _sync_error_log_paths = []
+        for sel in st.session_state.get('sync_selections', []):
             try:
-                r_sel['res_data']['sync_manager'] = SyncManager(
-                    local_path=pair_info['local_folder'],
-                    course_id=pair_info['course_id'],
-                    course_name=pair_info['course_name']
-                )
+                sm = sel.get('res_data', {}).get('sync_manager')
+                if sm and sm.local_path.exists():
+                    log_file = sm.local_path / 'download_errors.txt'
+                    if log_file.exists():
+                        _sync_error_log_paths.append(log_file)
             except Exception:
-                r_sel['res_data']['sync_manager'] = None
+                pass
 
-        st.session_state['sync_selections'] = retry_selections
-        st.session_state['download_status'] = 'syncing'
-        st.session_state['step'] = 3
-        st.session_state['sync_errors'] = []
-        st.session_state['sync_cancel_requested'] = False
-        st.session_state['sync_cancelled'] = False
-        st.rerun()
+        # Retry callback
+        def _do_sync_retry():
+            for r_sel in retry_selections:
+                pair_info = r_sel['res_data']['pair']
+                r_sel['res_data']['course'] = None
+                try:
+                    r_sel['res_data']['sync_manager'] = SyncManager(
+                        local_path=pair_info['local_folder'],
+                        course_id=pair_info['course_id'],
+                        course_name=pair_info['course_name']
+                    )
+                except Exception:
+                    r_sel['res_data']['sync_manager'] = None
 
-    _has_sync_retry = bool(sync_errors and retry_selections)
+            st.session_state['sync_selections'] = retry_selections
+            st.session_state['download_status'] = 'syncing'
+            st.session_state['step'] = 3
+            st.session_state['sync_errors'] = []
+            st.session_state['sync_cancel_requested'] = False
+            st.session_state['sync_cancelled'] = False
+            st.rerun()
 
-    render_error_section(
-        sync_errors, _sync_error_log_paths,
-        dialog_fn=error_log_dialog,
-        key_prefix='sync_complete',
-        retry_btn_callback=_do_sync_retry if _has_sync_retry else None,
-        has_retriable_errors=_has_sync_retry,
-    )
+        _has_sync_retry = bool(sync_errors and retry_selections)
+
+        render_error_section(
+            sync_errors, _sync_error_log_paths,
+            dialog_fn=error_log_dialog,
+            key_prefix='sync_complete',
+            retry_btn_callback=_do_sync_retry if _has_sync_retry else None,
+            has_retriable_errors=_has_sync_retry,
+            discovery_skipped=st.session_state.get('skipped_discovery_errors', 0),
+        )
 
     # Folders updated - card style with filetype summary
     sync_pairs = st.session_state.get('sync_pairs', [])
