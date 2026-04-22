@@ -1041,9 +1041,21 @@ with _main_content.container():
             size_skipped = st.session_state.get('size_skipped_files', [])
             limit_mb = st.session_state.get('max_file_size_mb', 0)
             retry_attempted = st.session_state.get('retry_attempted', False)
-            skipped_discovery = st.session_state.get('skipped_discovery_errors', 0)
-            
+            retry_total = st.session_state.get('retry_total_attempted', 0)
+            retry_resolved = st.session_state.get('retry_resolved_count', 0)
+
+            _retry_failed = retry_attempted and retry_total > 0 and retry_resolved == 0
+
             with st.container(border=True, key='completion_dashboard'):
+                # Split errors into retriable vs unresolvable for separate stat cards
+                _retriable = sum(
+                    1 for err in download_errors
+                    if isinstance(getattr(err, 'context', None), dict)
+                    and err.context.get('filepath')
+                    and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+                )
+                _unresolvable = len(download_errors) - _retriable
+
                 render_completion_card(
                     synced_count=success_count,
                     error_count=len(download_errors),
@@ -1052,9 +1064,11 @@ with _main_content.container():
                     size_skipped_files=size_skipped,
                     size_limit_mb=limit_mb,
                     retry_attempted=retry_attempted,
-                    retry_resolved=st.session_state.get('retry_resolved_count', 0),
-                    retry_total=st.session_state.get('retry_total_attempted', 0),
-                    discovery_skipped=skipped_discovery,
+                    retry_resolved=retry_resolved,
+                    retry_total=retry_total,
+                    retriable_count=_retriable,
+                    unresolvable_count=_unresolvable,
+                    courses_count=len(file_details),
                 )
 
                 # 2. Post-processing warning
@@ -1123,9 +1137,9 @@ with _main_content.container():
                     download_errors, error_log_paths,
                     dialog_fn=error_log_dialog,
                     key_prefix='dl',
-                    retry_btn_callback=_do_retry if has_retriable_errors else None,
+                    retry_btn_callback=_do_retry if has_retriable_errors and not retry_attempted else None,
                     has_retriable_errors=has_retriable_errors,
-                    discovery_skipped=skipped_discovery,
+                    retry_failed=_retry_failed,
                 )
 
             # 4. Per-course folder cards with filetype summary
@@ -1196,12 +1210,13 @@ with _main_content.container():
         
         if st.session_state['download_status'] in ['done', 'cancelled']:
             st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-            # Use "Go to front page" for both done and cancelled
             button_text = 'Go to front page'
-            if st.button(button_text, type="primary", use_container_width=True):
-                from core.state_registry import cleanup_download_state
-                cleanup_download_state()
-                st.rerun()
+            col_front, _ = st.columns([0.35, 0.65])
+            with col_front:
+                if st.button(button_text, type="primary", use_container_width=True):
+                    from core.state_registry import cleanup_download_state
+                    cleanup_download_state()
+                    st.rerun()
 
 
     # STEP 4: SYNC ANALYSIS (Only shown when current_mode is 'sync')

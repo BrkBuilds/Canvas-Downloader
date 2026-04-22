@@ -16,7 +16,7 @@ from __future__ import annotations
 import streamlit as st
 
 import theme
-from sync_manager import SyncManager, SyncHistoryManager
+from sync_manager import SyncManager
 from ui_helpers import (
     render_progress_bar,
     render_sync_wizard,
@@ -85,9 +85,11 @@ def show_sync_cancelled():
     show_sync_errors()
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button('Go to front page', type="primary", use_container_width=True):
-        _cleanup_sync_state()
-        st.rerun()
+    col_front, _ = st.columns([0.35, 0.65])
+    with col_front:
+        if st.button('Go to front page', type="primary", use_container_width=True):
+            _cleanup_sync_state()
+            st.rerun()
 
 
 def show_sync_complete():
@@ -132,6 +134,23 @@ def show_sync_complete():
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
     with st.container(border=True, key='completion_dashboard'):
+        # Sync errors are plain strings — classify by checking for LTI/stream markers
+        _sync_retriable = sum(
+            1 for err in sync_errors
+            if hasattr(err, 'error_type') and isinstance(getattr(err, 'context', None), dict)
+            and err.context.get('filepath')
+            and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+        ) if sync_errors else 0
+        # For sync errors that are plain strings, treat all as retriable
+        _sync_unresolvable = 0
+        if sync_errors:
+            _plain_str_count = sum(1 for e in sync_errors if isinstance(e, str))
+            _obj_count = len(sync_errors) - _plain_str_count
+            if _obj_count > 0:
+                _sync_unresolvable = _obj_count - _sync_retriable
+            # Plain strings are retriable (generic errors)
+            _sync_retriable += _plain_str_count
+
         render_completion_card(
             synced_count=synced_count,
             error_count=len(sync_errors),
@@ -139,6 +158,9 @@ def show_sync_complete():
             mode='sync',
             size_skipped_files=size_skipped,
             size_limit_mb=limit_mb,
+            retriable_count=_sync_retriable,
+            unresolvable_count=_sync_unresolvable,
+            courses_count=1,
         )
 
         # UN-TRAPPED QUICK SYNC WARNING:
@@ -217,13 +239,18 @@ def show_sync_complete():
 
         _has_sync_retry = bool(sync_errors and retry_selections)
 
+        _retry_attempted = st.session_state.get('retry_attempted', False)
+        _retry_total = st.session_state.get('retry_total_attempted', 0)
+        _retry_resolved = st.session_state.get('retry_resolved_count', 0)
+        _sync_retry_failed = _retry_attempted and _retry_total > 0 and _retry_resolved == 0
+
         render_error_section(
             sync_errors, _sync_error_log_paths,
             dialog_fn=error_log_dialog,
             key_prefix='sync_complete',
             retry_btn_callback=_do_sync_retry if _has_sync_retry else None,
             has_retriable_errors=_has_sync_retry,
-            discovery_skipped=st.session_state.get('skipped_discovery_errors', 0),
+            retry_failed=_sync_retry_failed,
         )
 
     # Folders updated - card style with filetype summary
@@ -248,9 +275,11 @@ def show_sync_complete():
     render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete')
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button('Go to front page', type="primary", use_container_width=True):
-        _cleanup_sync_state()
-        st.rerun()
+    col_front, _ = st.columns([0.35, 0.65])
+    with col_front:
+        if st.button('Go to front page', key='sync_complete_front_page', type="primary", use_container_width=True):
+            _cleanup_sync_state()
+            st.rerun()
 
 
 
