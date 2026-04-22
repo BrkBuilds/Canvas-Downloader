@@ -5,39 +5,95 @@
 
 /* --- Unified Summary Card --- */
 .completion-card {
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 8px 0 12px 0;
-    border-left: 4px solid;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
 }
-.completion-card.success {
-    background-color: #1a3a2a;
-    border-left-color: #2ecc71;
-}
-.completion-card.partial {
-    background-color: #3a2a1a;
-    border-left-color: #f1c40f;
-}
-.completion-card.failure {
-    background-color: #2c1616;
-    border-left-color: #ef4444;
-}
+.completion-card.success {}
+.completion-card.partial {}
+.completion-card.failure {}
 .completion-card .card-title {
     font-weight: 700;
-    font-size: 1.1em;
-    margin: 0 0 4px 0;
+    font-size: 1.5em;
+    margin: -20px 0 0 0;
+}
+.completion-card .card-subtitle {
+    font-size: 0.85em;
+    color: #d3d3d3;
+    margin-top: -5px; /* Pull closer to title */
+    margin-bottom: 0;
 }
 .completion-card.success .card-title { color: #4ade80; }
-.completion-card.partial .card-title { color: #f1c40f; }
+.completion-card.partial .card-title { color: #fef08a; /* very light yellow */ }
 .completion-card.failure .card-title { color: #ef4444; }
-.completion-card .card-summary {
-    color: #d1d5db;
-    font-size: 0.85em;
-    margin: 0;
-    line-height: 1.5;
+/* Completion Stats Grid */
+.completion-stats-grid {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    flex: 1;
+    min-width: 150px;
+}
+.stat-card.stat-error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+.stat-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+.stat-card.stat-error .stat-icon-wrapper {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+.stat-icon-wrapper svg {
+    width: 18px;
+    height: 18px;
+}
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+.stat-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    line-height: 1;
+    color: #f3f4f6;
+    margin-bottom: -1px;
+}
+.stat-card.stat-error .stat-value {
+    color: #ffffff;
+}
+.stat-label {
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9ca3af;
+}
+.stat-card.stat-error .stat-label {
+    color: #f87171;
 }
 .completion-card .card-note {
-    color: #9ca3af;
+    color: #d1d5db;
     font-size: 0.8em;
     margin-top: 8px;
     padding-top: 8px;
@@ -45,9 +101,9 @@
     line-height: 1.5;
 }
 .completion-card .retry-note {
-    margin-top: 6px;
+    margin-top: 10px;
     font-size: 0.82em;
-    color: #9ca3af;
+    color: #d1d5db;
 }
 .completion-card .retry-note .retry-badge {
     display: inline-block;
@@ -62,29 +118,36 @@
     color: #4ade80;
 }
 .completion-card .retry-note .retry-fail {
-    background: rgba(239, 68, 68, 0.12);
-    color: #f87171;
+    background: rgba(255, 128, 55, 0.404);
+    color: #f1f1f1;
+}
+
+/* Make grey text lighter in the amber partial card */
+.completion-card.partial .card-note,
+.completion-card.partial .retry-note {
+    color: #f3f4f6 !important;
+}
+.completion-card.partial .stat-label {
+    color: #e5e7eb !important;
 }
 
 /* --- Error Panel (Custom CSS Collapsible) --- */
 .error-panel {
-    background: rgba(239, 68, 68, 0.04);
-    border: 1px solid rgba(239, 68, 68, 0.15);
-    border-radius: 10px;
-    margin: 12px 0;
+    background: rgba(136, 39, 39, 0.226);
+    border: 1px solid rgba(238, 97, 97, 0.3);
+    border-radius: 8px;
+    margin: 10px 0 0 0;
     overflow: hidden;
 }
 .error-panel-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
+    display: block;
+    padding: 10px 16px;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.15s ease;
 }
 .error-panel-header:hover {
-    background: rgba(239, 68, 68, 0.06);
+    background: rgba(206, 58, 58, 0.1);
 }
 .error-panel-header .chevron {
     width: 16px;
@@ -93,13 +156,27 @@
     flex-shrink: 0;
     opacity: 0.6;
 }
-.error-panel-header .chevron.open {
+details[open] > .error-panel-header .chevron {
     transform: rotate(90deg);
 }
+.error-panel-header .ep-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ep-discovery {
+    color: #f3f3f3;
+    font-size: 0.9em;
+    padding-left: 26px;
+    margin-top: 0px;
+}
+details:not([open]) .ep-discovery {
+    display: none;
+}
 .error-panel-header .ep-title {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.95em;
-    color: #f87171;
+    color: #fafafa;
     flex: 1;
 }
 .error-panel-header .ep-badge {
@@ -116,12 +193,8 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 10px 16px;
-    border-top: 1px solid rgba(255,255,255,0.04);
-    transition: background 0.15s ease;
-}
-.error-row:hover {
-    background: rgba(255,255,255,0.02);
+    padding: 6px 16px;
+    border-top: 1px solid rgba(255, 188, 188, 0.178);
 }
 .error-row .err-icon {
     width: 18px;
@@ -142,8 +215,8 @@
 }
 .error-row .err-ext-badge {
     display: inline-block;
-    background: rgba(255,255,255,0.08);
-    color: #9ca3af;
+    background: rgba(43, 9, 9, 0.6);
+    color: #ffffff;
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 0.7em;
@@ -153,15 +226,15 @@
 }
 .error-row .err-reason {
     font-size: 0.82em;
-    color: #9ca3af;
-    margin-top: 2px;
-    line-height: 1.4;
+    color: #dac1bf;
+    margin-top: 0px;
+    line-height: 1.2;
 }
 .error-panel-footer {
     padding: 8px 16px 10px;
     border-top: 1px solid rgba(255,255,255,0.04);
     font-size: 0.78em;
-    color: #6b7280;
+    color: #d1d5db;
 }
 
 /* --- Retry Button (Premium Inside Error Panel) --- */
@@ -173,13 +246,12 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button {
     border-radius: 8px !important;
     height: 42px !important;
     min-height: 42px !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2) !important;
+    transition: filter 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(217, 119, 6, 0.2) !important;
 }
 div[class*="st-key-"][class*="_retry_failed_btn"] button:hover {
-    background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%) !important;
-    box-shadow: 0 4px 16px rgba(217, 119, 6, 0.35) !important;
-    transform: translateY(-1px) !important;
+    filter: brightness(1.15) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 16px rgba(217, 119, 6, 0.35) !important;
 }
 div[class*="st-key-"][class*="_retry_failed_btn"] button p {
     display: flex !important;
