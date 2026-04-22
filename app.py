@@ -1042,88 +1042,91 @@ with _main_content.container():
             limit_mb = st.session_state.get('max_file_size_mb', 0)
             retry_attempted = st.session_state.get('retry_attempted', False)
             skipped_discovery = st.session_state.get('skipped_discovery_errors', 0)
-            render_completion_card(
-                synced_count=success_count,
-                error_count=len(download_errors),
-                total_bytes=total_bytes,
-                mode='download',
-                size_skipped_files=size_skipped,
-                size_limit_mb=limit_mb,
-                retry_attempted=retry_attempted,
-                retry_resolved=st.session_state.get('retry_resolved_count', 0),
-                retry_total=st.session_state.get('retry_total_attempted', 0),
-                discovery_skipped=skipped_discovery,
-            )
+            
+            with st.container(border=True, key='completion_dashboard'):
+                render_completion_card(
+                    synced_count=success_count,
+                    error_count=len(download_errors),
+                    total_bytes=total_bytes,
+                    mode='download',
+                    size_skipped_files=size_skipped,
+                    size_limit_mb=limit_mb,
+                    retry_attempted=retry_attempted,
+                    retry_resolved=st.session_state.get('retry_resolved_count', 0),
+                    retry_total=st.session_state.get('retry_total_attempted', 0),
+                    discovery_skipped=skipped_discovery,
+                )
 
-            # 2. Post-processing warning
-            render_pp_warning(st.session_state.get('pp_failure_count', 0))
+                # 2. Post-processing warning
+                render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
-            # Size-skipped files are now rendered inside render_completion_card
+                # Size-skipped files are now rendered inside render_completion_card
 
-            # 3. Error section (with retry button inside)
-            download_path = Path(st.session_state['download_path'])
-            error_log_paths = []
-            for c in st.session_state.get('courses_to_download', []):
-                cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                log_file = download_path / cm_temp._sanitize_filename(c.name) / "download_errors.txt"
-                if log_file.exists():
-                    error_log_paths.append(log_file)
+                # 3. Error section (with retry button inside)
+                download_path = Path(st.session_state['download_path'])
+                error_log_paths = []
+                for c in st.session_state.get('courses_to_download', []):
+                    cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                    log_file = download_path / cm_temp._sanitize_filename(c.name) / "download_errors.txt"
+                    if log_file.exists():
+                        error_log_paths.append(log_file)
 
-            # Check if retriable errors exist (files with filepath context, not LTI streams)
-            has_retriable_errors = any(
-                isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream'
-                for err in download_errors
-            ) if download_errors else False
+                # Check if retriable errors exist (files with filepath context, not LTI streams)
+                has_retriable_errors = any(
+                    isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+                    for err in download_errors
+                ) if download_errors else False
 
-            def _do_retry():
-                """Sniper Retry callback - jump straight to isolated_retry."""
-                current_errors = list(st.session_state.get('download_errors_list', []))
+                def _do_retry():
+                    """Sniper Retry callback - jump straight to isolated_retry."""
+                    current_errors = list(st.session_state.get('download_errors_list', []))
 
-                retriable_queue = []
-                structural_count = 0
-                for err in current_errors:
-                    ctx = getattr(err, 'context', None) if not isinstance(err, dict) else err.get('context')
-                    if isinstance(ctx, dict) and ctx.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream':
-                        retriable_queue.append(err)
-                    else:
-                        structural_count += 1
+                    retriable_queue = []
+                    structural_count = 0
+                    for err in current_errors:
+                        ctx = getattr(err, 'context', None) if not isinstance(err, dict) else err.get('context')
+                        if isinstance(ctx, dict) and ctx.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream':
+                            retriable_queue.append(err)
+                        else:
+                            structural_count += 1
 
-                st.session_state['isolated_retry_queue'] = retriable_queue
-                st.session_state['download_status'] = 'isolated_retry'
+                    st.session_state['isolated_retry_queue'] = retriable_queue
+                    st.session_state['download_status'] = 'isolated_retry'
 
-                # Initialize sandboxed variables for the retry isolated UI
-                st.session_state['retry_isolated_details'] = {}
-                st.session_state['retry_downloaded_items'] = 0
-                st.session_state['retry_failed_items'] = 0
-                st.session_state['retry_attempted'] = False
+                    # Initialize sandboxed variables for the retry isolated UI
+                    st.session_state['retry_isolated_details'] = {}
+                    st.session_state['retry_downloaded_items'] = 0
+                    st.session_state['retry_failed_items'] = 0
+                    st.session_state['retry_attempted'] = False
 
-                st.session_state['cancel_requested'] = False
-                st.session_state['download_cancelled'] = False
+                    st.session_state['cancel_requested'] = False
+                    st.session_state['download_cancelled'] = False
 
-                # Rebuild seen_error_sigs using course_name|item_name only (no error_type)
-                existing_errors = list(st.session_state.get('download_errors_list', []))
-                normalized_sigs = set()
-                for _err in existing_errors:
-                    if hasattr(_err, 'course_name') and hasattr(_err, 'item_name'):
-                        normalized_sigs.add(f"{_err.course_name}|{_err.item_name}")
-                st.session_state['seen_error_sigs'] = normalized_sigs
-                st.session_state['skipped_discovery_errors'] = structural_count
-                st.session_state['pp_failure_count'] = 0
-                st.session_state['pp_success_count'] = 0
-                st.session_state['log_content'] = ""
-                st.session_state['start_time'] = time.time()
+                    # Rebuild seen_error_sigs using course_name|item_name only (no error_type)
+                    existing_errors = list(st.session_state.get('download_errors_list', []))
+                    normalized_sigs = set()
+                    for _err in existing_errors:
+                        if hasattr(_err, 'course_name') and hasattr(_err, 'item_name'):
+                            normalized_sigs.add(f"{_err.course_name}|{_err.item_name}")
+                    st.session_state['seen_error_sigs'] = normalized_sigs
+                    st.session_state['skipped_discovery_errors'] = structural_count
+                    st.session_state['pp_failure_count'] = 0
+                    st.session_state['pp_success_count'] = 0
+                    st.session_state['log_content'] = ""
+                    st.session_state['start_time'] = time.time()
 
-                st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
+                    st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
 
-                st.rerun()
+                    st.rerun()
 
-            render_error_section(
-                download_errors, error_log_paths,
-                dialog_fn=error_log_dialog,
-                key_prefix='dl',
-                retry_btn_callback=_do_retry if has_retriable_errors else None,
-                has_retriable_errors=has_retriable_errors,
-            )
+                render_error_section(
+                    download_errors, error_log_paths,
+                    dialog_fn=error_log_dialog,
+                    key_prefix='dl',
+                    retry_btn_callback=_do_retry if has_retriable_errors else None,
+                    has_retriable_errors=has_retriable_errors,
+                    discovery_skipped=skipped_discovery,
+                )
 
             # 4. Per-course folder cards with filetype summary
             folder_paths = {}

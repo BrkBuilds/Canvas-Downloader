@@ -97,8 +97,10 @@ def run_sync():
             st.session_state['download_status'] = 'select'
             st.session_state.pop('qs_cancel_route', None)
         else:
-            st.session_state['step'] = 2
-            st.session_state['download_status'] = 'review'
+            # Route to the sync cancelled screen (step 4 handles all sync
+            # sub-states).  Previous code sent users to step=2 which is
+            # the Download Settings page — wrong mode entirely.
+            st.session_state['download_status'] = 'sync_cancelled'
             
         st.rerun()
 
@@ -189,7 +191,7 @@ def run_sync():
             total_mb = 0.0
             for sel in sync_selections:
                 total_mb += sum(getattr(f, 'size', 0) or 0 for f in sel['new'])
-                total_mb += sum(getattr(f, 'size', 0) or 0 for f, info in sel['updates'])
+                total_mb += sum(getattr(f, 'size', 0) or 0 for f in sel['updates'])
                 cfmap = {str(f.id): f for f in sel['res_data']['canvas_files']}
                 for si in sel['redownload']:
                     cf = cfmap.get(str(si.canvas_file_id))
@@ -266,7 +268,7 @@ def run_sync():
                     if entry.get('is_ignored'):
                         sync_mgr._save_single_file_to_db(entry)
 
-                all_files = list(sel['new']) + [f for f, info in sel['updates']]
+                all_files = list(sel['new']) + list(sel['updates'])
                 for sync_info in sel['redownload']:
                     # 1. Direct ID match (Real Files)
                     if str(sync_info.canvas_file_id) in {str(k) for k in canvas_files_map.keys()}:
