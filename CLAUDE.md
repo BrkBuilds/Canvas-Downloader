@@ -80,6 +80,67 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - `st.container(key="x")` does **not** reliably generate `st-key-x` CSS class unless `border=True` is set. Use `border=True` then strip the border via CSS ("Border Strip" trick).
 - Use `st.rerun(scope="app")` when closing dialogs to force full DOM repaint.
 
+### Targeting Streamlit Widget Wrappers with CSS (Critical Lessons)
+
+**The only reliable CSS selectors for widget children inside keyed containers are the class-based ones:**
+```css
+div[class*="st-key-my_key_"] [data-testid="stButton"] { ... }
+```
+These are the same selectors that work for styling the button itself. Do NOT use `:has()` to find `[data-testid="stButton"]` — it fails silently for widget wrapper divs even when `:has()` works for styling other descendants in the same container.
+
+**`[data-testid="stButton"]` wrapper layout:**
+- By default Streamlit renders `[data-testid="stButton"]` as a block-level full-width wrapper.
+- `margin-left: Xpx` on the wrapper shifts the entire block right. With `use_container_width=False` on the button, the button is content-sized and sits at the left edge of the (now-shifted) wrapper — this is the correct way to indent a button by a fixed pixel amount.
+- Do NOT add `width: auto !important` or change `display` on `[data-testid="stButton"]` — it causes the wrapper to collapse and the button appears squished or disappears.
+- Do NOT use `margin-left` on the `<button>` element itself (child of stButton) — Streamlit's `display: flex !important` override on the button causes it to not respond predictably.
+- Do NOT use `padding-left` on `[data-testid="stButton"]` — Streamlit overrides it internally and it has no visible effect.
+
+**st.columns() for button indent is unreliable across zoom/window sizes:**
+- A percentage-based spacer column (`st.columns([0.05, 0.95])`) shifts the button by a percentage of the container width. Since the target alignment (e.g. matching a fixed-size icon) is in pixels, the column fraction that "looks right" on one screen drifts at different zoom levels or window sizes.
+- **Always use CSS `margin-left` with fixed pixels on `[data-testid="stButton"]` (via class-based selector) for pixel-accurate button indentation.** This is screen-size independent.
+
+**Key prefix selector coverage for folder cards:**
+- Download mode cards: `div[class*="st-key-dl_fc_"]`
+- Sync mode cards: `div[class*="st-key-sync_complete_fc_"]`
+- Note: `div[class*="st-key-sync_fc_"]` does NOT match `sync_complete_fc_` — the substring `sync_fc_` is not contiguous in `sync_complete_fc_`. Always use the full prefix.
+
+### CSS Checkbox Hack for Pure-CSS Toggle/Expand
+
+To build an interactive expand/collapse inline with HTML content (no JS, no Streamlit state reruns):
+```html
+<input type="checkbox" id="my-toggle" class="toggle-class"/>
+<label for="my-toggle" class="trigger-class">Click me</label>
+<div class="content-class">Hidden content</div>
+```
+```css
+.toggle-class { display: none; }
+/* All three elements must be direct children of the same parent for ~ to work */
+.toggle-class:checked ~ .trigger-class { /* active trigger style */ }
+.toggle-class:checked ~ .content-class { /* reveal content */ }
+```
+- Use `max-width: 0 → max-width: 1000px` + `opacity: 0 → 1` transitions for smooth slide-in of inline content.
+- Add a slight delay on `opacity` in the expand direction (`transition: max-width 0.28s, opacity 0.18s ease 0.06s`) so width starts opening before content fades in.
+- For chevron rotation/thickness on toggle: target the inline SVG's `stroke-width` via CSS (`stroke-width: 5`) rather than `transform: rotate()` if you want a "bolder" active indicator instead of directional rotation. CSS can override SVG presentation attributes (`stroke`, `stroke-width`, `fill`) on inline SVGs.
+- To make only a child element (e.g. a chevron) change color on toggle while the parent text stays neutral: use `stroke: #color` directly on the SVG element class inside the `:checked ~` rule, rather than relying on `color: inherit` propagation.
+
+### SVG Icons in CSS and HTML
+
+**URL-encoded data URIs** (for CSS `background-image`, `<img src="...">`):
+- Replace `<` → `%3C`, `>` → `%3E`, `#` → `%23` in the SVG source.
+- Use single quotes inside the SVG attributes (not double quotes) to avoid breaking the outer CSS string.
+- Solid/filled icon: `fill='%23hexcolor'` with no stroke.
+- Outlined icon: `fill='none' stroke='%23hexcolor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'`.
+
+**Inline SVGs** (for `st.markdown(unsafe_allow_html=True)` HTML strings):
+- Use raw `<svg>` tags directly — no URL encoding needed.
+- Can use CSS classes (`class='my-chevron'`) and `stroke='currentColor'` to inherit parent `color`.
+- CSS can override SVG attributes (`stroke`, `stroke-width`, `fill`) on inline SVGs targeting the element's class.
+
+### `st.html()` Shadow Root Behaviour (Extended)
+- `st.html()` renders into a shadow root — CSS inside it is completely isolated from the main page, and main-page CSS cannot reach into it.
+- Elements rendered by `st.markdown(unsafe_allow_html=True)` ARE in the main DOM and ARE reachable by external CSS selectors.
+- Use `st.html()` ONLY for injecting `<style>` tags or zero-content spacers. Use `st.markdown(unsafe_allow_html=True)` for actual HTML content that needs to be styled by external CSS.
+
 ### State Management
 - Widget values lost on step navigation — explicitly save to `persistent_*` session state keys before `st.rerun()`.
 - Protect `on_click` array mutations against double-click: all mutations must be idempotent.
