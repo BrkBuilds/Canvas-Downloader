@@ -1486,7 +1486,7 @@ def show_analysis_review(on_confirm_sync):
                     total_bytes = 0
                     for s in sync_selections:
                         total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
-                        total_bytes += sum(getattr(f, 'size', 0) or 0 for f, info in s['updates'])
+                        total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['updates'])
 
                         # For redownloads, we need to map back to the Canvas file to get the real size (SyncFileInfo lacks size)
                         cfmap = {str(f.id): f for f in s['res_data']['canvas_files']}
