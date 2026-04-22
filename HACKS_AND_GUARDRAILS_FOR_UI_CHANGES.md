@@ -265,6 +265,7 @@ With the CSS already loaded into the browser memory before React is asked to re-
             background-size: 18px !important;
         }
         ```
+        ```
     *   **Active State Identification:** Since individual buttons stay in the DOM, targeting "the currently active" button requires passing a dynamic key to the button that includes the active state name, or using a specific class-prefix targeting the active button's key. 
         ```python
         # In Python:
@@ -274,5 +275,23 @@ With the CSS already loaded into the browser memory before React is asked to re-
             background-color: rgba(56, 189, 248, 0.1) !important;
             border-color: rgba(56,189,248,0.3) !important;
             color: #ffffff !important;
+        }
+        ```
+
+#### 13. Full-Height Clickable Checkbox Rows (The Flex-Stretch Chain)
+*   **The Problem:** When placing checkboxes inside `st.columns()` to build custom lists (like the Sync Review page), users expect the entire height of the row to be clickable. However, using `vertical_alignment="center"` in Streamlit forces `margin: 5px 0` on the `stColumn` and applies `align-items: center` to the parent `stHorizontalBlock`. This creates unclickable "dead zones" above and below the checkbox label. Trying to use `::after` with `position: absolute` breaks layout flex scaling.
+*   **The Solution:** You must kill Streamlit's centering margins and implement a contiguous, unbroken Flex-Stretch chain from the outer column container all the way down to the native HTML `<label>`, forcing it to occupy 100% of the row's height. Then, vertically center the content *inside* the stretched label.
+*   **Implementation Rules:**
+    1.  **Stretch the Row:** Force the parent row container to stretch its columns: `div[class*="st-key-row_key"] .stHorizontalBlock { align-items: stretch !important; }`
+    2.  **Kill Column Margins:** `div[class*="st-key-row_key"] [data-testid="stColumn"] { margin: 0 !important; }`
+    3.  **The Flex Chain:** Apply `display: flex; flex-direction: column; flex: 1 !important;` to EVERY element in the DOM tree bridging the column and the checkbox: `stColumn`, `stVerticalBlockBorderWrapper`, `stVerticalBlock`, `stElementContainer`, and `stCheckbox`.
+    4.  **Stretch and Center the Label:** Force the target `<label>` to `flex: 1` so it absorbs the full column height, and apply `align-items: center` to vertically center the actual checkbox icon and text inside the newly expanded hit area.
+        ```css
+        div[class*="st-key-sync_row_"] label[data-baseweb="checkbox"] {
+            width: 100% !important;
+            flex: 1 !important; /* Absorbs the full stretched height */
+            display: flex !important;
+            align-items: center !important; /* Centers the actual text/icon */
+            cursor: pointer !important;
         }
         ```

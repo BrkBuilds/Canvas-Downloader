@@ -1,6 +1,14 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Session 2026-04-22: Download & Sync Completion UI Overhaul**
+    - Done: Unified the completion screen layout by replacing multiple disjointed success/warning/error alert bars with a single cohesive `render_completion_card` that natively handles success, partial success, and failure states, including skipped discovery feedback.
+    - Done: Refactored raw JSON error output from Canvas into an expandable, CSS-styled `.error-panel` featuring human-readable translations (e.g., "Access Denied" vs 401 Unauthorized JSON).
+    - Done: Strategically integrated the "Retry Failed Items" button *inside* the error panel to provide contextual actionability directly next to the error list.
+    - Done: Replaced visually overwhelming expanded file lists with a compact, pill-based filetype summary component (`_render_filetype_summary`) utilizing Base64-injected SVG icons (PDF, HTML, ZIP, etc.).
+    - Done: Audited `app.py` and `sync/completion.py` to ensure both Download and Sync completion screens invoke the new unified `render_completion_card`, `render_error_section`, and `render_folder_cards` components.
+    - Done: Applied strict "no emoji" policy across completion UI, leveraging pure CSS and Base64 SVGs for a premium, physical volume aesthetic via `styles/completion.css`.
+
 - **Action on Right, Cancel on Left Standardization**: Conducted a comprehensive UX audit and remediation, enforcing a "Primary Action on Right, Secondary/destructive on Left" pattern across all wizards, dialogs, and bulk action bars.
 - **"Physical Volume" Button Aesthetic**: Re-engineered the primary sync action buttons with a premium, tactile "Physical Volume" look. This includes high-saturation 135° gradients (Dark Blue to Teal for Quick Sync), 3D inset beveled lips (`box-shadow: inset ...`), and subtle 0.2 opacity outer glows on hover.
 - **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
@@ -979,6 +987,12 @@
 - **Standard Download UX Parity**:
   - **Confirmation Dialog**: Ported the `@st.dialog` vertical centering modal logic over to `app.py` Step 2.
   - **Dashboard Analytics**: Upgraded the standard download progress block (Step 3) to strictly utilize the injected HTML Sync metrics rendering structure.
+- **Sync Review & Lists Clickability (Session 2026-04-21)**:
+  - **The Flex-Stretch Chain Hack**: Fixed the persistent vertical "dead zone" clickability issues in the Sync Review file list. Streamlit's `st.columns(vertical_alignment="center")` inherently injects a 5px margin on columns and center-aligns the parent row block, causing the child `<label>` to not fill the row height. We surgically killed the margin, forced `align-items: stretch` on the horizontal block, and applied `flex: 1; display: flex; flex-direction: column` across all intermediate wrappers (`stColumn`, `stVerticalBlock`, `stElementContainer`, `stCheckbox`) to stretch the checkbox label to fill 100% of the row area, making every pixel clickable.
+  - **Vertical Icon/Text Nudging**: Applied micro-adjustments using `margin-top: -1px` for the checkbox SVG and `margin-top: 2px` for the file name text to achieve perfect horizontal centering within the fully stretched rows.
+  - **Ignored Files Spacing**: Shrunk the vertical `margin-bottom` on the ignored files list to massively increase UI density and resemble the Ignored Files Modal styling, pulling elements closer together.
+  - **Brightness Fixes**: Removed `opacity`/`filter` dimming on ignored files, resetting their text colors to solid white with an explicit `#ffffff` rule to fix illegibility issues.
+
 ## Recent Changes (Session 2026-04-04 - Stabilizing Course Selection UI)
 - **Eradication of Dynamic Sorting**: 
   - Modified `ui/course_selector.py` (Download Wizard), `ui/sync_dialogs.py` (Sync Pairing), and `ui/hub_dialog.py` (Sync Hub).
