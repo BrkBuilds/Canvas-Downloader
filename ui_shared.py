@@ -26,7 +26,10 @@ def render_completion_card(synced_count: int, error_count: int,
                            total_bytes: int, mode: str = 'download',
                            size_skipped_files: list = None, size_limit_mb: int = 0,
                            retry_attempted: bool = False, retry_resolved: int = 0,
-                           retry_total: int = 0, discovery_skipped: int = 0):
+                           retry_total: int = 0,
+                           retriable_count: int = 0,
+                           unresolvable_count: int = 0,
+                           courses_count: int = 0):
     """Render the unified completion summary card.
 
     Single card that absorbs all status info: success/partial/failure,
@@ -37,22 +40,17 @@ def render_completion_card(synced_count: int, error_count: int,
 
     size_skipped_files = size_skipped_files or []
     size_skipped_count = len(size_skipped_files)
-    action_word = 'Downloaded' if mode == 'download' else 'Synced'
-    file_word = 'file' if synced_count == 1 else 'files'
 
     # Determine card variant
     if synced_count == 0 and error_count > 0:
         card_class = 'failure'
         title = 'Download Failed' if mode == 'download' else 'Sync Failed'
-        subtitle = f'{action_word.replace("ed", "")} failed for all {error_count} files'
     elif error_count > 0:
         card_class = 'partial'
         title = 'Partial Success' if mode == 'download' else 'Sync Completed with Errors'
-        subtitle = f'{action_word} {synced_count} {file_word} with {error_count} {"error" if error_count == 1 else "errors"}'
     elif synced_count > 0:
         card_class = 'success'
         title = 'Download Success' if mode == 'download' else 'Sync Success'
-        subtitle = f'{action_word} {synced_count} {file_word} successfully!'
     else:
         st.success("Nothing to download - all files are up to date!")
         return
@@ -61,6 +59,8 @@ def render_completion_card(synced_count: int, error_count: int,
     file_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>"
     error_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>"
     size_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='12' cy='5' rx='9' ry='3'></ellipse><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'></path><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'></path></svg>"
+    # Slash-circle icon for unresolvable files
+    slash_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='4.93' y1='4.93' x2='19.07' y2='19.07'></line></svg>"
     
     size_parts = format_file_size(total_bytes).split(" ", 1)
     size_val = size_parts[0]
@@ -68,6 +68,19 @@ def render_completion_card(synced_count: int, error_count: int,
 
     stats_html = (
 '<div class="completion-stats-grid">'
+    )
+    if courses_count > 0:
+        course_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>"
+        stats_html += (
+'<div class="stat-card">'
+f'<div class="stat-icon-wrapper">{course_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{courses_count}</div>'
+f'<div class="stat-label">{"Course" if courses_count == 1 else "Courses"} {"Updated" if mode == "sync" else "Downloaded"}</div>'
+'</div>'
+'</div>'
+        )
+    stats_html += (
 '<div class="stat-card">'
 f'<div class="stat-icon-wrapper">{file_icon}</div>'
 '<div class="stat-info">'
@@ -83,8 +96,32 @@ f'<div class="stat-label">{size_unit} Downloaded</div>'
 '</div>'
 '</div>'
     )
-    
-    if error_count > 0:
+
+    # Conditional error stat cards — split by retriable vs unresolvable
+    if retriable_count > 0 or unresolvable_count > 0:
+        # Show separate cards when split counts are provided
+        if retriable_count > 0:
+            stats_html += (
+'<div class="stat-card stat-error">'
+f'<div class="stat-icon-wrapper">{error_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{retriable_count}</div>'
+f'<div class="stat-label">Failed {"Download" if retriable_count == 1 else "Downloads"}</div>'
+'</div>'
+'</div>'
+            )
+        if unresolvable_count > 0:
+            stats_html += (
+'<div class="stat-card stat-skip">'
+f'<div class="stat-icon-wrapper">{slash_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{unresolvable_count}</div>'
+f'<div class="stat-label">Unavailable {"File" if unresolvable_count == 1 else "Files"}</div>'
+'</div>'
+'</div>'
+            )
+    elif error_count > 0:
+        # Fallback: single combined error card (backward compat)
         stats_html += (
 '<div class="stat-card stat-error">'
 f'<div class="stat-icon-wrapper">{error_icon}</div>'
@@ -99,27 +136,21 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
 
     # Optional notes (retry + discovery, folded inline)
     notes_html = ''
+    _check_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:14px;height:14px;flex-shrink:0;margin-top:1px;'><polyline points='20 6 9 17 4 12'/></svg>"
     if retry_attempted and retry_total > 0:
         if retry_resolved == 0:
-            notes_html += (
-                f'<div class="retry-note">'
-                f'<span class="retry-badge retry-fail">Retry</span> '
-                f'Attempted for {retry_total} {"item" if retry_total == 1 else "items"}, '
-                f'but {"it" if retry_total == 1 else "none"} could be downloaded. '
-                f'These files may not be available on Canvas.'
-                f'</div>'
-            )
+            pass  # Note shown below retry button instead
         elif retry_resolved < retry_total:
             notes_html += (
-                f'<div class="retry-note">'
-                f'<span class="retry-badge retry-success">Retry</span> '
-                f'Recovered {retry_resolved} of {retry_total} failed {"item" if retry_total == 1 else "items"}!'
+                f'<div class="retry-note retry-note-success">'
+                f'{_check_icon}'
+                f'Recovered {retry_resolved} of {retry_total} failed {"item" if retry_total == 1 else "items"}.'
                 f'</div>'
             )
         else:
             notes_html += (
-                f'<div class="retry-note">'
-                f'<span class="retry-badge retry-success">Retry</span> '
+                f'<div class="retry-note retry-note-success">'
+                f'{_check_icon}'
                 f'Successfully recovered all {retry_resolved} previously failed {"item" if retry_resolved == 1 else "items"}!'
                 f'</div>'
             )
@@ -134,14 +165,14 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         )
 
     if card_class == 'failure':
-        bg_color = '#2c1616'
-        border_color = 'rgba(239, 68, 68, 0.4)'
+        bg_color = '#191919'
+        border_color = 'rgba(239, 68, 68, 0.25)'
     elif card_class == 'partial':
-        bg_color = '#261e17'
-        border_color = 'rgba(241, 196, 15, 0.4)'
+        bg_color = 'rgba(120, 80, 0, 0.22)'
+        border_color = 'rgba(245, 158, 11, 0.45)'
     else:
-        bg_color = '#1a3a2a'
-        border_color = 'rgba(46, 204, 113, 0.4)'
+        bg_color = 'rgba(22, 101, 52, 0.25)'
+        border_color = 'rgba(74, 222, 128, 0.5)'
 
     st.html(f"""
     <style>
@@ -149,7 +180,7 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         background-color: {bg_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 10px !important;
-        padding: 16px 20px !important;
+        padding: 20px 20px 35px 20px !important;
         margin-bottom: 12px;
     }}
     </style>
@@ -158,7 +189,6 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
     st.markdown(f"""
     <div class="completion-card {card_class}">
         <div class="card-title">{esc(title)}</div>
-        <div class="card-subtitle">{esc(subtitle)}</div>
         {stats_html}
         {notes_html}
     </div>
@@ -174,16 +204,25 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         st.balloons()
 
 
+_FC_FOLDER_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'"
+    " viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'"
+    " stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'/%3E"
+    "%3C/svg%3E"
+)
+_FC_CHEVRON_SVG = (
+    "<svg class='ft-chevron' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='none' stroke='currentColor' stroke-width='2.5'"
+    " stroke-linecap='round' stroke-linejoin='round'>"
+    "<path d='M9 18l6-6-6-6'/>"
+    "</svg>"
+)
+
+
 def render_folder_cards(file_details: dict, folder_paths: dict,
                         key_prefix: str = 'dl'):
-    """Render per-folder cards with filetype summary and Open Folder buttons.
-
-    Args:
-        file_details: Dict mapping folder_key -> list of filenames.
-        folder_paths: Dict mapping folder_key -> absolute folder path string.
-        key_prefix: Unique prefix for Streamlit widget keys ('dl' or 'sync').
-    """
-    import os
+    """Render per-folder cards with filetype summary and Open Folder buttons."""
     has_files = any(len(files) > 0 for files in file_details.values())
     if not has_files:
         return
@@ -195,65 +234,30 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
             continue
 
         folder_path = folder_paths.get(folder_key, '')
-        folder_display = short_path(folder_path) if folder_path else folder_key
+        folder_name = short_path(folder_path) if folder_path else folder_key
+        file_count = len(files)
+        count_label = f"{file_count} file" if file_count == 1 else f"{file_count} files"
+        expand_id = f"ft-expand-{key_prefix}-{idx}"
+        pills_html = _build_filetype_pills_html(files)
 
-        with st.container(border=True):
-            st.markdown(f"""<style>
-            div[data-testid="stVerticalBlock"]:has(span#{key_prefix}_folder_{idx}) {{
-                padding-top: 2px !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) {{
-                align-items: center !important;
-                gap: 15px !important;
-                min-height: 0 !important;
-                margin-bottom: 0px !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) div[data-testid="stColumn"] {{
-                width: auto !important;
-                flex: 0 0 auto !important;
-                min-width: 0 !important;
-                display: flex !important;
-                align-items: center !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) div[data-testid="stMarkdownContainer"] {{
-                margin: 0 !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) div[data-testid="stMarkdown"] {{
-                display: flex !important;
-                align-items: center !important;
-                overflow: visible !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) div[data-testid="stElementContainer"] {{
-                margin: 0 !important;
-                overflow: visible !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) p {{
-                margin: 0 !important;
-                line-height: 1.4 !important;
-            }}
-            div[data-testid="stHorizontalBlock"]:has(span#{key_prefix}_folder_{idx}) button {{
-                border: 1px solid rgba(255,255,255,0.3) !important;
-                padding: 4px 14px !important;
-                font-size: 0.85rem !important;
-                line-height: 1.4 !important;
-                min-height: 0 !important;
-                height: auto !important;
-                transform: translateY(-2px) !important;
-            }}
-            </style>""", unsafe_allow_html=True)
+        header_html = (
+            f'<div class="fc-header">'
+            f'<img class="fc-folder-icon" src="{_FC_FOLDER_SVG}" alt="folder"/>'
+            f'<div class="fc-title">{esc(folder_name)}</div>'
+            f'<input type="checkbox" id="{expand_id}" class="ft-expand-toggle"/>'
+            f'<label for="{expand_id}" class="ft-expander-trigger">'
+            f'{_FC_CHEVRON_SVG}'
+            f'<span class="ft-label">{count_label}</span>'
+            f'</label>'
+            f'<div class="ft-expander-pills">{pills_html}</div>'
+            f'</div>'
+        )
 
-            c1, c2, c3 = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
-            with c1:
-                st.markdown(f'<span id="{key_prefix}_folder_{idx}"></span>**{folder_display}**', unsafe_allow_html=True)  # audit-ignore: folder_display is a local filesystem path
-            with c2:
-                if folder_path and Path(folder_path).exists():
-                    if st.button('\U0001f4c2 Open folder', key=f"{key_prefix}_open_{idx}"):
-                        open_folder(folder_path)
-            with c3:
-                st.empty()
-
-            # Filetype breakdown summary instead of individual file list
-            _render_filetype_summary(files, f"{key_prefix}_ft_{idx}")
+        with st.container(border=True, key=f"{key_prefix}_fc_{idx}"):
+            st.markdown(header_html, unsafe_allow_html=True)
+            if folder_path and Path(folder_path).exists():
+                if st.button('Open Folder', key=f"{key_prefix}_open_{idx}", use_container_width=False):
+                    open_folder(folder_path)
 
 
 
@@ -276,49 +280,78 @@ _FILETYPE_SVGS = {
     'mp3': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23d8b4fe'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EMP3%3C/text%3E%3C/svg%3E",
     'csv': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3ECSV%3C/text%3E%3C/svg%3E",
     'url': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%237dd3fc'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EURL%3C/text%3E%3C/svg%3E",
+    'other': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23cbd5e1'/%3E%3Ctext x='2' y='17' font-size='5' font-weight='bold' fill='white'%3EOTHER%3C/text%3E%3C/svg%3E",
 }
 _FILETYPE_SVG_DEFAULT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234b5563'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%239ca3af'/%3E%3C/svg%3E"
 
 
-def _render_filetype_summary(files: list, key: str):
-    """Render a compact filetype breakdown as pill badges."""
+def _build_filetype_pills_html(files: list) -> str:
+    """Return filetype pill HTML string for a list of filenames."""
     import os
     from collections import Counter
+
+    WHITELIST = {'pdf', 'docx', 'pptx', 'xlsx', 'zip', 'mp4', 'js', 'html', 'css', 'txt', 'sql', 'jpg', 'png', 'doc', 'ppt', 'xls', 'md', 'csv', 'json', 'py', 'java', 'c', 'cpp'}
+
     ext_counts = Counter()
     for f in files:
         ext = os.path.splitext(f)[1].lower().lstrip('.')
-        ext_counts[ext or 'other'] += 1
+        if ext in WHITELIST:
+            ext_counts[ext] += 1
+        else:
+            ext_counts['other'] += 1
 
-    # Sort by count descending
-    sorted_exts = sorted(ext_counts.items(), key=lambda x: -x[1])
-    total = sum(ext_counts.values())
+    specific_exts = {k: v for k, v in ext_counts.items() if k != 'other'}
+    sorted_specific = sorted(specific_exts.items(), key=lambda x: -x[1])
 
-    pills_html = ''
-    for ext, count in sorted_exts:
+    top_4 = sorted_specific[:4]
+    remaining_count = sum(v for k, v in sorted_specific[4:])
+    other_count = ext_counts.get('other', 0) + remaining_count
+
+    html = ''
+    for ext, count in top_4:
         icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
-        pills_html += (
+        html += (
             f'<div class="filetype-pill">'
             f'<img class="ft-icon" src="{icon_url}" alt="{ext}"/>'
             f'<span class="ft-label">{esc(ext.upper())}</span>'
             f'<span class="ft-count">{count}</span>'
             f'</div>'
         )
+    if other_count > 0:
+        html += (
+            f'<div class="filetype-pill">'
+            f'<img class="ft-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="other"/>'
+            f'<span class="ft-label">OTHER</span>'
+            f'<span class="ft-count">{other_count}</span>'
+            f'</div>'
+        )
+    return html
 
-    st.markdown(
-        f'<div style="font-size:0.82em;color:#9ca3af;margin-bottom:4px;">{total} {"file" if total == 1 else "files"} downloaded</div>'
-        f'<div class="filetype-summary">{pills_html}</div>',
-        unsafe_allow_html=True,
-    )
+
 
 
 # --- Error type to human-friendly message mapping ---
 _ERROR_TRANSLATIONS = {
-    'No URL': 'This file has no download link on Canvas',
+    'No URL': 'Canvas did not provide a download link for this file',
     'LTI/Media Stream': 'This is a streamed video that cannot be downloaded directly',
     'URL Expiration': 'The download link expired and could not be refreshed',
     'Network Error': 'Network connection failed after multiple retries',
-    'Write Error': 'Could not save the file to disk',
-    '401 Unauthorized': 'Access denied - you may not have permission to download this file',
+    'Write Error': 'Could not save the file to disk — check available storage',
+    '401 Unauthorized': 'Access denied — you may not have permission to download this file',
+    'Missing Content ID': 'Canvas did not provide a file reference for this item',
+    'Missing Page URL': 'Canvas did not provide a URL for this page',
+    'Missing External URL': 'Canvas did not provide a URL for this link',
+    'Missing Tool URL': 'Canvas did not provide a launch URL for this external tool',
+    'Item Processing Error': 'An unexpected error occurred while processing this item',
+    'Module Error': 'Could not load this module from Canvas',
+    'Async Error': 'A download task failed unexpectedly',
+    'Processing Error': 'An unexpected error occurred during download',
+    'Hybrid Mode Error': 'An unexpected error occurred while scanning the course',
+    'Secondary Content Error': 'Could not download supplementary course content',
+    'Secondary Retry Error': 'Retry also failed for supplementary content',
+    'Fetch Error': 'Could not load this resource from Canvas',
+    'Queue Error': 'Failed to queue this file for download',
+    'Legacy Entity Save Error': 'Could not save this item to disk',
 }
 
 def _friendly_error_reason(err) -> str:
@@ -364,7 +397,7 @@ _ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 def render_error_section(error_list: list, error_log_paths: list = None,
                          dialog_fn=None, key_prefix: str = 'dl',
                          retry_btn_callback=None, has_retriable_errors: bool = False,
-                         discovery_skipped: int = 0):
+                         retry_failed: bool = False):
     """Render error details as a custom CSS panel with human-friendly messages.
 
     Args:
@@ -374,59 +407,163 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         key_prefix: Unique prefix for Streamlit widget keys.
         retry_btn_callback: If provided, renders the retry button inside the panel.
         has_retriable_errors: Whether retriable errors exist (controls retry btn visibility).
+        retry_failed: True when a retry was already attempted and all items still failed.
     """
     if not error_list:
         return
 
     import os
+    from collections import defaultdict
     count = len(error_list)
-    display_errors = error_list[:20]
 
-    # Build error rows HTML
-    rows_html = ''
-    for err in display_errors:
+    def _err_row_html(err):
         if hasattr(err, 'item_name'):
             fname = err.item_name or 'Unknown file'
-            reason = _friendly_error_reason(err)
             ext = os.path.splitext(fname)[1].lower().lstrip('.')
-            ext_badge = f'<span class="err-ext-badge">.{esc(ext)}</span>' if ext else ''
             fname = os.path.splitext(fname)[0] if ext else fname
-        else:
-            fname = str(err)
-            reason = ''
-            ext_badge = ''
+            ft_icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+            
+            link_html = ''
+            
+            api_url = st.session_state.get('api_url', '').rstrip('/')
+            if api_url and hasattr(err, 'context') and isinstance(err.context, dict):
+                f_dict = err.context.get('file_dict', {})
+                fid = f_dict.get('id')
+                furl = f_dict.get('url', '')
+                
+                course_id = None
+                if hasattr(err, 'course_name'):
+                    for c in st.session_state.get('courses_to_download', []):
+                        if c.name == err.course_name:
+                            course_id = c.id
+                            break
+                    if not course_id:
+                        sync_state = st.session_state.get('sync_state', {})
+                        course_det = sync_state.get('course_details')
+                        if course_det and getattr(course_det, 'name', '') == err.course_name:
+                            course_id = course_det.id
 
-        rows_html += (
-            f'<div class="error-row">'
-            f'<img class="err-icon" src="{_ALERT_SVG}" alt="error"/>'
-            f'<div class="err-body">'
-            f'<div class="err-filename">{esc(fname)}{ext_badge}</div>'
+                canvas_url = None
+                if furl and ('/courses/' in furl or '/assignments/' in furl or '/discussion_topics/' in furl or '/quizzes/' in furl):
+                    canvas_url = furl
+                elif fid and str(fid).isdigit():
+                    if course_id:
+                        canvas_url = f"{api_url}/courses/{course_id}/files/{fid}"
+                    else:
+                        canvas_url = f"{api_url}/files/{fid}"
+                    
+                if canvas_url:
+                    _LINK_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
+                    link_html = f'<a href="{canvas_url}" target="_blank" rel="noopener noreferrer" class="err-link-btn" title="Open in Canvas">{_LINK_SVG}</a>'
+
+            return (
+                f'<div class="error-row">'
+                f'<img class="err-icon" src="{ft_icon_url}" alt="{ext}"/>'
+                f'<div class="err-body">'
+                f'<span class="err-filename">{esc(fname)}</span>'
+                f'{link_html}'
+                f'</div></div>'
+            )
+        else:
+            return (
+                f'<div class="error-row">'
+                f'<img class="err-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="file"/>'
+                f'<div class="err-body">'
+                f'<div class="err-filename">{esc(str(err))}</div>'
+                f'</div></div>'
+            )
+
+    # Split into actionable vs unresolvable
+    actionable, unresolvable = [], []
+    for err in error_list[:20]:
+        is_retriable = (
+            hasattr(err, 'item_name')
+            and isinstance(getattr(err, 'context', None), dict)
+            and err.context.get('filepath')
+            and getattr(err, 'error_type', '') != 'LTI/Media Stream'
         )
-        if reason:
-            rows_html += f'<div class="err-reason">{esc(reason)}</div>'
-        rows_html += '</div></div>'
+        if is_retriable or not hasattr(err, 'item_name'):
+            actionable.append(err)
+        else:
+            unresolvable.append(err)
+
+    # Build left column: "Failed to Download" (actionable / retriable errors)
+    left_col_html = ''
+    if actionable:
+        if retry_failed:
+            subtitle = "We tried to download these files again, with no success. Please try downloading these files manually via Canvas."
+            subtitle_class = 'err-col-subtitle err-col-subtitle-failed'
+        else:
+            subtitle = "These files timed out or failed. Click the <b>Retry Failed Files</b> button below to try grabbing them again."
+            subtitle_class = 'err-col-subtitle'
+        rows = ''.join(_err_row_html(e) for e in actionable)
+        left_col_html = (
+            f'<div class="err-col">'
+            f'<div class="err-col-header">'
+            f'<span class="err-col-title">Failed to Download</span>'
+            f'<span class="err-group-badge err-group-badge-error">{len(actionable)}</span>'
+            f'</div>'
+            f'<div class="{subtitle_class}">{subtitle}</div>'
+            f'{rows}'
+            f'</div>'
+        )
+
+    # Build right column: "Stream-Only Videos" or generic unresolvable
+    right_col_html = ''
+    if unresolvable:
+        by_reason = defaultdict(list)
+        for err in unresolvable:
+            reason = _friendly_error_reason(err)
+            by_reason[reason].append(err)
+
+        lti_count = sum(1 for e in unresolvable if getattr(e, 'error_type', '') == 'LTI/Media Stream')
+        if lti_count == len(unresolvable):
+            col_title = 'Unavailable Files (Stream-Only)'
+            col_subtitle = 'These are video streams. Canvas does not allow direct downloads for these.'
+            badge_class = 'err-group-badge-neutral'
+        else:
+            col_title = 'Cannot Be Downloaded'
+            col_subtitle = 'These files have a permanent issue and cannot be retried.'
+            badge_class = 'err-group-badge-muted'
+
+        sub_html = ''
+        for reason, errs in by_reason.items():
+            rows = ''.join(_err_row_html(e) for e in errs)
+            if len(by_reason) > 1:
+                sub_html += f'<div class="err-subgroup-reason">{esc(reason)}</div>'
+            sub_html += rows
+
+        right_col_html = (
+            f'<div class="err-col">'
+            f'<div class="err-col-header">'
+            f'<span class="err-col-title">{col_title}</span>'
+            f'<span class="err-group-badge {badge_class}">{len(unresolvable)}</span>'
+            f'</div>'
+            f'<div class="err-col-subtitle">{col_subtitle}</div>'
+            f'{sub_html}'
+            f'</div>'
+        )
+
+    body_html = f'<div class="error-columns">{left_col_html}{right_col_html}</div>'
 
     if count > 20:
-        rows_html += f'<div class="error-row" style="justify-content:center;color:#c7b8ad;font-size:0.82em;">... and {count - 20} more errors</div>'
+        body_html += f'<div style="padding:6px 0;color:#6b7280;font-size:0.82em;">... and {count - 20} more errors</div>'
 
     # Footer
     footer_html = ''
     if st.session_state.get('error_log_enabled', True):
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
-    # Render the custom panel via st.html (not iframe - use markdown)
     st.markdown(f"""
-    <details class="error-panel">
+    <details class="error-panel" open>
         <summary class="error-panel-header">
             <div class="ep-header-row">
                 <img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>
                 <span class="ep-title">Error Details</span>
-                <span class="ep-badge">{count}</span>
             </div>
-            {f'<div class="ep-discovery">{discovery_skipped} {"file" if discovery_skipped == 1 else "files"} could not be downloaded because Canvas did not provide enough information to locate {"it" if discovery_skipped == 1 else "them"}. Try downloading the course again to pick {"it" if discovery_skipped == 1 else "them"} up.</div>' if discovery_skipped > 0 else ''}
         </summary>
         <div class="error-panel-body">
-            {rows_html}
+            {body_html}
             {footer_html}
         </div>
     </details>
@@ -441,20 +578,28 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 if st.button("View Full Error Log", key=f"{key_prefix}_view_error_log", use_container_width=True):
                     dialog_fn(valid_paths)
 
-    # Retry button inside the error section
+    # Retry button — placed in half-width left column under the error panel
+    # so it visually associates with the "Failed to Download" column only.
     if has_retriable_errors and retry_btn_callback:
         retriable_count = sum(
-            1 for err in error_list 
-            if isinstance(getattr(err, 'context', None), dict) 
-            and err.context.get('filepath') 
+            1 for err in error_list
+            if isinstance(getattr(err, 'context', None), dict)
+            and err.context.get('filepath')
             and getattr(err, 'error_type', '') != 'LTI/Media Stream'
         )
-        btn_text = f"Retry Failed Files ({retriable_count})" if retriable_count > 0 else "Retry Failed Files"
-        st.markdown("<div style='margin-top: 3px; margin-bottom: 8px;'></div>", unsafe_allow_html=True)
-        col_retry, _ = st.columns([0.3, 0.7])
+        btn_text = "Retry Failed Files" if retry_failed else (
+            f"Retry Failed Files ({retriable_count})" if retriable_count > 0 else "Retry Failed Files"
+        )
+        retry_tooltip = (
+            "We couldn't download these files after retrying. "
+            "You can find them directly on Canvas and download from there."
+        ) if retry_failed else None
+        st.html("<div style='padding: 4px 0 0 0;'></div>")
+        col_retry, _ = st.columns(2)
         with col_retry:
             if st.button(btn_text, type="secondary", key=f"{key_prefix}_retry_failed_btn",
-                         use_container_width=True):
+                         use_container_width=True, disabled=retry_failed,
+                         help=retry_tooltip):
                 retry_btn_callback()
 
 

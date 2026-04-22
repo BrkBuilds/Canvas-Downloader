@@ -33,6 +33,7 @@
     display: flex;
     gap: 12px;
     margin-top: 12px;
+    margin-bottom: 0;
     flex-wrap: wrap;
 }
 .stat-card {
@@ -45,10 +46,6 @@
     padding: 12px 16px;
     flex: 1;
     min-width: 150px;
-}
-.stat-card.stat-error {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
 }
 .stat-icon-wrapper {
     display: flex;
@@ -63,6 +60,10 @@
 .stat-card.stat-error .stat-icon-wrapper {
     background: rgba(239, 68, 68, 0.2);
     color: #fca5a5;
+}
+.stat-card.stat-skip .stat-icon-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
 }
 .stat-icon-wrapper svg {
     width: 18px;
@@ -80,7 +81,7 @@
     margin-bottom: -1px;
 }
 .stat-card.stat-error .stat-value {
-    color: #ffffff;
+    color: #f87171;
 }
 .stat-label {
     font-size: 0.75em;
@@ -88,9 +89,6 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #9ca3af;
-}
-.stat-card.stat-error .stat-label {
-    color: #f87171;
 }
 .completion-card .card-note {
     color: #d1d5db;
@@ -101,42 +99,51 @@
     line-height: 1.5;
 }
 .completion-card .retry-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
     margin-top: 10px;
     font-size: 0.82em;
+}
+.completion-card .retry-note-warn {
     color: #d1d5db;
 }
-.completion-card .retry-note .retry-badge {
-    display: inline-block;
-    padding: 1px 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    font-weight: 600;
-    margin-right: 4px;
+.completion-card .retry-note-warn svg {
+    color: #f59e0b;
 }
-.completion-card .retry-note .retry-success {
-    background: rgba(74, 222, 128, 0.12);
+.completion-card .retry-note-success {
+    color: #86efac;
+}
+.completion-card .retry-note-success svg {
     color: #4ade80;
-}
-.completion-card .retry-note .retry-fail {
-    background: rgba(255, 128, 55, 0.404);
-    color: #f1f1f1;
 }
 
 /* Make grey text lighter in the amber partial card */
-.completion-card.partial .card-note,
-.completion-card.partial .retry-note {
+.completion-card.partial .card-note {
     color: #f3f4f6 !important;
 }
 .completion-card.partial .stat-label {
     color: #e5e7eb !important;
 }
 
+/* Stat cards pop on yellow/amber background */
+.completion-card.partial .stat-card {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Success card note — white text with breathing room */
+.completion-card.success .card-note {
+    color: #ffffff !important;
+    padding-bottom: 10px;
+}
+
 /* --- Error Panel (Custom CSS Collapsible) --- */
 .error-panel {
-    background: rgba(136, 39, 39, 0.226);
-    border: 1px solid rgba(238, 97, 97, 0.3);
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    margin: 10px 0 0 0;
+    margin: 10px 0 16px 0; /* Add bottom margin to maintain outer padding when retry button is absent */
     overflow: hidden;
 }
 .error-panel-header {
@@ -147,7 +154,7 @@
     transition: background-color 0.15s ease;
 }
 .error-panel-header:hover {
-    background: rgba(206, 58, 58, 0.1);
+    background: rgba(255, 255, 255, 0.03);
 }
 .error-panel-header .chevron {
     width: 16px;
@@ -155,23 +162,15 @@
     transition: transform 0.2s ease;
     flex-shrink: 0;
     opacity: 0.6;
+    transform: rotate(90deg);
 }
 details[open] > .error-panel-header .chevron {
-    transform: rotate(90deg);
+    transform: rotate(-90deg);
 }
 .error-panel-header .ep-header-row {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-.ep-discovery {
-    color: #f3f3f3;
-    font-size: 0.9em;
-    padding-left: 26px;
-    margin-top: 0px;
-}
-details:not([open]) .ep-discovery {
-    display: none;
 }
 .error-panel-header .ep-title {
     font-weight: 500;
@@ -188,30 +187,124 @@ details:not([open]) .ep-discovery {
     font-weight: 600;
 }
 
+/* --- Two-Column Error Layout --- */
+.error-panel-body {
+    padding: 0 16px 4px 42px; /* left-align content with "E" in "Error Details" */
+}
+.error-columns {
+    display: flex;
+    gap: 24px;
+    padding-top: 14px;
+    flex-wrap: wrap;
+}
+.err-col {
+    flex: 1;
+    min-width: 180px;
+}
+.err-col-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+.err-col-title {
+    font-size: 0.88em;
+    font-weight: 600;
+    color: #f3f4f6;
+}
+.err-col-subtitle {
+    font-size: 0.8em;
+    color: #6b7280;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+.err-col-subtitle-failed {
+    color: #f87171;
+}
+
+/* --- Badge Styles (shared) --- */
+.err-group-badge {
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 10px;
+}
+.err-group-badge-warn {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+.err-group-badge-error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+.err-group-badge-muted {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+.err-group-badge-neutral {
+    background: rgba(255, 255, 255, 0.07);
+    color: #9ca3af;
+}
+
+/* --- Sub-reason label (for mixed unresolvable errors) --- */
+.err-subgroup-reason {
+    font-size: 0.78em;
+    color: #6b7280;
+    padding: 4px 0 2px 0;
+    font-style: italic;
+}
+
 /* --- Individual Error Row --- */
 .error-row {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 6px 16px;
-    border-top: 1px solid rgba(255, 188, 188, 0.178);
+    gap: 8px;
+    padding: 6px 8px 6px 0;
+    border-radius: 4px;
+}
+.error-row:hover {
+    background: none;
+    cursor: default;
 }
 .error-row .err-icon {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
     margin-top: 2px;
-    opacity: 0.7;
+    opacity: 1;
 }
 .error-row .err-body {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .error-row .err-filename {
     font-weight: 600;
     font-size: 0.88em;
     color: #e5e7eb;
     word-break: break-word;
+}
+a.err-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+a.err-link-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+}
+a.err-link-btn svg {
+    width: 12px;
+    height: 12px;
 }
 .error-row .err-ext-badge {
     display: inline-block;
@@ -231,13 +324,12 @@ details:not([open]) .ep-discovery {
     line-height: 1.2;
 }
 .error-panel-footer {
-    padding: 8px 16px 10px;
-    border-top: 1px solid rgba(255,255,255,0.04);
+    padding: 10px 0 6px 0;
     font-size: 0.78em;
-    color: #d1d5db;
+    color: #6b7280;
 }
 
-/* --- Retry Button (Premium Inside Error Panel) --- */
+/* --- Retry Button (Premium) --- */
 div[class*="st-key-"][class*="_retry_failed_btn"] button {
     background: linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%) !important;
     border: none !important;
@@ -253,6 +345,10 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button:hover {
     filter: brightness(1.15) !important;
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 16px rgba(217, 119, 6, 0.35) !important;
 }
+div[class*="st-key-"][class*="_retry_failed_btn"] button:disabled {
+    cursor: not-allowed !important;
+    filter: grayscale(100%) brightness(30%) !important;
+}
 div[class*="st-key-"][class*="_retry_failed_btn"] button p {
     display: flex !important;
     align-items: center !important;
@@ -260,7 +356,6 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p {
     margin: 0 !important;
     white-space: nowrap !important;
 }
-/* Retry icon via CSS pseudo-element (SVG arrow circle) */
 div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     content: "" !important;
     display: inline-block !important;
@@ -282,14 +377,193 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-/* --- Folder Card Overrides --- */
-/* Reduce internal padding of the bordered container */
-.st-key-completion_folder div[data-testid="stVerticalBlockBorderWrapper"] {
-    padding: 8px 16px !important;
+/* --- Custom Folder Cards --- */
+/* --- Custom Folder Cards --- */
+div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"],
+div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) {
+    border-radius: 10px !important;
+    background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 8px !important;
+    overflow: hidden !important;
 }
-/* Tighter gap between course name row and file summary */
-.st-key-completion_folder div[data-testid="stVerticalBlock"] {
-    gap: 0.25rem !important;
+div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]:hover,
+div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]:hover,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title):hover {
+    border-color: #475569 !important;
+    background: linear-gradient(145deg, #334155, #1e293b) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+/* override Streamlit container padding */
+div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"] > div > div,
+div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"] > div > div,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) > div > div {
+    padding: 14px 18px !important; 
+}
+
+/* Custom Title */
+.fc-title {
+    font-size: 1.25em !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin-bottom: 4px !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Open Folder Button — Dark Ghost Style with outlined blue folder icon */
+div[class*="st-key-dl_fc_"] button,
+div[class*="st-key-sync_fc_"] button,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button {
+    background: rgba(255, 255, 255, 0.07) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 0px 44px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 38px !important;
+    max-height: 38px !important;
+    min-height: 38px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+div[class*="st-key-dl_fc_"] button:hover,
+div[class*="st-key-sync_fc_"] button:hover,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:hover {
+    background: rgba(255, 255, 255, 0.13) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 12px rgba(255, 255, 255, 0.07) !important;
+}
+div[class*="st-key-dl_fc_"] button:active,
+div[class*="st-key-sync_fc_"] button:active,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:active {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(1px) !important;
+    box-shadow: none !important;
+}
+div[class*="st-key-dl_fc_"] button p,
+div[class*="st-key-sync_fc_"] button p,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p {
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    font-size: 0.92em !important;
+}
+div[class*="st-key-dl_fc_"] button p::before,
+div[class*="st-key-sync_fc_"] button p::before,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p::before {
+    content: "" !important;
+    display: inline-block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393c5fd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'%3E%3C/path%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Align Open Folder button with title text — fixed pixel indent, screen-size independent */
+div[class*="st-key-dl_fc_"] [data-testid="stButton"],
+div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
+    margin-left: 29px !important;
+}
+
+/* --- Folder Card Header Row --- */
+.fc-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+.fc-folder-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0.75;
+    position: relative;
+    top: -2px;
+}
+
+/* --- Inline File Count Expander (checkbox hack) --- */
+.ft-expand-toggle {
+    display: none;
+}
+.ft-expander-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2px 10px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    color: #e2e8f0;
+    position: relative;
+    top: -2px;
+}
+.ft-expander-trigger:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+.ft-expander-trigger .ft-label {
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: inherit;
+}
+.ft-chevron {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    transition: stroke-width 0.15s ease;
+}
+.ft-expand-toggle:checked ~ .ft-expander-trigger .ft-chevron {
+    stroke-width: 5;
+    stroke: #60a5fa;
+}
+.ft-expand-toggle:checked ~ .ft-expander-trigger {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #e2e8f0;
+}
+
+/* Pills container — hidden by default, slides in when expanded */
+.ft-expander-pills {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-width 0.28s ease, opacity 0.18s ease 0.06s;
+    white-space: nowrap;
+    position: relative;
+    top: -2px;
+}
+.ft-expand-toggle:checked ~ .ft-expander-pills {
+    max-width: 1000px;
+    opacity: 1;
+    pointer-events: auto;
+    transition: max-width 0.28s ease, opacity 0.18s ease;
 }
 
 /* --- Filetype Summary Grid --- */
@@ -306,11 +580,7 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
-    padding: 5px 12px;
-    transition: background 0.15s ease;
-}
-.filetype-pill:hover {
-    background: rgba(255,255,255,0.08);
+    padding: 2px 12px;
 }
 .filetype-pill .ft-icon {
     width: 16px;
@@ -320,12 +590,13 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
 .filetype-pill .ft-label {
     font-size: 0.8em;
     font-weight: 600;
-    color: #d1d5db;
+    color: #f1f5f9;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 .filetype-pill .ft-count {
     font-size: 0.78em;
-    color: #9ca3af;
+    color: #cbd5e1;
     font-weight: 400;
 }
+
