@@ -436,6 +436,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button {
     min-height: 38px !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    margin-top: 4px;
 }
 div[class*="st-key-dl_fc_"] button:hover,
 div[class*="st-key-sync_fc_"] button:hover,
@@ -545,7 +546,7 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
 /* trigger & chevron active states — trigger is inside .fc-header, sibling of toggle */
 .ft-expand-toggle:checked ~ .fc-header .ft-expander-trigger .ft-chevron {
     stroke-width: 5;
-    stroke: #60a5fa;
+    stroke: #ffffff;
     transform: rotate(90deg);
 }
 .ft-expand-toggle:checked ~ .fc-header .ft-expander-trigger {
@@ -574,7 +575,7 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
     opacity: 1;
     pointer-events: auto;
     margin-top: 4px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     transition: max-height 0.28s ease-out, opacity 0.18s ease-out, margin-top 0.28s ease-out, margin-bottom 0.28s ease-out;
 }
 
