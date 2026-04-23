@@ -67,6 +67,8 @@ def _start_streamlit_server():
             "--server.headless=true",
             "--theme.base=dark",
             "--theme.primaryColor=#0072CE",
+            "--client.toolbarMode=minimal",
+            "--browser.gatherUsageStats=false",
         ]
 
         # Scope the monkeypatch: Streamlit's threading.Thread context

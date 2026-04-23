@@ -31,6 +31,7 @@ datas = [
     ('sync', 'sync'),
     ('ui', 'ui'),
     ('styles', 'styles'),
+    ('.streamlit', '.streamlit'),
 ]
 
 # Automatically locate the ffmpeg binary provided by imageio_ffmpeg
