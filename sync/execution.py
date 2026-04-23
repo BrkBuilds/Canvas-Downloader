@@ -203,17 +203,16 @@ def run_sync():
             total_pairs = len(sync_selections)
 
             render_progress_bar(progress_container, 0, total_files)
-            
+
             # Setup Tracking Variables
             start_time = _time.time()
             last_ui_update = 0
             terminal_log = deque(maxlen=10)
-            
+
             # Initial UI Draw
             metrics_dashboard.markdown(render_metrics_html_compat(0, total_files, 0.0, total_mb, 0.0, "--:--"), unsafe_allow_html=True)
             active_file_placeholder.markdown("<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>🔄 Preparing sync...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
-            progress_container.progress(0, text="0%")
 
             for pair_idx, sel in enumerate(sync_selections):
                 if st.session_state.get('sync_cancel_requested', False):
@@ -351,8 +350,7 @@ def run_sync():
                     # Throttled progress update (Prevent Streamlit from choking on rapid tiny files)
                     curr_time = _time.time()
                     if curr_time - last_ui_update > 0.4:
-                        pct = min(1.0, (current_file - 1) / total_files) if total_files > 0 else 0.0
-                        progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                        render_progress_bar(progress_container, max(0, current_file - 1), total_files)
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         last_ui_update = curr_time
 
@@ -600,8 +598,7 @@ def run_sync():
                                                                         current_file, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
                                                                     ), unsafe_allow_html=True)
                                                                     
-                                                                    pct = min(1.0, current_file / total_files) if total_files > 0 else 0.0
-                                                                    progress_container.progress(pct, text=f"{int(pct * 100)}%")
+                                                                    render_progress_bar(progress_container, current_file, total_files)
                                                                     last_ui_update = c_t
                                                     except Exception as write_err:
                                                         download_interrupted = True

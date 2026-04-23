@@ -113,6 +113,8 @@ def show_sync_complete():
     synced_count = st.session_state.get('synced_count', 0)
     sync_errors = st.session_state.get('sync_errors', [])
     synced_details = st.session_state.get('synced_details', {})
+    sync_selections = st.session_state.get('sync_selections', [])
+    sync_pairs = st.session_state.get('sync_pairs', [])
 
     custom_text = None
     if sync_errors and synced_count == 0:
@@ -151,6 +153,10 @@ def show_sync_complete():
             # Plain strings are retriable (generic errors)
             _sync_retriable += _plain_str_count
 
+        _retry_attempted = st.session_state.get('retry_attempted', False)
+        _retry_total = st.session_state.get('retry_total_attempted', 0)
+        _retry_resolved = st.session_state.get('retry_resolved_count', 0)
+
         render_completion_card(
             synced_count=synced_count,
             error_count=len(sync_errors),
@@ -160,7 +166,10 @@ def show_sync_complete():
             size_limit_mb=limit_mb,
             retriable_count=_sync_retriable,
             unresolvable_count=_sync_unresolvable,
-            courses_count=1,
+            courses_count=len(sync_selections),
+            retry_attempted=_retry_attempted,
+            retry_resolved=_retry_resolved,
+            retry_total=_retry_total,
         )
 
         # UN-TRAPPED QUICK SYNC WARNING:
@@ -176,7 +185,13 @@ def show_sync_complete():
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
 
             joined_parts = " and ".join(parts)
-            st.warning(f"Quick Sync skipped {joined_parts}. To download them, run a normal 'Analyze, Review & Sync' and select them manually.")
+            st.markdown(
+                f"<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
+                f"border-radius:6px;padding:10px 14px;margin-top:8px;font-size:0.88rem;color:#fcd34d;'>"
+                f"&#9889; <strong>Quick Sync skipped {joined_parts}</strong>. "
+                f"To download them, run a normal 'Analyze, Review &amp; Sync' and select them manually.</div>",
+                unsafe_allow_html=True, 
+            )
 
             # Cleanup
             if 'qs_skipped' in st.session_state:
@@ -238,10 +253,6 @@ def show_sync_complete():
             st.rerun()
 
         _has_sync_retry = bool(sync_errors and retry_selections)
-
-        _retry_attempted = st.session_state.get('retry_attempted', False)
-        _retry_total = st.session_state.get('retry_total_attempted', 0)
-        _retry_resolved = st.session_state.get('retry_resolved_count', 0)
         _sync_retry_failed = _retry_attempted and _retry_total > 0 and _retry_resolved == 0
 
         render_error_section(
@@ -254,9 +265,6 @@ def show_sync_complete():
         )
 
     # Folders updated - card style with filetype summary
-    sync_pairs = st.session_state.get('sync_pairs', [])
-    sync_selections = st.session_state.get('sync_selections', [])
-
     file_dropdown_details = {}
     folder_paths_map = {}
 
@@ -272,7 +280,7 @@ def show_sync_complete():
             file_dropdown_details[f_key] = synced_details.get(pair_idx, [])
             folder_paths_map[f_key] = pair['local_folder']
 
-    render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete')
+    render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete', show_files_expander=True)
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])
