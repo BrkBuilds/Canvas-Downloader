@@ -241,14 +241,16 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
         pills_html = _build_filetype_pills_html(files)
 
         header_html = (
+            f'<div class="fc-wrapper">'
+            f'<input type="checkbox" id="{expand_id}" class="ft-expand-toggle"/>'
             f'<div class="fc-header">'
             f'<img class="fc-folder-icon" src="{_FC_FOLDER_SVG}" alt="folder"/>'
             f'<div class="fc-title">{esc(folder_name)}</div>'
-            f'<input type="checkbox" id="{expand_id}" class="ft-expand-toggle"/>'
             f'<label for="{expand_id}" class="ft-expander-trigger">'
             f'{_FC_CHEVRON_SVG}'
             f'<span class="ft-label">{count_label}</span>'
             f'</label>'
+            f'</div>'
             f'<div class="ft-expander-pills">{pills_html}</div>'
             f'</div>'
         )
@@ -321,7 +323,7 @@ def _build_filetype_pills_html(files: list) -> str:
         html += (
             f'<div class="filetype-pill">'
             f'<img class="ft-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="other"/>'
-            f'<span class="ft-label">OTHER</span>'
+            f'<span class="ft-label">OTHER FILES</span>'
             f'<span class="ft-count">{other_count}</span>'
             f'</div>'
         )
