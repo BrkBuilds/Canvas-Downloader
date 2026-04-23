@@ -13,6 +13,28 @@ header[data-testid="stHeader"] {
     min-height: 0px !important;
     padding: 0 !important;
     margin: 0 !important;
+    overflow: visible !important;
+}
+
+/* Belt-and-suspenders: hide toolbar action items individually.
+   stToolbar itself must NOT be display:none — stSidebarCollapsedControl
+   (the sidebar expand button when collapsed) is a child of stToolbar and
+   would be hidden along with it. */
+[data-testid="stToolbarActions"],
+[data-testid="stDeployButton"],
+[data-testid="stStatusWidget"],
+[data-testid="stMainMenu"],
+[data-testid="stViewerBadge"],
+#MainMenu {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Hide the grey anchor-link icons that appear on hover over headings */
+[data-testid="stHeadingWithActionElements"] a[href],
+[data-testid="stHeadingWithActionElements"] a {
+    display: none !important;
 }
 
 /* 1. Step tracker sits flush at the top edge — no top padding */
@@ -117,7 +139,7 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
     max-width: 360px !important;
 }
 /* Collapse the sidebar header (collapse button) to ZERO height — take it OUT of flow.
-   The collapse button floats in the top-right corner via absolute positioning. */
+   The collapse button (stSidebarCollapseButton) floats via absolute positioning. */
 section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
     height: 0 !important;
     min-height: 0 !important;
@@ -126,7 +148,8 @@ section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
     overflow: visible !important;
     position: relative !important;
 }
-section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button {
+section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button,
+[data-testid="stSidebarCollapseButton"] {
     position: absolute !important;
     top: 5px !important;
     right: 5px !important;
@@ -135,6 +158,14 @@ section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button {
 /* Also kill gutter on the stSidebar section itself */
 section[data-testid="stSidebar"] {
     scrollbar-gutter: unset !important;
+}
+
+/* Expand button shown when sidebar is collapsed (Streamlit 1.51: stExpandSidebarButton).
+   Lives inside stToolbar → stHeader (height:0, overflow:visible).
+   Nudge it down so it is fully visible and not clipped by the viewport edge. */
+[data-testid="stExpandSidebarButton"] {
+    position: relative !important;
+    top: 25px !important;
 }
 
 /* 2. Flexbox column chain —
