@@ -452,6 +452,21 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         cursor: not-allowed !important;
     }
 
+    /* Fix Streamlit tooltip wrappers shrinking buttons vertically */
+    div[class*="st-key-open_folder_"] div[data-testid="stTooltipHoverTarget"],
+    div[class*="st-key-ignored_btn_"] div[data-testid="stTooltipHoverTarget"] {
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    div[class*="st-key-open_folder_"] button,
+    div[class*="st-key-ignored_btn_"] button,
+    div[class*="st-key-edit_pair_"] button,
+    div[class*="st-key-remove_pair_"] button {
+        height: 42px !important;
+        min-height: 42px !important;
+    }
+
     /* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
     div[class*="st-key-cancel_pair"] button:hover,
     div[class*="st-key-cancel_add"] button:hover {
@@ -612,7 +627,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     _pair_sig = (pair.get('course_id'), pair.get('local_folder', ''))
                     _pair_already_saved = _pair_sig in _saved_pair_sigs
                     _save_help = (
-                        "This pair is saved \u2014 go to Saved Groups & Pairs to see, rename, or edit."
+                        "This pair is saved - go to Saved Groups & Pairs to see, rename, or edit."
                         if _pair_already_saved
                         else "Save as Pair"
                     )
@@ -636,6 +651,10 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                         if st.button("📂 " + 'Open Folder',
                                      key=f"open_folder_{idx}", use_container_width=True):
                             open_folder(pair['local_folder'])
+                    else:
+                        st.button("📂 " + 'Open Folder',
+                                     key=f"open_folder_{idx}", use_container_width=True, disabled=True,
+                                     help="This folder could not be found (it may have been deleted or moved).")
 
                 with col_edit:
                     if st.button("✏️ " + 'Edit', 
@@ -648,8 +667,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
+                    ignored_help = "No files have been ignored for this course." if ignored_count == 0 else None
                     if st.button(f"Ignored Files \u00A0:gray[({ignored_count})]", key=f"ignored_btn_{idx}",
-                                 disabled=(ignored_count == 0), use_container_width=True):
+                                 disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
                         course_data = ignored_by_course.get(pair['course_id'])
                         if course_data:
                             _show_course_ignored_files(
@@ -703,16 +723,26 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     # Disable if < 2 pairs or current list matches an already saved group
                     # Reusing the existing _saved_mgr instance from the top of the render loop
                     _save_disabled = len(sync_pairs) < 2 or _saved_mgr.matches_existing_group(sync_pairs)
+                    _save_group_help = "Save this exact list of courses as a group."
+                    if _save_disabled:
+                        _save_group_help = "You need at least 2 courses to save a group." if len(sync_pairs) < 2 else "This exact group of courses is already saved."
 
                     # Clean, isolated CSS for "Save List" using its Streamlit key
                     st.markdown("""<style>
+                    div.st-key-btn_save_group_main div[data-testid="stTooltipHoverTarget"] {
+                        margin-top: -50px !important;
+                        position: relative;
+                        z-index: 1;
+                        display: block !important;
+                        width: 100% !important;
+                    }
                     div.st-key-btn_save_group_main button {
                         background-color: rgba(95, 100, 200, 0.075) !important;
                         color: #e0e7ff !important;
                         border: 1px solid rgba(95, 100, 200, 0.75) !important;
-                        margin-top: -50px !important;
-                        position: relative;
-                        z-index: 1;
+                        width: 100% !important;
+                        height: 48px !important;
+                        min-height: 48px !important;
                     }
                     div.st-key-btn_save_group_main button:hover {
                         background-color: rgba(95, 100, 200, 0.2) !important;
@@ -728,7 +758,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     }
                     </style>""", unsafe_allow_html=True)
 
-                    if st.button("💾 Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True):
+                    if st.button("💾 Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
                         _save_group_dialog(sync_pairs)
 
         else:

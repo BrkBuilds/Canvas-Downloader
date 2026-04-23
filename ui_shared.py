@@ -6,7 +6,6 @@ import streamlit as st
 from pathlib import Path
 from ui_helpers import open_folder, esc, short_path
 from sync_manager import format_file_size
-import theme
 from preset_manager import PresetManager
 
 
@@ -52,7 +51,26 @@ def render_completion_card(synced_count: int, error_count: int,
         card_class = 'success'
         title = 'Download Success' if mode == 'download' else 'Sync Success'
     else:
-        st.success("Nothing to download - all files are up to date!")
+        st.html("""
+        <style>
+        div[class*="st-key-completion_dashboard"] {
+            background-color: rgba(22, 101, 52, 0.25) !important;
+            border: 1px solid rgba(74, 222, 128, 0.5) !important;
+            border-radius: 10px !important;
+            padding: 20px 20px 35px 20px !important;
+            margin-bottom: 12px;
+        }
+        </style>
+        """)
+        _label = 'sync' if mode == 'sync' else 'download'
+        st.markdown(
+            "<div class='completion-card success'>"
+            "<div class='card-title'>All Up to Date</div>"
+            f"<p style='color:#86efac;font-size:1rem;margin:8px 0 0;'>"
+            f"Nothing to {_label} — all files are up to date!"
+            "</p></div>",
+            unsafe_allow_html=True,
+        )
         return
 
     # Stats grid
@@ -65,6 +83,8 @@ def render_completion_card(synced_count: int, error_count: int,
     size_parts = format_file_size(total_bytes).split(" ", 1)
     size_val = size_parts[0]
     size_unit = size_parts[1] if len(size_parts) > 1 else "Bytes"
+    if total_bytes == 0:
+        size_unit = "MB"
 
     stats_html = (
 '<div class="completion-stats-grid">'
@@ -221,7 +241,7 @@ _FC_CHEVRON_SVG = (
 
 
 def render_folder_cards(file_details: dict, folder_paths: dict,
-                        key_prefix: str = 'dl'):
+                        key_prefix: str = 'dl', show_files_expander: bool = False):
     """Render per-folder cards with filetype summary and Open Folder buttons."""
     has_files = any(len(files) > 0 for files in file_details.values())
     if not has_files:
@@ -260,6 +280,16 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
             if folder_path and Path(folder_path).exists():
                 if st.button('Open Folder', key=f"{key_prefix}_open_{idx}", use_container_width=False):
                     open_folder(folder_path)
+            if show_files_expander and files:
+                with st.expander(f"Files added ({len(files)})"):
+                    items_html = "".join(
+                        f"<li style='font-size:0.85rem;color:#cbd5e1;padding:2px 0;'>{esc(fname)}</li>"
+                        for fname in sorted(files)
+                    )
+                    st.markdown(
+                        f"<ul style='margin:4px 0 0 0;padding-left:18px;list-style:disc;'>{items_html}</ul>",
+                        unsafe_allow_html=True,
+                    )
 
 
 
