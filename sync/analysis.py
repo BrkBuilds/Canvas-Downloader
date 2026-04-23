@@ -287,14 +287,16 @@ def run_analysis(sync_pairs, main_placeholder=None):
         total_new = 0
         total_updated = 0
         total_missing = 0
-        
+        total_local_del = 0
+
         for res_data in all_results:
             result = res_data.get('result')
             if result:
-                total_new += len(getattr(result, 'new_files', []))
-                total_updated += len(getattr(result, 'updated_files', []))
-                total_missing += len(getattr(result, 'missing_files', []))
-                
+                total_new += len(getattr(result, 'new_files', []) or [])
+                total_updated += len(getattr(result, 'updated_files', []) or [])
+                total_missing += len(getattr(result, 'missing_files', []) or [])
+                total_local_del += len(getattr(result, 'locally_deleted_files', []) or [])
+
         parts = []
         if total_new > 0:
             parts.append(f"{total_new} new file{'s' if total_new != 1 else ''}")
@@ -302,7 +304,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
             parts.append(f"{total_updated} update{'s' if total_updated != 1 else ''}")
         if total_missing > 0:
             parts.append(f"{total_missing} missing file{'s' if total_missing != 1 else ''}")
-            
+        if total_local_del > 0:
+            parts.append(f"{total_local_del} locally deleted file{'s' if total_local_del != 1 else ''}")
+
         summary = ", ".join(parts) + (" found." if parts else " No changes found.")
         
         play_completion_beep(mode='sync_review', summary=summary.strip())
