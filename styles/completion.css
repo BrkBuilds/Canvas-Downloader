@@ -409,8 +409,12 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) > div > div {
     font-size: 1.25em !important;
     font-weight: 700 !important;
     color: #ffffff !important;
-    margin-bottom: 4px !important;
     letter-spacing: -0.01em !important;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Open Folder Button — Dark Ghost Style with outlined blue folder icon */
@@ -480,12 +484,15 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
 }
 
 /* --- Folder Card Header Row --- */
+.fc-wrapper {
+    display: flex;
+    flex-direction: column;
+}
 .fc-header {
     display: flex;
     align-items: center;
     gap: 9px;
     flex-wrap: nowrap;
-    overflow: hidden;
 }
 .fc-folder-icon {
     width: 20px;
@@ -496,7 +503,7 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
     top: -2px;
 }
 
-/* --- Inline File Count Expander (checkbox hack) --- */
+/* --- File Count Expander (checkbox hack) --- */
 .ft-expand-toggle {
     display: none;
 }
@@ -533,37 +540,42 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
     width: 11px;
     height: 11px;
     flex-shrink: 0;
-    transition: stroke-width 0.15s ease;
+    transition: stroke-width 0.15s ease, transform 0.2s ease;
 }
-.ft-expand-toggle:checked ~ .ft-expander-trigger .ft-chevron {
+/* trigger & chevron active states — trigger is inside .fc-header, sibling of toggle */
+.ft-expand-toggle:checked ~ .fc-header .ft-expander-trigger .ft-chevron {
     stroke-width: 5;
     stroke: #60a5fa;
+    transform: rotate(90deg);
 }
-.ft-expand-toggle:checked ~ .ft-expander-trigger {
+.ft-expand-toggle:checked ~ .fc-header .ft-expander-trigger {
     background: rgba(255, 255, 255, 0.09);
     border-color: rgba(255, 255, 255, 0.4);
     color: #e2e8f0;
 }
 
-/* Pills container — hidden by default, slides in when expanded */
+/* Pills row — hidden by default, expands below the header row */
 .ft-expander-pills {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    max-width: 0;
+    gap: 6px 8px;
+    max-height: 0;
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    transition: max-width 0.28s ease, opacity 0.18s ease 0.06s;
-    white-space: nowrap;
-    position: relative;
-    top: -2px;
+    margin-left: 29px;
+    margin-top: 0;
+    margin-bottom: 0;
+    transition: max-height 0.22s ease-in, opacity 0.15s ease-in, margin-top 0.22s ease-in, margin-bottom 0.22s ease-in;
 }
 .ft-expand-toggle:checked ~ .ft-expander-pills {
-    max-width: 1000px;
+    max-height: 60px;
     opacity: 1;
     pointer-events: auto;
-    transition: max-width 0.28s ease, opacity 0.18s ease;
+    margin-top: 4px;
+    margin-bottom: 14px;
+    transition: max-height 0.28s ease-out, opacity 0.18s ease-out, margin-top 0.28s ease-out, margin-bottom 0.28s ease-out;
 }
 
 /* --- Filetype Summary Grid --- */
