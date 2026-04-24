@@ -1081,10 +1081,10 @@ def _show_analysis_review():
 # ---- Confirmation dialog ----
 
 @st.dialog("Confirm Sync")
-def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes):
+def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, _total_mb, _target_folder, total_bytes):
     """Delegate to ui.sync_confirmation."""
     from ui.sync_confirmation import show_sync_confirmation_inner
-    show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes)
+    show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb, _total_mb, _target_folder, total_bytes)
 
 
 # ---- Sync execution ----
