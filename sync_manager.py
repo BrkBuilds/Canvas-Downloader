@@ -56,19 +56,21 @@ class SyncFileInfo:
 class AnalysisResult:
     """Result of analyzing local folder vs Canvas course."""
     new_files: list[CanvasFileInfo] = field(default_factory=list)
-    updated_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
-    missing_files: list[SyncFileInfo] = field(default_factory=list)
+    updated_clean_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
+    updated_modified_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
     ignored_files: list[SyncFileInfo] = field(default_factory=list)
     uptodate_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
     deleted_on_canvas: list[SyncFileInfo] = field(default_factory=list)
     locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
     untracked_shortcuts: int = 0
     structural_errors: int = 0
-    ignored_files: list[SyncFileInfo] = field(default_factory=list)
-    uptodate_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
-    deleted_on_canvas: list[SyncFileInfo] = field(default_factory=list)
-    locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
-    untracked_shortcuts: int = 0
+
+    @property
+    def updated_files(self) -> list[tuple[CanvasFileInfo, SyncFileInfo]]:
+        """Union of clean + modified updates. Read-only convenience view for
+        aggregation (counts, file lists, retry queues). Mutating callers must
+        target ``updated_clean_files`` or ``updated_modified_files`` directly."""
+        return self.updated_clean_files + self.updated_modified_files
 
 
 # --- Constants ---
@@ -563,10 +565,9 @@ class SyncManager:
                     pass
 
         seen_ids = set()
-        
+
         # Temporary sets/lists for deduplication
         raw_new_files = []
-        raw_missing_infos = []
         raw_locally_deleted = []
         _phase1_locdel_seen = set()
 
@@ -664,16 +665,25 @@ class SyncManager:
                 sync_info.target_local_path = calc_path
                 
                 is_newer_on_canvas = self._is_canvas_newer(c_file, entry)
-                
+
                 # Pre-calculate intrinsic state for UI routing (restoring ignored files)
                 _origin_category = 'uptodate_files'
                 _original_item = (c_file, sync_info)
-                
+                _mod_state = 'clean'  # 'clean' vs 'modified' — only meaningful for updates
+
                 if not entry.get('downloaded_at') and not entry.get('canvas_updated_at'):
+                    # Orphan manifest entry (stub with no timestamps) — treat as new download.
+                    c_file._target_local_path = calc_path
                     _origin_category = 'new_files'
                     _original_item = c_file
                 elif is_newer_on_canvas:
-                    _origin_category = 'updated_files'
+                    _mod_state = self._classify_local_modification(
+                        local_path, entry.get('original_md5', '')
+                    )
+                    _origin_category = (
+                        'updated_modified_files' if _mod_state == 'modified'
+                        else 'updated_clean_files'
+                    )
                     _original_item = (c_file, sync_info)
                 else:
                     if local_path.exists():
@@ -692,26 +702,29 @@ class SyncManager:
                                 _origin_category = 'locally_deleted_files'
                                 _original_item = sync_info
                             else:
-                                _origin_category = 'missing_files'
-                                _original_item = sync_info
-                
+                                # Previously routed to 'missing_files' (retired).
+                                # Semantically identical to 'new_files': student
+                                # does not have this file and needs to download it.
+                                c_file._target_local_path = calc_path
+                                _origin_category = 'new_files'
+                                _original_item = c_file
+
                 if entry.get('is_ignored', False):
                     sync_info.origin_category = _origin_category
                     sync_info.original_item = _original_item
                     result.ignored_files.append(sync_info)
                     continue
-                
-                if is_newer_on_canvas:
-                    # 2. Teacher updated it
-                    result.updated_files.append((c_file, sync_info))
-                else:
-                    # 3/4. Teacher did not update it. Trust the student.
-                    if _origin_category == 'uptodate_files':
-                        result.uptodate_files.append((c_file, sync_info))
-                    elif _origin_category == 'locally_deleted_files':
-                        raw_locally_deleted.append(sync_info)
-                    elif _origin_category == 'missing_files':
-                        raw_missing_infos.append(sync_info)
+
+                if _origin_category == 'updated_clean_files':
+                    result.updated_clean_files.append((c_file, sync_info))
+                elif _origin_category == 'updated_modified_files':
+                    result.updated_modified_files.append((c_file, sync_info))
+                elif _origin_category == 'uptodate_files':
+                    result.uptodate_files.append((c_file, sync_info))
+                elif _origin_category == 'locally_deleted_files':
+                    raw_locally_deleted.append(sync_info)
+                elif _origin_category == 'new_files':
+                    raw_new_files.append(c_file)
                         
         # 5. Check deletions (in manifest but not in canvas)
         for file_id, entry in files_section.items():
@@ -737,8 +750,8 @@ class SyncManager:
                             pass  # Archive extraction bypass
                         elif entry.get('downloaded_at'):
                             raw_locally_deleted.append(sync_info)
-                        else:
-                            raw_missing_infos.append(sync_info)
+                        # else: orphan manifest row (never downloaded, no longer on
+                        # Canvas, no local file) — drop silently, nothing to sync.
                         continue # Successfully caught local deletion, move to next file
                     
                     # 2. If it exists locally, process Canvas API failure guards
@@ -756,27 +769,14 @@ class SyncManager:
                     result.deleted_on_canvas.append(sync_info)
                     
         # --- Backend Deduplication (The Teacher Re-upload Scenario) ---
+        # When a teacher deletes a Canvas file and immediately re-uploads one
+        # with the same name (new ID), naively it looks like Delete+New.
+        # Treat it as an UPDATE instead so the student keeps the same mental
+        # model. The old local file does not exist (locally_deleted branch),
+        # so the update is always 'clean' — no risk of overwriting edits.
         new_name_map = {robust_filename_normalize(nf.filename): nf for nf in raw_new_files}
-        final_new_files = []
-        final_missing_files = []
-        
-        # Cross-reference missing files against new files
-        for missing_info in raw_missing_infos:
-            missing_norm = robust_filename_normalize(missing_info.canvas_filename)
-            if missing_norm in new_name_map:
-                # The teacher deleted the old Canvas file and uploaded a new one with the same name.
-                # Treat this as an UPDATE, not a Delete+New. 
-                matching_new_cfile = new_name_map[missing_norm]
-                
-                # We link the missing sync_info with the new canvas file.
-                result.updated_files.append((matching_new_cfile, missing_info))
-                
-                # Remove from new_files list so it doesn't duplicate
-                del new_name_map[missing_norm]
-            else:
-                final_missing_files.append(missing_info)
-                
-        # Check locally deleted files against re-uploads as well
+
+        # Check locally deleted files against re-uploads
         final_locally_deleted = []
         dedup_loc_del_ids = set()
         for del_info in raw_locally_deleted:
@@ -784,31 +784,28 @@ class SyncManager:
             if raw_id_str in dedup_loc_del_ids:
                 continue
             dedup_loc_del_ids.add(raw_id_str)
-            
+
             # --- CRITICAL PATCH: Type-Safe Shield ---
             try:
                 check_id = int(del_info.canvas_file_id)
             except (TypeError, ValueError):
                 check_id = 1
-                
+
             if check_id < 0:
                 final_locally_deleted.append(del_info)
                 continue
             # ----------------------------------------
-            
+
             missing_norm = robust_filename_normalize(del_info.canvas_filename)
             if missing_norm in new_name_map:
                 matching_new_cfile = new_name_map[missing_norm]
-                result.updated_files.append((matching_new_cfile, del_info))
+                result.updated_clean_files.append((matching_new_cfile, del_info))
                 del new_name_map[missing_norm]
             else:
                 final_locally_deleted.append(del_info)
 
         # Reconstruct the remaining new files that were not duplicates
-        final_new_files = list(new_name_map.values())
-        
-        result.new_files = final_new_files
-        result.missing_files = final_missing_files
+        result.new_files = list(new_name_map.values())
         result.locally_deleted_files = final_locally_deleted
         
         # Count ALL untracked local files so they reflect in the "up to date" UI
@@ -925,8 +922,20 @@ class SyncManager:
         entities (Assignments, Quizzes …) are regenerated from the live
         Canvas API on every sync download, so timestamp-based diffing
         is unnecessary — local existence is sufficient.
+
+        MD5 short-circuit: if both Canvas and the manifest expose the same
+        md5 hash, the file content is byte-identical regardless of what the
+        timestamp says. Teachers frequently "touch" files (permission
+        changes, metadata edits) without altering content, so comparing
+        timestamps alone produces phantom updates. Trust the hash when we
+        have it on both sides.
         """
         if canvas_file.id < 0:
+            return False
+
+        canvas_md5 = getattr(canvas_file, 'md5', None)
+        manifest_md5 = manifest_entry.get('original_md5', '')
+        if canvas_md5 and manifest_md5 and canvas_md5 == manifest_md5:
             return False
 
         if not canvas_file.modified_at:
@@ -943,6 +952,35 @@ class SyncManager:
             return canvas_dt > manifest_dt
         except (ValueError, TypeError):
             return False
+
+    @staticmethod
+    def _classify_local_modification(local_path: Path, original_md5: str) -> str:
+        """Decide whether a local file is byte-identical to what we downloaded.
+
+        Returns:
+            ``'clean'``    — md5 matches the stored original → safe to overwrite.
+            ``'modified'`` — md5 differs, missing, or unreadable → preserve via
+                             ``_NewVersion`` on update.
+
+        Files larger than 50 MB skip the hash comparison (matches
+        ``heal_manifest`` Tier 2) and are treated as ``clean`` — re-hashing
+        large videos on every analysis would dominate sync latency, and
+        annotation targets in practice are small documents (PDF, DOCX, PPTX).
+        """
+        if not local_path.exists():
+            return 'clean'
+        if not original_md5:
+            return 'modified'
+        try:
+            size = local_path.stat().st_size
+        except OSError:
+            return 'modified'
+        if size > 50 * 1024 * 1024:
+            return 'clean'
+        current_md5 = compute_local_md5(local_path)
+        if not current_md5:
+            return 'modified'
+        return 'clean' if current_md5 == original_md5 else 'modified'
     
     def _dict_to_sync_info(self, file_id: str, entry: dict, 
                            canvas_file: Optional[CanvasFileInfo] = None) -> SyncFileInfo:

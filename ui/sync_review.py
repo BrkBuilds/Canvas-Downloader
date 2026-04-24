@@ -40,7 +40,8 @@ def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    st.markdown("<h2 style='margin-bottom: 12px; margin-top: -5px;'>Review Changes</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-bottom: 4px; margin-top: -5px;'>Review Changes</h2>", unsafe_allow_html=True)
+    st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 1.05rem; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -102,27 +103,30 @@ def show_analysis_review(on_confirm_sync):
         if hasattr(pair_data['result'], 'ignored_files'):
             pair_data['result'].ignored_files = [f for f in pair_data['result'].ignored_files if f.canvas_file_id != sync_info.canvas_file_id]
             
-        origin = getattr(sync_info, 'origin_category', 'missing_files')
-        dest_list = getattr(pair_data['result'], origin, pair_data['result'].missing_files)
+        origin = getattr(sync_info, 'origin_category', 'new_files')
+        dest_list = getattr(pair_data['result'], origin, pair_data['result'].new_files)
         original_item = getattr(sync_info, 'original_item', sync_info)
-        
+
         def get_id(x):
             if isinstance(x, tuple): return x[0].id
             elif hasattr(x, 'canvas_file_id'): return x.canvas_file_id
             return x.id
-            
+
         # 2. Append to destination list ONLY if not already there
         if not any(get_id(x) == sync_info.canvas_file_id for x in dest_list):
             dest_list.append(original_item)
-        
+
         prefixes = {
             'new_files': 'sync_new',
-            'updated_files': 'sync_upd',
-            'missing_files': 'sync_miss',
-            'locally_deleted_files': 'sync_locdel'
+            'updated_clean_files': 'sync_upd',
+            'updated_modified_files': 'sync_updmod',
+            'locally_deleted_files': 'sync_locdel',
         }
-        prefix = prefixes.get(origin, 'sync_miss')
-        st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
+        prefix = prefixes.get(origin, 'sync_new')
+        # Default-check restored items EXCEPT modified-update restores, where the
+        # student likely ignored precisely because they wanted to keep their edits.
+        restore_default = origin != 'updated_modified_files'
+        st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = restore_default
         st.session_state['keep_ignored_open'] = True
         
         fname = getattr(original_item, 'display_name', getattr(original_item, 'filename', getattr(sync_info, 'canvas_filename', 'file')))
@@ -146,22 +150,23 @@ def show_analysis_review(on_confirm_sync):
         
         for sync_info in list(pair_data['result'].ignored_files):
             sync_info.is_ignored = False
-            origin = getattr(sync_info, 'origin_category', 'missing_files')
-            dest_list = getattr(pair_data['result'], origin, pair_data['result'].missing_files)
+            origin = getattr(sync_info, 'origin_category', 'new_files')
+            dest_list = getattr(pair_data['result'], origin, pair_data['result'].new_files)
             original_item = getattr(sync_info, 'original_item', sync_info)
-            
+
             # append safely
             if not any(get_id(x) == sync_info.canvas_file_id for x in dest_list):
                 dest_list.append(original_item)
-            
+
             prefixes = {
                 'new_files': 'sync_new',
-                'updated_files': 'sync_upd',
-                'missing_files': 'sync_miss',
-                'locally_deleted_files': 'sync_locdel'
+                'updated_clean_files': 'sync_upd',
+                'updated_modified_files': 'sync_updmod',
+                'locally_deleted_files': 'sync_locdel',
             }
-            prefix = prefixes.get(origin, 'sync_miss')
-            st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = True
+            prefix = prefixes.get(origin, 'sync_new')
+            restore_default = origin != 'updated_modified_files'
+            st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = restore_default
             
         pair_data['result'].ignored_files.clear()
         st.session_state['keep_ignored_open'] = True
@@ -244,8 +249,9 @@ def show_analysis_review(on_confirm_sync):
         st.stop()
 
     total_new = sum(len(r['result'].new_files) for r in all_results)
-    total_upd = sum(len(r['result'].updated_files) for r in all_results)
-    total_miss = sum(len(r['result'].missing_files) for r in all_results)
+    total_upd_clean = sum(len(r['result'].updated_clean_files) for r in all_results)
+    total_upd_mod = sum(len(r['result'].updated_modified_files) for r in all_results)
+    total_upd = total_upd_clean + total_upd_mod
     total_loc_del = sum(len(r['result'].locally_deleted_files) for r in all_results)
     total_del = sum(len(r['result'].deleted_on_canvas) for r in all_results)
     total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in all_results)
@@ -267,7 +273,7 @@ def show_analysis_review(on_confirm_sync):
         return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
 
     # Summary logic
-    if total_new > 0 or total_upd > 0 or total_miss > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
+    if total_new > 0 or total_upd > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
 
         sum_cols = st.columns([3, 2])
         with sum_cols[0]:
@@ -276,7 +282,7 @@ def show_analysis_review(on_confirm_sync):
             # Determine labels safely based on lang
             lbl_new = "New files"
             lbl_upd = "Updates available"
-            lbl_miss = "Missing files"
+            lbl_edited = "Edited locally"
             lbl_loc_del = "Deleted locally"
             lbl_del = "Deleted on Canvas"
 
@@ -312,13 +318,21 @@ def show_analysis_review(on_confirm_sync):
             with c2:
                 st.markdown(_render_metric_card(total_upd, lbl_upd, _sync_icon_img(_b64_icon_upd), theme.SUCCESS_ALT, "#27ae60", "rgba(46, 204, 113, 0.35)"), unsafe_allow_html=True)
             with c3:
-                st.markdown(_render_metric_card(total_miss, lbl_miss, _sync_icon_img(_b64_icon_miss), theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
+                st.markdown(_render_metric_card(total_upd_mod, lbl_edited, _sync_icon_img(_b64_icon_miss), theme.WARNING_ALT, "#e67e22", "rgba(241, 196, 15, 0.35)"), unsafe_allow_html=True)
             with c4:
                 st.markdown(_render_metric_card(total_loc_del, lbl_loc_del, _sync_icon_img(_b64_icon_locdel), "#9b59b6", "#8e44ad", "rgba(155, 89, 182, 0.35)"), unsafe_allow_html=True)
             with c5:
                 st.markdown(_render_metric_card(total_del, lbl_del, _sync_icon_img(_b64_icon_del), theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
         st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+
+        # General Explainer
+        from ui_shared import render_help_card
+        render_help_card(
+            key_prefix="sync_review",
+            title="How to review your sync",
+            text_html="Keep the files you want to download checked. If there are files you never want to sync (like large videos or old readings), click their ignore icon to hide them permanently. Files you've edited locally are unchecked by default so your notes are never overwritten."
+        )
 
         # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
 
@@ -327,7 +341,7 @@ def show_analysis_review(on_confirm_sync):
     # Nothing actionable to sync — redirect to completion screen.
     # Exception: if the user manually ignored files, stay on the review page so they
     # can restore or go back. Only auto-route when analysis genuinely found nothing.
-    if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0:
+    if total_new == 0 and total_upd == 0 and total_del == 0 and total_loc_del == 0:
         if total_ignored == 0:
             # Genuinely nothing to sync — advance to completion screen
             st.session_state['synced_count'] = 0
@@ -355,14 +369,14 @@ def show_analysis_review(on_confirm_sync):
             ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_new_{cid}_{f.id}')
-        for f, _ in res.updated_files:
+        for f, _ in res.updated_clean_files:
             ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_upd_{cid}_{f.id}')
-        for si in res.missing_files:
-            ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
+        for f, _ in res.updated_modified_files:
+            ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
-            files_by_ext[ext].append(f'sync_miss_{cid}_{si.canvas_file_id}')
+            files_by_ext[ext].append(f'sync_updmod_{cid}_{f.id}')
         for si in res.locally_deleted_files:
             ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
@@ -648,7 +662,7 @@ def show_analysis_review(on_confirm_sync):
         position: relative;
         top: -1px;
     }}
-    div[class*="st-key-cat_missing_"] details > summary p::before {{
+    div[class*="st-key-cat_updmod_"] details > summary p::before {{
         content: "";
         display: inline-block;
         width: 18px;
@@ -707,140 +721,6 @@ def show_analysis_review(on_confirm_sync):
     }}
     }}
     </style>""")
-    
-    import streamlit.components.v1 as components
-    components.html("""
-        <script>
-            const doc = window.parent.document;
-            
-            // Protect against duplicate injection on React rerender
-            if (!doc.getElementById('premium-hover-tooltip')) {
-                const tooltip = doc.createElement('div');
-                tooltip.id = 'premium-hover-tooltip';
-                
-                Object.assign(tooltip.style, {
-                    position: 'fixed',
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    color: '#e2e8f0',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    fontSize: '0.82rem',
-                    fontWeight: '500',
-                    whiteSpace: 'nowrap',
-                    zIndex: '9999999',
-                    pointerEvents: 'none',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    opacity: '0',
-                    transition: 'opacity 0.15s ease',
-                    top: '0px',
-                    left: '0px'
-                });
-                
-                doc.body.appendChild(tooltip);
-                
-                // High-performance static tooltip tracker with UX debounce delays
-                let activeSummary = null;
-                let showTimer = null;
-                let hideTimer = null;
-                
-                function onMouseOver(e) {
-                    // Guard: bail if the Sync Review containers no longer exist in the DOM
-                    if (!doc.querySelector('div[class*="st-key-cat_"]')) {
-                        teardown();
-                        return;
-                    }
-
-                    const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
-                    
-                    if (summary) {
-                        // Cancel any pending hide timers immediately upon re-entry
-                        clearTimeout(hideTimer);
-                        hideTimer = null;
-                        
-                        if (activeSummary === summary) return;
-                        
-                        let text = "";
-                        if(summary.closest('div[class*="st-key-cat_new_"]')) text = "Brand new files available on Canvas";
-                        else if(summary.closest('div[class*="st-key-cat_update_"]')) text = "Files with a newer timestamp on Canvas";
-                        else if(summary.closest('div[class*="st-key-cat_missing_"]')) text = "Files that are missing from your computer";
-                        else if(summary.closest('div[class*="st-key-cat_deleted_local_"]')) text = "Files you deleted locally (will not be re-downloaded)";
-                        else if(summary.closest('div[class*="st-key-cat_deleted_canvas_"]')) text = "Files the teacher removed from Canvas (preserved locally for your safety)";
-                        else if(summary.closest('div[class*="st-key-cat_ignored_"]')) text = "Files you permanently ignored from syncing";
-                        
-                        if (text) {
-                            // Queue the tooltip to show after a brief purposeful hover delay (200ms)
-                            clearTimeout(showTimer);
-                            showTimer = setTimeout(() => {
-                                activeSummary = summary;
-                                tooltip.innerText = text;
-                                tooltip.style.left = e.clientX + 'px';
-                                tooltip.style.top = (e.clientY - 45) + 'px';
-                                tooltip.style.opacity = '1';
-                            }, 200);
-                        }
-                    }
-                }
-                
-                function onMouseOut(e) {
-                    const summary = e.target.closest('div[class*="st-key-cat_"] details > summary');
-                    if (summary) {
-                        // Keep tooltip alive if moving gracefully between nested HTML elements
-                        if (e.relatedTarget && summary.contains(e.relatedTarget)) {
-                            return;
-                        }
-                        
-                        // The user cleanly exited the element boundaries
-                        clearTimeout(showTimer);
-                        showTimer = null;
-                        
-                        // Add a let-go grace period before physically hiding the tooltip
-                        clearTimeout(hideTimer);
-                        hideTimer = setTimeout(() => {
-                            activeSummary = null;
-                            tooltip.style.opacity = '0';
-                        }, 200);
-                    }
-                }
-
-                doc.addEventListener('mouseover', onMouseOver);
-                doc.addEventListener('mouseout', onMouseOut);
-
-                // Self-cleanup: remove tooltip + listeners when Sync Review leaves the DOM
-                function teardown() {
-                    clearTimeout(showTimer);
-                    clearTimeout(hideTimer);
-                    doc.removeEventListener('mouseover', onMouseOver);
-                    doc.removeEventListener('mouseout', onMouseOut);
-                    const el = doc.getElementById('premium-hover-tooltip');
-                    if (el) el.remove();
-                    if (observer) observer.disconnect();
-                }
-
-                // MutationObserver: detect when Sync Review containers disappear
-                let teardownTimer = null;
-                const observer = new MutationObserver(() => {
-                    if (!doc.querySelector('div[class*="st-key-cat_"]')) {
-                        // Grace period: if it's just a React rerender, the container will be back in < 500ms
-                        if (!teardownTimer) {
-                            teardownTimer = setTimeout(() => {
-                                if (!doc.querySelector('div[class*="st-key-cat_"]')) {
-                                    teardown();
-                                }
-                                teardownTimer = null;
-                            }, 500);
-                        }
-                    } else {
-                        // Container is present. Cancel any pending teardowns caused by rerenders
-                        if (teardownTimer) {
-                            clearTimeout(teardownTimer);
-                            teardownTimer = null;
-                        }
-                    }
-                });
-                observer.observe(doc.body, { childList: true, subtree: true });
-            }
-        </script>
-    """, height=0, width=0)
     
     st.html(f"""<style>
     /* ===== CLICKABLE ROW HOVER / CHECKED STATES ===== */
@@ -988,7 +868,7 @@ def show_analysis_review(on_confirm_sync):
     /* Right-align: cascade flex through the keyed container AND Streamlit's stButton wrapper */
     div[class*="st-key-ign_new_"],
     div[class*="st-key-ign_upd_"],
-    div[class*="st-key-ign_miss_"],
+    div[class*="st-key-ign_updmod_"],
     div[class*="st-key-ign_locdel_"] {{
         display: flex !important;
         justify-content: flex-end !important;
@@ -996,7 +876,7 @@ def show_analysis_review(on_confirm_sync):
     }}
     div[class*="st-key-ign_new_"] div[data-testid="stButton"],
     div[class*="st-key-ign_upd_"] div[data-testid="stButton"],
-    div[class*="st-key-ign_miss_"] div[data-testid="stButton"],
+    div[class*="st-key-ign_updmod_"] div[data-testid="stButton"],
     div[class*="st-key-ign_locdel_"] div[data-testid="stButton"] {{
         display: flex !important;
         justify-content: flex-end !important;
@@ -1004,7 +884,7 @@ def show_analysis_review(on_confirm_sync):
     }}
     div[class*="st-key-ign_new_"] button,
     div[class*="st-key-ign_upd_"] button,
-    div[class*="st-key-ign_miss_"] button,
+    div[class*="st-key-ign_updmod_"] button,
     div[class*="st-key-ign_locdel_"] button {{
         background: transparent !important;
         border: none !important;
@@ -1021,14 +901,14 @@ def show_analysis_review(on_confirm_sync):
     }}
     div[class*="st-key-ign_new_"] button p,
     div[class*="st-key-ign_upd_"] button p,
-    div[class*="st-key-ign_miss_"] button p,
+    div[class*="st-key-ign_updmod_"] button p,
     div[class*="st-key-ign_locdel_"] button p {{
         display: none !important;
     }}
     /* Default state: eye icon — nudged up 1px to align visual center with the taller ignore icon */
     div[class*="st-key-ign_new_"] button::before,
     div[class*="st-key-ign_upd_"] button::before,
-    div[class*="st-key-ign_miss_"] button::before,
+    div[class*="st-key-ign_updmod_"] button::before,
     div[class*="st-key-ign_locdel_"] button::before {{
         content: '';
         position: absolute;
@@ -1047,7 +927,7 @@ def show_analysis_review(on_confirm_sync):
     /* Hover state: ignore icon (eye with slash) — scales in from 1→1.2 as it fades in */
     div[class*="st-key-ign_new_"] button::after,
     div[class*="st-key-ign_upd_"] button::after,
-    div[class*="st-key-ign_miss_"] button::after,
+    div[class*="st-key-ign_updmod_"] button::after,
     div[class*="st-key-ign_locdel_"] button::after {{
         content: '';
         position: absolute;
@@ -1065,7 +945,7 @@ def show_analysis_review(on_confirm_sync):
     }}
     div[class*="st-key-ign_new_"] button:hover,
     div[class*="st-key-ign_upd_"] button:hover,
-    div[class*="st-key-ign_miss_"] button:hover,
+    div[class*="st-key-ign_updmod_"] button:hover,
     div[class*="st-key-ign_locdel_"] button:hover {{
         background: transparent !important;
         border: none !important;
@@ -1073,14 +953,14 @@ def show_analysis_review(on_confirm_sync):
     /* On hover: eye fades out while ALSO scaling to 1.2 — so the "grow" is continuous across both icons */
     div[class*="st-key-ign_new_"] button:hover::before,
     div[class*="st-key-ign_upd_"] button:hover::before,
-    div[class*="st-key-ign_miss_"] button:hover::before,
+    div[class*="st-key-ign_updmod_"] button:hover::before,
     div[class*="st-key-ign_locdel_"] button:hover::before {{
         opacity: 0;
         transform: translateY(-1px) scale(1.2);
     }}
     div[class*="st-key-ign_new_"] button:hover::after,
     div[class*="st-key-ign_upd_"] button:hover::after,
-    div[class*="st-key-ign_miss_"] button:hover::after,
+    div[class*="st-key-ign_updmod_"] button:hover::after,
     div[class*="st-key-ign_locdel_"] button:hover::after {{
         opacity: 1;
         transform: scale(1.2);
@@ -1206,21 +1086,21 @@ def show_analysis_review(on_confirm_sync):
             uptodate_count = len(result.uptodate_files)
             pending_count = (
                 len(result.new_files)
-                + len(result.updated_files)
-                + len(result.missing_files)
+                + len(result.updated_clean_files)
+                + len(result.updated_modified_files)
                 + len(result.locally_deleted_files)
             )
             _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
             # Dimmed white sync icon for the pending-sync label
-            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.5);" />'
+            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.65);" />'
             # Inline checkmark for the up-to-date label (base64 to avoid Streamlit SVG sanitization)
             import base64 as _b64
-            _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
+            _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
             _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
             _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0;" />'
             # No background — plain grey text labels stacked on the right
             _tag_style = (
-                "font-size: 0.73rem; color: rgba(255,255,255,0.45); font-weight: 500; "
+                "font-size: 0.73rem; color: rgba(255,255,255,0.65); font-weight: 500; "
                 "display:inline-flex; align-items:center; white-space:nowrap;"
             )
 
@@ -1264,12 +1144,12 @@ def show_analysis_review(on_confirm_sync):
             st.markdown(header_html, unsafe_allow_html=True)
 
             has_new = bool(result.new_files)
-            has_updated = bool(result.updated_files)
-            has_missing = bool(result.missing_files)
+            has_updated_clean = bool(result.updated_clean_files)
+            has_updated_modified = bool(result.updated_modified_files)
             has_locally_deleted = bool(result.locally_deleted_files)
             has_ignored = hasattr(result, 'ignored_files') and bool(result.ignored_files)
 
-            if not any([has_new, has_updated, has_missing, has_locally_deleted]) and not has_ignored:
+            if not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted]) and not has_ignored:
                 st.success('All files up-to-date')
                 continue
 
@@ -1286,6 +1166,7 @@ def show_analysis_review(on_confirm_sync):
                     with st.expander(f"{'New Files'}"):
                         deselected_new = total_new - selected_new
                         st.button(f"Move deselected files to Ignored *({deselected_new})*", key=f"sweep_new_{pair['course_id']}", use_container_width=True, disabled=(selected_new == total_new), on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="These files will be moved to the Ignored Files section and skipped during sync.")
+                        st.caption("Brand new files available on Canvas that you don't have locally yet.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
                             for file in result.new_files:
@@ -1306,19 +1187,20 @@ def show_analysis_review(on_confirm_sync):
                                         st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
             # Updated files — always starts OPEN
-            if result.updated_files:
-                total_upd = len(result.updated_files)
-                selected_upd = sum(1 for f, _ in result.updated_files if st.session_state.get(f"sync_upd_{pair['course_id']}_{f.id}", True))
-                
-                
+            # Updates Available (clean) \u2014 default CHECKED. Local file is
+            # byte-identical to what we downloaded, so we overwrite in place.
+            if result.updated_clean_files:
+                total_upd = len(result.updated_clean_files)
+                selected_upd = sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f"sync_upd_{pair['course_id']}_{f.id}", True))
 
                 with st.container(key=f"cat_update_{pair['course_id']}"):
-                    with st.expander(f"{'Updates Available'}"):
+                    with st.expander("Updates Available"):
                         deselected_upd = total_upd - selected_upd
-                        st.button(f"Move deselected files to Ignored *({deselected_upd})*", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, disabled=(selected_upd == total_upd), on_click=handle_sweep, args=(idx, 'updated_files', 'sync_upd'), help="These files will be moved to the Ignored Files section and skipped during sync.")
-                        
+                        st.button(f"Move deselected files to Ignored *({deselected_upd})*", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, disabled=(selected_upd == total_upd), on_click=handle_sweep, args=(idx, 'updated_clean_files', 'sync_upd'), help="These files will be moved to the Ignored Files section and skipped during sync.")
+                        st.caption("Your local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.")
+
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
-                            for canvas_file, sync_info in result.updated_files:
+                            for canvas_file, sync_info in result.updated_clean_files:
                                 ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
                                 icon = get_file_icon(canvas_file.filename)
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
@@ -1333,37 +1215,44 @@ def show_analysis_review(on_confirm_sync):
                                         _size_clean = f" `{size}`" if size else ""
                                         st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                     with col2:
-                                        st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_files', (canvas_file, sync_info)))
+                                        st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_clean_files', (canvas_file, sync_info)))
 
-            # Missing files — always starts OPEN
-            if result.missing_files:
-                total_miss = len(result.missing_files)
-                selected_miss = sum(1 for f in result.missing_files if st.session_state.get(f"sync_miss_{pair['course_id']}_{f.canvas_file_id}", True))
-                
-                
+            # Updates Available \u2014 You've Edited These \u2014 default UNCHECKED.
+            # Local file has been modified by the student; if they opt in, the
+            # new Canvas version is saved alongside as `_NewVersion` so their
+            # annotations survive.
+            if result.updated_modified_files:
+                total_updmod = len(result.updated_modified_files)
+                selected_updmod = sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f"sync_updmod_{pair['course_id']}_{f.id}", False))
 
-                with st.container(key=f"cat_missing_{pair['course_id']}"):
-                    with st.expander(f"{'Missing Files'}"):
-                        deselected_miss = total_miss - selected_miss
-                        is_disabled_miss = (selected_miss == total_miss)
-                        help_text_miss = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_miss else "All files are selected. Uncheck one or more files to enable this button."
-                        st.button(f"Move deselected files to Ignored *({deselected_miss})*", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, disabled=is_disabled_miss, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help=help_text_miss)
-                        
-                        with st.container(key=f"sync_review_file_list_{idx}_miss"):
-                            for sync_info in result.missing_files:
-                                ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                                icon = get_file_icon(sync_info.canvas_filename)
-                                key = f"sync_miss_{pair['course_id']}_{sync_info.canvas_file_id}"
-                                st.session_state.setdefault(key, True)
-                                with st.container(key=f"sync_row_miss_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                with st.container(key=f"cat_updmod_{pair['course_id']}"):
+                    with st.expander("Updates Available \u2014 You've Edited These"):
+                        deselected_updmod = total_updmod - selected_updmod
+                        is_disabled_updmod = (selected_updmod == total_updmod)
+                        help_text_updmod = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_updmod else "All files are selected. Uncheck one or more files to enable this button."
+                        st.button(f"Move deselected files to Ignored *({deselected_updmod})*", key=f"sweep_updmod_{pair['course_id']}", use_container_width=True, disabled=is_disabled_updmod, on_click=handle_sweep, args=(idx, 'updated_modified_files', 'sync_updmod'), help=help_text_updmod)
+                        st.caption("You've modified your local copies of these files. They are **unchecked by default** to protect your edits. If you sync them, the new Canvas version will be saved alongside as `_NewVersion` \u2014 your edited copy is never touched.")
+
+                        with st.container(key=f"sync_review_file_list_{idx}_updmod"):
+                            for canvas_file, sync_info in result.updated_modified_files:
+                                ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
+                                icon = get_file_icon(canvas_file.filename)
+                                size = format_file_size(canvas_file.size) if canvas_file.size else ""
+                                key = f"sync_updmod_{pair['course_id']}_{canvas_file.id}"
+                                st.session_state.setdefault(key, False)
+                                with st.container(key=f"sync_row_updmod_{pair['course_id']}_{canvas_file.id}"):
                                     col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                     with col1:
-                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
                                         _name, _ext = os.path.splitext(_disp_raw)
                                         _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                        st.checkbox(f"{_name}{_ext_clean}", key=key)
+                                        _size_clean = f" `{size}`" if size else ""
+                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                     with col2:
-                                        st.button("\u200b", key=f"ign_miss_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'missing_files', sync_info))
+                                        st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
+
+            # Missing files — always starts OPEN
+            # (Missing Files category retired \u2014 rolled into New Files.)
 
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
@@ -1398,7 +1287,7 @@ def show_analysis_review(on_confirm_sync):
 
             # Deleted files — always starts OPEN
             if result.deleted_on_canvas:
-                lbl_del = "Deleted on Canvas (Ignored)"
+                lbl_del = "Deleted on Canvas (Kept Locally)"
                 
                 
 
@@ -1439,7 +1328,13 @@ def show_analysis_review(on_confirm_sync):
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
     # --- Action buttons (Back left, Sync right) ---
-    total_active_files = sum(len(pd['result'].new_files) + len(pd['result'].updated_files) + len(pd['result'].missing_files) + len(pd['result'].locally_deleted_files) for pd in all_results)
+    total_active_files = sum(
+        len(pd['result'].new_files)
+        + len(pd['result'].updated_clean_files)
+        + len(pd['result'].updated_modified_files)
+        + len(pd['result'].locally_deleted_files)
+        for pd in all_results
+    )
 
     # Count only the files the user has actually checked
     total_selected_files = 0
@@ -1447,8 +1342,8 @@ def show_analysis_review(on_confirm_sync):
         cid = pd['pair']['course_id']
         result = pd['result']
         total_selected_files += sum(1 for f in result.new_files if st.session_state.get(f'sync_new_{cid}_{f.id}', True))
-        total_selected_files += sum(1 for f, _ in result.updated_files if st.session_state.get(f'sync_upd_{cid}_{f.id}', True))
-        total_selected_files += sum(1 for si in result.missing_files if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False))
+        total_selected_files += sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f'sync_upd_{cid}_{f.id}', True))
+        total_selected_files += sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f'sync_updmod_{cid}_{f.id}', False))
         total_selected_files += sum(1 for si in result.locally_deleted_files if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False))
 
     if total_active_files == 0:
@@ -1497,28 +1392,32 @@ def show_analysis_review(on_confirm_sync):
                             f for f in result.new_files
                             if st.session_state.get(f'sync_new_{cid}_{f.id}', True)
                         ]
-                        selected_upd = [
-                            f for f, _ in result.updated_files
+                        selected_upd_clean = [
+                            f for f, _ in result.updated_clean_files
                             if st.session_state.get(f'sync_upd_{cid}_{f.id}', True)
                         ]
-                        selected_miss = [
-                            si for si in result.missing_files
-                            if st.session_state.get(f'sync_miss_{cid}_{si.canvas_file_id}', False)
+                        selected_upd_mod = [
+                            f for f, _ in result.updated_modified_files
+                            if st.session_state.get(f'sync_updmod_{cid}_{f.id}', False)
                         ]
                         selected_locdel = [
                             si for si in result.locally_deleted_files
                             if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
                         ]
-                        # Combine both missing and locally deleted files that the user opted to redownload
-                        selected_miss.extend(selected_locdel)
 
                         sync_selections.append({
                             'pair_idx': idx,
                             'res_data': res_data,
                             'new': selected_new,
-                            'updates': selected_upd,
-                            'redownload': selected_miss,
-                            'ignore': [], # Let it pass empty, ignore was handled by immediate DB updates
+                            # Union preserves retry logic, size accounting, and
+                            # the downloads-log pipeline (all read `updates`).
+                            'updates': selected_upd_clean + selected_upd_mod,
+                            # Subsets carry the routing decision for execution.py:
+                            # clean → overwrite in place; modified → `_NewVersion`.
+                            'updates_clean': selected_upd_clean,
+                            'updates_modified': selected_upd_mod,
+                            'redownload': selected_locdel,
+                            'ignore': [],  # ignore was handled by immediate DB updates
                         })
 
                     # Total count & size for confirmation
@@ -1596,21 +1495,22 @@ def inject_dynamic_sync_review_css():
                 font-weight: normal; font-size: 0.9rem;
             }}""")
             
-        if result.updated_files:
-            total_upd = len(result.updated_files)
-            selected_upd = sum(1 for f, _ in result.updated_files if st.session_state.get(f"sync_upd_{cid}_{f.id}", True))
+        if result.updated_clean_files:
+            total_upd = len(result.updated_clean_files)
+            selected_upd = sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f"sync_upd_{cid}_{f.id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_update_{cid}"] div[data-testid="stExpander"] details summary p::after {{
                 content: "\\00a0\\00a0 ({selected_upd} / {total_upd} selected)";
                 color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
-            
-        if result.missing_files:
-            total_miss = len(result.missing_files)
-            selected_miss = sum(1 for f in result.missing_files if st.session_state.get(f"sync_miss_{cid}_{f.canvas_file_id}", True))
+
+        if result.updated_modified_files:
+            total_updmod = len(result.updated_modified_files)
+            selected_updmod = sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f"sync_updmod_{cid}_{f.id}", False))
             css_blocks.append(f"""
-            div[class*="st-key-cat_missing_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 ({selected_miss} / {total_miss} selected)"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+            div[class*="st-key-cat_updmod_{cid}"] div[data-testid="stExpander"] details summary p::after {{
+                content: "\\00a0\\00a0 ({selected_updmod} / {total_updmod} selected)";
+                color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
             
         if result.locally_deleted_files:
@@ -1625,7 +1525,7 @@ def inject_dynamic_sync_review_css():
             total_del_canvas = len(result.deleted_on_canvas)
             css_blocks.append(f"""
             div[class*="st-key-cat_deleted_canvas_{cid}"] div[data-testid="stExpander"] details summary p::after {{
-                content: "\\00a0\\00a0 ({total_del_canvas}) ignored"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
+                content: "\\00a0\\00a0 ({total_del_canvas}) kept locally"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
 
         has_ignored_files = hasattr(result, 'ignored_files') and bool(result.ignored_files)
