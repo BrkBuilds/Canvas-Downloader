@@ -221,7 +221,7 @@ def cleanup_sync_state() -> None:
     # Clean up dynamic checkbox keys from the sync review UI
     keys_to_remove = [
         k for k in st.session_state
-        if k.startswith(('sync_new_', 'sync_upd_', 'sync_miss_', 'ignore_'))
+        if k.startswith(('sync_new_', 'sync_upd_', 'sync_updmod_', 'sync_locdel_', 'ignore_'))
     ]
     for k in keys_to_remove:
         st.session_state.pop(k, None)

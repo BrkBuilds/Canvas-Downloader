@@ -199,36 +199,37 @@ def run_analysis(sync_pairs, main_placeholder=None):
             res_data['contract'] = _contract
                 
             current_filter = _contract.get('file_filter', 'all')
-            
+
             # Apply the gatekeeper BEFORE execution
             actionable_new = apply_file_filter(result.new_files, current_filter, is_tuple=False)
-            actionable_missing = apply_file_filter(result.missing_files, current_filter, is_tuple=False)
-            actionable_updated = apply_file_filter(result.updated_files, current_filter, is_tuple=True)
+            # Quick Sync processes CLEAN updates only. Modified updates stay
+            # behind for the full Review flow so students can't accidentally
+            # clutter their folder with `_NewVersion` siblings of files they
+            # edited. (Confirmed by the user's design choice.)
+            actionable_updated_clean = apply_file_filter(result.updated_clean_files, current_filter, is_tuple=True)
             actionable_del = apply_file_filter(result.locally_deleted_files, current_filter, is_tuple=False)
-            
-            # Set session state keys for UI consistency (if user goes back)
-            # Use cid (course_id) to match the normal Review flow's key pattern
+
+            # Set session state keys for UI consistency (if user goes Back)
             for f in actionable_new:
                 st.session_state[f'sync_new_{cid}_{f.id}'] = True
-            for f, _ in actionable_updated:
+            for f, _ in actionable_updated_clean:
                 st.session_state[f'sync_upd_{cid}_{f.id}'] = True
-            for mf in actionable_missing:
-                st.session_state[f'sync_miss_{cid}_{mf.canvas_file_id}'] = True
+            # Modified updates are explicitly left UNCHECKED so the Review UI
+            # renders them with their default-off state.
+            for f, _ in result.updated_modified_files:
+                st.session_state.setdefault(f'sync_updmod_{cid}_{f.id}', False)
             for si in actionable_del:
                 st.session_state[f'sync_locdel_{cid}_{si.canvas_file_id}'] = True
-            
-            # Combine missing + locally deleted into 'redownload', mirroring the normal
-            # Review flow at lines 2299-2304 (selected_miss.extend(selected_locdel))
-            # FIX: Quick Sync explicitly only takes true missing files!
-            true_missing = list(actionable_missing)
-            
+
+            clean_updates = [f for f, _ in actionable_updated_clean]
             sync_selections.append({
                 'pair_idx': idx,
                 'res_data': res_data,
                 'new': list(actionable_new),
-                # Note: updated_files is list of tuples (canvas_file, local_file)
-                'updates': [f for f, _ in actionable_updated],
-                'redownload': true_missing,
+                'updates': clean_updates,
+                'updates_clean': clean_updates,
+                'updates_modified': [],
+                'redownload': [],
                 'ignore': [],
             })
             
@@ -237,17 +238,18 @@ def run_analysis(sync_pairs, main_placeholder=None):
         # 1. Tally skipped files globally using a bulletproof net
         total_locdel = 0
         total_canvasdel = 0
-        
+        total_edited = 0
+
         for pair_res in all_results:
             if not isinstance(pair_res, dict):
                 continue
-                
+
             # A. Check root level dictionary keys first (fallback from Step 2 logic)
             if 'locdel' in pair_res:
                 total_locdel += len(pair_res['locdel'])
             if 'canvasdel' in pair_res: # Adjust if your root key is different
                 total_canvasdel += len(pair_res['canvasdel'])
-            
+
             # B. Check the 'result' object/dict
             res_obj = pair_res.get('result')
             if res_obj:
@@ -256,15 +258,23 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     total_locdel += len(res_obj.locally_deleted_files)
                 if hasattr(res_obj, 'deleted_on_canvas') and res_obj.deleted_on_canvas is not None:
                     total_canvasdel += len(res_obj.deleted_on_canvas)
-                
+                if hasattr(res_obj, 'updated_modified_files') and res_obj.updated_modified_files is not None:
+                    total_edited += len(res_obj.updated_modified_files)
+
                 # If it's a dictionary:
                 if isinstance(res_obj, dict):
                     if 'locally_deleted_files' in res_obj and res_obj['locally_deleted_files'] is not None:
                         total_locdel += len(res_obj['locally_deleted_files'])
                     if 'deleted_on_canvas' in res_obj and res_obj['deleted_on_canvas'] is not None:
                         total_canvasdel += len(res_obj['deleted_on_canvas'])
-                        
-        st.session_state['qs_skipped'] = {'local_del': total_locdel, 'canvas_del': total_canvasdel}
+                    if 'updated_modified_files' in res_obj and res_obj['updated_modified_files'] is not None:
+                        total_edited += len(res_obj['updated_modified_files'])
+
+        st.session_state['qs_skipped'] = {
+            'local_del': total_locdel,
+            'canvas_del': total_canvasdel,
+            'edited': total_edited,
+        }
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
         
         if total_count == 0:
@@ -290,19 +300,20 @@ def run_analysis(sync_pairs, main_placeholder=None):
     else:
         # Tally files for sync review notification
         total_new = 0
-        total_updated = 0
-        total_missing = 0
+        total_updated_clean = 0
+        total_updated_modified = 0
         total_local_del = 0
 
         for res_data in all_results:
             result = res_data.get('result')
             if result:
                 total_new += len(getattr(result, 'new_files', []) or [])
-                total_updated += len(getattr(result, 'updated_files', []) or [])
-                total_missing += len(getattr(result, 'missing_files', []) or [])
+                total_updated_clean += len(getattr(result, 'updated_clean_files', []) or [])
+                total_updated_modified += len(getattr(result, 'updated_modified_files', []) or [])
                 total_local_del += len(getattr(result, 'locally_deleted_files', []) or [])
 
-        total_changes = total_new + total_updated + total_missing + total_local_del
+        total_updated = total_updated_clean + total_updated_modified
+        total_changes = total_new + total_updated + total_local_del
 
         if total_changes == 0:
             # Nothing to review — skip review step, go straight to completion
@@ -318,8 +329,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
             parts.append(f"{total_new} new file{'s' if total_new != 1 else ''}")
         if total_updated > 0:
             parts.append(f"{total_updated} update{'s' if total_updated != 1 else ''}")
-        if total_missing > 0:
-            parts.append(f"{total_missing} missing file{'s' if total_missing != 1 else ''}")
+        if total_updated_modified > 0:
+            parts.append(f"{total_updated_modified} edited locally")
         if total_local_del > 0:
             parts.append(f"{total_local_del} locally deleted file{'s' if total_local_del != 1 else ''}")
 
