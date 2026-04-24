@@ -148,6 +148,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
     
     st.session_state['sync_analysis_results'] = all_results
 
+    # Reset locally-deleted checkbox state so they always start deselected in the review.
+    for k in list(st.session_state.keys()):
+        if k.startswith('sync_locdel_'):
+            del st.session_state[k]
+
     # Quick Sync mode — skip review and go straight to sync
     if st.session_state.get('sync_quick_mode'):
         
@@ -297,6 +302,17 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 total_missing += len(getattr(result, 'missing_files', []) or [])
                 total_local_del += len(getattr(result, 'locally_deleted_files', []) or [])
 
+        total_changes = total_new + total_updated + total_missing + total_local_del
+
+        if total_changes == 0:
+            # Nothing to review — skip review step, go straight to completion
+            st.session_state['synced_count'] = 0
+            st.session_state['download_status'] = 'sync_complete'
+            # Pre-arm the flag so show_sync_complete doesn't fire a second notification
+            st.session_state['completion_beep_fired'] = True
+            play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
+            st.rerun()
+
         parts = []
         if total_new > 0:
             parts.append(f"{total_new} new file{'s' if total_new != 1 else ''}")
@@ -307,8 +323,6 @@ def run_analysis(sync_pairs, main_placeholder=None):
         if total_local_del > 0:
             parts.append(f"{total_local_del} locally deleted file{'s' if total_local_del != 1 else ''}")
 
-        summary = ", ".join(parts) + (" found." if parts else " No changes found.")
-        
+        summary = ", ".join(parts) + " found."
         play_completion_beep(mode='sync_review', summary=summary.strip())
-        
         st.session_state['download_status'] = 'analyzed'

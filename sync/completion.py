@@ -18,7 +18,6 @@ import streamlit as st
 import theme
 from sync_manager import SyncManager
 from ui_helpers import (
-    render_progress_bar,
     render_sync_wizard,
     friendly_course_name,
 )
@@ -101,9 +100,12 @@ def show_sync_complete():
         and not st.session_state.get('completion_beep_fired', False)
     ):
         _sync_count = st.session_state.get('synced_count', 0)
-        _sync_courses = len(st.session_state.get('sync_selections', []))
-        _sync_summary = f"Synced {_sync_count} file{'s' if _sync_count != 1 else ''} across {_sync_courses} course{'s' if _sync_courses != 1 else ''}."
-        play_completion_beep(mode='sync', summary=_sync_summary)
+        if _sync_count == 0:
+            play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
+        else:
+            _sync_courses = len(st.session_state.get('sync_selections', []))
+            _sync_summary = f"Synced {_sync_count} file{'s' if _sync_count != 1 else ''} across {_sync_courses} course{'s' if _sync_courses != 1 else ''}."
+            play_completion_beep(mode='sync', summary=_sync_summary)
         st.session_state['completion_beep_fired'] = True
 
     # Step wizard
@@ -115,19 +117,6 @@ def show_sync_complete():
     synced_details = st.session_state.get('synced_details', {})
     sync_selections = st.session_state.get('sync_selections', [])
     sync_pairs = st.session_state.get('sync_pairs', [])
-
-    custom_text = None
-    if sync_errors and synced_count == 0:
-        # Full failure - progress bar will be red
-        mode = 'complete_error'
-    elif sync_errors:
-        # Partial failure - progress bar will be yellow
-        mode = 'complete_warning'
-    else:
-        mode = 'complete'
-        custom_text = 'Sync Complete'
-
-    render_progress_bar(st, 1, 1, mode=mode, custom_text=custom_text)
 
     # Summary card logic
     total_bytes = st.session_state.get('synced_bytes', 0)
@@ -216,7 +205,13 @@ def show_sync_complete():
 
         # Ignored files note
         if st.session_state.get('sync_has_ignored_files'):
-            st.info("Some files are marked as ignored and were not synced. You can manage ignored files from the Sync Hub after adding this course to your sync list.", icon="ℹ️")
+            st.markdown(
+                "<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
+                "border-radius:6px;padding:10px 14px;margin-top:8px;font-size:0.88rem;color:#fcd34d;'>"
+                "&#9888; <strong>Some files were ignored and not synced.</strong> "
+                "You can manage ignored files from the Sync Hub.</div>",
+                unsafe_allow_html=True,
+            )
 
         # Build error log paths for the error section
         _sync_error_log_paths = []
