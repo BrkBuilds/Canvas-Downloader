@@ -165,9 +165,12 @@ def show_sync_complete():
         skipped_data = st.session_state.get('qs_skipped', {})
         local_del = skipped_data.get('local_del', 0)
         canvas_del = skipped_data.get('canvas_del', 0)
+        edited = skipped_data.get('edited', 0)
 
-        if local_del > 0 or canvas_del > 0:
+        if local_del > 0 or canvas_del > 0 or edited > 0:
             parts = []
+            if edited > 0:
+                parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
             if local_del > 0:
                 parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
             if canvas_del > 0:
@@ -179,7 +182,7 @@ def show_sync_complete():
                 f"border-radius:6px;padding:10px 14px;margin-top:8px;font-size:0.88rem;color:#fcd34d;'>"
                 f"&#9889; <strong>Quick Sync skipped {joined_parts}</strong>. "
                 f"To download them, run a normal 'Analyze, Review &amp; Sync' and select them manually.</div>",
-                unsafe_allow_html=True, 
+                unsafe_allow_html=True,
             )
 
             # Cleanup

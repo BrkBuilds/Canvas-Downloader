@@ -771,3 +771,185 @@ def error_log_dialog(log_paths):
 
     if st.button("Close", type="primary", use_container_width=True):
         st.rerun(scope="app")
+
+
+def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "💡"):
+    """
+    Renders a unified Help Explainer Card component.
+    
+    Args:
+        key_prefix: Unique string to namespace CSS classes and session state.
+        title: Title of the explainer card.
+        text_html: The HTML body content of the explainer card.
+        icon: The emoji/icon prefix for the title.
+    """
+    import base64
+    from ui_helpers import esc
+    
+    state_key = f"show_help_card_{key_prefix}"
+    if state_key not in st.session_state:
+        st.session_state[state_key] = False
+
+    close_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+    close_b64 = base64.b64encode(close_svg.encode()).decode()
+    
+    help_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+    help_b64 = base64.b64encode(help_svg.encode()).decode()
+
+    card_key = f"{key_prefix}_explainer_card"
+    close_key = f"{key_prefix}_close_explainer"
+    help_btn_key = f"{key_prefix}_explainer_help_btn"
+    open_key = f"{key_prefix}_open_explainer"
+
+    if st.session_state[state_key]:
+        with st.container(key=card_key):
+            if st.button("✕", key=close_key):
+                st.session_state[state_key] = False
+                st.rerun()
+            
+            st.markdown(f"""
+            <div>
+                <p style="margin: 0 0 6px 0; font-weight: 700; color: #f8fafc; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem; line-height: 1;">{icon}</span>{esc(title)}
+                </p>
+                <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
+                    {text_html}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.html(f"""<style>
+        @keyframes slideDownFadeIn_{key_prefix} {{
+            from {{ opacity: 0; transform: translateY(-8px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        div.st-key-{card_key} {{
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 8px !important;
+            padding: 16px 16px 32px 16px !important;
+            margin-bottom: 15px !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
+            position: relative !important;
+            animation: slideDownFadeIn_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }}
+        div.st-key-{card_key} div.element-container {{
+            margin-bottom: 0 !important;
+        }}
+        div.st-key-{card_key} p:last-child {{
+            margin-bottom: 0 !important;
+        }}
+        div.st-key-{card_key} > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            border: none !important;
+            padding: 0 !important;
+        }}
+        div.st-key-{close_key} {{
+            position: absolute !important;
+            top: 8px !important;
+            right: 8px !important;
+            z-index: 10 !important;
+        }}
+        div.st-key-{close_key} button {{
+            background: transparent !important;
+            border: none !important;
+            color: #94a3b8 !important;
+            font-size: 1.2rem !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            min-height: 28px !important;
+            height: 28px !important;
+            width: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+            transition: all 0.15s ease !important;
+        }}
+        div.st-key-{close_key} button:hover {{
+            color: #f8fafc !important;
+            background: transparent !important;
+        }}
+        div.st-key-{close_key} button > div {{
+            display: none !important;
+        }}
+        div.st-key-{close_key} button::before {{
+            content: "";
+            display: block;
+            width: 16px;
+            height: 16px;
+            background-color: #94a3b8;
+            -webkit-mask-image: url('data:image/svg+xml;base64,{close_b64}');
+            mask-image: url('data:image/svg+xml;base64,{close_b64}');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            transition: background-color 0.15s ease !important;
+        }}
+        div.st-key-{close_key} button:hover::before {{
+            background-color: #f8fafc !important;
+        }}
+        </style>""")
+    else:
+        with st.container(key=help_btn_key):
+            if st.button("Help", key=open_key, help="Show help"):
+                st.session_state[state_key] = True
+                st.rerun()
+
+        st.html(f"""<style>
+        @keyframes fadeInHelp_{key_prefix} {{
+            from {{ opacity: 0; transform: translateX(8px); }}
+            to {{ opacity: 1; transform: translateX(0); }}
+        }}
+        div.st-key-{help_btn_key} {{
+            margin-bottom: 25px !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+            animation: fadeInHelp_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }}
+        div.st-key-{help_btn_key} > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            border: none !important;
+            padding: 0 !important;
+        }}
+        div.st-key-{open_key} button {{
+            background: transparent !important;
+            border: none !important;
+            padding: 4px 8px !important;
+            min-height: 24px !important;
+            height: 24px !important;
+            color: #a8b4c6 !important;
+            font-weight: 500 !important;
+            font-size: 0.9rem !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+        }}
+        div.st-key-{open_key} button:hover {{
+            background: transparent !important;
+            color: #f8fafc !important;
+        }}
+        div.st-key-{open_key} button p::before {{
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            background-color: #a8b4c6;
+            -webkit-mask-image: url('data:image/svg+xml;base64,{help_b64}');
+            mask-image: url('data:image/svg+xml;base64,{help_b64}');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            vertical-align: middle;
+            position: relative;
+            top: -2px;
+            transition: background-color 0.2s ease !important;
+        }}
+        div.st-key-{open_key} button:hover p::before {{
+            background-color: #f8fafc !important;
+        }}
+        </style>""")

@@ -30,6 +30,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     # --- Data Collection for Dropdowns ---
     file_items = []
     folder_set = set()
+    modified_update_count = sum(len(s.get('updates_modified', [])) for s in sync_selections)
     for s in sync_selections:
         # Get the friendly course name for the folder
         pair = s['res_data']['pair']
@@ -272,7 +273,12 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'}}'
         f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
         f'</style>'
-        f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.</div>'
+        f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.'
+        + (
+            f'<br><span style="color:#fcd34d;">&#9998; {modified_update_count} of these are files you\'ve edited locally — the new Canvas version will be saved alongside as <code>_NewVersion</code> so your edits are preserved.</span>'
+            if modified_update_count > 0 else ''
+        ) +
+        '</div>'
         f'<div class="stats-card">'
         f'<div class="stat-row-dropdown">'
         f'<details>'
