@@ -1,6 +1,10 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Session 2026-04-24: Debugging Sync Review File Restoration**
+    - Done: Fixed a bug where restoring ignored files from the database placed them incorrectly into the "Missing Files" expander by default.
+    - Done: Updated `analyze_course` in `sync_manager.py` to pre-calculate the intrinsic `origin_category` (e.g., `new_files`, `updated_files`, `missing_files`, `locally_deleted_files`) even if a file is marked as ignored.
+    - Done: Attached `origin_category` and `original_item` directly to the `SyncFileInfo` instances of ignored files during load, ensuring UI restoration logic routes them back to the exact list they originated from perfectly.
 - **Session 2026-04-22: Download & Sync Completion UI Overhaul**
     - Done: Unified the completion screen layout by replacing multiple disjointed success/warning/error alert bars with a single cohesive `render_completion_card` that natively handles success, partial success, and failure states, including skipped discovery feedback.
     - Done: Refactored raw JSON error output from Canvas into an expandable, CSS-styled `.error-panel` featuring human-readable translations (e.g., "Access Denied" vs 401 Unauthorized JSON).
