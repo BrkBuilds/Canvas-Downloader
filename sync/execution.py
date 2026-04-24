@@ -369,32 +369,55 @@ def run_sync():
                         
                         # Fallback to sync_info properties explicitly
                         if not calc_path:
+                            # Union of clean + modified updates (updated_files is a
+                            # computed property returning their concatenation).
                             for f, info in sel['res_data']['result'].updated_files:
                                 if f == file:
                                     calc_path = info.target_local_path
                                     break
-                            
+
                         if not calc_path:
                             for info in sel['redownload']:
                                 if str(info.canvas_file_id) == str(getattr(file, 'id', None)) or str(info.canvas_file_id) == str(getattr(file, 'canvas_file_id', None)):
                                     calc_path = info.target_local_path
                                     break
-                                    
+
                         if calc_path:
                             calc_dir = Path(calc_path).parent
                             if str(calc_dir) != '.':
                                 target_dir = local_path / calc_dir
-                                
+
                         Path(make_long_path(target_dir)).mkdir(parents=True, exist_ok=True)
-                        
+
                         filepath = target_dir / filename
 
-                        is_update = file in sel['updates']
-                        if is_update and filepath.exists():
+                        # Update routing:
+                        #  - CLEAN update (md5 matches original): overwrite in place.
+                        #    The local file is byte-identical to what we downloaded,
+                        #    so replacing it loses nothing and avoids `_NewVersion` clutter.
+                        #  - MODIFIED update (student edited locally): save alongside
+                        #    as `_NewVersion` so annotations survive.
+                        is_update_clean = file in sel.get('updates_clean', [])
+                        is_update_modified = file in sel.get('updates_modified', [])
+
+                        if is_update_modified and filepath.exists():
                             base = filepath.stem
                             ext = filepath.suffix
                             filepath = local_path / f"{base}{'_NewVersion'}{ext}"
                             filepath = cm._handle_conflict(filepath)
+                        elif is_update_clean and filepath.exists():
+                            # Claim the exact path. Remove the stale file so the
+                            # download writes cleanly without `_handle_conflict`
+                            # adding a numeric suffix. If unlink fails (file open
+                            # in another app on Windows), fall back to _NewVersion
+                            # rather than crashing the sync.
+                            try:
+                                filepath.unlink()
+                            except OSError:
+                                base = filepath.stem
+                                ext = filepath.suffix
+                                filepath = local_path / f"{base}{'_NewVersion'}{ext}"
+                                filepath = cm._handle_conflict(filepath)
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
 
@@ -720,31 +743,41 @@ def run_sync():
                     safe_res_data.pop('sync_manager', None)
                     
                     # BUG FIX: Restore failed items to their exact correct buckets using O(1) Dictionaries
+                    # Preserve the clean/modified split so retries honour the
+                    # same overwrite-vs-`_NewVersion` routing as the initial run.
+                    modified_ids = {getattr(f, 'id', None) for f in sel.get('updates_modified', [])}
                     update_map: Dict[int, CanvasFileInfo] = {getattr(f, 'id', None): f for f in sel['updates']}
                     redownload_map: Dict[int, SyncFileInfo] = {getattr(r, 'canvas_file_id', r[0] if isinstance(r, tuple) else None): r for r in sel['redownload']}
-                    
+
                     retry_new: List[CanvasFileInfo] = []
-                    retry_updates: List[CanvasFileInfo] = []
+                    retry_updates_clean: List[CanvasFileInfo] = []
+                    retry_updates_modified: List[CanvasFileInfo] = []
                     retry_redownload: List[SyncFileInfo] = []
-                    
+
                     for failed_item in failed_files_for_pair:
                         # --- FIX: Tuple Identity Loss ---
                         # Mirror O(1) redownload_map logic: try 'id', then 'canvas_file_id', then tuple explicit index
                         f_id = getattr(failed_item, 'id', getattr(failed_item, 'canvas_file_id', failed_item[0] if isinstance(failed_item, tuple) else None))
                         if f_id in update_map:
-                            retry_updates.append(update_map[f_id])
+                            recovered = update_map[f_id]
+                            if f_id in modified_ids:
+                                retry_updates_modified.append(recovered)
+                            else:
+                                retry_updates_clean.append(recovered)
                         elif f_id in redownload_map:
                             retry_redownload.append(redownload_map[f_id])
                         else:
                             retry_new.append(failed_item)
-                            
+
                     retry_selections.append({
                         'pair_idx': pair_idx,
                         'res_data': safe_res_data,
                         'new': retry_new,
-                        'updates': retry_updates,
+                        'updates': retry_updates_clean + retry_updates_modified,
+                        'updates_clean': retry_updates_clean,
+                        'updates_modified': retry_updates_modified,
                         'redownload': retry_redownload,
-                        'ignore': []
+                        'ignore': [],
                     })
                         
             # Final 100% UI Paint after the loop
