@@ -185,8 +185,8 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         )
 
     if card_class == 'failure':
-        bg_color = '#191919'
-        border_color = 'rgba(239, 68, 68, 0.25)'
+        bg_color = 'rgba(127, 29, 29, 0.30)'
+        border_color = 'rgba(239, 68, 68, 0.45)'
     elif card_class == 'partial':
         bg_color = 'rgba(120, 80, 0, 0.22)'
         border_color = 'rgba(245, 158, 11, 0.45)'
@@ -277,19 +277,33 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
 
         with st.container(border=True, key=f"{key_prefix}_fc_{idx}"):
             st.markdown(header_html, unsafe_allow_html=True)
+            if show_files_expander and files:
+                with st.expander("Files added"):
+                    import os as _os
+                    rows = []
+                    for fname in sorted(files):
+                        _ext = _os.path.splitext(fname)[1].lower().lstrip('.')
+                        _name = _os.path.splitext(fname)[0]
+                        _icon = _FILETYPE_SVGS.get(_ext, _FILETYPE_SVG_DEFAULT)
+                        _badge = (
+                            f"<span style='font-size:0.65rem;font-weight:700;letter-spacing:0.4px;"
+                            f"color:#bababa;background:rgba(255,255,255,0.08);border-radius:3px;"
+                            f"padding:1px 5px;margin-left:6px;white-space:nowrap;flex-shrink:0;'>{esc(_ext.upper())}</span>"
+                        ) if _ext else ""
+                        rows.append(
+                            f"<div style='display:flex;align-items:center;gap:3px;padding:3px 0;flex-wrap:wrap;'>"
+                            f'<img src="{_icon}" style="width:16px;height:16px;flex-shrink:0;" alt="{esc(_ext)}"/>'
+                            f"<span style='font-size:0.85rem;color:#ffffff;word-break:break-word;'>{esc(_name)}</span>"
+                            f"{_badge}"
+                            f"</div>"
+                        )
+                    st.markdown(
+                        "<div style='display:flex;flex-direction:column;gap:1px;'>" + "".join(rows) + "</div>",
+                        unsafe_allow_html=True,
+                    )
             if folder_path and Path(folder_path).exists():
                 if st.button('Open Folder', key=f"{key_prefix}_open_{idx}", use_container_width=False):
                     open_folder(folder_path)
-            if show_files_expander and files:
-                with st.expander(f"Files added ({len(files)})"):
-                    items_html = "".join(
-                        f"<li style='font-size:0.85rem;color:#cbd5e1;padding:2px 0;'>{esc(fname)}</li>"
-                        for fname in sorted(files)
-                    )
-                    st.markdown(
-                        f"<ul style='margin:4px 0 0 0;padding-left:18px;list-style:disc;'>{items_html}</ul>",
-                        unsafe_allow_html=True,
-                    )
 
 
 

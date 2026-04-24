@@ -87,7 +87,7 @@ def show_analysis_review(on_confirm_sync):
         # 2. Append to ignored list ONLY if not already there
         if not any(f.canvas_file_id == canvas_file_id for f in pair_data['result'].ignored_files):
             pair_data['result'].ignored_files.append(sync_info)
-            
+
         _fname_clean, _ = os.path.splitext(unquote_plus(fname))
         st.toast(f"🚫 Ignored '{_fname_clean}'")
 
@@ -325,21 +325,22 @@ def show_analysis_review(on_confirm_sync):
 
 
     # Nothing actionable to sync — redirect to completion screen.
-    # When only ignored files exist, the student manages those from the Sync Hub,
-    # not from the review page.
+    # Exception: if the user manually ignored files, stay on the review page so they
+    # can restore or go back. Only auto-route when analysis genuinely found nothing.
     if total_new == 0 and total_upd == 0 and total_miss == 0 and total_del == 0 and total_loc_del == 0:
-        # Advance to the completion screen (step 4) with zero-file success state
-        st.session_state['synced_count'] = 0
-        st.session_state['synced_bytes'] = 0
-        st.session_state['sync_errors'] = []
-        st.session_state['synced_details'] = {}
-        st.session_state['retry_selections'] = []
-        st.session_state['up_to_date_file_count'] = total_uptodate
-        if total_ignored > 0:
-            st.session_state['sync_has_ignored_files'] = True
-        st.session_state['download_status'] = 'sync_complete'
-        st.session_state['step'] = 4
-        st.rerun()
+        if total_ignored == 0:
+            # Genuinely nothing to sync — advance to completion screen
+            st.session_state['synced_count'] = 0
+            st.session_state['synced_bytes'] = 0
+            st.session_state['sync_errors'] = []
+            st.session_state['synced_details'] = {}
+            st.session_state['retry_selections'] = []
+            st.session_state['up_to_date_file_count'] = total_uptodate
+            st.session_state['download_status'] = 'sync_complete'
+            st.session_state['step'] = 4
+            st.rerun()
+        # else: user ignored all files — fall through to render the page normally.
+        # The action buttons section below will show the disabled sync button.
 
 
     # Feature 1: Advanced filtering & Global Selection
@@ -816,9 +817,24 @@ def show_analysis_review(on_confirm_sync):
                 }
 
                 // MutationObserver: detect when Sync Review containers disappear
+                let teardownTimer = null;
                 const observer = new MutationObserver(() => {
                     if (!doc.querySelector('div[class*="st-key-cat_"]')) {
-                        teardown();
+                        // Grace period: if it's just a React rerender, the container will be back in < 500ms
+                        if (!teardownTimer) {
+                            teardownTimer = setTimeout(() => {
+                                if (!doc.querySelector('div[class*="st-key-cat_"]')) {
+                                    teardown();
+                                }
+                                teardownTimer = null;
+                            }, 500);
+                        }
+                    } else {
+                        // Container is present. Cancel any pending teardowns caused by rerenders
+                        if (teardownTimer) {
+                            clearTimeout(teardownTimer);
+                            teardownTimer = null;
+                        }
                     }
                 });
                 observer.observe(doc.body, { childList: true, subtree: true });
@@ -1243,12 +1259,8 @@ def show_analysis_review(on_confirm_sync):
                         <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
                     </div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">
-                    {pending_pill}
-                    {uptodate_pill}
-                </div>
-            </div>
-            """
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">{pending_pill}{uptodate_pill}</div>
+            </div>"""
             st.markdown(header_html, unsafe_allow_html=True)
 
             has_new = bool(result.new_files)
@@ -1333,7 +1345,9 @@ def show_analysis_review(on_confirm_sync):
                 with st.container(key=f"cat_missing_{pair['course_id']}"):
                     with st.expander(f"{'Missing Files'}"):
                         deselected_miss = total_miss - selected_miss
-                        st.button(f"Move deselected files to Ignored *({deselected_miss})*", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, disabled=(selected_miss == total_miss), on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help="These files will be moved to the Ignored Files section and skipped during sync.")
+                        is_disabled_miss = (selected_miss == total_miss)
+                        help_text_miss = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_miss else "All files are selected. Uncheck one or more files to enable this button."
+                        st.button(f"Move deselected files to Ignored *({deselected_miss})*", key=f"sweep_miss_{pair['course_id']}", use_container_width=True, disabled=is_disabled_miss, on_click=handle_sweep, args=(idx, 'missing_files', 'sync_miss'), help=help_text_miss)
                         
                         with st.container(key=f"sync_review_file_list_{idx}_miss"):
                             for sync_info in result.missing_files:
@@ -1361,14 +1375,17 @@ def show_analysis_review(on_confirm_sync):
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
                     with st.expander("Locally Deleted"):
                         deselected_locdel = total_locdel - selected_locdel
-                        st.button(f"Move deselected files to Ignored *({deselected_locdel})*", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, disabled=(selected_locdel == total_locdel), on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help="These files will be moved to the Ignored Files section and skipped during sync.")
-                        
+                        is_disabled_locdel = (selected_locdel == total_locdel)
+                        help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
+                        st.button(f"Move deselected files to Ignored *({deselected_locdel})*", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, disabled=is_disabled_locdel, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help=help_text_locdel)
+                        st.caption("These files are missing from your local folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
+
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                             for sync_info in result.locally_deleted_files:
                                 ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
                                 icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
-                                st.session_state.setdefault(key, True)
+                                st.session_state.setdefault(key, False)
                                 with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
                                     col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                     with col1:
@@ -1401,7 +1418,7 @@ def show_analysis_review(on_confirm_sync):
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
                     with st.expander(f"Ignored Files", expanded=is_ignored_open):
                         st.session_state['keep_ignored_open'] = False
-                        st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,))
+                        st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again")
                         st.caption("These files are safely ignored and will not be synced.")
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
                             for sync_info in result.ignored_files:
@@ -1435,17 +1452,42 @@ def show_analysis_review(on_confirm_sync):
         total_selected_files += sum(1 for si in result.locally_deleted_files if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False))
 
     if total_active_files == 0:
-        st.success("All pending files have been addressed or ignored. You are fully up to date!")
-        if st.button("Done - Return to Front Page", type="primary", use_container_width=True):
-            cleanup_sync_state()
-            st.rerun()
-    else:
+        # All files have been manually ignored — show amber notice, keep buttons visible
+        st.markdown(
+            "<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
+            "border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:0.88rem;color:#fcd34d;'>"
+            "&#9888; <strong>All files are currently ignored.</strong> "
+            "Restore files using the <strong>Ignored Files</strong> section above to enable syncing, "
+            "or press <strong>Back</strong> to return to the sync setup.</div>",
+            unsafe_allow_html=True,
+        )
 
-        col_back, col_sync, _ = st.columns([1, 1.2, 5])
-        with col_sync:
-            with st.container(key="btn_sync_selected"):
-                sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'
-                if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected_files == 0):
+    st.html("""<style>
+    div.st-key-btn_sync_selected button {
+        min-height: 48px !important;
+        max-height: 48px !important;
+        height: 48px !important;
+    }
+    div.st-key-btn_sync_back button {
+        min-height: 48px !important;
+        max-height: 48px !important;
+        height: 48px !important;
+    }
+    </style>""")
+
+    col_back, col_sync, _ = st.columns([1, 1.2, 5])
+    with col_sync:
+        with st.container(key="btn_sync_selected"):
+            sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'
+            
+            if total_active_files == 0:
+                _sync_help = "All files are currently ignored. Restore files in the Ignored Files section above to enable syncing."
+            elif total_selected_files == 0:
+                _sync_help = "No files selected. Please select at least one file to sync, or press Back to return."
+            else:
+                _sync_help = None
+                
+            if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected_files == 0, help=_sync_help):
                     # Collect selections
                     sync_selections = []
                     for idx, res_data in enumerate(all_results):
@@ -1522,9 +1564,10 @@ def show_analysis_review(on_confirm_sync):
                     on_confirm_sync(sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
 
         with col_back:
-            if st.button('Back', use_container_width=True):
-                cleanup_sync_state()
-                st.rerun()
+            with st.container(key="btn_sync_back"):
+                if st.button('Back', use_container_width=True):
+                    cleanup_sync_state()
+                    st.rerun()
 
 
 def inject_dynamic_sync_review_css():
@@ -1624,6 +1667,31 @@ def inject_dynamic_sync_review_css():
         color: #6b6b6b !important;
         box-shadow: none !important;
         border: 1px solid #4a4a4a !important;
+    }
+    /* Sweep and Restore buttons (Neutral, no blue tint) */
+    div[class*="st-key-sweep_"] button,
+    div[class*="st-key-restore_all_"] button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #e5e7eb !important;
+        transition: all 0.2s ease !important;
+    }
+    div[class*="st-key-sweep_"] button:hover:not(:disabled),
+    div[class*="st-key-restore_all_"] button:hover:not(:disabled) {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+    }
+    div[class*="st-key-sweep_"] button:active:not(:disabled),
+    div[class*="st-key-restore_all_"] button:active:not(:disabled) {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+    div[class*="st-key-sweep_"] button:disabled,
+    div[class*="st-key-restore_all_"] button:disabled {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
     }
     """)
 

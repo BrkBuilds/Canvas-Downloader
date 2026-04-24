@@ -584,7 +584,7 @@ class SyncManager:
                 check_path = self.local_path / entry.get('local_path', '')
                 
                 # If it was previously downloaded but is physically missing now:
-                if not check_path.exists() and entry.get('downloaded_at'):
+                if not check_path.exists() and entry.get('downloaded_at') and not entry.get('is_ignored', False):
                     # URL Compiler Bypass (Phase 1)
                     if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
                         pass  # Treat as up-to-date by silently skipping the deletion flag
@@ -663,35 +663,55 @@ class SyncManager:
                 sync_info = self._dict_to_sync_info(file_id, entry, c_file)
                 sync_info.target_local_path = calc_path
                 
+                is_newer_on_canvas = self._is_canvas_newer(c_file, entry)
+                
+                # Pre-calculate intrinsic state for UI routing (restoring ignored files)
+                _origin_category = 'uptodate_files'
+                _original_item = (c_file, sync_info)
+                
+                if not entry.get('downloaded_at') and not entry.get('canvas_updated_at'):
+                    _origin_category = 'new_files'
+                    _original_item = c_file
+                elif is_newer_on_canvas:
+                    _origin_category = 'updated_files'
+                    _original_item = (c_file, sync_info)
+                else:
+                    if local_path.exists():
+                        _origin_category = 'uptodate_files'
+                        _original_item = (c_file, sync_info)
+                    else:
+                        _calc_path_p = Path(calc_path)
+                        if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
+                            _origin_category = 'uptodate_files'
+                            _original_item = (c_file, sync_info)
+                        elif convert_zip_enabled and _is_archive_path(calc_path):
+                            _origin_category = 'uptodate_files'
+                            _original_item = (c_file, sync_info)
+                        else:
+                            if entry.get('downloaded_at'):
+                                _origin_category = 'locally_deleted_files'
+                                _original_item = sync_info
+                            else:
+                                _origin_category = 'missing_files'
+                                _original_item = sync_info
+                
                 if entry.get('is_ignored', False):
+                    sync_info.origin_category = _origin_category
+                    sync_info.original_item = _original_item
                     result.ignored_files.append(sync_info)
                     continue
-                
-                is_newer_on_canvas = self._is_canvas_newer(c_file, entry)
                 
                 if is_newer_on_canvas:
                     # 2. Teacher updated it
                     result.updated_files.append((c_file, sync_info))
                 else:
                     # 3/4. Teacher did not update it. Trust the student.
-                    if local_path.exists():
+                    if _origin_category == 'uptodate_files':
                         result.uptodate_files.append((c_file, sync_info))
-                    else:
-                        # URL Compiler Bypass (Phase 2)
-                        _calc_path_p = Path(calc_path)
-                        if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
-                            result.uptodate_files.append((c_file, sync_info))
-                        # Archive Extraction Bypass (Phase 2)
-                        elif convert_zip_enabled and _is_archive_path(calc_path):
-                            result.uptodate_files.append((c_file, sync_info))
-                        else:
-                            # Missing locally = Student deleted it
-                            if entry.get('downloaded_at'):
-                                # It was previously downloaded, so it's a student deletion
-                                raw_locally_deleted.append(sync_info)
-                            else:
-                                # It was never downloaded (maybe sync crashed), so standard missing
-                                raw_missing_infos.append(sync_info)
+                    elif _origin_category == 'locally_deleted_files':
+                        raw_locally_deleted.append(sync_info)
+                    elif _origin_category == 'missing_files':
+                        raw_missing_infos.append(sync_info)
                         
         # 5. Check deletions (in manifest but not in canvas)
         for file_id, entry in files_section.items():
@@ -1421,4 +1441,4 @@ def format_file_size(size_bytes: int) -> str:
     elif size_bytes < 1024 * 1024 * 1024:
         return f"{size_bytes / (1024 * 1024):.1f} MB"
     else:
-        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+        return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"

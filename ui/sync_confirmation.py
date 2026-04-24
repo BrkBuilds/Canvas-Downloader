@@ -12,19 +12,21 @@ Contains:
 from __future__ import annotations
 
 import json
+import os
 import urllib.parse
 import streamlit as st
 
 import theme
-from sync_manager import SyncManager, get_file_icon
+from sync_manager import SyncManager
 from ui_helpers import (
     friendly_course_name,
     format_file_size,
 )
+from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT
 
 # ---- Confirmation dialog ----
 
-def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb, total_mb, target_folder, total_bytes):
+def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb, _total_mb, _target_folder, total_bytes):
     # --- Data Collection for Dropdowns ---
     file_items = []
     folder_set = set()
@@ -40,20 +42,29 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             unquoted = urllib.parse.unquote_plus(name)
             return unquoted
 
-        # Collect files from all categories with emojis and friendly names
-        # Use structured spans for hanging indent
+        def _file_li(raw_name, display_name, size_bytes):
+            ext = os.path.splitext(raw_name)[1].lower().lstrip('.')
+            fname = os.path.splitext(get_friendly_name(display_name or raw_name))[0]
+            icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+            ext_badge = (
+                f"<span class='li-ext-badge'>{ext.upper()}</span>"
+            ) if ext else ""
+            size_badge = f"<span class='li-size-badge'>{format_file_size(size_bytes)}</span>"
+            return (
+                f"<li>"
+                f'<img class="li-img" src="{icon_url}" alt="{ext}"/>'
+                f"<span class='li-text'>{fname}</span>"
+                f"{ext_badge}"
+                f"{size_badge}"
+                f"</li>"
+            )
+
         for f in s['new']:
-            icon = get_file_icon(f.filename)
-            fname = get_friendly_name(f.display_name or f.filename)
-            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
+            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
         for f in s['updates']:
-            icon = get_file_icon(f.filename)
-            fname = get_friendly_name(f.display_name or f.filename)
-            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.size)})</span></span></li>")
+            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
         for f in s['redownload']:
-            icon = get_file_icon(f.canvas_filename)
-            fname = get_friendly_name(f.canvas_filename)
-            file_items.append(f"<li><span class='li-icon'>{icon}</span><span class='li-text'>{fname} <span style='color:rgba(255,255,255,0.4);'>({format_file_size(f.original_size)})</span></span></li>")
+            file_items.append(_file_li(f.canvas_filename, f.canvas_filename, f.original_size))
     
     # Tight HTML structure - NO whitespace
     file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted(file_items))}</ul>"
@@ -172,7 +183,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'max-height: 150px;'
         f'overflow-y: auto;'
         f'font-size: 0.8rem;'
-        f'color: rgba(255, 255, 255, 0.6);'
+        f'color: #e2e8f0;'
         f'border: 1px solid rgba(255, 255, 255, 0.03);'
         f'display: block;'
         f'}}'
@@ -230,14 +241,34 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'min-height: 0 !important;'
         f'}}'
         f'.dropdown-list ul li:last-child {{ margin-bottom: 0 !important; }}'
-        f'.li-icon {{'
-        f'width: 24px !important;'
+        f'.li-img {{'
+        f'width: 16px !important;'
+        f'height: 16px !important;'
         f'flex-shrink: 0 !important;'
-        f'display: inline-block !important;'
+        f'margin-right: 2px !important;'
         f'}}'
         f'.li-text {{'
-        f'flex: 1 !important;'
         f'word-break: break-word !important;'
+        f'color: #f1f5f9 !important;'
+        f'}}'
+        f'.li-ext-badge {{'
+        f'font-size: 0.65rem !important;'
+        f'font-weight: 700 !important;'
+        f'letter-spacing: 0.4px !important;'
+        f'color: #bababa !important;'
+        f'background: rgba(255,255,255,0.08) !important;'
+        f'border-radius: 3px !important;'
+        f'padding: 1px 5px !important;'
+        f'white-space: nowrap !important;'
+        f'flex-shrink: 0 !important;'
+        f'margin-left: 3px !important;'
+        f'}}'
+        f'.li-size-badge {{'
+        f'font-size: 0.72rem !important;'
+        f'color: rgba(255,255,255,0.4) !important;'
+        f'white-space: nowrap !important;'
+        f'flex-shrink: 0 !important;'
+        f'margin-left: 3px !important;'
         f'}}'
         f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
         f'</style>'
