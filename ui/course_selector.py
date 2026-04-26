@@ -22,6 +22,7 @@ from ui_helpers import (
     render_download_wizard,
     get_base64_image,
 )
+from ui_shared import render_help_card
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -551,7 +552,101 @@ def render_course_selector(fetch_courses_fn):
     """
     inject_course_selector_css()
     render_download_wizard(st, 1)
-    st.markdown('<h2 class="step-header" style="margin-bottom: 10px !important;">Select Courses</h2>', unsafe_allow_html=True)
+
+    # Help Card Content
+    _cs_help_title = "How Course Selection Works"
+    _cs_help_text = (
+        "<b>Select the courses you want to download, then press Continue.</b>"
+        "<br><br>"
+        "<b>📦 Batch Downloading</b><br>"
+        "You can download as many courses as you want at once. The application will process them sequentially.<br> "
+        "All selected courses will be downloaded as separate folders (e.g. 📁 <em>Programming 101</em>, 📁 <em>History 201</em>)."
+        "<br><br>"
+        "<b>⭐ Favorites vs All Courses</b><br>"
+        "The toggle at the top lets you filter between your favorited courses and your full course list.<br> "
+        "Your favorited courses can be managed directly in Canvas.<br><br>"
+        "<b>⚙️ Download Settings & Course Selection</b><br>"
+        "You will configure your download settings in the next step.<br>"
+        "<div style='background-color: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; margin-top: 8px; border-radius: 0px 4px 4px 0px;'>"
+        "<span style='color: #fbd38d; font-weight: 600;'>⚠️ Notice:</span> The download settings you choose in the next page, will apply to <b>ALL</b> courses selected here. <br>"
+        "For example, if you enable AI Optimization, it will be applied to the entire batch. <br>"
+        "If you need different settings for different courses, you must perform separate download runs."
+        "</div>"
+        "<hr>"
+        "<b>❓ Frequently Asked Questions</b><br>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What happens if a folder with the course name already exists on my computer?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db;'>"
+        "The application will safely <b>merge</b> the new files into your existing folder (e.g. a previously downloaded version of the same course). "
+        "It will not delete your files - only add whats missing. If a Canvas file has been updated, it will overwrite the old version, "
+        "but everything else remains untouched."
+        "</div>"
+        "</details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Can I download all my Canvas courses at once?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db;'>"
+        "Yes! Just click the <b>Select All</b> button at the bottom of the course list. "
+        "Note that downloading dozens of courses simultaneously might take a while depending on your internet connection."
+        "</div>"
+        "</details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Does this download my Assignments and Quizzes?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db;'>"
+        "By default, we only download <b>Files uploaded by your teacher</b>, however, in Step 2, you can enable <b>Canvas Content</b>, "
+        "to automatically download your course Assignments, Quizzes, Discussions, etc. as readable documents into your course folder."
+        "</div>"
+        "</details>"
+    )
+
+    # Snug Header Hack — H2 + Help button on one flex row
+    st.html("""
+        <style>
+        div.st-key-cs_title_help_row [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 0px !important;
+            justify-content: flex-start !important;
+        }
+        div.st-key-cs_title_help_row [data-testid="column"],
+        div.st-key-cs_title_help_row [data-testid="stColumn"] {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            min-width: 0px !important;
+            padding: 0 !important;
+        }
+        div.st-key-cs_title_help_row h2 {
+            margin-right: 0 !important;
+            padding-right: 0 !important;
+        }
+        div.st-key-cs_title_help_row div[class*="st-key-course_selector_explainer_help_btn"] {
+            margin-bottom: -20px !important;
+            margin-top: 10px !important;
+            margin-left: 0 !important;
+        }
+        </style>
+    """)
+    with st.container(key="cs_title_help_row"):
+        _c1, _c2 = st.columns([1, 10])
+        with _c1:
+            st.markdown("<h2 style='margin: 0; white-space: nowrap;'>Select Courses</h2>", unsafe_allow_html=True)
+        with _c2:
+            render_help_card(
+                key_prefix="course_selector",
+                title=_cs_help_title,
+                text_html=_cs_help_text,
+                icon="💡",
+                mode="button"
+            )
+
+    # Help Card Expansion (renders below the header row if open)
+    render_help_card(
+        key_prefix="course_selector",
+        title=_cs_help_title,
+        text_html=_cs_help_text,
+        icon="💡",
+        mode="card"
+    )
 
     # --- Select All / Clear button icons (download-mode specific) ---
     b64_select_all = get_base64_image("assets/icon_select_all.png")
