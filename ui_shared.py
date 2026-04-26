@@ -665,7 +665,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     c_core = "#3fd9ff"
     core_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
-    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Core Settings</div>
+    <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Core Settings</div>
     <div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
     <span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>{_filter_disp}</span>
 </div>
@@ -685,7 +685,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         
     content_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
-    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Canvas Content</div>
+    <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Canvas Content</div>
     {sec_badges}
 </div>
 """
@@ -710,7 +710,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         
     conv_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
-    <div style='width: 100%; font-size:0.8rem; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>AI Optimization & Conversions</div>
+    <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>AI Optimization & Conversions</div>
     {conv_badges}
 </div>
 """

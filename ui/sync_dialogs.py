@@ -742,25 +742,6 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         </style>""")
         # (3) CSS for cancel button red styling (Moved to render_sync_step1 for global scope/no flash)
 
-        # Two auto-width columns + spacer, vertically centered
-        col_folder_info, col_change_btn, col_spacer = st.columns(
-            [1, 1, 1], vertical_alignment="center", gap="small"
-        )
-
-        with col_folder_info:
-            st.markdown(
-                f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{'Added Folder:'}</span>'  # audit-ignore: folder_name is a local filesystem path
-                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
-                unsafe_allow_html=True,
-            )
-        with col_change_btn:
-            if st.button('Change Folder', key="btn_change_folder"):
-                _select_sync_folder_lazy()
-                st.rerun()
-        with col_spacer:
-            st.empty()
-
         # --- Course Selection (Pop-up Dialog) ---
         
         # Determine current display
@@ -792,7 +773,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_c_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{'Course: '}</span>'
+                f'{"Course: "}</span>'
                 f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{current_disp}</span>',
                 unsafe_allow_html=True
             )
@@ -803,6 +784,25 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 select_course_dialog_inner(courses, selected_course_id)
         
         with col_c_spacer:
+            st.empty()
+
+        # Two auto-width columns + spacer, vertically centered
+        col_folder_info, col_change_btn, col_spacer = st.columns(
+            [1, 1, 1], vertical_alignment="center", gap="small"
+        )
+
+        with col_folder_info:
+            st.markdown(
+                f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                f'{"Added Folder:"}</span>'  # audit-ignore: folder_name is a local filesystem path
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
+                unsafe_allow_html=True,
+            )
+        with col_change_btn:
+            if st.button('Change Folder', key="btn_change_folder"):
+                _select_sync_folder_lazy()
+                st.rerun()
+        with col_spacer:
             st.empty()
 
         # Check for return value from dialog

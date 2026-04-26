@@ -129,8 +129,7 @@ div[data-testid="stDialog"] div.st-key-btn_hub_close button:hover {
    LAYER 1: GROUP CARD BUTTONS HIERARCHY
    ========================================= */
 
-/* 1. Default state for "Add to Sync List" & "Edit Group" (Light Grey) */
-div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button,
+/* 1. Default state for "Edit Group" (Light Grey) */
 div[data-testid="stDialog"] div[class*="st-key-hub_edit_"] button {
     background-color: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -144,12 +143,22 @@ div[data-testid="stDialog"] div[class*="st-key-hub_edit_"] button:hover {
     transition: all 0.2s ease-in-out;
 }
 
-/* 3. Hover state for "Add to Sync List" (Indigo Theme) */
-div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
-    background-color: rgba(95, 100, 200, 0.4) !important;
-    border-color: rgba(95, 100, 200, 1) !important;
+/* 3. Solid Indigo state for "Add to Sync List" */
+div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button {
+    background-color: #5f64c8 !important;
+    border: 1px solid transparent !important;
     color: #ffffff !important;
-    transition: all 0.2s ease-in-out;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border 0.2s ease-in-out !important;
+}
+
+/* 4. Hover state for "Add to Sync List" (Indigo Glow) */
+div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
+    background-color: #6e73d7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.275) !important;
+    box-shadow: 0 4px 15px rgba(95, 100, 200, 0.3),
+                inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
 }
 
 /* 4. Default state for "Delete" (Dark Grey / Recessed) */
