@@ -330,8 +330,28 @@ def show_analysis_review(on_confirm_sync):
         from ui_shared import render_help_card
         render_help_card(
             key_prefix="sync_review",
-            title="How to review your sync",
-            text_html="Keep the files you want to download checked. If there are files you never want to sync (like large videos or old readings), click their ignore icon to hide them permanently. Files you've edited locally are unchecked by default so your notes are never overwritten."
+            title="How to Review Your Sync",
+            text_html=(
+                "This screen shows every file that has changed on Canvas since your last sync. "
+                "Files are sorted into categories:"
+                "<br><br>"
+                "<b>📥 New Files</b> — Brand new uploads from your teacher. "
+                "Checked by default — uncheck any you don't need."
+                "<br><br>"
+                "<b>🔄 Updates Available</b> — Your local copy is outdated. "
+                "The new version will replace it in place."
+                "<br><br>"
+                "<b>✏️ Updates (You've Edited)</b> — You've annotated or modified these locally. "
+                "Unchecked by default to protect your work. If you sync them, the new Canvas version "
+                "is saved alongside as <code>_NewVersion</code> — your edits are never touched."
+                "<br><br>"
+                "<b>🗑️ Locally Deleted</b> — Files you deleted from your folder. "
+                "Unchecked by default since your deletion was probably intentional. Re-check to re-download."
+                "<br><br>"
+                "<b>How Ignore works:</b> Click the 👁️ icon on any file to move it to the Ignored Files section. "
+                "Ignored files are permanently hidden from future syncs. You can restore them anytime from the "
+                "Ignored Files expander or from the Sync Setup screen."
+            )
         )
 
         # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
