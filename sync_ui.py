@@ -393,12 +393,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # Help Card Content
     _sync_help_title = "How Sync Mode Works"
     _slbl = "font-size: 1rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin: 14px 0 8px 0; color: rgba(255,255,255,0.9);"
-    _step_card_r = "flex: 1; min-width: 0; background: rgba(63,217,255,0.1); border: 1px solid rgba(63,217,255,0.45); border-radius: 14px; padding: 13px 14px;"
-    _step_num_r = "flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; background: rgba(63,217,255,0.22); display: flex; align-items: center; justify-content: center; font-size: 1.32rem; font-weight: 800; color: #fffff; line-height: 1;"
+    _step_card_r = "flex: 1; min-width: 0; border: 1px solid transparent; border-radius: 14px; background: linear-gradient(#132036, #132036) padding-box, linear-gradient(150deg, #3b71b8 0%, #132036 90%) border-box; padding: 13px 14px;"
+    _step_num_r = "flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; background: #1d3354; display: flex; align-items: center; justify-content: center; font-size: 1.32rem; font-weight: 800; color: #ffffff; line-height: 1;"
     _step_inner = "display: flex; align-items: flex-start; gap: 12px;"
-    _step_title = "font-weight: 700; color: #ffffff; font-size: 1.075rem; margin-top: 5px;margin-bottom: 5px;"
+    _step_title = "font-weight: 700; color: #ffffff; font-size: 1.075rem; margin-top: 5px; padding-bottom: 8px; margin-bottom: 8px; background: linear-gradient(to right, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%) left bottom / 100% 1px no-repeat;"
     _step_body = "font-size: 0.83rem; color: rgba(255,255,255,0.88); line-height: 1.55;"
-    _arr_r = "<div style='display:flex;align-items:center;flex-shrink:0;width:44px;align-self:center;margin:0 5px'><div style='flex:1;height:2.5px;background: rgba(255,255,255,0.8);border-radius:2px'></div><div style='width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid rgba(255,255,255,0.8)'></div></div>"
+    _arr_r = "<div style='display:flex;align-items:center;flex-shrink:0;width:44px;align-self:center;margin:0 12px'><div style='flex:1;height:2.5px;background: rgba(255,255,255,0.8);border-radius:2px'></div><div style='width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid rgba(255,255,255,0.8)'></div></div>"
     _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; padding: 11px 12px 10px 12px; display: flex; flex-direction: column;"
     _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
     _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
@@ -474,7 +474,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
         # Quick Sync flow
         f"<div style='{_slbl} margin-top: 0;'>⚡ Quick Sync</div>"
-        "<div style='display: flex; align-items: stretch; margin-bottom: 14px;'>"
+        "<div style='display: flex; align-items: center; margin-bottom: 14px;'>"
         f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
         f"<div style='{_step_title}'>👆 Click Quick Sync</div>"
         f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li>Analysis scans Canvas, compares every file to your local course folder.</li><li><b>Looks for all new or updated files.</b></li></ul></div>"
@@ -492,7 +492,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
         # Analyze, Review & Sync flow
         f"<div style='{_slbl}'>🔍 Analyze, Review &amp; Sync</div>"
-        "<div style='display: flex; align-items: stretch; margin-bottom: 0;'>"
+        "<div style='display: flex; align-items: center; margin-bottom: 0;'>"
         f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
         f"<div style='{_step_title}'>👆 Click Analyze, Review & Sync</div>"
         f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li> Analysis scans Canvas, compares every file to your local course folder.</li><li> <b>Looks for all files with changes, and sorts them into 7 categories.</b></li></ul></div>"
