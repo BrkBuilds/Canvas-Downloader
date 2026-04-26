@@ -26,7 +26,7 @@ from ui_helpers import (
     open_folder,
 )
 from styles import inject_css
-from ui_shared import render_help_card
+
 
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _add_pair_lazy(pair):
@@ -334,9 +334,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 width: auto !important;
                 flex: 0 1 auto !important;
             }}
-            /* Reduce vertical space between Folder row and Course row */
-            div[class*="st-key-hub_inline_edit_row_folder"],
-            div[class*="st-key-hub_inline_edit_row_add_folder"] {{
+            /* Reduce vertical space between Course row and Folder row */
+            div[class*="st-key-hub_inline_edit_row_course"],
+            div[class*="st-key-hub_inline_edit_row_add_course"] {{
                 margin-bottom: -6px !important;
             }}
 
@@ -349,10 +349,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             /* =========================================
                COMPACT PAIR CARDS & ACTION BUTTONS
                ========================================= */
-            /* Shrink the Action Buttons (Open, Edit, Remove) to 32px height */
+            /* Shrink the Action Buttons to 32px height */
             div[class*="st-key-hub_open_"] button,
             div[class*="st-key-hub_editp_"] button,
-            div[class*="st-key-btn_hub_remove_pair_"] button {{
+            div[class*="st-key-btn_hub_remove_pair_"] button,
+            div[class*="st-key-hub_add_"] button,
+            div[class*="st-key-hub_edit_"] button,
+            div[class*="st-key-btn_hub_delete_"] button {{
                 min-height: 32px !important;
                 height: 32px !important;
                 padding-top: 2px !important;
@@ -374,6 +377,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 min-height: 0px !important;
             }}
 
+            /* Adjust configuration expander body padding */
+            div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {{
+                padding-top: 10px !important;
+                padding-bottom: 24px !important;
+            }}
+
             /* Pull the action buttons closer to the text above them */
             div[class*="st-key-hub_pair_card_"] div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {{
                 margin-top: -5px !important;
@@ -382,8 +391,20 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
             /* Fix Group Name Edit Box padding to prevent height jumps */
             div.st-key-hub_edit_group_meta {{
-                padding: 8px 12px !important;
+                padding: 10px 12px !important;
                 margin-bottom: 5px !important;
+                background-color: rgba(255, 255, 255, 0.02) !important;
+            }}
+            /* Style the text input box to be distinguishable */
+            div.st-key-hub_edit_name_input div[data-baseweb="input"] {{
+                background-color: rgba(0, 0, 0, 0.3) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 6px !important;
+                min-height: 48px !important;
+                height: 48px !important;
+            }}
+            div.st-key-hub_edit_name_input div[data-baseweb="input"]:focus-within {{
+                border-color: #4a90e2 !important;
             }}
 
             /* ===== ADD BUTTONS — Base64 Icon via ::before ===== */
@@ -420,26 +441,6 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     )
     
     if layer == 'layer_1':
-        # Layer 1 Help Card
-        render_help_card(
-            key_prefix="hub_overview",
-            title="Managing Your Saved Groups & Pairs",
-            text_html=(
-                "<b>Groups</b> contain multiple course/folder pairs. Use them when you want to load an "
-                "entire semester's worth of courses into the sync list in one click."
-                "<br><br>"
-                "<b>Pairs</b> are single course/folder links. Save a pair when you have a specific course "
-                "you frequently sync on its own."
-                "<br><br>"
-                "<b>Add to Sync List</b> loads the group/pair into your active sync queue. Duplicates are "
-                "automatically skipped."
-                "<br><br>"
-                "<b>⚠️ Missing Folders</b> — If a saved folder path no longer exists (e.g. you moved it), "
-                "you'll enter Rescue Mode where you can pick new folder locations before adding."
-            ),
-            icon="💡"
-        )
-
         groups = mgr.load_groups()
         if not groups:
             st.info("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
@@ -503,7 +504,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # Title: Base64 Pairs icon with same font size/weight as group expander summaries
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2; margin-bottom: 8px;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;'>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Pair</div>
+                                </div>
                                 <div class='pair-course-subtitle'>Course: {display_name}</div>
                             </div>
                         """, unsafe_allow_html=True)
@@ -568,7 +572,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # 1. Custom Title HTML (Fixed top margin to align centrally, Base64 Group icon)
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Group</div>
+                                </div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -674,24 +681,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         st.button("← Back to overview", key="btn_back_to_groups", type="tertiary",
                   on_click=change_hub_layer, kwargs={'target_layer': 'layer_1'})
 
-        # Layer 2 Help Card
-        render_help_card(
-            key_prefix="hub_details",
-            title="Editing a Group or Pair",
-            text_html=(
-                "<b>Rename</b> — Click the ✏️ Edit button next to the group/pair name to rename it."
-                "<br><br>"
-                "<b>Edit a Course Pair</b> — Click ✏️ Edit on any pair card to change its local folder "
-                "or linked Canvas course. Your changes are saved immediately."
-                "<br><br>"
-                "<b>Add a New Course</b> — Click the Add button at the bottom to append a new "
-                "course/folder pair to this group."
-                "<br><br>"
-                "<b>Remove a Course</b> — Click 🗑️ Remove to delete a single pair from the group. "
-                "This does not delete any files on your computer."
-            ),
-            icon="💡"
-        )
+
 
         # Detect single pair for conditional UI
         is_sp = group.get('is_single_pair', False)
@@ -730,6 +720,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # Spacing before cards
         else:
             # EDIT MODE (Ultra-compact to prevent dialog height jump)
+            name_label = "Editing pair title:" if is_sp else "Editing group title:"
+            st.markdown(f"""
+                <div style='margin-bottom: 2px; margin-top: -20px;'>
+                    <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>{name_label}</span>
+                </div>
+            """, unsafe_allow_html=True)
             with st.container(border=True, key="hub_edit_group_meta"):
                 col_name, col_cancel, col_save = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
@@ -759,22 +755,6 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with st.container(border=True, key=f"hub_compact_edit_form_{p_idx}"):
                         st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>✏️ Editing Pair</h3>", unsafe_allow_html=True)
 
-                        # --- Folder row ---
-                        temp_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
-                        folder_display = Path(temp_folder).name if temp_folder else 'No folder selected'
-                        with st.container(key=f"hub_inline_edit_row_folder_{p_idx}"):
-                            col_f_info, col_f_btn = st.columns(2, vertical_alignment="center", gap="small")
-                            with col_f_info:
-                                st.markdown(
-                                    f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                                    f'Folder:</span>'  # audit-ignore: folder_display is a local path
-                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
-                                    unsafe_allow_html=True,
-                                )
-                            with col_f_btn:
-                                st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
-                                          on_click=hub_pick_folder_cb)
-
                         # --- Course row ---
                         temp_course_id = st.session_state.get('hub_edit_temp_course_id')
                         temp_course_name = st.session_state.get('hub_edit_temp_course_name', '')
@@ -795,6 +775,22 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 st.button("Change Course", key=f"btn_hub_compact_change_course_{p_idx}",
                                           on_click=change_hub_layer,
                                           kwargs={'target_layer': 'layer_course_selector'})
+
+                        # --- Folder row ---
+                        temp_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
+                        folder_display = Path(temp_folder).name if temp_folder else 'No folder selected'
+                        with st.container(key=f"hub_inline_edit_row_folder_{p_idx}"):
+                            col_f_info, col_f_btn = st.columns(2, vertical_alignment="center", gap="small")
+                            with col_f_info:
+                                st.markdown(
+                                    f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
+                                    f'Folder:</span>'  # audit-ignore: folder_display is a local path
+                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
+                                    unsafe_allow_html=True,
+                                )
+                            with col_f_btn:
+                                st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
+                                          on_click=hub_pick_folder_cb)
 
                         # --- Save / Cancel ---
                         col_cancel, col_save, _ = st.columns([1, 1, 3])
@@ -1176,8 +1172,6 @@ def render_hub_config(pair: dict):
             normalized_settings[key] = value
             
     st.markdown(render_config_summary_badges(normalized_settings, show_path=False), unsafe_allow_html=True)
-
-    st.markdown("<div style='margin-bottom: -10px;'></div>", unsafe_allow_html=True)
 
 def reset_hub_state():
     """Wipes all Hub SPA state to guarantee a fresh Layer 1 start."""
