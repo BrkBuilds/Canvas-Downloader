@@ -345,9 +345,9 @@ div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button:hover {
 
 /* Elevate Layer 1 Group Cards */
 div[class*="st-key-hub_group_item_"] {
-    background-color: rgba(255, 230, 150, 0.1) !important;
+    background-color: rgb(36, 39, 46) !important;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
-    border: 1px solid rgba(255, 230, 150, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     margin-bottom: 15px !important;
     border-radius: 8px !important;
 }
@@ -473,7 +473,7 @@ div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
    LAYER 1: PAIR CARDS (Single Pairs)
    ========================================= */
 div[class*="st-key-hub_pair_item_"] {
-    background-color: rgba(180, 200, 220, 0.08) !important;
+    background-color: rgb(21, 25, 29) !important;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25) !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
     margin-bottom: -2px !important;

@@ -725,8 +725,8 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 
 def render_pending_folder_ui(courses, course_names, course_options, ):
     """Inline UI shown while adding/editing a sync-pair — unified card."""
-    pending_folder = st.session_state['pending_sync_folder']
-    folder_name = Path(pending_folder).name
+    pending_folder = st.session_state.get('pending_sync_folder', "")
+    folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder&nbsp;&nbsp; ➝"
     editing_idx = st.session_state.get('editing_pair_idx')
 
     # (1) Everything inside one bordered container
@@ -745,7 +745,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # --- Course Selection (Pop-up Dialog) ---
         
         # Determine current display
-        current_disp = 'Select Canvas Course' # Default "Select Canvas Course"
+        current_disp = 'Select Canvas Course&nbsp;&nbsp; ➝' # Default "Select Canvas Course"
         
         # Get current selected course ID from session state (for editing or new)
         selected_course_id = st.session_state.get('sync_selected_course_id')
@@ -794,12 +794,13 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_folder_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
-                f'{"Added Folder:"}</span>'  # audit-ignore: folder_name is a local filesystem path
-                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_name}</span>',
+                f'{"Added Folder:" if pending_folder else "Folder:"}</span>'  # audit-ignore: folder_name is a local filesystem path
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{"📁 " if pending_folder else ""}{folder_name}</span>',
                 unsafe_allow_html=True,
             )
         with col_change_btn:
-            if st.button('Change Folder', key="btn_change_folder"):
+            btn_label = 'Change Folder' if pending_folder else 'Select Folder'
+            if st.button(btn_label, key="btn_change_folder"):
                 _select_sync_folder_lazy()
                 st.rerun()
         with col_spacer:
@@ -835,20 +836,18 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
 
         # --- Warnings ---
         # Mismatch warning
-        if selected_course_name:
+        if selected_course_name and pending_folder:
             # Determine if this is the original course selection
             is_same_as_original = False
             if editing_idx is not None and 0 <= editing_idx < len(st.session_state.get('sync_pairs', [])):
                  original_pair = st.session_state['sync_pairs'][editing_idx]
-                 if original_pair.get('course_id') == selected_course_id:
-                     is_same_as_original = True
-                 elif original_pair.get('course_name') == selected_course_name:
+                 if original_pair.get('course_id') == selected_course_id and original_pair.get('local_folder') == pending_folder:
                      is_same_as_original = True
             
             folder_lower = folder_name.lower()
             course_lower = selected_course_name.lower()
-            course_words = [w for w in course_lower.replace('(', ' ').replace(')', ' ').split() if len(w) > 3]
-            folder_words = [w for w in folder_lower.replace('(', ' ').replace(')', ' ').split() if len(w) > 3]
+            course_words = [w for w in course_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
+            folder_words = [w for w in folder_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
             has_match = (
                 any(cw in folder_lower for cw in course_words)
                 or any(fw in course_lower for fw in folder_words)
@@ -889,9 +888,48 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.rerun()
 
         with col_add:
+            is_folder_selected = bool(pending_folder)
+            is_course_selected = bool(selected_course_id)
+            
+            if is_folder_selected and is_course_selected:
+                btn_disabled = False
+                btn_tooltip = None
+            elif is_folder_selected and not is_course_selected:
+                btn_disabled = True
+                btn_tooltip = "Select a course to continue."
+            elif not is_folder_selected and is_course_selected:
+                btn_disabled = True
+                btn_tooltip = "Select a folder to continue."
+            else:
+                btn_disabled = True
+                btn_tooltip = "Select a Canvas course, and its corresponding course folder on your pc to continue."
+
             if st.button('Confirm and Add', key="confirm_pair",
-                         type="primary", use_container_width=True):
-                if selected_course_name and selected_course_name != course_options[0]:
+                         type="primary", use_container_width=True,
+                         disabled=btn_disabled, help=btn_tooltip):
+                if not pending_folder:
+                    error_msg = 'Please select a folder.'
+                    error_container.markdown(
+                        f"""
+                        <div style="
+                            padding: 8px 12px;
+                            margin-bottom: 10px;
+                            background-color: rgba(255, 75, 75, 0.15);
+                            color: #ff4b4b;
+                            border: 1px solid rgba(255, 75, 75, 0.2);
+                            border-radius: 4px;
+                            font-size: 0.9em;
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                            ⚠️ {error_msg}
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                elif selected_course_name and selected_course_name != course_options[0]:
                     selected_course_id = None
                     for cid, cname in course_names.items():
                         if cname == selected_course_name:
