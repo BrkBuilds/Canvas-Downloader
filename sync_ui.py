@@ -1010,7 +1010,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
             for idx, pair in enumerate(sync_pairs):
                 # --- If this pair is being edited, render the edit form inline ---
-                if editing_idx is not None and editing_idx == idx and st.session_state.get('pending_sync_folder'):
+                if editing_idx is not None and editing_idx == idx and st.session_state.get('pending_sync_folder') is not None:
                     _render_pending_folder_ui(courses, course_names, course_options)
                     # Removed explicit spacer to match list gap via CSS margin-bottom on container
                     continue
@@ -1091,9 +1091,17 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 
             if pairs_to_remove:
                 signatures = [{'course_id': sync_pairs[i].get('course_id'), 'local_folder': sync_pairs[i].get('local_folder')} for i in pairs_to_remove]
+                
+                # Build toast message before modifying the sync_pairs array
+                if len(pairs_to_remove) == 1:
+                    display_name = friendly_course_name(sync_pairs[pairs_to_remove[0]].get('course_name', 'Course'))
+                    st.session_state['pending_toast'] = f"🗑️ Removed '{display_name}' from Sync List"
+                else:
+                    st.session_state['pending_toast'] = f"🗑️ Removed {len(pairs_to_remove)} courses from Sync List"
+                    
                 _remove_pairs_by_signature(signatures)
                 st.rerun()
-            if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
+            if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
                 # (9) "Add Course folder" + "Save List as Group" — full width
@@ -1122,7 +1130,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     </style>""", unsafe_allow_html=True)
                     
                     if st.button('Add Course', key="btn_add_folder", use_container_width=True):
-                        _select_sync_folder()
+                        st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
                         st.rerun()
@@ -1171,7 +1179,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
         else:
             # EMPTY STATE Logic (if not sync_pairs)
-            if st.session_state.get('pending_sync_folder') and st.session_state.get('editing_pair_idx') is None:
+            if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
                 col_add, _ = st.columns([2.25, 7.75]) 
@@ -1199,7 +1207,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     </style>""", unsafe_allow_html=True)
     
                     if st.button('Add Course', key="btn_add_folder_empty", use_container_width=True):
-                        _select_sync_folder()
+                        st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
                         st.rerun()
