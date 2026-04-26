@@ -32,6 +32,7 @@ from core.state_registry import (
     NOTEBOOK_SUB_KEYS,
     TOTAL_SECONDARY_SUBS,
 )
+from ui_shared import render_help_card
 
 
 def _resolve_path(path):
@@ -83,8 +84,256 @@ def render_download_settings(fetch_courses_fn):
 
     # Step 2 Header with Preset Buttons
     _hdr_left, _hdr_right = st.columns([0.6, 0.4])
+    
+    # Define Help Content
+    help_title = "Download Settings Guide"
+    # Inner setting buttons: grey bg, white text, themed border; answer divs: dark bg, white text
+    _b1 = "padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(63,217,255,0.4); border-radius: 5px; user-select: none; list-style: none;"
+    _b2 = "padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(104,212,163,0.42); border-radius: 5px; user-select: none; list-style: none;"
+    _b3 = "padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(249,115,22,0.42); border-radius: 5px; user-select: none; list-style: none;"
+    _ans1 = "padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(63,217,255,0.5); margin-top: 1px; line-height: 1.6; cursor: default;"
+    _ans2 = "padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(104,212,163,0.5); margin-top: 1px; line-height: 1.6; cursor: default;"
+    _ans3 = "padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(249,115,22,0.5); margin-top: 1px; line-height: 1.6; cursor: default;"
+    _row = "margin: 5px 0; border-radius: 5px; overflow: hidden;"
+    _lbl = "font-size: 0.73rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin: 13px 0 5px 0; color: rgba(255,255,255,0.9);"
+    # Shared badge styles (inline, placed after title text in HTML)
+    _tag1 = "color: #3fd9ff; background: rgba(63,217,255,0.15); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;"
+    _tag2 = "color: #68d4a3; background: rgba(104,212,163,0.18); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;"
+    _tag3 = "color: #f97316; background: rgba(249,115,22,0.18); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;"
+    help_text = (
+        # ── Intro ─────────────────────────────────────────────────────────────
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); margin-bottom: 10px;'>"
+        "<b style='color: #e2e8f0;'>Your task on this page:</b> Configure the three cards below, then scroll down and click <b>Confirm and Download</b>."
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(63,217,255,0.05); border-radius: 6px; border-left: 3px solid rgba(63,217,255,0.45);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #3fd9ff; background: rgba(63,217,255,0.15); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Card 1</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>File Filter &amp; Folder Structure</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Always visible. Choose which files to download and how to organize them into folders. This is the only required card.</div>"
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(104,212,163,0.05); border-radius: 6px; border-left: 3px solid rgba(104,212,163,0.45);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #68d4a3; background: rgba(104,212,163,0.18); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Card 2</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>Canvas Content</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Optional. Download extra course information that only exists as web pages in Canvas - assignment instructions, your syllabus, announcements, quiz questions, and graded feedback.</div>"
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(249,115,22,0.05); border-radius: 6px; border-left: 3px solid rgba(249,115,22,0.45);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #f97316; background: rgba(249,115,22,0.18); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Card 3</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>AI Optimization</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Optional. After downloading, automatically convert your files into formats that work best with AI study tools like NotebookLM, ChatGPT, or Claude.</div>"
+        "</div>"
+        "<hr>"
+
+        # ── Section title ─────────────────────────────────────────────────────
+        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>&#9881;&#65039; Settings Explained in Detail</div>"
+
+        # ── Card 1 ────────────────────────────────────────────────────────────
+        "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(255,255,255,0.13); border-radius: 7px; overflow: hidden;'>"
+        f"<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>File Filter &amp; Folder Structure</span><span style='{_tag1}'>Card 1</span></summary>"
+        "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
+        "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>Click any setting below to read what it does.</p>"
+        f"<div style='{_lbl}'>Which files to download</div>"
+        f"<details style='{_row}'><summary style='{_b1}'>All Files</summary>"
+        f"<div style='{_ans1}'>Downloads every file your professor uploaded: PDFs, PowerPoint slides, Word documents, images, videos, spreadsheets, zip archives, and more. Best if you want a complete offline copy of your course.</div></details>"
+        f"<details style='{_row}'><summary style='{_b1}'>Presentations &amp; PDFs</summary>"
+        f"<div style='{_ans1}'>Downloads only lecture slides (PowerPoint files) and PDF documents. Use this if you want to skip large videos or data sets and just get the study materials.</div></details>"
+        f"<div style='{_lbl}'>Folder structure</div>"
+        f"<details style='{_row}'><summary style='{_b1}'>With Subfolders</summary>"
+        f"<div style='{_ans1}'>Mirrors the Canvas module layout on your computer. Each module becomes its own subfolder - for example: <em>CHEM101 / Week 3 - Thermodynamics / lecture.pdf</em>. Recommended for courses with many files across multiple topics.</div></details>"
+        f"<details style='{_row}'><summary style='{_b1}'>All in One Folder</summary>"
+        f"<div style='{_ans1}'>Puts every file directly in the course folder with no subfolders. Easier to search everything at once, but can get cluttered for larger courses.</div></details>"
+        "</div></details>"
+
+        # ── Card 2 ────────────────────────────────────────────────────────────
+        "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(255,255,255,0.13); border-radius: 7px; overflow: hidden;'>"
+        f"<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>Canvas Content</span><span style='{_tag2}'>Card 2</span></summary>"
+        "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
+        "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>These exist only as web pages in Canvas - the app converts them into local files you can open and search. Click any item to read more.</p>"
+        f"<details style='{_row}'><summary style='{_b2}'>Assignments</summary>"
+        f"<div style='{_ans2}'>Saves each assignment's full instructions, due date, and attached rubric as a file you can open in any browser. Useful for reading briefs offline or uploading to an AI tool.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Syllabus</summary>"
+        f"<div style='{_ans2}'>Saves the course syllabus page, including grading policies, office hours, and weekly schedules if your professor set those up in Canvas.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Announcements</summary>"
+        f"<div style='{_ans2}'>Saves all course announcements in order. Great for finding deadline changes or last-minute reminders your professor posted.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Discussions</summary>"
+        f"<div style='{_ans2}'>Saves discussion board threads. Useful if your professor posts key content there, or if you want to review classmates' responses when studying.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Quizzes</summary>"
+        f"<div style='{_ans2}'>Saves quiz questions and answer choices. What is visible depends on your professor's privacy settings in Canvas.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Rubrics</summary>"
+        f"<div style='{_ans2}'>Saves the grading criteria for each assignment. Helpful for understanding exactly how your work will be marked before you submit.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>Submissions (Results)</summary>"
+        f"<div style='{_ans2}'>Saves feedback and grades you received on your own submitted work: professor comments, rubric scores, and the grade per assignment. This is your personal data - your professor is not notified.</div></details>"
+        f"<div style='{_lbl}'>How to organize Canvas Content</div>"
+        f"<details style='{_row}'><summary style='{_b2}'>Match Course Folder structure</summary>"
+        f"<div style='{_ans2}'>Places Canvas Content files alongside your regular course files in the same module subfolders.</div></details>"
+        f"<details style='{_row}'><summary style='{_b2}'>In Separate Folders</summary>"
+        f"<div style='{_ans2}'>Creates a dedicated subfolder per content type (Assignments, Quizzes, Discussions, etc.) inside the course folder, separate from your regular files. Note: the organization buttons are greyed out until you select at least one content type above.</div></details>"
+        "</div></details>"
+
+        # ── Card 3 ────────────────────────────────────────────────────────────
+        "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(255,255,255,0.13); border-radius: 7px; overflow: hidden;'>"
+        f"<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>AI Optimization</span><span style='{_tag3}'>Card 3</span></summary>"
+        "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
+        "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>These run after downloading finishes. Each only touches the file types it handles - all others are left unchanged. Click any item to read more.</p>"
+        f"<details style='{_row}'><summary style='{_b3}'>Unpack Archives</summary>"
+        f"<div style='{_ans3}'>Automatically extracts zip files after downloading so the contents are immediately accessible. Most AI tools cannot read zip files directly.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>PowerPoint to PDF</summary>"
+        f"<div style='{_ans3}'>Converts PowerPoint slide decks to PDF. Most AI tools handle PDF better than PowerPoint. The original PowerPoint file is <b>replaced</b> by the PDF. Requires Microsoft PowerPoint or the free LibreOffice app.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Legacy Word Docs to PDF</summary>"
+        f"<div style='{_ans3}'>Converts old Word document formats (.doc, .rtf, .odt) to PDF. Modern .docx files are not affected. The original is <b>replaced</b> by the PDF. Requires Microsoft Word or LibreOffice.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Excel to PDF &amp; AI Data</summary>"
+        f"<div style='{_ans3}'>Converts Excel spreadsheets into a visual PDF and a plain text file with all the cell data AI tools can process. The <b>original spreadsheet is kept</b> alongside the two new files. Requires Microsoft Excel or LibreOffice.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Canvas Pages to Plain Text</summary>"
+        f"<div style='{_ans3}'>Converts Canvas web pages downloaded via Card 2 into clean plain text files, stripping all web formatting. Makes them easy to paste into or upload to AI tools.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Code &amp; Data to .txt</summary>"
+        f"<div style='{_ans3}'>Adds a .txt extension to programming files so you can upload them to AI tools that only accept plain text. The file content is completely unchanged - only the filename gets .txt added.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Gather Web Links</summary>"
+        f"<div style='{_ans3}'>Collects all website shortcut files across your course folder and combines them into a single text file per course. Useful for keeping track of every external link your professor added.</div></details>"
+        f"<details style='{_row}'><summary style='{_b3}'>Video to Audio</summary>"
+        f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3. Requires FFmpeg.</div></details>"
+        "<div style='background-color: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
+        "<span style='color: #fbd38d; font-weight: 600;'>&#9888;&#65039; Required software:</span> PowerPoint, Word, and Excel conversions require Microsoft Office or the free LibreOffice app. Video to Audio requires FFmpeg. If the required software is not installed, that conversion is silently skipped and your original file is kept."
+        "</div>"
+        "</div></details>"
+
+        # ── Output Folder ─────────────────────────────────────────────────────
+        "<hr>"
+        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 6px;'>&#128193; Output Folder</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8);'>"
+        "The folder where all downloaded courses are saved. Each course automatically gets its own named subfolder inside it. Click <b>Select Folder</b> to change the destination path."
+        "</div>"
+        "<hr>"
+
+        # ── Presets ───────────────────────────────────────────────────────────
+        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>&#128190; Download Settings Presets</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8); margin-bottom: 10px;'>"
+        "A Preset saves your entire Card 1, 2, and 3 configuration under a name you choose. Once saved, you can restore your full setup in one click instead of re-configuring everything from scratch."
+        "</div>"
+        "<div style='display: flex; gap: 10px; margin-bottom: 10px;'>"
+        "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
+        "<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>&#128190; Saving a preset</div>"
+        "<div style='color: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.6;'>"
+        "Configure Cards 1, 2 &amp; 3, then click <b style='color: #e2e8f0;'>Save Preset</b> in the top right. Give it a name - like <em>AI Ready</em> - and click Save. Settings are stored locally on your computer."
+        "</div>"
+        "</div>"
+        "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
+        "<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>&#128193; Loading a preset</div>"
+        "<div style='color: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.6;'>"
+        "Click the <b style='color: #e2e8f0;'>Presets</b> button in the top right. The Preset Hub opens - click any preset name to instantly apply its settings to all three cards."
+        "</div>"
+        "</div>"
+        "</div>"
+        "<div style='background: rgba(255,255,255,0.04); border-radius: 7px; padding: 10px 13px;'>"
+        "<div style='font-size: 0.73rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 7px;'>Example presets to get you started</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.7;'>"
+        "&#8226; <b style='color: #e2e8f0;'>AI Ready</b> - Card 3 fully enabled. Ideal for courses you feed to NotebookLM or ChatGPT.<br>"
+        "&#8226; <b style='color: #e2e8f0;'>Quick Backup</b> - All Files selected, no conversions. Fast offline copy with no post-processing.<br>"
+        "&#8226; <b style='color: #e2e8f0;'>Study Files</b> - Presentations &amp; PDFs only, PowerPoint and Word converted to PDF."
+        "</div>"
+        "</div>"
+        "<hr>"
+
+        # ── FAQ ───────────────────────────────────────────────────────────────
+        "<details style='margin-top: 4px;'>"
+        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 0.95rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between All Files and Presentations &amp; PDFs?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "<b>All Files</b> grabs everything your professor uploaded - PDFs, slides, Word documents, images, videos, spreadsheets, zip archives, and more. <b>Presentations &amp; PDFs</b> only grabs lecture slides and PDF files. Use the filtered option if you want to skip large videos or data sets."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does With Subfolders actually look like on my computer?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Each course gets a folder, and inside it, Canvas modules become subfolders. For example: <em>Downloads / CHEM101 / Week 3 - Thermodynamics / lecture.pdf</em>. With All in One Folder: <em>Downloads / CHEM101 / lecture.pdf</em> - every file at the same level with no subfolders."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is Canvas Content and why would I want to download it?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Canvas Content covers items that only exist as web pages inside Canvas - assignment instructions, announcements, discussion threads, quiz questions. The app converts these into local documents you can read offline or upload to AI tools. Your regular course files are always downloaded regardless of Card 2 settings."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>If I enable PowerPoint to PDF, does the original file get deleted?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Yes - the original PowerPoint file is replaced by the PDF to avoid duplicates. The same applies to Legacy Word to PDF and Video to Audio. <b>Exception:</b> Excel keeps the original spreadsheet alongside the new PDF and data file. If you need to keep originals, skip these conversions or make a backup first."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does Submissions (Results) save, and will my professor know?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "It saves the feedback and grades you received on your own submitted assignments - professor comments, rubric scores, and your grade per assignment. This is your personal data - your professor is not notified."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do I have to re-download everything every time, or can I just get new files?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Use <b>Sync Mode</b> (available from the navigation sidebar) for that. Download Mode always downloads a fresh copy of everything. Sync Mode tracks what is already on your computer and only fetches files that are new or updated since your last sync."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why would I use Video to Audio instead of keeping the full video file?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Lecture videos are often hundreds of megabytes each, and most AI tools like NotebookLM do not support video uploads. Converting to audio gives a much smaller file (typically 10 to 20 times smaller) you can upload to AI tools for summaries or questions. If you want to watch the recording, leave this disabled."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do the AI conversions in Card 3 work on all computers?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "It depends on the conversion. PowerPoint and Word conversions require <b>Microsoft Office</b> or the free <b>LibreOffice</b> app. Video to Audio requires <b>FFmpeg</b>. If not installed, that conversion is silently skipped. Unpacking archives, converting Canvas pages, adding .txt to code files, and gathering web links all work on any computer with no extra software."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Preset and should I use one?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "A Preset saves your current settings (Cards 1, 2, and 3) under a name so you can reload them instantly next time. Click <b>&#128190; Save Preset</b> after configuring, and the <b>Presets</b> button to open the Preset Hub and apply a saved one."
+        "</div></details>"
+        "</div>"
+        "</details>"
+    )
+
     with _hdr_left:
-        st.markdown("<h2 style='margin-bottom: -10px;'>Download Settings</h2>", unsafe_allow_html=True)
+        # Title + Help Tag in a Snug Flex Row
+        st.html("""
+            <style>
+            /* Force the column container to justify left and have a tight gap */
+            div.st-key-title_help_row [data-testid="stHorizontalBlock"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0px !important;
+                justify-content: flex-start !important;
+            }
+            /* Force columns to hug their content instead of using percentages */
+            div.st-key-title_help_row [data-testid="column"],
+            div.st-key-title_help_row [data-testid="stColumn"] {
+                width: auto !important;
+                flex: 0 0 auto !important;
+                min-width: 0px !important;
+                padding: 0 !important;
+            }
+            /* Move it LEFT by ensuring the H2 has no trailing margin */
+            div.st-key-title_help_row h2 {
+                margin-right: 0 !important;
+                padding-right: 0 !important;
+            }
+            /* Move it DOWN to align its bottom with the H2 baseline */
+            div.st-key-title_help_row div[class*="st-key-download_settings_explainer_help_btn"] {
+                margin-bottom: -20px !important;
+                margin-top: 10px !important;
+                margin-left: 0 !important;
+            }
+            </style>
+        """)
+        with st.container(key="title_help_row"):
+            _c1, _c2 = st.columns([1, 10]) # Ratio doesn't matter much with width:auto
+            with _c1:
+                st.markdown("<h2 style='margin: 0; white-space: nowrap;'>Download Settings</h2>", unsafe_allow_html=True)
+            with _c2:
+                render_help_card(
+                    key_prefix="download_settings",
+                    title=help_title,
+                    text_html=help_text,
+                    mode="button"
+                )
 
 
     with _hdr_right:
@@ -117,6 +366,14 @@ def render_download_settings(fetch_courses_fn):
         with _pb2:
             if st.button("Presets", key="btn_presets_hub", use_container_width=True):
                 _presets_hub_dialog()
+
+    # Help Card Expansion (renders below the header row if open)
+    render_help_card(
+        key_prefix="download_settings",
+        title=help_title,
+        text_html=help_text,
+        mode="card"
+    )
 
     def _load_b64(path):
         import base64

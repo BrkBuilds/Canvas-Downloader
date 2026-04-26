@@ -26,6 +26,7 @@ from ui_helpers import (
     open_folder,
 )
 from styles import inject_css
+from ui_shared import render_help_card
 
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _add_pair_lazy(pair):
@@ -419,6 +420,26 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     )
     
     if layer == 'layer_1':
+        # Layer 1 Help Card
+        render_help_card(
+            key_prefix="hub_overview",
+            title="Managing Your Saved Groups & Pairs",
+            text_html=(
+                "<b>Groups</b> contain multiple course/folder pairs. Use them when you want to load an "
+                "entire semester's worth of courses into the sync list in one click."
+                "<br><br>"
+                "<b>Pairs</b> are single course/folder links. Save a pair when you have a specific course "
+                "you frequently sync on its own."
+                "<br><br>"
+                "<b>Add to Sync List</b> loads the group/pair into your active sync queue. Duplicates are "
+                "automatically skipped."
+                "<br><br>"
+                "<b>⚠️ Missing Folders</b> — If a saved folder path no longer exists (e.g. you moved it), "
+                "you'll enter Rescue Mode where you can pick new folder locations before adding."
+            ),
+            icon="💡"
+        )
+
         groups = mgr.load_groups()
         if not groups:
             st.info("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
@@ -652,6 +673,25 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
         st.button("← Back to overview", key="btn_back_to_groups", type="tertiary",
                   on_click=change_hub_layer, kwargs={'target_layer': 'layer_1'})
+
+        # Layer 2 Help Card
+        render_help_card(
+            key_prefix="hub_details",
+            title="Editing a Group or Pair",
+            text_html=(
+                "<b>Rename</b> — Click the ✏️ Edit button next to the group/pair name to rename it."
+                "<br><br>"
+                "<b>Edit a Course Pair</b> — Click ✏️ Edit on any pair card to change its local folder "
+                "or linked Canvas course. Your changes are saved immediately."
+                "<br><br>"
+                "<b>Add a New Course</b> — Click the Add button at the bottom to append a new "
+                "course/folder pair to this group."
+                "<br><br>"
+                "<b>Remove a Course</b> — Click 🗑️ Remove to delete a single pair from the group. "
+                "This does not delete any files on your computer."
+            ),
+            icon="💡"
+        )
 
         # Detect single pair for conditional UI
         is_sp = group.get('is_single_pair', False)

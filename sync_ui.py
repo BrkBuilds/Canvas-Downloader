@@ -51,6 +51,7 @@ from sync.completion import (
     show_sync_errors as _show_sync_errors_impl,
 )
 from ui_shared import error_log_dialog as _view_error_log_dialog_impl
+from ui_shared import render_help_card
 
 logger = logging.getLogger(__name__)
 
@@ -389,18 +390,343 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     sorted_course_names = sorted(course_names.values(), key=lambda x: x.lower())
     course_options = ["-- " + 'Select Canvas Course' + " --"] + sorted_course_names
 
-    # --- (8) Bigger subheading + Hub button ---
+    # Help Card Content
+    _sync_help_title = "How Sync Mode Works"
+    _slbl = "font-size: 1rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin: 14px 0 8px 0; color: rgba(255,255,255,0.9);"
+    _step_card_r = "flex: 1; min-width: 0; background: rgba(63,217,255,0.1); border: 1px solid rgba(63,217,255,0.45); border-radius: 14px; padding: 13px 14px;"
+    _step_num_r = "flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; background: rgba(63,217,255,0.22); display: flex; align-items: center; justify-content: center; font-size: 1.32rem; font-weight: 800; color: #fffff; line-height: 1;"
+    _step_inner = "display: flex; align-items: flex-start; gap: 12px;"
+    _step_title = "font-weight: 700; color: #ffffff; font-size: 1.075rem; margin-top: 5px;margin-bottom: 5px;"
+    _step_body = "font-size: 0.83rem; color: rgba(255,255,255,0.88); line-height: 1.55;"
+    _arr_r = "<div style='display:flex;align-items:center;flex-shrink:0;width:44px;align-self:center;margin:0 5px'><div style='flex:1;height:2.5px;background: rgba(255,255,255,0.8);border-radius:2px'></div><div style='width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid rgba(255,255,255,0.8)'></div></div>"
+    _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; padding: 11px 12px 10px 12px; display: flex; flex-direction: column;"
+    _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
+    _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
+    _cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
+    _cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
+    _cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+    _cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
+    _cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
+    _cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
+    _cat_desc = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+    _cat_act = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+    _sb_checked = "font-size: 0.72rem; color: rgba(134,239,172,1); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    _sb_unchecked = "font-size: 0.72rem; color: rgba(255,255,255,0.95); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    _sync_help_text = (
+        # -- Intro ---------------------------------------------------------------
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); margin-bottom: 10px;'>"
+        "<b style='color: #e2e8f0;'>Your task on this page:</b> Add your course/folder pairs, then run a sync to keep your local files up to date with Canvas."
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(63,217,255,0.05); border-radius: 6px; border-left: 3px solid rgba(63,217,255,0.45);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #3fd9ff; background: rgba(63,217,255,0.15); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>&#9889; Quick Sync</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>Fast Mode</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Scan and download in one step. Grabs all new files and clean updates only. Automatically skips anything that needs a human decision - files you edited or intentionally deleted. Perfect for between-lecture refreshes.</div>"
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(63,217,255,0.05); border-radius: 6px; border-left: 3px solid rgba(63,217,255,0.45);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #3fd9ff; background: rgba(63,217,255,0.15); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>&#128269; Analyze &amp; Review</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>Full Control Mode</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Scan Canvas, then see every new, updated, and deleted file before anything downloads. Review each category, adjust checkboxes, ignore files permanently, then confirm. Nothing happens until you click Sync.</div>"
+        "</div>"
+        "<hr>"
+
+        # -- Get Started: Add a Course Pair --------------------------------------
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1.25rem; margin-bottom: 8px;'>&#128194; Get started with syncing: Add a Course Pair</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65; margin-bottom: 6px;'>"
+        "A <b>Course Pair</b> links one local folder on your computer to one Canvas course. The sync engine reads Canvas and writes to that folder, tracking every file in a hidden database stored inside it - this is how it knows what you already have, what you edited, and what to skip.<br><br>"
+        "Click <b>Add Course</b>. In the dialog, pick your local folder (e.g. <em>C:\\Users\\You\\Documents\\CHEM101</em>), then select the matching Canvas course from the dropdown. Click Confirm. The pair is saved permanently - you only do this once per course.<br><br>"
+        "One folder = one course = one database. Multiple courses cannot share the same folder."
+        "</div>"
+        "<hr>"
+
+        # -- Saved Groups & Pairs ------------------------------------------------
+        "<span style=\"font-weight: 700; color: #ffffff; font-size: 1.25rem;\">💾 How to use Saved Groups & Pairs</span><br>"
+
+        "<span style=\"font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;\">"
+            "The <b>Saved Groups & Pairs</b> hub (button in the top right) lets you manage all your added Course Pairs and Groups so you only have to save them once.<br>In the Saved Groups & Pairs hub you can manage your saved groups and pairs, load them onto the Sync list, or delete them if no longer needed. <br>"
+        "</span><br><br>"
+
+        "<span style=\"font-weight: 600; color: #e2e8f0; font-size: 0.87rem;\">Save a Pair</span><br>"
+        "<span style=\"font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;\">"
+            "After adding a pair to the Sync List, click the save icon 💾 on the top right of the pair card. Give it a name, and save it. It is now stored in the hub and can be loaded in a single click in any future session."
+        "</span><br><br>"
+
+        "<span style=\"font-weight: 600; color: #e2e8f0; font-size: 0.87rem;\">Save a Group</span><br>"
+        "<span style=\"font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;\">"
+            "A Group is a named collection of multiple pairs - for example, all your semester courses. Add all the pairs you want on the sync page, open the hub, and click the <b>Save Group</b> button next to 'add course'. <br>Now the group, with all your course pairs, can be loaded onto the sync list in a single click next session.<br>Notice: Pairs can be saved individually AND in groups - one doesn't exclude the other. <br> You can only save groups when there are 2 or more course pairs on the Sync list. You cannot save groups that already have been saved. "
+        "</span><br><br>"
+
+        "<span style=\"font-weight: 600; color: #e2e8f0; font-size: 0.87rem;\">Load from the Hub</span><br>"
+        "<span style=\"font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;\">"
+            "Click <b>Saved Groups & Pairs</b> in the top right. Browse your saved groups and individual pairs. Click any entry to load it onto the sync page instantly. You can load multiple groups one after another to build a combined list. Both Pairs and Groups can be viewed and edited (e.g. change name, update course folder path if it was changed, etc) - all from the sync hub. You can even add brand new course pairs to a group from the hub itself! The individual configuration (Download settings set initially for each course folder downloaded) is viewable in the Saved Groups & Pairs hub, for each pair."
+        "</span><br><br>"
+
+
+        # -- Workflow ------------------------------------------------------------
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1.25rem; margin-bottom: 10px;'>&#128260; The Sync process - how to sync.</div>"
+
+        # Workflow container
+        "<div style='background: #0f0f0f; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 16px 18px; margin-bottom: 8px;'>"
+
+        # Quick Sync flow
+        f"<div style='{_slbl} margin-top: 0;'>⚡ Quick Sync</div>"
+        "<div style='display: flex; align-items: stretch; margin-bottom: 14px;'>"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
+        f"<div style='{_step_title}'>👆 Click Quick Sync</div>"
+        f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li>Analysis scans Canvas, compares every file to your local course folder.</li><li><b>Looks for all new or updated files.</b></li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>2</div><div>"
+        f"<div style='{_step_title}'>📥 Downloading</div>"
+        f"<div style='{_step_body}'><ul><li>New files and clean updates download automatically.</li><li>Files you have edited or deleted are automatically skipped and not downloaded.</li><li>Watch the download progress on the dashboard.</li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>3</div><div>"
+        f"<div style='{_step_title}'>✅ Done</div>"
+        f"<div style='{_step_body}'><b>Sync & Download complete! Your course folders are now fully up to date.</b><br><ul><li>See which files were downloaded for each course, and any errors.</li><li>Use the <b style='color: #e2e8f0;'>retry button</b> for any failed downloads.</li><li>Use the <b style='color: #e2e8f0;'>Open Folder</b> button to see the synced course folder directly</li></ul></div>"
+        "</div></div></div>"
+        "</div>"
+        "<hr>"
+
+        # Analyze, Review & Sync flow
+        f"<div style='{_slbl}'>🔍 Analyze, Review &amp; Sync</div>"
+        "<div style='display: flex; align-items: stretch; margin-bottom: 0;'>"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
+        f"<div style='{_step_title}'>👆 Click Analyze, Review & Sync</div>"
+        f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li> Analysis scans Canvas, compares every file to your local course folder.</li><li> <b>Looks for all files with changes, and sorts them into 7 categories.</b></li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>2</div><div>"
+        f"<div style='{_step_title}'>🔍 Review changes</div>"
+        f"<div style='{_step_body}'><ul><li>All files that have changes are organized here by category. </li><li>Select files you want to download.</li><li>Deselect files you don't want to download</li><li>Ignore files to skip and hide in future syncs.</li><li>Click <b>Sync &amp; Download</b> to continue.</li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>3</div><div>"
+        f"<div style='{_step_title}'>👁️ Confirm &amp; Download</div>"
+        f"<div style='{_step_body}'><ul><li>A pop-up shows you everything you need to know about the files that will be downloaded. </li><li>Click Confirm to download, or go back to review page and make changes.</li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>4</div><div>"
+        f"<div style='{_step_title}'>📥 Downloading</div>"
+        f"<div style='{_step_body}'><ul><li>Files selected to download in the review page, will download.</li><li>Watch the download progress on the dashboard.</li></ul></div>"
+        f"</div></div></div>{_arr_r}"
+        f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>5</div><div>"
+        f"<div style='{_step_title}'>✅ Done!</div>"
+        f"<div style='{_step_body}'><b>Sync & Download complete! Your course folders are now fully up to date.</b><br><ul><li>See which files were downloaded for each course, and any errors.</li><li>Use the <b style='color: #e2e8f0;'>retry button </b>for any failed downloads.</li><li>Use the <b style='color: #e2e8f0;'>Open Folder</b> button to see the synced course folder directly</li></ul></div>"
+        "</div></div></div>"
+        "</div>"
+        "</div>"
+        "<hr>"
+
+        # -- File Categories -----------------------------------------------------
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1.25rem; margin-bottom: 4px;'>&#128202; Sync Review: The 7 file categories explained.</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); margin-bottom: 10px;'>After Analyze runs, every file lands in exactly one of these categories. Understanding them tells you what the app will do - and what it won't.</div>"
+        f"<div style='display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 4px;'>"
+        f"<div style='{_cc_new}'>"
+        f"<div style='{_cat_name}'>New Files</div>"
+        f"<div style='{_cat_desc}'>Files on Canvas added by your teacher, that are not in your course folder yet.</div>"
+        f"<div style='{_cat_act}'>Downloaded fresh into the correct subfolder.</div>"
+        f"<div style='{_sb_checked}'>✔ Checked by default</div>"
+        "</div>"
+        f"<div style='{_cc_clean}'>"
+        f"<div style='{_cat_name}'>Updates (Clean)</div>"
+        f"<div style='{_cat_desc}'>Canvas has a newer version of a file in your course folder that is untouched.</div>"
+        f"<div style='{_cat_act}'>The file will be replaced with the newest version - same name, same location.</div>"
+        f"<div style='{_sb_checked}'>✔ Checked by default</div>"
+        "</div>"
+        f"<div style='{_cc_edited}'>"
+        f"<div style='{_cat_name}'>Updates (You Edited)</div>"
+        f"<div style='{_cat_desc}'>Canvas has a newer version AND your copy changed.</div>"
+        f"<div style='{_cat_act}'>New version saved with '_NewVersion' alongside your original: Your edited file is untouched.</div>"
+        f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
+        "</div>"
+        f"<div style='{_cc_loc_del}'>"
+        f"<div style='{_cat_name}'>Locally Deleted</div>"
+        f"<div style='{_cat_desc}'>You deleted a file from your course folder, but Canvas still has it.</div>"
+        f"<div style='{_cat_act}'>App assumes the deletion was intentional - won't redownload it unless you check the box.</div>"
+        f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
+        "</div>"
+        f"<div style='{_cc_can_del}'>"
+        f"<div style='{_cat_name}'>Deleted on Canvas</div>"
+        f"<div style='{_cat_desc}'>The teacher removed a file from Canvas, but it is still in your course folder.</div>"
+        f"<div style='{_cat_act}'>Your local copy stays exactly where it is. The app never deletes local files.</div>"
+        f"<div style='{_sb_info}'>ℹ Info only - no action</div>"
+        "</div>"
+        f"<div style='{_cc_ignored}'>"
+        f"<div style='{_cat_name}'>Ignored Files</div>"
+        f"<div style='{_cat_desc}'>Files you permanently skipped, so they never appear in future syncs.</div>"
+        f"<div style='{_cat_act}'>Restore them any time in the <b>Ignored Files</b> section in Sync Review or the Sync front page.</div>"
+        f"<div style='{_sb_info}'>Permanent skip</div>"
+        "</div>"
+        f"<div style='{_cc_uptodate}'>"
+        f"<div style='{_cat_name}'>Up to Date</div>"
+        f"<div style='{_cat_desc}'>File is identical on both sides: Your local file matches Canvas.</div>"
+        f"<div style='{_cat_act}'>Hidden from the review screen since no action is needed.</div>"
+        f"<div style='{_sb_info}'>Hidden - nothing to do</div>"
+        "</div>"
+        "</div>"
+        "<hr>"
+
+        # -- Quick Sync vs Analyze -----------------------------------------------
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1.25rem; margin-bottom: 8px;'>&#9889; Quick Sync vs Analyze &amp; Review &amp; Sync</div>"
+        "<div style='font-size: 0.85rem; color: #e6e6e6; margin-bottom: 10px;'>Both modes scan Canvas - the difference is the usecase, and how much control you have over what gets downloaded.</div>"
+        "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
+        "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>⚡Quick Sync</div>"
+        "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.7;'>"
+        "✅ Auto-download all new files<br>"
+        "✅ Auto-update unedited files that have changes in canvas<br>"
+        "✅ Quick & Easy - press the button and let the app work for you<br>"
+        "✅ Skips ignored, locally deleted, & Edited files with updates automatically<br>"
+        "❌ Doesn't allow re-download of ignored, locally deleted, or edited files with updates<br>"
+        "❌ Doesn't show any canvas/folder changes, only which files were downloaded (after quick sync finished)<br><br>"
+        "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem;font-weight: 800;'>Best for:</span> "
+        "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem;font-weight: 600;'>Quick everyday use between lectures, morning catch-up - whenever you need the latest files from canvas as quick as possible.</span>"
+        "</div></div>"
+        "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>🔍 Analyze, Review &amp; Sync</div>"
+        "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.7;'>"
+        "✅ Full overview over all course folder & canvas changes over 7 different categories<br>"
+        "✅ Select per-file what you want to download, and what you don't - full control<br>"
+        "✅ Ignored files management: Ignore new files, or restore & download previously ignored files<br>"
+        "✅ Filter by file extension for easy selection<br>"
+        "✅ See all files to be downloaded and important metrics before you download<br>"
+        "❌ More time-consuming than Quick-sync<br><br>"
+        "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem; font-weight: 800;'>Best for:</span> "
+        "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem; font-weight: 600;'>Exam prep, before a studying block, or whenever you need to see the full picture & ensure course folders on your pc are 100% up-to-date with canvas.</span>"
+        "</div></div>"
+        "</div>"
+        "<div style='background: rgba(0,0,0,0.0); border-radius: 7px; padding: 15px 15px;'>"
+        "<span style='font-size: 1rem; font-weight: 700; letter-spacing: 0.07em; margin-top: 0px; margin-bottom: 0px; color: rgba(255,255,255,0.9);'>When to use which - examples</span>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 2; margin-top: 5px;'>"
+        "<b style='color: #e2e8f0;'>Checking for new files between classes</b> ➜ Quick Sync<br>"
+        "<b style='color: #e2e8f0;'>Start-of-week catch-up on your courses</b> ➜ Quick Sync<br>"
+        "<b style='color: #e2e8f0;'>Just before an exam, you want to ensure course folders are fully up to date</b> ➜ Analyze &amp; Review<br>"
+        "<b style='color: #e2e8f0;'>You have been editing files</b> ➜ Analyze &amp; Review<br>"
+        "<b style='color: #e2e8f0;'>First time setting up a new course folder</b> ➜ Analyze &amp; Review"
+        "</div></div>"
+        "<hr>"
+
+        # -- Safety Guarantees ---------------------------------------------------
+        "<div style='font-weight: 700; color: #ffffff; font-size: 1.25rem; margin-bottom: 8px;'>🤝 Safety Guarantees</div>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 2.0;'>"
+        "Syncing may seem scary, but we made it totally safe. Here's what the app will <b style='color: #e2e8f0;'>never</b> do:<br>"
+        "<b style='color: #e2e8f0;'>🚫 Will never overwrite a file you edited</b> - If a teacher updates (changes content & reuploads with same name) a file you edited on your pc, the edited file will be preserved, and the updated file on canvas will download with '_NewVersion' added to the name.<br>"
+        "<b style='color: #e2e8f0;'>🚫 Will never delete your local files</b> - not even when the teacher removes them from Canvas. Your disk is yours. Bonus: If you ever delete a file, run a Analyze, Review & Sync to re-download it, fresh from canvas)<br>"
+        "<b style='color: #e2e8f0;'>🚫 Will never re-download files you intentionally deleted</b> - unless you explicitly check the box for a given locally deleted file in the Sync Review page, your files will stay deleted.<br>"
+        "<b style='color: #e2e8f0;'>🚫 Will never create duplicate files</b> - every download is tracked; re-downloads either cleanly overwrites or produces a clearly-named '_NewVersion' version of your files. We keep your course folder tidy.<br>"
+        "<b style='color: #e2e8f0;'>🚫 Will never touch files outside your paired folder</b> - the Sync engine only operates inside the folders you explicitly link to a course, and only modifies files when you run a Sync"
+        "</div>"
+        "<hr>"
+
+        # -- FAQ -----------------------------------------------------------------
+        "<details style='margin-top: 4px;'>"
+        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between Sync Mode and Download Mode?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Download Mode always fetches a complete fresh copy of everything - it has no memory of what you already have. Sync Mode tracks every file you have ever downloaded in a hidden database, compares your local folder against Canvas, and only fetches what is new or changed. Use Download Mode for a first-time full backup; use Sync Mode for all ongoing maintenance."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>I renamed a file locally - will sync break or create a duplicate?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "No. Before every analysis, the engine runs a heal step that scans your folder for renamed or moved files. It uses three tiers: exact filename match, exact content fingerprint (MD5), and fuzzy name similarity (over 85% similar). If it finds a match, the internal record is updated. You can rename and reorganize freely."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>My professor updated a lecture PDF I annotated heavily. What exactly happens?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "It appears in Updates - You Edited, unchecked by default. If you check it, the corrected version is saved as <em>Lecture_3_NewVersion.pdf</em> alongside your annotated original. Your annotations are never touched. If you leave it unchecked, nothing changes. Quick Sync skips it entirely."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Will a file appear as an update if the professor only changed its description on Canvas?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Not if Canvas exposes its own MD5 hash for the file (which it usually does). The engine compares Canvas's MD5 against its stored fingerprint. If they match byte-for-byte, the file stays in Up to Date regardless of the bumped timestamp. Touch events that change nothing about the actual content generate no sync action."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Course Pair and do I need one per course?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Yes - one pair per course. A pair links a specific local folder to a specific Canvas course. The sync engine reads Canvas and writes to that folder, tracking everything in a hidden database stored inside it. Multiple courses cannot share a folder. Adding a pair takes about 10 seconds and is saved permanently."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Saved Group?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "A Group is a named collection of course pairs saved for reuse. For example, save all 5 of this semester's courses as Semester 1 2026. Next time you open Sync Mode, click that group to load all 5 pairs instantly. Groups are managed via the Saved Groups and Pairs button."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>I moved my course folder to a different drive. Will sync still work?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "You need to update the pair: click the edit icon on the affected pair and re-select the folder at its new location. The hidden .canvas_sync.db database lives inside the folder and travels with it, so all sync history and fingerprints are preserved automatically."
+        "</div></details>"
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Can Quick Sync run all my courses at once?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Yes - add all your course pairs to the list on this page, then click Quick Sync All. Every pair is scanned and synced in sequence. New files and clean updates across all courses are downloaded in one run. If any course has edited or locally-deleted files, those are reported afterward so you can handle them in Analyze and Review."
+        "</div></details>"
+        "</div>"
+        "</details>"
+    )
+
+    # --- (8) Bigger subheading + Help + Hub button ---
+    # Snug Header Hack — H2 + Help button on one flex row
+    st.html("""
+        <style>
+        div.st-key-sync_title_help_row [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 0px !important;
+            justify-content: flex-start !important;
+        }
+        div.st-key-sync_title_help_row [data-testid="column"],
+        div.st-key-sync_title_help_row [data-testid="stColumn"] {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            min-width: 0px !important;
+            padding: 0 !important;
+        }
+        div.st-key-sync_title_help_row h2 {
+            margin-right: 0 !important;
+            padding-right: 0 !important;
+        }
+        div.st-key-sync_title_help_row div[class*="st-key-sync_setup_explainer_help_btn"] {
+            margin-bottom: -20px !important;
+            margin-top: 10px !important;
+            margin-left: 0 !important;
+        }
+        </style>
+    """)
+
     col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="center")
     with col_heading:
-        st.markdown(
-            '<h2 style="margin-top: -30px; margin-bottom: 0px; padding-bottom: 0px;">Canvas Courses to Sync</h2>',
-            unsafe_allow_html=True,
-        )
+        with st.container(key="sync_title_help_row"):
+            _c1, _c2 = st.columns([1, 10])
+            with _c1:
+                st.markdown(
+                    '<h2 style="margin: 0; white-space: nowrap;">Canvas Courses to Sync</h2>',
+                    unsafe_allow_html=True,
+                )
+            with _c2:
+                render_help_card(
+                    key_prefix="sync_setup",
+                    title=_sync_help_title,
+                    text_html=_sync_help_text,
+                    icon="💡",
+                    mode="button"
+                )
     with col_hub:
         if st.button("Saved Groups & Pairs", key="btn_hub_main",
                      use_container_width=True):
             _reset_hub_state()
             _saved_groups_hub_dialog(courses, course_names)
+
+    # Help Card Expansion (renders below the header + hub button row if open)
+    render_help_card(
+        key_prefix="sync_setup",
+        title=_sync_help_title,
+        text_html=_sync_help_text,
+        icon="💡",
+        mode="card"
+    )
 
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []

@@ -773,7 +773,7 @@ def error_log_dialog(log_paths):
         st.rerun(scope="app")
 
 
-def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ðŸ’¡"):
+def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ðŸ’¡", mode: str = "auto"):
     """
     Renders a unified Help Explainer Card component.
     
@@ -782,6 +782,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
         title: Title of the explainer card.
         text_html: The HTML body content of the explainer card.
         icon: The emoji/icon prefix for the title.
+        mode: "auto" (default), "button" (only trigger), or "card" (only expanded content).
     """
     import base64
     from ui_helpers import esc
@@ -789,6 +790,11 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
     state_key = f"show_help_card_{key_prefix}"
     if state_key not in st.session_state:
         st.session_state[state_key] = False
+
+    # Logic to determine what to show based on mode and state
+    is_open = st.session_state[state_key]
+    show_button = (mode in ["auto", "button"])
+    show_card = (mode in ["auto", "card"]) and is_open
 
     close_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
     close_b64 = base64.b64encode(close_svg.encode()).decode()
@@ -801,7 +807,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
     help_btn_key = f"{key_prefix}_explainer_help_btn"
     open_key = f"{key_prefix}_open_explainer"
 
-    if st.session_state[state_key]:
+    if show_card:
         with st.container(key=card_key):
             if st.button("âœ•", key=close_key):
                 st.session_state[state_key] = False
@@ -812,7 +818,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
                 <p style="margin: 0 0 6px 0; font-weight: 700; color: #f8fafc; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.1rem; line-height: 1;">{icon}</span>{esc(title)}
                 </p>
-                <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
+                <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); line-height: 1.5;">
                     {text_html}
                 </div>
             </div>
@@ -892,11 +898,17 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
             background-color: #f8fafc !important;
         }}
         </style>""")
-    else:
+    
+    if show_button:
         with st.container(key=help_btn_key):
-            if st.button("Help", key=open_key, help="Show help"):
-                st.session_state[state_key] = True
+            if st.button("Help", key=open_key, help="Click to open guide"):
+                st.session_state[state_key] = not st.session_state[state_key]
                 st.rerun()
+
+        # Adjust alignment based on mode: "auto" is usually top-right (flex-end), 
+        # whereas manual triggers might need flex-start.
+        justify_content = "flex-end" if mode == "auto" else "flex-start"
+        margin_bottom = "25px" if mode == "auto" else "0px"
 
         st.html(f"""<style>
         @keyframes fadeInHelp_{key_prefix} {{
@@ -904,9 +916,9 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
             to {{ opacity: 1; transform: translateX(0); }}
         }}
         div.st-key-{help_btn_key} {{
-            margin-bottom: 25px !important;
+            margin-bottom: {margin_bottom} !important;
             display: flex !important;
-            justify-content: flex-end !important;
+            justify-content: {justify_content} !important;
             animation: fadeInHelp_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }}
         div.st-key-{help_btn_key} > div[data-testid="stVerticalBlockBorderWrapper"] {{
@@ -953,3 +965,4 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
             background-color: #f8fafc !important;
         }}
         </style>""")
+
