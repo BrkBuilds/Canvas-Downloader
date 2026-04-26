@@ -423,6 +423,7 @@ def _render_authenticated_nav_top():
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = False
             st.session_state['sync_pairs'] = []
+            st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
 
     # Sync mode button
@@ -432,6 +433,7 @@ def _render_authenticated_nav_top():
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = True
             st.session_state['sync_pairs'] = []
+            st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
 
 
