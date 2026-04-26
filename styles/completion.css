@@ -431,9 +431,9 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    height: 38px !important;
-    max-height: 38px !important;
-    min-height: 38px !important;
+    height: 32px !important;
+    max-height: 32px !important;
+    min-height: 32px !important;
     box-shadow: none !important;
     text-shadow: none !important;
     margin-top: 4px;
@@ -461,21 +461,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 7px !important;
     font-size: 0.92em !important;
-}
-div[class*="st-key-dl_fc_"] button p::before,
-div[class*="st-key-sync_complete_fc_"] button p::before,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p::before {
-    content: "" !important;
-    display: inline-block !important;
-    width: 16px !important;
-    height: 16px !important;
-    flex-shrink: 0 !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393c5fd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'%3E%3C/path%3E%3C/svg%3E") !important;
-    background-size: contain !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
 }
 
 /* Align Open Folder button with title text — fixed pixel indent, screen-size independent */
