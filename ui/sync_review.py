@@ -40,7 +40,200 @@ def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    st.markdown("<h2 style='margin-bottom: 4px; margin-top: -5px;'>Review Changes</h2>", unsafe_allow_html=True)
+    from ui_shared import render_help_card
+    
+    # ── Help Card Content ──
+    _help_title = "How to Review Your Sync"
+    
+    _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; padding: 11px 12px 10px 12px; display: flex; flex-direction: column;"
+    _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
+    _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
+    _cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
+    _cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
+    _cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+    _cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
+    _cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
+    _cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
+    _cat_desc = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+    _cat_act = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+    _sb_checked = "font-size: 0.72rem; color: rgba(134,239,172,1); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    _sb_unchecked = "font-size: 0.72rem; color: rgba(255,255,255,0.95); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+    
+    _help_text = (
+        # -- Workflow & Selection Rules --
+        "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
+        "Welcome to the Review page! Here you have full control over exactly what gets downloaded to your computer.<br><br>"
+        "<b style='color: #ffffff; font-size: 1rem;'>The Selection Process (Crucial):</b><br>"
+        "Every file on this screen is either checked (☑) or unchecked (☐).<br>"
+        "<ul style='margin-top: 6px; margin-bottom: 12px; padding-left: 20px;'>"
+        "<li><b style='color: #ffffff;'>Checked Files (☑)</b>: Will be downloaded or updated during this sync. Once synced, they won't appear here again until the teacher updates them.</li>"
+        "<li><b style='color: #ffffff;'>Unchecked Files (☐)</b>: Will <b style='color: #ffffff;'>NOT</b> be downloaded. <b style='color: #ffffff;'>However, they will reappear in your next sync.</b> If you never want to see an unchecked file again, you must <b style='color: #ffffff;'>Ignore</b> it (see UI Tools below).</li>"
+        "</ul>"
+        
+        "<b style='color: #ffffff; font-size: 1rem;'>Your Step-by-Step Workflow:</b><br>"
+        "<b>1. Review Categories:</b> Expand the file categories below to see which files are new, updated, or deleted.<br>"
+        "<b>2. Smart Select:</b> Use the quick-filters on the right to instantly check or uncheck entire filetypes (e.g. check all PDFs, uncheck all MP4s).<br>"
+        "<b>3. Customize:</b> Manually check the box for specific files you want to sync, and uncheck those you don't need right now.<br>"
+        "<b>4. Clean Up (Optional):</b> Click the <b style='color: #ffffff;'>\"Move deselected files to Ignored\"</b> button at the top of a category to permanently skip files you left unchecked.<br>"
+        "<b>5. Confirm &amp; Download:</b> Click the primary button at the bottom of the page to execute your choices."
+        "</div>"
+        "<hr>"
+        
+        # -- UI Elements --
+        "<details style='margin-top: 4px;'>"
+        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🛠️ UI Tools Explained</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.88); line-height: 1.6; margin-bottom: 12px;'>"
+        "The review page gives you powerful tools to manage large course updates instantly:"
+        "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 20px; line-height: 1.7;'>"
+        "<li><b style='color: #ffffff;'>Smart Select (By filetype):</b> The grey/blue tag buttons group every changed file by extension (e.g. <code>.pdf</code>, <code>.docx</code>). Click a filetype tag to instantly toggle all files of that type across all courses.</li>"
+        "<li><b style='color: #ffffff;'>Select All / Deselect All:</b> One-click bulk actions located right beneath the Smart Select buttons. They instantly check or uncheck every visible file.</li>"
+        "<li><b style='color: #ffffff;'>The Ignore Icon (👁️):</b> Hover over the far-right edge of any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>"
+        "<li><b style='color: #ffffff;'>Move deselected files to Ignored:</b> This powerful button sits at the top of every expanded category. Click it to instantly sweep every unchecked file in that specific list into your permanent Ignored bucket.</li>"
+        "<li><b style='color: #ffffff;'>Restore Icons (↩️):</b> Inside the \"Ignored Files\" category at the bottom of any course, you can click the restore arrow next to a file, or use the \"Restore All\" button to bring them back into active sync.</li>"
+        "</ul>"
+        "</div>"
+        "</div>"
+        "</details>"
+        "<hr>"
+
+        # -- File Categories --
+        "<details style='margin-top: 4px;' open>"
+        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🔎 The 7 File Categories</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); margin-bottom: 10px;'>After sync analysis, every file is placed into one of these 7 categories. This determines the default action the app takes.<br><b>Notice: The file counts in each category card at the top show the total amount of files in each category across all courses synced. <br>See per-course breakdown in each course's category lists.</b></div>"
+        f"<div style='display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 4px;'>"
+        f"<div style='{_cc_new}'>"
+        f"<div style='{_cat_name}'>New Files</div>"
+        f"<div style='{_cat_desc}'>Files on Canvas added by your teacher, that are not in your course folder yet.</div>"
+        f"<div style='{_cat_act}'>Downloaded fresh into the correct subfolder.</div>"
+        f"<div style='{_sb_checked}'>✔ Checked by default</div>"
+        "</div>"
+        f"<div style='{_cc_clean}'>"
+        f"<div style='{_cat_name}'>Updates (Clean)</div>"
+        f"<div style='{_cat_desc}'>Canvas has a newer version, and you haven't edited your local copy.</div>"
+        f"<div style='{_cat_act}'>Replaced in place with the newest version — same name, same location.</div>"
+        f"<div style='{_sb_checked}'>✔ Checked by default</div>"
+        "</div>"
+        f"<div style='{_cc_edited}'>"
+        f"<div style='{_cat_name}'>Updates (You Edited)</div>"
+        f"<div style='{_cat_desc}'>Canvas has a newer version, and you've modified your local copy (e.g., added annotations, filled in answers).</div>"
+        f"<div style='{_cat_act}'>New version saved as <em>filename_NewVersion</em> alongside your original. Your edits are never touched.</div>"
+        f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
+        "</div>"
+        f"<div style='{_cc_loc_del}'>"
+        f"<div style='{_cat_name}'>Locally Deleted</div>"
+        f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
+        f"<div style='{_cat_act}'>Your deletion is respected — won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
+        f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
+        "</div>"
+        f"<div style='{_cc_can_del}'>"
+        f"<div style='{_cat_name}'>Deleted on Canvas</div>"
+        f"<div style='{_cat_desc}'>The teacher removed a file from Canvas, but it is still in your course folder.</div>"
+        f"<div style='{_cat_act}'>Your local copy stays exactly where it is. The app never deletes local files.</div>"
+        f"<div style='{_sb_info}'>ℹ Info only - no action</div>"
+        "</div>"
+        f"<div style='{_cc_ignored}'>"
+        f"<div style='{_cat_name}'>Ignored Files</div>"
+        f"<div style='{_cat_desc}'>Files you permanently skipped, so they never appear in future syncs.</div>"
+        f"<div style='{_cat_act}'>Restore them any time in the <b style='color: #ffffff;'>Ignored Files</b> section.</div>"
+        f"<div style='{_sb_info}'>Permanent skip</div>"
+        "</div>"
+        f"<div style='{_cc_uptodate}'>"
+        f"<div style='{_cat_name}'>Up to Date</div>"
+        f"<div style='{_cat_desc}'>File is identical on both sides: Your local file matches Canvas.</div>"
+        f"<div style='{_cat_act}'>Hidden from the review screen since no action is needed.</div>"
+        f"<div style='{_sb_info}'>Hidden - nothing to do</div>"
+        "</div>"
+        "</div>"
+        "</div>"
+        "</details>"
+        "<hr>"
+
+        # -- FAQ --
+        "<details style='margin-top: 4px;'>"
+        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What happens to my local edits if I sync an 'Updated (You Edited)' file?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Your edits are 100% safe. The app will download the new Canvas version and save it right next to your original file, adding <code>_NewVersion</code> to its name. Your original file is never overwritten."
+        "</div></details>"
+        
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why are some files unchecked by default?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "The app protects your intentional actions. Files you've edited locally are unchecked to prevent cluttering your folder with <code>_NewVersion</code> files unless you explicitly ask for them. Locally deleted files are unchecked because we assume you deleted them to save space."
+        "</div></details>"
+        
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>If I uncheck a file, will it ask me again next time?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Yes. Unchecking simply tells the app \"skip this file for today.\" The file is still pending sync, so it will show up on this review screen next time. If you never want to see it again, use the <b style='color: #ffffff;'>Ignore</b> icon (👁️) or the <b style='color: #ffffff;'>Move deselected files to Ignored</b> button."
+        "</div></details>"
+        
+        "<details style='margin-top: 8px; cursor: pointer;'>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>How do I undo an ignore?</summary>"
+        "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+        "Scroll to the bottom of the affected course's list and expand the <b style='color: #ffffff;'>Ignored Files</b> category. You can click the restore icon next to individual files, or click the big \"Restore All Ignored Files\" button."
+        "</div></details>"
+        
+        "</div>"
+        "</details>"
+    )
+
+    st.html("""
+        <style>
+        div.st-key-sync_review_title_help_row [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: flex-end !important;
+            gap: 0px !important;
+            justify-content: flex-start !important;
+        }
+        div.st-key-sync_review_title_help_row [data-testid="column"],
+        div.st-key-sync_review_title_help_row [data-testid="stColumn"] {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            min-width: 0px !important;
+            padding: 0 !important;
+        }
+        div.st-key-sync_review_title_help_row h2 {
+            margin-right: 0 !important;
+            padding-right: 0 !important;
+        }
+        div.st-key-sync_review_title_help_row div[class*="st-key-sync_review_explainer_help_btn"] {
+            margin-bottom: -20px !important;
+            margin-top: 10px !important;
+            margin-left: 0 !important;
+        }
+        </style>
+    """)
+
+    with st.container(key="sync_review_title_help_row"):
+        _c1, _c2 = st.columns([1, 10])
+        with _c1:
+            st.markdown("<h2 style='margin: 0; white-space: nowrap;'>Review Changes</h2>", unsafe_allow_html=True)
+        with _c2:
+            render_help_card(
+                key_prefix="sync_review_explainer",
+                title=_help_title,
+                text_html=_help_text,
+                icon="💡",
+                mode="button"
+            )
+
+    # Help Card Expansion (renders below the header row if open)
+    render_help_card(
+        key_prefix="sync_review_explainer",
+        title=_help_title,
+        text_html=_help_text,
+        icon="💡",
+        mode="card"
+    )
+
     st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 1.05rem; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
@@ -324,36 +517,6 @@ def show_analysis_review(on_confirm_sync):
             with c5:
                 st.markdown(_render_metric_card(total_del, lbl_del, _sync_icon_img(_b64_icon_del), theme.ERROR_ALT, "#c0392b", "rgba(231, 76, 60, 0.35)"), unsafe_allow_html=True)
                 
-        st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
-
-        # General Explainer
-        from ui_shared import render_help_card
-        render_help_card(
-            key_prefix="sync_review",
-            title="How to Review Your Sync",
-            text_html=(
-                "This screen shows every file that has changed on Canvas since your last sync. "
-                "Files are sorted into categories:"
-                "<br><br>"
-                "<b>📥 New Files</b> — Brand new uploads from your teacher. "
-                "Checked by default — uncheck any you don't need."
-                "<br><br>"
-                "<b>🔄 Updates Available</b> — Your local copy is outdated. "
-                "The new version will replace it in place."
-                "<br><br>"
-                "<b>✏️ Updates (You've Edited)</b> — You've annotated or modified these locally. "
-                "Unchecked by default to protect your work. If you sync them, the new Canvas version "
-                "is saved alongside as <code>_NewVersion</code> — your edits are never touched."
-                "<br><br>"
-                "<b>🗑️ Locally Deleted</b> — Files you deleted from your folder. "
-                "Unchecked by default since your deletion was probably intentional. Re-check to re-download."
-                "<br><br>"
-                "<b>How Ignore works:</b> Click the 👁️ icon on any file to move it to the Ignored Files section. "
-                "Ignored files are permanently hidden from future syncs. You can restore them anytime from the "
-                "Ignored Files expander or from the Sync Setup screen."
-            )
-        )
-
         # --- NotebookLM Compatible Download Toggle (Sync Mode) ---
 
 
