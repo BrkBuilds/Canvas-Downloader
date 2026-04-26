@@ -264,7 +264,7 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
             f'<div class="fc-wrapper">'
             f'<input type="checkbox" id="{expand_id}" class="ft-expand-toggle"/>'
             f'<div class="fc-header">'
-            f'<img class="fc-folder-icon" src="{_FC_FOLDER_SVG}" alt="folder"/>'
+            f'<div class="fc-folder-icon" style="font-size:1.15rem; line-height:1; display:flex; align-items:center; justify-content:center; opacity:1;">📁</div>'
             f'<div class="fc-title">{esc(folder_name)}</div>'
             f'<label for="{expand_id}" class="ft-expander-trigger">'
             f'{_FC_CHEVRON_SVG}'
