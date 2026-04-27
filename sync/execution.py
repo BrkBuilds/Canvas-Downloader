@@ -268,13 +268,33 @@ def run_sync():
                         sync_mgr._save_single_file_to_db(entry)
 
                 all_files = list(sel['new']) + list(sel['updates'])
+
+                def _adopt_redownload(target_obj, sync_info):
+                    """Stamp the queued file with the analyzer's resolved
+                    target path + a flag marking it as a locally-deleted
+                    redownload. This is what lets the routing block read
+                    ``_target_local_path`` directly instead of searching
+                    ``sel['redownload']`` by id, and what enables the
+                    clean-overwrite branch for locally-deleted conflicts.
+                    """
+                    try:
+                        if getattr(sync_info, 'target_local_path', ''):
+                            target_obj._target_local_path = sync_info.target_local_path
+                    except Exception:
+                        pass
+                    try:
+                        target_obj._is_redownload = True
+                    except Exception:
+                        pass
+                    return target_obj
+
                 for sync_info in sel['redownload']:
                     # 1. Direct ID match (Real Files)
                     if str(sync_info.canvas_file_id) in {str(k) for k in canvas_files_map.keys()}:
                         # Map string ID to the proper canvas file map object safely
                         _mapped_id = next(k for k in canvas_files_map.keys() if str(k) == str(sync_info.canvas_file_id))
-                        all_files.append(canvas_files_map[_mapped_id])
-                    
+                        all_files.append(_adopt_redownload(canvas_files_map[_mapped_id], sync_info))
+
                     # --- CRITICAL PATCH: Synthetic Proxy Reconstruction ---
                     elif int(sync_info.canvas_file_id) < 0:
                         import types
@@ -286,25 +306,25 @@ def run_sync():
                             modified_at=getattr(sync_info, 'canvas_updated_at', ''),
                             url=""
                         )
-                        all_files.append(proxy)
+                        all_files.append(_adopt_redownload(proxy, sync_info))
                     # ----------------------------------------------------
-                    
+
                     else:
                         # 3. Fallback: Try to match by filename (handle URL encoding + vs space, case insensitivity)
                         # Files may be re-uploaded (new ID) but keep same name.
                         target_name = robust_filename_normalize(sync_info.canvas_filename)
                         found_file = None
-                        
+
                         for f in res_data['canvas_files']:
                             # Compare robustly
                             if robust_filename_normalize(f.filename) == target_name:
                                 found_file = f
                                 break
-                        
+
                         if found_file:
                             # Prevent duplicates: If file is already in 'new' list (new ID) but matched here via fallback
                             if found_file not in all_files:
-                                all_files.append(found_file)
+                                all_files.append(_adopt_redownload(found_file, sync_info))
                         else:
                             # Log error if file is truly gone
                             error_list.append(f"File removed from Canvas before download: {sync_info.canvas_filename}")
@@ -366,8 +386,13 @@ def run_sync():
                         # Task 4: Target Path Resolution
                         target_dir = local_path
                         calc_path = getattr(file, '_target_local_path', '')
-                        
-                        # Fallback to sync_info properties explicitly
+
+                        # Fallback to sync_info properties explicitly. With Fix 2
+                        # (`_adopt_redownload` stamping target_local_path onto the
+                        # queued file) this fallback is rarely needed, but it's
+                        # kept as a safety net for any future code path that
+                        # appends to ``all_files`` without going through the
+                        # redownload promotion.
                         if not calc_path:
                             # Union of clean + modified updates (updated_files is a
                             # computed property returning their concatenation).
@@ -397,15 +422,21 @@ def run_sync():
                         #    so replacing it loses nothing and avoids `_NewVersion` clutter.
                         #  - MODIFIED update (student edited locally): save alongside
                         #    as `_NewVersion` so annotations survive.
+                        #  - LOCALLY-DELETED redownload: clean overwrite. The file is
+                        #    by definition not on disk at this path, so any sibling
+                        #    we encounter is something the user kept intentionally
+                        #    (e.g. an earlier `_NewVersion`). Reclaim the original
+                        #    name without a numeric suffix.
                         is_update_clean = file in sel.get('updates_clean', [])
                         is_update_modified = file in sel.get('updates_modified', [])
+                        is_redownload = bool(getattr(file, '_is_redownload', False))
 
                         if is_update_modified and filepath.exists():
                             base = filepath.stem
                             ext = filepath.suffix
                             filepath = local_path / f"{base}{'_NewVersion'}{ext}"
                             filepath = cm._handle_conflict(filepath)
-                        elif is_update_clean and filepath.exists():
+                        elif (is_update_clean or is_redownload) and filepath.exists():
                             # Claim the exact path. Remove the stale file so the
                             # download writes cleanly without `_handle_conflict`
                             # adding a numeric suffix. If unlink fails (file open
@@ -430,6 +461,17 @@ def run_sync():
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
                                 _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
 
+                                # Mode A inline: derive the module subfolder from
+                                # the analyzer's target_local_path so the entity
+                                # writes to the right module folder. (In Mode B,
+                                # _resolve_secondary_path always routes to the
+                                # category folder, so module_path is ignored.)
+                                _sec_module_path = None
+                                if not _sec_settings.get('isolate_secondary_content', True):
+                                    _calc_dir = Path(calc_path).parent if calc_path else Path('.')
+                                    if str(_calc_dir) not in ('.', ''):
+                                        _sec_module_path = local_path / _calc_dir
+
                                 try:
                                     sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
                                         safe_thread_wrapper,
@@ -440,7 +482,8 @@ def run_sync():
                                         Path(local_path),
                                         sync_mgr,
                                         _sec_settings,
-                                        None, None, Path(local_path), course_name
+                                        None, None, Path(local_path), course_name,
+                                        _sec_module_path,
                                     )
                                 except Exception as _sec_err:
                                     # Let the error bubble up to the outer retry loop
@@ -458,30 +501,58 @@ def run_sync():
                                     # bypass the `file.id < 0` branch and enter the standard
                                     # HTTP download path with full retry + cancellation support.
                                     if sec_attachments:
-                                        from sync_manager import CanvasFileInfo as _CFI
+                                        from sync_manager import (
+                                            CanvasFileInfo as _CFI,
+                                            make_secondary_id as _make_sec_id,
+                                        )
                                         attach_dir = sec_filepath.parent
-                                        
+
                                         # Deduplication guard: prevent double-queueing if
                                         # the attachment was already in the sync selection
                                         # (e.g. both HTML + attachment were locally deleted)
                                         _queued_ids = {getattr(f, 'id', None) for f in all_files}
+
+                                        # On-disk dedup: attachments whose manifest entry
+                                        # already points to a file currently present on
+                                        # disk should not be re-queued — that's the
+                                        # "delete only the .html, redownload it" failure
+                                        # mode that produces ``attachment (1).pdf``.
+                                        # Attachment IDs are positive in Mode A and
+                                        # synthetic-negative in Mode B, so we look up
+                                        # both forms.
+                                        _isolate_now = _sec_settings.get('isolate_secondary_content', True)
+                                        _files_section = manifest.get('files', {})
+
                                         for att in sec_attachments:
                                             att_id = att.get('id')
                                             att_url = att.get('url', '')
                                             att_filename = att.get('filename', att.get('display_name', 'attachment'))
-                                            
+
                                             if not att_url or not att_id:
                                                 continue
-                                                
+
+                                            # Manifest IDs use positive (Mode A) or
+                                            # synthetic-negative (Mode B) form.  Use
+                                            # whichever the contract dictates so the
+                                            # lookup matches what initial download wrote.
+                                            _manifest_att_id = (
+                                                _make_sec_id('attachment', att_id) if _isolate_now else att_id
+                                            )
+                                            _manifest_entry = _files_section.get(str(_manifest_att_id))
+                                            if _manifest_entry:
+                                                _existing_path = local_path / _manifest_entry.get('local_path', '')
+                                                if _existing_path.exists():
+                                                    continue  # Already on disk — skip re-queue
+
                                             # Guard against cross-queue and intra-document duplicates
-                                            if att_id in _queued_ids:
-                                                continue  
-                                                
-                                            # Add the ID to the set to prevent duplicate links 
+                                            if att_id in _queued_ids or _manifest_att_id in _queued_ids:
+                                                continue
+
+                                            # Add the ID to the set to prevent duplicate links
                                             # within the same HTML document from firing twice
                                             _queued_ids.add(att_id)
                                             att_info = _CFI(
-                                                id=att_id,
+                                                id=_manifest_att_id,
                                                 filename=att_filename,
                                                 display_name=att.get('display_name', att_filename),
                                                 size=att.get('size', 0),
@@ -492,7 +563,7 @@ def run_sync():
                                             try:
                                                 att_info._target_local_path = str(
                                                     (attach_dir / cm._sanitize_filename(att_filename)).relative_to(local_path)
-                                                )
+                                                ).replace('\\', '/')
                                             except ValueError:
                                                 # Fallback: attachment dir is outside local_path — use filename only
                                                 att_info._target_local_path = cm._sanitize_filename(att_filename)
@@ -541,8 +612,8 @@ def run_sync():
                                     await f.write(html_content)
 
                             if is_url_ext or is_html_ext:
-                                rel_path = filepath.relative_to(local_path)
-                                sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
+                                rel_path = str(filepath.relative_to(local_path)).replace('\\', '/')
+                                sync_mgr.add_file_to_manifest(manifest, file, rel_path)
                                 synced_counter[0] += 1
                                 st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                 synced_details[pair_idx].append(display_file_name)
@@ -646,8 +717,8 @@ def run_sync():
                                                     atomic_rename_done = True
                                                     
                                                     # Only commit to DB AFTER file is physically complete on disk
-                                                    rel_path = filepath.relative_to(local_path)
-                                                    sync_mgr.add_file_to_manifest(manifest, file, str(rel_path))
+                                                    rel_path = str(filepath.relative_to(local_path)).replace('\\', '/')
+                                                    sync_mgr.add_file_to_manifest(manifest, file, rel_path)
                                                     synced_counter[0] += 1
                                                     st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                                     
