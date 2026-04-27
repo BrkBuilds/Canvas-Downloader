@@ -1,3 +1,9 @@
+- [x] **Sync Engine Robustness & Mode A/B Parity** (2026-04-27):
+    - [x] **Locally-Deleted File Handling**: Refactored `analyze_course` to prioritize local existence, ensuring locally-deleted files land back in their correct module subfolders.
+    - [x] **Mode A/B Alignment**: Unified synthetic content filenames and attachment routing across Mode A (inline) and Mode B (isolated).
+    - [x] **Clean Redownloads**: Implemented `_adopt_redownload` for clean overwrites of locally-deleted files, eliminating `_NewVersion` suffix clutter.
+    - [x] **Attachment Deduping**: Fixed "duplicate attachment" bug by verifying manifest and on-disk presence before re-queuing.
+    - [x] **Path Normalization**: Standardized manifest writes to use forward slashes (`/`) globally.
 - [x] **Sync Analysis Optimization & UI Unblocking** (2026-04-27):
     - [x] **Redundant Scan Elimination**: Refactored `_get_files_from_modules` to emit a `module_map` during the initial metadata sweep.
     - [x] **Target Path Pre-Calculation Bypass**: Threaded `module_map` into `analyze_course`, eliminating the secondary Canvas API sweep entirely and cutting ~30 network requests per course during Sync Review.

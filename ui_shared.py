@@ -63,9 +63,14 @@ def render_completion_card(synced_count: int, error_count: int,
         </style>
         """)
         _label = 'sync' if mode == 'sync' else 'download'
+        _card_title = 'All Up to Date'
+        if mode == 'sync':
+            _is_qs = st.session_state.get('sync_quick_mode', False)
+            _card_title = 'Quick Sync done! All files up to date' if _is_qs else 'Sync done! All files up to date'
+
         st.markdown(
             "<div class='completion-card success'>"
-            "<div class='card-title'>All Up to Date</div>"
+            f"<div class='card-title'>{_card_title}</div>"
             f"<p style='color:#86efac;font-size:1rem;margin:8px 0 0;'>"
             f"Nothing to {_label} — all files are up to date!"
             "</p></div>",

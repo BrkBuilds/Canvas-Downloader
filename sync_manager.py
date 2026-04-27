@@ -581,47 +581,27 @@ class SyncManager:
         # Temporary sets/lists for deduplication
         raw_new_files = []
         raw_locally_deleted = []
-        _phase1_locdel_seen = set()
 
         # Deduplicate canvas files based on their target path and size
         unique_canvas_files = []
         seen_path_sizes = set()
-        
+
         for c_file in canvas_files:
             file_id = str(c_file.id)
-            
-            # --- CRITICAL ARCHITECTURAL PATCH: The Phase 1 Existence Guard ---
-            if file_id in files_section:
-                entry = files_section[file_id]
-                # Reconstruct the exact physical path from the manifest
-                check_path = self.local_path / entry.get('local_path', '')
-                
-                # If it was previously downloaded but is physically missing now:
-                if not check_path.exists() and entry.get('downloaded_at') and not entry.get('is_ignored', False):
-                    # URL Compiler Bypass (Phase 1)
-                    if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
-                        pass  # Treat as up-to-date by silently skipping the deletion flag
-                    # Archive Extraction Bypass (Phase 1)
-                    elif convert_zip_enabled and _is_archive_path(str(entry.get('local_path', ''))):
-                        pass  # Archive was extracted & deleted; skip deletion flag
-                    else:
-                        sync_info = self._dict_to_sync_info(file_id, entry)
-                        # Add to locally deleted if not already caught
-                        raw_id_str = str(sync_info.canvas_file_id)
-                        if raw_id_str not in _phase1_locdel_seen:
-                            _phase1_locdel_seen.add(raw_id_str)
-                            raw_locally_deleted.append(sync_info)
-            # -----------------------------------------------------------------
-            
             seen_ids.add(file_id)
-            
-            # Determine target path
+
+            # Determine target path. ``target_paths`` may key on positive
+            # Canvas file IDs *or* synthetic negative IDs (Pages, Assignments,
+            # Quizzes, Discussions, ExternalUrls — populated by the modules
+            # scan in canvas_logic._get_files_from_modules).  This is what
+            # lets Mode A inline secondary content land in the right module
+            # subfolder during sync.
             subfolder = target_paths.get(c_file.id, "")
             if subfolder:
                 calc_path = f"{subfolder}/{c_file.filename}"
             else:
                 calc_path = c_file.filename
-                
+
             path_size_key = (calc_path.lower(), getattr(c_file, 'size', 0))
             if path_size_key not in seen_path_sizes:
                 seen_path_sizes.add(path_size_key)
@@ -675,8 +655,6 @@ class SyncManager:
                 local_path = self.local_path / entry.get('local_path', '')
                 sync_info = self._dict_to_sync_info(file_id, entry, c_file)
                 sync_info.target_local_path = calc_path
-                
-                is_newer_on_canvas = self._is_canvas_newer(c_file, entry)
 
                 # Pre-calculate intrinsic state for UI routing (restoring ignored files)
                 _origin_category = 'uptodate_files'
@@ -688,7 +666,30 @@ class SyncManager:
                     c_file._target_local_path = calc_path
                     _origin_category = 'new_files'
                     _original_item = c_file
-                elif is_newer_on_canvas:
+                elif not local_path.exists():
+                    # Local file is gone: respect the user's deletion regardless
+                    # of Canvas's update timestamp. (Was previously split across
+                    # a dedicated "Phase 1 Existence Guard" and the post-update
+                    # branch below; merged here so the same file_id can never
+                    # land in two result buckets simultaneously.)
+                    _calc_path_p = Path(calc_path)
+                    if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
+                        # URL Compiler bypass: file was post-processed away on disk.
+                        _origin_category = 'uptodate_files'
+                        _original_item = (c_file, sync_info)
+                    elif convert_zip_enabled and _is_archive_path(calc_path):
+                        # Archive Extraction bypass: archive was extracted & deleted.
+                        _origin_category = 'uptodate_files'
+                        _original_item = (c_file, sync_info)
+                    elif entry.get('downloaded_at'):
+                        _origin_category = 'locally_deleted_files'
+                        _original_item = sync_info
+                    else:
+                        # Manifest stub with no prior download → semantically a new file.
+                        c_file._target_local_path = calc_path
+                        _origin_category = 'new_files'
+                        _original_item = c_file
+                elif self._is_canvas_newer(c_file, entry):
                     _mod_state = self._classify_local_modification(
                         local_path, entry.get('original_md5', '')
                     )
@@ -697,29 +698,7 @@ class SyncManager:
                         else 'updated_clean_files'
                     )
                     _original_item = (c_file, sync_info)
-                else:
-                    if local_path.exists():
-                        _origin_category = 'uptodate_files'
-                        _original_item = (c_file, sync_info)
-                    else:
-                        _calc_path_p = Path(calc_path)
-                        if convert_urls_enabled and _calc_path_p.suffix.lower() in {'.url', '.webloc'}:
-                            _origin_category = 'uptodate_files'
-                            _original_item = (c_file, sync_info)
-                        elif convert_zip_enabled and _is_archive_path(calc_path):
-                            _origin_category = 'uptodate_files'
-                            _original_item = (c_file, sync_info)
-                        else:
-                            if entry.get('downloaded_at'):
-                                _origin_category = 'locally_deleted_files'
-                                _original_item = sync_info
-                            else:
-                                # Previously routed to 'missing_files' (retired).
-                                # Semantically identical to 'new_files': student
-                                # does not have this file and needs to download it.
-                                c_file._target_local_path = calc_path
-                                _origin_category = 'new_files'
-                                _original_item = c_file
+                # else: uptodate (defaults already set)
 
                 if entry.get('is_ignored', False):
                     sync_info.origin_category = _origin_category

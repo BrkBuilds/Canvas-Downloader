@@ -101,7 +101,9 @@ def show_sync_complete():
     ):
         _sync_count = st.session_state.get('synced_count', 0)
         if _sync_count == 0:
-            play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
+            _is_qs = st.session_state.get('sync_quick_mode', False)
+            _notif_mode = 'quick_sync_uptodate' if _is_qs else 'sync_uptodate'
+            play_completion_beep(mode=_notif_mode, summary='All files are up to date - nothing to download.')
         else:
             _sync_courses = len(st.session_state.get('sync_selections', []))
             _sync_summary = f"Synced {_sync_count} file{'s' if _sync_count != 1 else ''} across {_sync_courses} course{'s' if _sync_courses != 1 else ''}."
