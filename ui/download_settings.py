@@ -13,6 +13,7 @@ Contains:
 from __future__ import annotations
 
 import base64
+import functools
 import os
 import sys
 import time
@@ -40,6 +41,29 @@ def _resolve_path(path):
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, path)
     return path
+
+
+@functools.lru_cache(maxsize=64)
+def _load_b64(path):
+    """Load a file and base64-encode it. Cached: assets don't change at runtime."""
+    try:
+        with open(_resolve_path(path), "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        return ""
+
+
+def safe_b64(name):
+    """Load an asset PNG by name and return base64 string, or "" on failure.
+
+    Cached via the underlying ``get_base64_image`` lru_cache, so repeated
+    calls during reruns are free.
+    """
+    try:
+        res = get_base64_image(f"assets/{name}")
+        return res if res else ""
+    except Exception:
+        return ""
 
 
 def _select_folder():
@@ -375,173 +399,8 @@ def render_download_settings(fetch_courses_fn):
         mode="card"
     )
 
-    def _load_b64(path):
-        import base64
-        try:
-            with open(_resolve_path(path), "rb") as f:
-                return base64.b64encode(f.read()).decode()
-        except FileNotFoundError:
-            return ""
-
-    b64_icon_all = _load_b64("assets/icon_all_files.png")
-    b64_icon_study = _load_b64("assets/icon_study_files.png")
-    active_include = st.session_state.get('file_filter', 'all')
-    active_include_key = "all" if active_include == 'all' else "study"
-    st.markdown(f'''
-    <style>
-    /* GLOBAL CHECKBOX PSEUDO-ELEMENT BASE */
-    div[class*="st-key-btn_"] button::before {{
-        content: "" !important;
-        position: absolute !important;
-        top: 10px !important;
-        right: 10px !important;
-        width: 16px !important;
-        height: 16px !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 4px !important;
-        background-color: transparent !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        transition: all 0.2s ease-in-out !important;
-        box-sizing: border-box !important;
-    }}
-    /* Hide Checkboxes on Action Buttons & Master Toggles */
-    div.st-key-btn_save_config button::before,
-    div.st-key-btn_presets_hub button::before,
-    div.st-key-btn_dl_secondary_master button::before,
-    div.st-key-btn_convert_master button::before,
-    div.st-key-btn_preset_hub_close button::before {{
-        display: none !important;
-    }}
-    /* Circular Mutually Exclusive Toggles */
-    div[class*="st-key-btn_include_"] button::before,
-    div[class*="st-key-btn_org_"] button::before,
-    div[class*="st-key-btn_sec_org_"] button::before {{
-        border-radius: 50% !important;
-    }}
-    /* Apply generic buffer so text avoids the absolute checkboxes */
-    div[class*="st-key-btn_"] button p, 
-    div[class*="st-key-btn_"] button::after {{
-        padding-right: 16px !important;
-        box-sizing: border-box !important;
-    }}
-    /* Exclude Organization Master Buttons from Text Buffer */
-    div.st-key-btn_org_all button p, div.st-key-btn_org_all button::after,
-    div.st-key-btn_org_modules button p, div.st-key-btn_org_modules button::after {{
-        padding-right: 0px !important;
-    }}
-
-    /* 1. Outer Container & Crush horizontal gap */
-    div[class*="st-key-include_files_segmented_wrapper"] {{
-        margin-top: 5px !important;
-    }}
-
-    /* 2. Stretch column wrappers for dynamic height */
-    div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="column"] > div,
-    div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"] {{
-        height: 100% !important;
-    }}
-
-    /* 3. Base Button: Flex Column + Relative Position */
-    div[class*="st-key-btn_include_"] button {{
-        position: relative !important;
-        height: 150px !important;
-        background-color: transparent !important;
-        background-repeat: no-repeat !important;
-        background-position: center 18px !important;
-        background-size: 55px !important;
-        padding-top: 85px !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        transition: all 0.2s ease-in-out !important;
-        opacity: 0.75 !important;
-        color: #a0a0a0 !important;
-    }}
-
-    /* 4. Primary Title Styling (The native button label) */
-    div[class*="st-key-btn_include_"] button p {{
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        margin: 0 !important;
-        margin-bottom: 0px !important;
-        line-height: 1.2 !important;
-        color: inherit !important;
-    }}
-
-    div[class*="st-key-btn_include_"] button::after {{
-        margin-bottom: 0px !important;
-        padding-bottom: 0px !important;
-    }}
-
-    /* 5. Geometry lockdown for radio pseudo-element on Card 1 */
-    div[class*="st-key-btn_include_"] button::before {{
-        top: 16px !important;
-        right: 16px !important;
-        box-sizing: border-box !important;
-    }}
-
-    /* Icon Layer (native background) */
-    div.st-key-btn_include_all button {{ background-image: url('data:image/png;base64,{b64_icon_all}') !important; }}
-    div.st-key-btn_include_study button {{ background-image: url('data:image/png;base64,{b64_icon_study}') !important; }}
-
-    /* 6. Descriptions (::after) */
-    div.st-key-btn_include_all button::after {{
-        content: "Includes everything from the Canvas folder" !important;
-        font-size: 0.85rem !important;
-        line-height: 1.1 !important;
-        color: #a0a0a0 !important;
-        margin-top: -1px !important;
-        font-weight: 400 !important;
-    }}
-    div.st-key-btn_include_study button::after {{
-        content: "Download PDFs & PowerPoints only" !important;
-        font-size: 0.85rem !important;
-        line-height: 1.1 !important;
-        color: #a0a0a0 !important;
-        margin-top: -1px !important;
-        font-weight: 400 !important;
-    }}
-
-    /* 6.5 Hover State (Inactive Buttons) */
-    div[class*="st-key-btn_include_"] button:hover {{
-        border-color: #3fd9ff !important;
-        background-color: rgba(255, 255, 255, 0.02) !important;
-        box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        opacity: 1 !important;
-        color: #ffffff !important;
-    }}
-
-    /* 7. Active State Logic */
-    div.st-key-btn_include_{active_include_key} button {{
-        border: 1px solid #3fd9ff !important;
-        background-color: rgba(56, 189, 248, 0.05) !important;
-        box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        opacity: 1 !important;
-        color: #ffffff !important;
-    }}
-    /* Protect Active Blue Pill from Grey Hover Override */
-    div.st-key-btn_include_{active_include_key} button:hover {{
-        border: 1px solid #3fd9ff !important;
-        background-color: rgba(56, 189, 248, 0.08) !important;
-        box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        opacity: 1 !important;
-        color: #ffffff !important;
-    }}
-
-    div[class*="st-key-btn_include_"] button:hover::before {{ border-color: #3fd9ff !important; }}
-    div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color: transparent !important; }}
-    div.st-key-btn_include_{active_include_key} button::before {{
-        border: none !important;
-        background-color: transparent !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%233fd9ff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%233fd9ff'/%3E%3C/svg%3E") !important;
-    }}
-    </style>
-    ''', unsafe_allow_html=True)
+    # NOTE: Card 1 dynamic CSS (active include button state) is injected
+    # inside `_card1_fragment` so it re-emits on Card 1 fragment-only reruns.
 
     step2_container = st.empty()
     with step2_container.container():
@@ -562,17 +421,8 @@ def render_download_settings(fetch_courses_fn):
             st.session_state['dl_isolate_secondary'] = is_subfolders
 
         def _get_sec_org_segmented_css():
-            import base64
-            import os
-
-            def _get_b64(filepath):
-                if os.path.exists(filepath):
-                    with open(filepath, "rb") as f:
-                        return base64.b64encode(f.read()).decode()
-                return ""
-
-            b64_inline = _get_b64("assets/icon_sec_inline.png")
-            b64_sub = _get_b64("assets/icon_sec_subfolders.png")
+            b64_inline = _load_b64("assets/icon_sec_inline.png")
+            b64_sub = _load_b64("assets/icon_sec_subfolders.png")
 
             is_sub = st.session_state.get('dl_isolate_secondary', False)
             active_key = "subfolders" if is_sub else "inline"
@@ -723,15 +573,10 @@ def render_download_settings(fetch_courses_fn):
         """, unsafe_allow_html=True)
 
         # Card elevation CSS — Version-Agnostic Target for Streamlit 1.51+
-        c2_exp_global = st.session_state.get('card2_expanded', False)
-        card2_flex_rule = """
-    /* TIER 1 & TIER 2: Conditional Flex rule for Card 2 to match Card 1 height. 
-       If collapsed, this is omitted so the card shrink-fits to its textual content. */
-    div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_native_content"]) { flex: 1 !important; }
-    div[class*="st-key-card_native_content"] { flex: 1 !important; }
-    """ if c2_exp_global else ""
-
-        st.markdown(f"""
+        # NOTE: The conditional Card 2 flex rule (depends on `card2_expanded`)
+        # is re-injected inside `_card2_fragment` so the height-sync updates
+        # when only Card 2 reruns.
+        st.markdown("""
     <style>
     /* 1. Target via the explicit Streamlit Keys (Most Reliable) */
     div[class*="st-key-card_core_files"],
@@ -739,32 +584,209 @@ def render_download_settings(fetch_courses_fn):
     div[class*="st-key-card_ai_engine"],
 
     /* 2. Target via modern Streamlit 1.51+ Container ID + Trojan Class */
-    div[data-testid="stContainer"]:has(.step-2-card-target) {{
+    div[data-testid="stContainer"]:has(.step-2-card-target) {
         background-color: rgba(255, 255, 255, 0.04) !important;
         border-radius: 8px !important;
-    }}
+    }
 
-    /* === Card 1 ↔ Card 2: Dynamic Height Synchronization === */
-    div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_core_files"]) {{
+    /* === Card 1 ↔ Card 2: Height Synchronization ===
+       Both cards get flex:1 unconditionally so the headers stay aligned
+       whether Card 2 is collapsed or expanded. (Earlier the Card 2 rule
+       was conditional on `card2_expanded`, which made the Canvas Content
+       header drift upward when Card 2 collapsed.) */
+    div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_core_files"]),
+    div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-card_native_content"]) {
         flex: 1 !important;
-    }}
-    div[class*="st-key-card_core_files"] {{
+    }
+    div[class*="st-key-card_core_files"],
+    div[class*="st-key-card_native_content"] {
         flex: 1 !important;
-    }}
+    }
 
-    {card2_flex_rule}
+    /* Vertical alignment shim — Card 2's trojan div has a more aggressive
+       negative margin-top (-25px) than Card 1's (-10px), which makes its
+       outer container collapse 15px higher up. Push Card 2 back down so
+       the card boxes start at the same Y as Card 1. */
+    div[class*="st-key-card_native_content"] {
+        margin-top: 15px !important;
+    }
 
     /* Push the "Include Files" section to the bottom of Card 1 */
-    div[class*="st-key-card1_include_section"] {{
+    div[class*="st-key-card1_include_section"] {
         margin-top: auto !important;
-    }}
+    }
     </style>
     """, unsafe_allow_html=True)
 
         col1, col2 = st.columns([3, 5], gap="medium")
 
         # --- COLUMN 1: Organization & Include Files ---
-        with col1:
+        @st.fragment
+        def _render_card1():
+            # Card 1 dynamic CSS (active include + global button base).
+            # Lives inside the fragment so the active-state CSS re-injects on
+            # Card 1 fragment-only reruns (toggling include keeps the rest of
+            # the page from rerunning, which is the whole point of fragments).
+            b64_icon_all = _load_b64("assets/icon_all_files.png")
+            b64_icon_study = _load_b64("assets/icon_study_files.png")
+            active_include = st.session_state.get('file_filter', 'all')
+            active_include_key = "all" if active_include == 'all' else "study"
+            st.markdown(f'''
+            <style>
+            /* GLOBAL CHECKBOX PSEUDO-ELEMENT BASE */
+            div[class*="st-key-btn_"] button::before {{
+                content: "" !important;
+                position: absolute !important;
+                top: 10px !important;
+                right: 10px !important;
+                width: 16px !important;
+                height: 16px !important;
+                border: 2px solid rgba(255, 255, 255, 0.2) !important;
+                border-radius: 4px !important;
+                background-color: transparent !important;
+                background-size: contain !important;
+                background-repeat: no-repeat !important;
+                background-position: center !important;
+                transition: all 0.2s ease-in-out !important;
+                box-sizing: border-box !important;
+            }}
+            /* Hide Checkboxes on Action Buttons & Master Toggles */
+            div.st-key-btn_save_config button::before,
+            div.st-key-btn_presets_hub button::before,
+            div.st-key-btn_dl_secondary_master button::before,
+            div.st-key-btn_convert_master button::before,
+            div.st-key-btn_preset_hub_close button::before {{
+                display: none !important;
+            }}
+            /* Circular Mutually Exclusive Toggles */
+            div[class*="st-key-btn_include_"] button::before,
+            div[class*="st-key-btn_org_"] button::before,
+            div[class*="st-key-btn_sec_org_"] button::before {{
+                border-radius: 50% !important;
+            }}
+            /* Apply generic buffer so text avoids the absolute checkboxes */
+            div[class*="st-key-btn_"] button p,
+            div[class*="st-key-btn_"] button::after {{
+                padding-right: 16px !important;
+                box-sizing: border-box !important;
+            }}
+            /* Exclude Organization Master Buttons from Text Buffer */
+            div.st-key-btn_org_all button p, div.st-key-btn_org_all button::after,
+            div.st-key-btn_org_modules button p, div.st-key-btn_org_modules button::after {{
+                padding-right: 0px !important;
+            }}
+
+            /* 1. Outer Container & Crush horizontal gap */
+            div[class*="st-key-include_files_segmented_wrapper"] {{
+                margin-top: 5px !important;
+            }}
+
+            /* 2. Stretch column wrappers for dynamic height */
+            div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="column"] > div,
+            div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"] {{
+                height: 100% !important;
+            }}
+
+            /* 3. Base Button: Flex Column + Relative Position */
+            div[class*="st-key-btn_include_"] button {{
+                position: relative !important;
+                height: 150px !important;
+                background-color: transparent !important;
+                background-repeat: no-repeat !important;
+                background-position: center 18px !important;
+                background-size: 55px !important;
+                padding-top: 85px !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 8px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                transition: all 0.2s ease-in-out !important;
+                opacity: 0.75 !important;
+                color: #a0a0a0 !important;
+            }}
+
+            /* 4. Primary Title Styling (The native button label) */
+            div[class*="st-key-btn_include_"] button p {{
+                font-size: 1.1rem !important;
+                font-weight: 600 !important;
+                margin: 0 !important;
+                margin-bottom: 0px !important;
+                line-height: 1.2 !important;
+                color: inherit !important;
+            }}
+
+            div[class*="st-key-btn_include_"] button::after {{
+                margin-bottom: 0px !important;
+                padding-bottom: 0px !important;
+            }}
+
+            /* 5. Geometry lockdown for radio pseudo-element on Card 1 */
+            div[class*="st-key-btn_include_"] button::before {{
+                top: 16px !important;
+                right: 16px !important;
+                box-sizing: border-box !important;
+            }}
+
+            /* Icon Layer (native background) */
+            div.st-key-btn_include_all button {{ background-image: url('data:image/png;base64,{b64_icon_all}') !important; }}
+            div.st-key-btn_include_study button {{ background-image: url('data:image/png;base64,{b64_icon_study}') !important; }}
+
+            /* 6. Descriptions (::after) */
+            div.st-key-btn_include_all button::after {{
+                content: "Includes everything from the Canvas folder" !important;
+                font-size: 0.85rem !important;
+                line-height: 1.1 !important;
+                color: #a0a0a0 !important;
+                margin-top: -1px !important;
+                font-weight: 400 !important;
+            }}
+            div.st-key-btn_include_study button::after {{
+                content: "Download PDFs & PowerPoints only" !important;
+                font-size: 0.85rem !important;
+                line-height: 1.1 !important;
+                color: #a0a0a0 !important;
+                margin-top: -1px !important;
+                font-weight: 400 !important;
+            }}
+
+            /* 6.5 Hover State (Inactive Buttons) */
+            div[class*="st-key-btn_include_"] button:hover {{
+                border-color: #3fd9ff !important;
+                background-color: rgba(255, 255, 255, 0.02) !important;
+                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                opacity: 1 !important;
+                color: #ffffff !important;
+            }}
+
+            /* 7. Active State Logic */
+            div.st-key-btn_include_{active_include_key} button {{
+                border: 1px solid #3fd9ff !important;
+                background-color: rgba(56, 189, 248, 0.05) !important;
+                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                opacity: 1 !important;
+                color: #ffffff !important;
+            }}
+            /* Protect Active Blue Pill from Grey Hover Override */
+            div.st-key-btn_include_{active_include_key} button:hover {{
+                border: 1px solid #3fd9ff !important;
+                background-color: rgba(56, 189, 248, 0.08) !important;
+                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                opacity: 1 !important;
+                color: #ffffff !important;
+            }}
+
+            div[class*="st-key-btn_include_"] button:hover::before {{ border-color: #3fd9ff !important; }}
+            div.st-key-btn_include_{active_include_key} button:hover::before {{ border-color: transparent !important; }}
+            div.st-key-btn_include_{active_include_key} button::before {{
+                border: none !important;
+                background-color: transparent !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%233fd9ff' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%233fd9ff'/%3E%3C/svg%3E") !important;
+            }}
+            </style>
+            ''', unsafe_allow_html=True)
+
             with st.container(border=True, key="card_core_files"):
                 b64_wf1 = _load_b64("assets/icon_workflow_1.png")
                 st.markdown(f"""<div class='step-2-card-target' style='position: relative; margin-top: -10px; margin-bottom: 12px;'>
@@ -926,8 +948,12 @@ def render_download_settings(fetch_courses_fn):
                 </style>
                 ''', unsafe_allow_html=True)
 
+        with col1:
+            _render_card1()
+
         # --- COLUMN 2: Additional Course Content ---
-        with col2:
+        @st.fragment
+        def _render_card2():
             with st.container(border=True, key="card_native_content"):
                 m_active = st.session_state.get('dl_secondary_master', False)
                 _sec_active = sum(1 for k in SECONDARY_CONTENT_KEYS if st.session_state.get(k, False))
@@ -1053,14 +1079,6 @@ def render_download_settings(fetch_courses_fn):
                     st.markdown(f"""<div style='display: flex; align-items: center; justify-content: space-between; padding-right: 10px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Canvas Content <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {c2_tag_bg}; color: {c2_tag_col}; border: {c2_tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{dynamic_tag}</span></div>""", unsafe_allow_html=True)
 
                 css_blocks = []
-
-                # Helper to safely load icon
-                def safe_b64(name):
-                    try:
-                        res = get_base64_image(f"assets/{name}")
-                        return res if res else ""
-                    except Exception:
-                        return ""
 
                 # Button data
                 button_defs = [
@@ -1249,11 +1267,15 @@ def render_download_settings(fetch_courses_fn):
 
 
 
+        with col2:
+            _render_card2()
+
         # Force a visual break between top and bottom rows
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
         # --- BOTTOM ROW: Conversion Settings / NotebookLM ---
-        with st.container(border=True, key="card_ai_engine"):
+        @st.fragment
+        def _render_card3_inner():
             # --- Conversion Button Data ---
             conv_button_defs = [
                 ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png'),
@@ -1287,70 +1309,48 @@ def render_download_settings(fetch_courses_fn):
             else:
                 conv_tag = f"<strong>ON</strong>  |  {_conv_active} selected"
 
-            # --- Generate CSS for each button ---
+            # --- Dynamic CSS only ---
+            # Static layout/geometry/description/hover rules live in
+            # styles/global.css (under "Card 3 — static button styling").
+            # Here we only emit the parts that depend on session state:
+            # icon URLs and active-state coloring + active checkmark SVG.
             conv_css_blocks = []
 
-            # Base styles — zero-indentation to prevent Streamlit code-block conversion
-            conv_css_blocks.append(
-    'div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }\n'
-    'div[class*="st-key-btn_convert_"] button > div,\n'
-    'div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] {\n'
-    'width: 100% !important; display: flex !important; justify-content: flex-start !important; text-align: left !important; }\n'
-    'div[class*="st-key-btn_convert_"] button p { text-align: left !important; width: 100% !important; margin-top: 0px !important; margin-bottom: 0px !important; line-height: 1.2 !important; }\n'
-    'div[class*="st-key-btn_convert_"] button::after { text-align: left !important; width: 100% !important; display: block !important; }\n'
-    'div[class*="st-key-btn_convert_"] button {\n'
-    'height: 58px !important; min-height: 0px !important;\n'
-    'padding-top: 10px !important; padding-bottom: 10px !important;\n'
-    'padding-right: 10px !important; padding-left: 52px !important;\n'
-    'background-position: 15px center !important; background-size: 30px !important;\n'
-    'background-repeat: no-repeat !important; border-radius: 12px !important;\n'
-    'display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent !important; }\n'
-    'div.st-key-btn_convert_master button { height: 48px !important; padding-top: 0px !important; padding-bottom: 0px !important; padding-left: 50px !important; background-size: 24px !important; justify-content: center !important; }\n'
-            )
-
-            # Master (Select All) CSS
+            # Master (Select All) — dynamic active state + icon
             m_active = st.session_state.get('notebooklm_master', False)
-            m_bg = "rgba(255, 255, 255, 0.12)" if m_active else "rgba(255, 255, 255, 0.1)"
-            m_border = "rgba(255, 255, 255, 0.1)"
-            m_ledge = "#f97316" if m_active else "transparent"
-            m_ledge_border = "#f97316" if m_active else m_border
             b64_conv_m = safe_b64('icon_conv_select_all.png')
             m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
 
-            conv_css_blocks.append(
-    f'div.st-key-btn_convert_master button {{ background-color: {m_bg} !important; border: 1px solid {m_border} !important; border-bottom: 1px solid {m_ledge_border} !important; box-shadow: inset 0 -3px 0 0 {m_ledge} !important; border-radius: 12px !important; {m_conv_img_rule} }}\n'
-            )
-            if not m_active:
-                conv_css_blocks.append(
-    'div.st-key-btn_convert_master button:hover { border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }\n'
-                )
             if m_active:
                 conv_css_blocks.append(
-    '/* Master button checkbox intentionally hidden by global rule. */\n'
+                    f'div.st-key-btn_convert_master button {{ background-color: rgba(255, 255, 255, 0.12) !important; border-bottom: 1px solid #f97316 !important; box-shadow: inset 0 -3px 0 0 #f97316 !important; {m_conv_img_rule} }}\n'
+                )
+            else:
+                conv_css_blocks.append(
+                    f'div.st-key-btn_convert_master button {{ {m_conv_img_rule} }}\n'
+                    'div.st-key-btn_convert_master button:hover { border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }\n'
                 )
 
-            # Child button CSS (per-toggle)
-            for conv_key, conv_title, conv_desc, conv_icon in conv_button_defs:
+            # Child buttons — icon (always) + active state colors + active checkmark
+            ACTIVE_CHECK_SVG = (
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' rx='4' fill='%23ff9838' mask='url(%23m)'/%3E%3C/svg%3E\")"
+            )
+            for conv_key, _conv_title, _conv_desc, conv_icon in conv_button_defs:
                 is_conv_active = st.session_state.get(conv_key, False)
-                c_bg = "rgba(249, 115, 22, 0.15)" if is_conv_active else "rgba(255, 255, 255, 0.02)"
-                c_border = "#f97316" if is_conv_active else "rgba(255, 255, 255, 0.1)"
                 b64_conv_c = safe_b64(conv_icon)
                 c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
 
                 if is_conv_active:
-                    c_conv_check = f'''div.st-key-btn_{conv_key} button::before {{ border: none !important; background-color: transparent !important; background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cdefs%3E%3Cmask id=\'m\'%3E%3Crect width=\'24\' height=\'24\' fill=\'white\'/%3E%3Cpath d=\'M20 6L9 17l-5-5\' fill=\'none\' stroke=\'black\' stroke-width=\'4\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/mask%3E%3C/defs%3E%3Crect width=\'24\' height=\'24\' rx=\'4\' fill=\'%23ff9838\' mask=\'url(%23m)\'/%3E%3C/svg%3E") !important; }}\n'''
-                    hover_color = "transparent"
+                    conv_css_blocks.append(
+                        f'div.st-key-btn_{conv_key} button {{ background-color: rgba(249, 115, 22, 0.15) !important; border: 1px solid #f97316 !important; {c_conv_img_rule} }}\n'
+                        f'div.st-key-btn_{conv_key} button::before {{ border: none !important; background-color: transparent !important; background-image: {ACTIVE_CHECK_SVG} !important; }}\n'
+                        f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: transparent !important; }}\n'
+                    )
                 else:
-                    c_conv_check = ""
-                    hover_color = "#f97316"
-
-                conv_css_blocks.append(
-    f'div.st-key-btn_{conv_key} button {{ background-color: {c_bg} !important; border: 1px solid {c_border} !important; {c_conv_img_rule} }}\n'
-    f'{c_conv_check}'
-    f'div.st-key-btn_{conv_key} button::after {{ content: "{conv_desc}" !important; font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; display: block !important; text-align: left !important; width: 100%; margin-top: -2px !important; line-height: 1.2 !important; }}\n'
-    f'div.st-key-btn_{conv_key} button:hover {{ border-color: #f97316 !important; }}\n'
-    f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: {hover_color} !important; }}\n'
-                )
+                    # Inactive — only the icon; defaults come from global.css
+                    conv_css_blocks.append(
+                        f'div.st-key-btn_{conv_key} button {{ {c_conv_img_rule} }}\n'
+                    )
 
             # --- Header HTML (separate injection) ---
             def toggle_card3():
@@ -1470,6 +1470,9 @@ def render_download_settings(fetch_courses_fn):
                         col = cols[idx % 4]
                         with col:
                             st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
+
+        with st.container(border=True, key="card_ai_engine"):
+            _render_card3_inner()
 
         # 2. Output Card
         with st.container(border=True, key="review_output_card"):

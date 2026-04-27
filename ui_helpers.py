@@ -3,6 +3,7 @@ UI Helper utilities for Canvas LMS Batch File Downloader.
 Shared helpers used by both download and sync modes.
 """
 
+import functools
 import html
 import logging
 import os
@@ -34,8 +35,14 @@ def resolve_path(path):
         return os.path.join(sys._MEIPASS, path)
     return path
 
+@functools.lru_cache(maxsize=128)
 def get_base64_image(image_path):
-    """Reads a local file and returns its Base64 string representation."""
+    """Reads a local file and returns its Base64 string representation.
+
+    Cached: assets are static at runtime, so the disk read + encode is
+    done at most once per (frozen) session. Cached output keeps repeated
+    Streamlit reruns from re-reading PNGs from disk.
+    """
     try:
         with open(resolve_path(image_path), "rb") as image_file:
             return base64.b64encode(image_file.read()).decode()
