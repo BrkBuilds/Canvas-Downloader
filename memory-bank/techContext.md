@@ -58,6 +58,9 @@ Canvas_LMS_batch_file_downloader/
 ## Sync Implementation Details
 - **Sync Contract Extraction**: The synchronization review process in `sync_ui.py` is now strictly decoupled from configuration logic.
 - **SQLite Single Source of Truth**: `_show_sync_confirmation` now unconditionally extracts the `sync_contract` for every course in a batch from the `.canvas_sync.db` using the `SyncManager`.
+- **Mode A/B Routing Logic**:
+    - **Mode A (Inline)**: Synthetic content (Pages, Assignments) are placed in their respective Module folders (if applicable) with routing prefixes (e.g., `Type: ParentName - Filename.html`). Attachment IDs are associated with the parent's module for subfolder nesting.
+    - **Mode B (Isolated)**: All secondary content is routed to a dedicated category subfolder (e.g., `Assignments/`) regardless of module placement. Synthetic IDs are intentionally excluded from the module map in this mode to ensure global category routing.
 - **Handoff Contract**: The extracted JSON contract is bound to `st.session_state['res_data']['contract']` for each course, ensuring the post-processing engine (Phase 3) receives the correct, persistent settings.
 - **Architectural Cleanup**: All legacy branching logic (Mode 0, 1, 2) and associated transient session state keys (`_config_mode`, `ind_*`) have been removed to ensure a predictable, deterministic sync flow.
     - **Windows**: Hidden via `ctypes.windll.kernel32.SetFileAttributesW`.

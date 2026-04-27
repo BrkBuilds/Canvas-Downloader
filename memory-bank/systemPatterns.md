@@ -98,7 +98,7 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Implementation*: Extract the entire blocking subroutine (e.g. `_analyze_course_blocking`) and dispatch it via `asyncio.run(asyncio.to_thread(safe_thread_wrapper, ...))`. This frees the Streamlit UI thread to continue cycling, while the injected `safe_thread_wrapper` allows the background worker to safely push progress hook updates and read cancellation flags from the session state.
 - **Redundant Scan Elimination (Metadata Side-Effects)**:
     - *Problem*: Downstream functions (like `analyze_course`) often require structural metadata (like mapping file IDs to their parent module names) that forces them to execute identical, redundant API queries against Canvas.
-    - *Implementation*: Upstream metadata discovery functions (`_get_files_from_modules`) should quietly compile and emit these structural mappings (`module_map`) as secondary side-products (e.g. returning a 3-tuple). Threading this pre-calculated map downstream completely bypasses secondary network fetches (O(n) -> O(1) network cost).
+    - *Implementation*: Upstream metadata discovery functions (`_get_files_from_modules`) should quietly compile and emit these structural mappings (`module_map`) as secondary side-products. Refactored `_get_files_from_modules` to build this map during its initial run and threaded it through `get_course_files_metadata` directly into `analyze_course` in `sync_manager.py`. This saves ~30 redundant Canvas API calls per course during Sync Review.
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
@@ -452,10 +452,22 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
     - *Pattern*: `download_secondary_entity` dynamically evaluates `has_attachments=bool(attachments)`. When True, `_save_secondary_entity` constructs the path as `Folder/Name/Name.html`, implicitly creating the parent subfolder via `Path.mkdir(parents=True, exist_ok=True)`. The function then passes the positive-ID `attachments` array back up to the caller so they can be injected into the main task queue, safely nesting inside the newly guaranteed directory.
 - **Phase 1 & Step 5 Existence Guard Pattern**:
     - *Problem*: Sync engines often rely on remote API results to drive their analysis. If an API call is restricted or fails to return an entity, the engine may skip the local existence check, creating a "Black Hole" where locally deleted files go undetected.
-    - *Solution*: Enforce an unconditional `Path.exists()` check at the top of every analysis loop. In Phase 1, verify existence before marking a file as "Seen." In the Step 5 deletion loop, prioritize the "Missing on Disk" check before any Canvas API guards. This guarantees local deletions are surfaced regardless of API availability.
+    - *Solution*: Enforce an unconditional `Path.exists()` check at the top of every analysis loop. Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 Existence Guard entirely and prioritize `local_path.exists()` checks in Phase 2 *before* checking `is_newer_on_canvas`. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps, and they land back in their correct module subfolders upon redownload.
 - **SimpleNamespace Proxy Reconstruction Pattern**:
     - *Problem*: Redownloading locally-deleted synthetic entities (which don't have a direct URL and are generated via API) fails if they aren't present in the active Canvas file scan.
-    - *Solution*: Use `types.SimpleNamespace` to reconstruct a proxy object from the SQLite manifest data. This lightweight proxy provides the required attributes (`id`, `filename`, etc.) to route the entity into the secondary generation pipeline while shielding it from the primary URL downloader, avoiding complex imports of internal data classes.
+    - *Solution*: Use `types.SimpleNamespace` to reconstruct a proxy object from the SQLite manifest data. This lightweight proxy provides the required attributes (`id`, `filename`, etc.) to route the entity into the secondary pipeline while shielding it from the primary URL downloader, avoiding complex imports of internal data classes.
+
+- **Secondary Content Routing Mode A/B Pattern**:
+    - *Problem*: Secondary content (Assignments, Quizzes, etc.) and their attachments must follow the same organizational rules as primary files, particularly regarding the `isolate_secondary_content` setting.
+    - *Implementation*: Handling `isolate_secondary_content` is centralized in `canvas_logic.py`. In Mode A (Inline), synthetic content filenames are prefixed with routing identifiers (e.g., `Type: ParentName - ...`). For attachments, module-linked parent entities propagate their module to children to ensure consistent subfolder routing regardless of the isolation mode.
+- **Clean Redownload Pattern (`_adopt_redownload`)**:
+    - *Problem*: Standard redownloads often treat missing files as "updates," potentially triggering the `_NewVersion` suffix logic if not carefully handled.
+    - *Implementation*: `sync/execution.py` utilizes `_adopt_redownload` for locally-deleted files. This pattern performs a clean overwrite (no suffix) by unlinking any existing partial matches and ensuring the new file takes the exact target path, preserving structural integrity.
+- **Attachment Manifest Verification Pattern**:
+    - *Problem*: Redownloading a parent `.html` file (e.g., an Assignment) might re-queue its attachments, leading to duplicate files (e.g., `file (1).pdf`) if they already exist on disk but were not part of the active sync batch.
+    - *Implementation*: Before queuing secondary attachments, the system checks both the SQLite manifest and the physical disk. If the attachment is already recorded and present, the download is skipped, preventing unnecessary network I/O and filename clutter.
+- **Manifest Path Normalization**:
+    - *Pattern*: To ensure cross-platform database portability and prevent duplicate entries due to slash-direction mismatches (Windows `\` vs UNIX `/`), all paths written to the SQLite manifest are strictly normalized to forward slashes (`/`).
 
 ## Error Handling & Logging
 - **Locked File Pruning**: Pre-filtering Canvas `File` objects for missing `url` attributes to prevent batch download crashes.

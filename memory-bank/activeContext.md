@@ -1,6 +1,14 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Session 2026-04-27: Sync Engine Robustness & Mode A/B Parity**
+    - Done: Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 existence guard and prioritize local existence checks in Phase 2. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps.
+    - Done: Standardized `SyncFileInfo.target_local_path` to always reflect the analyzer's calculated path, and updated `target_paths` lookup to resolve both positive and synthetic negative IDs.
+    - Done: Enhanced `canvas_logic.py` to handle the `isolate_secondary_content` setting once per run. In Mode A (inline), synthetic content filenames now include routing prefixes (e.g., `Type: ParentName - ...`), and module-linked entities propagate their parent's module to attachment IDs for correct subfolder routing.
+    - Done: Implemented `_adopt_redownload` in `sync/execution.py` to handle redownloads of locally-deleted files with clean overwrites (no `_NewVersion` suffix), ensuring path reclamation for updates and redownloads.
+    - Done: Improved attachment deduplication by checking the manifest and on-disk presence before re-queuing, preventing duplicate attachments (e.g., `(1).pdf`) when only the parent `.html` is redownloaded.
+    - Done: Standardized path separators to forward slashes (`/`) in all manifest write operations to ensure cross-platform consistency.
+
 - **Session 2026-04-27: Sync Analysis Optimization & UI Unblocking**
     - Done: Addressed severe I/O bottleneck in the scanning phase by eliminating the duplicate module scan. Refactored `_get_files_from_modules` in `canvas_logic.py` to build a `module_map` during its initial run and threaded it through `get_course_files_metadata` directly into `analyze_course` in `sync_manager.py`. This saves ~30 redundant Canvas API calls per course during Sync Review.
     - Done: Eliminated Streamlit UI thread freezing during the Sync Analysis phase. Extracted all blocking API calls into `_analyze_course_blocking` and wrapped execution in `asyncio.to_thread` utilizing the existing `safe_thread_wrapper` pattern to safely inject Streamlit's `ScriptRunContext`. This allows the Progress Bar and Cancel button to remain highly responsive.

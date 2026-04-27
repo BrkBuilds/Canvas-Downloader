@@ -320,11 +320,15 @@ class CanvasManager:
             logger.error(f"Error during module scan fallback: {e}")
 
         # --- Phase 3: Secondary Content Metadata ---
+        # Pass the module map so attachments of module-linked entities can
+        # inherit their parent's module folder (Mode A path routing).
         secondary_fetch_success = {}
         if secondary_content_settings:
             try:
                 secondary_items, secondary_fetch_success = self.get_secondary_content_metadata(
-                    course, secondary_content_settings, is_scanning_phase=is_scanning_phase
+                    course, secondary_content_settings,
+                    is_scanning_phase=is_scanning_phase,
+                    module_map=module_map,
                 )
                 for s_info in secondary_items:
                     if s_info.id not in all_files_map:
@@ -338,26 +342,42 @@ class CanvasManager:
         """Fallback: Get files by iterating through modules.
 
         Also emits mock CanvasFileInfo for secondary entity types
-        (Assignment, Quiz, Discussion) when *secondary_content_settings*
-        enables them.  This allows the sync analysis engine to see these
-        entities without additional API calls.
+        (Assignment, Quiz, Discussion, Page, ExternalUrl) when
+        *secondary_content_settings* enables them.  This allows the sync
+        analysis engine to see these entities without additional API calls.
+
+        ``module_map`` is keyed by **both** raw positive Canvas file IDs
+        (for ordinary File items) **and** synthetic negative IDs (for
+        secondary content), so ``analyze_course`` can resolve a module
+        subfolder for every entity that lives inside a module — which is
+        what lets Mode A inline secondary content land in the right
+        module subfolder during sync.
 
         Returns:
             Tuple of (list[CanvasFileInfo], dict):
               - List of discovered file info objects
-              - Module map: content_id (int) → sanitized module folder name (str)
-                for use by analyze_course target path resolution.
+              - Module map: ID (int, positive or synthetic-negative) →
+                sanitized module folder name (str)
         """
         from sync_manager import CanvasFileInfo
-        
+
+        # Determine secondary-content layout mode once. Mode A (isolate=False)
+        # needs filenames carrying the routing prefix so the analyzer's
+        # calc_path = "<module>/Type: Foo.html" matches the on-disk layout.
+        # Mode B (isolate=True) keeps basenames; _resolve_secondary_path
+        # handles the actual category/folder placement at write time.
+        isolate = True
+        if secondary_content_settings:
+            isolate = secondary_content_settings.get('isolate_secondary_content', True)
+
         files = []
-        module_map = {}  # content_id → sanitized module folder name (for analyze_course target paths)
+        module_map = {}
         modules = list(course.get_modules())
         total_modules = len(modules)
         for idx, module in enumerate(modules):
             if progress_callback:
                 progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
-            
+
             clean_module_name = self._sanitize_filename(module.name)
             items = module.get_module_items()
             for item in items:
@@ -386,14 +406,27 @@ class CanvasManager:
                         pass
                 elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
                     ext = ".html" if item.type == 'Page' else ".url"
-                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + ext
-                    
+                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
+                    if isolate or item.type != 'Page':
+                        # Pages get the routing prefix in Mode A; ExternalUrls
+                        # use plain shortcut filenames in both modes.
+                        emitted_filename = safe_base + ext
+                    else:
+                        routing = _ENTITY_ROUTING['page']
+                        emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
+
                     actual_url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None) or getattr(item, 'url', '')
-                    
+                    syn_id = -int(item.id) if hasattr(item, 'id') else 0
+                    # Mode A uses module subfolders; Mode B routes to
+                    # ``<Category>/`` regardless of module placement, so we
+                    # only register synthetic IDs in module_map for Mode A.
+                    if syn_id and not isolate:
+                        module_map[syn_id] = clean_module_name
+
                     mock_info = CanvasFileInfo(
-                        id=-int(item.id) if hasattr(item, 'id') else 0,
-                        filename=safe_title,
-                        display_name=safe_title,
+                        id=syn_id,
+                        filename=emitted_filename,
+                        display_name=safe_base + ext,
                         size=0,
                         modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
                         url=actual_url,
@@ -403,11 +436,19 @@ class CanvasManager:
 
                 # --- Secondary entities found in modules ---
                 elif item.type == 'Assignment' and secondary_content_settings and secondary_content_settings.get('download_assignments'):
-                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
                     content_id = getattr(item, 'content_id', 0) or 0
+                    syn_id = make_secondary_id('assignment', content_id)
+                    if not isolate:
+                        module_map[syn_id] = clean_module_name
+                    if isolate:
+                        emitted_filename = safe_base + '.html'
+                    else:
+                        routing = _ENTITY_ROUTING['assignment']
+                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
                     files.append(CanvasFileInfo(
-                        id=make_secondary_id('assignment', content_id),
-                        filename=safe_title,
+                        id=syn_id,
+                        filename=emitted_filename,
                         display_name=getattr(item, 'title', 'Untitled'),
                         size=0,
                         modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
@@ -415,11 +456,19 @@ class CanvasManager:
                         content_type='text/html',
                     ))
                 elif item.type == 'Quiz' and secondary_content_settings and secondary_content_settings.get('download_quizzes'):
-                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
                     content_id = getattr(item, 'content_id', 0) or 0
+                    syn_id = make_secondary_id('quiz', content_id)
+                    if not isolate:
+                        module_map[syn_id] = clean_module_name
+                    if isolate:
+                        emitted_filename = safe_base + '.html'
+                    else:
+                        routing = _ENTITY_ROUTING['quiz']
+                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
                     files.append(CanvasFileInfo(
-                        id=make_secondary_id('quiz', content_id),
-                        filename=safe_title,
+                        id=syn_id,
+                        filename=emitted_filename,
                         display_name=getattr(item, 'title', 'Untitled'),
                         size=0,
                         modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
@@ -427,11 +476,19 @@ class CanvasManager:
                         content_type='text/html',
                     ))
                 elif item.type == 'Discussion' and secondary_content_settings and secondary_content_settings.get('download_discussions'):
-                    safe_title = self._sanitize_filename(getattr(item, 'title', 'Untitled')) + '.html'
+                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
                     content_id = getattr(item, 'content_id', 0) or 0
+                    syn_id = make_secondary_id('discussion', content_id)
+                    if not isolate:
+                        module_map[syn_id] = clean_module_name
+                    if isolate:
+                        emitted_filename = safe_base + '.html'
+                    else:
+                        routing = _ENTITY_ROUTING['discussion']
+                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
                     files.append(CanvasFileInfo(
-                        id=make_secondary_id('discussion', content_id),
-                        filename=safe_title,
+                        id=syn_id,
+                        filename=emitted_filename,
                         display_name=getattr(item, 'title', 'Untitled'),
                         size=0,
                         modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
@@ -440,7 +497,8 @@ class CanvasManager:
                     ))
         return files, module_map
 
-    def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False):
+    def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False,
+                                       module_map=None):
         """Return (items, fetch_success) for *standalone* secondary content.
 
         This covers entities that are NOT linked from any module and thus
@@ -449,6 +507,12 @@ class CanvasManager:
 
         Used by the sync analysis path to detect new/updated/missing
         secondary entities in the manifest.
+
+        ``module_map`` is mutated in place: when an emitted attachment
+        belongs to a module-linked parent entity (Assignment / Quiz /
+        Discussion that already appears in ``module_map``), the
+        attachment's ID is added so the analyzer can route Mode A
+        attachments back into the correct module subfolder.
 
         Returns
         -------
@@ -459,6 +523,9 @@ class CanvasManager:
             deletions when a fetch times out.
         """
         from sync_manager import CanvasFileInfo
+
+        if module_map is None:
+            module_map = {}
 
         items = []
         fetch_success = {}
@@ -571,15 +638,18 @@ class CanvasManager:
                             continue
                         from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
-                        
+
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
                             att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
                         elif isolate:
                             att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
                         else:
-                            att_prefixed_name = att_raw_name
-                            
+                            # Mode A: prefix attachment with parent entity's
+                            # routing prefix so it matches the on-disk layout
+                            # produced by _fetch_and_save_assignments / etc.
+                            att_prefixed_name = f"{routing['prefix']}: {safe_title} - {att_raw_name}"
+
                         items.append(CanvasFileInfo(
                             id=att_id,
                             filename=att_prefixed_name,
@@ -666,8 +736,9 @@ class CanvasManager:
                         entity_filename = f"{routing['prefix']}: {safe_name}.html"
 
                     # 1) The Assignment HTML entity itself (negative synthetic ID)
+                    parent_syn_id = make_secondary_id('assignment', a_id)
                     items.append(CanvasFileInfo(
-                        id=make_secondary_id('assignment', a_id),
+                        id=parent_syn_id,
                         filename=entity_filename,
                         display_name=a_name,
                         size=0,
@@ -677,6 +748,7 @@ class CanvasManager:
                     ))
 
                     # 2) Yield each attachment as a true CanvasFileInfo
+                    parent_module = module_map.get(parent_syn_id, "")
                     for att in attachments:
                         raw_id = att.get('id')
                         if not raw_id:
@@ -694,7 +766,16 @@ class CanvasManager:
                         elif isolate:
                             att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
                         else:
-                            att_prefixed_name = att_raw_name
+                            # Mode A: parent assignment writes attachments as
+                            # "<prefix>: <a_name> - <filename>" alongside its
+                            # HTML body (see _fetch_and_save_assignments).
+                            att_prefixed_name = f"{routing['prefix']}: {safe_name} - {att_raw_name}"
+
+                        # Inherit parent module placement so analyze_course
+                        # can route Mode A attachments back into the parent
+                        # assignment's module subfolder.
+                        if parent_module:
+                            module_map[att_id] = parent_module
 
                         items.append(CanvasFileInfo(
                             id=att_id,
@@ -766,8 +847,9 @@ class CanvasManager:
                     else:
                         disc_filename = f"{routing['prefix']}: {safe_title}.html"
                         
+                    parent_syn_id = make_secondary_id('discussion', t_id)
                     items.append(CanvasFileInfo(
-                        id=make_secondary_id('discussion', t_id),
+                        id=parent_syn_id,
                         filename=disc_filename,
                         display_name=d_title,
                         size=0,
@@ -775,22 +857,26 @@ class CanvasManager:
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
                     ))
-                    
+
+                    parent_module = module_map.get(parent_syn_id, "")
                     for att in attachments:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
                         from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
-                        
+
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
                             att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
                         elif isolate:
                             att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
                         else:
-                            att_prefixed_name = att_raw_name
-                            
+                            att_prefixed_name = f"{routing['prefix']}: {safe_title} - {att_raw_name}"
+
+                        if parent_module:
+                            module_map[att_id] = parent_module
+
                         items.append(CanvasFileInfo(
                             id=att_id,
                             filename=att_prefixed_name,
@@ -857,8 +943,9 @@ class CanvasManager:
                     else:
                         quiz_filename = f"{routing['prefix']}: {safe_title}.html"
                         
+                    parent_syn_id = make_secondary_id('quiz', q_id)
                     items.append(CanvasFileInfo(
-                        id=make_secondary_id('quiz', q_id),
+                        id=parent_syn_id,
                         filename=quiz_filename,
                         display_name=q_title,
                         size=0,
@@ -866,22 +953,26 @@ class CanvasManager:
                         url=getattr(quiz, 'html_url', ''),
                         content_type='text/html',
                     ))
-                    
+
+                    parent_module = module_map.get(parent_syn_id, "")
                     for att in attachments:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
                         from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
-                        
+
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
                         if isolate and has_attachments:
                             att_prefixed_name = f"{routing['folder']}/{safe_title}/{att_raw_name}"
                         elif isolate:
                             att_prefixed_name = f"{routing['folder']}/{att_raw_name}"
                         else:
-                            att_prefixed_name = att_raw_name
-                            
+                            att_prefixed_name = f"{routing['prefix']}: {safe_title} - {att_raw_name}"
+
+                        if parent_module:
+                            module_map[att_id] = parent_module
+
                         items.append(CanvasFileInfo(
                             id=att_id,
                             filename=att_prefixed_name,
@@ -2591,7 +2682,8 @@ class CanvasManager:
     def download_secondary_entity(self, course, canvas_file_info, base_path,
                                    sync_manager, secondary_content_settings,
                                    progress_callback=None, debug_file=None,
-                                   error_root_path=None, course_name="Unknown"):
+                                   error_root_path=None, course_name="Unknown",
+                                   module_path=None):
         """Fetch a single secondary entity from Canvas and save it to disk.
 
         This is the UNIVERSAL entry point used by both:
@@ -2610,6 +2702,12 @@ class CanvasManager:
             For DB recording.
         secondary_content_settings : dict
             The active secondary content contract.
+        module_path : Path | None
+            Mode A only: target module subfolder. When ``isolate=False``
+            and the entity is module-linked, this is the absolute path of
+            the module folder where the entity should be written. The sync
+            engine derives this from the analyzer's ``target_local_path``.
+            Mode B (``isolate=True``) ignores this argument entirely.
 
         Returns
         -------
@@ -2694,6 +2792,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
@@ -2751,6 +2850,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
@@ -2810,6 +2910,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
@@ -2866,6 +2967,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
                 )
@@ -2888,6 +2990,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=False,
                     metadata_pairs=None,
                 )
@@ -2921,6 +3024,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course_name, isolate=isolate,
+                    module_path=module_path,
                     has_attachments=False,
                     metadata_pairs=None,
                     file_extension='.md',
