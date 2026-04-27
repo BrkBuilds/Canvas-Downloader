@@ -261,7 +261,7 @@ with _main_content.container():
                         'download_rubrics': st.session_state.get('persistent_dl_rubrics', False),
                         'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
                     }
-                    course_files, _ = cm.get_course_files_metadata(
+                    course_files, _, _module_map = cm.get_course_files_metadata(
                         course,
                         progress_callback=analysis_progress_hook,
                         secondary_content_settings=_scan_secondary,

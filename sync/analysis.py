@@ -3,10 +3,17 @@ sync.analysis — Analysis phase logic for sync flow.
 
 Extracted from ``sync_ui.py`` L2682-2941 (Phase 4).
 Strict physical move — NO logic changes.
+
+Fix 1 (2026-04): Eliminated duplicate module scan by threading the
+    module_map from get_course_files_metadata → analyze_course.
+Fix 2 (2026-04): Offloaded blocking Canvas API calls to a background
+    thread via asyncio.to_thread + safe_thread_wrapper to improve
+    UI responsiveness during the analysis phase.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -16,13 +23,66 @@ from pathlib import Path
 import streamlit as st
 
 import theme
-from canvas_logic import CanvasManager
+from canvas_logic import CanvasManager, safe_thread_wrapper
 from core.state_registry import NOTEBOOK_SUB_KEYS
 from sync_manager import SyncManager
 from ui_helpers import render_sync_wizard, friendly_course_name
 from engine.notifications import play_completion_beep
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Fix 2: Background-thread helper for per-course analysis
+# ---------------------------------------------------------------------------
+
+def _analyze_course_blocking(cm, course_id, course_name, local_folder,
+                             progress_hook):
+    """Execute all blocking Canvas API calls for a single course.
+
+    This function is designed to be called via ``asyncio.to_thread()`` with
+    ``safe_thread_wrapper`` so that Streamlit's ScriptRunContext is preserved
+    on the background thread (required for ``st.session_state`` reads inside
+    the progress hook and for ``st.markdown`` UI pushes).
+
+    Returns:
+        Tuple of (course, sync_mgr, manifest, canvas_files, result, detected)
+        — all data needed by the caller, with no side effects.
+    """
+    progress_hook(0, 1, "Connecting to Canvas API...")
+    course = cm.canvas.get_course(course_id)
+
+    sync_mgr = SyncManager(str(local_folder), course_id, course_name)
+
+    progress_hook(0, 1, "Loading local sync manifest...")
+    manifest = sync_mgr.load_manifest()
+
+    # Load secondary content contract so analysis includes negative-ID entities
+    _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
+    _secondary_settings = json.loads(_raw_secondary) if _raw_secondary else None
+
+    progress_hook(0, 1, "Fetching files from Canvas...")
+    canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(
+        course,
+        progress_callback=progress_hook,
+        secondary_content_settings=_secondary_settings,
+    )
+
+    progress_hook(1, 1, "Healing local sync manifest...")
+    manifest = sync_mgr.heal_manifest(manifest)
+
+    progress_hook(1, 1, "Comparing files...")
+    detected = sync_mgr.detect_structure()
+    # Pass the pre-built module_map so analyze_course skips the redundant
+    # Canvas API fetch for module structure (Fix 1).
+    result = sync_mgr.analyze_course(
+        canvas_files, manifest, cm=cm,
+        download_mode=detected,
+        secondary_fetch_success=sec_fetch_status,
+        module_map=module_map,
+    )
+
+    return course, sync_mgr, manifest, canvas_files, result, detected
 
 
 def run_analysis(sync_pairs, main_placeholder=None):
@@ -95,35 +155,23 @@ def run_analysis(sync_pairs, main_placeholder=None):
         course_name = pair['course_name']
 
         try:
-            sync_progress_hook(0, 1, "Connecting to Canvas API...")
-            course = cm.canvas.get_course(course_id)
+            # --- Fix 2: Offload blocking API work to a background thread ---
+            # Uses the same safe_thread_wrapper pattern as sync/execution.py
+            # to preserve Streamlit's ScriptRunContext on the worker thread.
+            from streamlit.runtime.scriptrunner import get_script_run_ctx
+            _current_ctx = get_script_run_ctx()
 
-            sync_mgr = SyncManager(str(local_folder), course_id, course_name)
+            async def _run_course_analysis():
+                return await asyncio.to_thread(
+                    safe_thread_wrapper,
+                    _analyze_course_blocking,
+                    _current_ctx,
+                    cm, course_id, course_name, local_folder,
+                    sync_progress_hook,
+                )
 
-            sync_progress_hook(0, 1, "Loading local sync manifest...")
-            manifest = sync_mgr.load_manifest()
-
-            # Load secondary content contract so analysis includes negative-ID entities
-            _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
-            _secondary_settings = json.loads(_raw_secondary) if _raw_secondary else None
-
-            sync_progress_hook(0, 1, "Fetching files from Canvas...")
-            canvas_files, sec_fetch_status = cm.get_course_files_metadata(
-                course,
-                progress_callback=sync_progress_hook,
-                secondary_content_settings=_secondary_settings,
-            )
-            
-            sync_progress_hook(1, 1, "Healing local sync manifest...")
-            manifest = sync_mgr.heal_manifest(manifest)
-            
-            sync_progress_hook(1, 1, "Comparing files...")
-            detected = sync_mgr.detect_structure()
-            # Pass canvas manager and secondary fetch status to analyze_course for backend structure pre-calculation
-            result = sync_mgr.analyze_course(
-                canvas_files, manifest, cm=cm,
-                download_mode=detected,
-                secondary_fetch_success=sec_fetch_status
+            course, sync_mgr, manifest, canvas_files, result, detected = (
+                asyncio.run(_run_course_analysis())
             )
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
