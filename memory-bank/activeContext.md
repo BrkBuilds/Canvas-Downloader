@@ -1,6 +1,11 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Session 2026-04-27: Sync Analysis Optimization & UI Unblocking**
+    - Done: Addressed severe I/O bottleneck in the scanning phase by eliminating the duplicate module scan. Refactored `_get_files_from_modules` in `canvas_logic.py` to build a `module_map` during its initial run and threaded it through `get_course_files_metadata` directly into `analyze_course` in `sync_manager.py`. This saves ~30 redundant Canvas API calls per course during Sync Review.
+    - Done: Eliminated Streamlit UI thread freezing during the Sync Analysis phase. Extracted all blocking API calls into `_analyze_course_blocking` and wrapped execution in `asyncio.to_thread` utilizing the existing `safe_thread_wrapper` pattern to safely inject Streamlit's `ScriptRunContext`. This allows the Progress Bar and Cancel button to remain highly responsive.
+    - Verified: Preserved complete backward compatibility. The `module_map` parameter in `analyze_course` defaults to `None` with a functional API fallback, and `app.py` safely unpacks the new 3-tuple return from `get_course_files_metadata` without affecting the standard download flow.
+
 - **Session 2026-04-24: Debugging Sync Review File Restoration**
     - Done: Fixed a bug where restoring ignored files from the database placed them incorrectly into the "Missing Files" expander by default.
     - Done: Updated `analyze_course` in `sync_manager.py` to pre-calculate the intrinsic `origin_category` (e.g., `new_files`, `updated_files`, `missing_files`, `locally_deleted_files`) even if a file is marked as ignored.

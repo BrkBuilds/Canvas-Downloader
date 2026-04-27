@@ -1,3 +1,8 @@
+- [x] **Sync Analysis Optimization & UI Unblocking** (2026-04-27):
+    - [x] **Redundant Scan Elimination**: Refactored `_get_files_from_modules` to emit a `module_map` during the initial metadata sweep.
+    - [x] **Target Path Pre-Calculation Bypass**: Threaded `module_map` into `analyze_course`, eliminating the secondary Canvas API sweep entirely and cutting ~30 network requests per course during Sync Review.
+    - [x] **Background Offloading (`asyncio.to_thread`)**: Extracted all blocking API calls from `run_analysis` into a background worker to prevent the main thread from stalling.
+    - [x] **Context Safety**: Wrapped the background execution with `safe_thread_wrapper` and injected Streamlit's `get_script_run_ctx()` to preserve progress bar responsiveness and cancel button viability.
 - [x] **Add Course Button Aesthetic Refinement** (2026-04-20):
     - [x] **Solid Background**: Removed button border and replaced it with a solid `#4a7a9b` background color for "Add Course folder to Sync" buttons.
     - [x] **No Transparency**: Enforced full opacity and solid colors to prevent the perceived transparency effect from border/background contrast.

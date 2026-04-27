@@ -510,10 +510,17 @@ class SyncManager:
     
     def analyze_course(self, canvas_files: list[CanvasFileInfo], manifest: dict, 
                        cm=None, download_mode: str = 'modules',
-                       secondary_fetch_success: dict | None = None) -> AnalysisResult:
+                       secondary_fetch_success: dict | None = None,
+                       module_map: dict | None = None) -> AnalysisResult:
         """
         Compare Canvas files with local manifest to categorize files.
         Pre-calculates target paths and performs backend deduplication (matching new files to missing ones).
+
+        Args:
+            module_map: Optional pre-built mapping of content_id → sanitized module
+                folder name, produced by _get_files_from_modules during the metadata
+                scan.  When provided, the redundant Canvas API fetch for module
+                structure is skipped entirely.
         """
         result = AnalysisResult()
         files_section = manifest.get('files', {})
@@ -527,9 +534,14 @@ class SyncManager:
         convert_urls_enabled = contract_dict.get('convert_urls', False)
         convert_zip_enabled = contract_dict.get('convert_zip', False)
         
-        # 0. Pre-calculate Target Paths if CanvasManager is provided
+        # 0. Pre-calculate Target Paths
+        #    Prefer the pre-built module_map from the metadata scan (Fix 1 —
+        #    eliminates ~30 redundant HTTP calls per course).  Fall back to a
+        #    live API fetch only when no map was provided by the caller.
         target_paths = {}
-        if cm and download_mode == 'modules':
+        if module_map and download_mode == 'modules':
+            target_paths = dict(module_map)
+        elif cm and download_mode == 'modules':
             try:
                 course = cm.canvas.get_course(self.course_id)
                 modules = course.get_modules()
