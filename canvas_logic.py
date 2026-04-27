@@ -263,11 +263,15 @@ class CanvasManager:
         4. Optionally merge metadata for secondary content entities (Assignments, etc.).
         
         Returns:
-            List of CanvasFileInfo objects (unique by ID).
+            Tuple of (list[CanvasFileInfo], dict, dict):
+              - List of CanvasFileInfo objects (unique by ID)
+              - Secondary fetch success status dict
+              - Module map: content_id (int) → sanitized module folder name (str)
         """
         from sync_manager import CanvasFileInfo
         
         all_files_map = {} # ID -> CanvasFileInfo
+        module_map = {}  # content_id (int) -> sanitized module folder name (str)
         
         # --- Phase 1: Bulk Fetch (get_files) ---
         try:
@@ -297,8 +301,8 @@ class CanvasManager:
             
         # --- Phase 2: Module Scan (Supplement) ---
         try:
-            module_files = self._get_files_from_modules(course, progress_callback=progress_callback,
-                                                        secondary_content_settings=secondary_content_settings)
+            module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
+                                                                    secondary_content_settings=secondary_content_settings)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -328,7 +332,7 @@ class CanvasManager:
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
             
-        return list(all_files_map.values()), secondary_fetch_success
+        return list(all_files_map.values()), secondary_fetch_success, module_map
     
     def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None):
         """Fallback: Get files by iterating through modules.
@@ -337,21 +341,30 @@ class CanvasManager:
         (Assignment, Quiz, Discussion) when *secondary_content_settings*
         enables them.  This allows the sync analysis engine to see these
         entities without additional API calls.
+
+        Returns:
+            Tuple of (list[CanvasFileInfo], dict):
+              - List of discovered file info objects
+              - Module map: content_id (int) → sanitized module folder name (str)
+                for use by analyze_course target path resolution.
         """
         from sync_manager import CanvasFileInfo
         
         files = []
+        module_map = {}  # content_id → sanitized module folder name (for analyze_course target paths)
         modules = list(course.get_modules())
         total_modules = len(modules)
         for idx, module in enumerate(modules):
             if progress_callback:
                 progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
             
+            clean_module_name = self._sanitize_filename(module.name)
             items = module.get_module_items()
             for item in items:
                 if item.type == 'File':
                     if not hasattr(item, 'content_id') or not item.content_id:
                         continue
+                    module_map[item.content_id] = clean_module_name
                     try:
                         file = course.get_file(item.content_id)
                         if not getattr(file, 'url', ''):
@@ -425,7 +438,7 @@ class CanvasManager:
                         url=getattr(item, 'html_url', ''),
                         content_type='text/html',
                     ))
-        return files
+        return files, module_map
 
     def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False):
         """Return (items, fetch_success) for *standalone* secondary content.

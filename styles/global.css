@@ -499,3 +499,91 @@ section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-te
     -ms-overflow-style: none !important;
 }
 
+
+/* ═══════════════════════════════════════════════
+   Card 3 (AI Optimization) — static button styling
+   ═══════════════════════════════════════════════
+   These rules don't depend on session state. Hoisted out of the
+   per-rerun Python f-string so the dynamic CSS payload shrinks
+   dramatically — only the active-state coloring + icon URLs and
+   active-state checkmark SVGs are still emitted from Python. */
+
+/* Conversion grid horizontal gap */
+div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }
+
+/* Conv button text alignment */
+div[class*="st-key-btn_convert_"] button > div,
+div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+div[class*="st-key-btn_convert_"] button p {
+    text-align: left !important;
+    width: 100% !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    line-height: 1.2 !important;
+}
+
+/* Conv button base geometry */
+div[class*="st-key-btn_convert_"] button {
+    height: 58px !important;
+    min-height: 0px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-right: 10px !important;
+    padding-left: 52px !important;
+    background-position: 15px center !important;
+    background-size: 30px !important;
+    background-repeat: no-repeat !important;
+    border-radius: 12px !important;
+    display: flex;
+    flex-direction: column;
+    -webkit-tap-highlight-color: transparent !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Conv button description (::after) — defaults; the description text
+   itself is set per-button below */
+div[class*="st-key-btn_convert_"] button::after {
+    text-align: left !important;
+    width: 100% !important;
+    display: block !important;
+    font-size: 0.75rem !important;
+    color: #a0a0a0;
+    white-space: normal !important;
+    margin-top: -2px !important;
+    line-height: 1.2 !important;
+}
+
+/* Conv button hover (inactive). Active state overrides via Python. */
+div[class*="st-key-btn_convert_"] button:hover {
+    border-color: #f97316 !important;
+}
+div[class*="st-key-btn_convert_"] button:hover::before {
+    border-color: #f97316 !important;
+}
+
+/* Master "Select All" button geometry — overrides the conv button base */
+div.st-key-btn_convert_master button {
+    height: 48px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    padding-left: 50px !important;
+    background-size: 24px !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+}
+
+/* Per-button description text (static — never changes between renders) */
+div.st-key-btn_convert_zip   button::after { content: "Auto-unzip .zip and .tar.gz archives." !important; }
+div.st-key-btn_convert_pptx  button::after { content: "Convert .pptx/.ppt to PDF." !important; }
+div.st-key-btn_convert_word  button::after { content: "Convert unsupported older formats (.doc, .rtf, .odt) to PDF." !important; }
+div.st-key-btn_convert_excel button::after { content: "Export spreadsheets as visual PDFs and LLM-ready CSV sidecars." !important; }
+div.st-key-btn_convert_html  button::after { content: "Convert Canvas web pages into AI-friendly text." !important; }
+div.st-key-btn_convert_code  button::after { content: "Append .txt extension to programming files (e.g. code.js.txt)." !important; }
+div.st-key-btn_convert_urls  button::after { content: "Compile all internet shortcuts into one structured .txt file." !important; }
+div.st-key-btn_convert_video button::after { content: "Extract .mp3 audio from video files." !important; }

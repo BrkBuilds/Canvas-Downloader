@@ -93,6 +93,12 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Streamlit Async Context Safety (`safe_thread_wrapper`)**:
     - *Problem*: Asynchronous `asyncio.to_thread` calls lose the Streamlit `ScriptRunContext`, causing `StreamlitAPIException` when background threads attempt to access `st.session_state` or UI placeholders.
     - *Implementation*: Implement a module-level `safe_thread_wrapper` using `streamlit.runtime.scriptrunner.add_script_run_ctx`. Capture the context in the main async thread via `get_script_run_ctx()` and universally inject it into all worker threads (Canvas API fetchers, file downloaders, sync engines) before dispatching to maintain identical state propagation.
+- **Background UI Offloading (Sync Analysis)**:
+    - *Problem*: Complex API discovery processes (like Sync Analysis) executed synchronously block the Streamlit main thread. This completely freezes the UI, preventing Progress Bars from updating and trapping "Cancel" buttons in an unclickable state.
+    - *Implementation*: Extract the entire blocking subroutine (e.g. `_analyze_course_blocking`) and dispatch it via `asyncio.run(asyncio.to_thread(safe_thread_wrapper, ...))`. This frees the Streamlit UI thread to continue cycling, while the injected `safe_thread_wrapper` allows the background worker to safely push progress hook updates and read cancellation flags from the session state.
+- **Redundant Scan Elimination (Metadata Side-Effects)**:
+    - *Problem*: Downstream functions (like `analyze_course`) often require structural metadata (like mapping file IDs to their parent module names) that forces them to execute identical, redundant API queries against Canvas.
+    - *Implementation*: Upstream metadata discovery functions (`_get_files_from_modules`) should quietly compile and emit these structural mappings (`module_map`) as secondary side-products (e.g. returning a 3-tuple). Threading this pre-calculated map downstream completely bypasses secondary network fetches (O(n) -> O(1) network cost).
 
 ## UI Architecture & Patterns
 - **Modals**: Use **`st.dialog`** for complex isolated interactions.
