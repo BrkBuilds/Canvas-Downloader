@@ -22,7 +22,7 @@ from pathlib import Path
 import streamlit as st
 
 import theme
-from sync_manager import SyncHistoryManager, get_file_icon
+from sync_manager import SyncHistoryManager, SyncManager, get_file_icon
 from ui_helpers import (
     esc,
     friendly_course_name,
@@ -49,86 +49,6 @@ def _remove_pairs_by_signature_lazy(sigs):
     from sync.persistence import remove_pairs_by_signature
     remove_pairs_by_signature(sigs)
 
-
-def render_sync_history():
-    """Render sync history in an expander at the bottom of step 1."""
-    try:
-        from ui_helpers import get_config_dir
-        history_mgr = SyncHistoryManager(get_config_dir())
-        history = history_mgr.load_history()
-    except Exception:
-        history = []
-
-    if history:
-        with st.expander('📜 Sync History', expanded=False):
-            if not history:
-                st.write('No sync history yet.')
-                return
-                
-            # Show most recent first, limit to 10
-            for entry in reversed(history[-10:]):
-                count = entry.get('files_synced', 0)
-                courses_count = entry.get('courses', 0)
-                course_names = entry.get('course_names', [])
-                
-                # Format the time beautifully
-                raw_time = entry.get('timestamp', '')
-                time_display = raw_time
-                try:
-                    dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
-                    now = datetime.now()
-                    diff = now - dt
-                    
-                    if diff.days == 0:
-                        if diff.seconds < 3600:
-                            mins = diff.seconds // 60
-                            time_display = f"⏳ {mins} minute{'s' if mins != 1 else ''} ago ({dt.strftime('%H:%M')})"
-                        else:
-                            hrs = diff.seconds // 3600
-                            time_display = f"⏳ {hrs} hour{'s' if hrs != 1 else ''} ago ({dt.strftime('%H:%M')})"
-                    elif diff.days == 1:
-                        time_display = f"📅 Yesterday at {dt.strftime('%H:%M')}"
-                    elif diff.days < 7:
-                        time_display = f"📅 {diff.days} days ago ({dt.strftime('%A')} at {dt.strftime('%H:%M')})"
-                    else:
-                        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-                        month_name = months[dt.month - 1]
-                        
-                        day_suffix = "th"
-                        if 11 <= dt.day <= 13:
-                            pass
-                        elif dt.day % 10 == 1:
-                            day_suffix = "st"
-                        elif dt.day % 10 == 2:
-                            day_suffix = "nd"
-                        elif dt.day % 10 == 3:
-                            day_suffix = "rd"
-                            
-                        time_display = f"📅 {diff.days} days ago ({dt.day}{day_suffix} of {month_name} at {dt.strftime('%H:%M')})"
-                except Exception:
-                    time_display = f"⏳ {raw_time}"
-                
-                # Course names display
-                courses_text = ""
-                if course_names:
-                    # Filter and format course names
-                    # (Already friendly from backend update, but safe to wrap again)
-                    formatted_names = [friendly_course_name(name) for name in course_names if name]
-                    if formatted_names:
-                        courses_text = f"<div style='font-size:0.9em;color:#aaa;margin-top:4px;'>📚 <i>{', '.join(formatted_names)}</i></div>"
-                elif courses_count > 0:
-                    courses_text = f"<div style='font-size:0.9em;color:#aaa;margin-top:4px;'>📚 <i>Across {courses_count} course{'s' if courses_count != 1 else ''}</i></div>"
-
-                # Render HTML card inside the expander (Vertical stack layout)
-                st.markdown(f"""
-                <div style="background-color:#2a2b30;border-left:3px solid #3498db;border-radius:4px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:2px;">
-                    <div style="color:{theme.TEXT_DIM};font-size:0.85em;">{time_display}</div>
-                    <div style="color:#ddd;font-weight:600;font-size:0.95em;margin-top:2px;">
-                        ✅ Synced {count} file{'s' if count != 1 else ''}
-                    </div>
-                    {courses_text}
-                </div>
-                """, unsafe_allow_html=True)
 
 
 def render_filetype_selector(all_files, prefix, file_key_fn):
@@ -825,12 +745,13 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             else:
                  selected_course_name = None
 
-            # Persist to editing pair if in edit mode
-            if editing_idx is not None and 0 <= editing_idx < len(st.session_state.get('sync_pairs', [])):
-                 st.session_state['sync_pairs'][editing_idx]['course_id'] = selected_course_id
-                 st.session_state['sync_pairs'][editing_idx]['course_name'] = selected_course_name
-            
-            # Persist to temp state for new pair
+            # Persist only to the inline-form temp state. Do NOT mutate
+            # st.session_state['sync_pairs'][editing_idx] here — the pair's
+            # original course_id is the signature used by
+            # update_pair_by_signature on Confirm. Mutating it in-memory
+            # poisoned the signature lookup, so the disk-side replace
+            # silently no-op'd and the pair reverted to the old course on
+            # the next reload.
             st.session_state['sync_selected_course_id'] = selected_course_id
             st.rerun()
 
@@ -871,6 +792,43 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                     break
 
 
+
+        # --- Manifest binding notice ---
+        # Shown when the chosen folder already has a .canvas_sync.db bound to
+        # a DIFFERENT course (e.g. user re-directed an existing pair). We surface
+        # this here so the user understands what "Confirm and Add" will do.
+        _manifest_rebind_needed = False
+        if pending_folder and selected_course_id:
+            _bound_id = SyncManager.peek_bound_course_id(pending_folder)
+            if _bound_id is not None and _bound_id != selected_course_id:
+                _manifest_rebind_needed = True
+                _bound_name = friendly_course_name(
+                    SyncManager.peek_bound_course_name(pending_folder) or f"course #{_bound_id}"
+                )
+                _new_name = friendly_course_name(selected_course_name or f"course #{selected_course_id}")
+                st.html(f"""
+                <div style="
+                    background: rgba(234, 179, 8, 0.12);
+                    border: 1px solid rgba(234, 179, 8, 0.55);
+                    border-radius: 6px;
+                    padding: 10px 14px;
+                    margin: 4px 0 2px 0;
+                    font-size: 0.9rem;
+                    line-height: 1.5;
+                ">
+                    <div style="color:#fbbf24; font-weight:700; margin-bottom:3px;">
+                        🔗 This folder is already linked to a different course
+                    </div>
+                    <div style="color:#fde68a;">
+                        <b>Currently linked to:</b> {esc(_bound_name)}<br>
+                        <b>You've selected:</b> {esc(_new_name)}
+                    </div>
+                    <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
+                        Clicking <b>Confirm and Add</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
+                        If you meant to sync to a different course, change the course with the <b>Select Course</b> button above.
+                    </div>
+                </div>
+                """)
 
         # Error container Relocated HERE (Below dropdown/warnings, Above buttons)
         error_container = st.empty()
@@ -936,6 +894,12 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                             selected_course_id = cid
                             break
                     if selected_course_id:
+                        # If the folder's manifest was bound to a different
+                        # course, wipe it now so the next sync starts clean
+                        # against the newly chosen course.
+                        if _manifest_rebind_needed:
+                            SyncManager.reset_folder_binding(pending_folder)
+
                         new_pair = {
                             'local_folder': pending_folder,
                             'course_id': selected_course_id,

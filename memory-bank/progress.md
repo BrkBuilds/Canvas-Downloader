@@ -1,3 +1,9 @@
+- [x] **Inline Sync Edit Fixes & Course-Identity Guard** (2026-04-28):
+    - [x] **Inline Course-Edit Save**: Removed premature `st.session_state` mutation in `ui/sync_dialogs.py` to preserve signature integrity for `update_pair_by_signature`.
+    - [x] **Course-Identity Guard (SQLite)**: Switched `.canvas_sync.db` initialization to `INSERT OR IGNORE` to lock folders strictly to their first synced course.
+    - [x] **Static Probes**: Added `peek_bound_course_id()` and `peek_bound_course_name()` to `SyncManager` for side-effect-free metadata inspection.
+    - [x] **Folder Binding Reset**: Added `reset_folder_binding()` to wipe the SQLite metadata cleanly without deleting downloaded files.
+    - [x] **Inline Amber Notice**: Guard against sync pair mismatch directly within the edit form (Step 1), replacing the outdated resolver screen with a seamless "Confirm and Add" overwrite workflow.
 - [x] **Sync Engine Robustness & Mode A/B Parity** (2026-04-27):
     - [x] **Locally-Deleted File Handling**: Refactored `analyze_course` to prioritize local existence, ensuring locally-deleted files land back in their correct module subfolders.
     - [x] **Mode A/B Alignment**: Unified synthetic content filenames and attachment routing across Mode A (inline) and Mode B (isolated).
