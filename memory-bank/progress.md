@@ -1,4 +1,12 @@
-- [x] **Inline Sync Edit Fixes & Course-Identity Guard** (2026-04-28):
+1: - [x] **Documentation Overhaul & macOS Consistency Fixes** (2026-04-28):
+2:     - [x] **Documentation Rewrite**: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to reflect the transition to PyWebView/Chromium and unified security.
+3:     - [x] **Unified Keyring Security**: Migrated all platforms to native OS keyring storage in `ui/auth.py`, removing fragile base64 fallbacks.
+4:     - [x] **macOS Chromium Rendering**: Forced `gui='qt'` in `start.py` to ensure consistent CSS rendering via QtWebEngine.
+5:     - [x] **Native macOS Notifications**: Integrated `pync` in `engine/notifications.py` for branded notifications with app-focus click support.
+6:     - [x] **Windows Config Path Alignment**: Updated frozen build path to `%APPDATA%/CanvasDownloader/` to match cross-platform standards.
+7:     - [x] **macOS Spec File Refinement**: Bundled `.streamlit` config and implemented platform-specific excludes to reduce bundle size and improve stability.
+8:     - [x] **Office Automation Fixes**: Resolved macOS sheet name collisions in `excel_converter.py` and fixed Word alert suppression in AppleScript.
+9: - [x] **Inline Sync Edit Fixes & Course-Identity Guard** (2026-04-28):
     - [x] **Inline Course-Edit Save**: Removed premature `st.session_state` mutation in `ui/sync_dialogs.py` to preserve signature integrity for `update_pair_by_signature`.
     - [x] **Course-Identity Guard (SQLite)**: Switched `.canvas_sync.db` initialization to `INSERT OR IGNORE` to lock folders strictly to their first synced course.
     - [x] **Static Probes**: Added `peek_bound_course_id()` and `peek_bound_course_name()` to `SyncManager` for side-effect-free metadata inspection.

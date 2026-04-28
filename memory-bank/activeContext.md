@@ -1,14 +1,18 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-- **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
-    - Done: Fixed a bug where inline course editing poisoned the search signature in `ui/sync_dialogs.py`. Removed premature `st.session_state` mutation upon dialog return so `update_pair_by_signature` matches the original on-disk signature correctly before replacing it. Audited `ui/hub_dialog.py` to confirm immunity via its distinct callback flow.
-    - Done: Switched SQLite metadata `course_id` initialization in `sync_manager.py` from `INSERT OR REPLACE` to `INSERT OR IGNORE` to properly bind folders strictly to their first synced course.
-    - Done: Added static probes `peek_bound_course_id()` and `peek_bound_course_name()` to `SyncManager` for inspecting metadata without inadvertently writing initializations.
-    - Done: Added `reset_folder_binding()` to wipe only `.canvas_sync.db` cleanly without touching actual disk files when a re-link is requested.
-    - Done: Revamped course-identity guards inside `ui/sync_dialogs.py` to display an inline amber warning when a folder is already linked to another course, offering a seamless "Confirm and Add" overwrite without navigating away.
-    - Done: Modified `sync/analysis.py` to act as a silent safety net. Corrupted manual edits triggering a mismatch now safely open the inline editor with the amber re-link warning directly on Step 1.
-    - Done: Eliminated the old resolver screen and `sync_pairs_run_override` logic entirely from `sync_ui.py` for a much cleaner architecture.
+4: - **Session 2026-04-28: Documentation Overhaul & macOS Consistency Fixes**
+5:     - Done: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to remove stale architectural references (Tkinter, base64 tokens) and update technical specs (PyWebView/Chromium, size estimates).
+6:     - Done: Unified token security via `keyring` across both Windows and macOS, including migration logic for legacy base64 and plaintext tokens in `ui/auth.py`.
+7:     - Done: Forced Chromium rendering on macOS (`gui='qt'` via PySide6 + QtWebEngine) for 1:1 CSS parity with Windows.
+8:     - Done: Updated macOS build spec to include `.streamlit` config and exclude Windows-only toast/sound modules.
+9:     - Done: Fixed macOS folder picker and `open` behavior in `ui_helpers.py` to prevent failures in PyWebView contexts.
+10:     - Done: Integrated `pync` for native macOS notifications with app-focus support on click in `engine/notifications.py`.
+11:     - Done: Corrected Windows frozen build config path to `%APPDATA%/CanvasDownloader/` to match macOS Application Support standards.
+12:     - Done: Fixed sheet name collision in `excel_converter.py` on macOS by implementing indexed CSV exports.
+13:     - Done: Fixed Word alert suppression in AppleScript via explicit integer `0` for `wdAlertsNone` parity.
+14: 
+15: - **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
 
 - **Session 2026-04-27: Sync Engine Robustness & Mode A/B Parity**
     - Done: Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 existence guard and prioritize local existence checks in Phase 2. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps.

@@ -18,7 +18,7 @@
    - **Windows**: Double-click `Canvas_Downloader.exe`
    - **macOS**: Double-click `Canvas Downloader.app`
 
-> **First Launch**: The app runs a small local web server to display its interface. Your operating system may ask you to allow network access — this is normal and safe. The app only communicates with `localhost` and the official Canvas API.
+> **First Launch**: The app opens in a native desktop window and runs a small local web server to display its interface. Your operating system may ask you to allow network access — this is normal and safe. The app only communicates with `localhost` and the official Canvas API.
 
 ---
 
@@ -154,11 +154,13 @@ The app requires a Canvas API Access Token to connect to your courses.
 
 | Problem | Solution |
 |---------|----------|
-| App doesn't open at all | Try running from Terminal/Command Prompt to see error messages |
-| "Unauthorized" error | Your API token may be expired — generate a new one |
+| App doesn't open at all | Run from Terminal/Command Prompt to see error messages |
+| "Unauthorized" error | Your API token may be expired — generate a new one in Canvas Settings |
 | Downloads are slow | Canvas rate-limits API requests; the app retries automatically |
 | Conversions fail (macOS) | Ensure Microsoft Office is installed for Word/Excel/PDF conversion |
 | Video conversion fails | FFmpeg is bundled; if issues persist, run from source with `pip install moviepy` |
+| macOS: keychain prompt on first login | macOS is asking permission to store your token in the Keychain — click **"Always Allow"** |
+| macOS: notification says "Script Editor" | `terminal-notifier` may not be available; notifications still work but show from a system source instead of "Canvas Downloader" |
 
 ---
 
@@ -182,6 +184,10 @@ pip install -r requirements.txt
 # Launch
 python start.py
 ```
+
+> **macOS note**: `pip install -r requirements.txt` automatically installs
+> `PySide6`, `PySide6-WebEngine`, and `pync` on macOS. These are platform-
+> conditional (`sys_platform == 'darwin'`) and are skipped on Windows.
 
 ---
 

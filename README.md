@@ -12,107 +12,119 @@ This application allows students to batch download files and modules from Canvas
 </p>
 
 ## Features
-*   **Save Hours of Clicking**: Download *all* files from a course in seconds. No more clicking "download" on every single PDF.
-*   **Stay Organized**: Automatically creates folders that match your Canvas Modules. Perfect for exam prep!
-*   **Offline Access**: Get all your materials on your hard drive so you can study without internet.
-*   **Downloads Everything**: Supports Files, Modules, Panopto Videos, Pages, and External Links.
-*   **Always Up-to-Date**: New courses added to your Canvas account appear automatically in the app.
-*   **Study Mode**: Use the "Pdf & Powerpoint only" filter to download only the most important study materials (skips everything else).
-*   **Smart & Robust**: Skips files you can't access and retries automatically if the connection fails.
-*   **Secure**: Runs locally on your machine. Your token is saved securely on your own computer.
 
-### Security Warnings (Important!)
-*   **"Windows protected your PC" (SmartScreen)**:
-    *   Windows might try to block the .exe from running, as the application is unsigned.
-    *   **Solution**: Click **"More info"** and then **"Run anyway"** (the app is safe, windows just "doesn't like" independent developers who don't pay for having apps signed).
-*   **Firewall Popup**:
-    *   When the app starts, Windows Firewall might ask for permission.
-    *   **Why?**: The app runs a small local "web server" to show the UI. It needs permission to "talk" to itself, and to communicate with Instructure's Canvas API.
-    *   **Solution**: Check the boxes and click **"Allow access"**. It is completely safe.
+- **Save Hours of Clicking**: Download *all* files from a course in seconds. No more clicking "download" on every single PDF.
+- **Stay Organized**: Automatically creates folders that match your Canvas Modules. Perfect for exam prep!
+- **Offline Access**: Get all your materials on your hard drive so you can study without internet.
+- **Downloads Everything**: Supports Files, Modules, Panopto Videos, Pages, and External Links.
+- **Always Up-to-Date**: New courses added to your Canvas account appear automatically in the app.
+- **Sync Mode**: Keep a local folder in sync with a Canvas course — only downloads what's new or changed.
+- **Smart Post-Processing**: Optionally converts PowerPoint, Word, and Excel files to PDF, extracts video audio to MP3, and compiles external links for NotebookLM.
+- **Study Mode**: Use the "PDF & PowerPoint only" filter to download only the most important study materials.
+- **Smart & Robust**: Skips files you can't access and retries automatically if the connection fails.
+- **Secure**: Runs locally on your machine. Your API token is stored securely in your OS keyring (macOS Keychain or Windows Credential Manager) — never written to disk in plaintext.
 
-## Installation & Running
+---
 
-Since this is a Python application, you can run it directly from the source code on Windows, Mac, or Linux.
+## Security Warnings (Important!)
 
-**Prerequisites:**
-1.  **Install Python 3**: Download from [python.org](https://www.python.org/downloads/). *Ensure you check "Add Python to PATH" during installation.*
+### 🪟 Windows — SmartScreen
 
-**Steps:**
-1.  **Clone or Download**: Click the green "<> Code" button above in the Github Repository and select "Download ZIP" (or `git clone` this repo).
-2.  **Unzip**: Extract the folder.
-3.  **Install Requirements**:
-    Open your terminal/command prompt in the folder and run:
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  **Launch**:
-    Run the start script:
-    ```bash
-    python start.py
-    ```
-    The application will automatically start the "mother-window" and launch the application UI in your default web browser.
+When you run the `.exe` for the first time, Windows SmartScreen may block it with **"Windows protected your PC"**.
 
-## How to use Canvas Downloader
+**How to bypass:** Click **"More info"** → **"Run anyway"**. The app is safe; it is simply unsigned by a paid Microsoft certificate.
+
+### 🪟 Windows — Firewall Popup
+
+Windows Firewall may ask for permission on first launch. Check both boxes and click **"Allow access"**. The app runs a local web server on `127.0.0.1:8501` — it only talks to itself and the official Canvas API.
+
+### 🍎 macOS — Gatekeeper
+
+macOS may show **"can't be opened because Apple cannot check it for malicious software."**
+
+**How to bypass:** Right-click → **"Open"** → click the **"Open"** button in the dialog. See `README_INSTALL.md` for the full set of macOS bypass methods.
+
+---
+
+## Installation & Running from Source
+
+**Prerequisites:** Python 3.11+
+
+```bash
+# Clone the repository
+git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git
+cd Canvas_LMS_batch_file_downloader
+
+# Create and activate a virtual environment (recommended)
+python3 -m venv .venv
+source .venv/bin/activate       # macOS/Linux
+# .venv\Scripts\activate        # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Launch
+python start.py
+```
+
+The app opens in a native desktop window (PyWebView). No browser tab is opened.
+
+---
+
+## How to Use
 
 ### Step 1: Authentication
-1.  Open the app.
-2.  **Enter your Canvas URL**:
-    *   **Crucial**: You must use the *actual* Canvas URL, not your school's login portal.
-    *   **How to find it**: Log in to Canvas in your browser. Look at the address bar **after** you are logged in.
-    *   It often looks like `https://schoolname.instructure.com` (even if you went to `canvas.school.edu` to get there).
-    *   Copy that URL and paste it into the app.
-3.  **Get an API Token**:
-    *   Go to **Account** -> **Settings** on Canvas.
-    *   Scroll to **Approved Integrations**.
-    *   Click **+ New Access Token**.
-    *   Copy the long string and paste it into the app.
-4.  Click **"Validate & Save Token"**.
+
+1. **Enter your Canvas URL** — use the actual Canvas URL (e.g. `https://schoolname.instructure.com`), not your school's login portal. Check the address bar after you log in to Canvas.
+2. **Get an API Token**: Canvas → **Account** → **Settings** → **Approved Integrations** → **+ New Access Token**. Copy the token immediately.
+3. Click **"Log In"**. Your token is saved securely to the OS keyring — you won't need to re-enter it next session.
 
 ### Step 2: Select Courses
-1.  You will see a list of your courses.
-2.  Select the ones you want to download (or click "Select All").
-3.  Click **"Continue"**.
 
-### Step 3: Download
-1.  Choose your **Download Structure**:
-    *   **With subfolders**: Keeps files organized exactly like in Canvas Modules (Recommended).
-    *   **Flat**: Puts all files for a course into one big folder.
-2.  Choose a **Destination Folder** on your computer.
-3.  Click **"Confirm and Download"**.
-4.  Wait for the magic to happen! 🪄
+Select the courses you want from the list (or "Select All") and click **"Continue"**.
 
-## What do the files in the project folder do?
+### Step 3: Download Settings
 
-*   `start.py`: The "Launcher" script that starts the system.
-*   `app.py`: The visual interface you see in the browser.
-*   `canvas_logic.py`: The "Brain" that talks to Canvas and handles downloads.
-*   `translations.py`: Contains all text in English and Danish.
-*   `requirements.txt`: List of tools the app needs.
+Choose your download structure (with module subfolders or flat), a destination folder, and any post-processing options (PDF conversion, audio extraction, etc.).
 
-## Common Issues & Troubleshooting
+### Step 4: Download
 
-*   **"Unauthorized" Error**:
-    *   If you see an error saying "unauthorized", your token might be expired, or you might be downloading too fast. The app now has "smart retries" to handle this, so just try again.
+Click **"Confirm and Download"** and wait. A system notification will appear when the download is complete.
+
+---
+
+## Security
+
+- **Local Execution**: The app runs entirely on your local machine (`localhost`). No data passes through any third-party server.
+- **Token Safety**: Your Canvas API token is stored in the **OS keyring** — macOS Keychain on macOS, Windows Credential Manager on Windows. It is never written to disk in plaintext and is never sent anywhere except the official Canvas API endpoint you configured.
+- **Config Files**: Settings (download preferences, sync pairs, presets) are stored in a dedicated app folder:
+  - **macOS**: `~/Library/Application Support/CanvasDownloader/`
+  - **Windows**: `%APPDATA%\CanvasDownloader\`
+
+---
 
 ## Under the Hood: Technical Overview
 
-This application is built as a hybrid local web app to combine the power of Python with a modern UI.
-
 ### Architecture
-*   **Frontend**: Built with **Streamlit**, providing a responsive and clean web interface.
-*   **Launcher**: A lightweight **Tkinter** wrapper (`start.py`) that manages the Streamlit server process in a background thread, giving users a simple "double-click" experience without needing to manage command-line servers manually.
-*   **Canvas Integration**: Uses the **CanvasAPI** library to interact with the LMS. It handles pagination, rate limiting, and object retrieval (Files, Pages, Modules).
+
+| Layer | Technology |
+|---|---|
+| UI | [Streamlit](https://streamlit.io) — reactive Python web framework |
+| Desktop window | [pywebview](https://pywebview.flowrl.com) — native OS window wrapping the Streamlit server |
+| Rendering engine | **Chromium** (Edge on Windows via WinForms backend; QtWebEngine via PySide6 on macOS) |
+| Canvas integration | [canvasapi](https://github.com/ucfopen/canvasapi) — Canvas REST API wrapper |
+| Sync database | SQLite (`.canvas_sync.db`) — per-folder manifest tracking every synced file |
 
 ### Key Technical Features
-*   **Asynchronous I/O**: The core downloader (`canvas_logic.py`) utilizes `asyncio` and `aiohttp`. This allows the app to download multiple files in parallel (concurrency limited to prevent API bans), significantly speeding up large course traversals compared to synchronous requests.
-*   **Resiliency Patterns**:
-    *   **Smart Retries**: Implements exponential backoff for HTTP 429 (Rate Limit) and 5xx errors.
-    *   **Conflict Resolution**: Automatically renames files if duplicates exist (e.g., `Exam (1).pdf`) to prevent overwriting.
-    *   **Sanitization**: Cleans filenames of illegal characters to ensure cross-platform compatibility (Windows/Mac/Linux).
 
-## Security
-*   **Local Execution**: The app runs entirely on your local machine (`localhost`).
-*   **Token Safety**: Your API Token is stored locally in `canvas_downloader_settings.json` and is **never** sent to any external server other than the official Canvas API for authentication.
+- **Async downloads**: `asyncio` + `aiohttp` enable parallel multi-file downloads with configurable concurrency to avoid API rate limiting.
+- **Sync engine**: A SQLite manifest (Levenshtein-assisted collision resolution) tracks every downloaded file, detecting new, updated, locally-deleted, and Canvas-deleted files.
+- **Post-processing pipeline**: Pluggable converters for PDF (PowerPoint via Office COM/AppleScript), Word legacy formats, Excel (PDF + AI-friendly CSV extraction), video-to-MP3 (FFmpeg via MoviePy), archive extraction (zip bomb protection), HTML-to-Markdown, and URL compilation for NotebookLM.
+- **Cross-platform parity**: AppleScript bridges replicate all Windows COM Office automation on macOS. Identical Chromium rendering engine on both platforms via PyWebView Qt backend on macOS.
+- **Resiliency**: Exponential backoff for rate limits, atomic file writes (`.part` pattern), self-healing COM instances for Office converters, and SQLite WAL mode for concurrent access safety.
+
+---
 
 ## License
+
 MIT License. Feel free to modify and use this for your own studies!

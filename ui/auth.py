@@ -15,7 +15,6 @@ import base64
 import json
 import logging
 import os
-import platform
 
 import streamlit as st
 
@@ -255,36 +254,45 @@ div.st-key-nav_btn_logout button:hover::after {{
                                 st.session_state['download_path'] = saved_default
 
                         loaded_token = ''
-                        if platform.system() == 'Darwin':
-                            # macOS: Avoid keychain permission prompts by loading from config json via base64
-                            encoded_token = config.get('mac_api_token', '')
-                            if encoded_token:
-                                try:
-                                    loaded_token = base64.b64decode(encoded_token.encode('utf-8')).decode('utf-8')
-                                except Exception:
-                                    pass
-                        else:
-                            # Windows: Load token from OS keyring (secure)
-                            try:
-                                import keyring
-                                keyring_user = st.session_state['api_url'] or 'default'
-                                loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
-                            except Exception:
-                                pass  # Keyring unavailable, fall through to legacy check
+                        # Unified keyring load for all platforms (macOS Keychain / Windows Credential Manager)
+                        try:
+                            import keyring
+                            keyring_user = st.session_state['api_url'] or 'default'
+                            loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
+                        except Exception:
+                            pass  # Keyring unavailable, fall through to legacy checks
 
-                            # Legacy migration: if token still in JSON, migrate it to keyring
-                            if not loaded_token and config.get('api_token', ''):
-                                loaded_token = config['api_token']
-                                # Migrate to keyring and strip from JSON
+                        # Legacy migration: macOS base64 token stored in JSON before keyring unification
+                        if not loaded_token and config.get('mac_api_token', ''):
+                            try:
+                                loaded_token = base64.b64decode(
+                                    config['mac_api_token'].encode('utf-8')
+                                ).decode('utf-8')
+                                # Migrate to keyring and strip insecure field from JSON
                                 try:
                                     import keyring
                                     keyring_user = st.session_state['api_url'] or 'default'
                                     keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
-                                    config.pop('api_token', None)
+                                    config.pop('mac_api_token', None)
                                     with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                         json.dump(config, fw)
                                 except Exception:
-                                    pass  # Migration failed, will work from RAM this session
+                                    pass  # Migration failed, token still in RAM this session
+                            except Exception:
+                                pass
+
+                        # Legacy migration: Windows plain-JSON token
+                        if not loaded_token and config.get('api_token', ''):
+                            loaded_token = config['api_token']
+                            try:
+                                import keyring
+                                keyring_user = st.session_state['api_url'] or 'default'
+                                keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                                config.pop('api_token', None)
+                                with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
+                                    json.dump(config, fw)
+                            except Exception:
+                                pass  # Migration failed, will work from RAM this session
 
                         st.session_state['api_token'] = loaded_token
 
@@ -361,23 +369,16 @@ def _render_login_form():
             if 'debug_mode' in st.session_state:
                 config_data['debug_mode'] = st.session_state['debug_mode']
 
-            # Save token — macOS vs Windows
-            if platform.system() == 'Darwin':
-                # TODO: Implement pyobjc SecItemAdd for native Keychain access
-                # once the .app bundle is code-signed. Base64 is obfuscation,
-                # not encryption — acceptable only until signing is in place.
-                try:
-                    encoded = base64.b64encode(st.session_state['api_token'].encode('utf-8')).decode('utf-8')
-                    config_data['mac_api_token'] = encoded
-                except Exception as e:
-                    st.warning(f"Could not obfuscate token: {e}")
-            else:
-                try:
-                    import keyring
-                    keyring_user = st.session_state['api_url'] or 'default'
-                    keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
-                except Exception as e:
-                    st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
+            # Save token to OS keyring (macOS Keychain / Windows Credential Manager)
+            try:
+                import keyring
+                keyring_user = st.session_state['api_url'] or 'default'
+                keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
+                # Ensure no legacy insecure fields remain in the config JSON
+                config_data.pop('mac_api_token', None)
+                config_data.pop('api_token', None)
+            except Exception as e:
+                st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
 
             try:
                 with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -725,13 +726,12 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
     <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: -6px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{first_name}</div>
 </div>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout"):
-                if platform.system() != 'Darwin':
-                    try:
-                        import keyring
-                        keyring_user = st.session_state.get('api_url', '') or 'default'
-                        keyring.delete_password(KEYRING_SERVICE, keyring_user)
-                    except Exception:
-                        pass
+                try:
+                    import keyring
+                    keyring_user = st.session_state.get('api_url', '') or 'default'
+                    keyring.delete_password(KEYRING_SERVICE, keyring_user)
+                except Exception:
+                    pass
 
                 st.session_state['is_authenticated'] = False
                 st.session_state['api_token'] = ""

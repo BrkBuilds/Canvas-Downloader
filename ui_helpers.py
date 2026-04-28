@@ -167,14 +167,20 @@ def get_config_dir() -> str:
     """Get the directory where config files are stored.
 
     On macOS frozen bundles:  ~/Library/Application Support/CanvasDownloader/
-    On Windows frozen EXEs:   same directory as the executable
+    On Windows frozen EXEs:   %APPDATA%/CanvasDownloader/
     When running as script:   same directory as this source file
     """
     if getattr(sys, 'frozen', False) and platform.system() == 'Darwin':
         base = Path.home() / 'Library' / 'Application Support' / 'CanvasDownloader'
         base.mkdir(parents=True, exist_ok=True)
         return str(base)
+    elif getattr(sys, 'frozen', False) and platform.system() == 'Windows':
+        appdata = os.environ.get('APPDATA') or str(Path.home() / 'AppData' / 'Roaming')
+        base = Path(appdata) / 'CanvasDownloader'
+        base.mkdir(parents=True, exist_ok=True)
+        return str(base)
     elif getattr(sys, 'frozen', False):
+        # Other frozen platforms: fall back to executable directory
         return os.path.dirname(sys.executable)
     else:
         return str(Path(__file__).parent)
@@ -337,7 +343,7 @@ def native_folder_picker() -> str | None:
         import subprocess
         try:
             result = subprocess.run(
-                ['osascript', '-e', 'tell application (path to frontmost application as text) to POSIX path of (choose folder)'],
+                ['osascript', '-e', 'POSIX path of (choose folder)'],
                 capture_output=True, text=True, timeout=60
             )
             if result.returncode == 0 and result.stdout.strip():
@@ -393,8 +399,7 @@ def open_folder(path: str):
             pass
             
     elif sys_platform == "Darwin":  # macOS
-        subprocess.Popen(["open", "-R", path])
-        subprocess.Popen(["osascript", "-e", 'tell application "Finder" to activate'])
+        subprocess.Popen(["open", path])
     else:  # Linux
         subprocess.Popen(["xdg-open", path])
 

@@ -92,7 +92,7 @@ class WordToPDF:
         posix_dst = str(dst.resolve()).replace('"', '\\"')
         script = f'''
             tell application "Microsoft Word"
-                set display alerts to wdAlertsNone
+                set display alerts to 0
                 open POSIX file "{posix_src}"
                 set theDoc to active document
                 save as theDoc file name POSIX file "{posix_dst}" file format format PDF

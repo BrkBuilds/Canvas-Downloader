@@ -3,8 +3,7 @@
 > **Audience**: The developer compiling Canvas Downloader on a macOS machine
 > (native or cloud runner).
 >
-> **Prerequisite**: This guide assumes you have cloned the repository and are
-> running macOS 12 (Monterey) or later with Python 3.11+ installed via
+> **Prerequisite**: macOS 12 (Monterey) or later, Python 3.11+ installed via
 > [python.org](https://www.python.org/downloads/macos/) or Homebrew.
 
 ---
@@ -14,15 +13,16 @@
 Open **Terminal** in the project root directory:
 
 ```bash
-# Create a fresh virtual environment
 python3 -m venv .venv
-
-# Activate it
 source .venv/bin/activate
-
-# Upgrade pip (recommended)
 pip install --upgrade pip
 ```
+
+> [!IMPORTANT]
+> Use a clean `venv`, **not** a Conda environment. Conda pulls in hundreds of MB
+> of extras that cause PyInstaller bundles to balloon to 500+ MB.
+
+---
 
 ## 2. Install Python Dependencies
 
@@ -30,14 +30,20 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-This installs all runtime dependencies. Key macOS-specific notes:
+Key macOS-specific packages installed by this command:
 
-| Package | macOS Note |
-|---------|------------|
-| `pywebview>=5.1` | Automatically pulls in the macOS **Cocoa/WebKit** backend. No extra deps needed. |
-| `pywin32` | Skipped automatically on macOS (`sys_platform == 'win32'` marker). |
-| `keyring` | Installs but is lazy-loaded at runtime; your unsigned `.app` will use Base64 fallback instead of Keychain. |
+| Package | macOS role |
+|---|---|
+| `pywebview>=5.1` | Native desktop window. Canvas Downloader forces the **Qt backend** (`gui='qt'`) for Chromium-based rendering identical to Windows Edge. |
+| `PySide6` | Qt framework, required by pywebview's Qt backend. |
+| `PySide6-WebEngine` | QtWebEngine (bundled Chromium). Provides rendering parity with Windows. Adds ~100 MB to the bundle. |
+| `pync` | Wraps `terminal-notifier` for proper Notification Center alerts attributed to "Canvas Downloader" with click-to-activate support. |
+| `keyring` | Stores the Canvas API token in **macOS Keychain** (same secure store used by Safari, 1Password, etc.). |
 | `moviepy` | Bundles FFmpeg via `imageio_ffmpeg`. The binary is auto-downloaded on first import. |
+| `pywin32` | **Skipped** automatically on macOS (`sys_platform == 'win32'` marker). |
+| `win11toast` | **Skipped** automatically on macOS. |
+
+---
 
 ## 3. Install PyInstaller
 
@@ -46,31 +52,28 @@ pip install pyinstaller>=6.0
 ```
 
 > [!NOTE]
-> PyInstaller is a **build-time** dependency only. It is intentionally excluded
-> from `requirements.txt` since end-users running from source do not need it.
+> PyInstaller is a **build-time** dependency only — intentionally excluded from
+> `requirements.txt` since end-users running from source don't need it.
+
+---
 
 ## 4. Verify Required Assets
 
 Before building, confirm these files exist in the project root:
 
 ```bash
-# App icon — must be .icns format for macOS
-ls assets/icon.icns
-
-# Entitlements plist — grants AppleScript / Apple Events automation rights
-ls entitlements.plist
-
-# The macOS-specific PyInstaller spec
+ls assets/icon.icns      # App icon — must be .icns format
+ls entitlements.plist    # Grants Apple Events automation rights for Office converters
 ls Canvas_Downloader_macOS.spec
+ls .streamlit/config.toml  # Bundled UI theme — must be present
 ```
+
+---
 
 ## 5. Build the `.app` Bundle
 
 ```bash
-# Clean any stale build artifacts (recommended)
 rm -rf build/ dist/
-
-# Run PyInstaller with the macOS spec
 pyinstaller --clean Canvas_Downloader_macOS.spec
 ```
 
@@ -78,53 +81,54 @@ pyinstaller --clean Canvas_Downloader_macOS.spec
 
 ```
 dist/
-└── Canvas Downloader.app      ← The distributable .app bundle
+└── Canvas Downloader.app
     └── Contents/
         ├── Info.plist
         ├── MacOS/
-        │   └── Canvas_Downloader    ← Native executable
+        │   └── Canvas_Downloader
         └── Resources/
             └── icon.icns
 ```
 
-**Expected bundle size**: ~130–160 MB (comparable to the Windows `.exe`).
+**Expected bundle size: ~230–270 MB**
+
+This is larger than the Windows build (~130–150 MB) because PySide6 + QtWebEngine
+bundle a full Chromium runtime. This is intentional — it eliminates all
+WebKit/Chromium CSS rendering differences between platforms.
 
 ### Troubleshooting Build Failures
 
 | Symptom | Cause | Fix |
-|---------|-------|-----|
-| `ModuleNotFoundError: imageio_ffmpeg` | `imageio_ffmpeg` not installed | `pip install imageio_ffmpeg` |
-| `FileNotFoundError: assets/icon.icns` | Missing icon file | Ensure `assets/icon.icns` exists |
-| `No module named 'webview'` | `pywebview` not installed | `pip install pywebview` |
-| Extremely large bundle (500+ MB) | Anaconda/Conda environment | Use a clean `python3 -m venv` instead |
+|---|---|---|
+| `ModuleNotFoundError: imageio_ffmpeg` | Not installed | `pip install imageio_ffmpeg` |
+| `FileNotFoundError: assets/icon.icns` | Missing icon | Ensure `assets/icon.icns` exists |
+| `No module named 'webview'` | pywebview not installed | `pip install pywebview` |
+| `No module named 'PySide6'` | PySide6 not installed | `pip install PySide6 PySide6-WebEngine` |
+| `No module named 'pync'` | pync not installed | `pip install pync` |
+| Bundle is 500+ MB | Conda/Anaconda environment | Switch to a clean `python3 -m venv` |
+
+---
 
 ## 6. Ad-Hoc Code Signing (Required for Apple Silicon)
 
-macOS on Apple Silicon (M1/M2/M3/M4) **refuses to execute** unsigned native
-binaries. Since we do not hold a paid Apple Developer Account ($99/yr), we
-perform a **free ad-hoc signature** instead.
+macOS on Apple Silicon (M1/M2/M3/M4) refuses to run unsigned native binaries.
+Perform a free ad-hoc signature:
 
 ```bash
 codesign --force --deep -s - "dist/Canvas Downloader.app"
 ```
 
-### What this does
-
 | Flag | Purpose |
-|------|---------|
+|---|---|
 | `--force` | Overwrites any existing signature (safe for rebuilds). |
 | `--deep` | Signs the bundle *and* all nested frameworks/dylibs recursively. |
-| `-s -` | The dash (`-`) tells `codesign` to use an **ad-hoc identity** — a free, local-only signature that satisfies Apple Silicon's binary execution requirement without a paid Developer ID. |
+| `-s -` | Ad-hoc identity — free, local-only, satisfies Apple Silicon execution without a paid Developer ID. |
 
 ### Verification
 
 ```bash
-# Confirm the signature is valid
 codesign --verify --verbose=2 "dist/Canvas Downloader.app"
-
-# Expected output should end with:
-# valid on disk
-# satisfies its Designated Requirement
+# Expected output ends with: valid on disk / satisfies its Designated Requirement
 ```
 
 > [!IMPORTANT]
@@ -132,43 +136,51 @@ codesign --verify --verbose=2 "dist/Canvas Downloader.app"
 > from the internet will still see the "unidentified developer" warning.
 > See `README_INSTALL.md` for end-user bypass instructions.
 
+---
+
 ## 7. Test the Bundle
 
 ```bash
-# Launch the app from Terminal to see any crash output
+# Launch normally
 open "dist/Canvas Downloader.app"
 
-# Or run the binary directly for verbose debugging
+# Or run the binary directly for verbose crash output
 "dist/Canvas Downloader.app/Contents/MacOS/Canvas_Downloader"
 ```
 
-Verify:
-- [ ] The native WebKit window opens (not a browser tab).
-- [ ] The Streamlit UI loads inside the window.
-- [ ] Authentication (login/logout) works with the Base64 fallback.
-- [ ] File downloads complete to a user-selected folder.
-- [ ] Post-processing conversions (Word, Excel, PDF via AppleScript) execute.
-- [ ] Video-to-MP3 conversion succeeds (FFmpeg bundled correctly).
+**Verification checklist:**
+
+- [ ] A native Qt/Chromium desktop window opens (not a browser tab, not WebKit/Safari).
+- [ ] The Streamlit dark theme loads correctly (dark background, blue primary colour).
+- [ ] Login and logout work — token is stored in macOS Keychain, not in any JSON file.
+- [ ] Logging out clears the token from Keychain (re-launch should show the login form).
+- [ ] File downloads complete to a user-selected folder (folder picker dialog appears correctly).
+- [ ] "Open Folder" after download opens *into* the folder in Finder (not the parent).
+- [ ] A Notification Center alert appears when a download completes, attributed to **"Canvas Downloader"** (not "Script Editor").
+- [ ] Clicking the notification activates/focuses the Canvas Downloader window.
+- [ ] Post-processing conversions (Word, Excel, PDF via AppleScript) execute if Microsoft Office is installed.
+- [ ] Video-to-MP3 conversion succeeds (FFmpeg bundled correctly via imageio_ffmpeg).
+
+---
 
 ## 8. Package for Distribution
 
 ```bash
-# Create a compressed .zip for distribution
 cd dist/
 zip -r -y "Canvas_Downloader_macOS.zip" "Canvas Downloader.app"
 ```
 
 The `-y` flag preserves symbolic links inside the bundle, which is critical for
-macOS framework references.
+macOS framework references inside the PySide6/QtWebEngine bundle.
 
-Distribute `Canvas_Downloader_macOS.zip` alongside the `README_INSTALL.md` file.
+Distribute `Canvas_Downloader_macOS.zip` alongside `README_INSTALL.md`.
 
 ---
 
 ## Quick Reference — Full Build Sequence
 
 ```bash
-# One-shot: From clean clone to distributable .zip
+# One-shot: from clean clone to distributable .zip
 python3 -m venv .venv && source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
