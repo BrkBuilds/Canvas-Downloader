@@ -1851,7 +1851,7 @@ def render_sync_step4( main_placeholder=None):
     sync_pairs = st.session_state.get('sync_pairs', [])
     if not sync_pairs:
         st.error('No folders added yet. Click "Add Course folder" to get started.')
-        if st.button('Back'):
+        if st.button('Back', key="page_nav_back"):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()

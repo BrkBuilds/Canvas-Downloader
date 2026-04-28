@@ -617,64 +617,43 @@ def render_progress_bar(container, current: int, total: int,
         mb_total: Total MB to download (for 'mb' mode)
         custom_text: Optional override for the status text (e.g. for complete mode)
     """
+    import theme
+
     if mode == 'complete':
         progress_pct = 100
         display_text = custom_text if custom_text else 'Done!'
-        bar_color = '#2ecc71'
+        bar_color = theme.SUCCESS_ALT
     elif mode == 'complete_warning':
         progress_pct = 100
         display_text = custom_text if custom_text else 'Sync completed with errors.'
-        bar_color = '#f1c40f'  # Yellow/Orange for warnings
+        bar_color = theme.WARNING
     elif mode == 'complete_error':
         progress_pct = 100
         display_text = custom_text if custom_text else 'Sync failed for all files.'
-        bar_color = '#e74c3c'  # Red for errors
+        bar_color = theme.ERROR_ALT
     elif mode == 'mb':
         if mb_total <= 0:
             progress_pct = 0
         else:
             progress_pct = min(100, int((mb_current / mb_total) * 100))
         display_text = f'Downloading: {mb_current:.1f} / {mb_total:.1f} MB'
-        bar_color = '#3498db'
+        bar_color = theme.ACCENT_BLUE
     else:  # files
         if total <= 0:
             progress_pct = 0
         else:
             progress_pct = min(100, int((current / total) * 100))
-        display_text = custom_text if custom_text else f'Syncing: File {current} of {total}'
-        bar_color = '#3498db'
+        display_text = custom_text if custom_text else f'{progress_pct}%'
+        bar_color = theme.ACCENT_BLUE
     
-    progress_html = f"""
-    <div style="
-        width: 100%;
-        background: rgba(255,255,255,0.1);
-        border-radius: 12px;
-        overflow: hidden;
-        height: 32px;
-        position: relative;
-        margin: 8px 0;
-        border: 1px solid rgba(255,255,255,0.15);
-    ">
-        <div style="
-            width: {progress_pct}%;
-            height: 100%;
-            background: linear-gradient(90deg, {bar_color}, {bar_color}dd);
-            border-radius: 12px;
-            transition: width 0.4s ease;
-        "></div>
-        <div style="
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        ">{display_text}</div>
+    progress_html = f'''
+    <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
+        <div style="background-color: {bar_color}; width: {progress_pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
+            {display_text}
+        </div>
     </div>
-    """
+    '''
     container.markdown(progress_html, unsafe_allow_html=True)
 
 
