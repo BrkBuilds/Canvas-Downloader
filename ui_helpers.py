@@ -185,6 +185,58 @@ def get_config_dir() -> str:
     else:
         return str(Path(__file__).parent)
 
+def format_relative_date(raw_time: str, include_time: bool = False, include_emoji: bool = False) -> str:
+    """Format a timestamp string (YYYY-MM-DD HH:MM) into a friendly relative date.
+    
+    Conventions:
+    - Under 1 hour: "15 minutes ago" (No exact time needed)
+    - Same day: "Today at 14:30"
+    - Previous day: "Yesterday at 09:15"
+    - Within the last 7 days: "Thursday at 16:45"
+    - More than 7 days ago (current year): "24 Apr at 11:20"
+    - Previous year: "12 Nov 2025"
+    """
+    from datetime import datetime
+    try:
+        dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
+        now = datetime.now()
+        
+        diff_total_seconds = (now - dt).total_seconds()
+        diff_days = (now.date() - dt.date()).days
+        time_str = dt.strftime('%H:%M')
+        
+        if diff_total_seconds < 3600 and diff_total_seconds >= 0:
+            minutes = int(diff_total_seconds // 60)
+            if minutes == 0:
+                date_key = "just now"
+            elif minutes == 1:
+                date_key = "1 minute ago"
+            else:
+                date_key = f"{minutes} minutes ago"
+            include_time = False
+        elif diff_days == 0:
+            date_key = "Today"
+        elif diff_days == 1:
+            date_key = "Yesterday"
+        elif diff_days < 7 and diff_days > 0:
+            date_key = dt.strftime('%A')
+        elif dt.year == now.year:
+            date_key = f"{dt.day} {dt.strftime('%b')}"
+        else:
+            date_key = f"{dt.day} {dt.strftime('%b')} {dt.year}"
+            include_time = False
+            
+        parts = []
+        if include_emoji:
+            parts.append("📅")
+        parts.append(date_key)
+        if include_time:
+            parts.append(f"at {time_str}")
+            
+        return " ".join(parts)
+    except Exception:
+        return raw_time
+
 
 # --- Persistent Sync Pairs ---
 

@@ -31,6 +31,7 @@ from ui_helpers import (
     get_course_display_parts,
     short_path,
     get_base64_image,
+    format_relative_date,
 )
 
 from core.state_registry import ensure_sync_state, cleanup_sync_state
@@ -1022,10 +1023,22 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 with col_card:
                     folder_exists = Path(pair['local_folder']).exists()
                     last_synced = pair.get('last_synced')
-                    ts_str = (
-                        f'Last synced: {last_synced}' if last_synced
-                        else 'Never synced'
-                    )
+                    if not last_synced and folder_exists:
+                        # Try to recover it from the folder database
+                        try:
+                            recovered = SyncManager.peek_last_synced(pair['local_folder'])
+                            if recovered:
+                                last_synced = recovered
+                                # Heal the session state pair to avoid querying sqlite every frame
+                                pair['last_synced'] = recovered
+                        except Exception as e:
+                            logger.warning(f"Could not recover last_synced from folder: {e}")
+
+                    if last_synced:
+                        friendly_ts = format_relative_date(last_synced, include_time=True, include_emoji=False)
+                        ts_str = f'Last synced: {friendly_ts}'
+                    else:
+                        ts_str = 'Never synced'
                     
                     # Simplified card content
                     display_name = friendly_course_name(pair['course_name'])
@@ -1636,25 +1649,12 @@ def _render_sync_history():
                 raw_time = entry.get('timestamp', '')
                 try:
                     dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
-                    # Build friendly date string
-                    now = datetime.now()
-                    diff = now.date() - dt.date()
-                    if diff.days == 0:
-                        date_key = "📅 Today"
-                    elif diff.days == 1:
-                        date_key = "📅 Yesterday"
-                    elif diff.days <= 6:
-                        date_key = f"📅 {diff.days} days ago"
-                    elif dt.year == now.year:
-                        date_key = f"📅 {dt.day} {dt.strftime('%b')}"
-                    else:
-                        date_key = f"📅 {dt.day} {dt.strftime('%b')}, {dt.year}"
-                        
                     time_str = dt.strftime('%H:%M')
                 except Exception:
-                    date_key = "📅 Unknown Date"
                     time_str = raw_time
                     dt = None
+                    
+                date_key = format_relative_date(raw_time, include_time=False, include_emoji=True)
                     
                 grouped_history[date_key].append({
                     'entry': entry,
@@ -1685,8 +1685,8 @@ def _render_sync_history():
             for date_key, items in grouped_history.items():
                 # Sticky Header
                 html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 0px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-<div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
-</div>""")
+                                    <div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
+                                    </div>""")
                 
                 # Container for the day's cards
                 html_out.append('<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px; margin-bottom: 16px;">')
