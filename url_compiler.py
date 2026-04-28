@@ -5,7 +5,7 @@ from pathlib import Path
 def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path | None, list[Path]]:
     """
     Scans a course directory for shortcut files (.url on Windows, .webloc on macOS),
-    extracts the links, and compiles them into a single NotebookLM_External_Links.txt
+    extracts the links, and compiles them into a single Compiled_External_Links.txt
     file in the course root. Uses a Merge-Append strategy to preserve existing links.
     """
     course_path = Path(course_dir)
@@ -19,7 +19,7 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
     if not shortcut_files:
         return None, []
         
-    output_path = course_path / "NotebookLM_External_Links.txt"
+    output_path = course_path / "Compiled_External_Links.txt"
     
     existing_urls = set()
     existing_content = ""
@@ -30,9 +30,9 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
             with open(output_path, 'r', encoding='utf-8') as f:
                 existing_content = f.read()
             for line in existing_content.splitlines():
-                if line.startswith("🔗 "):
+                if line.startswith("http"):
                     # Robust hydration parsing: aggressive strip
-                    existing_urls.add(line[2:].strip())
+                    existing_urls.add(line.strip())
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning(f"Could not read existing NotebookLM text file for deduplication: {e}")
@@ -49,7 +49,7 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
             processed_shortcuts.append(shortcut_file)
             
             if link not in existing_urls:
-                compiled_links.append(f"📌 {shortcut_file.stem}\n🔗 {link}\n")
+                compiled_links.append(f"📌 {shortcut_file.stem}\n{link}\n")
                 existing_urls.add(link)
                 
     if not compiled_links:
@@ -65,9 +65,9 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
         # Build a beautiful, copy-paste friendly output header
         output_content = (
             f"========================================================\n"
-            f" 🤖 NotebookLM Links for: {course_name}\n"
+            f" 🤖 Compiled Links for: {course_name}\n"
             f"========================================================\n"
-            f"Copy and paste these links directly into NotebookLM's website source field.\n\n"
+            f"Copy and paste these links directly into your preferred AI tool - e.g. NotebookLM.\n\n"
         )
     else:
         # Add a newline spacer if we are appending to an existing master list

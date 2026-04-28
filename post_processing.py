@@ -359,7 +359,7 @@ def run_url_compilation(folders, ui: UIBridge, sm=None):
         if course_folder.exists():
             compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
             if compiled_path:
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{course_name}' into: NotebookLM_External_Links.txt</span>")
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{course_name}' into: Compiled_External_Links.txt</span>")
                 
                 # Pure Link Deletion (Sync Engine Bypass)
                 for shortcut in processed_shortcuts:
