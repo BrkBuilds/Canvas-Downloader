@@ -436,7 +436,7 @@ def show_analysis_review(on_confirm_sync):
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
         st.error("Analysis failed. Please try again.")
-        if st.button('Back'):
+        if st.button('Back', key="page_nav_back_sr_err"):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()

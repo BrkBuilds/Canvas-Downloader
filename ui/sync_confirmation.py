@@ -311,7 +311,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
             st.rerun()
     with col_yes:
-        if st.button("Yes, Start Sync", type="primary", use_container_width=True):
+        if st.button("Yes, Start Sync", type="primary", use_container_width=True, key="page_nav_start_sync"):
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
 
