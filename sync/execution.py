@@ -1116,6 +1116,14 @@ def run_sync():
     pairs = st.session_state.get('sync_pairs', [])
     for sel in sync_selections:
         pair_idx = sel['pair_idx']
+        
+        # Save securely to folder database
+        try:
+            if 'res_data' in sel and 'sync_manager' in sel['res_data']:
+                sel['res_data']['sync_manager']._save_metadata('last_synced', now_str)
+        except Exception as e:
+            logger.warning(f"Failed to save last_synced to db: {e}")
+            
         if pair_idx < len(pairs):
             updates.append((pairs[pair_idx].get('course_id'), pairs[pair_idx].get('local_folder'), now_str))
     
