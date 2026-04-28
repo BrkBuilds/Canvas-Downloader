@@ -1552,7 +1552,7 @@ def render_download_settings(fetch_courses_fn):
         _dl_courses = st.session_state.get('courses_to_download', [])
         if not _dl_courses:
             try:
-                _all_c = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'], False)
+                _all_c = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'])
                 _sel_ids = set(st.session_state.get('selected_course_ids', []))
                 _dl_courses = [c for c in _all_c if c.id in _sel_ids]
             except Exception:
@@ -1700,7 +1700,7 @@ def render_download_settings(fetch_courses_fn):
             if st.button(button_label, type="primary", use_container_width=True, key='action_dl_confirm'):
                 try:
                     # Initialize download state
-                    all_courses = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'], False)
+                    all_courses = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'])
                     course_map = {c.id: c for c in all_courses}
                     courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
 
