@@ -86,7 +86,7 @@ def show_sync_cancelled():
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])
     with col_front:
-        if st.button('Go to front page', type="primary", use_container_width=True):
+        if st.button('Go to front page', key="page_nav_front_page_sync", type="primary", use_container_width=True):
             _cleanup_sync_state()
             st.rerun()
 
@@ -285,7 +285,7 @@ def show_sync_complete():
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])
     with col_front:
-        if st.button('Go to front page', key='sync_complete_front_page', type="primary", use_container_width=True):
+        if st.button('Go to front page', key='page_nav_front_page_sync_complete', type="primary", use_container_width=True):
             _cleanup_sync_state()
             st.rerun()
 
