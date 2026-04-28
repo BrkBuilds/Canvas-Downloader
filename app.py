@@ -54,64 +54,101 @@ st.html(f"""
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
 
-# Loading overlay — hides the raw intermediate DOM during Streamlit reruns.
+# Loading overlay — hides the raw intermediate DOM during Streamlit page-navigation reruns.
 # Uses window.parent.document because components.html() runs inside an iframe.
-# Idempotent: the guard on _cdOv means the overlay + observer are created once
-# per page load; subsequent reruns just re-execute the guard and return early.
-# Show delay (300 ms): quick reruns (checkbox, filter toggle) finish before the
-# threshold so the overlay never flashes. Navigation reruns (step change, mode
-# switch) take 1-5 s and DO trigger it.
-# Hide delay (150 ms): lets new content finish painting before revealing it.
+# All state is stored on window.parent._cdp so it survives iframe reloads
+# (components.html() recreates its iframe on every rerun; without this the
+# MutationObserver is garbage-collected and the overlay stops working after the
+# first rerun).
+# Activation: click listener fires ONLY for buttons inside known navigation
+# containers (NAV_SEL allowlist) — in-page interactions (chevrons, filters,
+# dialogs) are excluded.
+# Hide: 500 ms settle (no DOM childList mutations) + one requestAnimationFrame
+# so the overlay only drops after the browser has committed a full paint of the
+# new content.  An 8 s safety valve force-hides if a rerun hangs.
 components.html("""<script>
 (function(){
-    var doc=window.parent.document;
-    if(doc.getElementById('_cdOv'))return;
+    // All state lives on window.parent._cdp so it survives iframe reloads.
+    // components.html() recreates its iframe on every Streamlit rerun; without
+    // this pattern the MutationObserver (tied to the old iframe context) is
+    // garbage-collected and the overlay stops working after the first rerun.
+    var win=window.parent, doc=win.document;
+    var p=win._cdp||(win._cdp={vis:false,hT:null,safeT:null,el:null,obs:null,clickAdded:false});
 
-    var s=doc.createElement('style');
-    s.textContent='@keyframes _cdR{to{transform:rotate(360deg)}}';
-    doc.head.appendChild(s);
+    // --- Create overlay element once ---
+    if(!p.el){
+        var s=doc.createElement('style');
+        s.textContent='@keyframes _cdR{to{transform:rotate(360deg)}}';
+        doc.head.appendChild(s);
+        p.el=doc.createElement('div');
+        p.el.id='_cdOv';
+        p.el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;'
+            +'background:#0e1117;z-index:99999;display:none;flex-direction:column;'
+            +'align-items:center;justify-content:center;gap:16px';
+        p.el.innerHTML=
+            '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
+            +'border-top-color:#38bdf8;border-radius:50%;animation:_cdR .75s linear infinite"></div>'
+            +'<div style="color:rgba(255,255,255,.38);font:13px/1 system-ui,sans-serif;'
+            +'letter-spacing:.04em">Loading…</div>';
+        doc.body.appendChild(p.el);
+    }
 
-    var el=doc.createElement('div');
-    el.id='_cdOv';
-    el.style.cssText='position:fixed;inset:0;background:#0e1117;z-index:99999;'
-        +'display:none;flex-direction:column;align-items:center;'
-        +'justify-content:center;gap:16px';
-    el.innerHTML=
-        '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
-        +'border-top-color:#38bdf8;border-radius:50%;'
-        +'animation:_cdR .75s linear infinite"></div>'
-        +'<div style="color:rgba(255,255,255,.38);font:13px/1 system-ui,sans-serif;'
-        +'letter-spacing:.04em">Loading…</div>';
-    doc.body.appendChild(el);
+    function show(){
+        if(p.vis)return;
+        // Re-attach if Streamlit hot-reload replaced document.body while we were detached
+        if(!p.el.isConnected)doc.body.appendChild(p.el);
+        p.el.style.display='flex'; p.vis=true;
+        // Safety valve: force-hide after 8 s so a hung rerun can't trap the overlay
+        if(p.safeT)clearTimeout(p.safeT);
+        p.safeT=setTimeout(function(){p.el.style.display='none';p.vis=false;p.safeT=null;},8000);
+    }
+    function schedHide(){
+        if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+        if(p.hT)clearTimeout(p.hT);
+        // 500 ms settle: Streamlit often makes a second wave of class/attribute
+        // mutations during React hydration after DOM nodes are inserted.  rAF
+        // then defers the actual hide until the browser has committed a full
+        // paint of the new content, eliminating the split-second raw-UI flash.
+        p.hT=setTimeout(function(){
+            requestAnimationFrame(function(){p.el.style.display='none';p.vis=false;p.hT=null;});
+        },500);
+    }
 
-    // Detection: button click -> start 300ms timer. At 300ms, if DOM mutations
-    // are still arriving (rerun is slow), show the overlay. Hide when mutations
-    // stop for 250ms (DOM settled = new page fully painted).
-    var lastMut=0,sT=null,hT=null,vis=false;
+    // --- Register click listener once ---
+    // Only show overlay for page-navigation buttons (mode switch, Continue,
+    // Analyze/Quick-Sync, Back, Go-to-front-page).  In-page interactions
+    // (chevrons, filters, dialog open/close, Settings) are excluded so the
+    // overlay does NOT flash on every checkbox or card expand.
+    var NAV_SEL=[
+        'div[class*="st-key-page_nav_"]',         // Continue, Back, Yes Start Sync, Go to front page (all variants)
+        'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
+        'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Local Folders
+        'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
+        'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
+        'div[class*="st-key-btn_quick_sync"]',    // Quick Sync All
+        'div[class*="st-key-btn_sync_back"]',     // Back in sync review (container-keyed)
+        'div[class*="st-key-action_dl_back"]',    // Back in download settings
+        'div[class*="st-key-cancel_sync_dialog"]' // No, Go back in sync confirmation
+    ].join(',');
+    if(!p.clickAdded){
+        p.clickAdded=true;
+        doc.addEventListener('click',function(e){
+            if(!e.target.closest('button'))return;
+            if(!e.target.closest(NAV_SEL))return;
+            show();
+        },true);
+    }
 
-    function show(){el.style.display='flex';vis=true;}
-    function hide(){el.style.display='none';vis=false;hT=null;}
-
-    doc.addEventListener('click',function(e){
-        if(!e.target.closest('button'))return;
-        lastMut=Date.now();
-        if(sT)clearTimeout(sT);
-        sT=setTimeout(function(){
-            sT=null;
-            // Only show if mutations are still recent (rerun still running)
-            if(Date.now()-lastMut<200)show();
-        },300);
-    },true);
-
-    new MutationObserver(function(){
-        lastMut=Date.now();
-        if(!vis)return;
-        if(hT)clearTimeout(hT);
-        hT=setTimeout(hide,250);
-    }).observe(
-        doc.querySelector('[data-testid="stMain"]')||doc.body,
-        {childList:true,subtree:true,attributes:false,characterData:false}
-    );
+    // --- Recreate MutationObserver on every iframe load ---
+    // The previous observer (from the last iframe context) was disconnected when
+    // that iframe was destroyed.  Always create a fresh one here.
+    if(p.obs){try{p.obs.disconnect();}catch(_){}}
+    p.obs=new MutationObserver(function(){
+        if(!p.vis)return;
+        schedHide(); // each mutation resets the 500 ms settle timer
+    });
+    p.obs.observe(doc.querySelector('[data-testid="stMain"]')||doc.body,
+        {childList:true,subtree:true,attributes:false,characterData:false});
 })();
 </script>""", height=0)
 
@@ -218,7 +255,7 @@ with _main_content.container():
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
             st.error('Download state not initialized. Please go back and try again.')
-            if st.button('Go Back to Settings'):
+            if st.button('Go Back to Settings', key="page_nav_back_to_settings"):
                 st.session_state['step'] = 2
                 st.rerun()
             st.stop()
@@ -1278,7 +1315,7 @@ with _main_content.container():
             button_text = 'Go to front page'
             col_front, _ = st.columns([0.35, 0.65])
             with col_front:
-                if st.button(button_text, type="primary", use_container_width=True):
+                if st.button(button_text, type="primary", use_container_width=True, key="page_nav_front_page"):
                     from core.state_registry import cleanup_download_state
                     cleanup_download_state()
                     st.rerun()

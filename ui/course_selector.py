@@ -831,7 +831,7 @@ def render_course_selector(fetch_courses_fn):
 
     c1, c2 = st.columns([1, 3])
     with c1:
-        continue_clicked = st.button('Continue', type="primary", use_container_width=True)
+        continue_clicked = st.button('Continue', type="primary", use_container_width=True, key="page_nav_continue")
 
     if continue_clicked:
         if not st.session_state['selected_course_ids']:
