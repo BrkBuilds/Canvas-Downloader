@@ -761,79 +761,70 @@ def render_course_selector(fetch_courses_fn):
     # --- Favorites / All Courses pill toggle ---
     favorites_only = render_favorites_pill("dl")
 
-    courses = fetch_courses_fn(
+    # Show a loading placeholder immediately so the UI above is visible
+    # while courses are being fetched. On cache hits (all transitions after
+    # first load) this is replaced so fast the spinner is imperceptible.
+    _courses_area = st.empty()
+    with _courses_area.container():
+        st.html("""
+            <div style="display:flex;align-items:center;justify-content:center;
+                        gap:12px;padding:56px 20px;
+                        border:1px solid rgba(255,255,255,0.1);border-radius:8px;">
+                <div style="width:20px;height:20px;
+                            border:2px solid rgba(255,255,255,0.07);
+                            border-top-color:#38bdf8;border-radius:50%;
+                            animation:_cs_spin .75s linear infinite;flex-shrink:0">
+                </div>
+                <span style="color:rgba(255,255,255,0.5);
+                             font:14px/1 system-ui,sans-serif">
+                    Loading your courses…
+                </span>
+            </div>
+            <style>@keyframes _cs_spin{to{transform:rotate(360deg)}}</style>
+        """)
+
+    # --- Fetch (spinner above is visible during cache miss) ---
+    all_courses = fetch_courses_fn(
         st.session_state['api_token'],
-        st.session_state['api_url'], favorites_only)
+        st.session_state['api_url'])
+    courses = [c for c in all_courses if c.is_favorite] if favorites_only else all_courses
 
     if not courses:
-        st.warning('No courses found.')
+        with _courses_area.container():
+            st.warning('No courses found.')
         st.stop()
 
-    # --- 1. CBS Filters (Own Row) ---
-    filtered_courses = render_cbs_filters(courses, "dl")
+    # --- Replace spinner with CBS filters + action buttons + course list ---
+    with _courses_area.container():
+        # 1. CBS Filters
+        filtered_courses = render_cbs_filters(courses, "dl")
 
-    # --- 2. Action Buttons (vertical stack reflowed into flex row via CSS) ---
-    # NOTE: border=True is required so the st-key-action_btns_row class is
-    # reliably emitted (per CLAUDE.md "Border Strip" rule). The default border
-    # is stripped in CSS above and replaced with a border-bottom that serves
-    # as the section separator — see comment in the <style> block.
-    with st.container(key="action_btns_row", border=True):
-        select_all_clicked = st.button('Select All', key="btn_course_select_all")
-        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
+        visible_ids = {c.id for c in filtered_courses}
 
-    visible_ids = {c.id for c in filtered_courses}
+        # 2. Action Buttons (border=True required for CSS key emission — border stripped in CSS above)
+        with st.container(key="action_btns_row", border=True):
+            select_all_clicked = st.button('Select All', key="btn_course_select_all")
+            clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
 
-    if select_all_clicked:
-        current_ids = set(st.session_state.get('selected_course_ids', []))
-        new_ids = current_ids.union(visible_ids)
-        st.session_state['selected_course_ids'] = list(new_ids)
-        for cid in visible_ids:
-            st.session_state[f"dl_chk_{cid}"] = True
-        st.rerun()
+        if select_all_clicked:
+            current_ids = set(st.session_state.get('selected_course_ids', []))
+            new_ids = current_ids.union(visible_ids)
+            st.session_state['selected_course_ids'] = list(new_ids)
+            for cid in visible_ids:
+                st.session_state[f"dl_chk_{cid}"] = True
+            st.rerun()
 
-    if clear_sel_clicked:
-        st.session_state['selected_course_ids'] = []
-        for c in courses:
-            st.session_state[f"dl_chk_{c.id}"] = False
-        st.rerun()
+        if clear_sel_clicked:
+            st.session_state['selected_course_ids'] = []
+            for c in courses:
+                st.session_state[f"dl_chk_{c.id}"] = False
+            st.rerun()
 
-    # --- Course list (centralized) ---
-    # Wrap the course list in its own bordered container so the bottom
-    # separator becomes a ``border-bottom`` on the SAME kind of box as the
-    # top separator (the buttons-row's border-bottom). With padding: 0 on
-    # both containers and ``margin-top: -1rem`` on this one (to cancel the
-    # parent stVerticalBlock gap), the top of the course list box sits
-    # flush against the buttons-row, and the first/last checkboxes sit at
-    # the box's content edges — so the visible top and bottom gaps both
-    # reduce to the checkbox's own intrinsic padding, which is symmetric
-    # by construction.
-    #
-    # The shared per-row CSS in _render_multi_select_list applies
-    # ``margin-bottom: -10px`` to EVERY ``dl_chk_*`` row as a row-tightening
-    # hack. That shrinks the outer box of every row by 10px, including the
-    # LAST row — so the box's border-bottom (the bottom separator) sits
-    # ~10px closer to the last row's visible text than it would naturally.
-    # The first row has no equivalent top-shrink, so the top gap reads
-    # ~10px LOOSER than the bottom — exactly the asymmetry visible in the
-    # screenshot.
-    #
-    # Mirror that 10px shrink at the first row's top edge by passing
-    # ``first_item_top_offset="-10px"``. This routes through the existing
-    # render_course_list parameter, which targets the first checkbox by
-    # its actual ``div.st-key-dl_chk_{first_course_id}`` class — not by
-    # ``:first-child`` (which would hit the invisible CSS-injection element
-    # that ``st.markdown`` plants as the first DOM child). With both ends
-    # of the box tightened by the same 10px, the visible top and bottom
-    # gaps match by construction.
-    #
-    # Note: ``-10px`` is the right unit here precisely BECAUSE it mirrors
-    # an existing px-based hack — both sides will scale together under
-    # DPI/zoom (a px-based shrink doesn't scale, but it doesn't need to,
-    # since the thing it's mirroring also doesn't scale).
-    with st.container(key="course_list_box", border=True):
-        render_course_list(
-            filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
-        )
+        # 3. Course list
+        with st.container(key="course_list_box", border=True):
+            render_course_list(
+                filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
+            )
 
     # --- Continue ---
     error_container = st.empty()

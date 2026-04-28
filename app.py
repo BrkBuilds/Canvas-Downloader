@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from canvas_logic import CanvasManager, DownloadError
 import asyncio
 import collections
@@ -53,6 +54,67 @@ st.html(f"""
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
 
+# Loading overlay — hides the raw intermediate DOM during Streamlit reruns.
+# Uses window.parent.document because components.html() runs inside an iframe.
+# Idempotent: the guard on _cdOv means the overlay + observer are created once
+# per page load; subsequent reruns just re-execute the guard and return early.
+# Show delay (300 ms): quick reruns (checkbox, filter toggle) finish before the
+# threshold so the overlay never flashes. Navigation reruns (step change, mode
+# switch) take 1-5 s and DO trigger it.
+# Hide delay (150 ms): lets new content finish painting before revealing it.
+components.html("""<script>
+(function(){
+    var doc=window.parent.document;
+    if(doc.getElementById('_cdOv'))return;
+
+    var s=doc.createElement('style');
+    s.textContent='@keyframes _cdR{to{transform:rotate(360deg)}}';
+    doc.head.appendChild(s);
+
+    var el=doc.createElement('div');
+    el.id='_cdOv';
+    el.style.cssText='position:fixed;inset:0;background:#0e1117;z-index:99999;'
+        +'display:none;flex-direction:column;align-items:center;'
+        +'justify-content:center;gap:16px';
+    el.innerHTML=
+        '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
+        +'border-top-color:#38bdf8;border-radius:50%;'
+        +'animation:_cdR .75s linear infinite"></div>'
+        +'<div style="color:rgba(255,255,255,.38);font:13px/1 system-ui,sans-serif;'
+        +'letter-spacing:.04em">Loading…</div>';
+    doc.body.appendChild(el);
+
+    // Detection: button click -> start 300ms timer. At 300ms, if DOM mutations
+    // are still arriving (rerun is slow), show the overlay. Hide when mutations
+    // stop for 250ms (DOM settled = new page fully painted).
+    var lastMut=0,sT=null,hT=null,vis=false;
+
+    function show(){el.style.display='flex';vis=true;}
+    function hide(){el.style.display='none';vis=false;hT=null;}
+
+    doc.addEventListener('click',function(e){
+        if(!e.target.closest('button'))return;
+        lastMut=Date.now();
+        if(sT)clearTimeout(sT);
+        sT=setTimeout(function(){
+            sT=null;
+            // Only show if mutations are still recent (rerun still running)
+            if(Date.now()-lastMut<200)show();
+        },300);
+    },true);
+
+    new MutationObserver(function(){
+        lastMut=Date.now();
+        if(!vis)return;
+        if(hT)clearTimeout(hT);
+        hT=setTimeout(hide,250);
+    }).observe(
+        doc.querySelector('[data-testid="stMain"]')||doc.body,
+        {childList:true,subtree:true,attributes:false,characterData:false}
+    );
+})();
+</script>""", height=0)
+
 # --- Session State Initialization (centralized in core/state_registry.py) ---
 ensure_download_state()
 
@@ -81,21 +143,24 @@ def cancel_download_callback():
 
 
 
-@st.cache_data(ttl=600)  # 10-minute TTL — new courses appear after brief wait
-def fetch_courses(token, url, fav_only):
+@st.cache_data(ttl=600, show_spinner=False)  # 10-minute TTL; spinner handled by course selector placeholder
+def fetch_courses(token, url):
+    """Return all enrolled courses, each annotated with .is_favorite (bool).
+
+    Callers that previously filtered by fav_only should now do:
+        [c for c in courses if c.is_favorite]  # favorites
+        courses                                  # all
+    """
     mgr = CanvasManager(token, url)
+    all_courses = list(mgr.get_courses(favorites_only=False))
+    all_courses.sort(key=lambda c: (c.name or "").lower())
     try:
-        courses = list(mgr.get_courses(fav_only))
-        # Global Alphabetical Sort
-        courses.sort(key=lambda c: (c.name or "").lower())
-        return courses
-    except Exception as e:
-        # If fetching fails (e.g. auth error), return empty list or let UI handle it. 
-        # But mgr.get_courses already raises exception. We should probably let it propagate or return empty.
-        # Existing code expected it to raise or return iterable. 
-        # Since we wrapper it, let's just let it raise if mgr.get_courses raises.
-        # But we need to handle the list conversion safely if it returns None (unlikely).
-        raise e
+        fav_ids = {c.id for c in mgr.get_courses(favorites_only=True)}
+    except Exception:
+        fav_ids = set()
+    for c in all_courses:
+        c.is_favorite = c.id in fav_ids
+    return all_courses
 
 # --- Sidebar: Authentication (delegated to ui.auth) ---
 with st.sidebar:
