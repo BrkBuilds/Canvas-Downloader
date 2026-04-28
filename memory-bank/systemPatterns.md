@@ -78,6 +78,11 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Pipeline Interruption Guards (Cancellation Flow)**:
     - *Problem*: Long-running pipelines (like post-processing conversions) that trigger automatically after a primary task (like downloading) are vulnerable to "Execution Leakage" if the user cancels during the primary task. If the secondary pipeline lacks explicit cancellation guards, it may trigger on a partial or aborted state, leading to "Overkill" loops or processing of half-downloaded files.
     - *Implementation*: Enforce a strict "Pre-Flight Interruption Check" before every major pipeline transition. In `app.py`, the `run_all_conversions` sequence is explicitly guarded by `not st.session_state.get('cancel_requested')` and `not st.session_state.get('download_cancelled')`. This ensures that an aborted download terminates the entire logic tree instantly, rather than falling through to the next phase.
+- **Centralized UI Preference Utility (Time/Date Formatting)**:
+    - *Problem*: Hardcoding time (`strftime('%H:%M')`) and date formats across multiple UI files leads to inconsistent behavior and makes it impossible to implement user-driven localization preferences globally.
+    - *Implementation*: Create a single source of truth (`format_time_display()` in `ui_helpers.py`) that reads the global preference from `st.session_state`.
+    - *Logic*: The utility handles the conditional logic (e.g., flipping `14:30` to `2:30 PM` and adjusting date ordering from `24 Apr` to `Apr 24`) based on the `use_12h_format` toggle.
+    - *Scope*: This pattern must be applied to all human-facing time surfaces (relative dates, sync cards, history entries, and report logs) while strictly exempting machine-readable timestamps and developer debug logs to maintain backend consistency.
 
 ## Concurrency, Async & Subprocess Patterns
 - **Active Subprocess ThreadPool Management**:
@@ -179,6 +184,10 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Callback & CSS Hoisting Pattern**:
     - *Problem*: Defining `@st.fragment` callback functions or `<style>` blocks inside `st.columns` or `st.container` blocks can cause Streamlit to unmount and re-re-render those elements when the parent container's state changes. This leads to "flapping" UI or lost widget focus.
     - *Solution*: Always hoist fragments, callbacks, and CSS definitions to the absolute top of the parent render function, *before* any layout containers (`columns`, `tabs`, `expanders`) are instantiated. This ensures the logic and styling remain stable regardless of the layout's internal branch mutations.
+- **3-Column Preference Card Pattern (Horizontal Stretching)**:
+    - *Problem*: Adding new settings to a row (like Preferences) can push existing 2-column layouts into awkward vertical stacks if not properly re-configured.
+    - *Implementation*: Transition from `st.columns(2)` to `st.columns(3)` and apply the "Flex-Stretch Chain" (see Item 215) to every card.
+    - *Aesthetic*: Ensures that "Notifications", "CBS Filters", and "Time Format" cards maintain identical heights and bottom-flush buttons regardless of varying description lengths, maintaining the "Hardware Dashboard" look.
 - **Dependency Injection Over Lazy Importing Pattern**:
     - *Problem*: Streamlit UIs split across multiple files often create circular dependencies (e.g. `app.py` imports `ui/sync_review.py` which needs `app.py`'s confirmation function). Using `import` inside the function execution block (lazy imports) is technically valid but creates highly brittle architecture, hides performance costs, and obscures testing.
     - *Solution*: Eradicate lazy imports using dependency injection. The higher-level orchestrator (e.g. `sync_ui.py`) imports the lower-level UI module (`show_analysis_review`) and passes its own callback functions (e.g., `on_confirm_sync=my_local_dialog_function`) directly as structural parameters. This enforces a strict top-down dependency tree.

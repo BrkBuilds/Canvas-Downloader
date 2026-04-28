@@ -12,7 +12,14 @@
 12:     - Done: Fixed sheet name collision in `excel_converter.py` on macOS by implementing indexed CSV exports.
 13:     - Done: Fixed Word alert suppression in AppleScript via explicit integer `0` for `wdAlertsNone` parity.
 14: 
-15: - **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
+15: - **Session 2026-04-28: Global 12-Hour Time Format & Date Standardization**
+    - Done: Implemented a central `format_time_display()` utility in `ui_helpers.py` that reads `st.session_state['use_12h_format']` to convert `HH:MM` to `h:MM AM/PM`.
+    - Done: Updated the "Settings" dialog's "Preferences" section from a 2-column to a 3-column layout, adding the "Time format" toggle card with matching equal-height CSS and persistence in `canvas_downloader_settings.json`.
+    - Done: Refactored `format_relative_date()` and `_format_canvas_date()` to respect the 12h toggle, switching both time format and date ordering: European default (`24 Apr`, `26th August`) vs. American standard (`Apr 24`, `August 26th`) when 12h is enabled.
+    - Done: Applied the formatting globally across sync cards, sync history, sync review metadata, and the "Sync Report" execution log.
+    - Done: Hardened date formatting in the sync execution log to switch between "Monday the 28th of April, 2026" (European) and "Monday, April 28th, 2026" (American) based on user preference.
+
+- **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
 
 - **Session 2026-04-27: Sync Engine Robustness & Mode A/B Parity**
     - Done: Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 existence guard and prioritize local existence checks in Phase 2. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps.

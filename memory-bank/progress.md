@@ -6,7 +6,13 @@
 6:     - [x] **Windows Config Path Alignment**: Updated frozen build path to `%APPDATA%/CanvasDownloader/` to match cross-platform standards.
 7:     - [x] **macOS Spec File Refinement**: Bundled `.streamlit` config and implemented platform-specific excludes to reduce bundle size and improve stability.
 8:     - [x] **Office Automation Fixes**: Resolved macOS sheet name collisions in `excel_converter.py` and fixed Word alert suppression in AppleScript.
-9: - [x] **Inline Sync Edit Fixes & Course-Identity Guard** (2026-04-28):
+9: - [x] **Global 12-Hour Time Format & Date Standardization** (2026-04-28):
+    - [x] **Central Time Utility**: Created `format_time_display()` in `ui_helpers.py` to handle 12h/24h string conversion globally.
+    - [x] **Settings Expansion**: Expanded Preferences row from 2 to 3 columns to house the "Time format" toggle card with matched CSS.
+    - [x] **Dynamic Date Standardization**: Implemented logic to flip between European (Day Month) and American (Month Day) standards based on the time format toggle.
+    - [x] **UI-Wide Integration**: Updated `format_relative_date()`, `_format_canvas_date()`, sync history, and sync execution logs to respect the preference.
+    - [x] **Persistence**: Integrated `use_12h_format` into the JSON config loading and saving lifecycle.
+- [x] **Inline Sync Edit Fixes & Course-Identity Guard** (2026-04-28):
     - [x] **Inline Course-Edit Save**: Removed premature `st.session_state` mutation in `ui/sync_dialogs.py` to preserve signature integrity for `update_pair_by_signature`.
     - [x] **Course-Identity Guard (SQLite)**: Switched `.canvas_sync.db` initialization to `INSERT OR IGNORE` to lock folders strictly to their first synced course.
     - [x] **Static Probes**: Added `peek_bound_course_id()` and `peek_bound_course_name()` to `SyncManager` for side-effect-free metadata inspection.
