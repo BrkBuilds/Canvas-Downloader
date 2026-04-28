@@ -1439,41 +1439,43 @@ def _render_sync_history():
 
         /* --- SEXY SYNC HISTORY EXPANDER STYLING --- */
         /* Target the expander immediately following our hidden marker */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] [data-testid="stExpander"],
-        .element-container:has(#sync-history-marker) ~ .element-container [data-testid="stExpander"] {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] [data-testid="stExpander"] {
             margin-top: 32px !important;
             border: none !important;
             background: transparent !important;
             box-shadow: none !important;
         }
+        /* Kill Streamlit's native glowing border on the details element */
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) {
+            border: none !important;
+            box-shadow: none !important;
+        }
         
-        /* The header (summary) */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary {
-            background: linear-gradient(180deg, #1d2127 0%, #161b22 100%) !important;
+        /* The header (summary) — flat style, same in both collapsed and expanded */
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary {
+            background: #1a1e24 !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 8px !important;
-            padding: 16px 20px !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            padding: 13px 20px !important;
+            transition: background 0.2s ease, border-color 0.2s ease !important;
+            box-shadow: none !important;
             list-style: none !important;
             display: flex !important;
             align-items: center !important;
             gap: 12px !important;
         }
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary::-webkit-details-marker,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary::-webkit-details-marker {
+        
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary::-webkit-details-marker {
             display: none !important;
         }
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary:hover,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary:hover {
-            background: linear-gradient(180deg, #21262d 0%, #1d2127 100%) !important;
-            border-color: rgba(255, 255, 255, 0.15) !important;
+        
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary:hover {
+            background: #1e2330 !important;
+            border-color: rgba(255, 255, 255, 0.13) !important;
         }
         
         /* Title text */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary p,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary p {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary p {
             font-size: 1.15rem !important;
             font-weight: 600 !important;
             color: #ffffff !important;
@@ -1483,8 +1485,7 @@ def _render_sync_history():
         }
         
         /* Custom Clock/History SVG */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary p::before,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary p::before {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary p::before {
             content: '';
             display: inline-block;
             width: 26px;
@@ -1499,8 +1500,7 @@ def _render_sync_history():
         }
         
         /* Style Streamlit's default chevron */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary svg,
-        .element-container:has(#sync-history-marker) ~ .element-container details > summary svg {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary svg {
             color: #8b949e !important;
             width: 20px !important;
             height: 20px !important;
@@ -1508,33 +1508,33 @@ def _render_sync_history():
             transition: transform 0.2s ease !important;
         }
         
-        /* Expanded state styling */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details[open],
-        .element-container:has(#sync-history-marker) ~ .element-container details[open] {
+        /* Expanded state — only structural overrides needed, base look is identical */
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details)[open] {
             border: none !important;
         }
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details[open] > summary,
-        .element-container:has(#sync-history-marker) ~ .element-container details[open] > summary {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details)[open] > summary {
             border-bottom-left-radius: 0 !important;
             border-bottom-right-radius: 0 !important;
-            border-bottom-color: transparent !important;
-            background: #1a1e24 !important;
-            box-shadow: none !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         
         /* Content box wrapper */
-        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > div,
-        .element-container:has(#sync-history-marker) ~ .element-container details > div {
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > div {
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-top: none !important;
             border-bottom-left-radius: 8px !important;
             border-bottom-right-radius: 8px !important;
             background-color: #0d1117 !important;
-            padding: 0 24px 24px 24px !important;
+            padding: 0 24px 0px 24px !important;
+        }
+        /* Kill Streamlit's default 16px padding-top on the content wrapper */
+        div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > div {
+            padding-top: 0 !important; 
         }
         </style>
+        <div id="sync-history-marker" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>
         """)
-        st.markdown('<div id="sync-history-marker" style="display:none;"></div>', unsafe_allow_html=True)
+        
         with st.expander('Sync History', expanded=False):
             if not history:
                 st.write('No sync history yet.')
@@ -1549,18 +1549,19 @@ def _render_sync_history():
             st.session_state.setdefault('sync_history_filter', 'all')
             st.session_state.setdefault('sync_history_course', None)
 
+            st.html('<div id="sync-history-toolbar" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>')
             col1, col2 = st.columns([3, 1])
             with col1:
                 # View all / By course
                 c1, c2, c3 = st.columns([1, 1, 2])
                 with c1:
-                    if st.button("View All", key="sync_hist_tab_all", use_container_width=True, type="primary" if st.session_state.sync_history_filter == 'all' else "secondary"):
-                        st.session_state.sync_history_filter = 'all'
-                        st.rerun()
+                    st.button("View All", key="sync_hist_tab_all", use_container_width=True,
+                              type="primary" if st.session_state.sync_history_filter == 'all' else "secondary",
+                              on_click=lambda: st.session_state.update({'sync_history_filter': 'all'}))
                 with c2:
-                    if st.button("By Course", key="sync_hist_tab_course", use_container_width=True, type="primary" if st.session_state.sync_history_filter == 'course' else "secondary"):
-                        st.session_state.sync_history_filter = 'course'
-                        st.rerun()
+                    st.button("By Course", key="sync_hist_tab_course", use_container_width=True,
+                              type="primary" if st.session_state.sync_history_filter == 'course' else "secondary",
+                              on_click=lambda: st.session_state.update({'sync_history_filter': 'course'}))
                 with c3:
                     if st.session_state.sync_history_filter == 'course':
                         # Get all unique courses
@@ -1597,7 +1598,18 @@ def _render_sync_history():
                     if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
                         st.session_state.confirm_clear_history = True
                         st.rerun()
-            
+
+            # Divider between action toolbar and list
+            st.html("""
+                <div style="
+                    border-top: 1px solid rgba(255,255,255,0.08);
+                    margin: 0px -24px 16px -24px;
+                    background: rgba(255,255,255,0.02);
+                    height: 1px;
+                    margin-bottom: -20px;
+                "></div>
+            """)
+
             # Filter history
             filtered_history = []
             for entry in history:
@@ -1668,12 +1680,12 @@ def _render_sync_history():
                 icon_img = f'<img src="{_icon_url}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{ext}"/>'
                 return f'<li style="margin-bottom: 4px; list-style-type: none; margin-left: -12px;">{icon_img}{fname}</li>'
 
-            html_out = []
+            html_out = ['<div style="margin-top: -12px;">']
             
             for date_key, items in grouped_history.items():
                 # Sticky Header
-                html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 4px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-<div style="color: #8b949e; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
+                html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 0px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+<div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
 </div>""")
                 
                 # Container for the day's cards
@@ -1812,6 +1824,7 @@ Updated {count} file{'s' if count != 1 else ''} <span style="margin: 0 8px; colo
                     
                 html_out.append('</div>')
                 
+            html_out.append('</div>')  # close margin-top wrapper
             st.markdown("".join(html_out), unsafe_allow_html=True)
 
 
