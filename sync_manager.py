@@ -147,7 +147,77 @@ def secondary_id_type(canvas_file_id: int) -> str:
 
 class SyncManager:
     """Manages synchronization between Canvas and local files using a SQLite database."""
-    
+
+    @staticmethod
+    def peek_bound_course_id(local_path: str) -> int | None:
+        """Read the course_id this folder's manifest is bound to, without
+        instantiating SyncManager (which would write the metadata row).
+
+        Returns the bound Canvas course_id as an int, or None if no DB
+        exists yet, the binding row is missing, or the value is unparseable.
+
+        Used by the analysis pipeline to detect course/folder mismatches
+        before any sync work runs against the wrong manifest.
+        """
+        try:
+            db_path = Path(local_path) / DB_FILENAME
+            if not db_path.exists():
+                return None
+            with sqlite3.connect(db_path, timeout=10.0) as conn:
+                cursor = conn.execute(
+                    'SELECT value FROM sync_metadata WHERE key = ?', ('course_id',)
+                )
+                row = cursor.fetchone()
+            if not row or row[0] is None:
+                return None
+            return int(row[0])
+        except (sqlite3.Error, ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def peek_bound_course_name(local_path: str) -> str | None:
+        """Read the course_name last written to this folder's manifest.
+
+        Used alongside peek_bound_course_id to give the user a friendly
+        identifier for the previously-bound course in the mismatch dialog.
+        """
+        try:
+            db_path = Path(local_path) / DB_FILENAME
+            if not db_path.exists():
+                return None
+            with sqlite3.connect(db_path, timeout=10.0) as conn:
+                cursor = conn.execute(
+                    'SELECT value FROM sync_metadata WHERE key = ?', ('course_name',)
+                )
+                row = cursor.fetchone()
+            return row[0] if row and row[0] else None
+        except sqlite3.Error:
+            return None
+
+    @staticmethod
+    def reset_folder_binding(local_path: str) -> bool:
+        """Clear the course binding and all sync records from the manifest DB,
+        so the folder can be re-synced against a different Canvas course.
+
+        Uses SQL DELETE rather than file deletion to avoid Windows file-lock
+        errors (WinError 32) caused by SQLite WAL mode keeping the .db file
+        open between Streamlit reruns.
+
+        Returns True on success or if no DB exists yet, False on SQL error.
+        """
+        try:
+            db_path = Path(local_path) / DB_FILENAME
+            if not db_path.exists():
+                return True
+            with sqlite3.connect(db_path, timeout=30.0) as conn:
+                conn.execute('DELETE FROM sync_manifest')
+                conn.execute('DELETE FROM sync_metadata')
+                conn.commit()
+            return True
+        except sqlite3.Error as e:
+            logger.error(f"Failed to reset folder binding at {local_path}: {e}")
+            return False
+
     def __init__(self, local_path: str, course_id: int, course_name: str):
         """
         Initialize SyncManager.
@@ -207,7 +277,14 @@ class SyncManager:
                     )
                 ''')
                 
-                cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_id', str(self.course_id)))
+                # Course-identity binding: only set course_id once. The
+                # manifest's canvas_file_ids are course-specific, so the
+                # folder is permanently bound to the first course it was
+                # synced against. Use peek_bound_course_id() before
+                # instantiating with a different course_id to detect
+                # mismatch and prompt the user (handled in sync.analysis).
+                cursor.execute('INSERT OR IGNORE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_id', str(self.course_id)))
+                # Course name can change on Canvas — always refresh.
                 cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_name', self.course_name))
                 conn.commit()
         except sqlite3.DatabaseError as e:
@@ -1278,6 +1355,15 @@ class SyncHistoryManager:
             os.replace(str(tmp_path), str(self.history_path))
         except IOError as e:
             logger.warning(f"Error saving sync history: {e}")
+
+    def clear_history(self):
+        """Clear all sync history."""
+        try:
+            if self.history_path.exists():
+                self.history_path.unlink()
+        except IOError as e:
+            import logging
+            logging.warning(f"Error clearing sync history: {e}")
 
 
 # --- Saved Sync Groups Manager ---
