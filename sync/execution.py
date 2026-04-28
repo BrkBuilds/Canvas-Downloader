@@ -882,7 +882,10 @@ def run_sync():
                     now = datetime.now()
                     day = now.day
                     ordinal = str(day) + ("th" if 4 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th"))
-                    nice_date = now.strftime(f"%A the {ordinal}, %B, %Y")
+                    if st.session_state.get('use_12h_format', False):
+                        nice_date = now.strftime(f"%A, %B {ordinal}, %Y")       # American: "Monday, April 28th, 2026"
+                    else:
+                        nice_date = now.strftime(f"%A the {ordinal} of %B, %Y")  # European: "Monday the 28th of April, 2026"
                     
                     course_name = friendly_course_name(res_data['pair']['course_name'])
                     
@@ -891,7 +894,8 @@ def run_sync():
                             lf.write(f"\n{'='*60}\n")
                             lf.write(f" ☁️ CANVAS DOWNLOADER: SYNC REPORT \n")
                             lf.write(f" Course: {course_name}\n")
-                            lf.write(f" Date:   {nice_date} at {now.strftime('%H:%M')}\n")
+                            from ui_helpers import format_time_display
+                            lf.write(f" Date:   {nice_date} at {format_time_display(now.strftime('%H:%M'))}\n")
                             lf.write(f"{'='*60}\n\n")
                             
                             lf.write("💡 HOW TO USE THIS LOG:\n")

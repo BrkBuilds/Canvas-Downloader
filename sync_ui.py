@@ -32,6 +32,7 @@ from ui_helpers import (
     short_path,
     get_base64_image,
     format_relative_date,
+    format_time_display,
 )
 
 from core.state_registry import ensure_sync_state, cleanup_sync_state
@@ -1649,7 +1650,7 @@ def _render_sync_history():
                 raw_time = entry.get('timestamp', '')
                 try:
                     dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
-                    time_str = dt.strftime('%H:%M')
+                    time_str = format_time_display(dt.strftime('%H:%M'))
                 except Exception:
                     time_str = raw_time
                     dt = None
