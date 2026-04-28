@@ -1,6 +1,15 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+- **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
+    - Done: Fixed a bug where inline course editing poisoned the search signature in `ui/sync_dialogs.py`. Removed premature `st.session_state` mutation upon dialog return so `update_pair_by_signature` matches the original on-disk signature correctly before replacing it. Audited `ui/hub_dialog.py` to confirm immunity via its distinct callback flow.
+    - Done: Switched SQLite metadata `course_id` initialization in `sync_manager.py` from `INSERT OR REPLACE` to `INSERT OR IGNORE` to properly bind folders strictly to their first synced course.
+    - Done: Added static probes `peek_bound_course_id()` and `peek_bound_course_name()` to `SyncManager` for inspecting metadata without inadvertently writing initializations.
+    - Done: Added `reset_folder_binding()` to wipe only `.canvas_sync.db` cleanly without touching actual disk files when a re-link is requested.
+    - Done: Revamped course-identity guards inside `ui/sync_dialogs.py` to display an inline amber warning when a folder is already linked to another course, offering a seamless "Confirm and Add" overwrite without navigating away.
+    - Done: Modified `sync/analysis.py` to act as a silent safety net. Corrupted manual edits triggering a mismatch now safely open the inline editor with the amber re-link warning directly on Step 1.
+    - Done: Eliminated the old resolver screen and `sync_pairs_run_override` logic entirely from `sync_ui.py` for a much cleaner architecture.
+
 - **Session 2026-04-27: Sync Engine Robustness & Mode A/B Parity**
     - Done: Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 existence guard and prioritize local existence checks in Phase 2. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps.
     - Done: Standardized `SyncFileInfo.target_local_path` to always reflect the analyzer's calculated path, and updated `target_paths` lookup to resolve both positive and synthetic negative IDs.
