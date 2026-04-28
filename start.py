@@ -118,10 +118,15 @@ if __name__ == "__main__":
     _wait_for_server()
 
     # 3. Create and start the native desktop window.
-    #    - Windows: Uses Edge/Chromium via pywebview WinForms backend.
-    #    - macOS:   Uses WebKit via pywebview Cocoa backend.
-    #    webview.start() blocks the main thread (required by macOS Cocoa).
+    #    - Windows: Uses Edge/Chromium via pywebview WinForms backend (default).
+    #    - macOS:   Forces the Qt backend (PySide6 + QtWebEngine = Chromium)
+    #               for rendering parity with Windows. The native Cocoa/WebKit
+    #               backend is NOT used because WebKit and Edge/Chromium differ
+    #               enough in CSS rendering to require platform-specific hacks.
+    #    webview.start() blocks the main thread (required by macOS Cocoa/Qt).
+    import platform as _platform
+    _gui_backend = 'qt' if _platform.system() == 'Darwin' else None
     webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
-    webview.start()
+    webview.start(gui=_gui_backend)
 
     sys.exit(0)
