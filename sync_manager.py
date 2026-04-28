@@ -218,7 +218,21 @@ class SyncManager:
             logger.error(f"Failed to reset folder binding at {local_path}: {e}")
             return False
 
-    def __init__(self, local_path: str, course_id: int, course_name: str):
+    @staticmethod
+    def peek_last_synced(local_path: str | Path) -> str | None:
+        """Peek at the last_synced timestamp bound to this folder."""
+        db_path = Path(local_path) / ".canvas_sync.db"
+        if not db_path.exists():
+            return None
+        try:
+            with sqlite3.connect(db_path, timeout=5.0) as conn:
+                cursor = conn.execute("SELECT value FROM sync_metadata WHERE key = 'last_synced'")
+                row = cursor.fetchone()
+                return row[0] if row else None
+        except Exception:
+            return None
+
+    def __init__(self, local_path: str | Path, course_id: int, course_name: str = ""):
         """
         Initialize SyncManager.
         
