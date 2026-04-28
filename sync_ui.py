@@ -343,26 +343,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # (7) Removed "Select Folders to Sync" header — wizard is enough context.
 
-    # Fetch courses (needed by pair cards and the add-folder UI)
+    # Fetch courses — already annotated with .is_favorite by fetch_courses()
     courses = fetch_courses_fn(
         st.session_state['api_token'],
         st.session_state['api_url'],
-        False
     )
-    
-    # Pre-fetch and flag favorites to fix "Favorites Only" modal filter
-    try:
-        fav_courses = fetch_courses_fn(
-            st.session_state['api_token'],
-            st.session_state['api_url'],
-            True
-        )
-        fav_ids = {c.id for c in fav_courses}
-    except Exception:
-        fav_ids = set()
-
-    for c in courses:
-        setattr(c, 'is_favorite', c.id in fav_ids)
     
     # 1. Generate base friendly names
     # We want "Friendly Name" usually, but if two courses have same friendly name,
