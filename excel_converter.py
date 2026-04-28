@@ -351,6 +351,10 @@ class ExcelToData:
         posix_dir = str(temp_dir.resolve())
 
         # Safely dump each sheet to a native CSV file using Mac Office
+        # Sheet CSVs are named "{index}_{sheetName}.csv" to avoid collisions on
+        # the case-insensitive macOS filesystem when two sheets share a name.
+        # The AppleScript returns "index\tsheetName" lines so Python can
+        # reconstruct the filename without guessing.
         script = f'''
             set output to ""
             tell application "Microsoft Excel"
@@ -363,9 +367,9 @@ class ExcelToData:
                     set sheetName to name of theSheet
                     try
                         tell theSheet to select
-                        set outPath to "{posix_dir}/" & sheetName & ".csv"
+                        set outPath to "{posix_dir}/" & i & "_" & sheetName & ".csv"
                         save as active sheet filename POSIX file outPath file format CSV file format
-                        set output to output & sheetName & linefeed
+                        set output to output & i & tab & sheetName & linefeed
                     end try
                 end repeat
                 close theBook saving no
@@ -379,9 +383,12 @@ class ExcelToData:
             )
             sheets = []
             if result.returncode == 0:
-                sheet_names = [s.strip() for s in result.stdout.split('\n') if s.strip()]
-                for s_name in sheet_names:
-                    csv_path = temp_dir / f"{s_name}.csv"
+                for line in result.stdout.splitlines():
+                    line = line.strip()
+                    if not line or '\t' not in line:
+                        continue
+                    idx_str, s_name = line.split('\t', 1)
+                    csv_path = temp_dir / f"{idx_str.strip()}_{s_name.strip()}.csv"
                     if csv_path.exists():
                         # Read the saved CSV and standardise encoding
                         try:
@@ -393,8 +400,8 @@ class ExcelToData:
 
                         # Skip completely empty sheets
                         if csv_text.strip():
-                            sheets.append((s_name, csv_text.strip() + '\n'))
-                            
+                            sheets.append((s_name.strip(), csv_text.strip() + '\n'))
+
             else:
                 logger.error(f"[AppleScript] Excel data extraction failed: {result.stderr.strip()}")
             return sheets

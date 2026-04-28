@@ -32,6 +32,8 @@ datas = [
     ('version.py', '.'),
     ('theme.py', '.'),
     ('assets', 'assets'),
+    # Streamlit config — theme, toolbar mode, primary colour (parity with Windows spec)
+    ('.streamlit', '.streamlit'),
     # Modularized packages (added during The Convergence refactor)
     ('core', 'core'),
     ('engine', 'engine'),
@@ -67,6 +69,14 @@ packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
     'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg',
+    # macOS-only: pync (terminal-notifier wrapper for Notification Center)
+    'pync',
+    # macOS-only: PySide6 + QtWebEngine for Chromium-based rendering (parity with Windows Edge)
+    # Note: adds ~100 MB to the bundle but eliminates WebKit/Chromium CSS divergence.
+    'PySide6',
+    'PySide6.QtWebEngineWidgets',
+    'PySide6.QtWebEngineCore',
+    'PySide6.QtWebEngine',
 ]
 for package in packages_to_collect:
     try:
@@ -87,9 +97,18 @@ hiddenimports += [
     '_tkinter',
     # macOS-critical: used by url_compiler.py for .webloc file parsing
     'plistlib',
-    # PyWebView — now used on macOS for native windowing (Phase 2 remediation)
+    # PyWebView backends — Qt (primary, Chromium) + Cocoa (fallback)
     'webview',
+    'webview.platforms.qt',
     'webview.platforms.cocoa',
+    # PySide6 QtWebEngine — required for webview gui='qt' Chromium backend
+    'PySide6.QtWebEngineWidgets',
+    'PySide6.QtWebEngineCore',
+    'PySide6.QtWebEngine',
+    'PySide6.QtCore',
+    'PySide6.QtWidgets',
+    'PySide6.QtGui',
+    'PySide6.QtNetwork',
     # MoviePy fx modules for video conversion
     'moviepy.audio.fx.all',
     'moviepy.video.fx.all',
@@ -115,6 +134,7 @@ a = Analysis(
               # Windows-only packages (not needed on macOS)
               'win32com', 'win32com.client', 'pythoncom', 'pywintypes',
               'webview.platforms.winforms', 'webview.platforms.edgechromium',
+              'win11toast', 'winsound',
               # More unused Streamlit features
               'streamlit.external.langchain'],
     noarchive=False,

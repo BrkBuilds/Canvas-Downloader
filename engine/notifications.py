@@ -40,6 +40,10 @@ if system == 'Windows':
 # ── macOS Dependencies ──
 if system == 'Darwin':
     import subprocess
+    try:
+        from pync import Notifier as _PyncNotifier
+    except ImportError:
+        _PyncNotifier = None
 
 logger = logging.getLogger(__name__)
 
@@ -147,9 +151,30 @@ def _play_macos_sound():
 
 
 def _show_macos_notification(title: str, body: str):
-    """Display a native macOS Notification Center notification via osascript."""
+    """Display a native macOS Notification Center notification.
+
+    Primary path: pync (wraps terminal-notifier) — notification is attributed
+    to 'Canvas Downloader' and clicking it activates the app via its bundle ID.
+
+    Fallback: osascript display notification — attributed to 'Script Editor'
+    but always available without additional dependencies.
+    """
+    # Primary: pync via terminal-notifier
+    if _PyncNotifier is not None:
+        try:
+            _PyncNotifier.notify(
+                body,
+                title='Canvas Downloader',
+                subtitle=title,
+                activate='com.canvasdownloader.app',
+                group='com.canvasdownloader.app',
+            )
+            return
+        except Exception as e:
+            logger.debug(f"pync notification failed: {e}")
+
+    # Fallback: osascript (notification appears from 'Script Editor')
     try:
-        # Escape double quotes in strings for AppleScript safety
         safe_title = title.replace('"', '\\"')
         safe_body = body.replace('"', '\\"')
         script = (
@@ -163,7 +188,7 @@ def _show_macos_notification(title: str, body: str):
             stderr=subprocess.DEVNULL,
         )
     except Exception as e:
-        logger.debug(f"macOS notification failed: {e}")
+        logger.debug(f"macOS osascript notification failed: {e}")
 
 
 def _macos_notify(title: str, body: str):

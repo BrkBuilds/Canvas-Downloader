@@ -10,3 +10,6 @@ pywin32==308; sys_platform == 'win32'
 psutil==6.1.0
 pywebview>=5.1
 win11toast; sys_platform == 'win32'
+pync; sys_platform == 'darwin'
+PySide6; sys_platform == 'darwin'
+PySide6-WebEngine; sys_platform == 'darwin'
