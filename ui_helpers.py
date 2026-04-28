@@ -185,6 +185,28 @@ def get_config_dir() -> str:
     else:
         return str(Path(__file__).parent)
 
+def format_time_display(time_str: str) -> str:
+    """Format a 24-hour HH:MM time string respecting the user's 12h/24h preference.
+
+    Reads ``st.session_state['use_12h_format']`` (default ``False`` = 24-hour).
+    When the toggle is on, converts e.g. ``'14:30'`` → ``'2:30 PM'``.
+    Returns the original string unchanged on parse error or when 24h is selected.
+    """
+    try:
+        import streamlit as st
+        if not st.session_state.get('use_12h_format', False):
+            return time_str
+    except Exception:
+        return time_str
+
+    from datetime import datetime as _dt
+    try:
+        parsed = _dt.strptime(time_str, '%H:%M')
+        return parsed.strftime('%I:%M %p').lstrip('0')
+    except Exception:
+        return time_str
+
+
 def format_relative_date(raw_time: str, include_time: bool = False, include_emoji: bool = False) -> str:
     """Format a timestamp string (YYYY-MM-DD HH:MM) into a friendly relative date.
     
@@ -203,7 +225,7 @@ def format_relative_date(raw_time: str, include_time: bool = False, include_emoj
         
         diff_total_seconds = (now - dt).total_seconds()
         diff_days = (now.date() - dt.date()).days
-        time_str = dt.strftime('%H:%M')
+        time_str = format_time_display(dt.strftime('%H:%M'))
         
         if diff_total_seconds < 3600 and diff_total_seconds >= 0:
             minutes = int(diff_total_seconds // 60)
@@ -221,9 +243,17 @@ def format_relative_date(raw_time: str, include_time: bool = False, include_emoj
         elif diff_days < 7 and diff_days > 0:
             date_key = dt.strftime('%A')
         elif dt.year == now.year:
-            date_key = f"{dt.day} {dt.strftime('%b')}"
+            import streamlit as _st
+            if _st.session_state.get('use_12h_format', False):
+                date_key = f"{dt.strftime('%b')} {dt.day}"       # American: "Apr 24"
+            else:
+                date_key = f"{dt.day} {dt.strftime('%b')}"       # European: "24 Apr"
         else:
-            date_key = f"{dt.day} {dt.strftime('%b')} {dt.year}"
+            import streamlit as _st
+            if _st.session_state.get('use_12h_format', False):
+                date_key = f"{dt.strftime('%b')} {dt.day}, {dt.year}"  # American: "Nov 12, 2025"
+            else:
+                date_key = f"{dt.day} {dt.strftime('%b')} {dt.year}"   # European: "12 Nov 2025"
             include_time = False
             
         parts = []

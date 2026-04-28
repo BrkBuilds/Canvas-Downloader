@@ -147,7 +147,8 @@ _ENTITY_ROUTING = {
 def _format_canvas_date(date_str):
     """
     Formats ISO 8601 UTC strings from Canvas (e.g., '2025-08-26T14:07:50Z')
-    into human-readable localized strings like 'August 26th, 2025 at 14:07'.
+    into human-readable localized strings like '26th August, 2025 at 14:07'.
+    When 12-hour format is enabled, uses American ordering: 'August 26th, 2025 at 2:07 PM'.
     """
     if not date_str or not isinstance(date_str, str):
         return str(date_str)
@@ -165,7 +166,21 @@ def _format_canvas_date(date_str):
         else:
             suffix = ["st", "nd", "rd"][day % 10 - 1]
             
-        return local_dt.strftime(f"%B {day}{suffix}, %Y at %H:%M")
+        # Format time component respecting 12h/24h preference
+        try:
+            import streamlit as st
+            use_12h = st.session_state.get('use_12h_format', False)
+        except Exception:
+            use_12h = False
+
+        if use_12h:
+            time_fmt = local_dt.strftime('%I:%M %p').lstrip('0')
+            # American: "August 26th, 2025 at 2:07 PM"
+            return f"{local_dt.strftime('%B')} {day}{suffix}, {local_dt.year} at {time_fmt}"
+        else:
+            time_fmt = local_dt.strftime('%H:%M')
+            # European: "26th August, 2025 at 14:07"
+            return f"{day}{suffix} {local_dt.strftime('%B')}, {local_dt.year} at {time_fmt}"
     except Exception:
         return date_str
 

@@ -241,6 +241,9 @@ div.st-key-nav_btn_logout button:hover::after {{
                         if 'notifications_enabled' in config:
                             st.session_state['notifications_enabled'] = config.get('notifications_enabled', True)
 
+                        if 'use_12h_format' in config:
+                            st.session_state['use_12h_format'] = config.get('use_12h_format', False)
+
                         if 'default_download_path' in config:
                             saved_default = config.get('default_download_path', '') or ''
                             st.session_state['default_download_path'] = saved_default
@@ -456,6 +459,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_bell   = _stg_ico("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
     _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
+    _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
 
     @st.dialog("\u200b", width="large")
     def _global_settings_dialog():
@@ -493,6 +497,20 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         div[class*="st-key-stg_card_maxsize"] [data-testid="stVerticalBlockBorderWrapper"],
         div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
         div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_speed"]) {
+            align-items: stretch !important;
+        }
+
+        /* ── Equal height preference cards ── */
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_sound"]) { flex: 1 !important; }
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_cbs"]) { flex: 1 !important; }
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_time"]) { flex: 1 !important; }
+        div[class*="st-key-stg_card_sound"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_cbs"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_time"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
+        div[class*="st-key-stg_card_sound"] [data-testid="stVerticalBlockBorderWrapper"],
+        div[class*="st-key-stg_card_cbs"] [data-testid="stVerticalBlockBorderWrapper"],
+        div[class*="st-key-stg_card_time"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_sound"]) {
             align-items: stretch !important;
         }
 
@@ -612,7 +630,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             # ── PREFERENCES ───────────────────────────────────────────
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PREFERENCES</span></div>""")
 
-            _p1, _p2 = st.columns(2)
+            _p1, _p2, _p3 = st.columns(3)
             with _p1:
                 with st.container(border=True, key="stg_card_sound"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Notifications</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Get a sound and a native notification when a download or sync finishes, so you can focus on what matters.</div></div>""")
@@ -621,6 +639,10 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 with st.container(border=True, key="stg_card_cbs"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")
                     temp_cbs = st.toggle("Enable CBS filters", value=st.session_state.get('enable_cbs_filters', False), key="temp_cbs_filters")
+            with _p3:
+                with st.container(border=True, key="stg_card_time"):
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_clock}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Time format</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Display all times in 12-hour AM/PM format instead of the default 24-hour clock.</div></div>""")
+                    temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
 
         # ── Sticky footer ─────────────────────────────────────────────
         st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
@@ -642,6 +664,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
                     or temp_notifications != st.session_state.get('notifications_enabled', True)
                     or temp_error_log != st.session_state.get('error_log_enabled', True)
+                    or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                 )
 
@@ -651,6 +674,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['max_file_size_mb'] = int(temp_size_mb)
                 st.session_state['notifications_enabled'] = temp_notifications
                 st.session_state['error_log_enabled'] = temp_error_log
+                st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
 
                 from pathlib import Path as _Path
@@ -676,6 +700,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['max_file_size_mb'] = int(temp_size_mb)
                 config_data['notifications_enabled'] = bool(temp_notifications)
                 config_data['error_log_enabled'] = bool(temp_error_log)
+                config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
 
                 try:
