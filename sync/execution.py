@@ -877,17 +877,40 @@ def run_sync():
                 deletions = res_data['result'].deleted_on_canvas
                 if updates or deletions:
                     log_file_path = local_path / "☁️ Canvas Updates & Deletions.txt"
+                    
+                    import urllib.parse
+                    now = datetime.now()
+                    day = now.day
+                    ordinal = str(day) + ("th" if 4 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th"))
+                    nice_date = now.strftime(f"%A the {ordinal}, %B, %Y")
+                    
+                    course_name = friendly_course_name(res_data['pair']['course_name'])
+                    
                     try:
                         with open(make_long_path(log_file_path), "a", encoding="utf-8") as lf:
-                            lf.write(f"\n--- Sync on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                            lf.write(f"\n{'='*60}\n")
+                            lf.write(f" ☁️ CANVAS DOWNLOADER: SYNC REPORT \n")
+                            lf.write(f" Course: {course_name}\n")
+                            lf.write(f" Date:   {nice_date} at {now.strftime('%H:%M')}\n")
+                            lf.write(f"{'='*60}\n\n")
+                            
+                            lf.write("💡 HOW TO USE THIS LOG:\n")
+                            lf.write("This document tracks files that were modified or deleted by your teacher on Canvas.\n")
+                            lf.write("Canvas Downloader NEVER deletes your local files. If a file is deleted on Canvas,\n")
+                            lf.write("it is listed here so you know the teacher removed it, but you still have your local copy.\n")
+                            lf.write("If a file was updated, we downloaded the new version and kept your old version safely alongside it.\n\n")
+                            
                             if updates:
-                                lf.write("UPDATED FILES (New versions downloaded, check local folder for numbered copies):\n")
+                                lf.write("🔄 UPDATED FILES (New versions downloaded):\n")
                                 for f in updates:
-                                    lf.write(f"  - {f.filename}\n")
+                                    clean_name = urllib.parse.unquote(f.filename)
+                                    lf.write(f"  - {clean_name}\n")
+                                lf.write("\n")
                             if deletions:
-                                lf.write("DELETED ON CANVAS (These were preserved locally but removed by teacher):\n")
+                                lf.write("🗑️ DELETED ON CANVAS (Your local copies are safe):\n")
                                 for si in deletions:
-                                    lf.write(f"  - {si.canvas_filename}\n")
+                                    clean_name = urllib.parse.unquote(si.canvas_filename)
+                                    lf.write(f"  - {clean_name}\n")
                             lf.write("\n")
                     except Exception as e:
                         logging.warning(f"Failed to write updates log: {e}")
@@ -1105,18 +1128,40 @@ def run_sync():
             from ui_helpers import get_config_dir
             history_mgr = SyncHistoryManager(get_config_dir())
             
-            # Extract names of courses that actually had files synced
+            import urllib.parse
+            categorized_files = {'new': [], 'updated': [], 'protected': []}
             synced_course_names = []
+            
             for sel in sync_selections:
-                if sel['pair_idx'] in synced_details and len(synced_details[sel['pair_idx']]) > 0:
+                pair_idx = sel['pair_idx']
+                pair_files = synced_details.get(pair_idx, [])
+                if pair_files:
                     synced_course_names.append(sel['res_data']['pair']['course_name'])
+                
+                # Extract updates list for this pair
+                updates_for_pair = []
+                res_data = sel.get('res_data', {})
+                if res_data and 'result' in res_data and hasattr(res_data['result'], 'updates'):
+                    updates_for_pair = [urllib.parse.unquote(f.filename) for f in res_data['result'].updates]
+                    
+                for fname in pair_files:
+                    if "_NewVersion" in fname:
+                        categorized_files['protected'].append(fname)
+                    elif fname in updates_for_pair:
+                        categorized_files['updated'].append(fname)
+                    else:
+                        categorized_files['new'].append(fname)
 
             history_mgr.add_entry({
                 'timestamp': now_str,
                 'files_synced': synced_counter[0],
                 'courses': len(sync_selections),
-                'course_names': synced_course_names,
+                'course_names': list(set(synced_course_names)),
                 'errors': len(error_list),
+                'error_details': error_list,
+                'synced_files': [fname for pair_files in synced_details.values() for fname in pair_files],
+                'categorized_files': categorized_files,
+                'sync_mode': st.session_state.get('sync_mode', 'normal')
             })
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")

@@ -1338,16 +1338,481 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.rerun()
 
     # --- (6) Tutorial + Sync History — grouped at bottom below separator ---
-    st.markdown("---")
-    with st.expander('📖 How Smart Sync Works', expanded=False):
-        st.markdown("**Smart Sync keeps your local folders up-to-date without ever destroying your work.**\n\n1. **Add a Folder**: Select an existing course folder on your computer and pair it with the corresponding Canvas course.\n2. **Analyze**: We compare your local files with Canvas — including a content-hash check to detect whether you've edited anything locally.\n3. **Review**: You'll see exactly what changed:\n   - 🆕 **New Files**: Downloaded to your folder.\n   - 🔄 **Updates Available**: Your local copy hasn't been edited, so it's replaced in place with the newer Canvas version. No clutter.\n   - ✏️ **Updates Available — You've Edited These**: Canvas has a newer version but you've modified your local copy. Off by default; if you opt in, the new version is saved alongside as `_NewVersion` — your edits are never touched.\n   - ↩️ **Locally Deleted**: Files you deleted locally. Off by default — your deletion is treated as intentional.\n   - 🗑️ **Deleted on Canvas (Kept Locally)**: Files removed by the teacher are preserved safely on your computer.\n\n*Tip: Use **⚡ Quick Sync All** to skip the review and instantly download new and clean updates across all your courses. Files you've edited are always left for manual review.*")
     _render_sync_history()
 
 
 def _render_sync_history():
-    """Delegate to ui.sync_dialogs."""
-    from ui.sync_dialogs import render_sync_history
-    render_sync_history()
+    """Render sync history in an expander at the bottom of step 1."""
+    try:
+        from ui_helpers import get_config_dir
+        from sync_manager import SyncHistoryManager, get_file_icon
+        history_mgr = SyncHistoryManager(get_config_dir())
+        history = history_mgr.load_history()
+    except Exception:
+        history = []
+
+    if history:
+        st.html("""
+        <style>
+        div[class*="st-key-sync_hist_tab_"] button {
+            border-radius: 6px !important;
+            border: 1px solid rgba(255,255,255,0.05) !important;
+            background-color: #21262d !important;
+            color: #e6edf3 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            min-height: 0 !important;
+            height: 38px !important;
+            padding: 4px 12px !important;
+        }
+        div[class*="st-key-sync_hist_tab_"] button:hover {
+            background-color: rgba(88, 166, 255, 0.1) !important;
+            color: #58a6ff !important;
+            border-color: rgba(88, 166, 255, 0.4) !important;
+        }
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"] {
+            background-color: rgba(88, 166, 255, 0.15) !important;
+            border-color: rgba(88, 166, 255, 0.6) !important;
+            color: #ffffff !important;
+            border-bottom: 2px solid #58a6ff !important;
+        }
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:hover {
+            background-color: rgba(88, 166, 255, 0.2) !important;
+            border-color: rgba(88, 166, 255, 0.8) !important;
+        }
+        /* Clean up the selectbox input */
+        div.st-key-sync_hist_course_select div[data-baseweb="select"],
+        div.st-key-sync_hist_course_select div[role="combobox"],
+        div.st-key-sync_hist_course_select [data-testid="stSelectbox"] > div > div:nth-child(2),
+        div.st-key-sync_hist_course_select [data-testid="stSelectbox"] > div:first-of-type > div:first-of-type {
+            background-color: #21262d !important;
+            border: 1px solid rgba(255,255,255,0.05) !important;
+            border-radius: 6px !important;
+            min-height: 0 !important;
+            height: 38px !important;
+        }
+        div.st-key-sync_hist_course_select div[data-baseweb="select"]:hover,
+        div.st-key-sync_hist_course_select div[role="combobox"]:hover,
+        div.st-key-sync_hist_course_select [data-testid="stSelectbox"] > div > div:nth-child(2):hover {
+            border-color: rgba(255,255,255,0.2) !important;
+        }
+        /* Universal detached dropdown wrapper styling */
+        div[data-baseweb="popover"] {
+            background-color: transparent !important;
+        }
+        div[data-baseweb="popover"] > div,
+        div[data-testid="stSelectboxVirtualDropdown"] {
+            background-color: #21262d !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            border-radius: 6px !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+            overflow: hidden !important;
+        }
+        ul[data-baseweb="menu"], ul[role="listbox"] {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 4px 0 !important;
+        }
+        li[role="option"] {
+            color: #e6edf3 !important;
+        }
+        li[role="option"]:hover, li[role="option"][aria-selected="true"] {
+            background-color: rgba(255,255,255,0.1) !important;
+        }
+        /* Ghost Danger style for clear history button */
+        div.st-key-btn_sync_hist_clear button {
+            min-height: 0 !important;
+            height: 38px !important;
+            padding: 4px 12px !important;
+            transition: all 0.2s ease !important;
+        }
+        div.st-key-btn_sync_hist_clear button:hover {
+            border-color: #ff4b4b !important;
+            color: #ff4b4b !important;
+            background-color: rgba(255, 75, 75, 0.1) !important;
+        }
+        /* Rotate chevron strictly from center */
+        .sync-history-details[open] .sync-history-chevron {
+            transform: rotate(90deg) !important;
+        }
+
+        /* --- SEXY SYNC HISTORY EXPANDER STYLING --- */
+        /* Target the expander immediately following our hidden marker */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] [data-testid="stExpander"],
+        .element-container:has(#sync-history-marker) ~ .element-container [data-testid="stExpander"] {
+            margin-top: 32px !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        /* The header (summary) */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary {
+            background: linear-gradient(180deg, #1d2127 0%, #161b22 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 8px !important;
+            padding: 16px 20px !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            list-style: none !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary::-webkit-details-marker,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary::-webkit-details-marker {
+            display: none !important;
+        }
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary:hover,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary:hover {
+            background: linear-gradient(180deg, #21262d 0%, #1d2127 100%) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        /* Title text */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary p,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary p {
+            font-size: 1.15rem !important;
+            font-weight: 600 !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        /* Custom Clock/History SVG */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary p::before,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary p::before {
+            content: '';
+            display: inline-block;
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjFiYWM0IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDh2NGwzIDNtNi0zYTkgOSAwIDExLTE4IDAgOSA5IDAgMDExOCAweiIvPjwvc3ZnPg==');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.9;
+            margin-right: 12px;
+        }
+        
+        /* Style Streamlit's default chevron */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > summary svg,
+        .element-container:has(#sync-history-marker) ~ .element-container details > summary svg {
+            color: #8b949e !important;
+            width: 20px !important;
+            height: 20px !important;
+            opacity: 0.7 !important;
+            transition: transform 0.2s ease !important;
+        }
+        
+        /* Expanded state styling */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details[open],
+        .element-container:has(#sync-history-marker) ~ .element-container details[open] {
+            border: none !important;
+        }
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details[open] > summary,
+        .element-container:has(#sync-history-marker) ~ .element-container details[open] > summary {
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            border-bottom-color: transparent !important;
+            background: #1a1e24 !important;
+            box-shadow: none !important;
+        }
+        
+        /* Content box wrapper */
+        [data-testid="stElementContainer"]:has(#sync-history-marker) + [data-testid="stElementContainer"] details > div,
+        .element-container:has(#sync-history-marker) ~ .element-container details > div {
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-top: none !important;
+            border-bottom-left-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+            background-color: #0d1117 !important;
+            padding: 0 24px 24px 24px !important;
+        }
+        </style>
+        """)
+        st.markdown('<div id="sync-history-marker" style="display:none;"></div>', unsafe_allow_html=True)
+        with st.expander('Sync History', expanded=False):
+            if not history:
+                st.write('No sync history yet.')
+                return
+            
+            from collections import defaultdict
+            from datetime import datetime
+            from ui_helpers import friendly_course_name
+            import theme
+            
+            # Action line at top of expander
+            st.session_state.setdefault('sync_history_filter', 'all')
+            st.session_state.setdefault('sync_history_course', None)
+
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                # View all / By course
+                c1, c2, c3 = st.columns([1, 1, 2])
+                with c1:
+                    if st.button("View All", key="sync_hist_tab_all", use_container_width=True, type="primary" if st.session_state.sync_history_filter == 'all' else "secondary"):
+                        st.session_state.sync_history_filter = 'all'
+                        st.rerun()
+                with c2:
+                    if st.button("By Course", key="sync_hist_tab_course", use_container_width=True, type="primary" if st.session_state.sync_history_filter == 'course' else "secondary"):
+                        st.session_state.sync_history_filter = 'course'
+                        st.rerun()
+                with c3:
+                    if st.session_state.sync_history_filter == 'course':
+                        # Get all unique courses
+                        all_courses = set()
+                        for entry in history:
+                            for c in entry.get('course_names', []):
+                                all_courses.add(friendly_course_name(c))
+                        courses_list = sorted(list(all_courses))
+                        if courses_list:
+                            # Pre-select if previously selected
+                            idx = 0
+                            if st.session_state.sync_history_course in courses_list:
+                                idx = courses_list.index(st.session_state.sync_history_course)
+                            
+                            def on_course_change():
+                                st.session_state.sync_history_course = st.session_state.sync_hist_course_select
+                            
+                            st.selectbox("Select Course", courses_list, index=idx, label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
+            
+            with col2:
+                if st.session_state.get('confirm_clear_history'):
+                    cc1, cc2 = st.columns(2)
+                    with cc1:
+                        if st.button("✓ Yes", type="primary", use_container_width=True):
+                            history_mgr.clear_history()
+                            del st.session_state['confirm_clear_history']
+                            st.rerun()
+                    with cc2:
+                        if st.button("✗ No", use_container_width=True):
+                            st.session_state.confirm_clear_history = False
+                            st.rerun()
+                    st.warning("Are you sure you want to delete all sync history? This cannot be undone.")
+                else:
+                    if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
+                        st.session_state.confirm_clear_history = True
+                        st.rerun()
+            
+            # Filter history
+            filtered_history = []
+            for entry in history:
+                if st.session_state.sync_history_filter == 'course':
+                    c_filter = st.session_state.get('sync_history_course')
+                    if c_filter:
+                        # friendly names in entry
+                        entry_friendly_courses = [friendly_course_name(c) for c in entry.get('course_names', [])]
+                        if c_filter not in entry_friendly_courses:
+                            continue
+                filtered_history.append(entry)
+                
+            if not filtered_history:
+                st.info("No history matches your filter.")
+                return
+
+            # Group by date
+            grouped_history = defaultdict(list)
+            
+            def get_ordinal(n):
+                return str(n) + ("th" if 11 <= n <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
+
+            for entry in reversed(filtered_history[-15:]):  # Show up to 15 recent syncs
+                raw_time = entry.get('timestamp', '')
+                try:
+                    dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
+                    # Build friendly date string
+                    now = datetime.now()
+                    diff = now.date() - dt.date()
+                    if diff.days == 0:
+                        date_key = "📅 Today"
+                    elif diff.days == 1:
+                        date_key = "📅 Yesterday"
+                    elif diff.days <= 6:
+                        date_key = f"📅 {diff.days} days ago"
+                    elif dt.year == now.year:
+                        date_key = f"📅 {dt.day} {dt.strftime('%b')}"
+                    else:
+                        date_key = f"📅 {dt.day} {dt.strftime('%b')}, {dt.year}"
+                        
+                    time_str = dt.strftime('%H:%M')
+                except Exception:
+                    date_key = "📅 Unknown Date"
+                    time_str = raw_time
+                    dt = None
+                    
+                grouped_history[date_key].append({
+                    'entry': entry,
+                    'time_str': time_str,
+                    'dt': dt
+                })
+            
+            # Inject CSS for details marker & animation
+            st.markdown("""
+            <style>
+                .sync-history-details summary::-webkit-details-marker { display: none; }
+                .sync-history-details summary { list-style: none; }
+                .sync-history-details summary:hover { background: rgba(255,255,255,0.02); }
+                .sync-history-details[open] .sync-history-chevron { transform: rotate(90deg); }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            import os
+            from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT
+            def render_file_li(fname):
+                ext = os.path.splitext(fname)[1].lower().lstrip('.')
+                _icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+                icon_img = f'<img src="{_icon_url}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{ext}"/>'
+                return f'<li style="margin-bottom: 4px; list-style-type: none; margin-left: -12px;">{icon_img}{fname}</li>'
+
+            html_out = []
+            
+            for date_key, items in grouped_history.items():
+                # Sticky Header
+                html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 4px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+<div style="color: #8b949e; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
+</div>""")
+                
+                # Container for the day's cards
+                html_out.append('<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px; margin-bottom: 16px;">')
+                
+                for item in items:
+                    entry = item['entry']
+                    count = entry.get('files_synced', 0)
+                    courses_count = entry.get('courses', 0)
+                    course_names = entry.get('course_names', [])
+                    errors = entry.get('errors', 0)
+                    
+                    synced_files = entry.get('synced_files', [])
+                    error_details = entry.get('error_details', [])
+                    
+                    # Course names display
+                    courses_text = ""
+                    if course_names:
+                        formatted_names = [friendly_course_name(name) for name in course_names if name]
+                        if formatted_names:
+                            courses_text = f"{', '.join(formatted_names)}"
+                    elif courses_count > 0:
+                        courses_text = f"Across {courses_count} course{'s' if courses_count != 1 else ''}"
+                    
+                    # Status logic
+                    if errors > 0:
+                        status_bg = "rgba(235, 168, 52, 0.1)"
+                        status_color = "#eba834"
+                        status_border = "rgba(235, 168, 52, 0.2)"
+                        status_text = f"{errors} error{'s' if errors != 1 else ''}"
+                    elif count > 0:
+                        status_bg = "rgba(52, 211, 153, 0.1)"
+                        status_color = "#34d399"
+                        status_border = "rgba(52, 211, 153, 0.2)"
+                        status_text = "Success"
+                    else:
+                        status_bg = "rgba(255, 255, 255, 0.03)"
+                        status_color = "#8b949e"
+                        status_border = "rgba(255, 255, 255, 0.05)"
+                        status_text = "No changes"
+                        
+                    # File categories
+                    categorized_files = entry.get('categorized_files', {})
+                    if not categorized_files and synced_files:
+                        categorized_files = {'new': [], 'updated': synced_files, 'protected': []}
+                        
+                    sync_mode_str = entry.get('sync_mode', 'normal')
+                    sync_mode_text = "⚡ Quick Sync" if sync_mode_str == 'quick' else "🔍 Analyze, Review & Sync"
+
+                    accordion_content = ""
+                    if count > 0 or errors > 0:
+                        accordion_content += '<div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.05); background: #17191f; display: flex; flex-direction: column; gap: 12px;">'
+                        
+                        # New Files
+                        if categorized_files.get('new'):
+                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">🆕 New Files Added <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["new"])})</span></div>'
+                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
+                            for f in categorized_files['new']:
+                                accordion_content += render_file_li(f)
+                            accordion_content += '</ul></div>'
+                        
+                        # Updated Files
+                        if categorized_files.get('updated'):
+                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">🔄 Updates Overwritten <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["updated"])})</span></div>'
+                            accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Your local files were untouched, so they were replaced with the updated files</div>'
+                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
+                            for f in categorized_files['updated']:
+                                accordion_content += render_file_li(f)
+                            accordion_content += '</ul></div>'
+
+                        # Protected Files
+                        if categorized_files.get('protected'):
+                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">✏️ Modified Files Protected <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["protected"])})</span></div>'
+                            accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Saved alongside your edited files</div>'
+                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
+                            for f in categorized_files['protected']:
+                                accordion_content += render_file_li(f)
+                            accordion_content += '</ul></div>'
+
+                        # Errors
+                        if errors > 0 and error_details:
+                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">❌ Skipped / Failed <span style="color: #ff7b72; font-weight: 500;">({errors})</span></div>'
+                            
+                            error_dict = defaultdict(list)
+                            for err in error_details:
+                                if ": " in err:
+                                    prefix, reason = err.split(": ", 1)
+                                    fname = prefix.replace("Error syncing ", "")
+                                    error_dict[reason].append(fname)
+                                else:
+                                    error_dict["Unknown error"].append(err)
+                            
+                            for reason, fnames in error_dict.items():
+                                accordion_content += f'<div style="color: #8b949e; font-size: 0.75rem; margin-top: 2px;">({reason})</div>'
+                                accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
+                                for fname in fnames:
+                                    accordion_content += render_file_li(fname)
+                                accordion_content += '</ul>'
+                            accordion_content += '</div>'
+                            
+                        accordion_content += '</div>'
+                    else:
+                        # Fallback for "no changes"
+                        accordion_content += '<div style="padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.05); background: #17191f; color: #8b949e; font-size: 0.85rem;">Everything was up to date.</div>'
+
+                    # Center rotating SVG chevron
+                    chevron_svg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="sync-history-chevron" style="color: #8b949e; flex-shrink: 0; transition: transform 0.2s; transform-origin: center;"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+                    
+                    # Clock Base64
+                    clock_svg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4Yjk0OWUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIj48L2NpcmNsZT48cG9seWxpbmUgcG9pbnRzPSIxMiA2IDEyIDEyIDE2IDE0Ij48L3BvbHlsaW5lPjwvc3ZnPg=="
+                    clock_img = f'<img src="{clock_svg}" style="width:12px;height:12px;vertical-align:middle;margin-right:4px;margin-top:-2px;" alt="time"/>'
+
+                    # Add row
+                    html_out.append(f"""<details class="sync-history-details" style="background: #20232b; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+<summary style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; gap: 12px; transition: background 0.2s;">
+<div style="display: flex; align-items: center; justify-content: center; width: 14px; height: 14px;">{chevron_svg}</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
+<div style="color: #ffffff; font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px;">
+{courses_text}
+<span style="color: {status_color}; font-size: 0.75rem; font-weight: 600; padding: 0px 6px; background: {status_bg}; border-radius: 4px; border: 1px solid {status_border}; display: inline-flex; align-items: center; height: 20px;">{status_text}</span>
+</div>
+<div style="color: #c9d1d9; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+Updated {count} file{'s' if count != 1 else ''} <span style="margin: 0 8px; color: #5c6269;">&bull;</span> {sync_mode_text}
+</div>
+</div>
+<div style="color: #8b949e; font-size: 0.85rem; font-weight: 500; flex-shrink: 0; padding-left: 8px; display: flex; align-items: center;">
+{clock_img}{item['time_str']}
+</div>
+</summary>
+{accordion_content}
+</details>""")
+                    
+                html_out.append('</div>')
+                
+            st.markdown("".join(html_out), unsafe_allow_html=True)
 
 
 
@@ -1432,7 +1897,7 @@ def render_sync_step4( main_placeholder=None):
             </script>
             """, height=0)
         else:
-            # Pass 2: The browser has successfully painted the clean UI. 
+            # Pass 2: The browser has successfully painted the clean UI.
             # Safe to lock the main thread with heavy synchronous work.
             _run_analysis(sync_pairs, main_placeholder)
             

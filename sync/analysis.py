@@ -103,6 +103,58 @@ def run_analysis(sync_pairs, main_placeholder=None):
     all_results = []
     total_pairs = len(sync_pairs)
 
+    # ── Course-identity guard ──────────────────────────────────────────
+    # Each folder's .canvas_sync.db is bound to the first course it was
+    # synced against. If the pair's course_id no longer matches that
+    # binding (e.g. user re-pointed the pair at a different course, or
+    # picked the wrong folder), running analysis would treat the entire
+    # bound course's manifest as "Deleted on Canvas" — terrifying and
+    # wrong. Detect and route to a confirmation screen instead.
+    mismatched = []
+    for pair_idx, pair in enumerate(sync_pairs):
+        try:
+            local_folder = pair.get('local_folder')
+            requested_id = pair.get('course_id')
+            if not local_folder or not Path(local_folder).exists():
+                continue  # downstream loop handles missing folder
+            bound_id = SyncManager.peek_bound_course_id(local_folder)
+            if bound_id is not None and bound_id != requested_id:
+                bound_name = SyncManager.peek_bound_course_name(local_folder) or f"course #{bound_id}"
+                mismatched.append({
+                    'pair_idx': pair_idx,
+                    'pair': pair,
+                    'bound_course_id': bound_id,
+                    'bound_course_name': bound_name,
+                    'requested_course_id': requested_id,
+                    'requested_course_name': pair.get('course_name', f"course #{requested_id}"),
+                })
+        except Exception as e:
+            logger.warning(f"Course-binding peek failed for {pair.get('local_folder')}: {e}")
+            continue
+
+    if mismatched:
+        # Route back to step 1 and open the inline editor on the first
+        # mismatched pair so the user sees the binding-notice in context
+        # and can fix the course/folder before syncing.
+        first = mismatched[0]
+        first_pair = first['pair']
+        # Find the real index in the full (un-filtered) sync_pairs list
+        full_pairs = st.session_state.get('sync_pairs', [])
+        real_idx = next(
+            (i for i, p in enumerate(full_pairs)
+             if p.get('course_id') == first_pair.get('course_id')
+             and p.get('local_folder') == first_pair.get('local_folder')),
+            None,
+        )
+        if real_idx is not None:
+            st.session_state['editing_pair_idx'] = real_idx
+            st.session_state['pending_sync_folder'] = first_pair.get('local_folder', '')
+            st.session_state['sync_selected_course_id'] = first_pair.get('course_id')
+        st.session_state['download_status'] = ''
+        st.session_state['step'] = 1
+        st.session_state.pop('analysis_pass', None)
+        st.rerun()
+
     # Completely wipe the Step 1 / Main UI container before blocking on analysis
     if main_placeholder:
         main_placeholder.empty()
