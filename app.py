@@ -998,10 +998,11 @@ with _main_content.container():
                                 sig = f"{error_obj.course_name}|{error_obj.item_name}"
                             else:
                                 sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
-                            seen = st.session_state.get('seen_error_sigs', set())
-                            if sig not in seen:
-                                seen.add(sig)
-                                st.session_state['seen_error_sigs'] = seen
+                            seen_list = st.session_state.get('seen_error_sigs', [])
+                            seen_set = set(seen_list)  # O(1) lookup from persisted list
+                            if sig not in seen_set:
+                                seen_list.append(sig)
+                                st.session_state['seen_error_sigs'] = seen_list
                                 
                                 # Increment retry counter INSIDE dedup guard so
                                 # suppressed duplicates don't inflate the count.

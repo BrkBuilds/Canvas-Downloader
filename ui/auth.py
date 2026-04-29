@@ -384,9 +384,19 @@ def _render_login_form():
                 st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
 
             try:
-                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                _tmp_config = CONFIG_FILE + '.tmp'
+                with open(_tmp_config, 'w', encoding='utf-8') as f:
                     json.dump(config_data, f)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(_tmp_config, CONFIG_FILE)
             except Exception as e:
+                # Clean up orphaned temp file on failure
+                try:
+                    if os.path.exists(_tmp_config):
+                        os.unlink(_tmp_config)
+                except OSError:
+                    pass
                 st.error(f"Could not save config: {e}")
 
             st.rerun()
@@ -603,7 +613,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
 
             with st.container(border=True, key="stg_card_path"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Default = system downloads folder.</div></div>""")
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Application default = Downloads folder.</div></div>""")
 
                 if '_temp_default_path' not in st.session_state:
                     st.session_state['_temp_default_path'] = st.session_state.get('default_download_path', '') or ''
@@ -704,9 +714,19 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['default_download_path'] = new_default_path
 
                 try:
-                    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                    _tmp_config = CONFIG_FILE + '.tmp'
+                    with open(_tmp_config, 'w', encoding='utf-8') as f:
                         json.dump(config_data, f)
+                        f.flush()
+                        os.fsync(f.fileno())
+                    os.replace(_tmp_config, CONFIG_FILE)
                 except Exception as e:
+                    # Clean up orphaned temp file on failure
+                    try:
+                        if os.path.exists(_tmp_config):
+                            os.unlink(_tmp_config)
+                    except OSError:
+                        pass
                     st.error(f"Could not save settings: {e}")
 
                 st.session_state.pop('_temp_default_path', None)

@@ -1,4 +1,11 @@
-1: - [x] **Comprehensive Sync UI Performance & Architecture Overhaul** (2026-04-29):
+1: - [x] **Pre-Flight Audit Remediation** (2026-04-29):
+    - [x] **Writability Probe (P1-A)**: Implemented immediate target folder health checks in `download_settings.py` to prevent "scanning black holes" on unwritable drives.
+    - [x] **Lazy API Pagination (P1-B)**: Replaced `list()` materialization with lazy iterators in `canvas_logic.py` to support 50,000+ file courses on low-RAM hardware.
+    - [x] **Dynamic Disk Space (P2-A)**: Updated `_check_disk_space` to use real-time payload estimates from session state for accurate available vs. required reporting.
+    - [x] **Serialization Safety (P2-B)**: Migrated `seen_error_sigs` to list-backed storage to satisfy Streamlit session state constraints.
+    - [x] **Security Redaction (P2-C)**: Added `__repr__` masking for `CanvasManager` to prevent API token exposure in log traces.
+    - [x] **Atomic Persistence (P2-E)**: Unified `auth.py` config writes to use the atomic `.tmp` + `os.replace` pattern for 100% corruption resistance.
+2: - [x] **Comprehensive Sync UI Performance & Architecture Overhaul** (2026-04-29):
 2:     - [x] **Rerun Stability**: Fragment-wrapped Course Selector, Sync List, and Sync Review to prevent violent page crashes.
 3:     - [x] **State Integrity**: Implemented `persistent_` keys and removed explicit `st.rerun()` from callbacks to preserve expander/scroll states.
 4:     - [x] **Performance Optimization**: Implemented `_ignored_files_cache` (S1) and hoisted massive help-text HTML to module constants (S3).
@@ -292,6 +299,7 @@
     - [x] **Subprocess Deadlock Eviction**: Rewrote the `moviepy.close()` executor in `video_converter.py`. Removed the synchronous `with` context manager block and forcefully mandated `pool.shutdown(wait=False, cancel_futures=True)` mapping, definitively preventing FFmpeg zombie threads from hanging the main UI process endlessly.
 - [x] Phase 4: Secondary Content Engine UI (Complete) <!-- Milestone: 2026-03-24 -->
 - [x] Phase 4: Conversion Settings UI Modernization (Complete) <!-- Milestone: 2026-03-25 -->
+- [x] **2026-04-29: Deep Systems Audit & Hardening** (Complete) <!-- Milestone: 2026-04-29 -->
 - [ ] Phase 4: Final Verification & Polish
 - [ ] Phase 5: Production Deployment Prep
 - [x] **Phase 4: Secondary Content Engine UI Refinements & Bug Fixes** (2026-03-19):

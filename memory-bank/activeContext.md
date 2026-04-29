@@ -1,6 +1,29 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+    - Fixed **P1-A (Writability Probe):** Added pre-flight writability check in `download_settings.py` that creates+deletes a temp file before transitioning to Step 3. Users now see a clear error message immediately instead of wasting minutes on scanning if the download folder is read-only or removed.
+    - Fixed **P1-B (Lazy Iteration):** Replaced `list(course.get_files())` with lazy paginator iteration in `canvas_logic.py` at 3 locations (catch-all L1519, folders L1892, flat L1947). Eliminates unbounded RAM allocation for mega-courses with 50,000+ files.
+    - Fixed **P2-A (Dynamic Disk Space):** `_check_disk_space()` now receives estimated payload bytes from `st.session_state['total_mb']`. Error message includes available vs. required space.
+    - Fixed **P2-B (Serialization Safety):** `seen_error_sigs` changed from `set` to `list` in session state. Local `set()` is rebuilt per-run for O(1) dedup lookups. Eliminates reliance on undocumented Streamlit set serialization.
+    - Fixed **P2-C (Token Redaction):** Added `__repr__` to `CanvasManager` that masks `api_key` as `'****'`. Prevents accidental token exposure if future logging configuration is added.
+    - Fixed **P2-D (Set Hoisting):** Hoisted set comprehensions out of the `HybridModeCatchAll` loop. Previously recomputed hash maps on every iteration (O(N×M) → O(N+M)).
+    - Fixed **P2-E (Atomic Config Writes):** Both config write paths in `auth.py` and `SavedGroupsManager._save_all` now use `.tmp` + `f.flush()` + `os.fsync()` + `os.replace()` atomic pattern. 100% of JSON writers are now atomic.
+    - Fixed **P2-F (plistlib Safety):** Migrated isolated retry `.webloc` path to `plistlib` to ensure proper XML escaping for URLs containing ampersands.
+    - Skipped **P2-G (Debug Log Location):** Per user direction — tech debt, not blocking.
+
+        - Rate-limit sleep occurs outside semaphore locks (no deadlock risk).
+        - `ScriptRunContext` is preserved via `safe_thread_wrapper` on all background threads.
+        - Course-identity guard prevents cross-course manifest corruption.
+    - P2/P3 advisory items documented: lock dict growth, SavedGroupsManager non-atomic writes, inline imports, catch-all int conversion per-iteration.
+    - **Next Step:** Production packaging (PyInstaller) and cross-platform QA validation.
+
+- **Session 2026-04-29: Deep Systems Audit & Hardening (v2.0.0)**
+    - **Atomic Persistence Hardening**: Finalized the migration to the `.tmp` -> `fsync` -> `os.replace` pattern for all link shortcuts (.url, .webloc) and HTML redirect files in `canvas_logic.py` and `sync/execution.py`.
+    - **Security Injection Mitigation**: Hardened HTML redirect generation by implementing mandatory `html.escape()` for meta refresh tags and anchor links, eliminating theoretical XSS vectors.
+    - **Architectural Consolidation**: Unified duplicate, platform-conflicting `_create_link` definitions into a single, canonical, platform-aware implementation in `CanvasManager`.
+    - **Production Readiness Verification**: Conducted a "Deep Systems, Entropy, and Edge-of-Reality" audit. Confirmed 0 P0/P1 blockers.
+    - **Memory Bank Synchronization**: Updated all core documentation to reflect the production-hardened state and finalized the `V2_Production_Readiness_Report.md`.
+
 - **Session 2026-04-29: Comprehensive Sync UI Performance & Architecture Overhaul**
     - **Rerun Stability (Category 1):**
         - Done: **R1 (Course Selector)**: Wrapped the course list block in `@st.fragment` and implemented a `persistent_` key prefix for the CBS toggle to prevent state drift and full-page reruns on selection (ui/course_selector.py).
