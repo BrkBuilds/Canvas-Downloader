@@ -1,4 +1,10 @@
-1: - [x] **Documentation Overhaul & macOS Consistency Fixes** (2026-04-28):
+1: - [x] **Comprehensive Sync UI Performance & Architecture Overhaul** (2026-04-29):
+2:     - [x] **Rerun Stability**: Fragment-wrapped Course Selector, Sync List, and Sync Review to prevent violent page crashes.
+3:     - [x] **State Integrity**: Implemented `persistent_` keys and removed explicit `st.rerun()` from callbacks to preserve expander/scroll states.
+4:     - [x] **Performance Optimization**: Implemented `_ignored_files_cache` (S1) and hoisted massive help-text HTML to module constants (S3).
+5:     - [x] **Shadow-DOM Migration**: Converted all `st.markdown` CSS to `st.html` to eliminate "Ghost Box" gaps and prevent CSS leakage (B2).
+6:     - [x] **UI Polish**: Standardized internal padding for shadow-root spacing (S5/B2) and scoped global button CSS (S5).
+8: - [x] **Documentation Overhaul & macOS Consistency Fixes** (2026-04-28):
 2:     - [x] **Documentation Rewrite**: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to reflect the transition to PyWebView/Chromium and unified security.
 3:     - [x] **Unified Keyring Security**: Migrated all platforms to native OS keyring storage in `ui/auth.py`, removing fragile base64 fallbacks.
 4:     - [x] **macOS Chromium Rendering**: Forced `gui='qt'` in `start.py` to ensure consistent CSS rendering via QtWebEngine.

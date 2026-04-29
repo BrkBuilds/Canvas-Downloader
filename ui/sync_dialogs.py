@@ -532,6 +532,9 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     )
                     for fid in to_restore:
                         st.session_state.pop(f"{prefix}_{fid}", None)
+                    # Invalidate the ignored-files cache so the sync list
+                    # re-queries SQLite and reflects the restored files.
+                    st.session_state.pop('_ignored_files_cache', None)
 
             btn_help = "Select files to restore" if checked_count == 0 else "Remove selected files from the ignored list so they are included in future syncs"
             st.button(
@@ -923,7 +926,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         st.session_state['pending_sync_folder'] = None
                         st.session_state.pop('editing_pair_idx', None)
                         st.session_state.pop('_prev_course_search', None)
-                        st.rerun()
+                        st.rerun(scope="app")
                 else:
                     # Custom error message with lower height (compact)
                     error_msg = 'Please select a course.'

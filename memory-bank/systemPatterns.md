@@ -530,3 +530,21 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
     - *Solution 4 (Download Retry State Reset)*: The standard "Retry Failed Items" button safely sets `download_status = 'isolated_retry'` (ensuring the full dashboard renders without blanking) and defensively resets `cancel_requested = False`, `download_cancelled = False`, `retry_downloaded_items = 0`, and `retry_failed_items = 0`.
     - *Solution 5 (Sync Retry State Reset)*: The Sync Tab's "Retry Failed Downloads" button resets `sync_cancel_requested = False` and `sync_cancelled = False` while forcing `download_status = 'syncing'` and `step = 3`, perfectly re-routing the pipeline back into the execution phase with a clean slate.
     - *UI Clickability (The Flex-Stretch Chain)*: When building lists with checkboxes in `st.columns`, Streamlit's `vertical_alignment="center"` forces `margin: 5px 0` on columns and `align-items: center` on the parent, causing unclickable vertical dead zones. To fix this, kill the margin (`margin: 0 !important`), set `align-items: stretch` on the parent, and apply a contiguous `display: flex; flex-direction: column; flex: 1 !important` chain down through all Streamlit wrappers to the native HTML `<label>`, making the hit area 100% of the row height. Vertically align the inner text/icon using `align-items: center` on the label.
+
+- **Shadow-Root Isolation CSS Pattern (`st.html` vs `st.markdown`)**:
+    - *Problem*: Streamlit 1.51+ wraps `st.markdown` CSS injections in a `div.stMarkdown` container with a default 1rem `margin-bottom`, creating "Ghost Box" gaps in the UI. Furthermore, the shadow root isolates certain CSS properties, making `margin` on elements like `<hr>` unreliable.
+    - *Solution*: Use `st.html("""<style>...</style>""")` for all UI-scoped CSS. `st.html` bypasses the `stMarkdown` wrapper, eliminating the ghost margin. To create vertical spacing within the shadow root, wrap elements in a `div` with internal `padding` (e.g., `padding: 10px 0`) rather than relying on external `margin`.
+- **Fragment-Scoped Reruns Pattern (`@st.fragment`)**:
+    - *Problem*: Frequent UI updates (like course list selection or bulk-action buttons) trigger full-page reruns, causing "violent" visual jumps, collapsing all open expanders, and losing scroll positions.
+    - *Solution*: Wrap high-interaction UI blocks in `@st.fragment`, confining reruns to the specific component's DOM subtree. For complex interactions like "Select All" that affect checkboxes, wrap BOTH the action buttons and the checklist in the same fragment. This ensures the checkboxes update instantaneously without affecting the parent page state (like wizard headers or course expanders).
+- **Persistent Session State Keys (`persistent_` prefix)**:
+    - *Problem*: Standard widget keys inside `@st.fragment` can "drift" or lose their values if a simultaneous full-page rerun occurs (e.g., due to a different tab or a main-page interaction).
+    - *Solution*: Prefix critical state-sensitive keys (like CBS filters or persistent toggles) with `persistent_`. This signals to the state management logic that these values must be strictly preserved and synchronized even when fragment reruns and full-page reruns intersect.
+- **SQLite Query Caching (`st.session_state` cache)**:
+    - *Problem*: Rerunning fragments that contain per-course database lookups (e.g., `get_ignored_files`) leads to O(N) SQLite table scans on every interaction, causing noticeable UI stutter in large sync lists.
+    - *Solution*: Implement a module-level session-state cache (e.g., `st.session_state['_ignored_files_cache']`). Check the cache before executing any SQL. Implement a "Three-Point Invalidation" strategy: invalidate on sync completion (`cleanup_sync_state`), single-pair removal, and bulk file restoration.
+
+- **Static Content Hoisting Pattern (Help Text Optimization)**:
+    - *Problem*: Building massive HTML help-text blocks (hundreds of lines of f-strings) inside the main render loop causes O(reruns) memory allocation and string processing overhead.
+    - *Solution*: Hoist all static HTML and literal strings to module-level constants (e.g., `_HELP_TEXT = """..."""`). This ensures the strings are allocated once at import time, significantly reducing the compute cost of every UI rerun.
+
