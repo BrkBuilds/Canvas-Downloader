@@ -164,7 +164,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
     
     # RENDER GLOBAL CANCEL ABOVE THE ANALYSIS LOOP
     cancel_analysis_placeholder = st.empty()
-    if cancel_analysis_placeholder.button('Cancel Download', type="secondary", key="cancel_analysis_btn"):
+    if cancel_analysis_placeholder.button('Cancel Sync', type="secondary", key="cancel_analysis_btn"):
         cancel_analysis_placeholder.empty()
         st.session_state['cancel_requested'] = True
         st.session_state['download_status'] = 'sync_cancelled'
