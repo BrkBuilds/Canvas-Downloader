@@ -1,6 +1,6 @@
 # Custom Loading Overlay for Page Navigation UI Breaks
 
-**Date**: 2026-04-28  
+**Date**: 2026-04-28 (updated 2026-04-29)  
 **Issue**: Streamlit's slow reruns during full page navigation (1-5s on slow machines) caused visible intermediate DOM states: old UI grayed out, CSS unloaded, raw empty containers below new UI, then suddenly styled UI appeared.  
 **User Feedback**: Explicitly rejected native Streamlit spinner as "unprofessional"; needed a fully custom, professional solution.
 
@@ -9,8 +9,12 @@
 ### Architecture
 - **Custom overlay**: Fixed-position full-page div, dark background (`#0e1117`), centered spinner + "Loading…" text
 - **Activation**: JavaScript click listener fires ONLY for buttons inside keyed navigation containers (allowlist)
-- **Deactivation**: 500ms of DOM mutation settlement + one `requestAnimationFrame` (ensures hide after browser paint commit)
-- **Safety valve**: 8s force-hide if rerun stalls
+- **Deactivation (3-Phase Geometry-Polling)**: 
+  1. **Phase 1 (Debounce):** 150ms debounce to batch rapid-fire mutations from initial React DOM insertion.
+  2. **Phase 2 (Python Done):** Polls every 150ms for `stStatusWidget` removal (Streamlit's signal that the Python script finished executing).
+  3. **Phase 3 (React Cleanup Done):** Polls page geometry (`scrollHeight` + total element count) every 200ms. Only hides after 4 consecutive identical readings (800ms of layout stability). This reliably detects when lingering old elements are finally removed by React.
+  - *Why not MutationObserver for Phase 3?* Stale UI elements sitting at the bottom of the page generate *no mutations* while they linger. Geometry polling actively detects their eventual removal.
+- **Safety valve**: 8s force-hide if rerun stalls (only cleared when committing the actual hide in Phase 3).
 - **Hot-reload resilience**: `isConnected` check re-attaches overlay if Streamlit hot-reload detaches it from DOM
 
 ### Key Technical Insights
@@ -21,12 +25,14 @@
 
 3. **`components.html()` Iframe Lifecycle**: Each Streamlit rerun destroys and recreates the `components.html()` iframe. The old MutationObserver is garbage-collected. Solution: store all state on `window.parent._cdp` (parent window object), which persists across iframe reloads.
 
-4. **500ms Settle + rAF Pattern**: 
-   - First wave: Streamlit inserts DOM nodes → MutationObserver fires
-   - Brief pause: React hydration applies classes/styles (attribute mutations NOT observed since `attributes: false`)
-   - 500ms settle: ensures hydration finishes
-   - rAF: defers actual `display: none` until after browser commits a full paint of the new content
-   - Result: overlay disappears only after new page is fully styled and rendered
+4. **Geometry-Polling Hide Pattern (2026-04-29 upgrade)**:
+   - **Problem with Mutation-Settle only**: On slow machines, the first wave of DOM mutations settled quickly, but the NEW page UI was still hydrating and old elements were lingering. Overlay hid too early because stale elements sitting there generate zero DOM mutations.
+   - **Solution**: 
+     - Added `stStatusWidget` check as an authoritative "Streamlit Python script done" signal.
+     - Switched to **Geometry Polling** (`pageFingerprint = scrollHeight + '|' + elementCount`) to detect when React finally removes the old elements. 
+     - The `MutationObserver` now just acts as an external trigger to restart the 3-phase check sequence on any DOM changes, but the hide decision is based strictly on layout stability, not mutation silence.
+   
+5. **Safety Valve Independence**: The 8s safety timeout is now only cleared when the hide actually commits (inside Phase 3), not when `schedHide` starts. This prevents edge cases where the safety valve is prematurely cancelled but `stStatusWidget` never disappears.
 
 ### Navigation Buttons Covered (Allowlist)
 
@@ -53,18 +59,19 @@
 ### Code Quality & Robustness
 
 - ✅ Added `isConnected` guard in `show()` to re-attach overlay after dev hot-reload
-- ✅ Updated stale comments (old 150ms settle timer reference, phantom 300ms show delay)
 - ✅ Fixed JS selector allowlist to prevent accidental triggers on non-navigation buttons
 - ✅ Clean inline comments explaining iframe lifecycle, state persistence, and settle logic
 - ✅ Strict boolean guard `if(!p.vis)return` prevents re-showing already-visible overlay
 - ✅ 8s safety timeout prevents hung overlays from trapping the user
+- ✅ `isStReady()` graceful degradation for future Streamlit versions
+- ✅ Geometry polling guarantees overlay stays up through React's slow DOM reconciliation on slow machines
 
 ### User Testing Feedback
 
 - ✅ User confirmed overlay appears and disappears correctly
 - ✅ Solves the visual break on slow machines (previously saw broken UI for ~500ms after overlay hid)
-- ✅ 500ms timer prevents the "half-second flash of unstyled UI" that occurred with 150ms
 - ✅ No disruptive overlays during in-page interactions (confirmed by testing chevron clicks on Download Settings)
+- 🔄 2026-04-29: Upgraded to 3-phase Geometry-Polling architecture because mutation-settle failed to account for slow React DOM reconciliation where lingering old elements generate zero mutations.
 
 ## Files Modified
 
@@ -81,7 +88,8 @@ This overlay approach can be reused for any Streamlit app with similar page-tran
 
 1. **State on parent window**: Allows survival across iframe reloads
 2. **Allowlist click detection**: Prevents overlay on every interaction
-3. **Mutation settlement + rAF**: Waits for full render commit, not just DOM insertion
+3. **Geometry-Polling Hide**: Don't rely on mutations stopping. Poll `scrollHeight` and element counts to verify layout stability, gated behind `stStatusWidget` removal.
 4. **Hot-reload guard**: Gracefully handles development workflow interruptions
+5. **Graceful degradation**: Falls back to Geometry Polling only if stStatusWidget is removed
 
 Not a workaround—a robust, production-ready solution for Streamlit's inherent rendering lag during major reruns.
