@@ -1415,12 +1415,26 @@ class SavedGroupsManager:
             return []
     
     def _save_all(self, groups: list[dict]):
-        """Write the full groups list to disk."""
+        """Atomically persist the full groups list to disk.
+
+        Pattern: write to ``.tmp``, fsync, then ``os.replace``.
+        Matches the atomic write convention used by ``PresetManager``,
+        ``SyncHistoryManager``, and ``save_sync_pairs``.
+        """
+        tmp_path = self.groups_path.with_suffix('.tmp')
         try:
-            with open(self.groups_path, 'w', encoding='utf-8') as f:
+            with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump({'groups': groups}, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(str(tmp_path), str(self.groups_path))
         except IOError as e:
             logger.warning(f"Error saving sync groups: {e}")
+            try:
+                if tmp_path.exists():
+                    tmp_path.unlink()
+            except OSError:
+                pass
     
     def save_group(self, name: str, pairs: list[dict], is_single_pair: bool = False) -> dict:
         """Save a new group (or single pair).

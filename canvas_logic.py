@@ -227,6 +227,10 @@ class CanvasManager:
         self._logged_error_sigs = set()  # Dedup cache: prevents same error being logged twice in one run
         self.error_log_enabled = True    # Toggled via Settings; when False, download_errors.txt is not created
 
+    def __repr__(self):
+        """Redacted repr — never expose the API token in tracebacks or log output."""
+        return f"CanvasManager(api_url={self.api_url!r}, api_key='****')"
+
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
         if not self.api_url or not self.canvas:
@@ -1175,13 +1179,24 @@ class CanvasManager:
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
         
-        # Check disk space
-        if not self._check_disk_space(save_dir):
+        # Check disk space — pass estimated payload from session state so the
+        # dynamic threshold catches large downloads (e.g. 15 GB course on a
+        # volume with only 1.5 GB free).
+        import streamlit as _st_disk
+        _estimated_mb = _st_disk.session_state.get('total_mb', 0) or 0
+        _estimated_bytes = int(_estimated_mb * 1024 * 1024)
+        if not self._check_disk_space(save_dir, required_bytes=_estimated_bytes):
+            _free_gb = 0
+            try:
+                _free_gb = shutil.disk_usage(save_dir).free / (1024 ** 3)
+            except Exception:
+                pass
             error = DownloadError(
                 course.name, 
                 "Disk Check", 
                 "Disk Full", 
-                'Insufficient disk space. Need at least 1GB free.'
+                f'Insufficient disk space. Estimated payload: {_estimated_mb:.0f} MB, '
+                f'available: {_free_gb:.1f} GB. Need at least {max(1.0, _estimated_mb * 1.2 / 1024):.1f} GB free.'
             )
             if progress_callback: progress_callback(error, progress_type='error')
             self._log_error(save_dir, error)
@@ -1516,14 +1531,18 @@ class CanvasManager:
                     log_debug("Starting Catch-All Phase for non-module files...", debug_file)
                     if progress_callback: progress_callback('Scanning remaining files...', progress_type='log')
                     
-                    all_files = course.get_files()
-                    all_files = list(all_files)
+                    all_files_paginator = course.get_files()
                     catch_all_tasks = []
 
-                    for file in all_files:
+                    # Pre-compute ID sets once — avoids O(N×M) set
+                    # reconstruction on every loop iteration.
+                    _downloaded_ids = {int(i) for i in downloaded_file_ids}
+                    _module_ids = {int(i) for i in module_file_ids}
+
+                    for file in all_files_paginator:
                         if check_cancellation and check_cancellation(): break
                         
-                        if int(file.id) in {int(i) for i in downloaded_file_ids} or int(file.id) in {int(i) for i in module_file_ids}:
+                        if int(file.id) in _downloaded_ids or int(file.id) in _module_ids:
                             log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
                             continue # Already downloaded in a module
                         
@@ -1731,8 +1750,12 @@ class CanvasManager:
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(content)
                                 elif ext == '.webloc':
-                                    content = f'<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n\t<key>URL</key>\n\t<string>{url_to_save}</string>\n</dict>\n</plist>'
-                                    async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
+                                    import plistlib
+                                    content = plistlib.dumps(
+                                        {'URL': url_to_save},
+                                        fmt=plistlib.FMT_XML,
+                                    )
+                                    async with aiofiles.open(str(make_long_path(filepath)), 'wb') as f:
                                         await f.write(content)
                                 
                                 # Do NOT append a task; this item is now done synchronously. 
@@ -1879,10 +1902,9 @@ class CanvasManager:
         # 2. Fetch and Download Files
         try:
             if progress_callback: progress_callback('Fetching file list...')
-            files = course.get_files()
-            files = list(files)
+            files_paginator = course.get_files()
             
-            for file in files:
+            for file in files_paginator:
                 if check_cancellation and check_cancellation(): break
                 try:
                     # Calculate path
@@ -1935,7 +1957,6 @@ class CanvasManager:
             for attempt in range(3):
                 try:
                     files = course.get_files()
-                    files = list(files) 
                     break
                 except Exception:
                     if attempt < 2:
@@ -3903,28 +3924,17 @@ class CanvasManager:
         log_debug("=== Secondary Content Download Complete ===", debug_file)
 
     def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
-        import xml.sax.saxutils as saxutils
+        import plistlib
         safe_title = self._sanitize_filename(title)
         
         if platform.system() == 'Darwin':
             filename = f"{safe_title}.webloc"
             filepath = folder_path / filename
             filepath = self._handle_conflict(filepath)
-            content = f'''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>URL</key>
-	<string>{saxutils.escape(url)}</string>
-</dict>
-</plist>
-'''
         else:
             filename = f"{safe_title}.url"
             filepath = folder_path / filename
             filepath = self._handle_conflict(filepath)
-            safe_url = url.replace('\r', '').replace('\n', '')
-            content = f'[InternetShortcut]\nURL={safe_url}'
 
         if progress_callback:
             progress_callback(f'Creating link: {title}', progress_type='link', explicit_filepath=str(filepath))
@@ -3932,8 +3942,17 @@ class CanvasManager:
         log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
 
         try:
-            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
-                f.write(content)
+            if platform.system() == 'Darwin':
+                # Binary-safe plist generation — plistlib handles all XML
+                # escaping internally, making manual saxutils.escape() unnecessary.
+                content = plistlib.dumps({'URL': url}, fmt=plistlib.FMT_XML)
+                with open(make_long_path(filepath), 'wb') as f:
+                    f.write(content)
+            else:
+                safe_url = url.replace('\r', '').replace('\n', '')
+                content = f'[InternetShortcut]\nURL={safe_url}'
+                with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
+                    f.write(content)
             # Sync Run #0: Record link/URL file to DB using deterministic canvas_item_id
             if sync_manager and course_base_path and canvas_item_id:
                 try:
