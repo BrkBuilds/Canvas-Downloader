@@ -159,6 +159,15 @@ components.html("""<script>
                         if(stableCount>=4){
                             // Layout has been stable for 800 ms.  Safe to hide.
                             if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+                            // Scroll to top — Streamlit uses internal scroll
+                            // containers, not the window.  Hit all candidates.
+                            win.scrollTo(0,0);
+                            var sc=doc.querySelectorAll(
+                                '[data-testid="stMain"],'
+                                +'[data-testid="stAppViewContainer"],'
+                                +'[data-testid="stVerticalBlock"]'
+                            );
+                            for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
                             requestAnimationFrame(function(){
                                 p.el.style.display='none';p.vis=false;p.hT=null;
                             });
