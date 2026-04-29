@@ -20,8 +20,8 @@ div[data-testid="stModal"] > div[role="dialog"] {
     padding: 0 !important;
     overflow: hidden !important;
 }
-/* Make the bulk action buttons inside expanders slightly shorter and subtle */
-[data-testid="stExpanderDetails"] button[kind="secondary"] {
+/* Make the bulk action buttons inside sync-review category expanders slightly shorter and subtle */
+div[class*="st-key-cat_"] [data-testid="stExpanderDetails"] button[kind="secondary"] {
     height: 34px !important;
     min-height: 34px !important;
     padding-top: 0 !important;
@@ -30,8 +30,8 @@ div[data-testid="stModal"] > div[role="dialog"] {
     align-items: center !important;
     justify-content: center !important;
 }
-/* Reduce divider vertical margins */
-hr {
+/* Reduce divider vertical margins — scoped to sync review category containers */
+div[class*="st-key-cat_"] hr {
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }

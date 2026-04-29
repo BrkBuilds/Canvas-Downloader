@@ -1,16 +1,33 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
-4: - **Session 2026-04-28: Documentation Overhaul & macOS Consistency Fixes**
-5:     - Done: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to remove stale architectural references (Tkinter, base64 tokens) and update technical specs (PyWebView/Chromium, size estimates).
-6:     - Done: Unified token security via `keyring` across both Windows and macOS, including migration logic for legacy base64 and plaintext tokens in `ui/auth.py`.
-7:     - Done: Forced Chromium rendering on macOS (`gui='qt'` via PySide6 + QtWebEngine) for 1:1 CSS parity with Windows.
-8:     - Done: Updated macOS build spec to include `.streamlit` config and exclude Windows-only toast/sound modules.
-9:     - Done: Fixed macOS folder picker and `open` behavior in `ui_helpers.py` to prevent failures in PyWebView contexts.
-10:     - Done: Integrated `pync` for native macOS notifications with app-focus support on click in `engine/notifications.py`.
-11:     - Done: Corrected Windows frozen build config path to `%APPDATA%/CanvasDownloader/` to match macOS Application Support standards.
-12:     - Done: Fixed sheet name collision in `excel_converter.py` on macOS by implementing indexed CSV exports.
-13:     - Done: Fixed Word alert suppression in AppleScript via explicit integer `0` for `wdAlertsNone` parity.
+- **Session 2026-04-29: Comprehensive Sync UI Performance & Architecture Overhaul**
+    - **Rerun Stability (Category 1):**
+        - Done: **R1 (Course Selector)**: Wrapped the course list block in `@st.fragment` and implemented a `persistent_` key prefix for the CBS toggle to prevent state drift and full-page reruns on selection (ui/course_selector.py).
+        - Done: **R2 (Sync Review)**: Converted "Select All" / "Deselect All" to use callbacks and removed explicit `st.rerun()` calls, preventing violent expander collapse by confining reruns to the fragment scope (ui/sync_review.py).
+        - Done: **R3 (Sync Step 1)**: Wrapped the pair card list in `@st.fragment` (`_sync_pairs_section`) to confine card management actions (Edit/Remove/Add) and prevent redundant help-text rebuilding (sync_ui.py).
+        - Verified: **R4 (Download Settings)**: Confirmed all settings cards are already isolated via `@st.fragment` (ui/download_settings.py).
+    - **Speed & Optimization (Category 2):**
+        - Done: **S1/F2 (Ignored Files Cache)**: Implemented `_ignored_files_cache` in `st.session_state` to eliminate redundant O(N) SQLite table scans during reruns, reducing DB load from O(N) per render to O(1) per cache hit (sync_ui.py).
+        - Done: **S3 (String Hoisting)**: Hoisted massive help-text HTML blocks to module-level constants in `sync_ui.py` and `ui/sync_review.py` to eliminate O(reruns) string allocation overhead.
+        - Done: **S5 (CSS Scoping)**: Scoped global button height CSS to specific Analyze/Quick Sync keys to prevent cross-page layout bleed.
+    - **UI Bleed & Isolation (Category 4):**
+        - Done: **B1 (Chevron Scaling Bug)**: Resolved the full-screen chevron expansion issue by implementing a session-state flag (`_inject_sync_review_css`) in `cleanup_sync_state()`. This prevents the `sync_review.css` from re-injecting into the front-page DOM where it lacks proper scoping (sync_ui.py).
+        - Done: **B2 (Shadow-Root Isolation)**: Converted all `st.markdown` CSS injections to `st.html` to move styles into shadow DOM isolation, resolving "Ghost Box" 1rem margin gaps and preventing cross-page leakage.
+        - Done: **S5/B2 (Shadow Spacing)**: Standardized using internal `padding` in `st.html` containers to inflate height inside shadow roots where `margin` is collapsed.
+    - **Fragment Integration (Category 3):**
+        - Done: **F1-F3**: Successfully implemented fragment boundaries for Course Selection, Sync List management, and Sync Review categories to ensure a fluid, non-jittery UX.
+
+- **Session 2026-04-28: Documentation Overhaul & macOS Consistency Fixes**
+    - Done: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to remove stale architectural references (Tkinter, base64 tokens) and update technical specs (PyWebView/Chromium, size estimates).
+    - Done: Unified token security via `keyring` across both Windows and macOS, including migration logic for legacy base64 and plaintext tokens in `ui/auth.py`.
+    - Done: Forced Chromium rendering on macOS (`gui='qt'` via PySide6 + QtWebEngine) for 1:1 CSS parity with Windows.
+    - Done: Updated macOS build spec to include `.streamlit` config and exclude Windows-only toast/sound modules.
+    - Done: Fixed macOS folder picker and `open` behavior in `ui_helpers.py` to prevent failures in PyWebView contexts.
+    - Done: Integrated `pync` for native macOS notifications with app-focus support on click in `engine/notifications.py`.
+    - Done: Corrected Windows frozen build config path to `%APPDATA%/CanvasDownloader/` to match macOS Application Support standards.
+    - Done: Fixed sheet name collision in `excel_converter.py` on macOS by implementing indexed CSV exports.
+    - Done: Fixed Word alert suppression in AppleScript via explicit integer `0` for `wdAlertsNone` parity.
 14: 
 15: - **Session 2026-04-28: Global 12-Hour Time Format & Date Standardization**
     - Done: Implemented a central `format_time_display()` utility in `ui_helpers.py` that reads `st.session_state['use_12h_format']` to convert `HH:MM` to `h:MM AM/PM`.

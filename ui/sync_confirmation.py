@@ -110,7 +110,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             f'</div>'
         )
 
-    html_content = (
+    _css_block = (
         f'<style>'
         f'/* Override modal styles */'
         f'div[data-testid="stModal"] [data-testid="stVerticalBlock"] {{'
@@ -273,6 +273,8 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'}}'
         f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
         f'</style>'
+    )
+    html_content = (
         f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.'
         + (
             f'<br><span style="color:#fcd34d;">&#9998; {modified_update_count} of these are files you\'ve edited locally — the new Canvas version will be saved alongside as <code>_NewVersion</code> so your edits are preserved.</span>'
@@ -304,6 +306,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'</div>'
         f'</div>'
     )
+    st.html(_css_block)
     st.markdown(html_content, unsafe_allow_html=True)
 
     col_no, col_yes = st.columns([1, 1], gap="medium")

@@ -1485,7 +1485,7 @@ def render_download_settings(fetch_courses_fn):
             # Nuclear CSS: apply flex-direction:row at EVERY DOM depth to hit whatever
             # level Streamlit nests the element-containers at. The `> div` chain covers
             # stVerticalBlockBorderWrapper, stVerticalBlock, and any other intermediates.
-            st.markdown("""<style>
+            st.html("""<style>
     div.st-key-path_display_row,
     div.st-key-path_display_row > div,
     div.st-key-path_display_row > div > div,
@@ -1521,7 +1521,8 @@ def render_download_settings(fetch_courses_fn):
         background-color: rgba(255, 255, 255, 0.15) !important;
         border-color: rgba(255, 255, 255, 0.18) !important;
     }
-    </style>""", unsafe_allow_html=True)
+    </style>""")
+            st.html('<div style="padding-bottom: 1rem;"></div>')
 
             with st.container(key="path_display_row"):
                 st.markdown(f"""<div>
