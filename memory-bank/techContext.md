@@ -28,7 +28,8 @@
 28: - **pywin32 / osascript**: Dual-engine architecture for Office-to-PDF conversions. Windows uses `win32com.client` COM automation. macOS uses native `osascript` (AppleScript) subprocess execution to achieve exact feature parity for `.doc`, `.pptx`, and `.xlsx` files.
 29: - **Zero-Dependency Smart-CSV Extraction**: Engineered a custom memory-to-CSV extraction layer in `excel_converter.py` that utilizes the existing COM/AppleScript bridge.
 30: - `beautifulsoup4` / `markdownify`: Cleaning HTML Canvas Pages and converting them to Markdown.
-31: - `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
+31: - `html`: Native security library used for XSS-safe URL escaping in generated HTML artifacts.
+- `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
 32: - `zipfile` / `tarfile`: Native extraction of compressed payloads.
 33: 
 34: ## File Structure
@@ -59,8 +60,10 @@
 59:     - **Windows**: `%APPDATA%/CanvasDownloader/` (Frozen build).
 60:     - **macOS**: `~/Library/Application Support/CanvasDownloader/`.
 61: - **Filesystem Parity**: All paths standardized to forward slashes (`/`) for manifest storage.
-62: 
-63: ## Build System
+62: - **Memory-Efficient Lazy Pagination**: Uses `canvasapi` paginators as lazy iterators rather than materializing `list()` results, protecting against `MemoryError` on 50,000+ file courses.
+63: - **API Token Redaction**: Custom `__repr__` on `CanvasManager` masks sensitive tokens as `'****'` to prevent accidental log exposure.
+64: 
+65: ## Build System
 64: - **PyInstaller**: Standalone `.exe` and macOS bundle `.app` compilation.
 65: - **Optimization**: Explicit excludes (`win11toast`, `winsound` for macOS) to reduce binary size.
 66: - **Size Estimates**: ~130MB (Windows) / ~230-270MB (macOS, includes QtWebEngine).

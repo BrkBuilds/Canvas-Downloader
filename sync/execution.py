@@ -607,7 +607,7 @@ def run_sync():
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(shortcut_content)
                             elif is_html_ext:
-                                html_content = f"<html><body><script>window.location.href='{file.url}';</script></body></html>"
+                                html_content = f'<meta http-equiv="refresh" content="0; url={file.url}">'
                                 async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                     await f.write(html_content)
 

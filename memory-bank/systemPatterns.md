@@ -69,9 +69,18 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 62: - **Defensive Exception Handling**:
     - *Policy*: Never use bare `except:` clauses.
     - *Implementation*: Always catch `Exception` explicitly (`except Exception as e:`) to prevent silently dropping vital OS-level interrupts like `KeyboardInterrupt` or `SystemExit`.
-- **Atomic Config Serialization (The `.tmp` Swap Pattern)**:
-    - *Problem*: Directly utilizing `json.dump(f)` to write user configurations or sync contracts is prone to disk tearing if the overarching Streamlit thread crashes, restarts, or is terminated mid-write, resulting in permanent `JSONDecodeError`s.
-    - *Implementation*: Configuration operations mathematically enforce atomicity by dumping to a named `.tmp` file, calling `f.flush()` and `os.fsync(f.fileno())` to guarantee disk saturation, and finally utilizing `os.replace(temp, final)` for a perfectly instantaneous, uninterruptible OS-level swap.
+- **Atomic Persistence (The `.tmp` Swap Pattern)**:
+    - *Problem*: Directly utilizing standard file writes (`f.write`) to store configurations or link shortcuts is prone to disk tearing or file corruption if the OS crashes, power is lost, or the thread is terminated mid-write.
+    - *Implementation*: Configuration operations and physical link file creation (.url, .webloc) mathematically enforce atomicity by writing to a named `.tmp` file in the same directory, calling `f.flush()` and `os.fsync(f.fileno())` to guarantee disk saturation, and finally utilizing `os.replace(temp, final)` for a perfectly instantaneous, uninterruptible OS-level swap. This is applied in `auth.py` (login/settings), `sync_manager.py` (history), `ui_helpers.py` (sync pairs), and `canvas_logic.py` (link shortcuts).
+- **Hardened HTML Redirect Pattern**:
+    - *Problem*: Dynamically generating HTML files (like Canvas Page redirects or Assignments) that embed user-controlled URLs can open theoretical cross-site scripting (XSS) vectors if those URLs are maliciously crafted to break out of the HTML attribute context.
+    - *Implementation*: All HTML-based redirects must utilize a "Triple-Lock" security pattern:
+        1. **Mandatory Escaping**: Every injected URL must be processed through `html.escape()` before being placed in `meta refresh` or `href` attributes.
+        2. **Semantic Fallback**: The HTML body must include a visible, human-readable link as a fallback if the meta-refresh is blocked or delayed.
+        3. **Standardized Header**: Use a consistent `<meta charset="UTF-8">` and `<title>` structure to prevent character-set-based injection or bypasses.
+- **Pre-Flight Writability Probe**:
+    - *Problem*: Starting a long-running task (like scanning a 10GB course) on an unwritable drive (read-only, disconnected USB, or permission-restricted C:\Program Files) leads to a "failure at the finish line" after the user has already waited.
+    - *Implementation*: Perform a "Fail-Fast" probe immediately upon confirming settings. The UI attempt to `Path.mkdir(parents=True)`, write a `.canvas_write_probe` dummy file, and instantly `unlink()` it. If this fails, block execution with a clear `st.error` before any network or CPU-heavy scanning begins.
 - **Atomic File Writing vs Concurrent Thread Locks (JSON TOCTOU)**:
     - *Problem*: While writing to a `.tmp` file and using `os.replace` guarantees the file on disk isn't corrupted (Disk Tearing), doing so during a concurrent Read-Modify-Write cycle without a `threading.Lock` still causes TOCTOU (Time-Of-Check-To-Time-Of-Update) data loss. Furthermore, passing a stale, pre-read monolithic memory state (`st.session_state`) into the lock completely defeats the mutex.
     - *Implementation (Signature-Based Modifiers)*: Ensure the wrapper (e.g., `atomic_update(modifier_func)`) accepts a callable that modifies freshly read data *inside* the lock. Rip out monolithic state saves. Migrate to granular operations (`_add_pair`, `_remove_pairs_by_signature`) that mutate the fresh JSON array matched by a strict unique signature (`course_id` + `local_folder`) rather than volatile list indices. Finally, synchronously rehydrate the application state with the wrapper's exact return value.
@@ -83,6 +92,18 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Implementation*: Create a single source of truth (`format_time_display()` in `ui_helpers.py`) that reads the global preference from `st.session_state`.
     - *Logic*: The utility handles the conditional logic (e.g., flipping `14:30` to `2:30 PM` and adjusting date ordering from `24 Apr` to `Apr 24`) based on the `use_12h_format` toggle.
     - *Scope*: This pattern must be applied to all human-facing time surfaces (relative dates, sync cards, history entries, and report logs) while strictly exempting machine-readable timestamps and developer debug logs to maintain backend consistency.
+- **Serialization-Safe State Persistence (List over Set)**:
+    - *Problem*: Streamlit's `session_state` serialization (used during certain rerun cycles or when passing state to background threads) does not officially support the Python `set` type in all versions. Storing sets can lead to silent data loss or serialization errors.
+    - *Solution*: For state keys that must persist (like `seen_error_sigs`), always use `list` as the storage format. Convert to a local `set()` at the start of an execution loop for O(1) performance, but commit results back as a `list` to ensure cross-rerun stability.
+- **Sensitive Data Masking (Redacted Repr)**:
+    - *Policy*: Core manager objects (like `CanvasManager`) that hold API tokens must never expose those tokens in string representations.
+    - *Implementation*: Override `__repr__` to explicitly mask the `api_key` or `token` field (e.g. `api_key='****'`). This prevents credential leakage if an object is ever printed to stdout, logged in a traceback, or captured by a telemetry tool.
+- **O(1) Collection Hoisting**:
+    - *Pattern*: Avoid re-calculating hash maps or performing set comprehensions inside performance-critical loops.
+    - *Implementation*: Always hoist set construction (e.g. `_module_ids = {int(i) for i in ids}`) above the loop. This converts an `O(N×M)` complexity bottleneck into a flat `O(N+M)` operation.
+- **Standardized Property Extraction (The Hybrid Guard)**:
+    - *Problem*: Re-rendering UI elements after an execution phase often involves reconciling complex objects (from the active run) with dictionaries (from the SQLite/JSON manifest).
+    - *Solution*: Use a hybrid property guard: `val = getattr(obj, key, None) if not isinstance(obj, dict) else obj.get(key)`. This guarantees field access regardless of whether the entity is currently an object or a serialized dictionary.
 
 ## Concurrency, Async & Subprocess Patterns
 - **Active Subprocess ThreadPool Management**:

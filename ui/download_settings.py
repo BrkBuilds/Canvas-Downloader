@@ -24,6 +24,7 @@ import streamlit as st
 import theme
 from ui_helpers import (
     esc,
+    get_course_display_parts,
     render_download_wizard,
     native_folder_picker,
     get_base64_image,
@@ -1278,14 +1279,14 @@ def render_download_settings(fetch_courses_fn):
         def _render_card3_inner():
             # --- Conversion Button Data ---
             conv_button_defs = [
-                ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png'),
-                ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png'),
-                ('convert_word',  'Legacy Word Docs → PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png'),
-                ('convert_excel', 'Excel → PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png'),
-                ('convert_html',  'Canvas Pages → Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png'),
-                ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png'),
-                ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png'),
-                ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png'),
+                ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png', None),
+                ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires Microsoft PowerPoint or LibreOffice'),
+                ('convert_word',  'Legacy Word Docs → PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires Microsoft Word or LibreOffice'),
+                ('convert_excel', 'Excel → PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png', 'Requires Microsoft Excel or LibreOffice'),
+                ('convert_html',  'Canvas Pages → Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
+                ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),
+                ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png', None),
+                ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png', None),
             ]
 
             # --- Dynamic Tag Counter ---
@@ -1335,7 +1336,7 @@ def render_download_settings(fetch_courses_fn):
             ACTIVE_CHECK_SVG = (
                 "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' rx='4' fill='%23ff9838' mask='url(%23m)'/%3E%3C/svg%3E\")"
             )
-            for conv_key, _conv_title, _conv_desc, conv_icon in conv_button_defs:
+            for conv_key, _conv_title, _conv_desc, conv_icon, _conv_req in conv_button_defs:
                 is_conv_active = st.session_state.get(conv_key, False)
                 b64_conv_c = safe_b64(conv_icon)
                 c_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_c}') !important;" if b64_conv_c else ""
@@ -1466,10 +1467,13 @@ def render_download_settings(fetch_courses_fn):
 
                 with st.container(key="conversion_cards_grid"):
                     cols = st.columns(4)
-                    for idx, (conv_key, conv_title, _, _) in enumerate(conv_button_defs):
+                    for idx, (conv_key, conv_title, _, _, conv_req) in enumerate(conv_button_defs):
                         col = cols[idx % 4]
                         with col:
-                            st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
+                            if conv_req:
+                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True, help=conv_req)
+                            else:
+                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
         with st.container(border=True, key="card_ai_engine"):
             _render_card3_inner()
@@ -1560,10 +1564,16 @@ def render_download_settings(fetch_courses_fn):
                 _dl_courses = []
         _dl_count = len(_dl_courses)
 
-        _dl_list_html = "".join([
-            f"<li class='course-item'><span class='num'>{i}.</span> <span class='name'>{esc(c.get('name', 'Unknown Course') if isinstance(c, dict) else getattr(c, 'name', 'Unknown Course'))}</span></li>"
-            for i, c in enumerate(_dl_courses, 1)
-        ])
+        def _render_course_item(i, c):
+            name, code = get_course_display_parts(c)
+            code_clean = code.strip("()") if code else ""
+            if code_clean:
+                code_html = f"<div class='code'>{esc(code_clean)}</div>"
+            else:
+                code_html = ""
+            return f"<li class='course-item'><span class='num'>{i}.</span> <div class='name-wrap'><div class='name'>{esc(name)}</div>{code_html}</div></li>"
+
+        _dl_list_html = "".join([_render_course_item(i, c) for i, c in enumerate(_dl_courses, 1)])
 
         _dl_details_html = f"""
     <style>
@@ -1606,12 +1616,26 @@ def render_download_settings(fetch_courses_fn):
     }}
     .summary-text {{
         color: #ffffff;
-        font-size: 1.05rem;
-        font-weight: 500;
+        font-size: 1.15rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }}
-    .summary-text strong {{
-        font-weight: bold;
-        color: #ffffff;
+    .count-tag {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(56, 189, 248, 0.15) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        color: #ffffff !important;
+        font-size: 0.9rem;
+        font-weight: 700;
+        min-width: 20px;
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 8px;
+        line-height: 1;
     }}
     .dropdown-body {{
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1626,7 +1650,7 @@ def render_download_settings(fetch_courses_fn):
     }}
     li.course-item {{
         display: flex;
-        align-items: baseline;
+        align-items: flex-start;
         gap: 5px;
         padding: 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -1636,15 +1660,32 @@ def render_download_settings(fetch_courses_fn):
     }}
     li.course-item .num {{
         color: #888888;
-        font-size: 0.9rem;
+        font-size: 1.05rem;
         min-width: 20px;
+        margin-top: 1px;
+    }}
+    li.course-item .name-wrap {{
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }}
     li.course-item .name {{
         color: #ffffff;
-        font-size: 0.95rem;
+        font-size: 1.05rem;
+        font-weight: 400;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.2;
+    }}
+    li.course-item .code {{
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 400;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 0px;
     }}
     .dropdown-body::-webkit-scrollbar {{
         width: 6px;
@@ -1664,7 +1705,7 @@ def render_download_settings(fetch_courses_fn):
     <details class="unified-course-dropdown">
     <summary>
     <div class="summary-chevron">▸</div>
-    <div class="summary-text">Courses to be downloaded: <strong>{_dl_count}</strong></div>
+    <div class="summary-text">Courses selected for download <span class="count-tag">{_dl_count}</span></div>
     </summary>
     <div class="dropdown-body">
     <ul class="course-list-box">
@@ -1700,6 +1741,25 @@ def render_download_settings(fetch_courses_fn):
             button_label = 'Sync (Download) Selected Files' if st.session_state['current_mode'] == 'sync' else 'Confirm and Download'
             if st.button(button_label, type="primary", use_container_width=True, key='action_dl_confirm'):
                 try:
+                    # ── PRE-FLIGHT: Writability probe ──
+                    # Fail fast with a clear message if the download folder is
+                    # read-only, missing, or otherwise unwritable — before the
+                    # user wastes minutes on the course scanning phase.
+                    _dl_path = Path(st.session_state.get('download_path', ''))
+                    try:
+                        _dl_path.mkdir(parents=True, exist_ok=True)
+                        _probe = _dl_path / '.canvas_write_probe'
+                        _probe.write_bytes(b'ok')
+                        _probe.unlink()
+                    except Exception as _wp_err:
+                        st.error(
+                            f"⚠️ Cannot write to the selected download folder.\n\n"
+                            f"**Path:** `{_dl_path}`\n\n"
+                            f"**Reason:** {_wp_err}\n\n"
+                            f"Please select a different folder with write permissions."
+                        )
+                        st.stop()
+
                     # Initialize download state
                     all_courses = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'])
                     course_map = {c.id: c for c in all_courses}
@@ -1728,7 +1788,7 @@ def render_download_settings(fetch_courses_fn):
                     st.session_state['downloaded_items'] = 0
                     st.session_state['course_mb_downloaded'] = {}
                     st.session_state['log_content'] = ""  # Initialize log content
-                    st.session_state['seen_error_sigs'] = set()  # Clear deduplication state for fresh download
+                    st.session_state['seen_error_sigs'] = []  # List-backed dedup (Streamlit serialization safe)
 
                     # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
                     st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)
