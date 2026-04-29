@@ -34,33 +34,26 @@ from core.state_registry import cleanup_sync_state
 
 
 
-# ---- Analysis review ----
+# ── Module-level help card constants (computed once at import, not on every render) ──
 
-def show_analysis_review(on_confirm_sync):
-    # Step wizard
-    render_sync_wizard(st, 2)
+_HELP_TITLE = "How to Review Your Sync"
 
-    from ui_shared import render_help_card
-    
-    # ── Help Card Content ──
-    _help_title = "How to Review Your Sync"
-    
-    _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; padding: 11px 12px 10px 12px; display: flex; flex-direction: column;"
-    _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
-    _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
-    _cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
-    _cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
-    _cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
-    _cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
-    _cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
-    _cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
-    _cat_desc = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
-    _cat_act = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
-    _sb_checked = "font-size: 0.72rem; color: rgba(134,239,172,1); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
-    _sb_unchecked = "font-size: 0.72rem; color: rgba(255,255,255,0.95); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
-    _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
-    
-    _help_text = (
+_cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; padding: 11px 12px 10px 12px; display: flex; flex-direction: column;"
+_cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
+_cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
+_cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
+_cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
+_cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+_cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
+_cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
+_cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
+_cat_desc = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+_cat_act = "font-size: 0.83rem; color: rgba(255,255,255,0.9); line-height: 1.5; margin-bottom: 8px;"
+_sb_checked = "font-size: 0.72rem; color: rgba(134,239,172,1); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+_sb_unchecked = "font-size: 0.72rem; color: rgba(255,255,255,0.95); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+_sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(0,0,0,0.35); padding: 5px 9px; border-radius: 6px; display: inline-block; margin-top: auto; align-self: flex-start;"
+
+_HELP_TEXT = (
         # -- Workflow & Selection Rules --
         "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
         "Welcome to the Review page! Here you have full control over exactly what gets downloaded to your computer.<br><br>"
@@ -184,6 +177,15 @@ def show_analysis_review(on_confirm_sync):
         "</details>"
     )
 
+
+# ---- Analysis review ----
+
+def show_analysis_review(on_confirm_sync):
+    # Step wizard
+    render_sync_wizard(st, 2)
+
+    from ui_shared import render_help_card
+
     st.html("""
         <style>
         div.st-key-sync_review_title_help_row [data-testid="stHorizontalBlock"] {
@@ -219,8 +221,8 @@ def show_analysis_review(on_confirm_sync):
         with _c2:
             render_help_card(
                 key_prefix="sync_review_explainer",
-                title=_help_title,
-                text_html=_help_text,
+                title=_HELP_TITLE,
+                text_html=_HELP_TEXT,
                 icon="💡",
                 mode="button"
             )
@@ -228,8 +230,8 @@ def show_analysis_review(on_confirm_sync):
     # Help Card Expansion (renders below the header row if open)
     render_help_card(
         key_prefix="sync_review_explainer",
-        title=_help_title,
-        text_html=_help_text,
+        title=_HELP_TITLE,
+        text_html=_HELP_TEXT,
         icon="💡",
         mode="card"
     )
@@ -798,22 +800,26 @@ def show_analysis_review(on_confirm_sync):
                 st.html("<div style='padding: 5px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
 
                 # border=True required for st-key class to be reliably emitted (CLAUDE.md Border Strip rule)
+                _all_keys = sum(files_by_ext.values(), [])
+                def _select_all(keys=_all_keys):
+                    for k in keys:
+                        if k.startswith('sync_locdel_'):
+                            ignore_key = k.replace('sync_locdel_', 'ignore_')
+                            if st.session_state.get(ignore_key, False):
+                                continue
+                        st.session_state[k] = True
+                def _deselect_all(keys=_all_keys):
+                    for k in keys:
+                        st.session_state[k] = False
+
                 with st.container(border=True, key="bulk_btns_row"):
                     col_sel, col_clr = st.columns([1, 1])
                     with col_sel:
-                        if st.button("Select All", key="btn_bulk_select_all", use_container_width=True):
-                            for k in sum(files_by_ext.values(), []):
-                                if k.startswith('sync_locdel_'):
-                                    ignore_key = k.replace('sync_locdel_', 'ignore_')
-                                    if st.session_state.get(ignore_key, False):
-                                        continue
-                                st.session_state[k] = True
-                            st.rerun()
+                        st.button("Select All", key="btn_bulk_select_all",
+                                  use_container_width=True, on_click=_select_all)
                     with col_clr:
-                        if st.button("Deselect All", key="btn_bulk_deselect_all", use_container_width=True):
-                            for k in sum(files_by_ext.values(), []):
-                                st.session_state[k] = False
-                            st.rerun()
+                        st.button("Deselect All", key="btn_bulk_deselect_all",
+                                  use_container_width=True, on_click=_deselect_all)
 
     # Inject base64 icons into expander category headers via CSS ::before
     st.html(f"""<style>

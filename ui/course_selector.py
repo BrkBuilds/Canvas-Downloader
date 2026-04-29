@@ -365,7 +365,7 @@ def _render_multi_select_list(
             new_selected_ids.append(sid)
 
     # ――― Inject global CSS for this list ―――
-    st.markdown(f"""<style>
+    st.html(f"""<style>
     div[class*="st-key-{namespace}_chk_"] {{
         border-radius: 6px !important;
         transition: background-color 0.2s !important;
@@ -405,7 +405,8 @@ def _render_multi_select_list(
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
         margin-top: 3px !important;
     }}
-    </style>""", unsafe_allow_html=True)
+    </style>""")
+    st.html('<div style="padding-bottom: 1rem;"></div>')
 
     dynamic_css = []
 
@@ -444,7 +445,8 @@ def _render_multi_select_list(
             dynamic_css.append(f"""
             div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
             """)
-        st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
+        st.html(f'<style>{"".join(dynamic_css)}</style>')
+        st.html('<div style="padding-bottom: 1rem;"></div>')
 
     st.session_state['selected_course_ids'] = new_selected_ids
     return new_selected_ids
@@ -457,7 +459,7 @@ def _render_single_select_list(
     selected_key = f"{namespace}_selected_id"
 
     # ――― Inject global CSS for this list ―――
-    st.markdown(f"""<style>
+    st.html(f"""<style>
     div[class*="st-key-{namespace}_chk_"] {{
         border-radius: 6px !important;
         transition: background-color 0.2s !important;
@@ -497,7 +499,8 @@ def _render_single_select_list(
     div[class*="st-key-{namespace}_chk_"] label[data-baseweb="checkbox"] > div:first-child {{
         margin-top: 3px !important;
     }}
-    </style>""", unsafe_allow_html=True)
+    </style>""")
+    st.html('<div style="padding-bottom: 1rem;"></div>')
 
     dynamic_css = []
 
@@ -537,7 +540,41 @@ def _render_single_select_list(
             dynamic_css.append(f"""
             div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
             """)
-        st.markdown(f'<style>{"".join(dynamic_css)}</style>', unsafe_allow_html=True)
+        st.html(f'<style>{"".join(dynamic_css)}</style>')
+        st.html('<div style="padding-bottom: 1rem;"></div>')
+
+@st.fragment
+def _course_list_section(courses: list) -> None:
+    """Fragment: CBS filters + Select All/Clear + checkbox list.
+
+    Scopes checkbox-click reruns to this fragment only, keeping the wizard
+    header and page chrome stable.
+    """
+    filtered_courses = render_cbs_filters(courses, "dl")
+    visible_ids = {c.id for c in filtered_courses}
+
+    with st.container(key="action_btns_row", border=True):
+        select_all_clicked = st.button('Select All', key="btn_course_select_all")
+        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
+
+    if select_all_clicked:
+        current_ids = set(st.session_state.get('selected_course_ids', []))
+        st.session_state['selected_course_ids'] = list(current_ids.union(visible_ids))
+        for cid in visible_ids:
+            st.session_state[f"dl_chk_{cid}"] = True
+        st.rerun(scope="fragment")
+
+    if clear_sel_clicked:
+        st.session_state['selected_course_ids'] = []
+        for c in courses:
+            st.session_state[f"dl_chk_{c.id}"] = False
+        st.rerun(scope="fragment")
+
+    with st.container(key="course_list_box", border=True):
+        render_course_list(
+            filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
+        )
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # Download Mode — Step 1: Select Courses
@@ -652,8 +689,7 @@ def render_course_selector(fetch_courses_fn):
     b64_select_all = get_base64_image("assets/icon_select_all.png")
     b64_clear = get_base64_image("assets/icon_clear_selection.png")
 
-    st.markdown(f"""
-    <style>
+    st.html(f"""<style>
     /* ── Action Buttons Row: reflow vertical stack → horizontal ── */
     div[data-testid="stVerticalBlock"]:has(> div.st-key-btn_course_select_all) {{
         display: flex !important;
@@ -755,8 +791,8 @@ def render_course_selector(fetch_courses_fn):
         margin-top: -1rem !important;
         box-sizing: border-box !important;
     }}
-    </style>
-    """, unsafe_allow_html=True)
+    </style>""")
+    st.html('<div style="padding-bottom: 1rem;"></div>')
 
     # --- Favorites / All Courses pill toggle ---
     favorites_only = render_favorites_pill("dl")
@@ -794,37 +830,9 @@ def render_course_selector(fetch_courses_fn):
             st.warning('No courses found.')
         st.stop()
 
-    # --- Replace spinner with CBS filters + action buttons + course list ---
+    # --- Replace spinner with fragment: CBS filters + action buttons + course list ---
     with _courses_area.container():
-        # 1. CBS Filters
-        filtered_courses = render_cbs_filters(courses, "dl")
-
-        visible_ids = {c.id for c in filtered_courses}
-
-        # 2. Action Buttons (border=True required for CSS key emission — border stripped in CSS above)
-        with st.container(key="action_btns_row", border=True):
-            select_all_clicked = st.button('Select All', key="btn_course_select_all")
-            clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
-
-        if select_all_clicked:
-            current_ids = set(st.session_state.get('selected_course_ids', []))
-            new_ids = current_ids.union(visible_ids)
-            st.session_state['selected_course_ids'] = list(new_ids)
-            for cid in visible_ids:
-                st.session_state[f"dl_chk_{cid}"] = True
-            st.rerun()
-
-        if clear_sel_clicked:
-            st.session_state['selected_course_ids'] = []
-            for c in courses:
-                st.session_state[f"dl_chk_{c.id}"] = False
-            st.rerun()
-
-        # 3. Course list
-        with st.container(key="course_list_box", border=True):
-            render_course_list(
-                filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
-            )
+        _course_list_section(courses)
 
     # --- Continue ---
     error_container = st.empty()
