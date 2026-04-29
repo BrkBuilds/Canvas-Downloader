@@ -218,6 +218,9 @@ def cleanup_sync_state() -> None:
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
+    # Invalidate ignored-files cache so next render re-reads from SQLite
+    st.session_state.pop('_ignored_files_cache', None)
+
     # Clean up dynamic checkbox keys from the sync review UI
     keys_to_remove = [
         k for k in st.session_state
