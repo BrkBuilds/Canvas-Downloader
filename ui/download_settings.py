@@ -552,7 +552,7 @@ def render_download_settings(fetch_courses_fn):
             st.session_state['notebooklm_master'] = (active_count == TOTAL_NOTEBOOK_SUBS)
 
         # HOISTED CSS
-        st.markdown("""
+        st.html("""
         <style>
         /* Tree-view styling for secondary content sub-checkboxes */
         .st-key-dl_assignments, .st-key-dl_syllabus, .st-key-dl_announcements,
@@ -570,13 +570,13 @@ def render_download_settings(fetch_courses_fn):
 
 
         </style>
-        """, unsafe_allow_html=True)
+        """)
 
         # Card elevation CSS — Version-Agnostic Target for Streamlit 1.51+
         # NOTE: The conditional Card 2 flex rule (depends on `card2_expanded`)
         # is re-injected inside `_card2_fragment` so the height-sync updates
         # when only Card 2 reruns.
-        st.markdown("""
+        st.html("""
     <style>
     /* 1. Target via the explicit Streamlit Keys (Most Reliable) */
     div[class*="st-key-card_core_files"],
@@ -616,7 +616,7 @@ def render_download_settings(fetch_courses_fn):
         margin-top: auto !important;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """)
 
         col1, col2 = st.columns([3, 5], gap="medium")
 
@@ -1072,7 +1072,7 @@ def render_download_settings(fetch_courses_fn):
                 }}
                 </style>''', unsafe_allow_html=True)
 
-                st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 36px; height: 36px; top: -34px; left: -34px; z-index: 10; filter: {c_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf2}' style='position: absolute; width: 36px; height: 36px; top: -24px; left: -34px; z-index: 10; filter: {c_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
 
                 with st.container(key="header_wrap_card2"):
                     st.button("\u200B", key="toggle_card2", on_click=toggle_card2)
@@ -1449,7 +1449,7 @@ def render_download_settings(fetch_courses_fn):
             }}
             </style>''', unsafe_allow_html=True)
 
-            st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 36px; height: 36px; top: -34px; left: -34px; z-index: 10; filter: {c3_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_wf3}' style='position: absolute; width: 36px; height: 36px; top: -24px; left: -34px; z-index: 10; filter: {c3_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
 
             with st.container(key="header_wrap_card3"):
                 st.button("\u200B", key="toggle_card3", on_click=toggle_card3)
