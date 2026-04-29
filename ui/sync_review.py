@@ -236,7 +236,7 @@ def show_analysis_review(on_confirm_sync):
         mode="card"
     )
 
-    st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 1.05rem; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; margin-top: -15px; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -567,7 +567,7 @@ def show_analysis_review(on_confirm_sync):
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_locdel_{cid}_{si.canvas_file_id}')
 
-    if all_extensions:
+    if all_extensions or total_ignored > 0:
         all_exts_sorted = sorted(list(all_extensions))
         
 
@@ -592,7 +592,8 @@ def show_analysis_review(on_confirm_sync):
                 border: none !important;
                 border-radius: 12px !important;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
-                margin-top: 8px !important;
+                margin-top: 30px !important;
+                margin-bottom: 10px !important;
                 padding-top: 6px !important;
             }}
             /* Filetype box: strip border */

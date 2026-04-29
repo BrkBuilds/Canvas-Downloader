@@ -781,7 +781,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         border: none !important;
                         background-color: #0b5a6e !important;
                         color: #ffffff !important;
-                        margin-top: -50px !important;
+                        margin-top: 0px !important;
                         position: relative;
                         z-index: 1;
                         opacity: 1 !important;
@@ -814,7 +814,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                     # Clean, isolated CSS for "Save List" using its Streamlit key
                     st.html(f"""<style>
                     div.st-key-btn_save_group_main div[data-testid="stTooltipHoverTarget"] {{
-                        margin-top: -50px !important;
+                        margin-top: 0px !important;
                         position: relative;
                         z-index: 1;
                         display: block !important;
@@ -1049,6 +1049,13 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # Snug Header Hack — H2 + Help button on one flex row
     st.html("""
         <style>
+        div.st-key-btn_hub_main button {
+            margin-top: -20px !important;
+        }
+        div[class*="st-key-sync_title_help_row"] {
+            margin-top: -15px !important;
+            margin-bottom: 15px !important;
+        }
         div.st-key-sync_title_help_row [data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
@@ -1820,7 +1827,7 @@ def _render_sync_history():
 <span style="color: {status_color}; font-size: 0.75rem; font-weight: 600; padding: 0px 6px; background: {status_bg}; border-radius: 4px; border: 1px solid {status_border}; display: inline-flex; align-items: center; height: 20px;">{status_text}</span>
 </div>
 <div style="color: #c9d1d9; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-Updated {count} file{'s' if count != 1 else ''} <span style="margin: 0 8px; color: #5c6269;">&bull;</span> {sync_mode_text}
+Synced {count} file{'s' if count != 1 else ''} <span style="margin: 0 8px; color: #5c6269;">&bull;</span> {sync_mode_text}
 </div>
 </div>
 <div style="color: #8b949e; font-size: 0.85rem; font-weight: 500; flex-shrink: 0; padding-left: 8px; display: flex; align-items: center;">
