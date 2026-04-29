@@ -303,8 +303,9 @@ with _main_content.container():
             cancel_placeholder = st.empty()
             
             # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP
+            cancel_label = 'Cancel Analysis' if st.session_state.get('current_mode') == 'sync' else 'Cancel Download'
             cancel_placeholder.button(
-                'Cancel Download',
+                cancel_label,
                 type="secondary",
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
