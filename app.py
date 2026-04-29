@@ -63,9 +63,15 @@ inject_css('preset_dialogs.css')
 # Activation: click listener fires ONLY for buttons inside known navigation
 # containers (NAV_SEL allowlist) — in-page interactions (chevrons, filters,
 # dialogs) are excluded.
-# Hide: 500 ms settle (no DOM childList mutations) + one requestAnimationFrame
-# so the overlay only drops after the browser has committed a full paint of the
-# new content.  An 8 s safety valve force-hides if a rerun hangs.
+# Hide (3-phase geometry-polling):
+#   Phase 1: 150 ms debounce — batches rapid-fire mutations.
+#   Phase 2: Poll for stStatusWidget removal — waits until the Python script
+#            has finished executing.
+#   Phase 3: Poll page geometry (scrollHeight + element count) every 200 ms.
+#            Only hides after 4 consecutive identical readings (800 ms of
+#            layout stability). Directly detects old-element cleanup regardless
+#            of whether mutations fire.
+#   An 8 s safety valve force-hides if a rerun hangs.
 components.html("""<script>
 (function(){
     // All state lives on window.parent._cdp so it survives iframe reloads.
@@ -102,16 +108,73 @@ components.html("""<script>
         if(p.safeT)clearTimeout(p.safeT);
         p.safeT=setTimeout(function(){p.el.style.display='none';p.vis=false;p.safeT=null;},8000);
     }
+
+    // Streamlit injects [data-testid="stStatusWidget"] while the Python script
+    // is executing and removes it once the rerun completes.  If the element is
+    // absent the script has finished (or the attribute was removed in a future
+    // Streamlit version — graceful degradation: treat as "ready").
+    function isStReady(){
+        return !doc.querySelector('[data-testid="stStatusWidget"]');
+    }
+
+    // Returns a lightweight fingerprint of the page layout.  When old elements
+    // are removed the scrollHeight drops and the element count changes.
+    function pageFingerprint(target){
+        return target.scrollHeight + '|' + target.querySelectorAll('*').length;
+    }
+
     function schedHide(){
-        if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+        // Don't cancel the safety valve — it is the ultimate fallback.
+        // Only clear it once we actually commit the hide (in Phase 3).
         if(p.hT)clearTimeout(p.hT);
-        // 500 ms settle: Streamlit often makes a second wave of class/attribute
-        // mutations during React hydration after DOM nodes are inserted.  rAF
-        // then defers the actual hide until the browser has committed a full
-        // paint of the new content, eliminating the split-second raw-UI flash.
+
+        // Phase 1 — 150 ms debounce.  Batches the rapid-fire mutations that
+        // occur during React's initial DOM insertion.
         p.hT=setTimeout(function(){
-            requestAnimationFrame(function(){p.el.style.display='none';p.vis=false;p.hT=null;});
-        },500);
+
+            // Phase 2 — Wait for Streamlit's Python script to finish.
+            // Poll every 150 ms until stStatusWidget is removed from the DOM.
+            // The 8 s safety valve guarantees we can never poll forever.
+            function waitForReady(){
+                if(!isStReady()){
+                    p.hT=setTimeout(waitForReady,150);
+                    return;
+                }
+                // Phase 3 — Script is done, but React DOM reconciliation continues
+                // on slow machines (removing old page elements, applying final CSS).
+                // MutationObserver-based settle DOES NOT WORK here because the old
+                // stale elements generate no mutations while they linger.
+                // Instead, poll the page geometry (scrollHeight + element count)
+                // every 200 ms.  Only hide after 4 consecutive identical readings
+                // (800 ms of layout stability).  This directly detects the moment
+                // old elements are removed — scrollHeight drops and element count
+                // changes — regardless of whether mutations fire.
+                var target=doc.querySelector('[data-testid="stMain"]')||doc.body;
+                var lastFP='';
+                var stableCount=0;
+                function pollStable(){
+                    var fp=pageFingerprint(target);
+                    if(fp===lastFP){
+                        stableCount++;
+                        if(stableCount>=4){
+                            // Layout has been stable for 800 ms.  Safe to hide.
+                            if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+                            requestAnimationFrame(function(){
+                                p.el.style.display='none';p.vis=false;p.hT=null;
+                            });
+                            return;
+                        }
+                    } else {
+                        // Layout changed — reset stability counter.
+                        stableCount=0;
+                        lastFP=fp;
+                    }
+                    p.hT=setTimeout(pollStable,200);
+                }
+                pollStable();
+            }
+            waitForReady();
+        },150);
     }
 
     // --- Register click listener once ---
@@ -142,10 +205,14 @@ components.html("""<script>
     // --- Recreate MutationObserver on every iframe load ---
     // The previous observer (from the last iframe context) was disconnected when
     // that iframe was destroyed.  Always create a fresh one here.
+    // The observer triggers schedHide() on DOM changes to kick off the 3-phase
+    // sequence.  Phase 3 itself uses geometry polling (not mutations) to decide
+    // when to hide — so even if mutations stop while stale elements linger,
+    // the polling loop catches the eventual cleanup.
     if(p.obs){try{p.obs.disconnect();}catch(_){}}
     p.obs=new MutationObserver(function(){
         if(!p.vis)return;
-        schedHide(); // each mutation resets the 500 ms settle timer
+        schedHide(); // restarts the 3-phase sequence on every DOM change
     });
     p.obs.observe(doc.querySelector('[data-testid="stMain"]')||doc.body,
         {childList:true,subtree:true,attributes:false,characterData:false});
