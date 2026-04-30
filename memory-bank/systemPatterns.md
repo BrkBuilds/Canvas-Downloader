@@ -98,6 +98,22 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Sensitive Data Masking (Redacted Repr)**:
     - *Policy*: Core manager objects (like `CanvasManager`) that hold API tokens must never expose those tokens in string representations.
     - *Implementation*: Override `__repr__` to explicitly mask the `api_key` or `token` field (e.g. `api_key='****'`). This prevents credential leakage if an object is ever printed to stdout, logged in a traceback, or captured by a telemetry tool.
+- **Loading Overlay & Script Settlement**:
+    - *Problem*: In Streamlit, hiding a page transition overlay as soon as the main loop reaches the bottom can lead to "broken" UI flashes if the browser hasn't finished rendering the new DOM or if a background fragment is still settling.
+    - *Implementation*:
+        1. **Authoritative Completion**: Monitor the internal `stStatusWidget` (Streamlit's indicator for "Running...") as the primary signal that the Python execution has finished.
+        2. **Adaptive Settlement Delay**: Introduce a mandatory delay (e.g., 250ms) *after* the script signal is caught. This allows the browser's main thread to settle style reconciliation and DOM painting before the overlay opacity is set to 0.
+        3. **Centralized Control**: Use `hide_loading_overlay()` in `ui_helpers.py` to ensure this logic is applied uniformly across all transitions (e.g., from Sync Hub to Sync Review).
+        4. **Hardware Agnostic**: The settlement period ensures premium stability on both high-end workstations and slower laptops where DOM cleanup may lag.
+- **Modal State Cleanup (Atomic Handoff)**:
+    - *Problem*: In complex Streamlit UIs with multiple nested modals (like the Sync Hub), closing a modal without explicitly popping its session-state keys can lead to "Ghost States" where a previously entered value (like a group name) reappears unexpectedly.
+    - *Implementation*: Implement a centralized `hub_cleanup()` (or equivalent) function that is invoked natively when a modal is closed or a process is cancelled. This function must explicitly `pop()` all relevant UI-bound keys from `st.session_state` to guarantee a clean slate for the next interaction.
+- **Tuple-Based Composite Identity**:
+    - *Pattern*: When deduplicating items that can exist in multiple contexts (e.g., a course synced to two different local folders), never rely on a single ID.
+    - *Implementation*: Use composite tuples `(course_id, local_folder)` as the primary identity key for deduplication and persistence. This ensures that the system correctly distinguishes between valid overlaps and true duplicates, aligning the UI layer with the backend database constraints.
+- **Broken State Visual Affordance**:
+    - *Pattern*: Use distinct CSS classes (e.g., `_missing_`) and high-contrast visual cues (red borders, tinted shadows) to immediately signal broken filesystem paths or missing resources to the user.
+    - *Implementation*: Inject targeted CSS that keys off specific session state indicators, ensuring the UI remains intuitive even when backend resources are moved or deleted.
 - **O(1) Collection Hoisting**:
     - *Pattern*: Avoid re-calculating hash maps or performing set comprehensions inside performance-critical loops.
     - *Implementation*: Always hoist set construction (e.g. `_module_ids = {int(i) for i in ids}`) above the loop. This converts an `O(N×M)` complexity bottleneck into a flat `O(N+M)` operation.

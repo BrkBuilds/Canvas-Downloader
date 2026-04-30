@@ -846,6 +846,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.session_state['pending_sync_folder'] = None
                 st.session_state.pop('editing_pair_idx', None)
                 st.session_state.pop('_prev_course_search', None)
+                st.session_state.pop('sync_selected_course_id', None)  # Prevent stale pre-selection on re-open
                 st.rerun()
 
         with col_add:
@@ -890,45 +891,65 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         """, 
                         unsafe_allow_html=True
                     )
-                elif selected_course_name and selected_course_name != course_options[0]:
-                    selected_course_id = None
-                    for cid, cname in course_names.items():
-                        if cname == selected_course_name:
-                            selected_course_id = cid
-                            break
-                    if selected_course_id:
-                        # If the folder's manifest was bound to a different
-                        # course, wipe it now so the next sync starts clean
-                        # against the newly chosen course.
-                        if _manifest_rebind_needed:
-                            SyncManager.reset_folder_binding(pending_folder)
+                elif selected_course_id and selected_course_id in course_names:
+                    # Direct lookup — no need to scan by name, the ID is
+                    # authoritative from the course selector.
 
-                        new_pair = {
-                            'local_folder': pending_folder,
-                            'course_id': selected_course_id,
-                            'course_name': course_names[selected_course_id],
-                            'last_synced': None,
-                        }
+                    # If the folder's manifest was bound to a different
+                    # course, wipe it now so the next sync starts clean
+                    # against the newly chosen course.
+                    if _manifest_rebind_needed:
+                        SyncManager.reset_folder_binding(pending_folder)
 
-                        # Check if we are updating or adding
-                        edit_idx = st.session_state.get('editing_pair_idx')
-                        if edit_idx is not None and 0 <= edit_idx < len(st.session_state['sync_pairs']):
-                            # Update existing
-                            old_pair = st.session_state['sync_pairs'][edit_idx]
-                            old_sig = {'course_id': old_pair.get('course_id'), 'local_folder': old_pair.get('local_folder')}
-                            if old_pair.get('course_id') == selected_course_id:
-                                new_pair['last_synced'] = old_pair.get('last_synced')
-                            _update_pair_by_signature_lazy(old_sig, new_pair)
-                        else:
-                            # Append new
-                            _add_pair_lazy(new_pair)
+                    new_pair = {
+                        'local_folder': pending_folder,
+                        'course_id': selected_course_id,
+                        'course_name': course_names[selected_course_id],
+                        'last_synced': None,
+                    }
 
-                        st.session_state['pending_sync_folder'] = None
-                        st.session_state.pop('editing_pair_idx', None)
-                        st.session_state.pop('_prev_course_search', None)
-                        st.rerun(scope="app")
+                    # Check if we are updating or adding
+                    edit_idx = st.session_state.get('editing_pair_idx')
+                    if edit_idx is not None and 0 <= edit_idx < len(st.session_state['sync_pairs']):
+                        # Update existing
+                        old_pair = st.session_state['sync_pairs'][edit_idx]
+                        old_sig = {'course_id': old_pair.get('course_id'), 'local_folder': old_pair.get('local_folder')}
+                        if old_pair.get('course_id') == selected_course_id:
+                            new_pair['last_synced'] = old_pair.get('last_synced')
+                        _update_pair_by_signature_lazy(old_sig, new_pair)
+                    else:
+                        # Append new
+                        _add_pair_lazy(new_pair)
+
+                    st.session_state['pending_sync_folder'] = None
+                    st.session_state.pop('editing_pair_idx', None)
+                    st.session_state.pop('_prev_course_search', None)
+                    st.rerun(scope="app")
+                elif selected_course_id and selected_course_id not in course_names:
+                    # Course exists in saved pair but was archived/removed from Canvas
+                    error_msg = 'This course is no longer available in Canvas. Please select a different course.'
+                    error_container.markdown(
+                        f"""
+                        <div style="
+                            padding: 8px 12px;
+                            margin-bottom: 10px;
+                            background-color: rgba(255, 75, 75, 0.15);
+                            color: #ff4b4b;
+                            border: 1px solid rgba(255, 75, 75, 0.2);
+                            border-radius: 4px;
+                            font-size: 0.9em;
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                            ⚠️ {error_msg}
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
                 else:
-                    # Custom error message with lower height (compact)
+                    # No course selected at all
                     error_msg = 'Please select a course.'
                     error_container.markdown(
                         f"""

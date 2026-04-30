@@ -99,7 +99,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             f'</details>'
             f'</div>'
         )
-    else:
+    elif len(folder_set) == 1:
         # Single folder - static row showing friendly name
         dest_html = (
             f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
@@ -109,6 +109,10 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             f'</div>'
             f'</div>'
         )
+    else:
+        # Defensive: empty folder_set should never happen (sync_selections
+        # are guaranteed non-empty), but guard against IndexError.
+        dest_html = ""
 
     _css_block = (
         f'<style>'
