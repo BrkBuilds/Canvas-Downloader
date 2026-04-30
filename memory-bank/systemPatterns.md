@@ -98,13 +98,16 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Sensitive Data Masking (Redacted Repr)**:
     - *Policy*: Core manager objects (like `CanvasManager`) that hold API tokens must never expose those tokens in string representations.
     - *Implementation*: Override `__repr__` to explicitly mask the `api_key` or `token` field (e.g. `api_key='****'`). This prevents credential leakage if an object is ever printed to stdout, logged in a traceback, or captured by a telemetry tool.
-- **Loading Overlay & Script Settlement**:
-    - *Problem*: In Streamlit, hiding a page transition overlay as soon as the main loop reaches the bottom can lead to "broken" UI flashes if the browser hasn't finished rendering the new DOM or if a background fragment is still settling.
+- **Loading Overlay & Script Settlement (3-Phase Geometry-Polling)**:
+    - *Problem*: In Streamlit, hiding a page transition overlay as soon as the main loop reaches the bottom can lead to "broken" UI flashes. Relying solely on mutation observers settling is flawed because stale UI elements waiting to be removed generate zero mutations while they linger on slow machines.
     - *Implementation*:
-        1. **Authoritative Completion**: Monitor the internal `stStatusWidget` (Streamlit's indicator for "Running...") as the primary signal that the Python execution has finished.
-        2. **Adaptive Settlement Delay**: Introduce a mandatory delay (e.g., 250ms) *after* the script signal is caught. This allows the browser's main thread to settle style reconciliation and DOM painting before the overlay opacity is set to 0.
-        3. **Centralized Control**: Use `hide_loading_overlay()` in `ui_helpers.py` to ensure this logic is applied uniformly across all transitions (e.g., from Sync Hub to Sync Review).
-        4. **Hardware Agnostic**: The settlement period ensures premium stability on both high-end workstations and slower laptops where DOM cleanup may lag.
+        1. **Allowlist Click Detection**: JavaScript click listener fires ONLY for buttons inside keyed navigation containers to prevent disruptive flashes during in-page interactions.
+        2. **State on Parent Window**: Overlay state and observer logic is stored on `window.parent._cdp` to survive Streamlit's iframe reloads.
+        3. **Phase 1 (Debounce)**: 150ms debounce to batch rapid-fire mutations from initial React DOM insertion.
+        4. **Phase 2 (Python Done)**: Polls for `stStatusWidget` removal (authoritative signal that the Streamlit Python script finished executing).
+        5. **Phase 3 (Geometry Polling)**: Polls page geometry (`scrollHeight` + total element count) every 200ms. Only hides after 4 consecutive identical readings (800ms of layout stability). This reliably detects when lingering old elements are finally removed by React.
+        6. **Safety Valve**: 8s force-hide timeout that is only cleared when the actual hide commits in Phase 3.
+        7. **Hot-Reload Guard**: `isConnected` guard re-attaches overlay after dev hot-reloads.
 - **Modal State Cleanup (Atomic Handoff)**:
     - *Problem*: In complex Streamlit UIs with multiple nested modals (like the Sync Hub), closing a modal without explicitly popping its session-state keys can lead to "Ghost States" where a previously entered value (like a group name) reappears unexpectedly.
     - *Implementation*: Implement a centralized `hub_cleanup()` (or equivalent) function that is invoked natively when a modal is closed or a process is cancelled. This function must explicitly `pop()` all relevant UI-bound keys from `st.session_state` to guarantee a clean slate for the next interaction.

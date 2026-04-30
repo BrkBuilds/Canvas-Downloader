@@ -16,6 +16,13 @@
     - **Windows Edge Cases**: Enhanced `_sanitize_filename` to intercept and prefix Windows reserved filenames (`CON`, `PRN`, `AUX`, `COM1-9`, `LPT1-9`) to prevent `OSError` crashes during file creation.
     - **Legal Compliance**: Explicitly included the `LICENSE` file within the PyInstaller `datas` array for both Windows and macOS specs, guaranteeing offline bundling of the MIT license inside the standalone executables.
 
+- **Session 2026-04-30: Build Architecture & Distribution Optimization**
+    - **Windows Distribution**: Finalized PyInstaller `Canvas_Downloader.spec` in one-dir mode and `Canvas_Downloader_Setup.iss` for Inno Setup installer. Achieved ~1.5s cold launch time by disabling UPX compression and removing one-file extraction overhead.
+    - **macOS Distribution**: Finalized `Canvas_Downloader_macOS.spec` for one-dir + BUNDLE (`.app`).
+    - **Parity**: Both OSes now use identical one-dir internal architecture.
+    - **Startup Optimization**: Reduced health poll interval in `start.py` from 1.0s to 0.1s to decrease startup latency.
+    - **Loading Overlay 3-Phase Settling**: Implemented a robust 3-Phase Geometry-Polling logic to prevent broken UI flashes during slow navigation in Streamlit.
+
 - **Session 2026-04-30: Post-Compilation UI & Reliability Bug Fixes**
     - **PyInstaller Path Resolution**: Updated `ui/presets.py` to use `get_base64_image` instead of a local loader, ensuring preset icons resolve correctly against `sys._MEIPASS` when compiled.
     - **Presets UI Standardization**: Changed the preset configuration expander summary to `⚙️ See Configuration` to match the Sync Hub styling, reducing visual noise.
