@@ -503,7 +503,22 @@
     - [x] **Root Cause Diagnosis**: Identified a race condition during React DOM reconciliation where dynamic `<style>` tags injected below the target element were temporarily unmounted, causing native BaseWeb button elements to flash their default grey boxes on click.
     - [x] **DOM Injection Hoisting**: Resolved the "Ghost Layout" flash permanently by lifting the CSS constructions and `st.markdown("<style>")` calls lexically above the `st.button` instantiations in Python. This guarantees the CSS is present in the DOM before React reconciles the button.
 
-## Completed Milestones (Archive)
+505: 
+506: 505: 
+506: - [x] **Phase 6.21: Comprehensive Sync Audit & UX Hardening** (2026-04-30):
+507:     - [x] **Crash Mitigation**: Resolved `IndexError` in `sync_confirmation.py` by implementing defensive length checks on folder sets.
+508:     - [x] **State Persistence**: Fixed `hub_cleanup()` to properly purge modal edit states, preventing "ghost" inputs when switching between groups.
+509:     - [x] **Deduplication Alignment**: Standardized sync pair deduplication to use `(course_id, local_folder)` tuples across all layers.
+510:     - [x] **XSS Defense**: Applied mandatory HTML escaping to all course/file names in history reports and rendered lists.
+511:     - [x] **Visual Cues**: Implemented high-visibility CSS for "Broken Folder" pair cards (red borders/shadows).
+512:     - [x] **Smart Overlap Detection**: Added informational toasts to warn users when adding a course that already exists under a different directory.
+513: 
+514: - [x] **Phase 6.20: Loading Screen & Transition Stabilization** (2026-04-30):
+507:     - [x] **Intelligent Overlay Control**: Implemented a robust hiding mechanism in `ui_helpers.py` that monitors Streamlit's internal `stStatusWidget` to ensure the script has fully finished before revealing the UI.
+508:     - [x] **Adaptive Settlement Period**: Added a 250ms "settlement" delay to allow for browser DOM cleanup and style reconciliation, preventing broken transitions on slow hardware.
+509:     - [x] **State-Agnostic Stability**: Verified consistency across all major page transitions (Sync Hub -> Sync Review, Download Settings -> Execution).
+510: 
+511: ## Completed Milestones (Archive)
 - [x] Sync Feature Refactoring (2026-02-11)
 - [x] Sync Robustness & Reliability Phase (2026-02-11)
 - [x] UI Polish & Error Resilience (2026-02-15)
