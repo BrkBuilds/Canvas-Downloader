@@ -25,6 +25,7 @@ import theme
 
 from sync_manager import SyncManager, SavedGroupsManager
 from ui_helpers import (
+    esc,
     open_folder,
     render_sync_wizard,
     friendly_course_name,
@@ -1249,6 +1250,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
     }
 
+    /* 13. Missing-folder pair cards — distinctive warning border */
+    div[class*="st-key-sync_pair_card_missing_"] {
+        border-color: rgba(239, 68, 68, 0.5) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
+    }
+
     /* Ignored Files button: match standard action button border style */
 
     </style>
@@ -1692,8 +1699,10 @@ def _render_sync_history():
             def render_file_li(fname):
                 ext = os.path.splitext(fname)[1].lower().lstrip('.')
                 _icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
-                icon_img = f'<img src="{_icon_url}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{ext}"/>'
-                return f'<li style="margin-bottom: 4px; list-style-type: none; margin-left: -12px;">{icon_img}{fname}</li>'
+                safe_fname = esc(fname)
+                safe_ext = esc(ext)
+                icon_img = f'<img src="{_icon_url}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{safe_ext}"/>'
+                return f'<li style="margin-bottom: 4px; list-style-type: none; margin-left: -12px;">{icon_img}{safe_fname}</li>'
 
             html_out = ['<div style="margin-top: -12px;">']
             
@@ -1716,10 +1725,10 @@ def _render_sync_history():
                     synced_files = entry.get('synced_files', [])
                     error_details = entry.get('error_details', [])
                     
-                    # Course names display
+                    # Course names display — escaped for XSS safety
                     courses_text = ""
                     if course_names:
-                        formatted_names = [friendly_course_name(name) for name in course_names if name]
+                        formatted_names = [esc(friendly_course_name(name)) for name in course_names if name]
                         if formatted_names:
                             courses_text = f"{', '.join(formatted_names)}"
                     elif courses_count > 0:
