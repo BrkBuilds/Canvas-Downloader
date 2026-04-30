@@ -179,12 +179,11 @@ def show_sync_complete():
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
 
             joined_parts = " and ".join(parts)
-            st.markdown(
-                f"<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
-                f"border-radius:6px;padding:10px 14px;margin-top:8px;font-size:0.88rem;color:#fcd34d;'>"
-                f"&#9889; <strong>Quick Sync skipped {joined_parts}</strong>. "
-                f"To download them, run a normal 'Analyze, Review &amp; Sync' and select them manually.</div>",
-                unsafe_allow_html=True,
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                f"Quick Sync skipped {joined_parts}.",
+                icon="⚡",
+                detail="To download them, run a normal 'Analyze, Review & Sync' and select them manually.",
             )
 
             # Cleanup
@@ -210,12 +209,10 @@ def show_sync_complete():
 
         # Ignored files note
         if st.session_state.get('sync_has_ignored_files'):
-            st.markdown(
-                "<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
-                "border-radius:6px;padding:10px 14px;margin-top:8px;font-size:0.88rem;color:#fcd34d;'>"
-                "&#9888; <strong>Some files were ignored and not synced.</strong> "
-                "You can manage ignored files from the Sync Hub.</div>",
-                unsafe_allow_html=True,
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                "Some files were ignored and not synced.",
+                detail="You can manage ignored files from the Sync Hub.",
             )
 
         # Build error log paths for the error section
@@ -263,6 +260,14 @@ def show_sync_complete():
             has_retriable_errors=_has_sync_retry,
             retry_failed=_sync_retry_failed,
         )
+
+        # Amber notice when all retries exhausted — guide user to manual download
+        if _sync_retry_failed:
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                "Retry didn't work — these files may be temporarily unavailable.",
+                detail="Check your internet connection and try again later, or download them directly from Canvas.",
+            )
 
     # Folders updated - card style with filetype summary
     file_dropdown_details = {}

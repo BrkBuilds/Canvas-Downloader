@@ -313,6 +313,14 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     st.html(_css_block)
     st.markdown(html_content, unsafe_allow_html=True)
 
+    # Amber notice when disk space is tight (download > 70% of remaining space)
+    if fill_percent > 70:
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "Your disk is getting full.",
+            detail=f"This download will use {fill_percent:.0f}% of your remaining space. Make sure you have enough room.",
+        )
+
     col_no, col_yes = st.columns([1, 1], gap="medium")
     with col_no:
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
