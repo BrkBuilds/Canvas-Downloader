@@ -3998,6 +3998,12 @@ class CanvasManager:
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
         if replace_spaces: sanitized = sanitized.replace(' ', '_')
         sanitized = sanitized.lstrip(' _').rstrip('. _')
+        
+        base_upper = sanitized.split('.')[0].upper()
+        if base_upper in ('CON', 'PRN', 'AUX', 'NUL') or \
+           (len(base_upper) == 4 and base_upper[:-1] in ('COM', 'LPT') and base_upper[-1].isdigit()):
+            sanitized = f"_{sanitized}"
+            
         if len(sanitized) > max_length:
             name, ext = os.path.splitext(sanitized)
             if len(ext) > 10: sanitized = sanitized[:max_length]

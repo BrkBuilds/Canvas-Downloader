@@ -79,8 +79,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
             )
 
         # Dynamic settings summary as an expander
-        _summary_label = _build_preset_summary(settings)
-        with st.expander(_summary_label):
+        with st.expander("⚙️ See Configuration"):
             path = str(preset.get('download_path', '')) if preset.get('include_path') else None
             _s = settings.copy()
             if path:
@@ -183,21 +182,11 @@ def _save_config_dialog():
 
 @st.dialog("\u200b", width="large")
 def _presets_hub_dialog():
-    from ui_helpers import get_config_dir
+    from ui_helpers import get_config_dir, get_base64_image
     mgr = PresetManager(get_config_dir())
 
-    # Load Base64 icons — import helper from app scope
-    def _load_b64(path):
-        """Inline Base64 loader for preset icons."""
-        import base64 as _b64
-        try:
-            with open(path, "rb") as f:
-                return _b64.b64encode(f.read()).decode()
-        except Exception:
-            return ""
-
-    _b64_user = _load_b64("assets/icon_preset_user.png")
-    _b64_builtin = _load_b64("assets/icon_preset_builtin.png")
+    _b64_user = get_base64_image("assets/icon_preset_user.png")
+    _b64_builtin = get_base64_image("assets/icon_preset_builtin.png")
 
     # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
     st.html(

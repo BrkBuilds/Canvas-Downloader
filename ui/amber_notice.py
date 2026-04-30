@@ -70,4 +70,8 @@ def render_amber_notice(
         f"</div>"
     )
 
-    st.markdown(html, unsafe_allow_html=True, key=key)
+    if key:
+        with st.container(key=key):
+            st.markdown(html, unsafe_allow_html=True)
+    else:
+        st.markdown(html, unsafe_allow_html=True)
