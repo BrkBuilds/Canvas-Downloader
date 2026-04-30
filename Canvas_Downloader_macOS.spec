@@ -40,6 +40,7 @@ datas = [
     ('sync', 'sync'),
     ('ui', 'ui'),
     ('styles', 'styles'),
+    ('LICENSE', '.'),
 ]
 
 # ── FFmpeg Binary ──────────────────────────────────────────────────

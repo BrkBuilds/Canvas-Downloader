@@ -502,11 +502,12 @@
 - [x] **Phase 6.19: Chevron Render-Flicker Resolution** (2026-03-31):
     - [x] **Root Cause Diagnosis**: Identified a race condition during React DOM reconciliation where dynamic `<style>` tags injected below the target element were temporarily unmounted, causing native BaseWeb button elements to flash their default grey boxes on click.
     - [x] **DOM Injection Hoisting**: Resolved the "Ghost Layout" flash permanently by lifting the CSS constructions and `st.markdown("<style>")` calls lexically above the `st.button` instantiations in Python. This guarantees the CSS is present in the DOM before React reconciles the button.
+- [x] **Phase 6.22: Final Production Readiness Audit** (2026-04-30):
+    - [x] **Windows Edge Cases**: Enhanced `_sanitize_filename` to intercept and prefix Windows reserved filenames (`CON`, `PRN`, `AUX`, `COM1-9`, `LPT1-9`) to prevent `OSError` crashes during file creation.
+    - [x] **Legal Compliance**: Explicitly included the `LICENSE` file within the PyInstaller `datas` array for both Windows and macOS specs, guaranteeing offline bundling of the MIT license inside the standalone executables.
 
-505: 
-506: 505: 
-506: - [x] **Phase 6.21: Comprehensive Sync Audit & UX Hardening** (2026-04-30):
-507:     - [x] **Crash Mitigation**: Resolved `IndexError` in `sync_confirmation.py` by implementing defensive length checks on folder sets.
+- [x] **Phase 6.21: Comprehensive Sync Audit & UX Hardening** (2026-04-30):
+    - [x] **Crash Mitigation**: Resolved `IndexError` in `sync_confirmation.py` by implementing defensive length checks on folder sets.
 508:     - [x] **State Persistence**: Fixed `hub_cleanup()` to properly purge modal edit states, preventing "ghost" inputs when switching between groups.
 509:     - [x] **Deduplication Alignment**: Standardized sync pair deduplication to use `(course_id, local_folder)` tuples across all layers.
 510:     - [x] **XSS Defense**: Applied mandatory HTML escaping to all course/file names in history reports and rendered lists.

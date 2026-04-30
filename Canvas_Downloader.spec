@@ -32,6 +32,7 @@ datas = [
     ('ui', 'ui'),
     ('styles', 'styles'),
     ('.streamlit', '.streamlit'),
+    ('LICENSE', '.'),
 ]
 
 # Automatically locate the ffmpeg binary provided by imageio_ffmpeg

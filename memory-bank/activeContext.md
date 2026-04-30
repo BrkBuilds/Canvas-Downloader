@@ -12,6 +12,15 @@
 12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
+- **Session 2026-04-30: Final Production Readiness Audit**
+    - **Windows Edge Cases**: Enhanced `_sanitize_filename` to intercept and prefix Windows reserved filenames (`CON`, `PRN`, `AUX`, `COM1-9`, `LPT1-9`) to prevent `OSError` crashes during file creation.
+    - **Legal Compliance**: Explicitly included the `LICENSE` file within the PyInstaller `datas` array for both Windows and macOS specs, guaranteeing offline bundling of the MIT license inside the standalone executables.
+
+- **Session 2026-04-30: Post-Compilation UI & Reliability Bug Fixes**
+    - **PyInstaller Path Resolution**: Updated `ui/presets.py` to use `get_base64_image` instead of a local loader, ensuring preset icons resolve correctly against `sys._MEIPASS` when compiled.
+    - **Presets UI Standardization**: Changed the preset configuration expander summary to `⚙️ See Configuration` to match the Sync Hub styling, reducing visual noise.
+    - **Settings Styling**: Corrected the "Saved Path" text color in the configuration summary to full white (`#ffffff`) to match core settings headers.
+    - **Streamlit Key TypeError Fix**: Removed the unsupported `key` argument from `st.markdown` in `ui/amber_notice.py`, resolving crashes when adding courses to folders in the Sync Page.
 15: - **Session 2026-04-30: Sync UI Hardening — Proactive Guardrails & Amber Notices**
     - **Amber Notice Component**: Created `ui/amber_notice.py` — a reusable, styled amber/gold notification card for non-fatal warnings. Matches the "Physical Volume" aesthetic with dark amber background, gold text, and configurable icon/detail parameters.
     - **Button State Hardening (Step 1)**: Extended Analyze & Quick Sync button disabling beyond just empty pairs. Now also blocks when any sync pair has a missing/unreachable folder. Added dynamic `help=` tooltips explaining exactly why buttons are disabled in student-friendly language.
