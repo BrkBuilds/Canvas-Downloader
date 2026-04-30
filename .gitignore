@@ -6,6 +6,8 @@ __pycache__/
 # Distribution / Build
 build/
 dist/
+installer_output/
+installer_output/*.exe
 
 # Secrets
 canvas_downloader_settings.json

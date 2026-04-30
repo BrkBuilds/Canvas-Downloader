@@ -91,14 +91,14 @@ def _wait_for_server(timeout_seconds: int = 60) -> bool:
     """Block until the Streamlit health endpoint responds 200, or timeout."""
     import urllib.request
 
-    for _ in range(timeout_seconds):
+    for _ in range(timeout_seconds * 10):
         try:
             with urllib.request.urlopen(_HEALTH_ENDPOINT, timeout=1) as resp:
                 if resp.status == 200:
                     return True
         except Exception:
             pass
-        time.sleep(1)
+        time.sleep(0.1)
     return False
 
 

@@ -64,7 +64,15 @@
 63: - **API Token Redaction**: Custom `__repr__` on `CanvasManager` masks sensitive tokens as `'****'` to prevent accidental log exposure.
 64: 
 65: ## Build System
-64: - **PyInstaller**: Standalone `.exe` and macOS bundle `.app` compilation.
-65: - **Optimization**: Explicit excludes (`win11toast`, `winsound` for macOS) to reduce binary size.
-66: - **Size Estimates**: ~130MB (Windows) / ~230-270MB (macOS, includes QtWebEngine).
-67: - **macOS Entitlements**: Requires `entitlements.plist` enabling `com.apple.security.automation.apple-events`.
+66: - **Windows Distribution**:
+67:     - **PyInstaller spec**: `Canvas_Downloader.spec` — one-dir mode (mirrors macOS spec structure)
+68:     - **Installer**: `Canvas_Downloader_Setup.iss` (Inno Setup 6.7.1)
+69:     - **Installation**: Per-user default to `%LOCALAPPDATA%\Programs\Canvas Downloader\`; user can opt for machine-wide via UAC
+70: - **macOS Distribution**:
+71:     - **PyInstaller spec**: `Canvas_Downloader_macOS.spec` — one-dir + BUNDLE
+72:     - **Distribution**: `.app` bundle
+73:     - **macOS Entitlements**: Requires `entitlements.plist` enabling `com.apple.security.automation.apple-events`.
+74: - **Optimization**:
+75:     - Explicit excludes (`win11toast`, `winsound` for macOS, heavy data science libs) to reduce binary size.
+76:     - Windows `upx=False` — removed decompression overhead at startup.
+77: - **Size Estimates**: ~347MB (Windows one-dir bundle on disk)
