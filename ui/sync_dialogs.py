@@ -779,7 +779,11 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             
             # Mismatch warning: Only if not the original selection (user changed it)
             if not has_match and not is_same_as_original:
-                st.warning("⚠️ Warning: The folder name doesn't seem to match the selected course. Are you sure this is the correct folder for this course?")
+                from ui.amber_notice import render_amber_notice
+                render_amber_notice(
+                    "The folder name doesn't seem to match the selected course.",
+                    detail="Are you sure this is the correct folder for this course?",
+                )
 
             # Duplicate pair detection
             existing = st.session_state.get('sync_pairs', [])
