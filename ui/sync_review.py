@@ -1538,13 +1538,10 @@ def show_analysis_review(on_confirm_sync):
 
     if total_active_files == 0:
         # All files have been manually ignored — show amber notice, keep buttons visible
-        st.markdown(
-            "<div style='background:rgba(120,80,0,0.18);border:1px solid rgba(245,158,11,0.4);"
-            "border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:0.88rem;color:#fcd34d;'>"
-            "&#9888; <strong>All files are currently ignored.</strong> "
-            "Restore files using the <strong>Ignored Files</strong> section above to enable syncing, "
-            "or press <strong>Back</strong> to return to the sync setup.</div>",
-            unsafe_allow_html=True,
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "All files are currently ignored.",
+            detail="Restore files using the Ignored Files section above to enable syncing, or press Back to return to the sync setup.",
         )
 
     st.html("""<style>

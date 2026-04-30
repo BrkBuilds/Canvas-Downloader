@@ -861,7 +861,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         border: none !important;
                         background-color: #0b5a6e !important;
                         color: #ffffff !important;
-                        margin-top: -15px !important;
+                        margin-top: 0px !important;
                         opacity: 1 !important;
                         box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
                         transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
@@ -987,6 +987,29 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
+    }}
+
+    /* Analyze Sync Disabled — clean muted grey, no washed-out color */
+    div.st-key-btn_analyze_sync button:disabled {{
+        background-color: #3a3a3a !important;
+        color: #6b6b6b !important;
+        box-shadow: none !important;
+        border: 1px solid #4a4a4a !important;
+    }}
+    div.st-key-btn_analyze_sync button:disabled p::before {{
+        filter: grayscale(100%) opacity(0.4) !important;
+    }}
+
+    /* Quick Sync Disabled — override gradient with flat grey */
+    div.st-key-btn_quick_sync button:disabled {{
+        background: #3a3a3a !important;
+        color: #6b6b6b !important;
+        box-shadow: none !important;
+        border: 1px solid #4a4a4a !important;
+        filter: none !important;
+    }}
+    div.st-key-btn_quick_sync button:disabled p::before {{
+        filter: grayscale(100%) opacity(0.4) !important;
     }}
 
     /* ===== ADD COURSE BUTTON — Base64 Icon via ::before ===== */
@@ -1239,6 +1262,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     .st-key-sync_list_outline {
         min-height: 50vh !important;
     }
+    .st-key-sync_list_outline > div[data-testid="stVerticalBlockBorderWrapper"] {
+        padding-top: 16px !important;
+    }
 
     /* 12. Sync Pair Cards Gradient Styling */
     div[class*="st-key-sync_pair_card_"] {
@@ -1269,10 +1295,34 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # --- (5) Analyze + Quick Sync action buttons ---
 
+    # ----- State-aware guardrails for Analyze / Quick Sync buttons -----
+    _has_missing_folders = False
+    _missing_folder_names = []
     if sync_pairs:
-        invalid = [p for p in sync_pairs if not Path(p['local_folder']).exists()]
-        if invalid:
-            st.warning(f"❌ Folder not found: {invalid[0]['local_folder']}. It may have been deleted, renamed, or the drive is disconnected.")
+        for p in sync_pairs:
+            if not Path(p['local_folder']).exists():
+                _has_missing_folders = True
+                _missing_folder_names.append(short_path(p['local_folder']))
+
+    _can_sync = bool(sync_pairs) and not _has_missing_folders
+
+    # Compute student-friendly help tooltips for disabled buttons
+    if not sync_pairs:
+        _sync_help = "Add at least one course folder to start syncing."
+    elif _has_missing_folders:
+        _sync_help = f"Can't sync — a folder is missing or disconnected. Fix or remove it first."
+    else:
+        _sync_help = None
+
+    # --- Amber notice cards (rendered ABOVE the buttons) ---
+    if sync_pairs and _has_missing_folders:
+        from ui.amber_notice import render_amber_notice
+        _folder_list = ", ".join(_missing_folder_names[:3])
+        _extra = f" (+{len(_missing_folder_names) - 3} more)" if len(_missing_folder_names) > 3 else ""
+        render_amber_notice(
+            f"Folder not found: {_folder_list}{_extra}",
+            detail="The folder may have been moved, renamed, or the drive is disconnected. Edit or remove the pair to continue.",
+        )
 
     # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
     # gap="small" brings the OR closer
@@ -1325,11 +1375,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     """)
     
     with col_analyze:
-        # Added key for symmetry and potential state stability
         if st.button('Analyze, Review & Sync', type="primary",
                      key="btn_analyze_sync",
                      use_container_width=True,
-                     disabled=not bool(sync_pairs)):
+                     disabled=not _can_sync,
+                     help=_sync_help):
             # Nuclear reset of all cancel flags — stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results.
             st.session_state['cancel_requested'] = False
@@ -1354,7 +1404,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      key="btn_quick_sync",
                      type="primary",
                      use_container_width=True,
-                     disabled=not bool(sync_pairs)):
+                     disabled=not _can_sync,
+                     help=_sync_help):
             # Nuclear reset of all cancel flags — stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results
             # and causing Quick Sync to silently fall back to the Review page.
@@ -1888,8 +1939,12 @@ def render_sync_step4( main_placeholder=None):
 
     sync_pairs = st.session_state.get('sync_pairs', [])
     if not sync_pairs:
-        st.error('No folders added yet. Click "Add Course folder" to get started.')
-        if st.button('Back', key="page_nav_back"):
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "No course folders found — this can happen after a page refresh.",
+            detail="Go back and add your courses again to continue.",
+        )
+        if st.button('Back to Sync Setup', key="page_nav_back"):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
