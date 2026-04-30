@@ -12,6 +12,16 @@
 12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
+15: - **Session 2026-04-30: Sync UI Hardening — Proactive Guardrails & Amber Notices**
+    - **Amber Notice Component**: Created `ui/amber_notice.py` — a reusable, styled amber/gold notification card for non-fatal warnings. Matches the "Physical Volume" aesthetic with dark amber background, gold text, and configurable icon/detail parameters.
+    - **Button State Hardening (Step 1)**: Extended Analyze & Quick Sync button disabling beyond just empty pairs. Now also blocks when any sync pair has a missing/unreachable folder. Added dynamic `help=` tooltips explaining exactly why buttons are disabled in student-friendly language.
+    - **Disabled Gradient Button CSS**: Added explicit `:disabled` CSS overrides for both the solid blue Analyze button and the gradient Quick Sync button, replacing washed-out gradients with clean muted grey + grey icon filter.
+    - **Missing Folder Amber Notice**: Replaced the red `st.warning` for missing folders with an amber notice card listing the affected paths and guidance on how to fix it.
+    - **Step 4 Empty Pairs Guard**: Upgraded the harsh `st.error` to a friendly amber notice explaining the "no folders found" state likely happened after a page refresh.
+    - **Disk Space Warning (Confirmation)**: Added an amber notice in `sync_confirmation.py` when the download will consume >70% of remaining disk space.
+    - **Retry Exhaustion Notice (Completion)**: Added an amber notice in `sync/completion.py` guiding students to check connectivity or download manually from Canvas when all retry attempts have failed.
+    - **Global Amber Migration**: Scanned the codebase and migrated standalone hardcoded amber notices to the `render_amber_notice` component in `ui/sync_review.py` (All files ignored) and `sync/completion.py` (Quick Sync skipped files), ensuring visual consistency across all warning surfaces.
+    - **Verified**: Confirmed all modified files compile and structural CSS/embedded HTML warnings (help cards) are left untouched as intended. ✅ Sync UI Hardening Complete.
 15: - **Session 2026-04-30: Comprehensive Sync Audit & Reliability Hardening**
 16:     - **Crash Vector Mitigation**: Added index guards to `sync_confirmation.py` to prevent `IndexError` on empty folder sets.
 17:     - **State Leakage Cleanup**: Fixed `hub_cleanup()` in `hub_dialog.py` to ensure edit-state keys are properly popped when closing modals.
