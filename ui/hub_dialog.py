@@ -611,10 +611,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                          disabled=_group_on_list, help=_add_help_g):
                                 # --- Phase 3: Pre-Flight Engine ---
                                 incoming = group.get('pairs', [])
-                                existing_ids = {p.get('course_id') for p in st.session_state.get('sync_pairs', [])}
+                                existing_sigs = {
+                                    (p.get('course_id'), p.get('local_folder'))
+                                    for p in st.session_state.get('sync_pairs', [])
+                                }
 
-                                # Task 1: Silent duplicate filtering
-                                unique_pairs = [p for p in incoming if p.get('course_id') not in existing_ids]
+                                # Task 1: Silent duplicate filtering (full signature match,
+                                # consistent with persistence.add_pairs_batch dedup logic).
+                                unique_pairs = [
+                                    p for p in incoming
+                                    if (p.get('course_id'), p.get('local_folder')) not in existing_sigs
+                                ]
                                 skipped = len(incoming) - len(unique_pairs)
 
                                 if not unique_pairs:
@@ -628,13 +635,26 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     ]
 
                                     if not missing_indices:
-                                        # All folders exist — merge immediately
                                         # All folders exist — merge immediately using batch atomic append
                                         _add_pairs_batch_lazy(unique_pairs)
+
+                                        # Detect same-course-different-folder overlaps for user awareness
+                                        existing_course_folders = {
+                                            p.get('course_id'): p.get('local_folder')
+                                            for p in st.session_state.get('sync_pairs', [])
+                                        }
+                                        overlap_count = sum(
+                                            1 for p in unique_pairs
+                                            if p.get('course_id') in existing_course_folders
+                                            and existing_course_folders[p.get('course_id')] != p.get('local_folder')
+                                        )
+
                                         added = len(unique_pairs)
                                         msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
                                         if skipped:
                                             msg += f" (Skipped {skipped} duplicate{'s' if skipped != 1 else ''}.)"
+                                        if overlap_count:
+                                            msg += f" ℹ️ {overlap_count} course{'s' if overlap_count != 1 else ''} already synced to a different folder."
                                         st.session_state['pending_toast'] = msg
                                         hub_cleanup()
                                         st.rerun()
@@ -647,6 +667,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                         st.session_state['hub_rescue_skipped'] = skipped
                                         st.session_state['rescue_paths'] = {}
                                         st.rerun()
+                        # NOTE: c2/c3 are at the same indent level as the
+                        # if-block above. On the click-frame, st.rerun()
+                        # fires before these render — by design.
                         with c2:
                             st.button("\u270f\ufe0f Edit Group", key=f"hub_edit_{g_idx}",
                                       use_container_width=True,
@@ -1116,14 +1139,26 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     break
                     mgr.update_group(rescue_gid, {'pairs': updated_group_pairs})
 
-            # Merge into active sync list
             # Merge securely into active sync list
             _add_pairs_batch_lazy(final_pairs)
+
+            # Detect same-course-different-folder overlaps for user awareness
+            existing_course_folders = {
+                p.get('course_id'): p.get('local_folder')
+                for p in st.session_state.get('sync_pairs', [])
+            }
+            overlap_count = sum(
+                1 for p in final_pairs
+                if p.get('course_id') in existing_course_folders
+                and existing_course_folders[p.get('course_id')] != p.get('local_folder')
+            )
 
             added = len(final_pairs)
             msg = f"\u2705 Added {added} course{'s' if added != 1 else ''} to sync list!"
             if skipped_count:
                 msg += f" (Skipped {skipped_count} duplicate{'s' if skipped_count != 1 else ''}.)"
+            if overlap_count:
+                msg += f" ℹ️ {overlap_count} course{'s' if overlap_count != 1 else ''} already synced to a different folder."
             st.session_state['pending_toast'] = msg
             hub_cleanup()
             st.rerun()
@@ -1188,6 +1223,7 @@ def hub_cleanup():
               'hub_editing_pair_idx', 'hub_edit_temp_folder',
               'hub_edit_temp_course_id', 'hub_edit_temp_course_name',
               'hub_is_adding_new_pair',
+              'hub_edit_group_name_active',  # Prevent stale edit-name form on re-entry
               'hub_rescue_group_id', 'hub_rescue_pairs', 'hub_rescue_missing',
               'hub_rescue_skipped', 'rescue_paths']:
         st.session_state.pop(k, None)
