@@ -8,6 +8,9 @@
   <meta property="og:title" content="Canvas Downloader — Offline Your Entire Canvas Library" />
   <meta property="og:description" content="Batch-download your Canvas courses with smart sync and AI-ready conversion. Free for students." />
   <meta property="og:type" content="website" />
+  <meta property="og:image" content="icon.png" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -97,10 +100,8 @@
       font-weight: 700; font-size: 16px; text-decoration: none; color: var(--txt);
     }
     .nav-logo-icon {
-      width: 30px; height: 30px; background: var(--grad);
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
     }
-    .nav-logo-icon svg { width: 16px; height: 16px; fill: white; }
     .nav-actions { display: flex; align-items: center; gap: 10px; }
     .nav-version {
       font-size: 12px; color: var(--txt3); background: var(--surf2);
@@ -571,10 +572,8 @@
       font-weight: 700; font-size: 16px; margin-bottom: 16px;
     }
     .footer-logo-icon {
-      width: 28px; height: 28px; background: var(--grad); border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
     }
-    .footer-logo-icon svg { width: 14px; height: 14px; fill: white; }
     footer p { font-size: 14px; color: var(--txt3); margin-bottom: 20px; }
     .footer-links { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
     .footer-links a { font-size: 13px; color: var(--txt3); text-decoration: none; transition: color 0.15s; }
@@ -605,7 +604,7 @@
     <div class="nav-inner">
       <a href="#" class="nav-logo">
         <div class="nav-logo-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <img src="icon.png" alt="Canvas Downloader" width="30" height="30" style="border-radius:8px;display:block;" />
         </div>
         Canvas Downloader
       </a>
@@ -642,7 +641,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
           Download for Mac
         </a>
-        <a href="#download-win" class="btn-dl btn-dl-win">
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe" class="btn-dl btn-dl-win">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
           Download for Windows
         </a>
@@ -1126,12 +1125,15 @@
         </div>
         <div class="platform-body">
           <div class="dl-btn-wrap">
-            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas.Downloader.exe"
+            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
                class="btn-download btn-dl-primary">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download for Windows (.exe)
+              Download Windows Installer
             </a>
           </div>
+          <p style="font-size:12px;color:var(--txt3);margin:-16px 0 18px;">
+            Installer wizard &mdash; creates Start Menu &amp; Desktop shortcuts. No Python needed.
+          </p>
           <div class="security-block">
             <div class="security-block-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1140,28 +1142,28 @@
             <div class="security-steps">
               <div class="security-step">
                 <div class="sec-num">1</div>
-                <p>Double-click the downloaded <strong>.exe</strong> file.</p>
+                <p>Double-click <strong>Canvas_Downloader_Setup_2.0.0.exe</strong> to launch the installer.</p>
               </div>
               <div class="security-step">
                 <div class="sec-num">2</div>
-                <p>Windows shows <strong>"Windows protected your PC."</strong> This is normal for new indie apps.</p>
+                <p>Windows shows <strong>"Windows protected your PC."</strong> Click <strong>More info</strong>.</p>
               </div>
               <div class="security-step">
                 <div class="sec-num">3</div>
-                <p>Click <strong>More info</strong> (the small link below the warning text).</p>
+                <p>Click <strong>Run anyway</strong>. The installer wizard opens.</p>
               </div>
               <div class="security-step">
                 <div class="sec-num">4</div>
-                <p>A <strong>Run anyway</strong> button appears. Click it.</p>
+                <p>Click through the wizard. By default it installs to <span class="kbd">Program Files</span> and creates Start Menu + Desktop shortcuts — you can uncheck either.</p>
               </div>
               <div class="security-step">
                 <div class="sec-num">5</div>
-                <p>The app installs and is ready to use. <strong>Done!</strong></p>
+                <p>Click <strong>Install</strong>, then tick <strong>"Launch Canvas Downloader"</strong> on the final page. Done!</p>
               </div>
             </div>
             <div class="security-why">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Microsoft SmartScreen flags apps that don't have a paid code-signing certificate. The source code is open on GitHub — you can review exactly what the app does before running it.
+              Microsoft SmartScreen flags apps without a paid code-signing certificate. The source code is fully public on GitHub — you can review exactly what the installer does before running it. Uninstall anytime via Settings &rarr; Apps.
             </div>
           </div>
         </div>
@@ -1277,7 +1279,7 @@
   <div class="container">
     <div class="footer-logo">
       <div class="footer-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <img src="icon.png" alt="Canvas Downloader" width="28" height="28" style="display:block;" />
       </div>
       Canvas Downloader
     </div>
