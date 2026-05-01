@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Downloader — Offline Your Entire Canvas Library</title>
+  <meta name="description" content="Batch-download every lecture, assignment, and slide from all your Canvas courses. Smart sync, AI-ready file conversion, and total offline access. Free forever." />
+  <meta property="og:title" content="Canvas Downloader — Offline Your Entire Canvas Library" />
+  <meta property="og:description" content="Batch-download your Canvas courses with smart sync and AI-ready conversion. Free for students." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #08080e;
+      --surf:     #0f0f1a;
+      --surf2:    #13131f;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --accent:   #6366f1;
+      --accent-l: #818cf8;
+      --grad:     linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --grad-h:   linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+      --txt:      #f1f5f9;
+      --txt2:     #94a3b8;
+      --txt3:     #475569;
+      --green:    #34d399;
+      --orange:   #fb923c;
+      --cyan:     #22d3ee;
+      --radius:   14px;
+      --radius-l: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== UTILITY ===== */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+      color: var(--accent-l); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 100px;
+    }
+    .tag svg { width: 12px; height: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 24px; border-radius: var(--radius); font-size: 15px;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      border: none; transition: all 0.2s ease; white-space: nowrap;
+    }
+    .btn-primary { background: var(--grad); color: #fff; }
+    .btn-primary:hover { background: var(--grad-h); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(99,102,241,0.35); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border2);
+      color: var(--txt);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+    .section-head {
+      text-align: center; margin-bottom: 64px;
+    }
+    .section-head h2 {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+      letter-spacing: -0.03em; line-height: 1.15; margin: 12px 0 16px;
+    }
+    .section-head p { font-size: 17px; color: var(--txt2); max-width: 540px; margin: 0 auto; }
+
+    /* fade-in animation */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ===== NAV ===== */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,8,14,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 16px; text-decoration: none; color: var(--txt);
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px; background: var(--grad);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-icon svg { width: 16px; height: 16px; fill: white; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .nav-version {
+      font-size: 12px; color: var(--txt3); background: var(--surf2);
+      border: 1px solid var(--border); padding: 3px 10px; border-radius: 100px;
+    }
+    @media(max-width:600px) { .nav-version { display:none; } }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 100px 0 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { text-align: center; position: relative; z-index: 1; }
+    .hero-content h1 {
+      font-size: clamp(38px, 6vw, 72px); font-weight: 900;
+      letter-spacing: -0.04em; line-height: 1.05;
+      margin: 16px 0 22px;
+    }
+    .hero-content h1 .grad-text {
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: clamp(16px, 2vw, 19px); color: var(--txt2);
+      max-width: 580px; margin: 0 auto 40px; line-height: 1.65;
+    }
+    .hero-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn-dl {
+      padding: 15px 28px; font-size: 16px; border-radius: var(--radius);
+      display: inline-flex; align-items: center; gap: 10px;
+      font-weight: 700; cursor: pointer; text-decoration: none; border: none;
+      transition: all 0.2s ease; white-space: nowrap;
+    }
+    .btn-dl-mac {
+      background: #1c1c1e; border: 1px solid rgba(255,255,255,0.15);
+      color: var(--txt);
+    }
+    .btn-dl-mac:hover { background: #2a2a2e; transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+    .btn-dl-win {
+      background: var(--grad); color: #fff;
+    }
+    .btn-dl-win:hover { background: var(--grad-h); transform: translateY(-2px); box-shadow: 0 10px 40px rgba(99,102,241,0.4); }
+    .hero-note { font-size: 13px; color: var(--txt3); margin-top: 8px; }
+    .hero-note a { color: var(--txt2); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* app window mockup */
+    .mockup-wrap {
+      position: relative; margin: 72px auto 0; max-width: 860px;
+    }
+    .mockup-glow {
+      position: absolute; inset: -40px;
+      background: radial-gradient(ellipse at 50% 60%, rgba(99,102,241,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .app-window {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative; z-index: 1;
+    }
+    .win-titlebar {
+      background: #0c0c17; padding: 14px 18px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .win-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .win-dot-r { background: #ff5f57; }
+    .win-dot-y { background: #febc2e; }
+    .win-dot-g { background: #28c840; }
+    .win-title {
+      flex: 1; text-align: center; font-size: 13px; color: var(--txt3); font-weight: 500;
+    }
+    .win-body {
+      display: grid; grid-template-columns: 240px 1fr; min-height: 380px;
+    }
+    .win-sidebar {
+      background: #0a0a15; border-right: 1px solid var(--border);
+      padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .sidebar-section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--txt3); text-transform: uppercase; padding: 8px 8px 4px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    }
+    .sidebar-item.active { background: rgba(99,102,241,0.15); }
+    .sidebar-item-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sidebar-item-text { font-size: 13px; color: var(--txt2); }
+    .sidebar-item.active .sidebar-item-text { color: var(--accent-l); }
+    .sidebar-check {
+      width: 14px; height: 14px; border-radius: 3px;
+      border: 2px solid var(--accent); background: var(--accent);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .sidebar-check svg { width: 9px; height: 9px; stroke: white; stroke-width: 2.5; fill: none; }
+    .sidebar-uncheck {
+      width: 14px; height: 14px; border-radius: 3px;
+      border: 2px solid var(--txt3); flex-shrink: 0;
+    }
+    .win-main { padding: 20px 24px; }
+    .step-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+      color: var(--accent-l); font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 100px; margin-bottom: 12px;
+    }
+    .mockup-heading { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .mockup-sub { font-size: 12px; color: var(--txt3); margin-bottom: 16px; }
+    .mock-card {
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .mock-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .mock-card-title { font-size: 13px; font-weight: 600; }
+    .mock-card-badge {
+      font-size: 10px; font-weight: 600; color: var(--green);
+      background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);
+      padding: 2px 8px; border-radius: 100px;
+    }
+    .mock-toggle-row {
+      display: flex; gap: 6px;
+    }
+    .mock-toggle {
+      flex: 1; padding: 6px 0; border-radius: 6px; font-size: 11px; font-weight: 600;
+      text-align: center; border: 1px solid var(--border);
+      color: var(--txt3);
+    }
+    .mock-toggle.on {
+      background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3);
+      color: var(--accent-l);
+    }
+    .mock-progress-bar {
+      height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; margin: 8px 0;
+    }
+    .mock-progress-fill {
+      height: 100%; width: 68%; border-radius: 100px; background: var(--grad);
+    }
+    .mock-stat-row { display: flex; gap: 16px; margin-top: 8px; }
+    .mock-stat { font-size: 11px; }
+    .mock-stat span { color: var(--accent-l); font-weight: 600; }
+    .mock-dl-btn {
+      width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px;
+      background: var(--grad); color: white; font-size: 13px; font-weight: 700;
+      text-align: center; border: none; cursor: pointer;
+    }
+    @media(max-width:680px) {
+      .win-body { grid-template-columns: 1fr; }
+      .win-sidebar { display: none; }
+    }
+
+    /* ===== TRUST BAR ===== */
+    .trust-bar {
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    .trust-items {
+      display: flex; align-items: center; justify-content: center;
+      gap: 40px; flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: var(--txt2); font-weight: 500;
+    }
+    .trust-icon { color: var(--green); display: flex; }
+    .trust-icon svg { width: 18px; height: 18px; }
+
+    /* ===== FEATURES ===== */
+    .features { padding: 100px 0; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media(max-width:800px) { .features-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:520px) { .features-grid { grid-template-columns: 1fr; } }
+    .feat-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius-l); padding: 28px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+    .feat-card:hover {
+      border-color: rgba(99,102,241,0.3); transform: translateY(-3px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .feat-icon svg { width: 22px; height: 22px; }
+    .feat-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feat-card p { font-size: 14px; color: var(--txt2); line-height: 1.6; }
+    .feat-card .feat-list {
+      margin-top: 12px; list-style: none; display: flex; flex-direction: column; gap: 5px;
+    }
+    .feat-list li { font-size: 13px; color: var(--txt2); display: flex; align-items: flex-start; gap: 7px; }
+    .feat-list li::before { content: "✓"; color: var(--green); font-size: 12px; font-weight: 700; margin-top: 2px; flex-shrink: 0; }
+
+    /* ===== HOW IT WORKS ===== */
+    .how { padding: 100px 0; }
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 28px; position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute; top: 28px; left: calc(16.67% + 14px); right: calc(16.67% + 14px);
+      height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--accent), transparent);
+      opacity: 0.3;
+    }
+    @media(max-width:680px) { .steps { grid-template-columns: 1fr; } .steps::before { display:none; } }
+    .step-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius-l); padding: 32px 28px; text-align: center;
+      position: relative;
+    }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--surf2);
+      border: 2px solid var(--accent); color: var(--accent-l);
+      font-size: 18px; font-weight: 800; display: flex; align-items: center;
+      justify-content: center; margin: 0 auto 20px;
+    }
+    .step-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .step-card p { font-size: 14px; color: var(--txt2); line-height: 1.6; }
+    .step-card .step-detail {
+      font-size: 12px; color: var(--txt3); margin-top: 10px; font-style: italic;
+    }
+
+    /* ===== AI SECTION ===== */
+    .ai-section {
+      padding: 100px 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.04) 50%, transparent 100%);
+    }
+    .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    @media(max-width:780px) { .ai-grid { grid-template-columns: 1fr; gap: 40px; } }
+    .ai-content h2 {
+      font-size: clamp(26px, 3.5vw, 38px); font-weight: 800;
+      letter-spacing: -0.03em; line-height: 1.2; margin: 12px 0 16px;
+    }
+    .ai-content p { font-size: 16px; color: var(--txt2); line-height: 1.7; margin-bottom: 24px; }
+    .ai-conversions { display: flex; flex-direction: column; gap: 10px; }
+    .conversion-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+    }
+    .conv-from {
+      font-size: 13px; font-weight: 600; color: var(--txt2);
+      background: var(--surf2); border: 1px solid var(--border2);
+      padding: 3px 8px; border-radius: 5px; font-family: monospace;
+    }
+    .conv-arrow { color: var(--txt3); font-size: 14px; }
+    .conv-to {
+      font-size: 13px; font-weight: 600; color: var(--green);
+      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.15);
+      padding: 3px 8px; border-radius: 5px; font-family: monospace;
+    }
+    .conv-label { font-size: 12px; color: var(--txt3); margin-left: auto; }
+    .ai-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .ai-tool-badge {
+      font-size: 12px; font-weight: 500; color: var(--txt2);
+      background: var(--surf); border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 100px;
+    }
+    .ai-visual {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--radius-l); padding: 28px; position: relative; overflow: hidden;
+    }
+    .ai-visual-glow {
+      position: absolute; top: -40px; right: -40px; width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    }
+    .ai-visual-title { font-size: 13px; font-weight: 600; color: var(--txt2); margin-bottom: 16px; }
+    .file-tree { font-size: 13px; font-family: monospace; line-height: 2; }
+    .file-tree .dir { color: var(--accent-l); font-weight: 600; }
+    .file-tree .file-old { color: var(--txt3); text-decoration: line-through; }
+    .file-tree .file-new { color: var(--green); }
+    .file-tree .file-keep { color: var(--txt2); }
+    .file-tree .indent { padding-left: 20px; }
+    .file-tree .badge-ai {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      background: rgba(34,211,238,0.1); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2);
+      padding: 1px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ===== SYNC SECTION ===== */
+    .sync-section { padding: 100px 0; }
+    .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    @media(max-width:780px) { .sync-grid { grid-template-columns: 1fr; gap: 40px; } }
+    .sync-features { display: flex; flex-direction: column; gap: 20px; }
+    .sync-feat {
+      display: flex; gap: 16px;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+    }
+    .sync-feat-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.15);
+    }
+    .sync-feat-icon svg { width: 20px; height: 20px; }
+    .sync-feat h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .sync-feat p { font-size: 13px; color: var(--txt2); line-height: 1.55; }
+    .sync-panel {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--radius-l); overflow: hidden;
+    }
+    .sync-panel-header {
+      background: #0a0a15; padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sync-panel-title { font-size: 13px; font-weight: 600; }
+    .sync-panel-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .sync-file-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surf2);
+    }
+    .sync-file-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-new { background: var(--green); }
+    .dot-update { background: var(--cyan); }
+    .dot-current { background: var(--txt3); }
+    .dot-warn { background: var(--orange); }
+    .sync-file-name { font-size: 13px; flex: 1; }
+    .sync-file-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
+    .status-new { background: rgba(52,211,153,0.1); color: var(--green); }
+    .status-update { background: rgba(34,211,238,0.1); color: var(--cyan); }
+    .status-current { background: rgba(71,85,105,0.3); color: var(--txt3); }
+    .status-warn { background: rgba(251,146,60,0.1); color: var(--orange); }
+
+    /* ===== DOWNLOAD SECTION ===== */
+    .download-section { padding: 100px 0; }
+    .platform-cards {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 24px; margin-bottom: 60px;
+    }
+    @media(max-width:720px) { .platform-cards { grid-template-columns: 1fr; } }
+    .platform-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius-l); overflow: hidden;
+    }
+    .platform-card.featured {
+      border-color: rgba(99,102,241,0.4);
+      box-shadow: 0 0 40px rgba(99,102,241,0.1);
+    }
+    .platform-header {
+      padding: 28px 28px 20px; display: flex; align-items: center; gap: 16px;
+    }
+    .platform-logo {
+      width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
+    }
+    .platform-logo svg { width: 48px; height: 48px; }
+    .platform-name { font-size: 20px; font-weight: 800; }
+    .platform-req { font-size: 13px; color: var(--txt3); margin-top: 2px; }
+    .platform-body { padding: 0 28px 28px; }
+    .dl-btn-wrap { margin-bottom: 24px; }
+    .btn-download {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 15px; border-radius: var(--radius); font-size: 16px; font-weight: 700;
+      cursor: pointer; text-decoration: none; border: none; transition: all 0.2s;
+    }
+    .btn-dl-primary { background: var(--grad); color: white; }
+    .btn-dl-primary:hover { background: var(--grad-h); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(99,102,241,0.4); }
+    .btn-dl-secondary {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border2); color: var(--txt);
+    }
+    .btn-dl-secondary:hover { background: rgba(255,255,255,0.09); }
+
+    /* Security instructions */
+    .security-block {
+      background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.2);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 0;
+    }
+    .security-block-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 700; color: var(--orange); margin-bottom: 14px;
+    }
+    .security-block-title svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .security-steps { display: flex; flex-direction: column; gap: 10px; }
+    .security-step { display: flex; align-items: flex-start; gap: 10px; }
+    .sec-num {
+      width: 22px; height: 22px; min-width: 22px; border-radius: 50%;
+      background: rgba(251,146,60,0.2); border: 1px solid rgba(251,146,60,0.3);
+      color: var(--orange); font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .security-step p { font-size: 13px; color: var(--txt2); line-height: 1.55; }
+    .security-step strong { color: var(--txt); }
+    .security-step .kbd {
+      display: inline-block; background: var(--surf2); border: 1px solid var(--border2);
+      border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: monospace;
+      color: var(--txt);
+    }
+    .security-why {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(251,146,60,0.15);
+      font-size: 12px; color: var(--txt3); line-height: 1.6;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .security-why svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; color: var(--txt3); }
+
+    /* ===== CANVAS TOKEN SECTION ===== */
+    .token-section { padding: 0 0 100px; }
+    .token-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius-l); padding: 40px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;
+    }
+    @media(max-width:720px) { .token-card { grid-template-columns: 1fr; } }
+    .token-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    .token-card > div > p { font-size: 15px; color: var(--txt2); line-height: 1.7; margin-bottom: 20px; }
+    .token-steps { display: flex; flex-direction: column; gap: 12px; }
+    .token-step { display: flex; gap: 12px; align-items: flex-start; }
+    .token-num {
+      width: 26px; height: 26px; min-width: 26px; border-radius: 50%;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
+      color: var(--accent-l); font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .token-step p { font-size: 14px; color: var(--txt2); line-height: 1.55; }
+    .token-step strong { color: var(--txt); }
+    .token-url {
+      display: inline-block; font-family: monospace; font-size: 12px;
+      background: var(--surf2); border: 1px solid var(--border2);
+      padding: 2px 8px; border-radius: 5px; color: var(--txt2); word-break: break-all;
+    }
+    .token-note {
+      background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.15);
+      border-radius: 10px; padding: 16px; font-size: 13px; color: var(--txt2); line-height: 1.6;
+      margin-top: 8px;
+    }
+    .token-note strong { color: var(--green); }
+
+    /* ===== FAQ ===== */
+    .faq-section { padding: 0 0 100px; }
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:720px) { .faq-grid { grid-template-columns: 1fr; } }
+    .faq-item {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .faq-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--txt); }
+    .faq-item p { font-size: 14px; color: var(--txt2); line-height: 1.65; }
+    .faq-item a { color: var(--accent-l); text-decoration: none; }
+    .faq-item a:hover { text-decoration: underline; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0; text-align: center;
+    }
+    .footer-logo {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-weight: 700; font-size: 16px; margin-bottom: 16px;
+    }
+    .footer-logo-icon {
+      width: 28px; height: 28px; background: var(--grad); border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .footer-logo-icon svg { width: 14px; height: 14px; fill: white; }
+    footer p { font-size: 14px; color: var(--txt3); margin-bottom: 20px; }
+    .footer-links { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--txt3); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--txt2); }
+    .footer-version { margin-top: 24px; font-size: 12px; color: var(--txt3); opacity: 0.5; }
+
+    /* ===== SCROLL TO TOP ===== */
+    #scroll-top {
+      position: fixed; bottom: 24px; right: 24px; z-index: 99;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--surf); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      color: var(--txt2);
+    }
+    #scroll-top.show { opacity: 1; pointer-events: all; }
+    #scroll-top:hover { background: var(--surf2); color: var(--txt); }
+
+    /* divider */
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+  </style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        Canvas Downloader
+      </a>
+      <div class="nav-actions">
+        <span class="nav-version">v2.0.0</span>
+        <a href="#download" class="btn btn-primary" style="padding:9px 18px;font-size:14px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Free
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="tag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Free for students · Mac &amp; Windows
+      </div>
+      <h1>
+        Your Canvas library.<br/>
+        <span class="grad-text">Downloaded. Organized.<br/>AI-ready.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Batch-download every lecture, assignment, and slide from all your Canvas courses —
+        with smart sync, one-click AI conversion, and total offline access.
+      </p>
+      <div class="hero-ctas">
+        <a href="#download-mac" class="btn-dl btn-dl-mac">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          Download for Mac
+        </a>
+        <a href="#download-win" class="btn-dl btn-dl-win">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+          Download for Windows
+        </a>
+      </div>
+      <p class="hero-note">
+        Free forever &mdash; no account needed &mdash; nothing leaves your computer &mdash;
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">open source on GitHub</a>
+      </p>
+    </div>
+
+    <!-- App window mockup -->
+    <div class="mockup-wrap reveal">
+      <div class="mockup-glow"></div>
+      <div class="app-window">
+        <div class="win-titlebar">
+          <div class="win-dot win-dot-r"></div>
+          <div class="win-dot win-dot-y"></div>
+          <div class="win-dot win-dot-g"></div>
+          <div class="win-title">Canvas Downloader</div>
+        </div>
+        <div class="win-body">
+          <div class="win-sidebar">
+            <div class="sidebar-section-label">Step 1 &mdash; Courses</div>
+            <div class="sidebar-item active">
+              <div class="sidebar-check"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></div>
+              <span class="sidebar-item-text">CHEM 201</span>
+            </div>
+            <div class="sidebar-item active">
+              <div class="sidebar-check"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></div>
+              <span class="sidebar-item-text">ECON 310</span>
+            </div>
+            <div class="sidebar-item active">
+              <div class="sidebar-check"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></div>
+              <span class="sidebar-item-text">MKTG 415</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-uncheck"></div>
+              <span class="sidebar-item-text">HIST 120</span>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-uncheck"></div>
+              <span class="sidebar-item-text">PSYC 330</span>
+            </div>
+            <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
+              <div class="sidebar-section-label">Settings</div>
+              <div class="sidebar-item">
+                <div class="sidebar-item-dot" style="background:#6366f1"></div>
+                <span class="sidebar-item-text">AI-Ready Preset</span>
+              </div>
+            </div>
+          </div>
+          <div class="win-main">
+            <div class="step-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Downloading — 3 courses
+            </div>
+            <div class="mockup-heading">Progress Dashboard</div>
+            <div class="mockup-sub">Downloading CHEM 201, ECON 310, MKTG 415&hellip;</div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title">CHEM 201 — Organic Chemistry</span>
+                <span class="mock-card-badge">Done</span>
+              </div>
+              <div class="mock-progress-bar"><div class="mock-progress-fill" style="width:100%"></div></div>
+              <div class="mock-stat-row">
+                <div class="mock-stat"><span>84</span> files</div>
+                <div class="mock-stat"><span>247 MB</span></div>
+                <div class="mock-stat"><span>3</span> PDFs converted</div>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-header">
+                <span class="mock-card-title">ECON 310 — Microeconomics</span>
+                <span class="mock-card-badge" style="color:var(--cyan);background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.2);">In progress</span>
+              </div>
+              <div class="mock-progress-bar"><div class="mock-progress-fill" style="width:68%"></div></div>
+              <div class="mock-stat-row">
+                <div class="mock-stat"><span>38</span> / 56 files</div>
+                <div class="mock-stat"><span>128 MB</span></div>
+                <div class="mock-stat" style="color:var(--txt3)">~45s remaining</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST BAR ============ -->
+<div class="trust-bar">
+  <div class="container">
+    <div class="trust-items">
+      <div class="trust-item">
+        <span class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        100% local — zero data leaves your computer
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        No account or sign-up
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        </span>
+        Open source on GitHub
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </span>
+        Completely free, forever
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FEATURES ============ -->
+<section class="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="tag">Core Features</div>
+      <h2>Everything your professors uploaded.<br/>Finally yours.</h2>
+      <p>One app to pull down your entire Canvas library — organized the way you study.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3>Batch Download</h3>
+        <p>Select every course in your semester and download them all in one go. Coffee optional.</p>
+        <ul class="feat-list">
+          <li>Select any combination of courses at once</li>
+          <li>Live progress dashboard per course</li>
+          <li>Automatic folder creation and naming</li>
+          <li>Re-download merges safely with existing files</li>
+        </ul>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        </div>
+        <h3>Smart Organization</h3>
+        <p>Mirror Canvas's module structure or keep everything in one flat folder. Your call.</p>
+        <ul class="feat-list">
+          <li>Module subfolders match Canvas layout</li>
+          <li>Or flat download — all files together</li>
+          <li>Canvas content in separate or matching folders</li>
+          <li>Sanitized filenames across platforms</li>
+        </ul>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <h3>Canvas Content</h3>
+        <p>Download web-only Canvas content as files — things your professor never attached.</p>
+        <ul class="feat-list">
+          <li>Assignments, syllabi, announcements</li>
+          <li>Discussions, quizzes, rubrics</li>
+          <li>Your grades and professor feedback</li>
+          <li>Saved as clean readable files</li>
+        </ul>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        </div>
+        <h3>Smart Sync</h3>
+        <p>Link folders to courses. Sync only what's new. Never re-download everything again.</p>
+        <ul class="feat-list">
+          <li>Tracks what's already downloaded</li>
+          <li>Detects files you've edited — never overwrites</li>
+          <li>One-click sync for all courses</li>
+          <li>Review changes before applying them</li>
+        </ul>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>AI Conversion</h3>
+        <p>Convert PowerPoint, Word, and Excel files to AI-friendly formats in one click.</p>
+        <ul class="feat-list">
+          <li>PPTX/PPT → PDF for AI upload</li>
+          <li>Video → MP3 for transcription</li>
+          <li>Extract ZIP archives automatically</li>
+          <li>HTML pages → clean plain text</li>
+        </ul>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>Presets &amp; Groups</h3>
+        <p>Save your perfect settings as a preset. Save course bundles for each semester.</p>
+        <ul class="feat-list">
+          <li>Named download presets (e.g. "AI-Ready")</li>
+          <li>Save semester course groups</li>
+          <li>Reload any setup in seconds</li>
+          <li>Never configure the same thing twice</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<hr class="section-divider" />
+<section class="how">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="tag">Setup</div>
+      <h2>Up and running in 3 steps</h2>
+      <p>No installation headaches. No account creation. Just paste your Canvas token and go.</p>
+    </div>
+    <div class="steps">
+      <div class="step-card reveal">
+        <div class="step-num">1</div>
+        <h3>Get your Canvas API token</h3>
+        <p>Log into Canvas → Account → Settings → New Access Token. Takes about 30 seconds.</p>
+        <p class="step-detail">Your token stays on your device. It never reaches any server.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">2</div>
+        <h3>Select your courses</h3>
+        <p>The app loads your full course list. Tick the ones you want — current semester, all time, or just favorites.</p>
+        <p class="step-detail">Save a group so next semester takes 5 seconds.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">3</div>
+        <h3>Download &amp; done</h3>
+        <p>Pick a folder, choose your settings, hit Download. Watch the progress dashboard and walk away.</p>
+        <p class="step-detail">Use Sync Mode next time to grab only new files.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AI SECTION ============ -->
+<section class="ai-section">
+  <div class="container">
+    <div class="ai-grid">
+      <div class="ai-content reveal">
+        <div class="tag">AI Integration</div>
+        <h2>Your notes. Into ChatGPT.<br/>In one click.</h2>
+        <p>Most AI study tools accept PDFs and plain text — not PowerPoint, not zip files, not videos. Canvas Downloader converts everything automatically so you can drag-and-drop straight into your tool of choice.</p>
+        <div class="ai-conversions">
+          <div class="conversion-row">
+            <span class="conv-from">.pptx</span>
+            <span class="conv-arrow">→</span>
+            <span class="conv-to">.pdf</span>
+            <span class="conv-label">Upload to any AI</span>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-from">.mp4 / .mov</span>
+            <span class="conv-arrow">→</span>
+            <span class="conv-to">.mp3</span>
+            <span class="conv-label">Transcribe lectures</span>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-from">.zip / .tar.gz</span>
+            <span class="conv-arrow">→</span>
+            <span class="conv-to">extracted</span>
+            <span class="conv-label">Auto-unpacked</span>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-from">.xlsx</span>
+            <span class="conv-arrow">→</span>
+            <span class="conv-to">.pdf + .csv</span>
+            <span class="conv-label">View + AI data</span>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-from">Canvas pages</span>
+            <span class="conv-arrow">→</span>
+            <span class="conv-to">.txt</span>
+            <span class="conv-label">Clean plain text</span>
+          </div>
+        </div>
+        <div class="ai-tools">
+          <span class="ai-tool-badge">ChatGPT</span>
+          <span class="ai-tool-badge">Claude</span>
+          <span class="ai-tool-badge">NotebookLM</span>
+          <span class="ai-tool-badge">Perplexity</span>
+          <span class="ai-tool-badge">Gemini</span>
+          <span class="ai-tool-badge">Any tool you use</span>
+        </div>
+      </div>
+      <div class="ai-visual reveal">
+        <div class="ai-visual-glow"></div>
+        <div class="ai-visual-title">ECON 310 / Week 4 — after conversion</div>
+        <div class="file-tree">
+          <div class="dir">📁 Week 4 — Supply &amp; Demand/</div>
+          <div class="indent">
+            <div class="file-old">📊 lecture_slides.pptx</div>
+            <div class="file-new">📄 lecture_slides.pdf <span class="badge-ai">AI READY</span></div>
+          </div>
+          <div class="indent">
+            <div class="file-old">🎥 lecture_recording.mp4</div>
+            <div class="file-new">🎵 lecture_recording.mp3 <span class="badge-ai">AI READY</span></div>
+          </div>
+          <div class="indent">
+            <div class="file-keep">📄 reading_week4.pdf</div>
+          </div>
+          <div class="indent">
+            <div class="file-old">🗜️ datasets.zip</div>
+            <div class="file-new">📁 datasets/ (extracted)</div>
+          </div>
+          <div class="indent">
+            <div class="file-old">📊 data.xlsx</div>
+            <div class="file-new">📄 data.pdf + 📝 data.csv <span class="badge-ai">AI READY</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SYNC SECTION ============ -->
+<hr class="section-divider" />
+<section class="sync-section">
+  <div class="container">
+    <div class="sync-grid">
+      <div>
+        <div class="tag reveal">Sync Mode</div>
+        <h2 class="reveal" style="font-size:clamp(26px,3.5vw,38px);font-weight:800;letter-spacing:-0.03em;line-height:1.2;margin:12px 0 16px;">Set it once.<br/>Stay current all semester.</h2>
+        <p class="reveal" style="font-size:16px;color:var(--txt2);line-height:1.7;margin-bottom:28px;">Pair your local folders to Canvas courses once. After that, one click syncs only what's new — new lectures, updated rubrics, late announcements. Your edits and deletions are always respected.</p>
+        <div class="sync-features">
+          <div class="sync-feat reveal">
+            <div class="sync-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            </div>
+            <div>
+              <h4>Only downloads what's new</h4>
+              <p>Tracks every file via a hidden database. Sync takes seconds, not minutes.</p>
+            </div>
+          </div>
+          <div class="sync-feat reveal">
+            <div class="sync-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div>
+              <h4>Your edits are never overwritten</h4>
+              <p>Annotated a slide? The new version is saved alongside yours as <em>filename_NewVersion</em>. Both kept.</p>
+            </div>
+          </div>
+          <div class="sync-feat reveal">
+            <div class="sync-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div>
+              <h4>Review before syncing</h4>
+              <p>See exactly what changed — new files, updates, deletions — and approve selectively.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sync-panel reveal">
+        <div class="sync-panel-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          <span class="sync-panel-title">Sync Analysis — CHEM 201</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--txt3)">12 changes</span>
+        </div>
+        <div class="sync-panel-body">
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-new"></div>
+            <span class="sync-file-name" style="font-size:13px">lecture_week8.pdf</span>
+            <span class="sync-file-status status-new">New</span>
+          </div>
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-new"></div>
+            <span class="sync-file-name" style="font-size:13px">assignment3_rubric.pdf</span>
+            <span class="sync-file-status status-new">New</span>
+          </div>
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-update"></div>
+            <span class="sync-file-name" style="font-size:13px">syllabus.pdf</span>
+            <span class="sync-file-status status-update">Updated</span>
+          </div>
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-warn"></div>
+            <span class="sync-file-name" style="font-size:13px">lecture_week5.pdf <span style="font-size:11px;color:var(--txt3)">(you edited)</span></span>
+            <span class="sync-file-status status-warn">Conflict</span>
+          </div>
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-current"></div>
+            <span class="sync-file-name" style="font-size:13px">lab_protocol.docx</span>
+            <span class="sync-file-status status-current">Up to date</span>
+          </div>
+          <div class="sync-file-row">
+            <div class="sync-file-dot dot-current"></div>
+            <span class="sync-file-name" style="font-size:13px">reading_ch3.pdf</span>
+            <span class="sync-file-status status-current">Up to date</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOWNLOAD SECTION ============ -->
+<hr class="section-divider" />
+<section class="download-section" id="download">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="tag">Download</div>
+      <h2>Get Canvas Downloader</h2>
+      <p>One-time download. No installer shenanigans. Just an app that runs on your laptop.</p>
+    </div>
+
+    <div class="platform-cards">
+      <!-- MAC -->
+      <div class="platform-card reveal" id="download-mac">
+        <div class="platform-header">
+          <div class="platform-logo">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          </div>
+          <div>
+            <div class="platform-name">macOS</div>
+            <div class="platform-req">macOS 11 Big Sur or later</div>
+          </div>
+        </div>
+        <div class="platform-body">
+          <div class="dl-btn-wrap">
+            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas.Downloader.dmg"
+               class="btn-download btn-dl-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download for Mac (.dmg)
+            </a>
+          </div>
+          <div class="security-block">
+            <div class="security-block-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Gatekeeper warning — expected &amp; easy to fix
+            </div>
+            <div class="security-steps">
+              <div class="security-step">
+                <div class="sec-num">1</div>
+                <p>Open the <strong>.dmg</strong> and drag Canvas Downloader to your <strong>Applications</strong> folder.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">2</div>
+                <p>Double-click the app. macOS will say <strong>"Apple cannot verify this app."</strong> Click <strong>Done</strong> for now.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">3</div>
+                <p>Open <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong>. Scroll to the Security section.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">4</div>
+                <p>You'll see <em>"Canvas Downloader was blocked."</em> Click <strong>Open Anyway</strong>.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">5</div>
+                <p>Enter your Mac password when asked. The app launches &mdash; <strong>this only happens once.</strong></p>
+              </div>
+            </div>
+            <div class="security-why">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Apple charges $99/year for a developer certificate. This is an indie student project — the warning is about the certificate, not the app. The source code is fully public on GitHub if you want to verify it yourself.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WINDOWS -->
+      <div class="platform-card featured reveal" id="download-win">
+        <div class="platform-header">
+          <div class="platform-logo">
+            <svg viewBox="0 0 24 24" fill="var(--accent-l)"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+          </div>
+          <div>
+            <div class="platform-name">Windows</div>
+            <div class="platform-req">Windows 10 or later (64-bit)</div>
+          </div>
+        </div>
+        <div class="platform-body">
+          <div class="dl-btn-wrap">
+            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas.Downloader.exe"
+               class="btn-download btn-dl-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download for Windows (.exe)
+            </a>
+          </div>
+          <div class="security-block">
+            <div class="security-block-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              SmartScreen warning — expected &amp; easy to fix
+            </div>
+            <div class="security-steps">
+              <div class="security-step">
+                <div class="sec-num">1</div>
+                <p>Double-click the downloaded <strong>.exe</strong> file.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">2</div>
+                <p>Windows shows <strong>"Windows protected your PC."</strong> This is normal for new indie apps.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">3</div>
+                <p>Click <strong>More info</strong> (the small link below the warning text).</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">4</div>
+                <p>A <strong>Run anyway</strong> button appears. Click it.</p>
+              </div>
+              <div class="security-step">
+                <div class="sec-num">5</div>
+                <p>The app installs and is ready to use. <strong>Done!</strong></p>
+              </div>
+            </div>
+            <div class="security-why">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Microsoft SmartScreen flags apps that don't have a paid code-signing certificate. The source code is open on GitHub — you can review exactly what the app does before running it.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas Token Setup -->
+    <div class="token-section">
+      <div class="token-card reveal">
+        <div>
+          <h3>Getting your Canvas API token</h3>
+          <p>Canvas Downloader needs an API token to access your courses. It never leaves your device — it's stored locally and only used to talk to your university's Canvas server directly.</p>
+          <div class="token-steps">
+            <div class="token-step">
+              <div class="token-num">1</div>
+              <p>Log in to Canvas at your university (e.g. <span class="token-url">canvas.university.edu</span>)</p>
+            </div>
+            <div class="token-step">
+              <div class="token-num">2</div>
+              <p>Click your <strong>profile picture</strong> (top left) → <strong>Account</strong> → <strong>Settings</strong></p>
+            </div>
+            <div class="token-step">
+              <div class="token-num">3</div>
+              <p>Scroll to <strong>Approved Integrations</strong> → click <strong>+ New Access Token</strong></p>
+            </div>
+            <div class="token-step">
+              <div class="token-num">4</div>
+              <p>Give it a name (e.g. "Canvas Downloader"), set an expiry, and click <strong>Generate Token</strong></p>
+            </div>
+            <div class="token-step">
+              <div class="token-num">5</div>
+              <p>Copy the token and paste it into Canvas Downloader — that's it</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="token-note">
+            <strong>Your token is safe.</strong> It's stored only on your device, used exclusively to call your university's own Canvas API, and never transmitted to any third-party server. Canvas Downloader has no backend, no analytics, no telemetry. It's just a local app.
+          </div>
+          <div style="margin-top:20px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--txt2)">What the token can access</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)">
+                <span style="color:var(--green)">✓</span> Your course files and content
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)">
+                <span style="color:var(--green)">✓</span> Your assignments, syllabus, grades
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)">
+                <span style="color:var(--green)">✓</span> Read-only — cannot submit or modify anything
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt3)">
+                <span style="color:var(--txt3)">—</span> Other students' data: not accessible
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt3)">
+                <span style="color:var(--txt3)">—</span> Admin or instructor features: not accessible
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<hr class="section-divider" />
+<section class="faq-section" style="padding-top:100px;">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="tag">FAQ</div>
+      <h2>Common questions</h2>
+    </div>
+    <div class="faq-grid">
+      <div class="faq-item reveal">
+        <h4>Is this allowed by my university?</h4>
+        <p>Canvas Downloader only accesses files and content you already have permission to view as a student. It uses the official Canvas API — the same one that Canvas's own mobile apps use. You're downloading your own course materials, not anything restricted.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>Is it really free? What's the catch?</h4>
+        <p>Yes, completely free. No subscriptions, no premium tier, no ads. It's an open-source project built by a student for students. You can <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">read every line of code on GitHub</a>.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>Will it work with my university's Canvas?</h4>
+        <p>Almost certainly yes. Canvas is used by over 30 million students worldwide. Canvas Downloader uses the standard Canvas REST API that works with every Canvas institution. As long as you can log into Canvas at your university, it will work.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>Do I need to install Python or anything else?</h4>
+        <p>No. The app is fully self-contained — Python is bundled inside the executable. For optional conversions (PowerPoint → PDF, video → audio), you'll need the relevant app (Microsoft Office or LibreOffice, FFmpeg) but none are required for the core download functionality.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>What happens when my professor updates a file?</h4>
+        <p>In Sync Mode, the app detects the update. If you haven't edited the file, it replaces it cleanly. If you've annotated or edited it, the new version is saved as <em>filename_NewVersion</em> alongside yours — your work is never lost.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>The macOS/Windows security warning scared me — is the app safe?</h4>
+        <p>Yes. The warning appears because we haven't paid for a code-signing certificate ($99–$300/year for an indie project). The app's source code is fully public on GitHub — anyone can read it and verify it does exactly what it says. Thousands of legitimate open-source apps show the same warning.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>Can the app see my other Canvas students' data?</h4>
+        <p>No. Your API token only grants access to your own student account — courses you're enrolled in, files available to you, your own grades and submissions. There is no way to access other students' data through the student API.</p>
+      </div>
+      <div class="faq-item reveal">
+        <h4>Found a bug or want a new feature?</h4>
+        <p>Open an issue on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank" rel="noopener">GitHub Issues</a>. Pull requests are also welcome — it's an open-source project and contributions are appreciated.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-logo">
+      <div class="footer-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      Canvas Downloader
+    </div>
+    <p>Built by a student, for students. Free and open source.</p>
+    <div class="footer-links">
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank" rel="noopener">Report a Bug</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank" rel="noopener">Request a Feature</a>
+    </div>
+    <div class="footer-version">v2.0.0 &mdash; Not affiliated with Instructure or Canvas LMS</div>
+  </div>
+</footer>
+
+<!-- scroll to top -->
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll to top">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<script>
+  // Intersection observer for reveal animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) {
+        el.target.classList.add('visible');
+        observer.unobserve(el.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Stagger children in grids
+  document.querySelectorAll('.features-grid, .steps, .faq-grid, .platform-cards').forEach(grid => {
+    grid.querySelectorAll('.reveal').forEach((el, i) => {
+      el.style.transitionDelay = (i * 80) + 'ms';
+    });
+  });
+
+  // Scroll to top button
+  const scrollBtn = document.getElementById('scroll-top');
+  window.addEventListener('scroll', () => {
+    scrollBtn.classList.toggle('show', window.scrollY > 600);
+  }, { passive: true });
+</script>
+</body>
+</html>
