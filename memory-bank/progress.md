@@ -1,3 +1,14 @@
+## Latest Updates
+
+- [x] **Easy Download Feature & Simplified Workflow** (2026-05-02):
+    - [x] **Two-Button Course Selector**: Replaced single "Continue" button with "Easy Download" (primary) and "Advanced Settings →" (primary) to route users to either simplified or full-featured download path.
+    - [x] **Easy Download Page (Step 2 lite)**: Created `ui/quick_download.py` with 5 preset cards displayed in a vertical list, implementing a centered, minimalist aesthetic.
+    - [x] **Preset Card UI**: Implemented card buttons with icons, titles, descriptions, and collapsible "Includes" expanders showing preset configuration via `render_config_summary_badges`.
+    - [x] **Folder Organization Toggle**: Two button cards ("With Subfolders" / "All in One Folder") with descriptions, allowing users to override preset defaults.
+    - [x] **Minimal Configuration**: Clean stacked layout with output folder path, selected courses list, and action buttons. No borders on sections, clean chip-style course display.
+    - [x] **Session State Routing**: Added `quick_download_mode`, `quick_preset_id`, `quick_org_mode` to `core/state_registry.py` defaults. `app.py` step 2 branches on `quick_download_mode` to render either `render_quick_download` or `render_download_settings`.
+    - [x] **UI Redesign & Refinements**: Transitioned from a cluttered 5-column layout to a clean, centered vertical list. Applied "Physical Volume" tactile styling, shadow-root isolation via `st.html`, and gradient/bevel effects for a premium feel. Removed complex expanders to streamline the workflow for non-technical users.
+
 1: - [x] **Pre-Flight Audit Remediation** (2026-04-29):
     - [x] **Writability Probe (P1-A)**: Implemented immediate target folder health checks in `download_settings.py` to prevent "scanning black holes" on unwritable drives.
     - [x] **Lazy API Pagination (P1-B)**: Replaced `list()` materialization with lazy iterators in `canvas_logic.py` to support 50,000+ file courses on low-RAM hardware.
