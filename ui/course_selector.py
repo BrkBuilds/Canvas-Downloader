@@ -837,13 +837,16 @@ def render_course_selector(fetch_courses_fn):
     # --- Continue ---
     error_container = st.empty()
 
-    c1, c2 = st.columns([1, 3])
+    c1, c2, c3 = st.columns([1, 1, 2])
     with c1:
-        continue_clicked = st.button('Continue', type="primary", use_container_width=True, key="page_nav_continue")
+        quick_clicked = st.button('Easy Download', type="primary", use_container_width=True, key="page_nav_quick_download")
+    with c2:
+        advanced_clicked = st.button('Advanced Settings →', type="primary", use_container_width=True, key="page_nav_continue")
 
-    if continue_clicked:
+    if quick_clicked or advanced_clicked:
         if not st.session_state['selected_course_ids']:
             error_container.error('Please select at least one course.')
         else:
+            st.session_state['quick_download_mode'] = quick_clicked
             st.session_state['step'] = 2
             st.rerun()
