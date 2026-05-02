@@ -39,7 +39,7 @@
 38: ├── sync_ui.py          # Sync mode UI (~4000 lines)
 39: ├── ui_helpers.py       # Shared utilities (disk check, folder picker, notifications)
 40: ├── canvas_logic.py     # Canvas API wrapper + sanitization
-41: ├── sync_manager.py     # Sync backend — Manifest Logic (SQLite, Levenshtein)
+41: ├── sync_manager.py     # Sync backend (SQLite, Levenshtein, manifest logic)
 42: ├── version.py          # Global version tracker (e.g., __version__)
 43: ├── theme.py            # Centralized design tokens and CSS variables
 44: ├── assets/             # Icons, images, chime.wav

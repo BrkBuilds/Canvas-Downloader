@@ -6,7 +6,10 @@ The **Canvas Downloader** is a robust desktop application built to solve a criti
 Recently, the application has evolved beyond simple downloading to include a **NotebookLM Compatible Download** suite, automatically converting complex educational formats into AI-digestible plaintext formats, bridging the gap between raw LMS content and modern AI research tools.
 
 ## Key Features & Capabilities
-1. **Batch Downloading & Directory Structuring**:
+1. **Dual-Mode Download Workflow**:
+   - **Easy Download**: Simplified workflow for first-time/casual users. Five preset cards (Complete Canvas, AI Study Pack, NotebookLM Ready, Slides & PDFs Only, Files Only) with minimal required choices. Users select preset + folder organization + output path, then download with zero advanced settings.
+   - **Advanced Settings**: Full-featured configuration for power users. Complete control over secondary content (assignments, syllabus, discussions, etc.), conversion options, file filtering, and organization.
+2. **Batch Downloading & Directory Structuring**:
    - Pulls all modules, sub-modules, and files, directly replicating the Canvas structure locally.
    - Offers robust options for organized folder hierarchies or flattened directories ("Flat" mode).
 2. **Smart Synchronization Engine**:

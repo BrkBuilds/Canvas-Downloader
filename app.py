@@ -309,10 +309,14 @@ with _main_content.container():
             render_course_selector(fetch_courses)
 
 
-    # STEP 2: DOWNLOAD SETTINGS
+    # STEP 2: DOWNLOAD SETTINGS (quick or advanced)
     elif st.session_state['step'] == 2:
-        from ui.download_settings import render_download_settings
-        render_download_settings(fetch_courses)
+        if st.session_state.get('quick_download_mode', False):
+            from ui.quick_download import render_quick_download
+            render_quick_download(fetch_courses)
+        else:
+            from ui.download_settings import render_download_settings
+            render_download_settings(fetch_courses)
 
 
     elif st.session_state['step'] == 3:
