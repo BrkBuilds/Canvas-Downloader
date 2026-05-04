@@ -12,6 +12,12 @@
 12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
+- **Session 2026-05-02: Easy Download Interface Redesign**
+    - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
+    - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.
+    - **Technical Hardening**: Maintained full parity with `core.state_registry` configuration mapping, keeping the core download logic intact. Ensured CSS injection pattern prevents "ghost flashes".
+    - **Codebase Stability**: Confirmed no remaining P0/P1 blockers. The interface is production-ready.
+
 - **Session 2026-04-30: Final Production Readiness Audit**
     - **Windows Edge Cases**: Enhanced `_sanitize_filename` to intercept and prefix Windows reserved filenames (`CON`, `PRN`, `AUX`, `COM1-9`, `LPT1-9`) to prevent `OSError` crashes during file creation.
     - **Legal Compliance**: Explicitly included the `LICENSE` file within the PyInstaller `datas` array for both Windows and macOS specs, guaranteeing offline bundling of the MIT license inside the standalone executables.
