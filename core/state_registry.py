@@ -85,6 +85,10 @@ DOWNLOAD_DEFAULTS = {
     'notifications_enabled': True,
     # One-shot sentinel to prevent replaying the completion beep on every rerun
     'completion_beep_fired': False,
+    # Quick Download mode
+    'quick_download_mode': False,
+    'quick_preset_id': 'quick_full',
+    'quick_org_mode': 'modules',
 }
 
 SYNC_DEFAULTS = {
