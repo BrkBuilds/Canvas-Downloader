@@ -3,8 +3,15 @@
 > **Audience**: The developer compiling Canvas Downloader on a macOS machine
 > (native or cloud runner).
 >
-> **Prerequisite**: macOS 12 (Monterey) or later, Python 3.11+ installed via
+> **Prerequisite**: macOS 12 (Monterey) or later, Python 3.13 installed via
 > [python.org](https://www.python.org/downloads/macos/) or Homebrew.
+
+> [!TIP]
+> **Don't have a Mac?** Use GitHub Actions to build in the cloud for free —
+> no Mac hardware required. See **`GITHUB_ACTIONS_GUIDE.md`** for a
+> step-by-step walkthrough. The workflow at
+> `.github/workflows/build-macos.yml` builds both Intel and Apple Silicon
+> targets automatically.
 
 ---
 
@@ -190,3 +197,41 @@ pyinstaller --clean Canvas_Downloader_macOS.spec
 codesign --force --deep -s - "dist/Canvas Downloader.app"
 cd dist/ && zip -r -y "Canvas_Downloader_macOS.zip" "Canvas Downloader.app"
 ```
+
+---
+
+## 9. Building via GitHub Actions (Cloud — No Mac Required)
+
+The repository includes a pre-configured GitHub Actions workflow that runs the
+full build sequence above on GitHub's macOS servers for free.
+
+**When to use this instead of a local build:**
+- You don't have a Mac available.
+- You want a reproducible build that isn't affected by your local environment.
+- You need both Intel and Apple Silicon builds at the same time.
+
+**Files involved:**
+
+| File | Purpose |
+|---|---|
+| `.github/workflows/build-macos.yml` | The workflow — triggers the build |
+| `GITHUB_ACTIONS_GUIDE.md` | Step-by-step instructions for running it |
+
+**Summary of what the workflow does:**
+
+1. Checks out the repository on a real macOS GitHub runner.
+2. Installs Python 3.13 and all dependencies from `requirements.txt`.
+3. Runs `pyinstaller --clean Canvas_Downloader_macOS.spec`.
+4. Runs `codesign --force --deep -s - "dist/Canvas Downloader.app"`.
+5. Zips the `.app` and uploads it as a downloadable artifact.
+
+Two jobs run in parallel — one on `macos-13` (Intel) and one on `macos-14`
+(Apple Silicon). Both produce separate `.zip` artifacts valid for 30 days.
+
+**Trigger**: Manual only. Go to the GitHub Actions tab → "Build macOS" →
+"Run workflow". See `GITHUB_ACTIONS_GUIDE.md` for screenshots and detail.
+
+> [!NOTE]
+> The ad-hoc signing limitation applies equally to cloud builds: users will
+> still see the Gatekeeper "unidentified developer" warning and must
+> right-click → Open on first launch. See `README_INSTALL.md`.
