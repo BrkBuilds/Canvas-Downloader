@@ -1,0 +1,930 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How It Works â€” Canvas Downloader</title>
+  <meta name="description" content="Learn how to use Canvas Downloader â€” download, sync, and convert your Canvas course files. Step-by-step guide for students." />
+  <meta property="og:title" content="How It Works â€” Canvas Downloader" />
+  <meta property="og:description" content="Step-by-step guide: downloading, syncing, and converting your Canvas course files." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="icon.png" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0b0c14;
+      --surf:    #10111e;
+      --surf2:   #15172a;
+      --border:  rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.16);
+      --txt:     #e2e8f0;
+      --txt2:    #94a3b8;
+      --txt3:    #475569;
+      --cyan:    #38bdf8;
+      --cyan-bg: rgba(56,189,248,0.08);
+      --cyan-b:  rgba(56,189,248,0.3);
+      --green:   #68d4a3;
+      --grn-bg:  rgba(104,212,163,0.08);
+      --grn-b:   rgba(104,212,163,0.3);
+      --orange:  #f97316;
+      --org-bg:  rgba(249,115,22,0.08);
+      --org-b:   rgba(249,115,22,0.3);
+      --blue:    #3b71b8;
+      --blu-bg:  rgba(59,113,184,0.12);
+      --red:     #ef4444;
+      --red-bg:  rgba(239,68,68,0.08);
+      --red-b:   rgba(239,68,68,0.3);
+      --purple:  #a855f7;
+      --purp-bg: rgba(168,85,247,0.08);
+      --purp-b:  rgba(168,85,247,0.3);
+      --amber:   #f59e0b;
+      --amb-bg:  rgba(245,158,11,0.08);
+      --amb-b:   rgba(245,158,11,0.3);
+      --rad:     10px;
+      --rad-l:   16px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+    a { color: inherit; text-decoration: none; }
+
+    /* reveal */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.vis { opacity: 1; transform: none; }
+
+    /* section label */
+    .label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--cyan); background: var(--cyan-bg); border: 1px solid var(--cyan-b);
+      padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+    }
+    .label.grn { color: var(--green); background: var(--grn-bg); border-color: var(--grn-b); }
+    .label.org { color: var(--orange); background: var(--org-bg); border-color: var(--org-b); }
+    .label.blu { color: var(--blue); background: var(--blu-bg); border-color: rgba(59,113,184,0.3); }
+
+    /* ---- NAV ---- */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,12,20,0.9); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between; height: 58px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 9px;
+      font-weight: 700; font-size: 15px; color: var(--txt);
+    }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 7px; display: block; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--txt2); padding: 6px 12px;
+      border-radius: 8px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--txt); background: rgba(255,255,255,0.05); }
+    .nav-link.active { color: var(--cyan); }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 18px; border-radius: var(--rad); font-size: 13px; font-weight: 600;
+      background: var(--blue); color: #fff; border: none; cursor: pointer; transition: filter 0.15s;
+    }
+    .btn-nav:hover { filter: brightness(1.15); }
+    @media(max-width:520px) { .nav-link { display: none; } }
+
+    /* ---- GUIDE LAYOUT ---- */
+    .guide-layout {
+      display: grid; grid-template-columns: 220px 1fr; gap: 48px;
+      padding: 60px 0 90px; align-items: start;
+    }
+    @media(max-width:860px) { .guide-layout { grid-template-columns: 1fr; } }
+
+    /* ---- SIDEBAR TOC ---- */
+    .toc {
+      position: sticky; top: 80px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    @media(max-width:860px) { .toc { display: none; } }
+    .toc-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt3); margin-bottom: 10px; padding-left: 12px;
+    }
+    .toc a {
+      font-size: 13px; color: var(--txt3); padding: 6px 12px; border-radius: 6px;
+      border-left: 2px solid transparent; transition: all 0.15s;
+      display: block; line-height: 1.4;
+    }
+    .toc a:hover { color: var(--txt2); background: rgba(255,255,255,0.03); }
+    .toc a.active { color: var(--cyan); border-left-color: var(--cyan); background: var(--cyan-bg); }
+    .toc a.sub { padding-left: 24px; font-size: 12px; }
+
+    /* ---- GUIDE HERO ---- */
+    .guide-hero {
+      padding: 70px 0 10px; position: relative; overflow: hidden;
+    }
+    .guide-hero-glow {
+      position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(59,113,184,0.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .guide-hero h1 {
+      font-size: clamp(28px, 4vw, 44px); font-weight: 900;
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 14px;
+      position: relative;
+    }
+    .guide-hero h1 span {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .guide-hero p {
+      font-size: 16px; color: var(--txt2); max-width: 600px; line-height: 1.7;
+      position: relative;
+    }
+
+    /* ---- GUIDE SECTIONS ---- */
+    .guide-section {
+      padding: 48px 0 24px;
+      border-top: 1px solid var(--border);
+    }
+    .guide-section:first-of-type { border-top: none; padding-top: 32px; }
+    .sh { margin-bottom: 28px; }
+    .sh h2 {
+      font-size: clamp(22px, 3vw, 32px); font-weight: 800;
+      letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
+    }
+    .sh p { font-size: 14px; color: var(--txt2); max-width: 600px; line-height: 1.65; }
+
+    .sub-title {
+      font-size: 18px; font-weight: 700; margin: 32px 0 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sub-title .emoji { font-size: 22px; line-height: 1; }
+
+    .body-text {
+      font-size: 14px; color: var(--txt2); line-height: 1.75; margin-bottom: 20px;
+    }
+    .body-text strong { color: var(--txt); font-weight: 600; }
+
+    /* ---- INFO CARDS ---- */
+    .info-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad-l); padding: 20px 22px; margin-bottom: 16px;
+    }
+    .info-card h4 {
+      font-size: 15px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .info-card p, .info-card ul { font-size: 13px; color: var(--txt2); line-height: 1.7; }
+    .info-card ul { padding-left: 18px; margin-top: 6px; }
+    .info-card ul li { margin-bottom: 4px; }
+    .info-card ul li strong { color: var(--txt); }
+
+    /* ---- STEP CARDS ---- */
+    .steps-row {
+      display: grid; gap: 12px; margin: 16px 0 24px;
+    }
+    .steps-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .steps-row.cols-5 { grid-template-columns: repeat(5, 1fr); }
+    @media(max-width:700px) {
+      .steps-row.cols-3, .steps-row.cols-5 { grid-template-columns: 1fr; }
+    }
+    .step-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 16px; position: relative;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(56,189,248,0.12); border: 1px solid var(--cyan-b);
+      color: var(--cyan); font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+    .step-card h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .step-card p { font-size: 12px; color: var(--txt2); line-height: 1.55; }
+
+    /* ---- CATEGORY CARDS (Sync Review) ---- */
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px; margin: 16px 0 24px;
+    }
+    .cat-card {
+      border-radius: var(--rad); padding: 16px; display: flex; flex-direction: column;
+      min-height: 150px;
+    }
+    .cat-card h5 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .cat-card .cat-desc { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.55; margin-bottom: 6px; flex: 1; }
+    .cat-card .cat-action { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.5; margin-bottom: 8px; }
+    .cat-badge {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px;
+      display: inline-block; align-self: flex-start; margin-top: auto;
+      background: rgba(0,0,0,0.35);
+    }
+    .cat-badge.checked { color: #86efac; }
+    .cat-badge.unchecked { color: rgba(255,255,255,0.9); }
+    .cat-badge.info { color: rgba(255,255,255,0.8); }
+
+    /* Category card colors */
+    .cat-new      { background: rgba(30,60,90,0.35); border: 1px solid rgba(59,130,246,0.6); }
+    .cat-clean    { background: rgba(20,70,40,0.35); border: 1px solid rgba(34,197,94,0.6); }
+    .cat-edited   { background: rgba(90,60,20,0.35); border: 1px solid rgba(245,158,11,0.6); }
+    .cat-locdel   { background: rgba(90,30,35,0.35); border: 1px solid rgba(239,68,68,0.6); }
+    .cat-candel   { background: rgba(60,30,90,0.35); border: 1px solid rgba(168,85,247,0.6); }
+    .cat-ignored  { background: rgba(0,0,0,0.35);    border: 1px solid rgba(100,116,139,0.6); }
+    .cat-uptodate { background: rgba(40,45,50,0.35);  border: 1px solid rgba(150,150,150,0.45); }
+
+    /* ---- COMPARISON CARDS ---- */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0 24px;
+    }
+    @media(max-width:600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad-l); padding: 20px;
+    }
+    .compare-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+    .compare-card p, .compare-card ul { font-size: 13px; color: var(--txt2); line-height: 1.7; }
+    .compare-card ul { padding-left: 0; list-style: none; }
+    .compare-card ul li { padding: 2px 0; }
+
+    /* ---- CALLOUT BOX ---- */
+    .callout {
+      border-radius: var(--rad); padding: 14px 16px; margin: 16px 0;
+      font-size: 13px; line-height: 1.6;
+    }
+    .callout.warn {
+      background: var(--amb-bg); border: 1px solid var(--amb-b); color: var(--txt2);
+      border-left: 3px solid var(--amber);
+    }
+    .callout.info {
+      background: var(--cyan-bg); border: 1px solid var(--cyan-b); color: var(--txt2);
+      border-left: 3px solid var(--cyan);
+    }
+    .callout strong { color: var(--txt); }
+
+    /* ---- FAQ ---- */
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:680px) { .faq-grid { grid-template-columns: 1fr; } }
+    .faq-item {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px;
+    }
+    .faq-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 7px; }
+    .faq-item p { font-size: 13px; color: var(--txt2); line-height: 1.65; }
+
+    /* ---- SAFETY LIST ---- */
+    .safety-list {
+      display: flex; flex-direction: column; gap: 8px; margin: 12px 0 20px;
+    }
+    .safety-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: var(--txt2); line-height: 1.6;
+    }
+    .safety-item .shield {
+      font-size: 16px; flex-shrink: 0; margin-top: 1px;
+    }
+    .safety-item strong { color: var(--txt); }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border); padding: 40px 0; text-align: center;
+    }
+    .foot-logo { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    .foot-logo img { width: 24px; height: 24px; border-radius: 6px; }
+    footer p { font-size: 13px; color: var(--txt3); margin-bottom: 16px; }
+    .foot-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .foot-links a { font-size: 12px; color: var(--txt3); transition: color 0.15s; }
+    .foot-links a:hover { color: var(--txt2); }
+    .foot-v { margin-top: 20px; font-size: 11px; color: var(--txt3); opacity: 0.45; }
+
+    hr.div { border: none; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </a>
+      <div class="nav-right">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="guide.html" class="nav-link active">How It Works</a>
+        <a href="index.html#get" class="btn-nav">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="guide-hero">
+  <div class="guide-hero-glow"></div>
+  <div class="container">
+    <div class="label">Complete Guide</div>
+    <h1 class="reveal">How <span>Canvas Downloader</span> Works</h1>
+    <p class="reveal">Everything you need to know â€” from your first download to keeping all your courses synced throughout the semester. Written for students, by a student.</p>
+  </div>
+</section>
+
+<hr class="div" />
+
+<!-- MAIN LAYOUT -->
+<div class="container">
+  <div class="guide-layout">
+
+    <!-- SIDEBAR TOC -->
+    <aside class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#getting-started">Getting Started</a>
+      <a href="#selecting-courses" class="sub">Selecting Courses</a>
+      <a href="#api-token" class="sub">Your API Token</a>
+      <a href="#download-settings">Download Settings</a>
+      <a href="#card1" class="sub">File Filter & Structure</a>
+      <a href="#card2" class="sub">Canvas Content</a>
+      <a href="#card3" class="sub">AI Optimization</a>
+      <a href="#presets" class="sub">Presets</a>
+      <a href="#sync-mode">Sync Mode</a>
+      <a href="#course-pairs" class="sub">Course Pairs</a>
+      <a href="#quick-vs-analyze" class="sub">Quick Sync vs Analyze</a>
+      <a href="#saved-groups" class="sub">Saved Groups</a>
+      <a href="#safety" class="sub">Safety Guarantees</a>
+      <a href="#sync-review">Sync Review</a>
+      <a href="#file-categories" class="sub">The 7 File Categories</a>
+      <a href="#review-tools" class="sub">Review Tools</a>
+      <a href="#faq">FAQ</a>
+    </aside>
+
+    <!-- CONTENT -->
+    <main>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 1: GETTING STARTED                                    -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="getting-started">
+        <div class="sh reveal">
+          <div class="label">Step 1</div>
+          <h2>Getting Started</h2>
+          <p>Connect to your Canvas account, pick the courses you need, and you're ready to download.</p>
+        </div>
+
+        <h3 class="sub-title reveal" id="api-token"><span class="emoji">ðŸ”‘</span> Your API Token</h3>
+        <p class="body-text reveal">
+          Canvas Downloader uses your <strong>Canvas API token</strong> to access your courses â€” the same way Canvas' own mobile app connects.
+          The token only grants access to <strong>your own student account</strong>: your enrolled courses, your files, and your grades. There is no way to access other students' data.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>ðŸ›¡ï¸ How to generate your token</h4>
+          <p>
+            <strong>1.</strong> Log in to Canvas in your browser.<br/>
+            <strong>2.</strong> Go to <strong>Account â†’ Settings</strong>.<br/>
+            <strong>3.</strong> Scroll down to <strong>Approved Integrations</strong> and click <strong>"+ New Access Token"</strong>.<br/>
+            <strong>4.</strong> Give it a name (e.g. "Canvas Downloader"), leave the expiry blank, and click <strong>Generate Token</strong>.<br/>
+            <strong>5.</strong> Copy the token and paste it into the app.
+          </p>
+        </div>
+
+        <div class="callout info reveal">
+          <strong>ðŸ”’ 100% local.</strong> Your token is stored only on your computer. It is never sent to any server other than your university's own Canvas instance.
+        </div>
+
+        <h3 class="sub-title reveal" id="selecting-courses"><span class="emoji">ðŸ“š</span> Selecting Courses</h3>
+        <p class="body-text reveal">
+          Once connected, the app loads your full course list. You can toggle between <strong>Favorites Only</strong> (courses you starred in Canvas) and <strong>All Courses</strong>.
+          Select as many courses as you want â€” the app processes them all in one batch, creating a separate folder for each.
+        </p>
+
+        <div class="callout warn reveal">
+          <strong>âš ï¸ One configuration for all.</strong> The download settings you choose in the next step apply to every course in the batch.
+          If you need different settings for different courses (e.g. AI Optimization for one, raw files for another), run separate downloads.
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 2: DOWNLOAD SETTINGS                                  -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="download-settings">
+        <div class="sh reveal">
+          <div class="label">Step 2</div>
+          <h2>Download Settings</h2>
+          <p>Configure what files to grab, how to organize them, and whether to convert them for AI tools â€” all from three simple cards.</p>
+        </div>
+
+        <!-- Card 1 -->
+        <h3 class="sub-title reveal" id="card1"><span class="emoji">ðŸ“</span> Card 1 â€” File Filter & Folder Structure</h3>
+        <p class="body-text reveal">This is the only required card. Choose <strong>what</strong> to download and <strong>how</strong> to organize it on your computer.</p>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>ðŸ“„ All Files</h4>
+            <p>Downloads <strong>everything</strong> your professor uploaded: PDFs, PowerPoint slides, Word documents, images, videos, spreadsheets, zip archives, and more. Best if you want a complete offline copy of your course.</p>
+          </div>
+          <div class="compare-card">
+            <h4>ðŸ“‘ Presentations & PDFs</h4>
+            <p>Downloads only lecture slides (PowerPoint files) and PDF documents. Use this if you want to skip large videos or data sets and just get the core study materials.</p>
+          </div>
+        </div>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>ðŸ“‚ With Subfolders</h4>
+            <p>Mirrors the Canvas module layout on your computer. Each module becomes its own subfolder â€” for example: <em>CHEM101 / Week 3 / lecture.pdf</em>. Recommended for courses with many files.</p>
+          </div>
+          <div class="compare-card">
+            <h4>ðŸ“„ All in One Folder</h4>
+            <p>Puts every file directly in the course folder with no subfolders. Easier to search everything at once, but can get cluttered for larger courses.</p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <h3 class="sub-title reveal" id="card2"><span class="emoji">ðŸŒ</span> Card 2 â€” Canvas Content</h3>
+        <p class="body-text reveal">
+          Optional. These are things that <strong>only exist as web pages</strong> inside Canvas â€” the app converts them into local files you can open offline or upload to AI tools.
+          Your regular course files are always downloaded regardless of these settings.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>What you can download</h4>
+          <ul>
+            <li><strong>Assignments</strong> â€” Full instructions, due dates, and attached rubrics saved as a file.</li>
+            <li><strong>Syllabus</strong> â€” Grading policies, office hours, and weekly schedules.</li>
+            <li><strong>Announcements</strong> â€” All course announcements in order. Great for finding deadline changes.</li>
+            <li><strong>Discussions</strong> â€” Discussion board threads, useful if your professor posts key content there.</li>
+            <li><strong>Quizzes</strong> â€” Quiz questions and answer choices (visibility depends on your professor's settings).</li>
+            <li><strong>Rubrics</strong> â€” Grading criteria for each assignment, so you know exactly how your work is marked.</li>
+            <li><strong>Submissions (Results)</strong> â€” Feedback and grades you received on your own submitted work. Your professor is not notified.</li>
+          </ul>
+        </div>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>Match Course Folder</h4>
+            <p>Places Canvas Content files alongside your regular course files in the same module subfolders.</p>
+          </div>
+          <div class="compare-card">
+            <h4>In Separate Folders</h4>
+            <p>Creates a dedicated subfolder per content type (Assignments/, Quizzes/, Discussions/, etc.) inside the course folder.</p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <h3 class="sub-title reveal" id="card3"><span class="emoji">âš¡</span> Card 3 â€” AI Optimization</h3>
+        <p class="body-text reveal">
+          Optional. After downloading finishes, the app can automatically convert your files into formats that work best with AI study tools like <strong>NotebookLM</strong>, <strong>ChatGPT</strong>, or <strong>Claude</strong>.
+          Each conversion only touches the file types it handles â€” all others are left unchanged.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>Available conversions</h4>
+          <ul>
+            <li><strong>Unpack Archives</strong> â€” Extracts .zip files so contents are immediately accessible. Most AI tools cannot read zips directly.</li>
+            <li><strong>PowerPoint â†’ PDF</strong> â€” Converts slide decks to PDF. Original is replaced. Requires Microsoft Office or LibreOffice.</li>
+            <li><strong>Legacy Word â†’ PDF</strong> â€” Converts old .doc / .rtf / .odt formats to PDF. Modern .docx files are not affected.</li>
+            <li><strong>Excel â†’ PDF & Data</strong> â€” Creates a visual PDF and a plain text data file. The original spreadsheet is kept.</li>
+            <li><strong>Canvas Pages â†’ Plain Text</strong> â€” Strips web formatting from Canvas pages, making them easy for AI tools.</li>
+            <li><strong>Code â†’ .txt</strong> â€” Adds a .txt extension to programming files for AI tools that only accept plain text.</li>
+            <li><strong>Gather Web Links</strong> â€” Collects all website shortcuts into a single text file per course.</li>
+            <li><strong>Video â†’ Audio</strong> â€” Extracts audio as MP3, typically 10-20Ã— smaller. Original video is replaced. Requires FFmpeg.</li>
+          </ul>
+        </div>
+
+        <div class="callout warn reveal">
+          <strong>âš ï¸ Required software:</strong> PowerPoint, Word, and Excel conversions require Microsoft Office or the free LibreOffice app. Video to Audio requires FFmpeg. If the required software is not installed, that conversion is silently skipped and your original file is kept.
+        </div>
+
+        <!-- Presets -->
+        <h3 class="sub-title reveal" id="presets"><span class="emoji">ðŸ’¾</span> Download Presets</h3>
+        <p class="body-text reveal">
+          A Preset saves your entire Card 1, 2, and 3 configuration under a name you choose. Once saved, you can restore your full setup in one click instead of re-configuring everything from scratch.
+        </p>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>ðŸ’¾ Saving a Preset</h4>
+            <p>Configure Cards 1, 2 & 3, then click <strong>Save Preset</strong> in the top right. Give it a name â€” like <em>AI Ready</em> â€” and click Save. Settings are stored locally on your computer.</p>
+          </div>
+          <div class="compare-card">
+            <h4>ðŸ“‚ Loading a Preset</h4>
+            <p>Click the <strong>Presets</strong> button in the top right. The Preset Hub opens â€” click any preset name to instantly apply its settings to all three cards.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 3: SYNC MODE                                          -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="sync-mode">
+        <div class="sh reveal">
+          <div class="label blu">Sync Mode</div>
+          <h2>Keep Your Courses Up to Date</h2>
+          <p>Sync Mode intelligently tracks your download history and only fetches what is new or changed â€” so your folders stay current all semester.</p>
+        </div>
+
+        <h3 class="sub-title reveal" id="course-pairs"><span class="emoji">ðŸ”—</span> Course Pairs</h3>
+        <p class="body-text reveal">
+          A <strong>Course Pair</strong> permanently links a local folder on your computer (e.g. <em>Documents\CHEM101</em>) to its matching Canvas course.
+          Click <strong>Add Course</strong> on the Sync page to create a pair. Once linked, syncing will automatically process every pair on your list.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>ðŸ—„ï¸ The Hidden Database</h4>
+          <p>Inside every synced folder, the app places a tiny, hidden database file. This acts as the folder's memory â€” tracking what you've already downloaded, what you've edited, and what to skip. If you link a pre-existing folder, the app scans Canvas and builds this memory from scratch.</p>
+        </div>
+
+        <div class="callout warn reveal">
+          <strong>âš ï¸ One folder = one course.</strong> Do not mix files from multiple Canvas courses into the same local folder. For best results, link folders originally downloaded via Canvas Downloader.
+        </div>
+
+        <div class="info-card reveal">
+          <h4>âš™ï¸ Syncing & Download Settings</h4>
+          <p><strong>Courses inherit their original download settings.</strong> If you initially downloaded a course with AI Optimization enabled, the sync engine will automatically apply those same conversions to any new files you sync. Want to change settings? Re-download the course into a new folder with your preferred configuration.</p>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>ðŸ› ï¸ Managing Your Course Pairs</h4>
+          <p>Each course pair card on your list has inline actions:</p>
+          <ul>
+            <li><strong>Open Folder</strong> â€” Instantly opens the local course folder in your file explorer.</li>
+            <li><strong>Edit</strong> â€” Change the course's display name or update the folder path (e.g. if you moved the folder).</li>
+            <li><strong>Ignored Files</strong> â€” View, manage, and restore any files you permanently skipped.</li>
+            <li><strong>Remove</strong> â€” Removes the course from the sync list. This will never delete your local files.</li>
+          </ul>
+        </div>
+
+        <!-- Quick Sync vs Analyze -->
+        <h3 class="sub-title reveal" id="quick-vs-analyze"><span class="emoji">ðŸ¤”</span> Quick Sync vs Analyze & Review</h3>
+        <p class="body-text reveal">Both modes scan Canvas â€” the difference is how much control you have over what gets downloaded.</p>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>âš¡ Quick Sync</h4>
+            <ul>
+              <li>âœ… Auto-downloads all new files</li>
+              <li>âœ… Auto-updates unedited files</li>
+              <li>âœ… Quick & easy â€” one button</li>
+              <li>âœ… Skips ignored, locally deleted, & edited files automatically</li>
+              <li>âŒ No per-file selection</li>
+              <li>âŒ No preview of changes</li>
+            </ul>
+            <p style="margin-top:10px;font-size:12px;color:var(--txt)"><strong>Best for:</strong> <span style="color:var(--txt2)">Quick catch-ups between lectures, morning file checks â€” whenever you need the latest files as fast as possible.</span></p>
+          </div>
+          <div class="compare-card">
+            <h4>ðŸ” Analyze, Review & Sync</h4>
+            <ul>
+              <li>âœ… Full overview of all changes across 7 categories</li>
+              <li>âœ… Select per-file what to download</li>
+              <li>âœ… Ignore or restore files for future syncs</li>
+              <li>âœ… Filter by file extension</li>
+              <li>âœ… Confirmation screen before downloading</li>
+              <li>âŒ Takes more time than Quick Sync</li>
+            </ul>
+            <p style="margin-top:10px;font-size:12px;color:var(--txt)"><strong>Best for:</strong> <span style="color:var(--txt2)">Exam prep, study blocks, or whenever you want full control and a complete picture of what changed.</span></p>
+          </div>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>ðŸ“‹ When to use which â€” examples</h4>
+          <ul>
+            <li><strong>Checking for new files between classes</strong> â†’ Quick Sync</li>
+            <li><strong>Start-of-week catch-up</strong> â†’ Quick Sync</li>
+            <li><strong>Before an exam, ensure folders are fully up to date</strong> â†’ Analyze, Review & Sync</li>
+            <li><strong>You have been editing files locally</strong> â†’ Analyze, Review & Sync</li>
+            <li><strong>First time setting up a new course folder</strong> â†’ Analyze, Review & Sync</li>
+          </ul>
+        </div>
+
+        <!-- Quick Sync workflow -->
+        <p class="body-text reveal" style="margin-top:8px;"><strong>Quick Sync workflow:</strong></p>
+        <div class="steps-row cols-3 reveal">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h5>Click Quick Sync</h5>
+            <p>Analysis scans Canvas and compares every file to your local course folder. Looks for all new or updated files.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h5>Downloading</h5>
+            <p>New files and clean updates download automatically. Files you've edited or deleted are skipped. Watch the progress on the dashboard.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h5>Done!</h5>
+            <p>Your course folders are fully up to date. See which files were downloaded, retry any failures, and open folders directly.</p>
+          </div>
+        </div>
+
+        <p class="body-text reveal"><strong>Analyze, Review & Sync workflow:</strong></p>
+        <div class="steps-row cols-5 reveal">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h5>Analyze</h5>
+            <p>Scans Canvas and sorts all files into 7 categories.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h5>Review</h5>
+            <p>Select files to download, deselect what you don't need, ignore files permanently.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h5>Confirm</h5>
+            <p>A pop-up shows everything that will be downloaded. Confirm or go back.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <h5>Download</h5>
+            <p>Selected files download. Watch progress on the dashboard.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">5</div>
+            <h5>Done!</h5>
+            <p>Folders are up to date. Review results and retry any failures.</p>
+          </div>
+        </div>
+
+        <!-- Saved Groups -->
+        <h3 class="sub-title reveal" id="saved-groups"><span class="emoji">ðŸ’¾</span> Saved Groups & Pairs</h3>
+        <p class="body-text reveal">
+          The <strong>Saved Groups & Pairs</strong> hub lets you save your course pairs so you only have to set them up once. Load them in one click any time you return.
+        </p>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4>ðŸ“ Save a Pair</h4>
+            <p>After adding a pair to the Sync List, click the save icon ðŸ’¾ on the pair card. Give it a name, and save it. It's now stored in the hub and can be loaded in a single click in any future session.</p>
+          </div>
+          <div class="compare-card">
+            <h4>ðŸ—ƒï¸ Save a Group</h4>
+            <p>A Group is a named collection of multiple pairs â€” e.g. all your semester courses. Add all pairs to the sync list, then click <strong>Save Group</strong>. You need at least 2 pairs to save a group.</p>
+          </div>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>â˜° Load from the Hub</h4>
+          <p>Click <strong>Saved Groups & Pairs</strong> in the top right. Browse your saved groups and individual pairs. Click any entry to load it onto the sync page instantly. You can load multiple groups one after another to build a combined list. Both Pairs and Groups can be viewed and edited â€” change names, update folder paths, or add new pairs to a group, all from the hub.</p>
+        </div>
+
+        <!-- Safety Guarantees -->
+        <h3 class="sub-title reveal" id="safety"><span class="emoji">ðŸ¤</span> Safety Guarantees</h3>
+        <p class="body-text reveal">Syncing is designed to be totally safe. The app <strong>guarantees</strong>:</p>
+
+        <div class="safety-list reveal">
+          <div class="safety-item">
+            <span class="shield">ðŸš«</span>
+            <p><strong>Never overwrites your edits</strong> â€” updated files you annotated get a <em>_NewVersion</em> copy alongside your original.</p>
+          </div>
+          <div class="safety-item">
+            <span class="shield">ðŸš«</span>
+            <p><strong>Never deletes local files</strong> â€” not even when the teacher removes them from Canvas. Your disk is yours.</p>
+          </div>
+          <div class="safety-item">
+            <span class="shield">ðŸš«</span>
+            <p><strong>Never re-downloads files you deleted</strong> â€” unless you explicitly opt in via the review page.</p>
+          </div>
+          <div class="safety-item">
+            <span class="shield">ðŸš«</span>
+            <p><strong>Never creates duplicates</strong> â€” every file is tracked. Re-downloads overwrite cleanly or produce a clearly-named <em>_NewVersion</em>.</p>
+          </div>
+          <div class="safety-item">
+            <span class="shield">ðŸš«</span>
+            <p><strong>Never touches files outside your course folder</strong> â€” only operates inside folders you explicitly link.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 4: SYNC REVIEW                                        -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="sync-review">
+        <div class="sh reveal">
+          <div class="label grn">Sync Review</div>
+          <h2>Review & Control Every Change</h2>
+          <p>When you use Analyze & Review, every file is sorted into one of 7 categories. You have full control over exactly what gets downloaded.</p>
+        </div>
+
+        <h3 class="sub-title reveal" id="file-categories"><span class="emoji">ðŸ”Ž</span> The 7 File Categories</h3>
+        <p class="body-text reveal">After analysis, every file is placed into one of these categories. This determines the default action the app takes.</p>
+
+        <div class="cat-grid reveal">
+          <div class="cat-card cat-new">
+            <h5>New Files</h5>
+            <p class="cat-desc">Files on Canvas added by your teacher that are not in your course folder yet.</p>
+            <p class="cat-action">Downloaded fresh into the correct subfolder.</p>
+            <span class="cat-badge checked">âœ” Checked by default</span>
+          </div>
+          <div class="cat-card cat-clean">
+            <h5>Updates (Clean)</h5>
+            <p class="cat-desc">Canvas has a newer version, and you haven't edited your local copy.</p>
+            <p class="cat-action">Replaced in place with the newest version â€” same name, same location.</p>
+            <span class="cat-badge checked">âœ” Checked by default</span>
+          </div>
+          <div class="cat-card cat-edited">
+            <h5>Updates (You Edited)</h5>
+            <p class="cat-desc">Canvas has a newer version, and you've modified your local copy (e.g. added annotations).</p>
+            <p class="cat-action">New version saved as <em>filename_NewVersion</em> alongside your original. Your edits are never touched.</p>
+            <span class="cat-badge unchecked">â˜ Unchecked by default</span>
+          </div>
+          <div class="cat-card cat-locdel">
+            <h5>Locally Deleted</h5>
+            <p class="cat-desc">You deleted a file from your folder, but Canvas still has it.</p>
+            <p class="cat-action">Your deletion is respected â€” won't redownload unless you explicitly check the box. Quick Sync always skips these.</p>
+            <span class="cat-badge unchecked">â˜ Unchecked by default</span>
+          </div>
+          <div class="cat-card cat-candel">
+            <h5>Deleted on Canvas</h5>
+            <p class="cat-desc">The teacher removed a file from Canvas, but it is still in your course folder.</p>
+            <p class="cat-action">Your local copy stays exactly where it is. The app never deletes local files.</p>
+            <span class="cat-badge info">â„¹ Info only â€” no action</span>
+          </div>
+          <div class="cat-card cat-ignored">
+            <h5>Ignored Files</h5>
+            <p class="cat-desc">Files you permanently skipped, so they never appear in future syncs.</p>
+            <p class="cat-action">Restore them any time in the Ignored Files section.</p>
+            <span class="cat-badge info">Permanent skip</span>
+          </div>
+          <div class="cat-card cat-uptodate">
+            <h5>Up to Date</h5>
+            <p class="cat-desc">File is identical on both sides â€” your local file matches Canvas.</p>
+            <p class="cat-action">Hidden from the review screen since no action is needed.</p>
+            <span class="cat-badge info">Hidden â€” nothing to do</span>
+          </div>
+        </div>
+
+        <!-- Selection Process -->
+        <h3 class="sub-title reveal" id="review-tools"><span class="emoji">ðŸ› ï¸</span> Review Tools</h3>
+        <p class="body-text reveal">The review page gives you powerful tools to manage large course updates:</p>
+
+        <div class="info-card reveal">
+          <h4>The Selection Process</h4>
+          <p>Every file on the review screen is either checked (â˜‘) or unchecked (â˜).</p>
+          <ul>
+            <li><strong>Checked files (â˜‘)</strong> â€” Will be downloaded or updated during this sync. Once synced, they won't appear again until the teacher updates them.</li>
+            <li><strong>Unchecked files (â˜)</strong> â€” Will <strong>NOT</strong> be downloaded. However, they will reappear in your next sync. If you never want to see an unchecked file again, you must <strong>Ignore</strong> it.</li>
+          </ul>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>UI Tools Explained</h4>
+          <ul>
+            <li><strong>Smart Select (by filetype)</strong> â€” Tag buttons group every file by extension (e.g. .pdf, .docx). Click a tag to instantly toggle all files of that type across all courses.</li>
+            <li><strong>Select All / Deselect All</strong> â€” One-click bulk actions to check or uncheck every visible file.</li>
+            <li><strong>The Ignore Icon (ðŸ‘ï¸)</strong> â€” Hover over any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>
+            <li><strong>Move deselected to Ignored</strong> â€” Sits at the top of every category. Click it to sweep every unchecked file in that list into your permanent Ignored bucket.</li>
+            <li><strong>Restore Icons (â†©ï¸)</strong> â€” Inside the Ignored Files category, click the restore arrow next to a file, or use "Restore All" to bring them back into active sync.</li>
+          </ul>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>ðŸ“‹ Your Step-by-Step Workflow</h4>
+          <ul>
+            <li><strong>1. Review Categories</strong> â€” Expand the file categories to see which files are new, updated, or deleted.</li>
+            <li><strong>2. Smart Select</strong> â€” Use the filetype filters to instantly check or uncheck entire types (e.g. all PDFs, no MP4s).</li>
+            <li><strong>3. Customize</strong> â€” Manually check specific files you want, uncheck those you don't need right now.</li>
+            <li><strong>4. Clean Up (Optional)</strong> â€” Click "Move deselected files to Ignored" to permanently skip files you left unchecked.</li>
+            <li><strong>5. Confirm & Download</strong> â€” Click the primary button at the bottom to execute your choices.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 5: FAQ                                                -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="faq">
+        <div class="sh reveal">
+          <div class="label org">FAQ</div>
+          <h2>Frequently Asked Questions</h2>
+          <p>Quick answers to the most common questions about Canvas Downloader.</p>
+        </div>
+
+        <div class="faq-grid">
+          <div class="faq-item reveal">
+            <h4>What is the difference between Download Mode and Sync Mode?</h4>
+            <p>Download Mode fetches a complete fresh copy of everything â€” it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your local folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>What happens to my edits if I sync an updated file?</h4>
+            <p>Your edits are 100% safe. The app downloads the new Canvas version and saves it as <em>filename_NewVersion</em> alongside your original. Your annotated file is never overwritten.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>Why are some files unchecked by default?</h4>
+            <p>The app protects your intentional actions. Files you've edited locally are unchecked to avoid cluttering your folder with <em>_NewVersion</em> files unless you explicitly ask. Locally deleted files are unchecked because your deletion is respected.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>If I uncheck a file, will it ask me again next time?</h4>
+            <p>Yes. Unchecking means "skip for today." The file is still pending sync and will show up on the review screen next time. To permanently skip it, use the <strong>Ignore</strong> icon (ðŸ‘ï¸) or the "Move deselected to Ignored" button.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>I renamed or moved a file locally â€” will sync break?</h4>
+            <p>No. The app automatically detects renamed and moved files using content fingerprinting. You can rename and reorganize freely â€” no duplicates, no broken tracking.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>Will a file show as updated if the teacher only changed its description?</h4>
+            <p>No. The app compares file content fingerprints, not just timestamps. If the actual file content hasn't changed, it stays in Up to Date â€” no phantom updates.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>Will Sync re-download files I already have?</h4>
+            <p>No. The app scans your existing folder and automatically recognizes files you already have using a smart algorithm. They are marked as Up to Date â€” no wasted bandwidth.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>I moved my course folder to a different drive. Will sync still work?</h4>
+            <p>Click the edit icon on the pair and re-select the folder at its new location. The hidden database lives inside the folder, so all sync history is preserved automatically.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>If I enable PowerPoint to PDF, does the original get deleted?</h4>
+            <p>Yes â€” the original is replaced by the PDF. Same for Legacy Word to PDF and Video to Audio. <strong>Exception:</strong> Excel keeps the original alongside the new PDF and data file.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>What does Submissions (Results) save, and will my professor know?</h4>
+            <p>It saves feedback and grades you received on your own submitted work â€” professor comments, rubric scores, and your grade per assignment. This is your personal data. Your professor is not notified.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>What is the "â˜ï¸ Canvas Updates & Deletions.txt" file?</h4>
+            <p>An automatic log inside each course folder that records every update and teacher deletion after each sync. It only appears if your teacher updated or deleted files.</p>
+          </div>
+          <div class="faq-item reveal">
+            <h4>Do the AI conversions work on all computers?</h4>
+            <p>It depends. PowerPoint and Word conversions require <strong>Microsoft Office</strong> or the free <strong>LibreOffice</strong>. Video to Audio requires <strong>FFmpeg</strong>. If not installed, that conversion is silently skipped. Archives, Canvas pages, code files, and web links work everywhere with no extra software.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot-logo">
+      <img src="icon.png" alt="Canvas Downloader" />
+      Canvas Downloader
+    </div>
+    <p>Built by a student, for students. Free and open source.</p>
+    <div class="foot-links">
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank" rel="noopener">Report a Bug</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="guide.html">How It Works</a>
+    </div>
+    <div class="foot-v">v2.0.0 â€” Not affiliated with Instructure or Canvas LMS</div>
+  </div>
+</footer>
+
+<script>
+  /* ---- Scroll reveal ---- */
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); } });
+  }, { threshold: 0.07, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    const parent = el.parentElement;
+    const siblings = parent ? [...parent.querySelectorAll(':scope > .reveal')] : [];
+    const idx = siblings.indexOf(el);
+    if (idx > 0) el.style.transitionDelay = (idx * 70) + 'ms';
+    obs.observe(el);
+  });
+
+  /* ---- Active TOC highlight on scroll ---- */
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = [];
+  tocLinks.forEach(a => {
+    const id = a.getAttribute('href').replace('#', '');
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link: a });
+  });
+
+  function updateToc() {
+    let current = sections[0];
+    const scrollY = window.scrollY + 120;
+    for (const s of sections) {
+      if (s.el.offsetTop <= scrollY) current = s;
+    }
+    tocLinks.forEach(a => a.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', updateToc, { passive: true });
+  updateToc();
+</script>
+</body>
+</html>
