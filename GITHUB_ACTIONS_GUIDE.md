@@ -46,15 +46,19 @@ git push
 6. A small dropdown appears. Leave everything as-is and click the green
    **"Run workflow"** button inside the dropdown.
 
-The build starts. You will see two jobs appear:
-- **Build — Intel (x86_64)** — runs on a simulated Intel Mac
-- **Build — Apple Silicon (arm64)** — runs on a real M1 Mac
+The build starts. You will see one job appear:
+- **Build — Intel (x86_64)** — runs on a GitHub-hosted Intel Mac
+
+> **Note on Apple Silicon:** The `macos-14` (M1) runner has GitHub account-level
+> access restrictions that are unreliable even on public repos. The Intel build
+> runs perfectly on Apple Silicon Macs via Rosetta 2 — users don't notice
+> any difference.
 
 ---
 
 ## Step 3 — Wait for the Build to Finish
 
-Both jobs run in parallel. Each takes **15–30 minutes** because:
+The job takes **15–30 minutes** because:
 - PySide6 + QtWebEngine (the Chromium renderer) is ~800 MB to download and install.
 - PyInstaller then packs everything into a single `.app`.
 
@@ -66,14 +70,12 @@ below.
 
 ## Step 4 — Download the Built `.app`
 
-Once both jobs show a green checkmark:
+Once the job shows a green checkmark:
 
 1. Click the **"Build macOS"** run (the row with the run name/number).
 2. Scroll to the bottom of the run page to the **Artifacts** section.
-3. You will see two artifacts:
-   - `Canvas_Downloader_macOS_intel` — for Intel Macs (2019 and older)
-   - `Canvas_Downloader_macOS_apple-silicon` — for M1/M2/M3/M4 Macs (2020+)
-4. Click the artifact name to download a `.zip` file.
+3. You will see one artifact: `Canvas_Downloader_macOS`
+4. Click it to download a `.zip` file.
 
 > **Artifact expiry**: Artifacts are kept for **30 days** and then deleted
 > automatically by GitHub. Download them before then.
@@ -171,7 +173,6 @@ Key settings at a glance:
 |---|---|---|
 | Trigger | `workflow_dispatch` | Manual only — never runs automatically |
 | Python | `3.13` | Matches your local development version |
-| Intel runner | `macos-13` | GitHub-hosted Intel Mac |
-| Apple Silicon runner | `macos-14` | GitHub-hosted M1 Mac |
+| Runner | `macos-13` | GitHub-hosted Intel Mac (runs on Apple Silicon via Rosetta 2) |
 | Signing | Ad-hoc (`-s -`) | Free, no Apple account needed |
 | Artifact retention | 30 days | Auto-deleted after 30 days |
