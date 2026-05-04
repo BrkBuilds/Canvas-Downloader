@@ -5,19 +5,8 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-13
-            arch: intel
-            label: Intel (x86_64)
-          - runner: macos-14
-            arch: apple-silicon
-            label: Apple Silicon (arm64)
-
-    name: Build — ${{ matrix.label }}
-    runs-on: ${{ matrix.runner }}
+    name: Build — Intel (x86_64)
+    runs-on: macos-13
 
     steps:
       - name: Checkout repository
@@ -32,9 +21,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-pip-
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
@@ -58,11 +47,11 @@ jobs:
       - name: Zip .app bundle
         run: |
           cd dist/
-          zip -r -y "Canvas_Downloader_macOS_${{ matrix.arch }}.zip" "Canvas Downloader.app"
+          zip -r -y "Canvas_Downloader_macOS.zip" "Canvas Downloader.app"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Canvas_Downloader_macOS_${{ matrix.arch }}
-          path: dist/Canvas_Downloader_macOS_${{ matrix.arch }}.zip
+          name: Canvas_Downloader_macOS
+          path: dist/Canvas_Downloader_macOS.zip
           retention-days: 30
