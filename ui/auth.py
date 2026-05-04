@@ -324,6 +324,18 @@ div.st-key-nav_btn_logout button:hover::after {{
 
 def _render_login_form():
     """Render the un-authenticated login form."""
+    # Suppress Streamlit's form validation flash during initial React hydration.
+    # On first boot (clean machine), form components may briefly render a red
+    # validation indicator before reconciliation completes.  A 300 ms fade-in
+    # makes any sub-second flash invisible without hiding legitimate errors.
+    st.html("""<style>
+    section[data-testid="stSidebar"] [data-baseweb="notification"],
+    section[data-testid="stSidebar"] [data-testid="stAlert"] {
+        animation: _sidebarFadeIn 0.3s ease-in forwards;
+        opacity: 0;
+    }
+    @keyframes _sidebarFadeIn { to { opacity: 1; } }
+    </style>""")
     st.markdown("<div style='padding: 0 20px; margin-top: 10px; margin-bottom: 25px;'><span style='color: #ffffff; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em;'>Authentication</span></div>", unsafe_allow_html=True)
 
     with st.form("auth_form", clear_on_submit=False, border=False):
