@@ -1280,13 +1280,13 @@ def render_download_settings(fetch_courses_fn):
             # --- Conversion Button Data ---
             conv_button_defs = [
                 ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png', None),
-                ('convert_pptx',  'PowerPoint → PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires Microsoft PowerPoint or LibreOffice'),
-                ('convert_word',  'Legacy Word Docs → PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires Microsoft Word or LibreOffice'),
-                ('convert_excel', 'Excel → PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png', 'Requires Microsoft Excel or LibreOffice'),
-                ('convert_html',  'Canvas Pages → Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
-                ('convert_code',  'Code & Data → .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),
+                ('convert_pptx',  'PowerPoint ⭢ PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires Microsoft PowerPoint or LibreOffice'),
+                ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires Microsoft Word or LibreOffice'),
+                ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png', 'Requires Microsoft Excel or LibreOffice'),
+                ('convert_html',  'Canvas Pages ⭢ Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
+                ('convert_code',  'Code & Data ⭢ .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),
                 ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png', None),
-                ('convert_video', 'Video → Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png', None),
+                ('convert_video', 'Video ⭢ Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png', None),
             ]
 
             # --- Dynamic Tag Counter ---
