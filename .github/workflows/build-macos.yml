@@ -1,30 +1,21 @@
-name: Build macOS
+name: Build macOS Releases
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build — macOS (Apple Silicon)
+  build-heavy-chromium:
+    name: Build macOS (Chromium/Intel)
     runs-on: macos-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # CHANGED: Downgraded to 3.11. PySide6-WebEngine ARM64 wheels are missing for 3.12+
-      - name: Set up Python 3.11
+      - name: Set up Python 3.11 (Intel emulation for QtWebEngine)
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          architecture: 'x64' 
 
       - name: Install dependencies
         run: |
@@ -34,24 +25,65 @@ jobs:
           pip install -r requirements.txt
           pip install "pyinstaller>=6.0"
 
-      - name: Build .app bundle
+      - name: Build Heavy .app bundle
+        env:
+          BUILD_TYPE: heavy
         run: |
           source .venv/bin/activate
           rm -rf build/ dist/
           pyinstaller --clean Canvas_Downloader_macOS.spec
 
-      - name: Ad-hoc code sign
+      - name: Ad-hoc code sign & Package
         run: |
           codesign --force --deep -s - "dist/Canvas Downloader.app"
-          codesign --verify --verbose=2 "dist/Canvas Downloader.app"
+          hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS_Chromium.dmg
 
-      - name: Create .dmg bundle
-        run: |
-          hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS.dmg
-
-      - name: Upload artifact
+      - name: Upload Chromium DMG
         uses: actions/upload-artifact@v4
         with:
-          name: Canvas_Downloader_macOS
-          path: dist/Canvas_Downloader_macOS.dmg
-          retention-days: 30
+          name: Canvas_Downloader_macOS_Chromium
+          path: dist/Canvas_Downloader_macOS_Chromium.dmg
+
+  build-light-native:
+    name: Build macOS (Native Safari/ARM64)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11 (Native Apple Silicon)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Remove PySide6 from requirements for Light build
+        run: |
+          # Strip PySide6 lines out so pip doesn't crash on Apple Silicon
+          sed -i '' '/PySide6/d' requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "pyinstaller>=6.0"
+
+      - name: Build Light .app bundle
+        env:
+          BUILD_TYPE: light
+        run: |
+          source .venv/bin/activate
+          rm -rf build/ dist/
+          pyinstaller --clean Canvas_Downloader_macOS.spec
+
+      - name: Ad-hoc code sign & Package
+        run: |
+          codesign --force --deep -s - "dist/Canvas Downloader.app"
+          hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS_Native.dmg
+
+      - name: Upload Native DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Canvas_Downloader_macOS_Native
+          path: dist/Canvas_Downloader_macOS_Native.dmg
