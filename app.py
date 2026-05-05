@@ -198,15 +198,31 @@ components.html("""<script>
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
         'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
         'div[class*="st-key-btn_quick_sync"]',    // Quick Sync All
-        'div[class*="st-key-btn_sync_back"]',     // Back in sync review (container-keyed)
+        'div[class*="st-key-btn_custom_download"]',// Course Selector: Custom Download
+        'div[class*="st-key-btn_quick_download"]', // Course Selector: Quick Download
+        'div[class*="st-key-sync_back"]',         // Back in sync review (container-keyed)
         'div[class*="st-key-action_dl_back"]',    // Back in download settings
-        'div[class*="st-key-cancel_sync_dialog"]' // No, Go back in sync confirmation
+        'div[class*="st-key-cancel_sync_dialog"]',// No, Go back in sync confirmation
+        'div[class*="st-key-qd_goto_advanced"]'   // Customize configuration in Quick Download
     ].join(',');
     if(!p.clickAdded){
         p.clickAdded=true;
         doc.addEventListener('click',function(e){
             if(!e.target.closest('button'))return;
-            if(!e.target.closest(NAV_SEL))return;
+            var btn = e.target.closest(NAV_SEL);
+            if(!btn)return;
+            
+            // Custom validation: Don't show overlay if clicking Course Selector download buttons with no courses selected
+            if (btn.matches('div[class*="st-key-btn_custom_download"], div[class*="st-key-btn_quick_download"]')) {
+                var checkedCourses = doc.querySelectorAll('div[class*="st-key-dl_chk_"] input[type="checkbox"]:checked');
+                var countEl = doc.getElementById('cdp_selected_courses_count');
+                var backendCount = countEl ? parseInt(countEl.getAttribute('data-count'), 10) : 0;
+                
+                if (checkedCourses.length === 0 && backendCount === 0) {
+                    return; // Prevent overlay, let Streamlit rerun and show the error natively
+                }
+            }
+            
             show();
         },true);
     }

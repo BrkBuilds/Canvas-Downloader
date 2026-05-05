@@ -1828,6 +1828,10 @@ def render_download_settings(fetch_courses_fn):
 
         with col_back:
             if st.button('Back', use_container_width=True, key='action_dl_back'):
-                st.session_state['step'] = 1
+                if st.session_state.get('came_from_quick_dl', False):
+                    st.session_state['quick_download_mode'] = True
+                    st.session_state.pop('came_from_quick_dl', None)
+                else:
+                    st.session_state['step'] = 1
                 st.rerun()
 

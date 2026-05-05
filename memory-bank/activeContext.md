@@ -12,7 +12,7 @@
 12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
-- **Session 2026-05-02: Easy Download Interface Redesign**
+- **Session 2026-05-02: Quick Download Interface Redesign**
     - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
     - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.
     - **Technical Hardening**: Maintained full parity with `core.state_registry` configuration mapping, keeping the core download logic intact. Ensured CSS injection pattern prevents "ghost flashes".

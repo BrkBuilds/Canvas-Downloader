@@ -1,8 +1,8 @@
 ## Latest Updates
 
-- [x] **Easy Download Feature & Simplified Workflow** (2026-05-02):
-    - [x] **Two-Button Course Selector**: Replaced single "Continue" button with "Easy Download" (primary) and "Advanced Settings →" (primary) to route users to either simplified or full-featured download path.
-    - [x] **Easy Download Page (Step 2 lite)**: Created `ui/quick_download.py` with 5 preset cards displayed in a vertical list, implementing a centered, minimalist aesthetic.
+- [x] **Quick Download Feature & Simplified Workflow** (2026-05-02):
+    - [x] **Two-Button Course Selector**: Replaced single "Continue" button with "Quick Download" (primary) and "Custom Download →" (primary) to route users to either simplified or full-featured download path.
+    - [x] **Quick Download Page (Step 2 lite)**: Created `ui/quick_download.py` with 5 preset cards displayed in a vertical list, implementing a centered, minimalist aesthetic.
     - [x] **Preset Card UI**: Implemented card buttons with icons, titles, descriptions, and collapsible "Includes" expanders showing preset configuration via `render_config_summary_badges`.
     - [x] **Folder Organization Toggle**: Two button cards ("With Subfolders" / "All in One Folder") with descriptions, allowing users to override preset defaults.
     - [x] **Minimal Configuration**: Clean stacked layout with output folder path, selected courses list, and action buttons. No borders on sections, clean chip-style course display.
