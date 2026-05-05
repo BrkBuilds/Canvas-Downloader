@@ -12,11 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # CHANGED: Downgraded to 3.12 to fix PySide6 compatibility
-      - name: Set up Python 3.12
+      # CHANGED: Downgraded to 3.11. PySide6-WebEngine ARM64 wheels are missing for 3.12+
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -45,12 +45,10 @@ jobs:
           codesign --force --deep -s - "dist/Canvas Downloader.app"
           codesign --verify --verbose=2 "dist/Canvas Downloader.app"
 
-      # CHANGED: Replaced Zip step with hdiutil to create a DMG
       - name: Create .dmg bundle
         run: |
           hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS.dmg
 
-      # CHANGED: Updated the upload path to grab the new .dmg file
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
