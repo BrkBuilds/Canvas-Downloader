@@ -946,7 +946,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important;
+        top: 4px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -1339,7 +1339,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         min-height: 3.2em !important;
         border-radius: 6px !important;
         width: 100% !important;
-        padding: 0px 10px !important;
+        padding: 0px 10px 4px 10px !important; /* Optical adjustment: pushes text up to balance top/bottom distance */
         float: none !important;
         margin: 0 auto !important;
     }
@@ -1400,7 +1400,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
-        if st.button('Quick Sync All',
+        if st.button('Quick Sync',
                      key="btn_quick_sync",
                      type="primary",
                      use_container_width=True,
