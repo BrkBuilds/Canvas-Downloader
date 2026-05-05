@@ -837,11 +837,117 @@ def render_course_selector(fetch_courses_fn):
     # --- Continue ---
     error_container = st.empty()
 
-    c1, c2, c3 = st.columns([1, 1, 2])
-    with c1:
-        quick_clicked = st.button('Easy Download', type="primary", use_container_width=True, key="page_nav_quick_download")
-    with c2:
-        advanced_clicked = st.button('Advanced Settings →', type="primary", use_container_width=True, key="page_nav_continue")
+    # Inject an invisible div so JavaScript knows if any courses are selected,
+    # preventing the loading overlay from triggering when validation will fail.
+    sel_count = len(st.session_state.get('selected_course_ids', []))
+    st.html(f"<div id='cdp_selected_courses_count' data-count='{sel_count}' style='display:none;'></div>")
+
+    # --- Load Premium Assets & Hoist Buttons CSS ---
+    b64_custom = get_base64_image("assets/icon_custom_download.png")
+    b64_quick = get_base64_image("assets/icon_sync_quick.png")
+
+    st.html(f"""<style>
+    /* Target buttons inside the main column containers — scoped to Custom/Quick Download */
+    div.st-key-btn_custom_download button[kind="primary"],
+    div.st-key-btn_quick_download button[kind="primary"] {{
+        height: 3.2em !important;
+        min-height: 3.2em !important;
+        border-radius: 6px !important;
+        width: 100% !important;
+        padding: 0px 10px 4px 10px !important; /* Optical adjustment: pushes text up */
+        float: none !important;
+        margin: 0 auto !important;
+    }}
+    /* RECURSIVE CENTERING: START - Universal child selector */
+    div.st-key-btn_custom_download button[kind="primary"] > div,
+    div.st-key-btn_custom_download button[kind="primary"] > div > p,
+    div.st-key-btn_quick_download button[kind="primary"] > div,
+    div.st-key-btn_quick_download button[kind="primary"] > div > p {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+    div.st-key-btn_custom_download button[kind="primary"] *,
+    div.st-key-btn_quick_download button[kind="primary"] * {{
+        text-align: center !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div.st-key-btn_custom_download button[kind="primary"] p,
+    div.st-key-btn_quick_download button[kind="primary"] p {{
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+    }}
+
+    div.st-key-btn_custom_download button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        position: relative !important;
+        top: 2px !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 5px !important;
+        background-image: url("data:image/png;base64,{b64_custom}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+    }}
+    div.st-key-btn_quick_download button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        position: relative !important;
+        top: 4px !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 5px !important;
+        background-image: url("data:image/png;base64,{b64_quick}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+    }}
+
+    /* Custom Download Colors - Solid Physical Volume */
+    div.st-key-btn_custom_download button {{
+        background-color: #1f77b4 !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }}
+    div.st-key-btn_custom_download button:hover {{
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }}
+
+    /* Quick Download Colors - Dramatic Teal Gradient Physical Volume */
+    div.st-key-btn_quick_download button {{
+        background: linear-gradient(135deg, #1e3a8a 0%, #06b6d4 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: filter 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }}
+    div.st-key-btn_quick_download button:hover {{
+        filter: brightness(1.15) !important;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }}
+    </style>""")
+
+    col_custom, col_or, col_quick, _ = st.columns([0.75, 0.12, 0.75, 2.38], gap="small", vertical_alignment="center")
+    with col_custom:
+        advanced_clicked = st.button('Custom Download', type="primary", use_container_width=True, key="btn_custom_download")
+    with col_or:
+        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
+    with col_quick:
+        quick_clicked = st.button('Quick Download', type="primary", use_container_width=True, key="btn_quick_download")
 
     if quick_clicked or advanced_clicked:
         if not st.session_state['selected_course_ids']:
