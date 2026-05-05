@@ -148,9 +148,17 @@ def render_quick_download(fetch_courses_fn) -> None:
     org_is_locked  = selected_id == 'quick_notebooklm'
 
     # ── Load base64 icons ────────────────────────────────────────────────
-    b64_preset   = get_base64_image("assets/icon_preset_builtin.png")
+    b64_preset_full = get_base64_image("assets/icon_quick_dl_complete.png")
+    b64_preset_ai   = get_base64_image("assets/icon_quick_dl_ai_optimized.png")
+    b64_preset_nb   = get_base64_image("assets/icon_quick_dl_notebook.png")
+    b64_preset_ppt  = get_base64_image("assets/icon_quick_dl_ppt_pdf.png")
+    b64_preset_files = get_base64_image("assets/icon_quick_dl_all_files.png")
+    
+    _preset_icons = [b64_preset_full, b64_preset_ai, b64_preset_nb, b64_preset_ppt, b64_preset_files]
+    
     b64_sub      = get_base64_image("assets/icon_subfolders.png")
     b64_flat_ico = get_base64_image("assets/icon_flat.png")
+    b64_custom_dl = get_base64_image("assets/icon_custom_download.png")
 
     # ── Active state radio SVG ───────────────────────────────────────────
     _radio_svg = (
@@ -167,21 +175,25 @@ def render_quick_download(fetch_courses_fn) -> None:
         "<polyline points='9 18 15 12 9 6'></polyline></svg>"
     )
 
-    # ── Per-preset description via CSS ::after (centered for square cards) ─
+    # ── Per-preset description and icon via CSS ─────────────────────────
     _preset_desc_css = ""
     for _i, _p in enumerate(_QUICK_PRESETS):
         _preset_desc_css += (
-            f"div[class*='st-key-qd_card_'] div.st-key-btn_quick_preset_{_i} button::after {{"
-            f" content: \"{_p['desc']}\" !important;"
-            f" display: block !important;"
-            f" font-size: 0.74rem !important;"
-            f" color: #8895ae !important;"
-            f" font-weight: 400 !important;"
-            f" margin-top: 3px !important;"
-            f" white-space: normal !important;"
-            f" text-align: center !important;"
-            f" line-height: 1.35 !important;"
-            f" width: 100% !important;"
+            f"div.st-key-btn_quick_preset_{_i} button {{"
+            f"  background-image: url('data:image/png;base64,{_preset_icons[_i]}'), "
+            f"                    linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%) !important;"
+            f" }}\n"
+            f"div.st-key-btn_quick_preset_{_i} button::after {{"
+            f"  content: \"{_p['desc']}\" !important;"
+            f"  display: block !important;"
+            f"  font-size: 0.82rem !important;"
+            f"  color: #cbd5e1 !important;"
+            f"  font-weight: 400 !important;"
+            f"  margin-top: 3px !important;"
+            f"  white-space: normal !important;"
+            f"  text-align: center !important;"
+            f"  line-height: 1.35 !important;"
+            f"  width: 100% !important;"
             f" }}\n"
         )
 
@@ -195,13 +207,16 @@ div[class*="st-key-btn_quick_org_"] button {
 """ if org_is_locked else ""
 
     active_card_css = f"""
-div.st-key-qd_card_{active_idx} > div[data-testid="stVerticalBlockBorderWrapper"],
-div.st-key-qd_card_{active_idx} > div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
+div.st-key-btn_quick_preset_{active_idx} button,
+div.st-key-btn_quick_preset_{active_idx} button:hover {{
     border-color: rgba(63, 217, 255, 0.5) !important;
-    background: linear-gradient(160deg, rgba(63,217,255,0.07) 0%, rgba(63,217,255,0.03) 100%) !important;
+    background-image: url('data:image/png;base64,{_preset_icons[active_idx]}'), 
+                      linear-gradient(160deg, rgba(63,217,255,0.12) 0%, rgba(63,217,255,0.04) 100%) !important;
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.08) !important;
+    transform: none !important;
+    transition: none !important;
 }}
-div[class*="st-key-qd_card_"] div.st-key-btn_quick_preset_{active_idx} button::before {{
+div.st-key-btn_quick_preset_{active_idx} button::before {{
     border: none !important;
     background-color: transparent !important;
     background-image: {_radio_svg} !important;
@@ -209,21 +224,20 @@ div[class*="st-key-qd_card_"] div.st-key-btn_quick_preset_{active_idx} button::b
     background-repeat: no-repeat !important;
     background-position: center !important;
 }}
-div[class*="st-key-qd_card_"] div.st-key-btn_quick_preset_{active_idx} button,
-div[class*="st-key-qd_card_"] div.st-key-btn_quick_preset_{active_idx} button:hover {{
-    background-color: transparent !important;
-    transform: none !important;
-    box-shadow: none !important;
-}}
 """
 
     active_org_css = f"""
 div.st-key-btn_quick_org_{active_org_key} button,
 div.st-key-btn_quick_org_{active_org_key} button:hover {{
-    background-color: rgba(63, 217, 255, 0.06) !important;
+    background-image: url('data:image/png;base64,{b64_sub if active_org_key == 'subfolders' else b64_flat_ico}'),
+                      linear-gradient(160deg, rgba(63, 217, 255, 0.12) 0%, rgba(63, 217, 255, 0.04) 100%) !important;
+    background-size: 42px auto, cover !important;
+    background-position: 15px center, center !important;
+    background-repeat: no-repeat, no-repeat !important;
     border-color: rgba(63, 217, 255, 0.5) !important;
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.07) !important;
     transform: none !important;
+    transition: none !important;
 }}
 div.st-key-btn_quick_org_{active_org_key} button::before {{
     border: none !important;
@@ -238,100 +252,97 @@ div.st-key-btn_quick_org_{active_org_key} button::before {{
     # ── HOISTED CSS ──────────────────────────────────────────────────────
     st.html(f"""
 <style>
+/* Equal height for cards - Surgical fix from HACKS_AND_GUARDRAILS.md */
+div[class*="st-key-qd_presets_row"] [data-testid="stHorizontalBlock"],
+div[class*="st-key-qd_org_wrap"] [data-testid="stHorizontalBlock"] {{
+    align-items: stretch !important;
+}}
+
+/* Target the intermediate stLayoutWrapper bottleneck */
+div[data-testid="stLayoutWrapper"]:has(> [class*="st-key-btn_quick_"]) {{
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}}
+
+/* Force the keyed element and button to fill the stretched wrapper */
+div[class*="st-key-btn_quick_"] {{
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}}
+
+div[class*="st-key-btn_quick_"] .stButton,
+div[class*="st-key-btn_quick_"] button {{
+    flex: 1 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}}
+
 {_preset_desc_css}
 
 /* ═══════════════════════════════════════════════════════
    PRESET CARDS — SQUARE GRID (3 + 2)
    ═══════════════════════════════════════════════════════ */
-
-/* Card container border & background */
-div[class*="st-key-qd_card_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-    border: 1px solid rgba(255,255,255,0.09) !important;
-    border-radius: 12px !important;
-    background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.15) !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    transition: border-color 0.15s ease, background 0.15s ease !important;
-}}
-div[class*="st-key-qd_card_"] > div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
-    border-color: rgba(63,217,255,0.22) !important;
-    background: linear-gradient(160deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.03) 100%) !important;
-}}
-
-/* ─── HITBOX FIX: zero every layer so button fills card edge-to-edge ─── */
-div[class*="st-key-qd_card_"] [data-testid="stVerticalBlock"] {{
-    padding: 0 !important;
-    gap: 0 !important;
-}}
-div[class*="st-key-qd_card_"] [data-testid="stVerticalBlock"] > div {{
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-}}
-div[class*="st-key-qd_card_"] [data-testid="stButton"] {{
-    height: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-}}
-div[class*="st-key-qd_card_"] [data-testid="stButton"] > button {{
-    flex: 1 !important;
-    margin: 0 !important;
-}}
-
-/* ─── Preset button — icon centered above title ─── */
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button {{
+/* ─── Preset button — the button IS the card ─── */
+div[class*="st-key-btn_quick_preset_"] button {{
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
     width: 100% !important;
-    min-height: 148px !important;
-    background-color: transparent !important;
-    background-image: url('data:image/png;base64,{b64_preset}') !important;
-    background-repeat: no-repeat !important;
-    background-position: center 22px !important;
-    background-size: 38px !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 72px 14px 14px 14px !important;
-    box-shadow: none !important;
+    min-height: 180px !important;
+    
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    border-radius: 12px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.15) !important;
+    
+    background-repeat: no-repeat, no-repeat !important;
+    background-position: center 24px, center !important;
+    background-size: 57px auto, cover !important;
+    
+    padding: 94px 14px 24px 14px !important;
     transform: none !important;
     position: relative !important;
     cursor: pointer !important;
+    transition: none !important;
 }}
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button:hover {{
-    background-color: rgba(255,255,255,0.025) !important;
+div[class*="st-key-btn_quick_preset_"] button:hover {{
+    border-color: rgba(63,217,255,0.22) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.15) !important;
     transform: none !important;
-    box-shadow: none !important;
+    transition: none !important;
 }}
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button:active {{
+div[class*="st-key-btn_quick_preset_"] button:active {{
     transform: none !important;
+    transition: none !important;
 }}
 
 /* Inner div — center the title text */
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button > div,
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button div[data-testid="stMarkdownContainer"] {{
+div[class*="st-key-btn_quick_preset_"] button > div,
+div[class*="st-key-btn_quick_preset_"] button div[data-testid="stMarkdownContainer"] {{
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
     text-align: center !important;
 }}
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button p {{
-    font-size: 0.88rem !important;
+div[class*="st-key-btn_quick_preset_"] button p {{
+    font-size: 0.94rem !important;
     font-weight: 600 !important;
-    color: #f1f5f9 !important;
+    color: #ffffff !important;
     line-height: 1.3 !important;
     text-align: center !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
 }}
 
 /* Radio ring — inactive (positioned in card top-right) */
-div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button::before {{
+div[class*="st-key-btn_quick_preset_"] button::before {{
     content: "" !important;
     position: absolute !important;
     top: 10px !important;
@@ -352,28 +363,31 @@ div[class*="st-key-qd_card_"] div[class*="st-key-btn_quick_preset_"] button::bef
    ORGANISATION BUTTONS
    ═══════════════════════════════════════════════════════ */
 div[class*="st-key-btn_quick_org_"] button {{
-    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%) !important;
+    background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%) !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 2px 6px rgba(0,0,0,0.12) !important;
     border-radius: 12px !important;
     position: relative !important;
-    padding: 14px 16px 14px 68px !important;
-    height: auto !important;
-    min-height: 68px !important;
+    padding: 16px 32px 18px 70px !important;
+    min-height: 80px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: center !important;
     text-align: left !important;
     transform: none !important;
+    transition: none !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
 }}
 div[class*="st-key-btn_quick_org_"] button:hover {{
     border-color: rgba(63,217,255,0.22) !important;
     background-color: rgba(255,255,255,0.025) !important;
     transform: none !important;
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 2px 6px rgba(0,0,0,0.12) !important;
+    transition: none !important;
 }}
-div[class*="st-key-btn_quick_org_"] button:active {{ transform: none !important; }}
+div[class*="st-key-btn_quick_org_"] button:active {{ transform: none !important; transition: none !important; }}
 div[class*="st-key-btn_quick_org_"] button > div,
 div[class*="st-key-btn_quick_org_"] button div[data-testid="stMarkdownContainer"] {{
     width: 100% !important;
@@ -382,18 +396,20 @@ div[class*="st-key-btn_quick_org_"] button div[data-testid="stMarkdownContainer"
     text-align: left !important;
 }}
 div[class*="st-key-btn_quick_org_"] button p {{
-    font-size: 0.92rem !important;
+    font-size: 0.98rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
-    color: #f8fafc !important;
+    color: #ffffff !important;
     text-align: left !important;
     width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
 }}
 div.st-key-btn_quick_org_subfolders button::after {{ content: "Match Canvas layout. Each module becomes its own subfolder." !important; }}
 div.st-key-btn_quick_org_flat button::after {{ content: "All files saved directly in the course folder." !important; }}
 div[class*="st-key-btn_quick_org_"] button::after {{
-    font-size: 0.76rem !important;
-    color: #94a3b8 !important;
+    font-size: 0.82rem !important;
+    color: #cbd5e1 !important;
     margin-top: 3px !important;
     white-space: normal !important;
     text-align: left !important;
@@ -403,34 +419,36 @@ div[class*="st-key-btn_quick_org_"] button::after {{
 div[class*="st-key-btn_quick_org_"] button::before {{
     content: "" !important;
     position: absolute !important;
-    top: 50% !important;
-    right: 14px !important;
-    transform: translateY(-50%) !important;
+    top: 12px !important;
+    right: 12px !important;
     width: 16px !important;
     height: 16px !important;
     border: 2px solid rgba(255,255,255,0.18) !important;
     border-radius: 50% !important;
     box-sizing: border-box !important;
     background-color: transparent !important;
+    transform: none !important;
 }}
 div.st-key-btn_quick_org_subfolders button {{
-    background-image: url('data:image/png;base64,{b64_sub}') !important;
-    background-repeat: no-repeat !important;
-    background-position: 12px center !important;
-    background-size: 42px !important;
+    background-image: url('data:image/png;base64,{b64_sub}'),
+                      linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%) !important;
+    background-repeat: no-repeat, no-repeat !important;
+    background-position: 15px center, center !important;
+    background-size: 42px auto, cover !important;
 }}
 div.st-key-btn_quick_org_flat button {{
-    background-image: url('data:image/png;base64,{b64_flat_ico}') !important;
-    background-repeat: no-repeat !important;
-    background-position: 12px center !important;
-    background-size: 42px !important;
+    background-image: url('data:image/png;base64,{b64_flat_ico}'),
+                      linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%) !important;
+    background-repeat: no-repeat, no-repeat !important;
+    background-position: 15px center, center !important;
+    background-size: 42px auto, cover !important;
 }}
 {active_org_css}
 {locked_org_css}
 
 /* Org columns gap override */
 div.st-key-qd_org_wrap [data-testid="stHorizontalBlock"] {{
-    gap: 6px !important;
+    gap: 12px !important;
 }}
 
 /* ═══════════════════════════════════════════════════════
@@ -509,8 +527,6 @@ details.qd-dropdown[open] .qd-dd-chevron svg {{ transform: rotate(90deg); }}
     border-radius: 5px;
 }}
 .qd-dd-body {{
-    border-top: 1px solid rgba(255,255,255,0.06);
-    padding: 4px 0 8px 0;
     max-height: 280px;
     overflow-y: auto;
 }}
@@ -524,9 +540,9 @@ li.qd-course-item {{
 }}
 li.qd-course-item:last-child {{ border-bottom: none; }}
 .qd-num {{ color: #64748b; font-size: 0.88rem; min-width: 18px; margin-top: 1px; flex-shrink: 0; }}
-.qd-name-wrap {{ display: flex; flex-direction: column; overflow: hidden; }}
-.qd-name {{ color: #e2e8f0; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }}
-.qd-code {{ color: #64748b; font-size: 0.77rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }}
+.qd-name-wrap {{ display: flex; flex-direction: column; min-width: 0; }}
+.qd-name {{ color: #e2e8f0; font-size: 0.88rem; white-space: normal; line-height: 1.3; overflow-wrap: anywhere; }}
+.qd-code {{ color: #64748b; font-size: 0.77rem; white-space: normal; margin-top: 1px; overflow-wrap: anywhere; }}
 .qd-dd-body::-webkit-scrollbar {{ width: 5px; }}
 .qd-dd-body::-webkit-scrollbar-track {{ background: transparent; }}
 .qd-dd-body::-webkit-scrollbar-thumb {{ background: rgba(255,255,255,0.12); border-radius: 8px; }}
@@ -534,17 +550,20 @@ li.qd-course-item:last-child {{ border-bottom: none; }}
 /* ═══════════════════════════════════════════════════════
    CONFIG EXPANDER (st.expander styled to match qd-dropdown)
    ═══════════════════════════════════════════════════════ */
-div.st-key-qd_config_wrap [data-testid="stExpander"] details {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details {{
     border: 1px solid rgba(255,255,255,0.12) !important;
     border-radius: 8px !important;
     overflow: hidden !important;
     margin-top: 8px !important;
 }}
-div.st-key-qd_config_wrap [data-testid="stExpander"] details[open] {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details[open],
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details[open] {{
     background: rgba(0,0,0,0.18) !important;
     border-color: rgba(255,255,255,0.18) !important;
 }}
-div.st-key-qd_config_wrap [data-testid="stExpander"] details summary {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary {{
     padding: 11px 16px !important;
     list-style: none !important;
     cursor: pointer !important;
@@ -555,12 +574,15 @@ div.st-key-qd_config_wrap [data-testid="stExpander"] details summary {{
     gap: 10px !important;
     background: transparent !important;
 }}
-div.st-key-qd_config_wrap [data-testid="stExpander"] details summary::-webkit-details-marker {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary::-webkit-details-marker,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary::-webkit-details-marker {{
     display: none !important;
 }}
 /* Label text */
 div.st-key-qd_config_wrap [data-testid="stExpander"] details summary p,
-div.st-key-qd_config_wrap [data-testid="stExpander"] details summary span:not([data-testid]) {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary span:not([data-testid]),
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary p,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary span:not([data-testid]) {{
     color: #e2e8f0 !important;
     font-size: 0.92rem !important;
     font-weight: 600 !important;
@@ -568,57 +590,110 @@ div.st-key-qd_config_wrap [data-testid="stExpander"] details summary span:not([d
     margin: 0 !important;
 }}
 /* Replace Streamlit's expand icon with our outline chevron */
-div.st-key-qd_config_wrap [data-testid="stExpanderToggleIcon"] {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary svg,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary svg,
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary [data-testid="stExpanderToggleIcon"],
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary [data-testid="stExpanderToggleIcon"],
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary [data-testid="stIconMaterial"],
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary [data-testid="stIconMaterial"] {{
     display: none !important;
 }}
-div.st-key-qd_config_wrap [data-testid="stExpander"] details summary::after {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details summary::before,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary::before {{
     content: "" !important;
     display: inline-block !important;
-    width: 10px !important;
-    height: 10px !important;
-    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    width: 14px !important;
+    height: 14px !important;
+    background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-size: contain !important;
     flex-shrink: 0 !important;
     transition: none !important;
 }}
-div.st-key-qd_config_wrap [data-testid="stExpander"] details[open] summary::after {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details[open] summary::before,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details[open] summary::before {{
     transform: rotate(90deg) !important;
 }}
 /* Content area */
-div.st-key-qd_config_wrap [data-testid="stExpander"] details > div {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] details > div,
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details > div {{
     border-top: 1px solid rgba(255,255,255,0.06) !important;
     padding: 12px 16px 14px !important;
 }}
 /* Kill extra vertical spacing inside the expander content */
-div.st-key-qd_config_wrap [data-testid="stExpander"] [data-testid="stVerticalBlock"] {{
+div.st-key-qd_config_wrap [data-testid="stExpander"] [data-testid="stVerticalBlock"],
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] [data-testid="stVerticalBlock"] {{
     gap: 0 !important;
+}}
+/* Style the count tag inside the courses expander summary */
+div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary p code {{
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    color: #ffffff !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    min-width: 20px !important;
+    height: 24px !important;
+    padding: 0 9px !important;
+    border-radius: 8px !important;
+    line-height: 1 !important;
+    margin-left: 8px !important;
+    font-family: inherit !important;
 }}
 /* Edit button */
 div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button {{
     background: transparent !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #64748b !important;
-    font-size: 0.81rem !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 0.77rem !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
-    height: 36px !important;
+    height: 32px !important;
+    width: auto !important;
     transform: none !important;
     box-shadow: none !important;
-    margin-top: 0 !important;
+    margin-top: 10px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    opacity: 0.45 !important;
+    transition: color 0.15s ease, opacity 0.15s ease !important;
+}}
+div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button::before {{
+    content: "" !important;
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    background-image: url('data:image/png;base64,{b64_custom_dl}') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+    transition: opacity 0.15s ease !important;
 }}
 div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button:hover {{
-    border-color: rgba(255,255,255,0.22) !important;
-    color: #94a3b8 !important;
-    background: rgba(255,255,255,0.025) !important;
+    color: #e2e8f0 !important;
+    background: transparent !important;
+    border: none !important;
     transform: none !important;
     box-shadow: none !important;
+    opacity: 1 !important;
+}}
+div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button:hover::before {{
+    opacity: 1 !important;
 }}
 div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button > div,
 div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button p {{
     justify-content: flex-start !important;
     text-align: left !important;
-    width: 100% !important;
+    width: auto !important;
+    margin: 0 !important;
 }}
 
 /* ═══════════════════════════════════════════════════════
@@ -699,14 +774,14 @@ div.st-key-page_nav_quick_back button:hover {{
         with hdr_col:
             st.markdown(
                 "<h1 style='font-size:1.8rem; font-weight:800; margin:0; color:#f8fafc; "
-                "letter-spacing:-0.02em;'>Easy Download</h1>"
+                "letter-spacing:-0.02em;'>Quick Download</h1>"
                 "<p style='color:#94a3b8; font-size:0.95rem; margin:6px 0 0 0; line-height:1.4;'>"
                 "Select how you want your courses downloaded. We'll handle the rest."
                 "</p>",
                 unsafe_allow_html=True,
             )
         with adv_col:
-            if st.button("Go to Advanced Settings →", key="page_nav_quick_advanced", use_container_width=True):
+            if st.button("Go to Custom Download →", key="page_nav_quick_advanced", use_container_width=True):
                 st.session_state['quick_download_mode'] = False
                 st.rerun()
 
@@ -724,10 +799,10 @@ div.st-key-page_nav_quick_back button:hover {{
         )
 
         # Row 1 — 3 cards
-        r1c1, r1c2, r1c3 = st.columns(3, gap="small")
-        for i, col in enumerate([r1c1, r1c2, r1c3]):
-            with col:
-                with st.container(border=True, key=f"qd_card_{i}"):
+        with st.container(key="qd_presets_row1"):
+            r1c1, r1c2, r1c3 = st.columns(3, gap="small")
+            for i, col in enumerate([r1c1, r1c2, r1c3]):
+                with col:
                     st.button(
                         _QUICK_PRESETS[i]['name'],
                         key=f"btn_quick_preset_{i}",
@@ -738,10 +813,10 @@ div.st-key-page_nav_quick_back button:hover {{
 
         # Row 2 — 2 cards centered (same card width as row-1 columns)
         # [1, 2, 2, 1] → inner cols each = 2/6 = 1/3 of total (matches row-1 cards)
-        _, r2c1, r2c2, _ = st.columns([1, 2, 2, 1], gap="small")
-        for i, col in zip([3, 4], [r2c1, r2c2]):
-            with col:
-                with st.container(border=True, key=f"qd_card_{i}"):
+        with st.container(key="qd_presets_row2"):
+            _, r2c1, r2c2, _ = st.columns([1, 2, 2, 1], gap="small")
+            for i, col in zip([3, 4], [r2c1, r2c2]):
+                with col:
                     st.button(
                         _QUICK_PRESETS[i]['name'],
                         key=f"btn_quick_preset_{i}",
@@ -807,27 +882,27 @@ div.st-key-page_nav_quick_back button:hover {{
             st.markdown(
                 f"""
                 <div title="{esc(download_path)}" style="
-                    background: rgba(255,255,255,0.03);
+                    background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%);
                     border: 1px solid rgba(255,255,255,0.08);
                     border-radius: 8px;
-                    padding: 5px 16px;
+                    padding: 8px 16px;
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    height: 58px;
+                    min-height: 58px;
                     box-sizing: border-box;
                     cursor: default;">
-                    <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" style="flex-shrink:0;">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                     </svg>
                     <div style="flex:1; min-width:0;">
                         <div style="font-weight:600; color:#e2e8f0; font-size:0.9rem;
-                                    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    white-space:normal; overflow-wrap:anywhere;">
                             {esc(folder_name)}
                         </div>
                         <div style="font-size:0.75rem; color:#64748b;
-                                    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    white-space:normal; overflow-wrap:anywhere; margin-top: 1px;">
                             {esc(folder_parent)}
                         </div>
                     </div>
@@ -861,38 +936,26 @@ div.st-key-page_nav_quick_back button:hover {{
 
         _course_rows = "".join(_render_course_row(i, c) for i, c in enumerate(_dl_courses, 1))
 
-        st.markdown(
-            f"<details class='qd-dropdown'>"
-            f"<summary>"
-            f"<span class='qd-dd-chevron'>{_dl_chevron}</span>"
-            f"<span class='qd-dd-title'>"
-            f"Courses selected for download"
-            f"<span class='qd-dd-badge'>{_dl_count}</span>"
-            f"</span>"
-            f"</summary>"
-            f"<div class='qd-dd-body'>"
-            f"<ul class='qd-course-list'>{_course_rows}</ul>"
-            f"</div>"
-            f"</details>",
-            unsafe_allow_html=True,
-        )
+        with st.container(key="qd_courses_dropdown"):
+            with st.expander(f"Courses selected for download  `{_dl_count}`"):
+                st.html(f"<div class='qd-dd-body'><ul class='qd-course-list'>{_course_rows}</ul></div>")
 
         # ── See configuration (st.expander + edit button) ────────────────
         _config_badges = render_config_summary_badges(active_preset['settings'], show_path=False)
         with st.container(key="qd_config_wrap"):
-            with st.expander(f"See configuration  ·  {active_preset['name']}"):
-                st.markdown(
+            with st.expander("See configuration"):
+                st.html(
+                    "<div style='margin-bottom: 12px;'>"
                     "<p style='color:#64748b; font-size:0.82rem; margin:0 0 10px 0; line-height:1.5;'>"
                     "The badges below show every setting in the selected preset. "
                     "Open this to verify what will be downloaded and how files will be processed "
                     "before you hit Start."
-                    "</p>",
-                    unsafe_allow_html=True,
+                    "</p>"
+                    f"{_config_badges}"
+                    "</div>"
                 )
-                st.markdown(_config_badges, unsafe_allow_html=True)
-                st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                 if st.button(
-                    "Customize this configuration in Advanced Settings →",
+                    "Customize this configuration in Custom Download →",
                     key="qd_goto_advanced",
                     use_container_width=True,
                 ):
@@ -912,7 +975,10 @@ div.st-key-page_nav_quick_back button:hover {{
                         _v = _s.get(_k, False)
                         st.session_state[_k] = _v
                         st.session_state[f'persistent_{_k}'] = _v
+                    st.session_state['card2_expanded'] = any(st.session_state.get(_k, False) for _k in SECONDARY_CONTENT_KEYS)
+                    st.session_state['card3_expanded'] = any(st.session_state.get(_k, False) for _k in NOTEBOOK_SUB_KEYS)
                     st.session_state['quick_download_mode'] = False
+                    st.session_state['came_from_quick_dl'] = True
                     st.rerun()
 
         # ── Action buttons ───────────────────────────────────────────────
