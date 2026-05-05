@@ -1,16 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-# Canvas Downloader — macOS PyInstaller Spec
-# Usage: pyinstaller Canvas_Downloader_macOS.spec
-#
-# Synchronized with Canvas_Downloader.spec (Windows) as of Phase 1
-# macOS Parity Remediation — F-04, F-05, F-06, F-07, F-13, F-19
 from PyInstaller.utils.hooks import collect_all, copy_metadata
 import sys
 import os
 import imageio_ffmpeg
 
-# ── Data Files ─────────────────────────────────────────────────────
-# Mirror ALL python modules + directories from the Windows spec.
+# Check if we are building the Heavy (Chromium) or Light (Cocoa) version
+BUILD_TYPE = os.environ.get('BUILD_TYPE', 'heavy')
+
 datas = [
     ('app.py', '.'),
     ('canvas_logic.py', '.'),
@@ -32,9 +28,7 @@ datas = [
     ('version.py', '.'),
     ('theme.py', '.'),
     ('assets', 'assets'),
-    # Streamlit config — theme, toolbar mode, primary colour (parity with Windows spec)
     ('.streamlit', '.streamlit'),
-    # Modularized packages (added during The Convergence refactor)
     ('core', 'core'),
     ('engine', 'engine'),
     ('sync', 'sync'),
@@ -43,42 +37,32 @@ datas = [
     ('LICENSE', '.'),
 ]
 
-# ── FFmpeg Binary ──────────────────────────────────────────────────
-# Automatically locate the macOS FFmpeg binary provided by imageio_ffmpeg.
-# This enables video-to-MP3 conversion (F-07).
 ffmpeg_exe_path = imageio_ffmpeg.get_ffmpeg_exe()
-
-binaries = [
-    (ffmpeg_exe_path, 'imageio_ffmpeg/binaries')
-]
+binaries = [(ffmpeg_exe_path, 'imageio_ffmpeg/binaries')]
 hiddenimports = []
-
-# ImageIO needs its own metadata to survive importlib.metadata.version() checks
 datas += copy_metadata('imageio')
 
-# ── Dependency Collection ──────────────────────────────────────────
-# Collect all Streamlit dependencies
 tmp_ret = collect_all('streamlit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
-# Collect CanvasAPI
 tmp_ret = collect_all('canvasapi')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
-# Collect other critical packages — fully synchronized with Windows spec
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg',
-    # macOS-only: pync (terminal-notifier wrapper for Notification Center)
-    'pync',
-    # macOS-only: PySide6 + QtWebEngine for Chromium-based rendering (parity with Windows Edge)
-    # Note: adds ~100 MB to the bundle but eliminates WebKit/Chromium CSS divergence.
-    'PySide6',
-    'PySide6.QtWebEngineWidgets',
-    'PySide6.QtWebEngineCore',
-    'PySide6.QtWebEngine',
+    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync'
 ]
+
+# Conditionally add PySide6 ONLY if it's the heavy build
+if BUILD_TYPE == 'heavy':
+    packages_to_collect.extend([
+        'PySide6',
+        'PySide6.QtWebEngineWidgets',
+        'PySide6.QtWebEngineCore',
+        'PySide6.QtWebEngine'
+    ])
+
 for package in packages_to_collect:
     try:
         tmp_ret = collect_all(package)
@@ -86,101 +70,59 @@ for package in packages_to_collect:
     except Exception:
         pass
 
-# ── Hidden Imports ─────────────────────────────────────────────────
-# Add specific hidden imports that might be missed by collect_all.
 hiddenimports += [
     'streamlit.web.cli',
     'streamlit.runtime.scriptrunner.magic_funcs',
     'streamlit.runtime.scriptrunner.script_runner',
     'engineio.async_drivers.threading',
-    'tkinter',
-    'tkinter.filedialog',
-    '_tkinter',
-    # macOS-critical: used by url_compiler.py for .webloc file parsing
-    'plistlib',
-    # PyWebView backends — Qt (primary, Chromium) + Cocoa (fallback)
-    'webview',
-    'webview.platforms.qt',
-    'webview.platforms.cocoa',
-    # PySide6 QtWebEngine — required for webview gui='qt' Chromium backend
-    'PySide6.QtWebEngineWidgets',
-    'PySide6.QtWebEngineCore',
-    'PySide6.QtWebEngine',
-    'PySide6.QtCore',
-    'PySide6.QtWidgets',
-    'PySide6.QtGui',
-    'PySide6.QtNetwork',
-    # MoviePy fx modules for video conversion
-    'moviepy.audio.fx.all',
-    'moviepy.video.fx.all',
+    'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
+    'webview', 'moviepy.audio.fx.all', 'moviepy.video.fx.all',
 ]
 
-# ── Analysis ───────────────────────────────────────────────────────
+if BUILD_TYPE == 'heavy':
+    hiddenimports.extend([
+        'webview.platforms.qt',
+        'PySide6.QtWebEngineWidgets', 'PySide6.QtWebEngineCore',
+        'PySide6.QtWebEngine', 'PySide6.QtCore', 'PySide6.QtWidgets',
+        'PySide6.QtGui', 'PySide6.QtNetwork'
+    ])
+else:
+    hiddenimports.append('webview.platforms.cocoa')
+
 a = Analysis(
     ['start.py'],
-    pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6',
-              'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses',
-              'sqlalchemy',
-              # Heavy packages not used by this app
+    pathex=[], binaries=binaries, datas=datas, hiddenimports=hiddenimports,
+    hookspath=[], hooksconfig={}, runtime_hooks=[],
+    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5',
+              'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses', 'sqlalchemy',
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
               'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
               'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
-              # Windows-only packages (not needed on macOS)
               'win32com', 'win32com.client', 'pythoncom', 'pywintypes',
               'webview.platforms.winforms', 'webview.platforms.edgechromium',
-              'win11toast', 'winsound',
-              # More unused Streamlit features
-              'streamlit.external.langchain'],
-    noarchive=False,
-    optimize=0,
+              'win11toast', 'winsound', 'streamlit.external.langchain'],
+    noarchive=False, optimize=0,
 )
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
-    name='Canvas_Downloader',
-    icon='assets/icon.icns',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,  # UPX is not commonly used on macOS
-    runtime_tmpdir=None,
-    console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file='entitlements.plist',
+    pyz, a.scripts, [], exclude_binaries=True,
+    name='Canvas_Downloader', icon='assets/icon.icns', debug=False,
+    bootloader_ignore_signals=False, strip=False, upx=False, console=False,
 )
 
 coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=False,
-    name='Canvas_Downloader',
+    exe, a.binaries, a.datas, strip=False, upx=False, name='Canvas_Downloader',
 )
 
 app = BUNDLE(
-    coll,
-    name='Canvas Downloader.app',
-    icon='assets/icon.icns',
+    coll, name='Canvas Downloader.app', icon='assets/icon.icns',
     bundle_identifier='com.canvasdownloader.app',
     info_plist={
         'NSHighResolutionCapable': True,
         'CFBundleShortVersionString': '2.0.0',
         'CFBundleName': 'Canvas Downloader',
-        'NSRequiresAquaSystemAppearance': False,  # Support Dark Mode
+        'NSRequiresAquaSystemAppearance': False,
     },
 )
