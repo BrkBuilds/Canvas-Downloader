@@ -231,7 +231,7 @@ div.st-key-nav_btn_logout button:hover::after {{
                             st.session_state['enable_cbs_filters'] = config.get('enable_cbs_filters', False)
 
                         if 'error_log_enabled' in config:
-                            st.session_state['error_log_enabled'] = config.get('error_log_enabled', True)
+                            st.session_state['error_log_enabled'] = config.get('error_log_enabled', False)
 
                         if 'max_file_size_enabled' in config:
                             st.session_state['max_file_size_enabled'] = config.get('max_file_size_enabled', False)
@@ -619,7 +619,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             with _dc3:
                 with st.container(border=True, key="stg_card_errlog"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Error log file</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Create a <code style="font-size:0.72rem;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">download_errors.txt</code> summarizing any failed downloads or conversion errors in the output folder.</div></div>""")
-                    temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', True), key="temp_error_log_enabled")
+                    temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', False), key="temp_error_log_enabled")
 
             # ── SAVE FOLDER ───────────────────────────────────────────
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
@@ -685,7 +685,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_size_enabled != st.session_state.get('max_file_size_enabled', False)
                     or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
                     or temp_notifications != st.session_state.get('notifications_enabled', True)
-                    or temp_error_log != st.session_state.get('error_log_enabled', True)
+                    or temp_error_log != st.session_state.get('error_log_enabled', False)
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                 )
