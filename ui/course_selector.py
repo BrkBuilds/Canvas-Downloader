@@ -889,7 +889,7 @@ def render_course_selector(fetch_courses_fn):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -901,7 +901,7 @@ def render_course_selector(fetch_courses_fn):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 4px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
