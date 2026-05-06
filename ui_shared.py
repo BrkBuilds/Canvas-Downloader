@@ -602,7 +602,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
 
     # Footer
     footer_html = ''
-    if st.session_state.get('error_log_enabled', True):
+    if st.session_state.get('error_log_enabled', False):
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
     st.markdown(f"""
@@ -658,7 +658,7 @@ def render_pp_warning(pp_failure_count: int):
     """Render post-processing failure warning if applicable."""
     if pp_failure_count > 0:
         word = "file" if pp_failure_count == 1 else "files"
-        detail_hint = " Check download_errors.txt for details." if st.session_state.get('error_log_enabled', True) else ""
+        detail_hint = " Check download_errors.txt for details." if st.session_state.get('error_log_enabled', False) else ""
         st.warning(f"⚠️ {pp_failure_count} {word} failed during post-processing (conversion/extraction).{detail_hint}")
 
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
