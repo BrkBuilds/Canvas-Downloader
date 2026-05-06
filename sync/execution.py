@@ -161,7 +161,7 @@ def run_sync():
         current_ctx = get_script_run_ctx()
         
         cm = CanvasManager(sync_api_token, sync_api_url)
-        cm.error_log_enabled = st.session_state.get('error_log_enabled', True)
+        cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state
@@ -1001,7 +1001,7 @@ def run_sync():
     # Resolve error_log_path for post-processing: respect the toggle,
     # and use the first sync pair's local_path as the error log directory.
     _sync_error_log_path = None
-    if st.session_state.get('error_log_enabled', True) and sync_selections:
+    if st.session_state.get('error_log_enabled', False) and sync_selections:
         _first_sm = sync_selections[0].get('res_data', {}).get('sync_manager')
         if _first_sm and hasattr(_first_sm, 'local_path'):
             _sync_error_log_path = _first_sm.local_path
