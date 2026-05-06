@@ -12,6 +12,10 @@
 12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
+- **Session 2026-05-06: Global UI Layout Hardening**
+    - **Wrapping Prevention**: Injected `white-space: nowrap;` to critical small UI structures (like the 'OR' divider between Sync actions) to permanently prevent awkward text-wrapping (e.g., "O" and "R" breaking onto separate lines).
+    - **Responsive Geometry Guard**: Implemented a hard constraint `min_size=(1024, 700)` into `webview.create_window()` inside `start.py`. This ensures that when the application is distributed and compiled across various hardware, the pywebview container can never be resized small enough to trigger Streamlit's native mobile column-collapsing, permanently protecting the multi-column desktop layout.
+
 - **Session 2026-05-02: Quick Download Interface Redesign**
     - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
     - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.

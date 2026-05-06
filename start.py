@@ -126,7 +126,7 @@ if __name__ == "__main__":
     #    webview.start() blocks the main thread (required by macOS Cocoa/Qt).
     import platform as _platform
     _gui_backend = 'qt' if _platform.system() == 'Darwin' else None
-    webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
+    webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))
     webview.start(gui=_gui_backend)
 
     sys.exit(0)
