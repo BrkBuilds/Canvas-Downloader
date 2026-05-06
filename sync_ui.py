@@ -934,7 +934,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -946,7 +946,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 4px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
