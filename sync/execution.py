@@ -18,6 +18,7 @@ optimise the async logic.
 from __future__ import annotations
 
 import asyncio
+import glob as _glob
 import json
 import logging
 import os
@@ -943,8 +944,13 @@ def run_sync():
             res_data = sel['res_data']
             sm = res_data['sync_manager']
             for fname in synced_details.get(pair_idx, []):
-                if Path(fname).suffix.lower() in target_exts:
-                    matches = list(sm.local_path.rglob(fname))
+                fname_path = Path(fname)
+                # Match on the primary suffix OR on the full compound suffix
+                # (e.g. '.tar.gz') so .tar.gz is caught precisely without
+                # accidentally matching standalone .gz files.
+                all_suffixes = ''.join(fname_path.suffixes).lower()
+                if fname_path.suffix.lower() in target_exts or all_suffixes in target_exts:
+                    matches = list(sm.local_path.rglob(_glob.escape(fname)))
                     for m in matches:
                         if m.is_file() and not m.name.startswith('._') and "__MACOSX" not in m.parts:
                             results.append((m, sm, pair_idx))
@@ -1022,7 +1028,7 @@ def run_sync():
 
     # Archive Extraction
     run_archive_extraction(
-        get_synced_file_paths({'.zip', '.tar', '.tar.gz', '.gz'}, 'persistent_convert_zip'), pp_ui
+        get_synced_file_paths({'.zip', '.tar', '.tar.gz'}, 'persistent_convert_zip'), pp_ui
     )
 
     # PPTX -> PDF
@@ -1096,9 +1102,9 @@ def run_sync():
                     matched_pair_idx = _pair_lookup[resolved_parent]
                     break
             if matched_pair_idx is not None:
-                existing = synced_details.get(matched_pair_idx, [])
+                existing = synced_details.setdefault(matched_pair_idx, [])
                 if sidecar_name not in existing:
-                    synced_details[matched_pair_idx].append(sidecar_name)
+                    existing.append(sidecar_name)
                     synced_counter[0] += 1  # Bump global synced count for completion card
 
 

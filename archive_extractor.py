@@ -19,6 +19,11 @@ def extract_archive(archive_path: str | Path) -> bool | None:
         extract_dir = abs_archive.with_name(abs_archive.name[:-7])
     else:
         extract_dir = abs_archive.with_suffix('')
+
+    # Apply long-path prefix to the extraction directory so that deeply
+    # nested members don't silently fail on Windows MAX_PATH (260 chars).
+    if os.name == 'nt' and not str(extract_dir).startswith('\\\\?\\'):
+        extract_dir = Path('\\\\?\\' + str(extract_dir))
         
 
     
