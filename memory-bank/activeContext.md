@@ -16,6 +16,10 @@
     - **Chrome-Only Policy**: The application strictly launches the user's Google Chrome natively, enforcing CSS parity required by our Chromium-optimized interface.
     - **Unified CI Build**: Consolidated the complex multi-build job (Intel/ARM split) in `.github/workflows/build-macos.yml` into a single, native `macos-latest` job for faster, simpler compilation.
     
+- **Session 2026-05-06: Global UI Layout Hardening**
+    - **Wrapping Prevention**: Injected `white-space: nowrap;` to critical small UI structures (like the 'OR' divider between Sync actions) to permanently prevent awkward text-wrapping (e.g., "O" and "R" breaking onto separate lines).
+    - **Responsive Geometry Guard**: Implemented a hard constraint `min_size=(1024, 700)` into `webview.create_window()` inside `start.py`. This ensures that when the application is distributed and compiled across various hardware, the pywebview container can never be resized small enough to trigger Streamlit's native mobile column-collapsing, permanently protecting the multi-column desktop layout.
+
 - **Session 2026-05-02: Quick Download Interface Redesign**
     - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
     - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.
@@ -1138,3 +1142,6 @@
 - **Idempotent Data Mutation**: When writing state callbacks tied to `st.button` `on_click` events in Streamlit, always ensure the array manipulations are strictly idempotent. Rapidly double-clicking buttons triggers the event twice before the rendering loop executes, leading to duplicate entities in session-state arrays which subsequently crashes Streamlit if those entries dynamically generate widget keys.
 - **Frontend Yield for Dialogs**: When starting a heavy, blocking task immediately after closing an `st.dialog`, use a hidden button click triggered via `components.html` with a small JS timeout (e.g., 200ms). This allows the Streamlit frontend to receive the "unmount modal" command and clear the UI before the Python server locks up on the heavy processing loop.
 - **Edge-to-Edge Layout Constraints (W3C)**: The W3C CSS Spec dictates that containers with `overflow-y: auto` also act as horizontal clipping masks. Because Streamlit sidebars use `overflow-y` by default, Windows OS physically reserves ~16px for a scroll track, rendering full-width edge-to-edge buttons mathematically impossible regardless of padding zeroing. **Solution**: Force `overflow-y: hidden !important` on `stSidebar`, `stSidebarUserContent`, and `stSidebarContent` explicitly. Since our Application Sidebar is static and requires no scroll, this obliterates the scrollbar gap, handing back the 16px to our buttons and allowing perfect geometric symmetry.
+## Recent Changes (Session 2026-05-06 - Error Log Toggle)
+- Modified the application configuration to set the 'Error log file' generation feature to OFF by default across UI state (ui_shared.py, ui/auth.py), sync execution logic, and core download orchestration (pp.py, canvas_logic.py).
+
