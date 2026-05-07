@@ -36,24 +36,23 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Implementation*: Office converters (`word`, `excel`, `pdf`) use a dynamic `if sys.platform == 'darwin':` branch inside their `convert()` methods. Windows uses `win32com` with self-healing. macOS uses `subprocess.run(['osascript'])` to inject AppleScript payloads directly into the local Mac Office applications.
     - *Excel COM Scalar Trap*: `sheet.UsedRange.Value` returns a 2D tuple for standard sheets, but if exactly 1 cell contains data, it returns a primitive scalar. Extractors must dynamically coerce scalars via `isinstance()` checks to prevent iteration crashes.
     - *AppleScript Native CSV Extraction*: When automating Mac Office, explicitly avoid AppleScript string concatenation loops (`set cellVal to string value...`) as internal line-breaks (`\r` or `\n`) within cells will fatally destroy tabular row alignment. Instead, command Excel to natively `save as active sheet ... file format CSV file format` to a secure temp directory, and let python parse the perfectly formatted output.
-39: - **Native Cocoa & Chromium Rendering Parity**:
-40:     - *Policy*: Ensure CSS rendering consistency and native OS interaction.
-41:     - *Implementation*: 
-42:         - **UI**: macOS forces `gui='qt'` (PySide6 + QtWebEngine) to use a Chromium backend, matching Windows Edge/Chromium.
-43:         - **Folder Picker**: `native_folder_picker()` on macOS uses simplified AppleScript `POSIX path of (choose folder)` without app-targeting to avoid failures in PyWebView contexts.
-44:         - **Navigation**: `open_folder()` on macOS uses `open {path}` (navigates into folder) rather than `-R` (reveals in parent).
-45:         - **Notifications**: macOS uses `pync` (terminal-notifier) for branded notifications with `activate='com.canvasdownloader.app'` support to focus the app on click.
-46: - **Windows PyInstaller Native Dialogue Parity**:
-47:     - *Policy*: Avoid using `tkinter` in Streamlit applications when compiled via PyInstaller.
-48:     - *Implementation*: `native_folder_picker()` on Windows uses `powershell -Command` for the native folder dialog.
-49: - **Unified Native WebView Lifecycle**:
-50:     - *Policy*: Standardized desktop experience via `pywebview`.
-51:     - *Implementation*: The `start.py` launcher unites both platforms under `pywebview`. macOS explicitly requires `gui='qt'` for Chromium-based rendering consistency.
+- **macOS BYOB Architecture & CustomTkinter Controller**:
+    - *Policy*: Avoid shipping massive 200MB+ PySide6/QtWebEngine binaries on macOS while ensuring 100% CSS rendering parity.
+    - *Implementation*: 
+        - **UI**: macOS uses a "Bring Your Own Browser" (BYOB) model, starting Streamlit on `localhost:8501` and forcing the system's Google Chrome browser to open the app.
+        - **Controller Window**: A native, lightweight `customtkinter` window acts as the lifecycle owner (`macos_controller.py`). It manages the Streamlit boot sequence, provides visual state feedback (Starting, Ready, Closing, Error), and handles clean thread termination when closed.
+        - **Folder Picker**: `native_folder_picker()` on macOS uses simplified AppleScript `POSIX path of (choose folder)` without app-targeting to avoid failures in headless contexts.
+        - **Navigation**: `open_folder()` on macOS uses `open {path}` (navigates into folder) rather than `-R` (reveals in parent).
+        - **Notifications**: macOS uses `pync` (terminal-notifier) for branded notifications with `activate='com.canvasdownloader.app'` support to focus the app on click.
+- **Windows PyInstaller Native Dialogue Parity**:
+    - *Policy*: Avoid using `tkinter` in Streamlit applications when compiled via PyInstaller.
+    - *Implementation*: `native_folder_picker()` on Windows uses `powershell -Command` for the native folder dialog.
+- **Unified Native WebView Lifecycle (Windows Only)**:
+    - *Policy*: Standardized desktop experience via `pywebview`.
+    - *Implementation*: The `start.py` launcher unites both platforms, but Windows uses `pywebview` for an embedded Edge/Chromium window. macOS branches to `macos_controller.py` for its BYOB controller window.
 - **AppleScript Defensive Execution & Extraction**:
     - *Pattern*: All `osascript` subprocess calls for Office automation are centralized into `engine/applescript_bridge.py` rather than triplicated across converters. They are strictly wrapped with `timeout=120` to guarantee the main Python async pipeline cannot freeze if the Mac Office GUI throws a blocking "Recover Document" or "Update Links" modal.
     - *Path Formatting*: AppleScript blocks natively accept `POSIX file "/Users/..."` strings. Paths are escaped (`path.replace('"', '\\"')`) for injection defense-in-depth.
-52: - **Code-Signing & Config Path Safety**:
-53:     - *Policy*: Store configurations in standard OS application support directories.
 54:     - *Implementation*: `ui_helpers.get_config_dir()` routes writes to:
 55:         - **macOS**: `~/Library/Application Support/CanvasDownloader/`.
 56:         - **Windows**: `%APPDATA%/CanvasDownloader/` (Frozen build).
