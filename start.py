@@ -109,24 +109,50 @@ if __name__ == "__main__":
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
-    import webview
-
-    # 1. Start Streamlit in a daemonized background thread.
-    threading.Thread(target=_start_streamlit_server, daemon=True).start()
-
-    # 2. Wait for the health endpoint before opening the native window.
-    _wait_for_server()
-
-    # 3. Create and start the native desktop window.
-    #    - Windows: Uses Edge/Chromium via pywebview WinForms backend (default).
-    #    - macOS:   Forces the Qt backend (PySide6 + QtWebEngine = Chromium)
-    #               for rendering parity with Windows. The native Cocoa/WebKit
-    #               backend is NOT used because WebKit and Edge/Chromium differ
-    #               enough in CSS rendering to require platform-specific hacks.
-    #    webview.start() blocks the main thread (required by macOS Cocoa/Qt).
     import platform as _platform
-    _gui_backend = 'qt' if _platform.system() == 'Darwin' else None
-    webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
-    webview.start(gui=_gui_backend)
+    
+    if _platform.system() == 'Darwin':
+        # ── macOS: BYOB + CustomTkinter Controller ──
+        from macos_controller import CanvasController
+        
+        # 1. Start Streamlit in daemon thread
+        threading.Thread(target=_start_streamlit_server, daemon=True).start()
+        
+        # 2. Boot UI and let it handle the health check / browser launch
+        controller = CanvasController(
+            streamlit_url=_STREAMLIT_URL,
+            on_quit=lambda: sys.exit(0),
+        )
+        
+        # 3. Background health check and launch sequence
+        def _boot_sequence():
+            if _wait_for_server():
+                controller.set_state('ready')
+                controller.open_chrome()
+            else:
+                controller.set_state('error', 'Server failed to start', 'Please try closing and reopening the app.')
+                
+        # Let the controller restart the boot sequence if "Try Again" is clicked
+        controller.retry_callback = _boot_sequence
+        
+        threading.Thread(target=_boot_sequence, daemon=True).start()
+        
+        # 4. tkinter mainloop on main thread (required by macOS Cocoa)
+        controller.run()
+        sys.exit(0)
+        
+    else:
+        # ── Windows: unchanged pywebview flow ──
+        import webview
+        
+        # 1. Start Streamlit in a daemonized background thread.
+        threading.Thread(target=_start_streamlit_server, daemon=True).start()
 
-    sys.exit(0)
+        # 2. Wait for the health endpoint before opening the native window.
+        _wait_for_server()
+
+        # 3. Create and start the native desktop window.
+        webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
+        webview.start()
+
+        sys.exit(0)

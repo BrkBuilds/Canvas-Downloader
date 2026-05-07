@@ -186,8 +186,8 @@ python start.py
 ```
 
 > **macOS note**: `pip install -r requirements.txt` automatically installs
-> `PySide6`, `PySide6-WebEngine`, and `pync` on macOS. These are platform-
-> conditional (`sys_platform == 'darwin'`) and are skipped on Windows.
+> `customtkinter`, `pillow`, and `pync` on macOS (`sys_platform == 'darwin'`).
+> `pywebview` and Windows-specific dependencies are skipped on macOS.
 
 ---
 
