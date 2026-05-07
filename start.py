@@ -152,7 +152,7 @@ if __name__ == "__main__":
         _wait_for_server()
 
         # 3. Create and start the native desktop window.
-        webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True)
+        webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))
         webview.start()
 
         sys.exit(0)
