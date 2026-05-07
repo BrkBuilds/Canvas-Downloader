@@ -1041,19 +1041,28 @@
           <div class="sec-block">
             <div class="sec-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Gatekeeper warning - expected, one-time fix
+              First launch — one-time Gatekeeper bypass
             </div>
             <div class="sec-steps">
               <div class="sec-step"><div class="sec-n">1</div><p>Open the <strong>.dmg</strong> and drag Canvas Downloader to <strong>Applications</strong></p></div>
-              <div class="sec-step"><div class="sec-n">2</div><p>Double-click. macOS says <strong>"Apple cannot verify this app"</strong> - click <strong>Done</strong></p></div>
-              <div class="sec-step"><div class="sec-n">3</div><p>Open <strong>System Settings - Privacy &amp; Security</strong> and scroll to the Security section</p></div>
-              <div class="sec-step"><div class="sec-n">4</div><p>Click <strong>Open Anyway</strong> next to Canvas Downloader</p></div>
-              <div class="sec-step"><div class="sec-n">5</div><p>Enter your Mac password. The app opens - this only happens once.</p></div>
+              <div class="sec-step"><div class="sec-n">2</div><p>Double-click the app. macOS says <strong>"Canvas Downloader cannot be opened because the developer cannot be verified"</strong> — click <strong>Cancel</strong> (not Move to Trash)</p></div>
+              <div class="sec-step"><div class="sec-n">3</div><p><strong>Right-click</strong> (or Control-click) the app in Applications and select <strong>Open</strong></p></div>
+              <div class="sec-step"><div class="sec-n">4</div><p>Click <strong>Open</strong> in the confirmation dialog. The app launches.</p></div>
+              <div class="sec-step"><div class="sec-n">5</div><p>From now on, double-click works normally — macOS remembers your choice.</p></div>
             </div>
             <div class="sec-why">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               Apple charges $99/year for a developer certificate. This is an indie student project. Source code is fully public on GitHub.
             </div>
+          </div>
+          <div style="background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.25);border-radius:var(--rad);padding:16px;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:10px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              If you see "damaged and can't be opened" instead
+            </div>
+            <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:10px;">Sometimes macOS aggressively quarantines apps downloaded from a browser, showing: <strong style="color:var(--txt)">"Canvas Downloader is damaged and can't be opened. You should move it to the Trash."</strong> This is a false positive. Run this one command in Terminal to clear it:</p>
+            <div style="background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;font-family:monospace;font-size:12px;color:var(--txt);letter-spacing:0.01em;">xattr -cr /Applications/Canvas\ Downloader.app</div>
+            <p style="font-size:11px;color:var(--txt3);margin-top:8px;line-height:1.5;">Open <strong style="color:var(--txt2)">Terminal</strong> (search Spotlight with ⌘Space), paste the command above, press Enter. Then double-click the app — it will open.</p>
           </div>
         </div>
       </div>
