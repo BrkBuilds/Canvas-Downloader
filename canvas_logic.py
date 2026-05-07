@@ -225,7 +225,7 @@ class CanvasManager:
             
         self.user = None
         self._logged_error_sigs = set()  # Dedup cache: prevents same error being logged twice in one run
-        self.error_log_enabled = True    # Toggled via Settings; when False, download_errors.txt is not created
+        self.error_log_enabled = False    # Toggled via Settings; when False, download_errors.txt is not created
 
     def __repr__(self):
         """Redacted repr — never expose the API token in tracebacks or log output."""

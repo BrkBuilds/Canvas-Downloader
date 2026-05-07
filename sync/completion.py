@@ -313,7 +313,7 @@ def show_sync_errors():
             if len(sync_errors) > 20:
                 st.caption(f"  ... and {len(sync_errors) - 20} more")
             
-            if st.session_state.get('error_log_enabled', True):
+            if st.session_state.get('error_log_enabled', False):
                 st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
         
         # In-App Error Log Viewer button

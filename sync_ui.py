@@ -934,7 +934,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -946,7 +946,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 4px !important;
+        top: -2px !important;
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -1397,7 +1397,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.rerun()
 
     with col_or:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
         if st.button('Quick Sync',
