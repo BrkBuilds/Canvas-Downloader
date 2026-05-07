@@ -357,10 +357,16 @@ def run_url_compilation(folders, ui: UIBridge, sm=None):
             break
 
         if course_folder.exists():
-            compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
+            try:
+                compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
+            except Exception as e:
+                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>[ ❌ ] URL compilation failed for '{esc(course_name)}': {esc(str(e))}</span>")
+                _log_error_to_file(ui.error_log_path, course_name, f"URL compilation error: {e}")
+                ui.pp_failure_count += 1
+                continue
             if compiled_path:
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{course_name}' into: Compiled_External_Links.txt</span>")
-                
+                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Compiled links for '{esc(course_name)}' into: Compiled_External_Links.txt</span>")
+
                 # Pure Link Deletion (Sync Engine Bypass)
                 for shortcut in processed_shortcuts:
                     try:
@@ -610,7 +616,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     if contract.get('convert_urls', False):
         if explicit_files is not None:
              # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
-             has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc', '.html'} for p in explicit_files)
+             has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc'} for p in explicit_files)
              if has_shortcut:
                  run_url_compilation([(course_folder, course_name)], ui, sm=sm)
         else:
