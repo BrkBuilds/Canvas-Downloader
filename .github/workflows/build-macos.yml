@@ -1,21 +1,20 @@
-name: Build macOS Releases
+name: Build macOS Release
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-heavy-chromium:
-    name: Build macOS (Chromium/Intel)
+  build:
+    name: Build macOS (.app)
     runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11 (Intel emulation for QtWebEngine)
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          architecture: 'x64' 
 
       - name: Install dependencies
         run: |
@@ -25,9 +24,7 @@ jobs:
           pip install -r requirements.txt
           pip install "pyinstaller>=6.0"
 
-      - name: Build Heavy .app bundle
-        env:
-          BUILD_TYPE: heavy
+      - name: Build .app bundle
         run: |
           source .venv/bin/activate
           rm -rf build/ dist/
@@ -36,54 +33,13 @@ jobs:
       - name: Ad-hoc code sign & Package
         run: |
           codesign --force --deep -s - "dist/Canvas Downloader.app"
-          hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS_Chromium.dmg
+          hdiutil create -volname "Canvas Downloader" \
+            -srcfolder "dist/Canvas Downloader.app" \
+            -ov -format UDZO \
+            dist/Canvas_Downloader_macOS.dmg
 
-      - name: Upload Chromium DMG
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: Canvas_Downloader_macOS_Chromium
-          path: dist/Canvas_Downloader_macOS_Chromium.dmg
-
-  build-light-native:
-    name: Build macOS (Native Safari/ARM64)
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11 (Native Apple Silicon)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Remove PySide6 from requirements for Light build
-        run: |
-          # Strip PySide6 lines out so pip doesn't crash on Apple Silicon
-          sed -i '' '/PySide6/d' requirements.txt
-
-      - name: Install dependencies
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install "pyinstaller>=6.0"
-
-      - name: Build Light .app bundle
-        env:
-          BUILD_TYPE: light
-        run: |
-          source .venv/bin/activate
-          rm -rf build/ dist/
-          pyinstaller --clean Canvas_Downloader_macOS.spec
-
-      - name: Ad-hoc code sign & Package
-        run: |
-          codesign --force --deep -s - "dist/Canvas Downloader.app"
-          hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS_Native.dmg
-
-      - name: Upload Native DMG
-        uses: actions/upload-artifact@v4
-        with:
-          name: Canvas_Downloader_macOS_Native
-          path: dist/Canvas_Downloader_macOS_Native.dmg
+          name: Canvas_Downloader_macOS
+          path: dist/Canvas_Downloader_macOS.dmg

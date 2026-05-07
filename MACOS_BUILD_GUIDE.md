@@ -10,8 +10,8 @@
 > **Don't have a Mac?** Use GitHub Actions to build in the cloud for free —
 > no Mac hardware required. See **`GITHUB_ACTIONS_GUIDE.md`** for a
 > step-by-step walkthrough. The workflow at
-> `.github/workflows/build-macos.yml` builds both Intel and Apple Silicon
-> targets automatically.
+> `.github/workflows/build-macos.yml` builds a native Apple Silicon
+> target automatically.
 
 ---
 
@@ -41,9 +41,8 @@ Key macOS-specific packages installed by this command:
 
 | Package | macOS role |
 |---|---|
-| `pywebview>=5.1` | Native desktop window. Canvas Downloader forces the **Qt backend** (`gui='qt'`) for Chromium-based rendering identical to Windows Edge. |
-| `PySide6` | Qt framework, required by pywebview's Qt backend. |
-| `PySide6-WebEngine` | QtWebEngine (bundled Chromium). Provides rendering parity with Windows. Adds ~100 MB to the bundle. |
+| `customtkinter` | Provides the lightweight, modern macOS Controller UI. |
+| `pillow` | Image processing for CustomTkinter icons. |
 | `pync` | Wraps `terminal-notifier` for proper Notification Center alerts attributed to "Canvas Downloader" with click-to-activate support. |
 | `keyring` | Stores the Canvas API token in **macOS Keychain** (same secure store used by Safari, 1Password, etc.). |
 | `moviepy` | Bundles FFmpeg via `imageio_ffmpeg`. The binary is auto-downloaded on first import. |
@@ -97,11 +96,9 @@ dist/
             └── icon.icns
 ```
 
-**Expected bundle size: ~230–270 MB**
+**Expected bundle size: ~70–90 MB**
 
-This is larger than the Windows build (~130–150 MB) because PySide6 + QtWebEngine
-bundle a full Chromium runtime. This is intentional — it eliminates all
-WebKit/Chromium CSS rendering differences between platforms.
+This is smaller than the Windows build (~130–150 MB) because macOS uses a Bring Your Own Browser (BYOB) architecture. We do not bundle a heavy Chromium runtime; instead, we strictly launch the user's native Google Chrome application.
 
 ### Troubleshooting Build Failures
 
@@ -109,8 +106,7 @@ WebKit/Chromium CSS rendering differences between platforms.
 |---|---|---|
 | `ModuleNotFoundError: imageio_ffmpeg` | Not installed | `pip install imageio_ffmpeg` |
 | `FileNotFoundError: assets/icon.icns` | Missing icon | Ensure `assets/icon.icns` exists |
-| `No module named 'webview'` | pywebview not installed | `pip install pywebview` |
-| `No module named 'PySide6'` | PySide6 not installed | `pip install PySide6 PySide6-WebEngine` |
+| `No module named 'customtkinter'` | customtkinter not installed | `pip install customtkinter pillow` |
 | `No module named 'pync'` | pync not installed | `pip install pync` |
 | Bundle is 500+ MB | Conda/Anaconda environment | Switch to a clean `python3 -m venv` |
 
@@ -157,7 +153,8 @@ open "dist/Canvas Downloader.app"
 
 **Verification checklist:**
 
-- [ ] A native Qt/Chromium desktop window opens (not a browser tab, not WebKit/Safari).
+- [ ] The lightweight CustomTkinter controller window opens.
+- [ ] The app natively launches a new tab in Google Chrome.
 - [ ] The Streamlit dark theme loads correctly (dark background, blue primary colour).
 - [ ] Login and logout work — token is stored in macOS Keychain, not in any JSON file.
 - [ ] Logging out clears the token from Keychain (re-launch should show the login form).
@@ -172,15 +169,16 @@ open "dist/Canvas Downloader.app"
 
 ## 8. Package for Distribution
 
+Create a `.dmg` image (the standard macOS distribution format):
+
 ```bash
-cd dist/
-zip -r -y "Canvas_Downloader_macOS.zip" "Canvas Downloader.app"
+hdiutil create -volname "Canvas Downloader" \
+  -srcfolder "dist/Canvas Downloader.app" \
+  -ov -format UDZO \
+  dist/Canvas_Downloader_macOS.dmg
 ```
 
-The `-y` flag preserves symbolic links inside the bundle, which is critical for
-macOS framework references inside the PySide6/QtWebEngine bundle.
-
-Distribute `Canvas_Downloader_macOS.zip` alongside `README_INSTALL.md`.
+Distribute `Canvas_Downloader_macOS.dmg` alongside `README_INSTALL.md`.
 
 ---
 
@@ -195,7 +193,7 @@ pip install pyinstaller>=6.0
 rm -rf build/ dist/
 pyinstaller --clean Canvas_Downloader_macOS.spec
 codesign --force --deep -s - "dist/Canvas Downloader.app"
-cd dist/ && zip -r -y "Canvas_Downloader_macOS.zip" "Canvas Downloader.app"
+hdiutil create -volname "Canvas Downloader" -srcfolder "dist/Canvas Downloader.app" -ov -format UDZO dist/Canvas_Downloader_macOS.dmg
 ```
 
 ---
@@ -208,7 +206,7 @@ full build sequence above on GitHub's macOS servers for free.
 **When to use this instead of a local build:**
 - You don't have a Mac available.
 - You want a reproducible build that isn't affected by your local environment.
-- You need both Intel and Apple Silicon builds at the same time.
+- You need a clean build environment.
 
 **Files involved:**
 
@@ -225,8 +223,7 @@ full build sequence above on GitHub's macOS servers for free.
 4. Runs `codesign --force --deep -s - "dist/Canvas Downloader.app"`.
 5. Zips the `.app` and uploads it as a downloadable artifact.
 
-Two jobs run in parallel — one on `macos-13` (Intel) and one on `macos-14`
-(Apple Silicon). Both produce separate `.zip` artifacts valid for 30 days.
+The workflow runs a single `macos-latest` (ARM64) job. It produces a `.dmg` artifact valid for 30 days.
 
 **Trigger**: Manual only. Go to the GitHub Actions tab → "Build macOS" →
 "Run workflow". See `GITHUB_ACTIONS_GUIDE.md` for screenshots and detail.

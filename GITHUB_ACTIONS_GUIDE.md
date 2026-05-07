@@ -47,20 +47,13 @@ git push
    **"Run workflow"** button inside the dropdown.
 
 The build starts. You will see one job appear:
-- **Build — Intel (x86_64)** — runs on a GitHub-hosted Intel Mac
-
-> **Note on Apple Silicon:** The `macos-14` (M1) runner has GitHub account-level
-> access restrictions that are unreliable even on public repos. The Intel build
-> runs perfectly on Apple Silicon Macs via Rosetta 2 — users don't notice
-> any difference.
+- **Build macOS (.app)** — runs on a GitHub-hosted Apple Silicon Mac (`macos-latest`).
 
 ---
 
 ## Step 3 — Wait for the Build to Finish
 
-The job takes **15–30 minutes** because:
-- PySide6 + QtWebEngine (the Chromium renderer) is ~800 MB to download and install.
-- PyInstaller then packs everything into a single `.app`.
+The job takes **just a few minutes** because it leverages a lightweight Bring Your Own Browser (BYOB) architecture.
 
 You can watch live logs by clicking on either job name. A green checkmark means
 success. A red X means something failed — see [Troubleshooting](#troubleshooting)
@@ -75,7 +68,7 @@ Once the job shows a green checkmark:
 1. Click the **"Build macOS"** run (the row with the run name/number).
 2. Scroll to the bottom of the run page to the **Artifacts** section.
 3. You will see one artifact: `Canvas_Downloader_macOS`
-4. Click it to download a `.zip` file.
+4. Click it to download a `.zip` file containing the `.dmg`.
 
 > **Artifact expiry**: Artifacts are kept for **30 days** and then deleted
 > automatically by GitHub. Download them before then.
@@ -84,14 +77,12 @@ Once the job shows a green checkmark:
 
 ## Step 5 — What's Inside the Downloaded `.zip`
 
-Each `.zip` contains:
+The downloaded `.zip` contains:
 ```
-Canvas_Downloader_macOS_intel.zip
-└── Canvas Downloader.app       ← this is the app, ready to use
+Canvas_Downloader_macOS.dmg     ← standard macOS disk image
 ```
 
-To distribute it, share the `.zip` directly. Users unzip it and drag
-`Canvas Downloader.app` to their `/Applications` folder.
+To distribute the app, share the `.dmg` directly. Users mount the `.dmg` and copy `Canvas Downloader.app` to their `/Applications` folder.
 
 ---
 
@@ -157,10 +148,7 @@ This is rare on GitHub-hosted runners since `codesign` is always available
 as part of Xcode. If it happens, check that the PyInstaller step before it
 actually produced `dist/Canvas Downloader.app`.
 
-### Only one architecture succeeded
-The two jobs are independent (`fail-fast: false`). A failure in one does
-not cancel the other. Download the artifact from the successful job and
-investigate the failed one separately.
+
 
 ---
 
@@ -173,6 +161,6 @@ Key settings at a glance:
 |---|---|---|
 | Trigger | `workflow_dispatch` | Manual only — never runs automatically |
 | Python | `3.13` | Matches your local development version |
-| Runner | `macos-13` | GitHub-hosted Intel Mac (runs on Apple Silicon via Rosetta 2) |
+| Runner | `macos-latest` | GitHub-hosted Apple Silicon Mac |
 | Signing | Ad-hoc (`-s -`) | Free, no Apple account needed |
 | Artifact retention | 30 days | Auto-deleted after 30 days |

@@ -7,7 +7,7 @@
 7: 
 8: - **CanvasAPI**: Python wrapper for the Canvas LMS API.
 9: - **aiohttp / asyncio**: For high-performance, concurrent file downloads.
-10: - **PyWebView / PySide6**: Dual-engine rendering. Windows uses default Edge backend; macOS forces `gui='qt'` (PySide6 + QtWebEngine) for Chromium-based parity.
+10: - **Architecture / UI**: "Bring Your Own Browser" (BYOB) architecture on macOS via `customtkinter` Controller Window launching Google Chrome. Windows continues to use a native pywebview Edge backend for seamless desktop integration.
 11: - **SQLite3**: Robust local database management for sync manifests.
 12: 
 13: ## Development Environment
@@ -26,7 +26,8 @@
 26: - `sqlite3`: Robust manifest database management.
 27: - `difflib`: Levenshtein string matching for collision resolution (`SequenceMatcher`).
 28: - **pywin32 / osascript**: Dual-engine architecture for Office-to-PDF conversions. Windows uses `win32com.client` COM automation. macOS uses native `osascript` (AppleScript) subprocess execution to achieve exact feature parity for `.doc`, `.pptx`, and `.xlsx` files.
-29: - **Zero-Dependency Smart-CSV Extraction**: Engineered a custom memory-to-CSV extraction layer in `excel_converter.py` that utilizes the existing COM/AppleScript bridge.
+- **Zero-Dependency Smart-CSV Extraction**: Engineered a custom memory-to-CSV extraction layer in `excel_converter.py` that utilizes the existing COM/AppleScript bridge.
+- `customtkinter` / `PIL`: Used on macOS exclusively to render the lightweight Controller Window.
 30: - `beautifulsoup4` / `markdownify`: Cleaning HTML Canvas Pages and converting them to Markdown.
 31: - `html`: Native security library used for XSS-safe URL escaping in generated HTML artifacts.
 - `moviepy`: Lightweight extraction of audio tracks (`.mp3`) from large video payloads.
@@ -38,9 +39,11 @@
 37: ├── app.py              # Main Streamlit app (~1400 lines)
 38: ├── sync_ui.py          # Sync mode UI (~4000 lines)
 39: ├── ui_helpers.py       # Shared utilities (disk check, folder picker, notifications)
-40: ├── canvas_logic.py     # Canvas API wrapper + sanitization
-41: ├── sync_manager.py     # Sync backend (SQLite, Levenshtein, manifest logic)
-42: ├── version.py          # Global version tracker (e.g., __version__)
+40: ├── start.py            # Cross-platform entrypoint + platform branching
+├── macos_controller.py # macOS CustomTkinter server controller
+├── canvas_logic.py     # Canvas API wrapper + sanitization
+├── sync_manager.py     # Sync backend (SQLite, Levenshtein, manifest logic)
+├── version.py          # Global version tracker (e.g., __version__)
 43: ├── theme.py            # Centralized design tokens and CSS variables
 44: ├── assets/             # Icons, images, chime.wav
 45: ├── post_processing.py  # Unified translation/conversion runner pipeline
@@ -52,7 +55,7 @@
 51: ├── video_converter.py  # Zero-logger Video->MP3 extraction utility
 52: ├── archive_extractor.py# Extractor and 0-byte Stub-generator for .zip payloads
 53: ├── excel_converter.py  # Dual-Pipeline Excel converter (PDF + AI-optimized CSV/TXT Sidecars)
-54: └── Canvas_Downloader_macOS.spec # macOS build specification (Chromium + Excludes)
+└── Canvas_Downloader_macOS.spec # macOS build specification (BYOB + CustomTkinter)
 55: ```
 56: 
 57: ## Path Management
@@ -73,6 +76,8 @@
 72:     - **Distribution**: `.app` bundle
 73:     - **macOS Entitlements**: Requires `entitlements.plist` enabling `com.apple.security.automation.apple-events`.
 74: - **Optimization**:
-75:     - Explicit excludes (`win11toast`, `winsound` for macOS, heavy data science libs) to reduce binary size.
-76:     - Windows `upx=False` — removed decompression overhead at startup.
-77: - **Size Estimates**: ~347MB (Windows one-dir bundle on disk)
+    - Explicit excludes (`win11toast`, `winsound` for macOS, `webview`, `PySide6`, heavy data science libs) to reduce binary size.
+    - Windows `upx=False` — removed decompression overhead at startup.
+- **Size Estimates**: 
+    - Windows: ~347MB (one-dir bundle on disk)
+    - macOS: ~70-90MB (BYOB native `.app` bundle without embedded Chromium engine)

@@ -1,17 +1,21 @@
 # Active Context: Canvas Downloader
 
 3: ## Current Focus
-4:     - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
-5:         - **Streamlit Script Completion**: Monitors the internal `stStatusWidget` as the authoritative signal that the Python script has finished execution.
-6:         - **Adaptive Settlement Period**: Implemented a dynamic settlement delay (default 250ms) to ensure the browser's DOM cleanup and style reconciliation are settled before revealing the new page.
-7:         - **Stabilized Transitions**: Prevents premature hiding on slow hardware, ensuring a seamless, premium UX across all transitions.
-8: 
-9: ## Next Steps
-10: - **Production Packaging**: Finalize PyInstaller configurations for Windows and macOS.
-11: - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
-12: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
+4:     - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
+5:     - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
+6: 
+7: ## Next Steps
+8: - **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
+9: - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
+10: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 13: 
 14: ## Recent Activity
+- **Session 2026-05-06: macOS "Bring Your Own Browser" Refactoring**
+    - **Engine Shift**: Abandoned `PySide6` and `PySide6-WebEngine`. Removed `webview` dependency for macOS to drastically reduce bundle size (~250MB to ~70MB) and bypass ARM64 wheel unavailability.
+    - **New Controller**: Implemented `macos_controller.py` using **CustomTkinter** to provide a lightweight (~300KB), modern, dark-mode native interface for non-technical users to manage the Streamlit daemon lifecycle.
+    - **Chrome-Only Policy**: The application strictly launches the user's Google Chrome natively, enforcing CSS parity required by our Chromium-optimized interface.
+    - **Unified CI Build**: Consolidated the complex multi-build job (Intel/ARM split) in `.github/workflows/build-macos.yml` into a single, native `macos-latest` job for faster, simpler compilation.
+    
 - **Session 2026-05-02: Quick Download Interface Redesign**
     - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
     - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.
