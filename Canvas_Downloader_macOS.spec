@@ -4,8 +4,7 @@ import sys
 import os
 import imageio_ffmpeg
 
-# Check if we are building the Heavy (Chromium) or Light (Cocoa) version
-BUILD_TYPE = os.environ.get('BUILD_TYPE', 'heavy')
+
 
 datas = [
     ('app.py', '.'),
@@ -34,6 +33,7 @@ datas = [
     ('sync', 'sync'),
     ('ui', 'ui'),
     ('styles', 'styles'),
+    ('macos_controller.py', '.'),
     ('LICENSE', '.'),
 ]
 
@@ -51,17 +51,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync'
+    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'customtkinter'
 ]
-
-# Conditionally add PySide6 ONLY if it's the heavy build
-if BUILD_TYPE == 'heavy':
-    packages_to_collect.extend([
-        'PySide6',
-        'PySide6.QtWebEngineWidgets',
-        'PySide6.QtWebEngineCore',
-        'PySide6.QtWebEngine'
-    ])
 
 for package in packages_to_collect:
     try:
@@ -76,24 +67,14 @@ hiddenimports += [
     'streamlit.runtime.scriptrunner.script_runner',
     'engineio.async_drivers.threading',
     'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
-    'webview', 'moviepy.audio.fx.all', 'moviepy.video.fx.all',
+    'moviepy.audio.fx.all', 'moviepy.video.fx.all',
 ]
-
-if BUILD_TYPE == 'heavy':
-    hiddenimports.extend([
-        'webview.platforms.qt',
-        'PySide6.QtWebEngineWidgets', 'PySide6.QtWebEngineCore',
-        'PySide6.QtWebEngine', 'PySide6.QtCore', 'PySide6.QtWidgets',
-        'PySide6.QtGui', 'PySide6.QtNetwork'
-    ])
-else:
-    hiddenimports.append('webview.platforms.cocoa')
 
 a = Analysis(
     ['start.py'],
     pathex=[], binaries=binaries, datas=datas, hiddenimports=hiddenimports,
     hookspath=[], hooksconfig={}, runtime_hooks=[],
-    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5',
+    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 'PySide6', 'webview',
               'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses', 'sqlalchemy',
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
               'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
