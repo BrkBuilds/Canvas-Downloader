@@ -1,5 +1,5 @@
 """
-Cancellation — Shared cancel callbacks and checkers for Canvas Downloader.
+Cancellation - Shared cancel callbacks and checkers for Canvas Downloader.
 
 Provides unified cancellation primitives used by both the download flow
 (app.py) and the sync flow (sync_ui.py).

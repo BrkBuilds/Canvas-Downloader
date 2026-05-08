@@ -1,4 +1,4 @@
-; Canvas Downloader — Inno Setup 6 Installer Script
+; Canvas Downloader - Inno Setup 6 Installer Script
 ; Build order: pyinstaller Canvas_Downloader.spec → iscc Canvas_Downloader_Setup.iss
 ; Output: installer_output\Canvas_Downloader_Setup_{version}.exe
 
@@ -10,7 +10,7 @@
 #define SourceDir      "dist\Canvas Downloader"
 
 [Setup]
-; Stable GUID — never change this or Windows will treat updates as new apps
+; Stable GUID - never change this or Windows will treat updates as new apps
 AppId={{A3F2D1E0-8B4C-4F7A-9C2E-5D6B3A1F8E2D}
 AppName={#AppName}
 AppVersion={#AppVersion}
@@ -24,7 +24,7 @@ AppComments=Batch-download your Canvas LMS course materials to your computer.
 ; Install location
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
-; Don't show "Select Start Menu Folder" page — handled by task below
+; Don't show "Select Start Menu Folder" page - handled by task below
 DisableProgramGroupPage=yes
 
 ; Output
@@ -62,7 +62,7 @@ UninstallDisplayName={#AppName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-; Both checked by default — user can opt out during install
+; Both checked by default - user can opt out during install
 Name: "startmenu";  Description: "Create a &Start Menu shortcut";  GroupDescription: "Shortcuts:"
 Name: "desktopicon"; Description: "Create a &desktop shortcut";     GroupDescription: "Shortcuts:"
 
@@ -70,7 +70,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut";     GroupDescrip
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-; Start Menu (modern: no Uninstall entry — users remove via Settings > Apps)
+; Start Menu (modern: no Uninstall entry - users remove via Settings > Apps)
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startmenu
 ; Desktop
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon

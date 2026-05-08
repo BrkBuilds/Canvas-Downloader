@@ -1,5 +1,5 @@
 """
-ui.quick_download — Quick Download preset picker (Step 2 lite).
+ui.quick_download - Quick Download preset picker (Step 2 lite).
 """
 from __future__ import annotations
 
@@ -285,9 +285,9 @@ div[class*="st-key-btn_quick_"] button {{
 {_preset_desc_css}
 
 /* ═══════════════════════════════════════════════════════
-   PRESET CARDS — SQUARE GRID (3 + 2)
+   PRESET CARDS - SQUARE GRID (3 + 2)
    ═══════════════════════════════════════════════════════ */
-/* ─── Preset button — the button IS the card ─── */
+/* ─── Preset button - the button IS the card ─── */
 div[class*="st-key-btn_quick_preset_"] button {{
     display: flex !important;
     flex-direction: column !important;
@@ -321,7 +321,7 @@ div[class*="st-key-btn_quick_preset_"] button:active {{
     transition: none !important;
 }}
 
-/* Inner div — center the title text */
+/* Inner div - center the title text */
 div[class*="st-key-btn_quick_preset_"] button > div,
 div[class*="st-key-btn_quick_preset_"] button div[data-testid="stMarkdownContainer"] {{
     width: 100% !important;
@@ -342,7 +342,7 @@ div[class*="st-key-btn_quick_preset_"] button p {{
     overflow-wrap: anywhere !important;
 }}
 
-/* Radio ring — inactive (positioned in card top-right) */
+/* Radio ring - inactive (positioned in card top-right) */
 div[class*="st-key-btn_quick_preset_"] button::before {{
     content: "" !important;
     position: absolute !important;
@@ -799,7 +799,7 @@ div.st-key-page_nav_quick_back button:hover {{
             "click <b>'Go to Custom Download'</b> in the top right corner."
         )
 
-        # Snug Header Hack — H1 + Help button on one flex row
+        # Snug Header Hack - H1 + Help button on one flex row
         st.html("""
             <style>
             div.st-key-qd_title_help_row [data-testid="stHorizontalBlock"] {
@@ -877,7 +877,7 @@ div.st-key-page_nav_quick_back button:hover {{
             unsafe_allow_html=True,
         )
 
-        # Row 1 — 3 cards
+        # Row 1 - 3 cards
         with st.container(key="qd_presets_row1"):
             r1c1, r1c2, r1c3 = st.columns(3, gap="small")
             for i, col in enumerate([r1c1, r1c2, r1c3]):
@@ -890,7 +890,7 @@ div.st-key-page_nav_quick_back button:hover {{
                         args=(_QUICK_PRESETS[i]['id'], _QUICK_PRESETS[i]['settings']['download_mode']),
                     )
 
-        # Row 2 — 2 cards centered (same card width as row-1 columns)
+        # Row 2 - 2 cards centered (same card width as row-1 columns)
         # [1, 2, 2, 1] → inner cols each = 2/6 = 1/3 of total (matches row-1 cards)
         with st.container(key="qd_presets_row2"):
             _, r2c1, r2c2, _ = st.columns([1, 2, 2, 1], gap="small")
@@ -1080,7 +1080,7 @@ div.st-key-page_nav_quick_back button:hover {{
 
         if start_clicked:
             if not st.session_state.get('selected_course_ids'):
-                error_placeholder.error("No courses selected — go back and select at least one course.")
+                error_placeholder.error("No courses selected - go back and select at least one course.")
                 st.stop()
 
             _dl_path = Path(st.session_state['download_path'])

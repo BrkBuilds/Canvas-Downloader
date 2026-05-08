@@ -1,8 +1,8 @@
 """
-ui.hub_dialog — Saved Groups Hub SPA dialog and helpers.
+ui.hub_dialog - Saved Groups Hub SPA dialog and helpers.
 
 Extracted from ``sync_ui.py`` (Phase 5).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
   - Save Group/Pair dialog inner logic
@@ -75,7 +75,7 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
 
     # Dialog button CSS now lives in inject_hub_global_css() for bulletproof rendering.
 
-    # Action buttons — Cancel left, Create right
+    # Action buttons - Cancel left, Create right
     col_cancel, col_create = st.columns([1, 1], vertical_alignment="bottom")
     with col_cancel:
         if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
@@ -407,7 +407,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 border-color: #4a90e2 !important;
             }}
 
-            /* ===== ADD BUTTONS — Base64 Icon via ::before ===== */
+            /* ===== ADD BUTTONS - Base64 Icon via ::before ===== */
             div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button p::before,
             div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button p::before {{
                 content: "" !important;
@@ -426,7 +426,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
 
     # =================================================================
-    # LAYER 1 — Overview
+    # LAYER 1 - Overview
     # =================================================================
     
     # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
@@ -546,8 +546,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                         st.rerun()
                                         return
 
-                                # Validation passed — append
-                                # Validation passed — append atomically
+                                # Validation passed - append
+                                # Validation passed - append atomically
                                 _add_pair_lazy(incoming_pair)
                                 st.session_state['pending_toast'] = f"\u2705 Added '{display_name}' to sync list!"
                                 hub_cleanup()
@@ -635,7 +635,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     ]
 
                                     if not missing_indices:
-                                        # All folders exist — merge immediately using batch atomic append
+                                        # All folders exist - merge immediately using batch atomic append
                                         _add_pairs_batch_lazy(unique_pairs)
 
                                         # Detect same-course-different-folder overlaps for user awareness
@@ -659,7 +659,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                         hub_cleanup()
                                         st.rerun()
                                     else:
-                                        # Some folders missing — enter rescue mode
+                                        # Some folders missing - enter rescue mode
                                         st.session_state['hub_layer'] = 'rescue_mode'
                                         st.session_state['hub_rescue_group_id'] = group['group_id']
                                         st.session_state['hub_rescue_pairs'] = unique_pairs
@@ -669,7 +669,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                         st.rerun()
                         # NOTE: c2/c3 are at the same indent level as the
                         # if-block above. On the click-frame, st.rerun()
-                        # fires before these render — by design.
+                        # fires before these render - by design.
                         with c2:
                             st.button("\u270f\ufe0f Edit Group", key=f"hub_edit_{g_idx}",
                                       use_container_width=True,
@@ -689,7 +689,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 st.rerun()
 
     # =================================================================
-    # LAYER 2 — Group Details
+    # LAYER 2 - Group Details
     # =================================================================
     elif layer == 'layer_2':
         gid = st.session_state.get('hub_active_group_id')
@@ -966,7 +966,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         div[role="dialog"] div[data-testid="stVerticalBlock"]:has(div[class*="st-key-hub_cs_chk_"]) {
             gap: 1rem !important;
         }
-        /* Compact "Back to Edit" button — shrink to content height so it doesn't
+        /* Compact "Back to Edit" button - shrink to content height so it doesn't
            create a large visual gap before the "Select Course" heading. */
         div[role="dialog"]:has(.st-key-btn_hub_back_from_course_sel) div.st-key-btn_hub_back_from_course_sel button {
             height: auto !important;
@@ -976,7 +976,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         }
         /* Scroll container: height:auto lets the list shrink to fit short
            Favorites lists; max-height caps growth so the dialog never
-           overflows the viewport — All Courses scrolls internally via
+           overflows the viewport - All Courses scrolls internally via
            overflow-y:auto once content exceeds max-height.
            border=True used for reliable st-key-* class; border stripped here. */
         div.st-key-hub_cs_scroll_container {
@@ -1061,7 +1061,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                   args=(selected_cid, selected_cname, course_names, courses))
 
     # =================================================================
-    # RESCUE MODE — Remap Missing Folders
+    # RESCUE MODE - Remap Missing Folders
     # =================================================================
     elif layer == 'rescue_mode':
         rescue_pairs = st.session_state.get('hub_rescue_pairs', [])
@@ -1230,7 +1230,7 @@ def hub_cleanup():
 
 
 # ===================================================================
-# STEP 1 — Folder Pairing
+# STEP 1 - Folder Pairing
 # ===================================================================
 def inject_hub_global_css():
     """Inject Hub Dialog styling: static CSS from file + dynamic theme overrides."""
@@ -1240,7 +1240,7 @@ def inject_hub_global_css():
     # Static CSS (extracted to styles/sync_hub.css)
     inject_css('sync_hub.css')
 
-    # Dynamic overrides — only rules requiring Python theme variables
+    # Dynamic overrides - only rules requiring Python theme variables
     # Use st.html (not st.markdown) to avoid ghost-box 1rem margin above the stepper.
     st.html(f"""<style>
     /* 1. Main Button Icon injected seamlessly next to text */

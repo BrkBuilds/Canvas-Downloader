@@ -1,5 +1,5 @@
 """
-Sync UI Module — All sync-related Streamlit UI logic.
+Sync UI Module - All sync-related Streamlit UI logic.
 Comprehensive overhaul with:
   - Fixed Select All / Deselect All buttons
   - Open Folder buttons inside pair cards
@@ -256,7 +256,7 @@ _SYNC_HELP_TEXT = (
     f"<div style='{_cc_clean}'>"
     f"<div style='{_cat_name}'>Updates (Clean)</div>"
     f"<div style='{_cat_desc}'>Canvas has a newer version, and you haven't edited your local copy.</div>"
-    f"<div style='{_cat_act}'>Replaced in place with the newest version — same name, same location.</div>"
+    f"<div style='{_cat_act}'>Replaced in place with the newest version - same name, same location.</div>"
     f"<div style='{_sb_checked}'>✔ Checked by default</div>"
     "</div>"
     f"<div style='{_cc_edited}'>"
@@ -268,7 +268,7 @@ _SYNC_HELP_TEXT = (
     f"<div style='{_cc_loc_del}'>"
     f"<div style='{_cat_name}'>Locally Deleted</div>"
     f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
-    f"<div style='{_cat_act}'>Your deletion is respected — won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
+    f"<div style='{_cat_act}'>Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
     f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
     "</div>"
     f"<div style='{_cc_can_del}'>"
@@ -344,11 +344,11 @@ _SYNC_HELP_TEXT = (
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 2.0;'>"
     "Syncing is designed to be totally safe. The app <b style='color: #ffffff;'>guarantees</b>:<br>"
-    "<b style='color: #ffffff;'>🚫 Never overwrites your edits</b> — updated files you annotated get a <em>_NewVersion</em> copy alongside your original.<br>"
-    "<b style='color: #ffffff;'>🚫 Never deletes local files</b> — not even when the teacher removes them from Canvas. Your disk is yours.<br>"
-    "<b style='color: #ffffff;'>🚫 Never re-downloads files you deleted</b> — unless you explicitly opt in via the review page.<br>"
-    "<b style='color: #ffffff;'>🚫 Never creates duplicates</b> — every file is tracked. Re-downloads overwrite cleanly or produce a clearly-named <em>_NewVersion</em>.<br>"
-    "<b style='color: #ffffff;'>🚫 Never touches files outside your course folder</b> — only operates inside folders you explicitly link."
+    "<b style='color: #ffffff;'>🚫 Never overwrites your edits</b> - updated files you annotated get a <em>_NewVersion</em> copy alongside your original.<br>"
+    "<b style='color: #ffffff;'>🚫 Never deletes local files</b> - not even when the teacher removes them from Canvas. Your disk is yours.<br>"
+    "<b style='color: #ffffff;'>🚫 Never re-downloads files you deleted</b> - unless you explicitly opt in via the review page.<br>"
+    "<b style='color: #ffffff;'>🚫 Never creates duplicates</b> - every file is tracked. Re-downloads overwrite cleanly or produce a clearly-named <em>_NewVersion</em>.<br>"
+    "<b style='color: #ffffff;'>🚫 Never touches files outside your course folder</b> - only operates inside folders you explicitly link."
     "</div>"
     "</div>"
     "</details>"
@@ -361,27 +361,27 @@ _SYNC_HELP_TEXT = (
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between Sync Mode and Download Mode?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "Download Mode fetches a complete fresh copy of everything — it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your local folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance."
+    "Download Mode fetches a complete fresh copy of everything - it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your local folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
-    "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>I renamed or moved a file locally — will sync break?</summary>"
+    "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>I renamed or moved a file locally - will sync break?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "No. The app automatically detects renamed and moved files using content fingerprinting. You can rename and reorganize freely — no duplicates, no broken tracking."
+    "No. The app automatically detects renamed and moved files using content fingerprinting. You can rename and reorganize freely - no duplicates, no broken tracking."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>My professor updated a PDF I annotated. What happens?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "It appears in <em>Updates — You Edited</em>, unchecked by default. If you check it, the new version saves as <em>Lecture_3_NewVersion.pdf</em> alongside your annotated original. Your annotations are never touched. Quick Sync skips it entirely."
+    "It appears in <em>Updates - You Edited</em>, unchecked by default. If you check it, the new version saves as <em>Lecture_3_NewVersion.pdf</em> alongside your annotated original. Your annotations are never touched. Quick Sync skips it entirely."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Will a file show as updated if my professor only changed its description?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "No. The app compares file content fingerprints, not just timestamps. If the actual file hasn't changed, it stays in Up to Date — no phantom updates."
+    "No. The app compares file content fingerprints, not just timestamps. If the actual file hasn't changed, it stays in Up to Date - no phantom updates."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Course Pair and do I need one per course?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "Yes — one pair per course. A pair links a local folder to a Canvas course. The app tracks everything in a hidden database inside that folder. Multiple courses cannot share the same folder."
+    "Yes - one pair per course. A pair links a local folder to a Canvas course. The app tracks everything in a hidden database inside that folder. Multiple courses cannot share the same folder."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Saved Group?</summary>"
@@ -396,7 +396,7 @@ _SYNC_HELP_TEXT = (
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Can Quick Sync run all my courses at once?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "Yes — Both sync modes take ALLL course pairs on the sync list, and run for each individual course in one batch."
+    "Yes - Both sync modes take ALLL course pairs on the sync list, and run for each individual course in one batch."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Will Sync re-download files I already have?</summary>"
@@ -478,7 +478,7 @@ def _select_sync_folder():
 
 # ===================================================================
 # ===================================================================
-# Save Group / Pair Dialog (Dual-Wrapper Pattern) — delegated to ui/hub_dialog.py
+# Save Group / Pair Dialog (Dual-Wrapper Pattern) - delegated to ui/hub_dialog.py
 # ===================================================================
 
 def _save_group_or_pair_inner(sync_pairs, is_pair=False, pair_data=None):
@@ -643,7 +643,7 @@ def _sync_pairs_section(courses, course_names, course_options):
     ignored_by_course = st.session_state.get(_cache_key)
 
     if ignored_by_course is None:
-        # Cache miss — query SQLite once, store result for subsequent fragment reruns
+        # Cache miss - query SQLite once, store result for subsequent fragment reruns
         ignored_by_course = {}
         if sync_pairs:
             for pair in sync_pairs:
@@ -714,7 +714,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                     with st.container(border=True, key=_card_key):
                         # Title rendered first, naturally
                         st.markdown(f"**{'Course: '} {display_name}**")
-                        # Save button rendered after — CSS absolute-positions it to top-right
+                        # Save button rendered after - CSS absolute-positions it to top-right
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
                                      help=_save_help):
                             _save_pair_dialog(pair)
@@ -773,7 +773,7 @@ def _sync_pairs_section(courses, course_names, course_options):
             if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
-                # (9) "Add Course folder" + "Save List as Group" — full width
+                # (9) "Add Course folder" + "Save List as Group" - full width
                 col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom") 
                 with col_add:
                     # Clean, isolated CSS for "Add Course" using its Streamlit key
@@ -855,7 +855,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                 with col_add:
                     st.html("""
                     <style>
-                    /* Scoped to the button's own key — NO :has() to prevent
+                    /* Scoped to the button's own key - NO :has() to prevent
                        leaking into dialog portals via ancestor climbing */
                     div.st-key-btn_add_folder_empty button {
                         border: none !important;
@@ -915,7 +915,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     _init_sync_session_state()
     _load_persistent_pairs()
 
-    # Step wizard — must be rendered BEFORE any inject_css() calls.
+    # Step wizard - must be rendered BEFORE any inject_css() calls.
     # inject_hub_global_css() calls inject_css() via st.markdown which creates a
     # 1rem ghost-box margin; rendering the wizard first pins it flush to the top.
     render_sync_wizard(st, 1)
@@ -989,7 +989,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         color: #ffffff !important;
     }}
 
-    /* Analyze Sync Disabled — clean muted grey, no washed-out color */
+    /* Analyze Sync Disabled - clean muted grey, no washed-out color */
     div.st-key-btn_analyze_sync button:disabled {{
         background-color: #3a3a3a !important;
         color: #6b6b6b !important;
@@ -1000,7 +1000,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         filter: grayscale(100%) opacity(0.4) !important;
     }}
 
-    /* Quick Sync Disabled — override gradient with flat grey */
+    /* Quick Sync Disabled - override gradient with flat grey */
     div.st-key-btn_quick_sync button:disabled {{
         background: #3a3a3a !important;
         color: #6b6b6b !important;
@@ -1012,7 +1012,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         filter: grayscale(100%) opacity(0.4) !important;
     }}
 
-    /* ===== ADD COURSE BUTTON — Base64 Icon via ::before ===== */
+    /* ===== ADD COURSE BUTTON - Base64 Icon via ::before ===== */
     div.st-key-btn_add_folder button p::before,
     div.st-key-btn_add_folder_empty button p::before {{
         content: "" !important;
@@ -1032,9 +1032,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     if 'pending_toast' in st.session_state:
         st.toast(st.session_state.pop('pending_toast'))
 
-    # (7) Removed "Select Folders to Sync" header — wizard is enough context.
+    # (7) Removed "Select Folders to Sync" header - wizard is enough context.
 
-    # Fetch courses — already annotated with .is_favorite by fetch_courses()
+    # Fetch courses - already annotated with .is_favorite by fetch_courses()
     courses = fetch_courses_fn(
         st.session_state['api_token'],
         st.session_state['api_url'],
@@ -1070,7 +1070,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
 
     # --- (8) Bigger subheading + Help + Hub button ---
-    # Snug Header Hack — H2 + Help button on one flex row
+    # Snug Header Hack - H2 + Help button on one flex row
     st.html("""
         <style>
         div.st-key-btn_hub_main button {
@@ -1276,7 +1276,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
     }
 
-    /* 13. Missing-folder pair cards — distinctive warning border */
+    /* 13. Missing-folder pair cards - distinctive warning border */
     div[class*="st-key-sync_pair_card_missing_"] {
         border-color: rgba(239, 68, 68, 0.5) !important;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
@@ -1310,7 +1310,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     if not sync_pairs:
         _sync_help = "Add at least one course folder to start syncing."
     elif _has_missing_folders:
-        _sync_help = f"Can't sync — a folder is missing or disconnected. Fix or remove it first."
+        _sync_help = f"Can't sync - a folder is missing or disconnected. Fix or remove it first."
     else:
         _sync_help = None
 
@@ -1332,7 +1332,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # We target specific children of these columns to ensure parity.
     st.html("""
     <style>
-    /* Target buttons inside the main column containers — scoped to Analyze/Quick Sync */
+    /* Target buttons inside the main column containers - scoped to Analyze/Quick Sync */
     div.st-key-btn_analyze_sync button[kind="primary"],
     div.st-key-btn_quick_sync button[kind="primary"] {
         height: 3.2em !important;
@@ -1380,7 +1380,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      use_container_width=True,
                      disabled=not _can_sync,
                      help=_sync_help):
-            # Nuclear reset of all cancel flags — stale flags from a previous download/sync
+            # Nuclear reset of all cancel flags - stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results.
             st.session_state['cancel_requested'] = False
             st.session_state['sync_cancelled'] = False
@@ -1406,7 +1406,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      use_container_width=True,
                      disabled=not _can_sync,
                      help=_sync_help):
-            # Nuclear reset of all cancel flags — stale flags from a previous download/sync
+            # Nuclear reset of all cancel flags - stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results
             # and causing Quick Sync to silently fall back to the Review page.
             st.session_state['cancel_requested'] = False
@@ -1423,7 +1423,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 main_placeholder.empty()
             st.rerun()
 
-    # --- (6) Tutorial + Sync History — grouped at bottom below separator ---
+    # --- (6) Tutorial + Sync History - grouped at bottom below separator ---
     _render_sync_history()
 
 
@@ -1537,7 +1537,7 @@ def _render_sync_history():
             box-shadow: none !important;
         }
         
-        /* The header (summary) — flat style, same in both collapsed and expanded */
+        /* The header (summary) - flat style, same in both collapsed and expanded */
         div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details) > summary {
             background: #1a1e24 !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -1594,7 +1594,7 @@ def _render_sync_history():
             transition: transform 0.2s ease !important;
         }
         
-        /* Expanded state — only structural overrides needed, base look is identical */
+        /* Expanded state - only structural overrides needed, base look is identical */
         div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] details:not(.sync-history-details)[open] {
             border: none !important;
         }
@@ -1776,7 +1776,7 @@ def _render_sync_history():
                     synced_files = entry.get('synced_files', [])
                     error_details = entry.get('error_details', [])
                     
-                    # Course names display — escaped for XSS safety
+                    # Course names display - escaped for XSS safety
                     courses_text = ""
                     if course_names:
                         formatted_names = [esc(friendly_course_name(name)) for name in course_names if name]
@@ -1926,7 +1926,7 @@ def _render_pending_folder_ui(courses, course_names, course_options):
     render_pending_folder_ui(courses, course_names, course_options)
 
 
-# STEP 4 — Analysis + Syncing + Completion
+# STEP 4 - Analysis + Syncing + Completion
 # ===================================================================
 
 def render_sync_step4( main_placeholder=None):
@@ -1941,7 +1941,7 @@ def render_sync_step4( main_placeholder=None):
     if not sync_pairs:
         from ui.amber_notice import render_amber_notice
         render_amber_notice(
-            "No course folders found — this can happen after a page refresh.",
+            "No course folders found - this can happen after a page refresh.",
             detail="Go back and add your courses again to continue.",
         )
         if st.button('Back to Sync Setup', key="page_nav_back"):

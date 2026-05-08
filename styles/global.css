@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Global Defaults — Canvas Downloader
+   Global Defaults - Canvas Downloader
    Source: app.py L36-60 (extracted Phase 0)
    ═══════════════════════════════════════════════ */
 
@@ -17,7 +17,7 @@ header[data-testid="stHeader"] {
 }
 
 /* Belt-and-suspenders: hide toolbar action items individually.
-   stToolbar itself must NOT be display:none — stSidebarCollapsedControl
+   stToolbar itself must NOT be display:none - stSidebarCollapsedControl
    (the sidebar expand button when collapsed) is a child of stToolbar and
    would be hidden along with it. */
 [data-testid="stToolbarActions"],
@@ -37,7 +37,7 @@ header[data-testid="stHeader"] {
     display: none !important;
 }
 
-/* 1. Step tracker sits flush at the top edge — no top padding */
+/* 1. Step tracker sits flush at the top edge - no top padding */
 .block-container,
 div[data-testid="stMainBlockContainer"],
 div[data-testid="stAppViewBlockContainer"] {
@@ -68,18 +68,37 @@ div[data-testid="stHtml"] {
 }
 
 /* Status text helpers */
-.success-text { color: #28a745; font-weight: bold; }
-.error-text   { color: #dc3545; font-weight: bold; }
+.success-text {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.error-text {
+    color: #dc3545;
+    font-weight: bold;
+}
 
 /* Step header typography */
-.step-header { font-size: 1.5em; font-weight: bold; margin-bottom: 1em; }
+.step-header {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
 
 /* Hide the "Press Enter to apply" / "Press Enter to submit" hints */
-div[data-testid="InputInstructions"] { display: none !important; }
+div[data-testid="InputInstructions"] {
+    display: none !important;
+}
 
 /* Hide the blinking cursor in the language dropdown to look like a static menu */
-div[data-testid="stSelectbox"] input { caret-color: transparent; cursor: default !important; }
-div[data-testid="stSelectbox"] > div { cursor: default !important; }
+div[data-testid="stSelectbox"] input {
+    caret-color: transparent;
+    cursor: default !important;
+}
+
+div[data-testid="stSelectbox"]>div {
+    cursor: default !important;
+}
 
 /* Destructive buttons (Cancel / Remove) turn red on hover */
 [class*="st-key-remove_pair"] button:hover,
@@ -93,9 +112,9 @@ div[data-testid="stSelectbox"] > div { cursor: default !important; }
    Flex Row Hack (Standardizing Side-by-Side Buttons)
    ═══════════════════════════════════════════════ */
 div.st-key-action_buttons_row,
-div.st-key-action_buttons_row > div,
-div.st-key-action_buttons_row > div > div,
-div.st-key-action_buttons_row > div > div > div {
+div.st-key-action_buttons_row>div,
+div.st-key-action_buttons_row>div>div,
+div.st-key-action_buttons_row>div>div>div {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -103,6 +122,7 @@ div.st-key-action_buttons_row > div > div > div {
     flex-wrap: wrap !important;
     width: 100% !important;
 }
+
 div.st-key-action_buttons_row div[data-testid="element-container"],
 div.st-key-action_buttons_row div.stElementContainer {
     width: auto !important;
@@ -112,7 +132,7 @@ div.st-key-action_buttons_row div.stElementContainer {
 
 
 /* ═══════════════════════════════════════════════
-   Sidebar Layout — Zero-Padding Strategy
+   Sidebar Layout - Zero-Padding Strategy
    ═══════════════════════════════════════════════
    Instead of keeping native 1.5rem padding and trying to burst
    buttons out with negative margins, we ZERO all sidebar padding
@@ -126,19 +146,22 @@ section[data-testid="stSidebar"] div[data-testid="stSidebarContent"] {
     overflow-y: hidden !important;
     scrollbar-gutter: unset !important;
     scrollbar-width: none !important;
-    padding: 0 !important; /* Kill ALL native padding including top 6rem default */
+    padding: 0 !important;
+    /* Kill ALL native padding including top 6rem default */
     /* Make stSidebarContent a flex column so stSidebarUserContent
        can take flex:1 to fill remaining space AFTER the header */
     display: flex !important;
     flex-direction: column !important;
     height: 100vh !important;
 }
-/* Sidebar width constraints — resizable within bounds */
+
+/* Sidebar width constraints - resizable within bounds */
 section[data-testid="stSidebar"][aria-expanded="true"] {
     min-width: 235px !important;
     max-width: 360px !important;
 }
-/* Collapse the sidebar header (collapse button) to ZERO height — take it OUT of flow.
+
+/* Collapse the sidebar header (collapse button) to ZERO height - take it OUT of flow.
    The collapse button (stSidebarCollapseButton) floats via absolute positioning. */
 section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
     height: 0 !important;
@@ -148,6 +171,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
     overflow: visible !important;
     position: relative !important;
 }
+
 section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button,
 [data-testid="stSidebarCollapseButton"] {
     position: absolute !important;
@@ -155,6 +179,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button,
     right: 5px !important;
     z-index: 100 !important;
 }
+
 /* Also kill gutter on the stSidebar section itself */
 section[data-testid="stSidebar"] {
     scrollbar-gutter: unset !important;
@@ -168,24 +193,27 @@ section[data-testid="stSidebar"] {
     top: 25px !important;
 }
 
-/* 2. Flexbox column chain —
+/* 2. Flexbox column chain -
       stSidebarContent (100vh, flex col)
         └─ stSidebarHeader (auto height)
         └─ stSidebarUserContent (flex: 1 → fills remaining space)
              └─ stVerticalBlock (flex: 1, flex col) */
 section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
     flex: 1 !important;
-    min-height: 0 !important; /* Allow shrinking below content size */
+    min-height: 0 !important;
+    /* Allow shrinking below content size */
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
 }
-section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] > div[data-testid="stVerticalBlock"] {
+
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"]>div[data-testid="stVerticalBlock"] {
     flex: 1 !important;
     min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0 !important; /* Kill default gap between flex children */
+    gap: 0 !important;
+    /* Kill default gap between flex children */
 }
 
 /* Kill gap on ALL vertical blocks inside the sidebar */
@@ -207,6 +235,7 @@ div[class*="st-key-sidebar_top"] {
 section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
     position: relative !important;
 }
+
 div[class*="st-key-sidebar_bottom_block"] {
     position: absolute !important;
     bottom: 0 !important;
@@ -214,12 +243,15 @@ div[class*="st-key-sidebar_bottom_block"] {
     right: 0 !important;
     width: 100% !important;
     padding-bottom: 1rem !important;
-    background: inherit !important; /* Inherit sidebar background */
+    background: inherit !important;
+    /* Inherit sidebar background */
     overflow: visible !important;
 }
+
 /* Reserve space at the bottom of the top content so it doesn't overlap */
-section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] > div[data-testid="stVerticalBlock"] {
-    padding-bottom: 180px !important; /* Reserve space for absolute-positioned bottom block */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"]>div[data-testid="stVerticalBlock"] {
+    padding-bottom: 180px !important;
+    /* Reserve space for absolute-positioned bottom block */
 }
 
 /* ═══════════════════════════════════════════════
@@ -234,10 +266,12 @@ section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
     padding: 0 !important;
     overflow: visible !important;
 }
+
 /* Kill the padding shim div between BorderWrapper and VerticalBlock */
-section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] > div {
+section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]>div {
     padding: 0 !important;
 }
+
 /* Kill all element-container margins in the sidebar */
 section[data-testid="stSidebar"] div[data-testid="element-container"],
 section[data-testid="stSidebar"] div.stElementContainer {
@@ -249,11 +283,12 @@ section[data-testid="stSidebar"] div.stElementContainer {
     max-width: 100% !important;
 }
 
-/* Collapse stHtml iframe wrappers to their content height — no extra space */
+/* Collapse stHtml iframe wrappers to their content height - no extra space */
 section[data-testid="stSidebar"] [data-testid="stHtml"] {
     height: auto !important;
     min-height: 0 !important;
 }
+
 section[data-testid="stSidebar"] [data-testid="stHtml"] iframe {
     height: auto !important;
     min-height: 0 !important;
@@ -277,22 +312,24 @@ section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"] button {
     border-radius: 0px !important;
     border: none !important;
 }
+
 /* Kill border-radius on ALL inner elements of nav buttons */
 section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button,
 section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button * {
     border-radius: 0px !important;
 }
+
 /* Force left-alignment on Streamlit's inner button wrappers (DIV > SPAN chain).
    Without this, Streamlit's default justify-content: center on the inner flex
    containers causes the icon+text to appear centered on narrow sidebars. */
-section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button > div,
-section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button > div > span {
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button>div,
+section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button>div>span {
     justify-content: flex-start !important;
     text-align: left !important;
     width: 100% !important;
 }
 
-/* Specific logout button override — keep it compact */
+/* Specific logout button override - keep it compact */
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout .stButton,
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button {
     width: 38px !important;
@@ -315,13 +352,14 @@ section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"] {
     margin-bottom: 0px !important;
 }
 
-/* User info row — position context for absolute logout button */
+/* User info row - position context for absolute logout button */
 section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] {
     position: relative !important;
     min-height: 40px !important;
     overflow: visible !important;
 }
-/* Logout button — absolutely positioned. left offset injected dynamically by Python. */
+
+/* Logout button - absolutely positioned. left offset injected dynamically by Python. */
 section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-nav_btn_logout {
     position: absolute !important;
     top: 60% !important;
@@ -344,16 +382,20 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
     border-radius: 8px !important;
     transition: all 0.2s ease !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"]:focus-within {
     border-color: #38bdf8 !important;
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3) !important;
 }
-[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"] > div {
+
+[data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"]>div {
     background-color: transparent !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-baseweb="input"] input {
     color: #f3f4f6 !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] div[data-testid="stTextInput"] label {
     padding-bottom: 2px !important;
     margin-bottom: 0px !important;
@@ -365,6 +407,7 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] div.stElementContainer {
     margin-bottom: 15px !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stForm"] div.stElementContainer:last-child {
     margin-bottom: 0px !important;
 }
@@ -373,6 +416,7 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 [data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] {
     margin-top: 5px !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] button {
     background-color: #3b82f6 !important;
     color: #ffffff !important;
@@ -385,12 +429,13 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
     transition: all 0.2s ease !important;
     box-shadow: none !important;
 }
+
 [data-testid="stSidebarUserContent"] [data-testid="stFormSubmitButton"] button:hover {
     background-color: #2563eb !important;
     box-shadow: none !important;
 }
 
-/* Premium Expanders — target raw <details> since Streamlit uses emotion classes, not .stExpander */
+/* Premium Expanders - target raw <details> since Streamlit uses emotion classes, not .stExpander */
 section[data-testid="stSidebar"] details {
     margin: 0 20px 0px 20px !important;
     padding: 0 !important;
@@ -401,6 +446,7 @@ section[data-testid="stSidebar"] details {
     width: auto !important;
     box-shadow: none !important;
 }
+
 section[data-testid="stSidebar"] details summary {
     padding: 10px 0px !important;
     background: transparent !important;
@@ -408,20 +454,24 @@ section[data-testid="stSidebar"] details summary {
     display: flex !important;
     align-items: center !important;
 }
+
 section[data-testid="stSidebar"] details summary:hover {
     background: transparent !important;
     opacity: 1 !important;
 }
+
 section[data-testid="stSidebar"] details summary:hover *,
 section[data-testid="stSidebar"] details summary:hover p,
 section[data-testid="stSidebar"] details summary:hover span {
     color: #ffffff !important;
 }
+
 section[data-testid="stSidebar"] details summary span,
-section[data-testid="stSidebar"] details summary > span {
+section[data-testid="stSidebar"] details summary>span {
     display: flex !important;
     align-items: center !important;
 }
+
 section[data-testid="stSidebar"] details summary p,
 section[data-testid="stSidebar"] details summary span,
 section[data-testid="stSidebar"] details summary div,
@@ -432,14 +482,17 @@ section[data-testid="stSidebar"] details summary * {
     line-height: 1 !important;
     margin: 0 !important;
 }
+
 /* Expander content: zero left padding so text aligns with the
    summary chevron at 20px from the sidebar's left edge. */
-section[data-testid="stSidebar"] details > div {
+section[data-testid="stSidebar"] details>div {
     padding: 10px 0px 10px 0px !important;
 }
+
 section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] {
     padding: 0px !important;
 }
+
 section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] p,
 section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] li {
     color: rgba(255, 255, 255, 0.85) !important;
@@ -452,14 +505,14 @@ section[data-testid="stSidebar"] details div[data-testid="stMarkdownContainer"] 
 }
 
 /* ═══════════════════════════════════════════════
-   Sidebar Alert (st.error / st.warning) — flat, edge-to-edge
+   Sidebar Alert (st.error / st.warning) - flat, edge-to-edge
    ═══════════════════════════════════════════════
    The login-failed notification rendered by st.error() defaults to
    rounded corners + horizontal margin. Strip both so it matches the
    flat sidebar aesthetic and spans the full width. */
 section[data-testid="stSidebar"] div[data-testid="stAlert"],
 section[data-testid="stSidebar"] div[data-testid="stAlertContainer"],
-section[data-testid="stSidebar"] div[data-testid="stAlert"] > div,
+section[data-testid="stSidebar"] div[data-testid="stAlert"]>div,
 section[data-testid="stSidebar"] div[data-baseweb="notification"] {
     border-radius: 0 !important;
     margin-left: 0 !important;
@@ -468,14 +521,16 @@ section[data-testid="stSidebar"] div[data-baseweb="notification"] {
     width: 100% !important;
     max-width: 100% !important;
 }
+
 /* Indent the alert text so it lines up with the rest of the sidebar
    content (20px from the left edge). Padding is applied to the alert
-   container itself — not the inner markdown — so the red background
+   container itself - not the inner markdown - so the red background
    still spans edge-to-edge. */
 section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] {
     padding-left: 20px !important;
     padding-right: 20px !important;
 }
+
 section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-testid="stMarkdownContainer"],
 section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-testid="stMarkdownContainer"] p {
     padding-left: 0 !important;
@@ -492,6 +547,7 @@ section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-te
     background: transparent !important;
     display: none !important;
 }
+
 [data-testid="stSidebarUserContent"],
 [data-testid="stSidebarContent"],
 [data-testid="stSidebar"] {
@@ -501,24 +557,27 @@ section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-te
 
 
 /* ═══════════════════════════════════════════════
-   Card 3 (AI Optimization) — static button styling
+   Card 3 (AI Optimization) - static button styling
    ═══════════════════════════════════════════════
    These rules don't depend on session state. Hoisted out of the
    per-rerun Python f-string so the dynamic CSS payload shrinks
-   dramatically — only the active-state coloring + icon URLs and
+   dramatically - only the active-state coloring + icon URLs and
    active-state checkmark SVGs are still emitted from Python. */
 
 /* Conversion grid horizontal gap */
-div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }
+div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] {
+    gap: 12px !important;
+}
 
 /* Conv button text alignment */
-div[class*="st-key-btn_convert_"] button > div,
+div[class*="st-key-btn_convert_"] button>div,
 div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] {
     width: 100% !important;
     display: flex !important;
     justify-content: flex-start !important;
     text-align: left !important;
 }
+
 div[class*="st-key-btn_convert_"] button p {
     text-align: left !important;
     width: 100% !important;
@@ -546,7 +605,7 @@ div[class*="st-key-btn_convert_"] button {
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Conv button description (::after) — defaults; the description text
+/* Conv button description (::after) - defaults; the description text
    itself is set per-button below */
 div[class*="st-key-btn_convert_"] button::after {
     text-align: left !important;
@@ -563,11 +622,12 @@ div[class*="st-key-btn_convert_"] button::after {
 div[class*="st-key-btn_convert_"] button:hover {
     border-color: #f97316 !important;
 }
+
 div[class*="st-key-btn_convert_"] button:hover::before {
     border-color: #f97316 !important;
 }
 
-/* Master "Select All" button geometry — overrides the conv button base */
+/* Master "Select All" button geometry - overrides the conv button base */
 div.st-key-btn_convert_master button {
     height: 48px !important;
     padding-top: 0px !important;
@@ -578,12 +638,35 @@ div.st-key-btn_convert_master button {
     border-radius: 12px !important;
 }
 
-/* Per-button description text (static — never changes between renders) */
-div.st-key-btn_convert_zip   button::after { content: "Auto-unzip .zip and .tar.gz archives." !important; }
-div.st-key-btn_convert_pptx  button::after { content: "Convert .pptx/.ppt to PDF." !important; }
-div.st-key-btn_convert_word  button::after { content: "Convert unsupported older formats (.doc, .rtf, .odt) to PDF." !important; }
-div.st-key-btn_convert_excel button::after { content: "Export spreadsheets as visual PDFs and LLM-ready CSV sidecars." !important; }
-div.st-key-btn_convert_html  button::after { content: "Convert Canvas web pages into AI-friendly text." !important; }
-div.st-key-btn_convert_code  button::after { content: "Append .txt extension to programming files (e.g. code.js.txt)." !important; }
-div.st-key-btn_convert_urls  button::after { content: "Compile all internet shortcuts into one structured .txt file." !important; }
-div.st-key-btn_convert_video button::after { content: "Extract .mp3 audio from video files." !important; }
+/* Per-button description text (static - never changes between renders) */
+div.st-key-btn_convert_zip button::after {
+    content: "Auto-unzip .zip and .tar.gz archives." !important;
+}
+
+div.st-key-btn_convert_pptx button::after {
+    content: "Convert .pptx/.ppt to PDF." !important;
+}
+
+div.st-key-btn_convert_word button::after {
+    content: "Convert unsupported older formats (.doc, .rtf, .odt) to PDF." !important;
+}
+
+div.st-key-btn_convert_excel button::after {
+    content: "Export spreadsheets as visual PDFs and LLM-ready CSV sidecars." !important;
+}
+
+div.st-key-btn_convert_html button::after {
+    content: "Convert Canvas web pages into AI-friendly text." !important;
+}
+
+div.st-key-btn_convert_code button::after {
+    content: "Append .txt extension to programming files (e.g. code.js.txt)." !important;
+}
+
+div.st-key-btn_convert_urls button::after {
+    content: "Compile all internet shortcuts into one structured .txt file." !important;
+}
+
+div.st-key-btn_convert_video button::after {
+    content: "Extract .mp3 audio from video files." !important;
+}

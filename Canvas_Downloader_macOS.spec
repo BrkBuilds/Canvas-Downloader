@@ -52,7 +52,7 @@ datas += copy_metadata('keyring')   # Fix 1: required for importlib.metadata ent
 
 # Fix 6: include terminal-notifier binary so pync notifications are attributed to the app,
 #         not "Script Editor".  collect_all('pync') captures the Python wrapper but may not
-#         preserve the executable bit on the binary — we add it explicitly as a binary.
+#         preserve the executable bit on the binary - we add it explicitly as a binary.
 _tn_bin = None
 try:
     import pync as _pync_mod
@@ -96,7 +96,7 @@ hiddenimports += [
     'engineio.async_drivers.threading',
     'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
     'moviepy.audio.fx.all', 'moviepy.video.fx.all',
-    # Fix 1: keyring macOS Keychain backend — needed for token persistence
+    # Fix 1: keyring macOS Keychain backend - needed for token persistence
     'keyring.backends', 'keyring.backends.macOS',
 ]
 

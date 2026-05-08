@@ -1,5 +1,5 @@
 """
-State Registry — Centralized session state management for Canvas Downloader.
+State Registry - Centralized session state management for Canvas Downloader.
 
 All st.session_state key names, defaults, and cleanup functions live here.
 This is the single source of truth for state initialization, preventing

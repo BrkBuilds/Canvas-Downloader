@@ -298,11 +298,11 @@ class SyncManager:
                 # instantiating with a different course_id to detect
                 # mismatch and prompt the user (handled in sync.analysis).
                 cursor.execute('INSERT OR IGNORE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_id', str(self.course_id)))
-                # Course name can change on Canvas — always refresh.
+                # Course name can change on Canvas - always refresh.
                 cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_name', self.course_name))
                 conn.commit()
         except sqlite3.DatabaseError as e:
-            # Database is corrupted — rescue by renaming and re-initializing
+            # Database is corrupted - rescue by renaming and re-initializing
             logger.error(f"Database corrupted at {self.db_path}: {e}. Resetting to fresh database.")
             if attempt >= 3:
                 logger.error(f"Max retries reached trying to fix DB at {self.db_path}. Aborting.")
@@ -384,7 +384,7 @@ class SyncManager:
         
         Uses INSERT OR REPLACE per row instead of DELETE + reinsert.
         This ensures that a crash at any point leaves all previously-committed
-        rows intact — no data loss scenario.
+        rows intact - no data loss scenario.
         """
         max_retries = 3
         
@@ -626,7 +626,7 @@ class SyncManager:
         convert_zip_enabled = contract_dict.get('convert_zip', False)
         
         # 0. Pre-calculate Target Paths
-        #    Prefer the pre-built module_map from the metadata scan (Fix 1 —
+        #    Prefer the pre-built module_map from the metadata scan (Fix 1 -
         #    eliminates ~30 redundant HTTP calls per course).  Fall back to a
         #    live API fetch only when no map was provided by the caller.
         target_paths = {}
@@ -683,7 +683,7 @@ class SyncManager:
 
             # Determine target path. ``target_paths`` may key on positive
             # Canvas file IDs *or* synthetic negative IDs (Pages, Assignments,
-            # Quizzes, Discussions, ExternalUrls — populated by the modules
+            # Quizzes, Discussions, ExternalUrls - populated by the modules
             # scan in canvas_logic._get_files_from_modules).  This is what
             # lets Mode A inline secondary content land in the right module
             # subfolder during sync.
@@ -750,10 +750,10 @@ class SyncManager:
                 # Pre-calculate intrinsic state for UI routing (restoring ignored files)
                 _origin_category = 'uptodate_files'
                 _original_item = (c_file, sync_info)
-                _mod_state = 'clean'  # 'clean' vs 'modified' — only meaningful for updates
+                _mod_state = 'clean'  # 'clean' vs 'modified' - only meaningful for updates
 
                 if not entry.get('downloaded_at') and not entry.get('canvas_updated_at'):
-                    # Orphan manifest entry (stub with no timestamps) — treat as new download.
+                    # Orphan manifest entry (stub with no timestamps) - treat as new download.
                     c_file._target_local_path = calc_path
                     _origin_category = 'new_files'
                     _original_item = c_file
@@ -833,7 +833,7 @@ class SyncManager:
                         elif entry.get('downloaded_at'):
                             raw_locally_deleted.append(sync_info)
                         # else: orphan manifest row (never downloaded, no longer on
-                        # Canvas, no local file) — drop silently, nothing to sync.
+                        # Canvas, no local file) - drop silently, nothing to sync.
                         continue # Successfully caught local deletion, move to next file
                     
                     # 2. If it exists locally, process Canvas API failure guards
@@ -841,7 +841,7 @@ class SyncManager:
                         etype = secondary_id_type(int_id)
                         if etype and etype not in ('module_item', 'unknown'):
                             if not secondary_fetch_success.get(etype, True):
-                                continue  # Skip — API failed for this type
+                                continue  # Skip - API failed for this type
                                 
                     # 3. Guard B: Bypass synthetic entities from Canvas deletion
                     if int_id < 0:
@@ -855,7 +855,7 @@ class SyncManager:
         # with the same name (new ID), naively it looks like Delete+New.
         # Treat it as an UPDATE instead so the student keeps the same mental
         # model. The old local file does not exist (locally_deleted branch),
-        # so the update is always 'clean' — no risk of overwriting edits.
+        # so the update is always 'clean' - no risk of overwriting edits.
         new_name_map = {robust_filename_normalize(nf.filename): nf for nf in raw_new_files}
 
         # Check locally deleted files against re-uploads
@@ -975,7 +975,7 @@ class SyncManager:
                                 original_size: int, local_md5: str = "") -> bool:
         """Record a single downloaded file directly to the SQLite DB.
         
-        This is the 'Sync Run #0' entry point — called from the Download engine
+        This is the 'Sync Run #0' entry point - called from the Download engine
         immediately after each successful file write. Bypasses the in-memory
         manifest dict entirely to avoid race conditions in async/concurrent code.
         
@@ -1003,7 +1003,7 @@ class SyncManager:
         reliable ``updated_at`` timestamp. New secondary-content
         entities (Assignments, Quizzes …) are regenerated from the live
         Canvas API on every sync download, so timestamp-based diffing
-        is unnecessary — local existence is sufficient.
+        is unnecessary - local existence is sufficient.
 
         MD5 short-circuit: if both Canvas and the manifest expose the same
         md5 hash, the file content is byte-identical regardless of what the
@@ -1040,12 +1040,12 @@ class SyncManager:
         """Decide whether a local file is byte-identical to what we downloaded.
 
         Returns:
-            ``'clean'``    — md5 matches the stored original → safe to overwrite.
-            ``'modified'`` — md5 differs, missing, or unreadable → preserve via
+            ``'clean'``    - md5 matches the stored original → safe to overwrite.
+            ``'modified'`` - md5 differs, missing, or unreadable → preserve via
                              ``_NewVersion`` on update.
 
         Files larger than 50 MB skip the hash comparison (matches
-        ``heal_manifest`` Tier 2) and are treated as ``clean`` — re-hashing
+        ``heal_manifest`` Tier 2) and are treated as ``clean`` - re-hashing
         large videos on every analysis would dominate sync latency, and
         annotation targets in practice are small documents (PDF, DOCX, PPTX).
         """
@@ -1270,7 +1270,7 @@ class SyncManager:
         
         Args:
             file_ids_and_names: List of (canvas_file_id, canvas_filename) tuples,
-                                OR list of plain ints (legacy compat — filename defaults to '').
+                                OR list of plain ints (legacy compat - filename defaults to '').
         """
         if not file_ids_and_names:
             return True
@@ -1365,7 +1365,7 @@ class SyncHistoryManager:
             tmp_path = self.history_path.with_suffix('.tmp')
             with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump(history, f, indent=2, ensure_ascii=False)
-            # Atomic replace — prevents corrupt JSON on crash-during-write
+            # Atomic replace - prevents corrupt JSON on crash-during-write
             os.replace(str(tmp_path), str(self.history_path))
         except IOError as e:
             logger.warning(f"Error saving sync history: {e}")

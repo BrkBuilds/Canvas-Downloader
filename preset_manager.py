@@ -1,5 +1,5 @@
 """
-Preset Manager — Saved Download Settings & Presets for Step 2.
+Preset Manager - Saved Download Settings & Presets for Step 2.
 
 Persists user-defined presets to a JSON file and provides 3 built-in
 immutable presets.  Uses the same atomic serialization pattern as

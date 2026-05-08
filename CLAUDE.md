@@ -1,4 +1,4 @@
-# Canvas Downloader — Claude Context
+# Canvas Downloader - Claude Context
 
 ## Project Overview
 Desktop app for batch-downloading Canvas LMS course materials. Built with Python + Streamlit, packaged as a standalone `.exe` (Windows) and `.app` (macOS) via PyInstaller. Runs locally in a pywebview window.
@@ -7,7 +7,7 @@ Desktop app for batch-downloading Canvas LMS course materials. Built with Python
 
 ### Module Map
 ```
-app.py                      # Main download mode and app orchestrator — routing, session init
+app.py                      # Main download mode and app orchestrator - routing, session init
 sync_ui.py                  # Sync mode orchestrator
 ui/
   auth.py                   # Sidebar: API token, debug mode, nav
@@ -44,13 +44,13 @@ version.py                  # __version__
 ```
 
 ### Key Data Files (runtime)
-- `canvas_sync_pairs.json` — active folder ↔ course mappings
-- `saved_sync_groups.json` — reusable multi-course sync groups
-- `canvas_sync_history.json` — last 50 sync operations
-- `.canvas_sync.db` — per-folder SQLite manifest (hidden file)
+- `canvas_sync_pairs.json` - active folder ↔ course mappings
+- `saved_sync_groups.json` - reusable multi-course sync groups
+- `canvas_sync_history.json` - last 50 sync operations
+- `.canvas_sync.db` - per-folder SQLite manifest (hidden file)
 
 ### Sync Contract
-The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sync settings. `_show_sync_confirmation` unconditionally reads the contract from the DB — there are no on-the-fly UI overrides. The extracted contract is bound to `st.session_state['res_data']['contract']` for post-processing.
+The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sync settings. `_show_sync_confirmation` unconditionally reads the contract from the DB - there are no on-the-fly UI overrides. The extracted contract is bound to `st.session_state['res_data']['contract']` for post-processing.
 
 ## Streamlit UI Rules (Critical)
 
@@ -63,15 +63,15 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - **Scope** all CSS to keyed containers (`div[class*="st-key-my_key"]`) to prevent global leakage.
 - **Key Lowercasing Rule**: Streamlit lowercases widget `key` strings when generating DOM classes (e.g. `st-key-PDF` becomes `st-key-pdf`). Always apply `.lower()` to keys used in CSS selectors.
 - **Modal Specificity Rule**: Standard CSS often fails inside `@st.dialog` because modals live in a separate high-specificity portal. Always prepend `div[data-testid="stDialog"] ` to modal-targeted CSS selectors.
-- Never use `:has()` + sibling combinators (`~`) on main-app components — it leaks into `stDialog` portals with high specificity.
-- **`st.html()` shadow root isolates `margin`**: `margin` on elements inside `st.html()` (e.g. `<hr style='margin:15px 0'>`) does NOT create external layout space — it is absorbed by the shadow root. To add real spacing around injected HTML, wrap in `<div style='padding: Xpx 0'>` instead; padding inflates the shadow root's rendered height.
-- **Side-by-side buttons**: Use `st.columns([1,1])` + `use_container_width=True` in Python. Never use CSS `:has()` flex hacks on `stVerticalBlock` — unreliable and leaks specificity.
-- **Streamlit checkbox gap**: Target `[data-testid="stCheckbox"] label` with `display: flex !important; gap: Xpx !important`. The `label > span` is the visual checkbox; `label > div` is the text wrapper. CSS `gap` cannot go negative — use `margin-left: -Xpx` on the text wrapper div for sub-zero tightness. Fix 1-2px vertical misalignment with `position: relative; top: -1px` on the `span`.
+- Never use `:has()` + sibling combinators (`~`) on main-app components - it leaks into `stDialog` portals with high specificity.
+- **`st.html()` shadow root isolates `margin`**: `margin` on elements inside `st.html()` (e.g. `<hr style='margin:15px 0'>`) does NOT create external layout space - it is absorbed by the shadow root. To add real spacing around injected HTML, wrap in `<div style='padding: Xpx 0'>` instead; padding inflates the shadow root's rendered height.
+- **Side-by-side buttons**: Use `st.columns([1,1])` + `use_container_width=True` in Python. Never use CSS `:has()` flex hacks on `stVerticalBlock` - unreliable and leaks specificity.
+- **Streamlit checkbox gap**: Target `[data-testid="stCheckbox"] label` with `display: flex !important; gap: Xpx !important`. The `label > span` is the visual checkbox; `label > div` is the text wrapper. CSS `gap` cannot go negative - use `margin-left: -Xpx` on the text wrapper div for sub-zero tightness. Fix 1-2px vertical misalignment with `position: relative; top: -1px` on the `span`.
 - **Full-Height Clickable Rows**: When checkboxes are in `st.columns(vertical_alignment="center")`, Streamlit injects `margin: 5px 0` creating unclickable dead zones. Kill the margin (`margin: 0 !important`), force `align-items: stretch` on the `stHorizontalBlock`, and apply a `flex: 1` + `display: flex; flex-direction: column` chain all the way down to the `<label>` to make the hit area 100% of the row height.
 
 ### Dialogs (`@st.dialog`)
-- No nested dialogs — Streamlit crashes. Flatten to single-layer modals.
-- Trigger dialogs directly inside `if st.button():` — no dangling session state flags.
+- No nested dialogs - Streamlit crashes. Flatten to single-layer modals.
+- Trigger dialogs directly inside `if st.button():` - no dangling session state flags.
 - Close buttons inside modals must use `st.rerun(scope="app")`, not plain `st.rerun()`.
 - Hide the native close button via CSS: `div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }`.
 - **Zero-Width Space Hack  & invisible title**: Pass `"\u200b"` to `@st.dialog(...)` to satisfy Streamlit's non-empty validation while rendering an invisible title. Inject a custom HTML header and pull it up with `margin-top: -70px`.
@@ -86,14 +86,14 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 ```css
 div[class*="st-key-my_key_"] [data-testid="stButton"] { ... }
 ```
-These are the same selectors that work for styling the button itself. Do NOT use `:has()` to find `[data-testid="stButton"]` — it fails silently for widget wrapper divs even when `:has()` works for styling other descendants in the same container.
+These are the same selectors that work for styling the button itself. Do NOT use `:has()` to find `[data-testid="stButton"]` - it fails silently for widget wrapper divs even when `:has()` works for styling other descendants in the same container.
 
 **`[data-testid="stButton"]` wrapper layout:**
 - By default Streamlit renders `[data-testid="stButton"]` as a block-level full-width wrapper.
-- `margin-left: Xpx` on the wrapper shifts the entire block right. With `use_container_width=False` on the button, the button is content-sized and sits at the left edge of the (now-shifted) wrapper — this is the correct way to indent a button by a fixed pixel amount.
-- Do NOT add `width: auto !important` or change `display` on `[data-testid="stButton"]` — it causes the wrapper to collapse and the button appears squished or disappears.
-- Do NOT use `margin-left` on the `<button>` element itself (child of stButton) — Streamlit's `display: flex !important` override on the button causes it to not respond predictably.
-- Do NOT use `padding-left` on `[data-testid="stButton"]` — Streamlit overrides it internally and it has no visible effect.
+- `margin-left: Xpx` on the wrapper shifts the entire block right. With `use_container_width=False` on the button, the button is content-sized and sits at the left edge of the (now-shifted) wrapper - this is the correct way to indent a button by a fixed pixel amount.
+- Do NOT add `width: auto !important` or change `display` on `[data-testid="stButton"]` - it causes the wrapper to collapse and the button appears squished or disappears.
+- Do NOT use `margin-left` on the `<button>` element itself (child of stButton) - Streamlit's `display: flex !important` override on the button causes it to not respond predictably.
+- Do NOT use `padding-left` on `[data-testid="stButton"]` - Streamlit overrides it internally and it has no visible effect.
 
 **st.columns() for button indent is unreliable across zoom/window sizes:**
 - A percentage-based spacer column (`st.columns([0.05, 0.95])`) shifts the button by a percentage of the container width. Since the target alignment (e.g. matching a fixed-size icon) is in pixels, the column fraction that "looks right" on one screen drifts at different zoom levels or window sizes.
@@ -102,7 +102,7 @@ These are the same selectors that work for styling the button itself. Do NOT use
 **Key prefix selector coverage for folder cards:**
 - Download mode cards: `div[class*="st-key-dl_fc_"]`
 - Sync mode cards: `div[class*="st-key-sync_complete_fc_"]`
-- Note: `div[class*="st-key-sync_fc_"]` does NOT match `sync_complete_fc_` — the substring `sync_fc_` is not contiguous in `sync_complete_fc_`. Always use the full prefix.
+- Note: `div[class*="st-key-sync_fc_"]` does NOT match `sync_complete_fc_` - the substring `sync_fc_` is not contiguous in `sync_complete_fc_`. Always use the full prefix.
 
 ### CSS Checkbox Hack for Pure-CSS Toggle/Expand
 
@@ -132,22 +132,22 @@ To build an interactive expand/collapse inline with HTML content (no JS, no Stre
 - Outlined icon: `fill='none' stroke='%23hexcolor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'`.
 
 **Inline SVGs** (for `st.markdown(unsafe_allow_html=True)` HTML strings):
-- Use raw `<svg>` tags directly — no URL encoding needed.
+- Use raw `<svg>` tags directly - no URL encoding needed.
 - Can use CSS classes (`class='my-chevron'`) and `stroke='currentColor'` to inherit parent `color`.
 - CSS can override SVG attributes (`stroke`, `stroke-width`, `fill`) on inline SVGs targeting the element's class.
 
 ### `st.html()` Shadow Root Behaviour (Extended)
-- `st.html()` renders into a shadow root — CSS inside it is completely isolated from the main page, and main-page CSS cannot reach into it.
+- `st.html()` renders into a shadow root - CSS inside it is completely isolated from the main page, and main-page CSS cannot reach into it.
 - Elements rendered by `st.markdown(unsafe_allow_html=True)` ARE in the main DOM and ARE reachable by external CSS selectors.
 - Use `st.html()` ONLY for injecting `<style>` tags or zero-content spacers. Use `st.markdown(unsafe_allow_html=True)` for actual HTML content that needs to be styled by external CSS.
 
 ### State Management
-- Widget values lost on step navigation — explicitly save to `persistent_*` session state keys before `st.rerun()`.
+- Widget values lost on step navigation - explicitly save to `persistent_*` session state keys before `st.rerun()`.
 - Protect `on_click` array mutations against double-click: all mutations must be idempotent.
 - After updating a UI placeholder before a heavy blocking operation, add `time.sleep(0.2)` to guarantee Streamlit flushes the DOM paint.
 
 ### Buttons as Cards ("Native Button is the Card")
-- Never overlay invisible buttons over `st.markdown` content — Streamlit's React DOM will collapse the hitbox.
+- Never overlay invisible buttons over `st.markdown` content - Streamlit's React DOM will collapse the hitbox.
 - Style native `st.button` as a card using CSS (`height`, `background-image`, `::before`/`::after` pseudo-elements).
 - Icons → Base64 via `get_base64_image()`, injected into CSS `background-image`.
 - Use `::before` for icon layers in buttons next to text.
@@ -158,10 +158,10 @@ To build an interactive expand/collapse inline with HTML content (no JS, no Stre
 ## Platform Notes
 - **Windows**: `win32com.client` COM automation for Office → PDF conversions. `ctypes` to hide `.canvas_sync.db`.
 - **macOS**: `osascript` (AppleScript) via `engine/applescript_bridge.py` for Office conversions. Requires `com.apple.security.automation.apple-events` entitlement in `.spec`.
-- **Keyring**: Lazy-loaded on Windows only — prevents macOS import/permission cascades.
-- **File I/O**: Always specify `encoding='utf-8'` explicitly — Windows defaults to CP1252, causing Mojibake in emoji-heavy UI files.
+- **Keyring**: Lazy-loaded on Windows only - prevents macOS import/permission cascades.
+- **File I/O**: Always specify `encoding='utf-8'` explicitly - Windows defaults to CP1252, causing Mojibake in emoji-heavy UI files.
 
 ## Build
 - Windows: `pyinstaller Canvas_Downloader.spec`
 - macOS: `pyinstaller --clean Canvas_Downloader_macOS.spec` + `codesign --force --deep -s - --entitlements entitlements.mac.plist Canvas\ Downloader.app`
-- Launcher: `start.py` — daemonized Streamlit thread + `pywebview.start()` on main thread (required for macOS Cocoa).
+- Launcher: `start.py` - daemonized Streamlit thread + `pywebview.start()` on main thread (required for macOS Cocoa).
