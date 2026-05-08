@@ -410,7 +410,9 @@ class ExcelToData:
             logger.error("[AppleScript] osascript not found")
             return []
         except subprocess.TimeoutExpired:
-            logger.error("[AppleScript] Excel data extraction timed out after 120s")
+            logger.error("[AppleScript] Excel data extraction timed out after 120s — attempting recovery")
+            from engine.applescript_bridge import _try_close_document_after_timeout
+            _try_close_document_after_timeout("Excel", str(src.resolve()).replace('"', '\\"'))
             return []
         except Exception as e:
             logger.error(f"[AppleScript] Excel data extraction error: {e}")

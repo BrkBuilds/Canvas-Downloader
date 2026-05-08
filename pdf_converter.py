@@ -37,19 +37,57 @@ class PowerPointToPDF:
             return self  # AppleScript path, no COM needed
         try:
             import pythoncom
-            import win32com.client
             pythoncom.CoInitialize()
+        except ImportError:
+            pass
+        except Exception:
+            pass
+        self._init_app()
+        return self
+
+    # ── COM management (self-healing, mirrors ExcelToPDF / WordToPDF) ──
+
+    def _init_app(self):
+        """Spin up a fresh PowerPoint instance."""
+        try:
+            import win32com.client
             self.app = win32com.client.DispatchEx("PowerPoint.Application")
             try:
                 self.app.Visible = False
                 self.app.DisplayAlerts = False
             except Exception:
-                pass  # Ignore Office 365 restriction
+                pass  # Some Office 365 builds restrict these flags
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. PowerPoint conversion disabled.")
+            self.app = None
         except Exception as e:
             logger.warning(f"COM Initialization failed: {e}")
-        return self
+            self.app = None
+
+    def _kill_app(self):
+        """Forcefully shut down the COM instance."""
+        if self.app:
+            try:
+                self.app.Quit()
+            except Exception:
+                pass
+        self.app = None
+
+    def _is_alive(self) -> bool:
+        """Quick COM channel health check."""
+        if not self.app:
+            return False
+        try:
+            _ = self.app.Version
+            return True
+        except Exception:
+            return False
+
+    def _ensure_app(self):
+        """Guarantee a live COM instance, reviving if necessary."""
+        if not self._is_alive():
+            self._kill_app()
+            self._init_app()
 
     # ── AppleScript bridge (macOS) ─────────────────────────────────
     @staticmethod
@@ -92,6 +130,7 @@ class PowerPointToPDF:
             return None
 
         # Windows: COM automation with path shadowing
+        self._ensure_app()
         if self.app is None:
             return None
 
@@ -158,6 +197,11 @@ class PowerPointToPDF:
                     except OSError:
                         pass
 
+                # SELF-HEAL: assume the COM channel is dead so the next file
+                # gets a fresh instance (mirrors WordToPDF / ExcelToPDF pattern).
+                self._kill_app()
+                self._init_app()
+
                 return None
             finally:
                 if presentation is not None:
@@ -167,11 +211,12 @@ class PowerPointToPDF:
                         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.app:
-            try:
-                self.app.Quit()
-            except Exception:
-                pass
+        self._kill_app()
+        try:
+            import pythoncom
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
         try:
             import pythoncom
             pythoncom.CoUninitialize()
