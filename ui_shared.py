@@ -963,7 +963,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "ð
             mask-position: center;
             vertical-align: middle;
             position: relative;
-            top: -2px;
+            /* rely on vertical-align: middle */
             transition: background-color 0.2s ease !important;
         }}
         div.st-key-{open_key} button:hover p::before {{

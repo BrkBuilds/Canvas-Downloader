@@ -1,5 +1,12 @@
 ## Latest Updates
 
+- [x] **UI Standardization & "Physical Volume" Aesthetic Refinement** (2026-05-08):
+    - [x] **Global Button Icon Alignment**: Standardized button icon alignment across `sync_ui.py`, `course_selector.py`, `ui_shared.py`, `sync_dialogs.py`, `auth.py`, and `sync_review.py`. Removed all legacy manual top-offsets (e.g., `top: -2px`, `translateY(-2px)`) in favor of a robust flexbox-based centering strategy.
+    - [x] **Padding Balance**: Adjusted vertical padding on primary action buttons (from `0px 10px 4px 10px` to `0px 10px`) to ensure perfect visual centering of icons and text.
+    - [x] **Quick Download UI Finalization**: Migrated the legacy markdown help block in `quick_download.py` to the standardized `render_help_card` component. Removed the 5px margin-bottom from the help button to ensure it sits flush with the H1 header baseline.
+    - [x] **Emoji Cleanup**: Removed remaining legacy emojis from `quick_download.py` and `course_selector.py` to maintain a professional, minimalist aesthetic.
+    - [x] **Snug Header Alignment**: Applied "Snug Header" corrections to ensure help buttons and header text share a consistent baseline across all main pages.
+
 - [x] **Quick Download Feature & Simplified Workflow** (2026-05-02):
     - [x] **Two-Button Course Selector**: Replaced single "Continue" button with "Quick Download" (primary) and "Custom Download →" (primary) to route users to either simplified or full-featured download path.
     - [x] **Quick Download Page (Step 2 lite)**: Created `ui/quick_download.py` with 5 preset cards displayed in a vertical list, implementing a centered, minimalist aesthetic.

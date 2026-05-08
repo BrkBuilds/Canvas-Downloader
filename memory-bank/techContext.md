@@ -4,6 +4,10 @@
 4: - **Python 3.10+**: Primary language.
 5: - **Streamlit 1.51.0**: Web application framework for the UI (specifically pinned for targeting stability).
 6: - **Modern CSS (:has)**: Utilized for version-agnostic "Trojan Horse" container targeting.
+- **Styling Standards**:
+    - **Physical Volume Aesthetic**: Tactile UI with inset bevels, gradients, and soft glows.
+    - **Snug Header Alignment**: Precise flex-based baseline alignment for help icons and headers.
+    - **Flex-Based Centering**: Universal replacement of manual top-offsets with robust flexbox centering.
 7: 
 8: - **CanvasAPI**: Python wrapper for the Canvas LMS API.
 9: - **aiohttp / asyncio**: For high-performance, concurrent file downloads.

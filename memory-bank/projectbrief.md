@@ -7,7 +7,7 @@ Recently, the application has evolved beyond simple downloading to include a **N
 
 ## Key Features & Capabilities
 1. **Dual-Mode Download Workflow**:
-   - **Quick Download**: Simplified workflow for first-time/casual users. Five preset cards (Complete Canvas, AI Study Pack, NotebookLM Ready, Slides & PDFs Only, Files Only) with minimal required choices. Users select preset + folder organization + output path, then download with zero custom configurations.
+   - **Quick Download**: Simplified workflow for first-time/casual users. Five preset cards (Complete Canvas, AI Study Pack, NotebookLM Ready, Slides & PDFs Only, Files Only) with minimal required choices. Users select preset + folder organization + output path, then download with zero custom configurations. Includes a standardized help section and professional, minimalist aesthetics.
    - **Custom Download**: Full-featured configuration for power users. Complete control over secondary content (assignments, syllabus, discussions, etc.), conversion options, file filtering, and organization.
 2. **Batch Downloading & Directory Structuring**:
    - Pulls all modules, sub-modules, and files, directly replicating the Canvas structure locally.

@@ -249,6 +249,14 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **The Ghost Toast Pattern (Pending Toasts)**:
     - *Problem*: `st.toast()` notifications fired inside a dialog immediately disappear if the next line of code runs an `st.rerun(scope="app")`, because the modal container they were bound to is instantly destroyed.
     - *Solution*: Do not call `st.toast` inside the dialog. Instead, inject the message into `st.session_state['pending_toast'] = "✅ Success"`. At the absolute top of the target page's layout block (e.g. `Step 2`), write a consumer: `if 'pending_toast' in session_state: st.toast(session_state.pop('pending_toast'))`. The toast will now cleanly render precisely as the dialog drops and the main page refreshes.
+- **Standardized Help Card Pattern (`render_help_card`)**:
+    - *Problem*: Redundant help text logic scattered across pages leads to inconsistent styling and maintenance debt.
+    - *Solution*: Use the `render_help_card(title, content, key)` utility in `ui_shared.py`. It renders a toggleable button with a ⓘ icon and a sleek help panel.
+    - *Aesthetic*: Help cards MUST be emoji-free and use professional, minimalist language.
+    - *Alignment*: Help buttons MUST be vertically aligned flush with their associated H1/H2 header baseline using flexbox (`align-items: flex-end`) to ensure a "snug" header aesthetic.
+- **Flex-Based Alignment Guardrail (No Manual Offsets)**:
+    - *Rule*: NEVER use manual top-offsets (`top: -2px`, `margin-top: -3px`) or translations (`translateY(-2px)`) for vertical centering of icons and text. These are brittle across different screen resolutions and font-renderers.
+    - *Implementation*: Always use `display: flex; align-items: center; justify-content: center;` on button/link containers. If an icon sits inside a `vertical-align: middle` context, ensure the parent container's `line-height` and `height` are perfectly balanced.
 - **The Headless Injection Pattern (`st.html`)**:
     - *Problem*: Separate `st.markdown(unsafe_allow_html=True)` calls for `<style>` and HTML headers force Streamlit's React engine to wrap the injection in an `stMarkdownContainer` (creating invisible "Ghost Boxes" with a native 1rem bottom margin that destroys vertical rhythm). The previous workaround ("Nuclear Ghost Box Purge" via CSS `display: none!important;`) is deprecated.
     - *Solution*: `st.markdown` is strictly for Typography. All dynamic CSS blocks, structural spacers, and Base64 UI wrappers MUST be injected using Streamlit 1.51.0's native `st.html()` function to guarantee zero-footprint DOM injection.

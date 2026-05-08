@@ -295,7 +295,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 margin-right: 8px !important; 
                 vertical-align: middle !important;
                 position: relative !important;
-                top: -2px !important;
+                /* rely on vertical-align: middle */
             }}
             /* Action Buttons Explicit Match */
             div[class*="st-key-{prefix}_close"] button,

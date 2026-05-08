@@ -1,15 +1,22 @@
 # Active Context: Canvas Downloader
 
-3: ## Current Focus
-4:     - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
-5:     - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
-6: 
-7: ## Next Steps
-8: - **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
-9: - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
-10: - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
-13: 
-14: ## Recent Activity
+## Current Focus
+    - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
+    - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
+
+## Next Steps
+- **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
+- **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
+- **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
+
+## Recent Activity
+- **Session 2026-05-08: UI Standardization & "Physical Volume" Aesthetic Refinement**
+    - **Global Button Icon Alignment**: Standardized button icon alignment across `sync_ui.py`, `course_selector.py`, `ui_shared.py`, `sync_dialogs.py`, `auth.py`, and `sync_review.py`. Removed all legacy manual top-offsets (e.g., `top: -2px`, `translateY(-2px)`) in favor of a robust flexbox-based centering strategy.
+    - **Padding Balance**: Adjusted vertical padding on primary action buttons (from `0px 10px 4px 10px` to `0px 10px`) to ensure perfect visual centering of icons and text.
+    - **Quick Download UI Finalization**: Migrated the legacy markdown help block in `quick_download.py` to the standardized `render_help_card` component. Removed the 5px margin-bottom from the help button to ensure it sits flush with the H1 header baseline.
+    - **Emoji Cleanup**: Removed remaining legacy emojis from `quick_download.py` and `course_selector.py` to maintain a professional, minimalist aesthetic.
+    - **Snug Header Alignment**: Applied "Snug Header" corrections to ensure help buttons and header text share a consistent baseline across all main pages.
+
 - **Session 2026-05-06: macOS "Bring Your Own Browser" Refactoring**
     - **Engine Shift**: Abandoned `PySide6` and `PySide6-WebEngine`. Removed `webview` dependency for macOS to drastically reduce bundle size (~250MB to ~70MB) and bypass ARM64 wheel unavailability.
     - **New Controller**: Implemented `macos_controller.py` using **CustomTkinter** to provide a lightweight (~300KB), modern, dark-mode native interface for non-technical users to manage the Streamlit daemon lifecycle.

@@ -39,6 +39,13 @@ Desktop application for university students to batch download and synchronize co
 
 ## Technology Stack
 - **Language**: Python 3.10+
-- **Frontend**: Streamlit (with Custom Components & Dialogs)
+- **Frontend**: Streamlit (with Custom Components, Dialogs, and Shadow-DOM CSS isolation)
 - **API**: CanvasAPI
-- **Distribution**: PyInstaller (Windows .exe)
+- **Controller (macOS)**: CustomTkinter (Bring Your Own Browser / BYOB model)
+- **Distribution**: PyInstaller (Windows .exe, macOS .app)
+
+## Design Philosophy
+- **"Physical Volume" Aesthetic**: High-fidelity, tactile UI components with 3D inset beveled lips, gradients, and soft active glows.
+- **Minimalist Professionalism**: Clean typography (Inter/System Stack), zero-emoji policy for professional help sections, and consistent flex-based layout centering.
+- **BYOB (Bring Your Own Browser)**: Lightweight native controllers manage the application lifecycle, offloading heavy rendering to the user's default browser to minimize bundle size and maximize performance.
+- **Atomic Consistency**: Uniform button layouts ("Action on Right, Cancel on Left") and synchronized header baselines across all modules.
