@@ -934,7 +934,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: -2px !important;
+        /* rely on flex centering */
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -946,7 +946,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: -2px !important;
+        /* rely on flex centering */
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -1339,7 +1339,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         min-height: 3.2em !important;
         border-radius: 6px !important;
         width: 100% !important;
-        padding: 0px 10px 4px 10px !important; /* Optical adjustment: pushes text up to balance top/bottom distance */
+        padding: 0px 10px !important; /* Balanced vertical padding */
         float: none !important;
         margin: 0 auto !important;
     }

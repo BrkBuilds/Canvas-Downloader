@@ -849,8 +849,6 @@ def show_analysis_review(on_confirm_sync):
         background-position: center;
         vertical-align: middle;
         margin-right: 7px;
-        position: relative;
-        top: -1px;
     }}
     div[class*="st-key-cat_updmod_"] details > summary p::before {{
         content: "";
@@ -863,8 +861,6 @@ def show_analysis_review(on_confirm_sync):
         background-position: center;
         vertical-align: middle;
         margin-right: 7px;
-        position: relative;
-        top: -1px;
     }}
     div[class*="st-key-cat_deleted_local_"] details > summary p::before {{
         content: "";
@@ -877,8 +873,6 @@ def show_analysis_review(on_confirm_sync):
         background-position: center;
         vertical-align: middle;
         margin-right: 7px;
-        position: relative;
-        top: -1px;
     }}
     div[class*="st-key-cat_deleted_canvas_"] details > summary p::before {{
         content: "";
@@ -891,8 +885,6 @@ def show_analysis_review(on_confirm_sync):
         background-position: center;
         vertical-align: middle;
         margin-right: 7px;
-        position: relative;
-        top: -1px;
     }}
     div[class*="st-key-cat_ignored_"] details > summary p::before {{
         content: "";
@@ -905,8 +897,6 @@ def show_analysis_review(on_confirm_sync):
         background-position: center;
         vertical-align: middle;
         margin-right: 7px;
-        position: relative;
-        top: -1px;
         filter: brightness(0) invert(1) opacity(0.9);
     }}
     }}
@@ -1146,7 +1136,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_updmod_"] button:hover::before,
     div[class*="st-key-ign_locdel_"] button:hover::before {{
         opacity: 0;
-        transform: translateY(-1px) scale(1.2);
+        transform: scale(1.2);
     }}
     div[class*="st-key-ign_new_"] button:hover::after,
     div[class*="st-key-ign_upd_"] button:hover::after,
@@ -1206,7 +1196,7 @@ def show_analysis_review(on_confirm_sync):
     }}
     /* On hover: scale to 1.2 */
     div[class*="st-key-restitem_"] button:hover::before {{
-        transform: translateY(-1px) scale(1.2);
+        transform: scale(1.2);
     }}
 
     /* ===== 'RESTORE ALL IGNORED FILES' BULK BUTTON ===== */
