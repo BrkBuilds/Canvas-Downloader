@@ -83,6 +83,12 @@
     }
     .nav-logo img { width: 28px; height: 28px; border-radius: 7px; display: block; }
     .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--txt2); padding: 6px 12px;
+      border-radius: 8px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--txt); background: rgba(255,255,255,0.05); }
+    .nav-link.active { color: var(--cyan); }
     .nav-v {
       font-size: 11px; color: var(--txt3); background: var(--surf2);
       border: 1px solid var(--border); padding: 3px 10px; border-radius: 100px;
@@ -515,12 +521,11 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="guide.html" style="font-size:13px;font-weight:500;color:var(--txt2);padding:6px 12px;border-radius:8px;transition:color 0.15s"
-           onmouseover="this.style.color='var(--txt)'" onmouseout="this.style.color='var(--txt2)'">How It Works</a>
+        <a href="guide.html" class="nav-link">How It Works</a>
         <span class="nav-v">v2.0.0</span>
         <a href="#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download Free
+          Download
         </a>
       </div>
     </div>

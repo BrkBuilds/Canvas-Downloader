@@ -51,7 +51,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'customtkinter'
+    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'customtkinter', 'PIL',
 ]
 
 for package in packages_to_collect:
@@ -105,5 +105,23 @@ app = BUNDLE(
         'CFBundleShortVersionString': '2.0.0',
         'CFBundleName': 'Canvas Downloader',
         'NSRequiresAquaSystemAppearance': False,
+        # Minimum macOS version (CustomTkinter requires 11.0+)
+        'LSMinimumSystemVersion': '11.0',
+        # Required on macOS 10.14+ for AppleScript automation of Office apps.
+        # Without this key the TCC permission dialog shows no description.
+        'NSAppleEventsUsageDescription': (
+            'Canvas Downloader uses Microsoft Office to convert PowerPoint, '
+            'Word, and Excel files to PDF.'
+        ),
+        # TCC usage strings shown when the OS prompts for folder/file access.
+        'NSDocumentsFolderUsageDescription': (
+            'Canvas Downloader saves downloaded course files to your chosen folder.'
+        ),
+        'NSDownloadsFolderUsageDescription': (
+            'Canvas Downloader may save downloaded course files to your Downloads folder.'
+        ),
+        'NSDesktopFolderUsageDescription': (
+            'Canvas Downloader may save downloaded course files to your Desktop.'
+        ),
     },
 )

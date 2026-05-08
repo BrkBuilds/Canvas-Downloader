@@ -65,8 +65,7 @@ class PowerPointToPDF:
         script = f'''
             tell application "Microsoft PowerPoint"
                 set display alerts to false
-                open POSIX file "{posix_src}"
-                set theDoc to active presentation
+                set theDoc to open POSIX file "{posix_src}"
                 save theDoc in POSIX file "{posix_dst}" as save as PDF
                 close theDoc saving no
             end tell
