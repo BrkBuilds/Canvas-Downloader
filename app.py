@@ -381,6 +381,10 @@ with _main_content.container():
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
             )
+            # Reserve the post-processing cancel slot NOW so it is always
+            # cleared on rerun, preventing the previous course's Cancel PP
+            # button from lingering in the DOM during the next download phase.
+            pp_cancel_placeholder = st.empty()
         else:
             status_text = st.empty()
             progress_container = st.empty()  # For custom progress bar with text
@@ -773,18 +777,21 @@ with _main_content.container():
                 ))
                 
                 # --- Post-Processing: Setup ---
-                # Set explicitly when entering Phase 3
-                st.session_state['is_post_processing'] = True
-                
-                # Re-render cancel button for post-processing phase
-                cancel_placeholder.empty()
-                pp_cancel_placeholder = st.empty()
-                pp_cancel_placeholder.button(
-                    "Cancel Post-Processing",
-                    key="cancel_pp_download",
-                    type="secondary",
-                    on_click=cancel_download_callback,
+                _has_pp = any(
+                    _pp_settings.get(k, False) for k in (
+                        'convert_zip', 'convert_pptx', 'convert_html', 'convert_code',
+                        'convert_urls', 'convert_word', 'convert_video', 'convert_excel'
+                    )
                 )
+                if _has_pp:
+                    st.session_state['is_post_processing'] = True
+                    cancel_placeholder.empty()
+                    pp_cancel_placeholder.button(
+                        "Cancel Post-Processing",
+                        key="cancel_pp_download",
+                        type="secondary",
+                        on_click=cancel_download_callback,
+                    )
 
                 # --- Post-Processing: Setup logging for NotebookLM hooks ---
                 save_dir = st.session_state['download_path']

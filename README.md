@@ -23,9 +23,11 @@ Smart sync, AI-ready file conversion, and zero cloud dependency - all in a nativ
 
 Canvas Downloader is a **standalone desktop application** that connects directly to your university's Canvas LMS via the official API and batch-downloads every file from every course - no browser extension, no web scraping, no cloud middleman.
 
-It goes beyond a simple downloader: a **persistent sync engine** tracks changes course-by-course (new files, teacher updates, local edits), and an **AI-preparation pipeline** automatically converts your downloads into formats Google's NotebookLM can ingest - PowerPoint → PDF, video → MP3, HTML → Markdown, and more.
+**Keep your course folders up to date with one click.** The sync engine tracks exactly what changed since your last run - new files, updated slides, teacher edits - and only touches what needs updating.
 
-**Built for university students. Impressive enough to put on a résumé.**
+**Turn your downloads into AI-ready study material automatically.** One toggle converts every PowerPoint, spreadsheet, video, and code file into a format any AI tool (NotebookLM, ChatGPT, Claude) can read and reason over.
+
+Free, open source, and runs entirely on your machine.
 
 ---
 
@@ -40,9 +42,9 @@ It goes beyond a simple downloader: a **persistent sync engine** tracks changes 
 - **File size filters** - skip large video files you don't need right now
 - **Full Canvas content support** - module files, assignments, syllabi, announcements, discussions, quizzes, and rubrics
 
-### Smart Sync Mode
+### Sync Mode
 
-Keep any local folder **permanently in sync** with its Canvas course. The sync engine tracks seven distinct file states:
+Keep any local folder **permanently in sync** with its Canvas course — one click to pull every new lecture, updated slide deck, and freshly posted file since your last run. The sync engine tracks seven distinct file states:
 
 | State | Description | Default Action |
 |---|---|---|
@@ -56,19 +58,21 @@ Keep any local folder **permanently in sync** with its Canvas course. The sync e
 
 Change detection uses **MD5 fingerprinting** stored in a per-folder SQLite manifest (`.canvas_sync.db`). Renamed files are resolved with **Levenshtein distance** so a renamed lecture slides file isn't treated as a brand-new download.
 
-### AI-Ready Post-Processing Pipeline
+### AI Optimization — NotebookLM-Ready in One Click
 
-One toggle enables a full conversion suite that turns your downloads into a **NotebookLM-ready research library**:
+Enable a single toggle and every download is automatically converted into a format Google's NotebookLM (or any AI tool) can ingest directly — no manual reformatting needed:
 
 | Source | Output | Platform | Engine |
 |---|---|---|---|
 | `.pptx` | `.pdf` | Win + macOS | COM automation / AppleScript |
 | `.doc` `.docm` | `.pdf` | Win + macOS | COM automation / AppleScript |
-| `.xls` `.xlsx` | `.pdf` + `.csv` | Win + macOS | COM automation / AppleScript |
+| `.xls` `.xlsx` | `.pdf` + `_Data.txt` (CSV-formatted data) | Win + macOS | COM automation / AppleScript |
 | `.mp4` `.mov` `.avi` `.mkv` `.webm` (+15 more) | `.mp3` | Win + macOS | FFmpeg via MoviePy |
 | `.html` | `.md` | Win + macOS | BeautifulSoup + markdownify |
 | `.zip` `.tar` `.tar.gz` | extracted | Win + macOS | stdlib (zip-bomb protection) |
-| 50+ code extensions (`.py` `.java` `.js` `.cpp` `.sql` `.json` ...) | `.txt` | Win + macOS | UTF-8 native |
+| 50+ code extensions | `.py.txt` `.js.txt` etc. (extension appended — preserves format hint) | Win + macOS | UTF-8 native |
+
+The Excel data sidecar (`Financials_Data.txt`) contains CSV-formatted sheet data with AI context headers — far more useful to language models than a PDF rendering of a spreadsheet.
 
 Safety details: archives enforce a **50 GB uncompressed limit** and **100:1 compression-ratio guard**. Video conversion wraps FFmpeg cleanup in a thread-pool with a 10-second timeout to survive corrupt files.
 
@@ -93,7 +97,7 @@ No Python installation required. Grab the latest release for your platform:
 | Platform | Package | Requirements |
 |---|---|---|
 | **Windows 10/11** | `Canvas_Downloader_Setup.exe` | Nothing - batteries included |
-| **macOS 11+** | `Canvas Downloader.app.zip` | macOS 11 Big Sur or later |
+| **macOS 11+** | `Canvas Downloader.dmg` | macOS 11 Big Sur or later |
 
 ### Windows
 
@@ -105,8 +109,8 @@ No Python installation required. Grab the latest release for your platform:
 
 ### macOS
 
-1. Unzip `Canvas Downloader.app.zip`
-2. Move `Canvas Downloader.app` to your `/Applications` folder
+1. Open `Canvas Downloader.dmg`
+2. Drag `Canvas Downloader.app` to your `/Applications` folder
 3. Right-click → **Open** the first time (Gatekeeper bypass for unsigned apps)
 
 > For automated Office conversions (PowerPoint → PDF, etc.) macOS will prompt for Automation permissions for Word/Excel/PowerPoint - grant them when asked.
@@ -123,20 +127,30 @@ No Python installation required. Grab the latest release for your platform:
 
 Your token is stored in your OS keyring (Windows Credential Manager / macOS Keychain) - never written to disk in plaintext.
 
-### 2. Connect & Download
+### 2. Download Mode
 
-1. Launch Canvas Downloader
-2. Paste your API token and your institution's Canvas URL (e.g. `https://canvas.university.edu`)
-3. **Step 1** - Select the courses you want
-4. **Step 2** - Configure what to download (module files, assignments, quizzes, etc.) and whether to run AI conversions
-5. **Step 3** - Watch the dashboard and wait for the completion chime
+There are two paths depending on whether you've been here before:
 
-### 3. Set Up Sync (Optional)
+**First time — Custom Download:**
+1. Launch Canvas Downloader and connect with your token + Canvas URL
+2. **Step 1** — Select which courses to download
+3. **Step 2** — Configure what to pull: module files, assignments, quizzes, syllabi, etc. Enable the AI conversion suite if you want NotebookLM-ready output
+4. **Step 3** — Watch the live dashboard; a chime plays when everything is done
 
+**Returning user — Quick Download:**
+- If you've saved a preset from a previous session, it appears on the home screen
+- Hit **Quick Download** to re-run your saved configuration in one click — no stepping through settings again
+
+### 3. Sync Mode
+
+**First time — Analyze, Review & Sync:**
 1. Switch to **Sync Mode** from the sidebar
 2. Create a sync pair: pick a local folder and link it to a Canvas course
-3. Run **Analyze** - see exactly what has changed since your last sync
-4. Review the diff, adjust per-file actions, confirm, and execute
+3. Hit **Analyze** — the engine diffs your folder against Canvas and categorises every file (new, updated, modified, deleted, etc.)
+4. Review the diff per course, adjust per-file actions if needed, confirm, and execute
+
+**Returning user — Quick Sync:**
+- Once sync pairs are configured, the **Quick Sync All** button re-runs the full analysis and sync for all your pairs in one go — no wizard required
 
 ---
 
