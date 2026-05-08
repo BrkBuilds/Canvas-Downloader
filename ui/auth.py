@@ -584,13 +584,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             content: ''; display: inline-block; width: 14px; height: 14px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'%3E%3C%2Fpath%3E%3C%2Fsvg%3E");
             background-size: contain; background-repeat: no-repeat;
-            margin-right: 7px; vertical-align: middle; margin-top: -2px;
+            margin-right: 7px; vertical-align: middle;
         }
         div[data-testid="stDialog"] div.st-key-stg_btn_clear button::before {
             content: ''; display: inline-block; width: 13px; height: 13px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C%2Fline%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C%2Fline%3E%3C%2Fsvg%3E");
             background-size: contain; background-repeat: no-repeat;
-            margin-right: 7px; vertical-align: middle; margin-top: -2px;
+            margin-right: 7px; vertical-align: middle;
         }
         </style>""")
 
