@@ -43,7 +43,10 @@ class ExcelToPDF:
         self._kill_app()
         try:
             import pythoncom
-            pythoncom.CoUninitialize()
+            import threading
+            t = threading.Thread(target=pythoncom.CoUninitialize, daemon=True)
+            t.start()
+            t.join(timeout=5.0)
         except Exception:
             pass
 
@@ -245,7 +248,10 @@ class ExcelToData:
         self._kill_app()
         try:
             import pythoncom
-            pythoncom.CoUninitialize()
+            import threading
+            t = threading.Thread(target=pythoncom.CoUninitialize, daemon=True)
+            t.start()
+            t.join(timeout=5.0)
         except Exception:
             pass
 
