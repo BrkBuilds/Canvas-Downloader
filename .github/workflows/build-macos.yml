@@ -32,7 +32,7 @@ jobs:
 
       - name: Ad-hoc code sign & Package
         run: |
-          codesign --force --deep -s - "dist/Canvas Downloader.app"
+          codesign --force --deep -s - --entitlements entitlements.mac.plist "dist/Canvas Downloader.app"
           hdiutil create -volname "Canvas Downloader" \
             -srcfolder "dist/Canvas Downloader.app" \
             -ov -format UDZO \
