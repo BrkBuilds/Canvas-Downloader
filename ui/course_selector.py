@@ -854,7 +854,7 @@ def render_course_selector(fetch_courses_fn):
         min-height: 3.2em !important;
         border-radius: 6px !important;
         width: 100% !important;
-        padding: 0px 10px 4px 10px !important; /* Optical adjustment: pushes text up */
+        padding: 0px 10px !important; /* Balanced vertical padding */
         float: none !important;
         margin: 0 auto !important;
     }}
@@ -889,7 +889,7 @@ def render_course_selector(fetch_courses_fn):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: -2px !important;
+        /* rely on flex centering */
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;
@@ -901,7 +901,7 @@ def render_course_selector(fetch_courses_fn):
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: -2px !important;
+        /* rely on flex centering */
         width: 18px !important;
         height: 18px !important;
         margin-right: 5px !important;

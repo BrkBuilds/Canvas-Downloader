@@ -822,7 +822,7 @@ div.st-key-page_nav_quick_back button:hover {{
                 line-height: 1 !important;
             }
             div.st-key-qd_title_help_row div[class*="st-key-quick_download_explainer_help_btn"] {
-                margin-bottom: 5px !important;
+                margin-bottom: 0px !important;
                 margin-left: 0 !important;
             }
             </style>
