@@ -508,6 +508,39 @@
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
     @media(max-width:700px) { .two-col { grid-template-columns: 1fr; } }
     .gap-16 { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ---- SECURITY SECTION ---- */
+    .security-section { padding: 90px 0; }
+    .sec-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--txt3); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+    }
+    .sec-qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:700px) { .sec-qa-grid { grid-template-columns: 1fr; } }
+    .sec-qa-card {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad-l); padding: 24px;
+    }
+    .sec-qa-card h4 {
+      font-size: 15px; font-weight: 800; color: var(--txt); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 9px; line-height: 1.3;
+    }
+    .sec-qa-card h4 svg { flex-shrink: 0; color: var(--txt3); }
+    .sec-qa-card .qa-body { font-size: 14px; color: var(--txt2); line-height: 1.78; }
+    .sec-qa-card .qa-note {
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+      font-size: 12.5px; color: var(--txt3); line-height: 1.65;
+    }
+    .sec-verify-link {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+      font-size: 13px; font-weight: 600; color: var(--txt2);
+      padding: 7px 14px; border-radius: var(--rad);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+      transition: color 0.15s, background 0.15s;
+    }
+    .sec-verify-link:hover { color: var(--txt); background: rgba(255,255,255,0.08); }
   </style>
 </head>
 <body>
@@ -522,6 +555,7 @@
       </a>
       <div class="nav-right">
         <a href="guide.html" class="nav-link">How It Works</a>
+        <a href="#security" class="nav-link">Security</a>
         <span class="nav-v">v2.0.0</span>
         <a href="#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -961,6 +995,70 @@
           <strong style="color:var(--txt2);">How edits are handled:</strong> If you annotated a file and Canvas has a newer version, the app saves the new version alongside yours as <span style="font-family:monospace;font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">filename_NewVersion.pdf</span>. Your file is untouched. Deletions you made locally are respected and not re-downloaded.
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div" />
+
+<!-- SECURITY -->
+<section class="security-section" id="security">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sec-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Security
+      </div>
+      <h2>Fair questions, straight answers.</h2>
+      <p>Downloading an unsigned app that has "Canvas" in its name — around the time of a Canvas security incident — is a completely reasonable thing to be cautious about. Here's what's actually going on.</p>
+    </div>
+
+    <div class="sec-qa-grid reveal">
+
+      <!-- Card 1: The warning -->
+      <div class="sec-qa-card">
+        <h4>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Why is Windows / Mac warning me?
+        </h4>
+        <p class="qa-body">Code-signing certificates — the thing that makes these warnings go away — cost $99–$300 per year, paid to Apple or Microsoft. This is a free project built by a student. The same popup appears for VLC, Blender, and most other open-source software that doesn't pay for the certificate. The warning means "unrecognized publisher," not "dangerous."</p>
+        <p class="qa-note">The certificate program isn't a safety check — it's a publisher registry. Any developer, including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about the code.</p>
+      </div>
+
+      <!-- Card 2: What it connects to -->
+      <div class="sec-qa-card">
+        <h4>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          What does it actually connect to?
+        </h4>
+        <p class="qa-body">Only your university's Canvas server — the same URL you log into in your browser. There's no backend, no analytics server, no developer receiving anything from your machine. Your API token is stored in your OS's password vault (Windows Credential Manager or macOS Keychain), not in a file on disk, and is only sent to your university's Canvas when downloading.</p>
+        <p class="qa-note">The app's local interface runs on 127.0.0.1 — your own computer only. It cannot be reached from the internet or your local network. None of this requires trusting our word: the source code is publicly readable on GitHub.</p>
+      </div>
+
+      <!-- Card 3: The breach -->
+      <div class="sec-qa-card">
+        <h4>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          What about the Instructure / Canvas breach?
+        </h4>
+        <p class="qa-body">This app has no connection to Instructure beyond using their public student API — the same one used by the Canvas mobile apps and other third-party integrations. It's not built by them, not affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't change your exposure to that incident in either direction.</p>
+        <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in Canvas → Account Settings → Approved Integrations, remove any API tokens you don't recognize.</p>
+      </div>
+
+      <!-- Card 4: Verify yourself -->
+      <div class="sec-qa-card">
+        <h4>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          You don't have to take our word for it
+        </h4>
+        <p class="qa-body">The full source code is public on GitHub and has been since the beginning. If you're unsure, read it before downloading — that's exactly the right approach. The things worth checking are in three files: <code style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">start.py</code> (server binds to 127.0.0.1), <code style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">canvas_logic.py</code> (all requests go to your Canvas URL), and <code style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">ui/auth.py</code> (token saved to OS keyring, never written to a file).</p>
+        <p class="qa-note">If you're not a developer, the fact that the source is fully public and has been since day one is itself the most meaningful signal.</p>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener" class="sec-verify-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Read the source on GitHub
+        </a>
+      </div>
+
     </div>
   </div>
 </section>
