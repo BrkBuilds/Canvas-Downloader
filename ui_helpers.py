@@ -426,13 +426,10 @@ def native_folder_picker() -> str | None:
         try:
             result = subprocess.run(
                 ['osascript', '-e', 'POSIX path of (choose folder)'],
-                capture_output=True, text=True, timeout=60
+                capture_output=True, text=True,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip()
-            return None
-        except subprocess.TimeoutExpired:
-            logging.warning("AppleScript folder picker timed out after 60 seconds.")
             return None
         except Exception:
             return None

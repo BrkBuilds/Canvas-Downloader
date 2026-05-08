@@ -226,12 +226,14 @@ class CanvasController:
             return
 
         if os.path.exists(CHROME_PATH):
-            subprocess.Popen([CHROME_PATH, self.url])
+            subprocess.Popen([CHROME_PATH, '--new-window', self.url])
         else:
             # Fallback: let macOS Launch Services find Chrome regardless of install location
             # (covers ~/Applications installs, non-standard paths, etc.)
+            # --args passes flags through to Chrome; --new-window forces a focused new window
+            # even when Chrome is already running with other tabs open.
             result = subprocess.run(
-                ['open', '-a', 'Google Chrome', self.url],
+                ['open', '-a', 'Google Chrome', '--args', '--new-window', self.url],
                 capture_output=True,
             )
             if result.returncode != 0:
