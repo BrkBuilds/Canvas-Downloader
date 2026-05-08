@@ -1,5 +1,5 @@
 """
-Styles package — External CSS injection for Canvas Downloader.
+Styles package - External CSS injection for Canvas Downloader.
 
 All static CSS lives in .css files within this directory.
 Dynamic CSS (requiring Python f-string values) remains inline in logic modules.
@@ -26,7 +26,7 @@ def inject_css(filename: str) -> None:
     reach the parent page DOM (sidebar, main content, etc.).
     st.markdown injects directly into the page DOM.
 
-    Caches CSS content in frozen (PyInstaller) builds — assets ship
+    Caches CSS content in frozen (PyInstaller) builds - assets ship
     immutable inside the bundle, so re-reading from disk on every rerun
     is pure waste. In dev (unfrozen) we always re-read so edits to .css
     files take effect on the next rerun without restarting Streamlit.

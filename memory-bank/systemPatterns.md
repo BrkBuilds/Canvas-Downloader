@@ -21,9 +21,9 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
 - **Policy**: Office COM APIs hard-crash on paths ≥255 chars. Shadow long paths into `%TEMP%` with short UUID names, yield safe paths, move results back on exit.
 - **Threshold**: 240 characters (15-char safety margin). Short paths pass through at zero cost.
 - **Ghost PDF Guard**: Exit block checks `temp_pdf.exists()` before `shutil.move()`. If COM crashed, no orphaned ghost file is created at the destination.
-- **Cleanup**: `temp_source.unlink(missing_ok=True)` in `finally` block — always runs.
-- **Injection Points**: `pdf_converter.py`, `word_converter.py`, `excel_converter.py` — Windows COM blocks only. macOS AppleScript branches are never touched.
-- **Yields**: 3-tuple `(safe_source, safe_pdf, original_pdf)` — converters use first two for COM, third for return value.
+- **Cleanup**: `temp_source.unlink(missing_ok=True)` in `finally` block - always runs.
+- **Injection Points**: `pdf_converter.py`, `word_converter.py`, `excel_converter.py` - Windows COM blocks only. macOS AppleScript branches are never touched.
+- **Yields**: 3-tuple `(safe_source, safe_pdf, original_pdf)` - converters use first two for COM, third for return value.
 
 ## ZIP Encoding (Mojibake Fix)
 - **Pattern**: `archive_extractor.py` uses Python-version-aware UTF-8 decoding for ZIP entry filenames.
@@ -237,15 +237,15 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: When an action inside a dialog mutates the core `st.session_state` (like Applying a Preset), a standard `st.rerun()` only restarts the modal fragment itself. The underlying parent page remains completely visually stale until the user manually clicks away or closes the modal.
     - *Solution*: Use `st.rerun(scope="app")` paired with a `try/except TypeError` fallback (for older Streamlit versions). This guarantees the modal is violently destroyed and the entire native application tree re-renders from the top using the newly injected state variables.
 - **`st.html()` Shadow Root Spacing Isolation**:
-    - *Problem*: `margin` on elements inside `st.html()` (e.g., `<hr style='margin: 15px 0'>`) appears to do nothing for external layout spacing. This is because `st.html()` renders inside a shadow root — CSS margin is applied within the shadow root's own box, not to the outer Streamlit document flow. The shadow root itself allocates only its minimum intrinsic height.
+    - *Problem*: `margin` on elements inside `st.html()` (e.g., `<hr style='margin: 15px 0'>`) appears to do nothing for external layout spacing. This is because `st.html()` renders inside a shadow root - CSS margin is applied within the shadow root's own box, not to the outer Streamlit document flow. The shadow root itself allocates only its minimum intrinsic height.
     - *Solution*: Wrap the inner element in a `<div style='padding: Xpx 0'>` container. Padding inflates the shadow root's rendered height, which is real layout space visible to the parent document. Example: `st.html("<div style='padding: 10px 0'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")`.
 - **Streamlit Checkbox Gap Tuning**:
     - *Problem*: The default Streamlit checkbox has ~8px of flex gap between the visual checkbox icon (a `span`) and the label text (a `div > p`). Setting `gap` without `display: flex !important` may not take effect if the emotion CSS specificity wins.
     - *Solution*: Target `[data-testid="stCheckbox"] label` with `display: flex !important; gap: Xpx !important`. The `label > span` is the visual checkbox square; the `label > div` is the text wrapper. To go sub-zero (tighter than 0), use `margin-left: -Xpx` on the text wrapper div since CSS `gap` cannot be negative.
-    - *Vertical alignment*: The visual checkbox span renders 1-2px below optical center. Fix with `position: relative; top: -1px` on the `span` — this is a visual-only shift in flex layout, does not disrupt the gap.
+    - *Vertical alignment*: The visual checkbox span renders 1-2px below optical center. Fix with `position: relative; top: -1px` on the `span` - this is a visual-only shift in flex layout, does not disrupt the gap.
 - **50/50 Button Row (Reliable)**:
     - *Problem*: CSS-forcing two stacked Streamlit buttons into a flex row via `:has()` on `stVerticalBlock` is fragile (CLAUDE.md warns against `:has()` on main-app components) and produces vertical misalignment.
-    - *Solution*: Use `st.columns([1, 1])` in Python and `use_container_width=True` on each button. Streamlit natively handles 50/50 split, vertical alignment, and column gap. No CSS layout hacking required — only visual button styling CSS is needed.
+    - *Solution*: Use `st.columns([1, 1])` in Python and `use_container_width=True` on each button. Streamlit natively handles 50/50 split, vertical alignment, and column gap. No CSS layout hacking required - only visual button styling CSS is needed.
 - **The Ghost Toast Pattern (Pending Toasts)**:
     - *Problem*: `st.toast()` notifications fired inside a dialog immediately disappear if the next line of code runs an `st.rerun(scope="app")`, because the modal container they were bound to is instantly destroyed.
     - *Solution*: Do not call `st.toast` inside the dialog. Instead, inject the message into `st.session_state['pending_toast'] = "✅ Success"`. At the absolute top of the target page's layout block (e.g. `Step 2`), write a consumer: `if 'pending_toast' in session_state: st.toast(session_state.pop('pending_toast'))`. The toast will now cleanly render precisely as the dialog drops and the main page refreshes.
@@ -429,7 +429,7 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
 ## NotebookLM Data Pipeline Patterns
   - **Excel to PDF (Tabular Integrity & Global Export)**:
     - *Pattern*: Unlike Word/PPT, Excel sheets are "infinite". To ensure LLM readability, the system modifies `PageSetup` to `FitToPagesWide = 1` and `FitToPagesTall = False`, while setting all margins to 0. 
-    - *Anti-Pattern Avoidance*: Never attempt to select sheets via `ActiveWindow` or filter data via `WorksheetFunction.CountA(sheet.Cells)`. `ActiveWindow` crashes reliably in `Visible=False` environments, and `CountA` sweeps billions of cells causing guaranteed RPC timeouts. The cleanest strategy is to just export the entire workbook via `ExportAsFixedFormat(0)`—empty sheets will produce small harmless PDFs instead of crashing the batch pipeline.
+    - *Anti-Pattern Avoidance*: Never attempt to select sheets via `ActiveWindow` or filter data via `WorksheetFunction.CountA(sheet.Cells)`. `ActiveWindow` crashes reliably in `Visible=False` environments, and `CountA` sweeps billions of cells causing guaranteed RPC timeouts. The cleanest strategy is to just export the entire workbook via `ExportAsFixedFormat(0)`-empty sheets will produce small harmless PDFs instead of crashing the batch pipeline.
 - **Pure Deletion + Sync Engine Bypass**:
     - *Pattern Description*: For destructive conversions (like URL compilation and Archive extraction), we DO NOT use Ghost Stubs (`.extracted` files) to represent the missing source file.
     - *Problem*: Physical file deletion after automated conversion/extraction causes the standard Sync Engine to flag files as "Locally Deleted," triggering redundant re-downloads.
@@ -538,8 +538,8 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
 - **LTI/Media Catch**: Graceful reporting of restricted media streams via extension/URL inspection.
 - **Centralized Logs**: `download_errors.txt` created in the workspace root.
 - **Post-Processing Dual Logging Architecture**:
-    - `canvas_debug.log_debug(message, debug_file)` — writes timestamped plain text to `debug_log.txt` (gated by Debug Mode toggle). The `debug_file` is `Path(save_dir) / "debug_log.txt"` or `None`.
-    - `log_post_process_error(directory, filename, error_msg)` — inline helper defined in `app.py` that appends `[Post-Processing]`-tagged entries to `download_errors.txt` (always active on failures).
+    - `canvas_debug.log_debug(message, debug_file)` - writes timestamped plain text to `debug_log.txt` (gated by Debug Mode toggle). The `debug_file` is `Path(save_dir) / "debug_log.txt"` or `None`.
+    - `log_post_process_error(directory, filename, error_msg)` - inline helper defined in `app.py` that appends `[Post-Processing]`-tagged entries to `download_errors.txt` (always active on failures).
     - Every post-processing log message is mirrored to three destinations: `log_deque` (Streamlit terminal UI), `logger.info/error` (Python logging), and `log_debug` (debug file).
 - **Two-Layer Error Deduplication**:
     - *Problem*: A single problematic LTI link appearing across multiple modules fails multiple times during identical scanning passes, flooding the UI terminal and `.txt` log with duplicate entries.
@@ -568,7 +568,7 @@ UI toggles must use idempotent callbacks to synchronize master/sub states:
     - *Solution*: Segregate heavy UI updates (progress bars, terminal logs, metrics) into a throttled block, but keep the per-file status text (`active_file_placeholder`) **outside** the throttle. This ensures the user receives instantaneous feedback on precisely which file is active while preserving overall browser performance.
 - **Expander for Sub-Toggles**:
     - *Problem*: 8+ sub-checkboxes clutter the Step 2 UI and visually overwhelm the page.
-    - *Solution*: Keep the master toggle (`notebooklm_master`) always visible, and nest all sub-checkboxes inside `st.expander(f"⚙️ Advanced Conversion Settings ({active}/{total})")`. The dynamic label updates on rerun. No custom CSS indentation needed — the expander provides natural visual hierarchy.
+    - *Solution*: Keep the master toggle (`notebooklm_master`) always visible, and nest all sub-checkboxes inside `st.expander(f"⚙️ Advanced Conversion Settings ({active}/{total})")`. The dynamic label updates on rerun. No custom CSS indentation needed - the expander provides natural visual hierarchy.
 - **Sniper Retry UI Bypassing & Path Provisioning**:
     - *Problem*: Retrying failed downloads normally requires resetting the UI to the "scanning" state, forcing the user to wait multiple minutes while the app recursively rescans every Canvas module and folder just to rebuild the `files_to_download` queue. Furthermore, if the user manually deleted a folder *after* the initial failure, the sniper retry will crash with a `FileNotFoundError` as it attempts to write a file into a non-existent directory.
     - *Solution 1 (State Jump)*: Jump Streamlit directly back to the execution phase by surgically injecting `download_status = 'running'` (or `'isolated_retry'`). Preserve the existing `courses_to_download` and total metrics in `st.session_state`. Only zero out the success/fail counters. This fast-forwards the UI and skips the multi-minute analysis bottleneck.

@@ -1,13 +1,13 @@
 """
-ui.course_selector — Shared course selection components + Step 1 for Download mode.
+ui.course_selector - Shared course selection components + Step 1 for Download mode.
 
 Shared Components (imported by sync_dialogs.py, hub_dialog.py):
-  - ``inject_course_selector_css()`` — Premium CSS for CBS filter trays.
-  - ``render_cbs_filters()``         — CBS toggle + filter criteria.
-  - ``render_course_list()``         — Course checkbox list (multi or single select).
+  - ``inject_course_selector_css()`` - Premium CSS for CBS filter trays.
+  - ``render_cbs_filters()``         - CBS toggle + filter criteria.
+  - ``render_course_list()``         - Course checkbox list (multi or single select).
 
 Download-specific:
-  - ``render_course_selector()``     — Full Step 1 page.
+  - ``render_course_selector()``     - Full Step 1 page.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from ui_shared import render_help_card
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Shared Components — reused by Download, Sync Dialog, and Hub Dialog
+# Shared Components - reused by Download, Sync Dialog, and Hub Dialog
 # ═══════════════════════════════════════════════════════════════════════
 
 # ── SVG data-URI constants (icon color variants) ──────────────────────
@@ -113,12 +113,12 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True, in_dia
 
     # ── HOISTED CSS FOR SEGMENTED CONTROL LIST VIEW TOGGLE) ─
     # In dialog mode, "Show:" uses st.html (margin-bottom: 0), so fav_seg sits
-    # immediately after the stVerticalBlock gap — no negative compensation needed.
+    # immediately after the stVerticalBlock gap - no negative compensation needed.
     _seg_margin_top = "0px" if in_dialog else "-30px"
     # In dialog portals, Streamlit's own button CSS wins at equal specificity
     # (loaded later in the cascade). Prefix with div[role="dialog"] to boost
     # our specificity to (0,2,*) so we always win regardless of source order.
-    # Download mode (in_dialog=False) uses no prefix — it works as-is.
+    # Download mode (in_dialog=False) uses no prefix - it works as-is.
     _bp = 'div[role="dialog"] ' if in_dialog else ''
     st.html(f"""<style>
     /* ── Outer tray (border=True used purely for st-key- class) ── */
@@ -194,7 +194,7 @@ def render_favorites_pill(namespace: str, default_favorites: bool = True, in_dia
         padding-left: 42px !important;
         padding-right: 20px !important;
     }}
-    /* Specificity shield — protect active from hover degradation */
+    /* Specificity shield - protect active from hover degradation */
     {_bp}div.st-key-btn_fav_{active_key}_{namespace} button:hover {{
         background-color: rgba(56, 189, 248, 0.15) !important;
         border-color: rgba(56, 189, 248, 0.4) !important;
@@ -577,7 +577,7 @@ def _course_list_section(courses: list) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Download Mode — Step 1: Select Courses
+# Download Mode - Step 1: Select Courses
 # ═══════════════════════════════════════════════════════════════════════
 
 def render_course_selector(fetch_courses_fn):
@@ -635,7 +635,7 @@ def render_course_selector(fetch_courses_fn):
         "</details>"
     )
 
-    # Snug Header Hack — H2 + Help button on one flex row
+    # Snug Header Hack - H2 + Help button on one flex row
     st.html("""
         <style>
         div.st-key-cs_title_help_row [data-testid="stHorizontalBlock"] {
@@ -777,7 +777,7 @@ def render_course_selector(fetch_courses_fn):
     }}
     /* ── Course List Box container ──
        Wraps the course checkbox list. Strip the native border and apply
-       a single hairline border-bottom — this is the BOTTOM separator
+       a single hairline border-bottom - this is the BOTTOM separator
        and is structurally identical to the top separator above. Pulled
        up by -1rem to cancel the parent stVerticalBlock's natural gap,
        so the top edge sits flush against the buttons-row's
@@ -847,7 +847,7 @@ def render_course_selector(fetch_courses_fn):
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
 
     st.html(f"""<style>
-    /* Target buttons inside the main column containers — scoped to Custom/Quick Download */
+    /* Target buttons inside the main column containers - scoped to Custom/Quick Download */
     div.st-key-btn_custom_download button[kind="primary"],
     div.st-key-btn_quick_download button[kind="primary"] {{
         height: 3.2em !important;

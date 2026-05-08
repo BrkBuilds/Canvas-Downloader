@@ -228,7 +228,7 @@ class CanvasManager:
         self.error_log_enabled = False    # Toggled via Settings; when False, download_errors.txt is not created
 
     def __repr__(self):
-        """Redacted repr — never expose the API token in tracebacks or log output."""
+        """Redacted repr - never expose the API token in tracebacks or log output."""
         return f"CanvasManager(api_url={self.api_url!r}, api_key='****')"
 
     def validate_token(self):
@@ -368,7 +368,7 @@ class CanvasManager:
         ``module_map`` is keyed by **both** raw positive Canvas file IDs
         (for ordinary File items) **and** synthetic negative IDs (for
         secondary content), so ``analyze_course`` can resolve a module
-        subfolder for every entity that lives inside a module — which is
+        subfolder for every entity that lives inside a module - which is
         what lets Mode A inline secondary content land in the right
         module subfolder during sync.
 
@@ -682,7 +682,7 @@ class CanvasManager:
             except Exception:
                 fetch_success['announcement'] = False
 
-        # Standalone Assignments — fetch individually for timestamp parity
+        # Standalone Assignments - fetch individually for timestamp parity
         # and attachment discovery (mirrors the download path exactly).
         if settings.get('download_assignments'):
             try:
@@ -741,7 +741,7 @@ class CanvasManager:
                                 })
                                 existing_att_ids.add(canvas_file.id)
                             except Exception:
-                                pass  # Inaccessible file — skip silently
+                                pass  # Inaccessible file - skip silently
 
                     has_attachments = bool(attachments)
 
@@ -1179,7 +1179,7 @@ class CanvasManager:
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
         
-        # Check disk space — pass estimated payload from session state so the
+        # Check disk space - pass estimated payload from session state so the
         # dynamic threshold catches large downloads (e.g. 15 GB course on a
         # volume with only 1.5 GB free).
         import streamlit as _st_disk
@@ -1215,7 +1215,7 @@ class CanvasManager:
         
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         if debug_mode:
-            # Append course header (never wipe — one global log per session)
+            # Append course header (never wipe - one global log per session)
             log_debug(f"\n{'='*50}\n--- Download: {course.name} (ID: {course.id}) Mode: {mode} ---\n{'='*50}", debug_file)
             log_debug(f"Save Dir: {save_dir}", debug_file)
 
@@ -1534,7 +1534,7 @@ class CanvasManager:
                     all_files_paginator = course.get_files()
                     catch_all_tasks = []
 
-                    # Pre-compute ID sets once — avoids O(N×M) set
+                    # Pre-compute ID sets once - avoids O(N×M) set
                     # reconstruction on every loop iteration.
                     _downloaded_ids = {int(i) for i in downloaded_file_ids}
                     _module_ids = {int(i) for i in module_file_ids}
@@ -1642,7 +1642,7 @@ class CanvasManager:
             # --- Sync Run #0: Save the download mode and sync contract ---
             try:
                 sync_manager._save_metadata('download_mode', mode)
-                # Save the full "Sync Contract" — all settings used during this download
+                # Save the full "Sync Contract" - all settings used during this download
                 if post_processing_settings:
                     import json
                     sync_manager._save_metadata('sync_contract', json.dumps(post_processing_settings))
@@ -2149,7 +2149,7 @@ class CanvasManager:
 
         # Max-file-size gate (opt-in, configured in the Settings dialog).
         # Files over the user-specified limit are counted as successful
-        # skips rather than errors — they're an intentional user choice.
+        # skips rather than errors - they're an intentional user choice.
         max_bytes = getattr(self, '_max_file_size_bytes', None)
         if max_bytes and file_size_bytes > max_bytes:
             size_mb_display = file_size_bytes / (1024 * 1024)
@@ -2320,7 +2320,7 @@ class CanvasManager:
                                             log_debug(f"Cancelled: deleted partial {part_path.name}", debug_file)
                                     except OSError:
                                         pass
-                                    return  # Cancel — do not return file info
+                                    return  # Cancel - do not return file info
                                 
                                 # Verify download completeness BEFORE rename
                                 if file_size_bytes > 0 and total_bytes != file_size_bytes:
@@ -2330,7 +2330,7 @@ class CanvasManager:
                                     if is_flexible_media and total_bytes > 0:
                                         log_debug(f"Soft Warning: {filename} size mismatch (Expected {file_size_bytes}, got {total_bytes}). Bypassing for media file.", debug_file)
                                     else:
-                                        # Incomplete download — delete .part and raise
+                                        # Incomplete download - delete .part and raise
                                         try:
                                             if Path(make_long_path(part_path)).exists():
                                                 Path(make_long_path(part_path)).unlink()
@@ -2749,7 +2749,7 @@ class CanvasManager:
         -------
         ``(filepath: Path | None, synthetic_id: int | None, attachments: list | None)``
         Where ``attachments`` is a list of Canvas attachment dicts (each with
-        ``id``, ``url``, ``filename``, ``size``) — only populated for assignments.
+        ``id``, ``url``, ``filename``, ``size``) - only populated for assignments.
         """
         # Local imports to prevent circular dependency with sync_manager
         from sync_manager import (
@@ -2804,7 +2804,7 @@ class CanvasManager:
                         })
                         existing_att_ids.add(canvas_file.id)
                     except (Unauthorized, ResourceDoesNotExist):
-                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
                     except Exception as e:
                         log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
@@ -2865,7 +2865,7 @@ class CanvasManager:
                         })
                         existing_att_ids.add(canvas_file.id)
                     except (Unauthorized, ResourceDoesNotExist):
-                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
                     except Exception as e:
                         log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
@@ -2923,7 +2923,7 @@ class CanvasManager:
                         })
                         existing_att_ids.add(canvas_file.id)
                     except (Unauthorized, ResourceDoesNotExist):
-                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
                     except Exception as e:
                         log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
@@ -2983,7 +2983,7 @@ class CanvasManager:
                         })
                         existing_att_ids.add(canvas_file.id)
                     except (Unauthorized, ResourceDoesNotExist):
-                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
                     except Exception as e:
                         log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
@@ -3176,7 +3176,7 @@ class CanvasManager:
                 # IMPORTANT: course.get_assignments() (list endpoint) does NOT
                 # return the `attachments` field. We must refetch each
                 # assignment individually to get full data including attached
-                # files — this mirrors the sync path's download_secondary_entity.
+                # files - this mirrors the sync path's download_secondary_entity.
                 attachments = []
                 try:
                     full_assignment = course.get_assignment(a_id)
@@ -3210,7 +3210,7 @@ class CanvasManager:
                         })
                         existing_att_ids.add(canvas_file.id)
                     except (Unauthorized, ResourceDoesNotExist):
-                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted — skipping", debug_file)
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
                     except Exception as e:
                         log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
 
@@ -3913,7 +3913,7 @@ class CanvasManager:
 
         try:
             if platform.system() == 'Darwin':
-                # Binary-safe plist generation — plistlib handles all XML
+                # Binary-safe plist generation - plistlib handles all XML
                 # escaping internally, making manual saxutils.escape() unnecessary.
                 content = plistlib.dumps({'URL': url}, fmt=plistlib.FMT_XML)
                 with open(make_long_path(filepath), 'wb') as f:

@@ -72,7 +72,7 @@ def render_completion_card(synced_count: int, error_count: int,
             "<div class='completion-card success'>"
             f"<div class='card-title'>{_card_title}</div>"
             f"<p style='color:#86efac;font-size:1rem;margin:8px 0 0;'>"
-            f"Nothing to {_label} — all files are up to date!"
+            f"Nothing to {_label} - all files are up to date!"
             "</p></div>",
             unsafe_allow_html=True,
         )
@@ -122,7 +122,7 @@ f'<div class="stat-label">{size_unit} Downloaded</div>'
 '</div>'
     )
 
-    # Conditional error stat cards — split by retriable vs unresolvable
+    # Conditional error stat cards - split by retriable vs unresolvable
     if retriable_count > 0 or unresolvable_count > 0:
         # Show separate cards when split counts are provided
         if retriable_count > 0:
@@ -387,8 +387,8 @@ _ERROR_TRANSLATIONS = {
     'LTI/Media Stream': 'This is a streamed video that cannot be downloaded directly',
     'URL Expiration': 'The download link expired and could not be refreshed',
     'Network Error': 'Network connection failed after multiple retries',
-    'Write Error': 'Could not save the file to disk — check available storage',
-    '401 Unauthorized': 'Access denied — you may not have permission to download this file',
+    'Write Error': 'Could not save the file to disk - check available storage',
+    '401 Unauthorized': 'Access denied - you may not have permission to download this file',
     'Missing Content ID': 'Canvas did not provide a file reference for this item',
     'Missing Page URL': 'Canvas did not provide a URL for this page',
     'Missing External URL': 'Canvas did not provide a URL for this link',
@@ -629,7 +629,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 if st.button("View Full Error Log", key=f"{key_prefix}_view_error_log", use_container_width=True):
                     dialog_fn(valid_paths)
 
-    # Retry button — placed in half-width left column under the error panel
+    # Retry button - placed in half-width left column under the error panel
     # so it visually associates with the "Failed to Download" column only.
     if has_retriable_errors and retry_btn_callback:
         retriable_count = sum(

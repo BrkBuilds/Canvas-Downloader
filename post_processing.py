@@ -156,7 +156,7 @@ def _show_active_file(ui: UIBridge, filename: str):
 def _update_manifest_path(sm, original_file: Path, converted_path: Path):
     """Update the sync manifest to point from the original file to the converted file.
 
-    Uses SyncManager exclusively — no raw sqlite3.  Fixes the audit inconsistency.
+    Uses SyncManager exclusively - no raw sqlite3.  Fixes the audit inconsistency.
     """
     try:
         original_rel = str(original_file.relative_to(sm.local_path)).replace('\\', '/')
@@ -218,7 +218,7 @@ def run_archive_extraction(files, ui: UIBridge):
         success = extract_archive(archive_file)
 
         if success:
-            # No manifest update needed — the Sync Engine bypass will
+            # No manifest update needed - the Sync Engine bypass will
             # silently ignore the missing archive on future sync runs.
             _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)}</span>")
             ui.pp_success_count += 1
@@ -420,7 +420,7 @@ def run_excel_data_conversion(files, ui: UIBridge):
     Produces a single _Data.txt file per workbook containing Markdown-headed
     sheet sections with CSV-formatted cell data, optimized for AI ingestion.
 
-    Does NOT delete the original file or update the sync manifest — the
+    Does NOT delete the original file or update the sync manifest - the
     _Data.txt is an untracked secondary artifact (Approach A).
     """
     if not files:
@@ -447,7 +447,7 @@ def run_excel_data_conversion(files, ui: UIBridge):
 
                 if data_path:
                     data_name = Path(data_path).name
-                    # Do NOT update manifest — _Data.txt is an untracked sidecar
+                    # Do NOT update manifest - _Data.txt is an untracked sidecar
                     _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>[ ✅ ] Extracted: {esc(old_name)} → {esc(data_name)}</span>")
                     ui.pp_success_count += 1
                     ui.generated_sidecar_paths.append(str(data_path))
@@ -630,7 +630,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
-    # Each call to _glob_files produces an independent list — no iterator exhaustion.
+    # Each call to _glob_files produces an independent list - no iterator exhaustion.
     if contract.get('convert_excel', False):
         excel_data_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
         if excel_data_files:

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Sync Hub Dialog CSS — Canvas Downloader
+   Sync Hub Dialog CSS - Canvas Downloader
    Source: sync_ui.py _inject_hub_global_css() L1222-1855
    Extracted in Phase 0 of Monolith Teardown.
 
@@ -84,14 +84,16 @@ div[data-testid="stDialog"] div[data-testid="stExpander"] details summary span {
     color: #ffffff !important;
 }
 
-/* Primary button: blue — NOTE: background-color set via dynamic override (theme.BLUE_PRIMARY) */
+/* Primary button: blue - NOTE: background-color set via dynamic override (theme.BLUE_PRIMARY) */
 div[data-testid="stDialog"] button[kind="primary"] {
     color: white !important;
     border: none !important;
 }
+
 div[data-testid="stDialog"] button[kind="primary"]:hover {
     background-color: #60a5fa !important;
 }
+
 div[data-testid="stDialog"] button[kind="primary"][disabled] {
     background-color: #1e3a8a !important;
     opacity: 1 !important;
@@ -105,12 +107,13 @@ div[data-testid="stDialog"] button[kind="secondary"] {
     color: white !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
+
 div[data-testid="stDialog"] button[kind="secondary"]:hover {
     border: 1px solid rgba(255, 255, 255, 0.35) !important;
     transition: all 0.2s ease-in-out;
 }
 
-/* Cancel buttons inside dialog — NOTE: colors set via dynamic override (theme.ERROR) */
+/* Cancel buttons inside dialog - NOTE: colors set via dynamic override (theme.ERROR) */
 
 /* Close Button (Normal Hover - Lighter Border) */
 div[data-testid="stDialog"] div.st-key-btn_hub_close button {
@@ -118,6 +121,7 @@ div[data-testid="stDialog"] div.st-key-btn_hub_close button {
     color: white !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_hub_close button:hover {
     background-color: #262730 !important;
     color: white !important;
@@ -157,7 +161,7 @@ div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
     background-color: #6e73d7 !important;
     border: 1px solid rgba(255, 255, 255, 0.275) !important;
     box-shadow: 0 4px 15px rgba(95, 100, 200, 0.3),
-                inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
     color: #ffffff !important;
 }
 
@@ -180,9 +184,11 @@ div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button:hover {
 div[data-testid="stVerticalBlockBorderWrapper"] {
     padding: 12px 15px !important;
 }
+
 div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
     gap: 0.3rem !important;
 }
+
 div[data-testid="stVerticalBlockBorderWrapper"] button {
     min-height: 35px !important;
     padding-top: 0.2rem !important;
@@ -205,6 +211,7 @@ div[data-testid="stDialog"] button[kind="tertiary"] {
     box-shadow: none !important;
     padding-left: 0px !important;
 }
+
 div[data-testid="stDialog"] button[kind="tertiary"]:hover {
     color: rgba(255, 255, 255, 1) !important;
     background-color: transparent !important;
@@ -258,6 +265,7 @@ div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
 }
+
 div[data-testid="stDialog"] div[class*="st-key-hub_open_"] button:hover,
 div[data-testid="stDialog"] div[class*="st-key-hub_editp_"] button:hover {
     background-color: rgba(255, 255, 255, 0.16) !important;
@@ -272,16 +280,19 @@ div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details {
     background-color: transparent !important;
     overflow: hidden !important;
 }
+
 div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary {
     background-color: rgba(255, 255, 255, 0.09) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 6px !important;
 }
+
 div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary:hover {
     background-color: rgba(255, 255, 255, 0.16) !important;
     transition: all 0.2s ease-in-out;
 }
+
 div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details[open] summary {
     border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
@@ -292,6 +303,7 @@ div[data-testid="stDialog"] div[class*="st-key-btn_hub_remove_pair_"] button {
     color: rgba(255, 255, 255, 1) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
+
 div[data-testid="stDialog"] div[class*="st-key-btn_hub_remove_pair_"] button:hover {
     border-color: #ff4b4b !important;
     color: #ff4b4b !important;
@@ -306,6 +318,7 @@ div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button {
     color: #93c5fd !important;
     margin-top: 10px !important;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button:hover {
     background-color: rgba(59, 130, 246, 0.25) !important;
     border-color: rgba(59, 130, 246, 0.6) !important;
@@ -318,11 +331,13 @@ div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] {
     align-items: flex-end !important;
     gap: 15px !important;
 }
-div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child {
+
+div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]:first-child {
     width: auto !important;
     flex: 0 1 auto !important;
 }
-div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {
+
+div.st-key-hub_group_name_view_row div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]:nth-child(2) {
     width: auto !important;
     flex: 0 0 auto !important;
     margin-bottom: -16px !important;
@@ -338,6 +353,7 @@ div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button {
     min-height: 0px !important;
     height: 32px !important;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_enable_edit_name button:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
     color: #ffffff !important;
@@ -445,6 +461,7 @@ div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_inline_new_folder button:hover,
 div[data-testid="stDialog"] div.st-key-btn_inline_new_course button:hover,
 div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button:hover {
@@ -453,16 +470,18 @@ div[data-testid="stDialog"] div.st-key-btn_inline_new_cancel button:hover {
     color: #ffffff !important;
 }
 
-/* 2. Add to Group Button — NOTE: hover bg/border set via dynamic override (theme.BLUE_PRIMARY) */
+/* 2. Add to Group Button - NOTE: hover bg/border set via dynamic override (theme.BLUE_PRIMARY) */
 div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button {
     background-color: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     color: #ffffff !important;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {
     color: #ffffff !important;
     transition: all 0.2s ease-in-out;
 }
+
 div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
     background-color: rgba(0, 0, 0, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -533,6 +552,7 @@ div.st-key-hub_tabs_container button {
     border-radius: 6px !important;
     transition: background-color 0.2s ease, border-color 0.2s ease !important;
 }
+
 div.st-key-hub_tabs_container button p {
     font-size: 0.95rem !important;
 }
@@ -570,6 +590,7 @@ div[class*="st-key-sync_pair_card_"] {
     overflow: visible !important;
     position: relative;
 }
+
 div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {
     gap: 10px !important;
     justify-content: flex-start !important;
@@ -589,7 +610,7 @@ div.pair-course-subtitle {
 /* =========================================
    LAYER 2: PIN ADD BUTTON TO BOTTOM
    ========================================= */
-div[data-testid="stDialog"] div[role="dialog"] > div:first-child > div {
+div[data-testid="stDialog"] div[role="dialog"]>div:first-child>div {
     display: flex !important;
     flex-direction: column !important;
     flex-grow: 1 !important;

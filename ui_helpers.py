@@ -80,20 +80,20 @@ def office_safe_path(original_path: Path):
 
     Yields:
         (safe_source_path: Path, safe_pdf_target: Path, original_pdf_target: Path)
-        — The first two are what COM should receive. The third is the true
+        - The first two are what COM should receive. The third is the true
           long-path destination where the PDF ultimately belongs.
     """
     resolved = original_path.resolve()
     original_pdf = original_path.with_suffix('.pdf')
 
-    # macOS/Linux: MAX_PATH is not a concern — always pass-through.
+    # macOS/Linux: MAX_PATH is not a concern - always pass-through.
     # This context manager exists exclusively for Win32 COM API limitations.
     if platform.system() != 'Windows':
         yield original_path, original_pdf, original_pdf
         return
 
     if len(str(resolved)) < _MAX_PATH_THRESHOLD:
-        # Short path — pass-through, zero overhead
+        # Short path - pass-through, zero overhead
         yield original_path, original_pdf, original_pdf
         return
 
@@ -548,7 +548,7 @@ def friendly_course_name(raw_name: str) -> str:
             break
     
     # Clean up any trailing whitespace or stray characters
-    name = name.rstrip(' -–—')
+    name = name.rstrip(' -–-')
     
     # Append found group codes (e.g., " (LA)")
     if found_codes:
@@ -570,7 +570,7 @@ def get_course_display_parts(course) -> tuple[str, str]:
     ``getattr`` so the app never crashes on incomplete course objects.
 
     Returns:
-        (display_name, course_code) — both guaranteed to be strings (never None).
+        (display_name, course_code) - both guaranteed to be strings (never None).
         display_name: Cleaned name with class codes, e.g. "Regnskab (LA)"
         course_code:  Raw Canvas code, e.g. "BINTO1060U.LA_E25"
     """
@@ -657,7 +657,7 @@ def render_progress_bar(container, current: int, total: int,
 # --- Step Wizard ---
 
 # SVG icon paths (Lucide/Heroicons style, 24×24 viewBox).
-# Shapes that should be filled use the placeholder __FILL__ — replaced at render time
+# Shapes that should be filled use the placeholder __FILL__ - replaced at render time
 # with the cutout colour so they appear as solid filled shapes inside the circle.
 _ICON_FOLDER = (
     '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>'
@@ -682,7 +682,7 @@ _ICON_DOC = (
     '<line x1="16" y1="13" x2="8" y2="13"/>'
     '<line x1="16" y1="17" x2="8" y2="17"/>'
 )
-# _ICON_GEAR — standard 24×24 sliders icon (Feather/Lucide, fully stroke-based)
+# _ICON_GEAR - standard 24×24 sliders icon (Feather/Lucide, fully stroke-based)
 _ICON_GEAR = (
     '<line x1="4" y1="21" x2="4" y2="14"/>'
     '<line x1="4" y1="10" x2="4" y2="3"/>'
@@ -746,23 +746,23 @@ def _wizard_icon_bg(icon_svg, color: str, size: int = 15, circle_bg: str = None)
 def render_wizard_step(container, current_step: int, steps: list):
     """Render a horizontal step tracker.
 
-    No circles, no pill shape.  Each step is [icon] N. Label — purely informational.
+    No circles, no pill shape.  Each step is [icon] N. Label - purely informational.
     Renders flush to the top of the page (global.css padding-top:0 on the block container).
     Separator lines flex-grow to fill full page width evenly.
 
     States:
-      done  — soft light-blue; icon + text, slightly faded to signal "already visited"
-      active — cool near-white, bold, icon slightly larger; drop-shadow glow below
-      idle  — medium-dark blue-grey; visible but clearly inactive
+      done  - soft light-blue; icon + text, slightly faded to signal "already visited"
+      active - cool near-white, bold, icon slightly larger; drop-shadow glow below
+      idle  - medium-dark blue-grey; visible but clearly inactive
 
     Args:
         container:    Streamlit container to render into.
         current_step: Current active step number.
         steps:        List of (step_num, label, svg_path) tuples.
     """
-    DONE_COLOR   = '#8dbecc'   # completed — soft accent blue
-    ACTIVE_COLOR = '#cce0e8'   # current    — cool near-white (slightly muted)
-    IDLE_COLOR   = '#607d8b'   # future     — medium-dark blue-grey, legible but receded
+    DONE_COLOR   = '#8dbecc'   # completed - soft accent blue
+    ACTIVE_COLOR = '#cce0e8'   # current    - cool near-white (slightly muted)
+    IDLE_COLOR   = '#607d8b'   # future     - medium-dark blue-grey, legible but receded
     DONE_SEP     = '#3a6070'   # separator after a completed step
     IDLE_SEP     = '#1a2d3d'   # separator before a future step
 
@@ -794,7 +794,7 @@ def render_wizard_step(container, current_step: int, steps: list):
             font_size   = '0.92rem'
             font_weight = '700'
             opacity     = '1'
-            # Centered drop-shadow glow — blurry bright spot at 37.5% opacity
+            # Centered drop-shadow glow - blurry bright spot at 37.5% opacity
             extra_style = 'filter:drop-shadow(0px 0px 14px rgba(141,190,204,0.375));'
         else:
             icon_size   = '12px'
