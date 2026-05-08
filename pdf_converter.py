@@ -104,7 +104,7 @@ class PowerPointToPDF:
             tell application "Microsoft PowerPoint"
                 set display alerts to false
                 set theDoc to open POSIX file "{posix_src}"
-                save theDoc in POSIX file "{posix_dst}" as save as PDF
+                save as theDoc filename POSIX file "{posix_dst}" file format save as PDF
                 close theDoc saving no
             end tell
         '''
@@ -212,11 +212,6 @@ class PowerPointToPDF:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._kill_app()
-        try:
-            import pythoncom
-            pythoncom.CoUninitialize()
-        except Exception:
-            pass
         try:
             import pythoncom
             pythoncom.CoUninitialize()

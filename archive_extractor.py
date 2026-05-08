@@ -7,6 +7,20 @@ from pathlib import Path
 MAX_UNCOMPRESSED_SIZE = 50 * 1024 * 1024 * 1024  # 50 GB
 MAX_COMPRESSION_RATIO = 100.0
 
+
+def _filter_zip_members(members):
+    """Strip macOS metadata entries from a zip member list.
+
+    macOS-created zips contain a __MACOSX/ directory of AppleDouble resource
+    fork files (._filename) alongside the real content.  These are invisible
+    clutter on any non-macOS system and noise even on macOS.
+    """
+    return [
+        m for m in members
+        if not m.filename.startswith('__MACOSX/')
+        and not os.path.basename(m.filename).startswith('._')
+    ]
+
 def extract_archive(archive_path: str | Path) -> bool | None:
     abs_archive = Path(archive_path).resolve().absolute()
     
@@ -41,10 +55,11 @@ def extract_archive(archive_path: str | Path) -> bool | None:
             if sys.version_info >= (3, 11):
                 # Python 3.11+ natively supports metadata_encoding
                 with zipfile.ZipFile(abs_archive, 'r', metadata_encoding='utf-8') as zip_ref:
-                    uncompressed_size = sum(info.file_size for info in zip_ref.infolist())
+                    members = _filter_zip_members(zip_ref.infolist())
+                    uncompressed_size = sum(info.file_size for info in members)
                     if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                         raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
-                    zip_ref.extractall(extract_dir)
+                    zip_ref.extractall(extract_dir, members=members)
             else:
                 # Python < 3.11: manually re-decode CP437 → UTF-8
                 with zipfile.ZipFile(abs_archive, 'r') as zip_ref:
@@ -57,6 +72,7 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                             except (UnicodeDecodeError, UnicodeEncodeError):
                                 pass  # Keep original if re-encoding fails
                         mutated_members.append(info)
+                    mutated_members = _filter_zip_members(mutated_members)
                     uncompressed_size = sum(info.file_size for info in mutated_members)
                     if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                         raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")

@@ -1069,6 +1069,26 @@
             <div style="background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;font-family:monospace;font-size:12px;color:var(--txt);letter-spacing:0.01em;">xattr -cr /Applications/Canvas\ Downloader.app</div>
             <p style="font-size:11px;color:var(--txt3);margin-top:8px;line-height:1.5;">Open <strong style="color:var(--txt2)">Terminal</strong> (search Spotlight with ⌘Space), paste the command above, press Enter. Then double-click the app — it will open.</p>
           </div>
+          <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(56,189,248,0.18);border-radius:var(--rad);padding:16px;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:10px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Permission prompts &amp; what to expect
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:3px;">Office conversion permissions (first use only)</p>
+                <p style="font-size:12px;color:var(--txt2);line-height:1.6;">If you enable PowerPoint, Word, or Excel → PDF conversion, macOS will show a one-time dialog: <strong style="color:var(--txt)">"Canvas Downloader wants to control Microsoft [Word / Excel / PowerPoint]."</strong> Click <strong style="color:var(--txt)">OK</strong> to allow it. This is how macOS protects inter-app automation — it only asks once per app.</p>
+              </div>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:3px;">After an app update</p>
+                <p style="font-size:12px;color:var(--txt2);line-height:1.6;">Because the app is ad-hoc signed rather than notarized (see the note above about the $99/year cert), macOS ties its trust record to the exact binary. After you install a new version you may see the Office permission dialogs again and macOS Keychain may ask <strong style="color:var(--txt)">"Allow Canvas Downloader to use your login keychain?"</strong> — click <strong style="color:var(--txt)">Always Allow</strong>. Your Canvas API token is stored there so you don't have to re-enter it every session.</p>
+              </div>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:3px;">If Automation access gets stuck</p>
+                <p style="font-size:12px;color:var(--txt2);line-height:1.6;">You can review and reset app permissions any time in <strong style="color:var(--txt)">System Settings → Privacy &amp; Security → Automation</strong>. Removing Canvas Downloader from the list and restarting the app will trigger a fresh prompt.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -2,8 +2,15 @@
 from PyInstaller.utils.hooks import collect_all, copy_metadata
 import sys
 import os
+import glob as _glob
+import importlib.util as _ilu
 import imageio_ffmpeg
 
+# ── Resolve app version from version.py ──────────────────────────────
+_ver_spec = _ilu.spec_from_file_location("version", os.path.join(os.path.dirname(os.path.abspath(SPEC)), "version.py"))
+_ver_mod  = _ilu.module_from_spec(_ver_spec)
+_ver_spec.loader.exec_module(_ver_mod)
+_APP_VERSION = _ver_mod.__version__
 
 
 datas = [
@@ -41,6 +48,27 @@ ffmpeg_exe_path = imageio_ffmpeg.get_ffmpeg_exe()
 binaries = [(ffmpeg_exe_path, 'imageio_ffmpeg/binaries')]
 hiddenimports = []
 datas += copy_metadata('imageio')
+datas += copy_metadata('keyring')   # Fix 1: required for importlib.metadata entry_points backend discovery
+
+# Fix 6: include terminal-notifier binary so pync notifications are attributed to the app,
+#         not "Script Editor".  collect_all('pync') captures the Python wrapper but may not
+#         preserve the executable bit on the binary — we add it explicitly as a binary.
+_tn_bin = None
+try:
+    import pync as _pync_mod
+    _tn_search = _glob.glob(
+        os.path.join(os.path.dirname(_pync_mod.__file__), '**', 'terminal-notifier'),
+        recursive=True,
+    )
+    if _tn_search:
+        _tn_bin = _tn_search[0]
+except Exception:
+    pass
+if _tn_bin is None:
+    import shutil as _shutil
+    _tn_bin = _shutil.which('terminal-notifier')
+if _tn_bin and os.path.isfile(_tn_bin):
+    binaries += [(_tn_bin, os.path.join('pync', 'vendor', 'terminal-notifier.app', 'Contents', 'MacOS'))]
 
 tmp_ret = collect_all('streamlit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
@@ -68,6 +96,8 @@ hiddenimports += [
     'engineio.async_drivers.threading',
     'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
     'moviepy.audio.fx.all', 'moviepy.video.fx.all',
+    # Fix 1: keyring macOS Keychain backend — needed for token persistence
+    'keyring.backends', 'keyring.backends.macOS',
 ]
 
 a = Analysis(
@@ -102,7 +132,8 @@ app = BUNDLE(
     bundle_identifier='com.canvasdownloader.app',
     info_plist={
         'NSHighResolutionCapable': True,
-        'CFBundleShortVersionString': '2.0.0',
+        'CFBundleShortVersionString': _APP_VERSION,   # Fix 8: read from version.py at build time
+        'CFBundleVersion': _APP_VERSION,
         'CFBundleName': 'Canvas Downloader',
         'NSRequiresAquaSystemAppearance': False,
         # Minimum macOS version (CustomTkinter requires 11.0+)
@@ -122,6 +153,10 @@ app = BUNDLE(
         ),
         'NSDesktopFolderUsageDescription': (
             'Canvas Downloader may save downloaded course files to your Desktop.'
+        ),
+        # Fix 11: required when the user picks a folder on an external/removable volume.
+        'NSRemovableVolumesUsageDescription': (
+            'Canvas Downloader saves downloaded course files to your chosen folder.'
         ),
     },
 )

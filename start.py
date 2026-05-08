@@ -1,19 +1,24 @@
 """
 start.py — Unified application launcher for Canvas Downloader.
 
-Architecture (Phase 2 macOS Parity Remediation — F-01, F-02, F-20):
-  Both Windows and macOS now use ``pywebview`` for a native desktop window.
-  The legacy AppleScript lifecycle dialog has been removed entirely.
+Architecture — platform split:
+  Windows: pywebview wraps the Streamlit server in a native EdgeChromium
+           desktop window.  The main thread runs ``webview.start()``.
+  macOS:   CustomTkinter (macos_controller.CanvasController) shows a small
+           native status window.  Chrome opens the Streamlit UI as a
+           dedicated browser window.  tkinter's mainloop runs on the main
+           thread (required by Cocoa).
 
-Threading model:
-  1. Streamlit server starts in a daemonized background thread.
-  2. The main thread waits for the health endpoint, then creates
-     the native ``pywebview`` window.
-  3. ``webview.start()`` runs the GUI event loop on the main thread
-     (required by macOS Cocoa/WebKit).
-  4. When the user closes the window, ``webview.start()`` returns,
-     Python falls through to ``sys.exit(0)``, and the daemon thread
-     is killed automatically.
+Threading model (both platforms):
+  1. Streamlit server starts in a daemonised background thread.
+     ``signal.signal`` is monkeypatched for the duration because Streamlit
+     tries to register signal handlers, which raises ``ValueError`` from a
+     non-main thread.
+  2. A second daemon thread polls the health endpoint.
+  3. Once healthy, the appropriate UI is opened (pywebview window on
+     Windows; Chrome + status controller on macOS).
+  4. When the user closes the controller/window the process exits and the
+     daemon thread is killed automatically.
 """
 
 import sys
