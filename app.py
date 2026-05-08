@@ -36,7 +36,7 @@ st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", 
 # Custom CSS (extracted to styles/)
 inject_css('global.css')
 
-# Cancel button hover CSS (dynamic — requires theme variables)
+# Cancel button hover CSS (dynamic - requires theme variables)
 st.html(f"""
     <style>
     .st-key-cancel_download_btn button:hover,
@@ -54,18 +54,18 @@ st.html(f"""
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
 
-# Loading overlay — hides the raw intermediate DOM during Streamlit page-navigation reruns.
+# Loading overlay - hides the raw intermediate DOM during Streamlit page-navigation reruns.
 # Uses window.parent.document because components.html() runs inside an iframe.
 # All state is stored on window.parent._cdp so it survives iframe reloads
 # (components.html() recreates its iframe on every rerun; without this the
 # MutationObserver is garbage-collected and the overlay stops working after the
 # first rerun).
 # Activation: click listener fires ONLY for buttons inside known navigation
-# containers (NAV_SEL allowlist) — in-page interactions (chevrons, filters,
+# containers (NAV_SEL allowlist) - in-page interactions (chevrons, filters,
 # dialogs) are excluded.
 # Hide (3-phase geometry-polling):
-#   Phase 1: 150 ms debounce — batches rapid-fire mutations.
-#   Phase 2: Poll for stStatusWidget removal — waits until the Python script
+#   Phase 1: 150 ms debounce - batches rapid-fire mutations.
+#   Phase 2: Poll for stStatusWidget removal - waits until the Python script
 #            has finished executing.
 #   Phase 3: Poll page geometry (scrollHeight + element count) every 200 ms.
 #            Only hides after 4 consecutive identical readings (800 ms of
@@ -112,7 +112,7 @@ components.html("""<script>
     // Streamlit injects [data-testid="stStatusWidget"] while the Python script
     // is executing and removes it once the rerun completes.  If the element is
     // absent the script has finished (or the attribute was removed in a future
-    // Streamlit version — graceful degradation: treat as "ready").
+    // Streamlit version - graceful degradation: treat as "ready").
     function isStReady(){
         return !doc.querySelector('[data-testid="stStatusWidget"]');
     }
@@ -124,15 +124,15 @@ components.html("""<script>
     }
 
     function schedHide(){
-        // Don't cancel the safety valve — it is the ultimate fallback.
+        // Don't cancel the safety valve - it is the ultimate fallback.
         // Only clear it once we actually commit the hide (in Phase 3).
         if(p.hT)clearTimeout(p.hT);
 
-        // Phase 1 — 150 ms debounce.  Batches the rapid-fire mutations that
+        // Phase 1 - 150 ms debounce.  Batches the rapid-fire mutations that
         // occur during React's initial DOM insertion.
         p.hT=setTimeout(function(){
 
-            // Phase 2 — Wait for Streamlit's Python script to finish.
+            // Phase 2 - Wait for Streamlit's Python script to finish.
             // Poll every 150 ms until stStatusWidget is removed from the DOM.
             // The 8 s safety valve guarantees we can never poll forever.
             function waitForReady(){
@@ -140,15 +140,15 @@ components.html("""<script>
                     p.hT=setTimeout(waitForReady,150);
                     return;
                 }
-                // Phase 3 — Script is done, but React DOM reconciliation continues
+                // Phase 3 - Script is done, but React DOM reconciliation continues
                 // on slow machines (removing old page elements, applying final CSS).
                 // MutationObserver-based settle DOES NOT WORK here because the old
                 // stale elements generate no mutations while they linger.
                 // Instead, poll the page geometry (scrollHeight + element count)
                 // every 200 ms.  Only hide after 4 consecutive identical readings
                 // (800 ms of layout stability).  This directly detects the moment
-                // old elements are removed — scrollHeight drops and element count
-                // changes — regardless of whether mutations fire.
+                // old elements are removed - scrollHeight drops and element count
+                // changes - regardless of whether mutations fire.
                 var target=doc.querySelector('[data-testid="stMain"]')||doc.body;
                 var lastFP='';
                 var stableCount=0;
@@ -159,7 +159,7 @@ components.html("""<script>
                         if(stableCount>=4){
                             // Layout has been stable for 800 ms.  Safe to hide.
                             if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
-                            // Scroll to top — Streamlit uses internal scroll
+                            // Scroll to top - Streamlit uses internal scroll
                             // containers, not the window.  Hit all candidates.
                             win.scrollTo(0,0);
                             var sc=doc.querySelectorAll(
@@ -174,7 +174,7 @@ components.html("""<script>
                             return;
                         }
                     } else {
-                        // Layout changed — reset stability counter.
+                        // Layout changed - reset stability counter.
                         stableCount=0;
                         lastFP=fp;
                     }
@@ -232,7 +232,7 @@ components.html("""<script>
     // that iframe was destroyed.  Always create a fresh one here.
     // The observer triggers schedHide() on DOM changes to kick off the 3-phase
     // sequence.  Phase 3 itself uses geometry polling (not mutations) to decide
-    // when to hide — so even if mutations stop while stale elements linger,
+    // when to hide - so even if mutations stop while stale elements linger,
     // the polling loop catches the eventual cleanup.
     if(p.obs){try{p.obs.disconnect();}catch(_){}}
     p.obs=new MutationObserver(function(){
@@ -434,7 +434,7 @@ with _main_content.container():
                     """, unsafe_allow_html=True)
                     
                     # Cancel button is already rendered above with on_click callback
-                    # No need to re-render inside the hook — the callback fires instantly
+                    # No need to re-render inside the hook - the callback fires instantly
 
                 # Render initial modern loading UI
                 analysis_ui_placeholder.markdown(f"""
@@ -737,7 +737,7 @@ with _main_content.container():
 
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-                # Build the Sync Contract — all settings for this download
+                # Build the Sync Contract - all settings for this download
                 _pp_settings = {
                     'file_filter': st.session_state.get('file_filter', 'all'),
                     'convert_zip': st.session_state.get('persistent_convert_zip', False),
@@ -1197,7 +1197,7 @@ with _main_content.container():
             st.rerun()
 
         elif st.session_state['download_status'] == 'done':
-            # Completion beep — fired exactly once per run via a session
+            # Completion beep - fired exactly once per run via a session
             # sentinel. Cleaned up by cleanup_download_state() when the user
             # returns to Step 1, which arms it again for the next download.
             if (

@@ -1,8 +1,8 @@
 """
-sync.analysis — Analysis phase logic for sync flow.
+sync.analysis - Analysis phase logic for sync flow.
 
 Extracted from ``sync_ui.py`` L2682-2941 (Phase 4).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Fix 1 (2026-04): Eliminated duplicate module scan by threading the
     module_map from get_course_files_metadata → analyze_course.
@@ -47,7 +47,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
 
     Returns:
         Tuple of (course, sync_mgr, manifest, canvas_files, result, detected)
-        — all data needed by the caller, with no side effects.
+        - all data needed by the caller, with no side effects.
     """
     progress_hook(0, 1, "Connecting to Canvas API...")
     course = cm.canvas.get_course(course_id)
@@ -108,7 +108,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # synced against. If the pair's course_id no longer matches that
     # binding (e.g. user re-pointed the pair at a different course, or
     # picked the wrong folder), running analysis would treat the entire
-    # bound course's manifest as "Deleted on Canvas" — terrifying and
+    # bound course's manifest as "Deleted on Canvas" - terrifying and
     # wrong. Detect and route to a confirmation screen instead.
     mismatched = []
     for pair_idx, pair in enumerate(sync_pairs):
@@ -159,7 +159,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
     if main_placeholder:
         main_placeholder.empty()
 
-    # Clean progress display — no stale cards
+    # Clean progress display - no stale cards
     analysis_ui_placeholder = st.empty()
     
     # RENDER GLOBAL CANCEL ABOVE THE ANALYSIS LOOP
@@ -253,7 +253,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         if k.startswith('sync_locdel_'):
             del st.session_state[k]
 
-    # Quick Sync mode — skip review and go straight to sync
+    # Quick Sync mode - skip review and go straight to sync
     if st.session_state.get('sync_quick_mode'):
         
         def apply_file_filter(file_list, filter_mode, is_tuple=False):
@@ -416,7 +416,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         total_changes = total_new + total_updated + total_local_del
 
         if total_changes == 0:
-            # Nothing to review — skip review step, go straight to completion
+            # Nothing to review - skip review step, go straight to completion
             st.session_state['synced_count'] = 0
             st.session_state['download_status'] = 'sync_complete'
             # Pre-arm the flag so show_sync_complete doesn't fire a second notification

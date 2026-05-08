@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Canvas Downloader — Architecture Verification Script
+Canvas Downloader - Architecture Verification Script
 =====================================================
 Scans ui/, sync/, engine/, core/, and root .py files for violations of
 the architectural rules documented in CLAUDE.md.
@@ -34,7 +34,7 @@ from typing import Optional
 # Configuration
 # ---------------------------------------------------------------------------
 
-# Root of the project — resolved relative to this script's location
+# Root of the project - resolved relative to this script's location
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Directories to scan recursively
@@ -244,13 +244,13 @@ def check_open_encoding(tree: ast.AST, filepath: Path, suppressed: set[int]) -> 
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        # Only flag bare open() — not tarfile.open, zipfile.open, etc.
+        # Only flag bare open() - not tarfile.open, zipfile.open, etc.
         is_open = isinstance(func, ast.Name) and func.id == "open"
         if not is_open:
             continue
         mode = _get_open_mode(node)
         if mode is not None and "b" in mode:
-            continue  # binary mode — encoding not applicable
+            continue  # binary mode - encoding not applicable
         if not _has_encoding(node):
             lineno = node.lineno
             violations.append(Violation(
@@ -292,13 +292,13 @@ def check_bare_except(tree: ast.AST, filepath: Path, suppressed: set[int]) -> li
 # Whitelist: FormattedValue expressions that are safe and need no escaping
 _SAFE_CALL_NAMES = {
     "esc", "get_base64_image",
-    # Type conversions / formatters — output is controlled, not user HTML
+    # Type conversions / formatters - output is controlled, not user HTML
     "str", "int", "float", "bool", "len", "round", "abs", "max", "min",
     "repr", "format", "sorted", "enumerate", "range", "sum",
 }
 _SAFE_ATTR_ROOTS = {"theme"}  # theme.ANYTHING is a design token
 
-# Known-safe variable names — internal counters, sizes, progress values, CSS tokens
+# Known-safe variable names - internal counters, sizes, progress values, CSS tokens
 _SAFE_VAR_NAMES = {
     # Numeric / progress
     "percent", "current_files", "total_files", "log_content",
@@ -307,9 +307,9 @@ _SAFE_VAR_NAMES = {
     "pct", "current", "total_courses", "total_pairs",
     "width", "height", "opacity", "duration", "delay", "radius",
     "version", "__version__",
-    # CSS property values — never user-controlled HTML
+    # CSS property values - never user-controlled HTML
     "accent", "bg", "border", "color", "fw",
-    # CSS structural keys / namespaces — programmatic, not Canvas data
+    # CSS structural keys / namespaces - programmatic, not Canvas data
     "namespace", "prefix", "key_prefix",
     "active_key", "active_include_key",
     # App-controlled formatted display strings
@@ -328,22 +328,22 @@ _SAFE_VAR_SUFFIXES = (
     "_count", "_files", "_mb", "_kb", "_bytes", "_size", "_pct",
     "_percent", "_total", "_num", "_n", "_index", "_idx", "_id",
     "_width", "_height", "_px", "_ms", "_s",
-    # CSS keys — programmatic identifiers, not user-controlled data
+    # CSS keys - programmatic identifiers, not user-controlled data
     "_key",
     # App-assembled HTML fragments / CSS output
     "_html", "_css", "_rule", "_flex_rule",
     # Image data URLs / SVG data
     "_url", "_svg",
-    # CSS property values — colors, filters, tag strings
+    # CSS property values - colors, filters, tag strings
     "_color", "_filter", "_tag", "_bg", "_col", "_bor",
     # Already-escaped values
     "_escaped",
 )
 
-# Variable name prefixes that indicate base64 image data — always safe
+# Variable name prefixes that indicate base64 image data - always safe
 _SAFE_VAR_PREFIXES = ("b64_", "_b64_", "_b64")
 
-# Safe function name suffixes — functions that return CSS/HTML app-controlled strings
+# Safe function name suffixes - functions that return CSS/HTML app-controlled strings
 _SAFE_CALL_NAME_SUFFIXES = ("_css", "_svg", "_html", "_style", "_color")
 
 
@@ -351,11 +351,11 @@ def _is_safe_formatted_value(fv: ast.FormattedValue) -> bool:
     """Return True if this interpolated expression is safe (doesn't need esc())."""
     val = fv.value
 
-    # Arithmetic / unary / ternary — results are numbers, not user HTML
+    # Arithmetic / unary / ternary - results are numbers, not user HTML
     if isinstance(val, (ast.BinOp, ast.UnaryOp, ast.IfExp)):
         return True
 
-    # Subscript access (e.g. data['key'], arr[0]) — internal data
+    # Subscript access (e.g. data['key'], arr[0]) - internal data
     if isinstance(val, ast.Subscript):
         return True
 
@@ -371,17 +371,17 @@ def _is_safe_formatted_value(fv: ast.FormattedValue) -> bool:
             return True
         if name and any(name.endswith(sfx) for sfx in _SAFE_CALL_NAME_SUFFIXES):
             return True
-        # "".join(...) — CSS block concatenation
+        # "".join(...) - CSS block concatenation
         if isinstance(func, ast.Attribute) and func.attr == "join":
             return True
 
-    # theme.SOMETHING — design token constant
+    # theme.SOMETHING - design token constant
     if isinstance(val, ast.Attribute):
         root = val.value
         if isinstance(root, ast.Name) and root.id in _SAFE_ATTR_ROOTS:
             return True
 
-    # String / numeric constant — literal, safe
+    # String / numeric constant - literal, safe
     if isinstance(val, ast.Constant):
         return True
 
@@ -438,7 +438,7 @@ def check_unsafe_html_escaping(tree: ast.AST, filepath: Path, suppressed: set[in
 
             lineno = getattr(fv, "lineno", node.lineno)
 
-            # Check if it's a theme-like attribute but non-theme root — note it differently
+            # Check if it's a theme-like attribute but non-theme root - note it differently
             val = fv.value
             is_theme = (isinstance(val, ast.Attribute) and
                         isinstance(val.value, ast.Name) and
@@ -481,7 +481,7 @@ _CSS_SELECTOR_LINE = re.compile(
     re.MULTILINE,
 )
 
-# Match st.markdown(f... blocks — find the raw string content
+# Match st.markdown(f... blocks - find the raw string content
 _ST_MARKDOWN_F = re.compile(
     r'st\.markdown\s*\(\s*f("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\')',
     re.MULTILINE,
@@ -490,7 +490,7 @@ _ST_MARKDOWN_F = re.compile(
 _STYLE_BLOCK = re.compile(r'<style[^>]*>([\s\S]*?)</style>', re.IGNORECASE)
 
 # Remove Python variable injections {var}, {var.attr}, {var.attr.x}, {expr}
-# before checking for unescaped CSS braces — these are intentional f-string uses.
+# before checking for unescaped CSS braces - these are intentional f-string uses.
 _PYTHON_VAR_INJECTION = re.compile(r'\{[a-zA-Z_][a-zA-Z0-9_.]*[^{}]*?\}')
 
 
@@ -567,7 +567,7 @@ def scan_file(filepath: Path) -> list[Violation]:
 def run_audit(fail_on_error: bool = False) -> int:
     files = collect_files()
 
-    print(BOLD(f"\nCANVAS DOWNLOADER — ARCHITECTURE AUDIT"))
+    print(BOLD(f"\nCANVAS DOWNLOADER - ARCHITECTURE AUDIT"))
     print("=" * 50)
     print(DIM(f"Scanning {len(files)} files...\n"))
 

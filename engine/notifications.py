@@ -1,5 +1,5 @@
 """
-engine.notifications — Cross-platform completion notification helper.
+engine.notifications - Cross-platform completion notification helper.
 
 Plays a short, non-blocking system sound AND shows a native OS notification
 to signal that a long-running download or sync has finished, so users who
@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 def _play_windows_sound():
     """Play the Windows Notify Calendar chime (a pleasant, recognizable ding)."""
     if winsound is None:
-        logger.debug("winsound not available — skipping completion sound")
+        logger.debug("winsound not available - skipping completion sound")
         return
 
     try:
@@ -73,7 +73,7 @@ def _play_windows_sound():
 def _focus_canvas_window():
     """Bring the PyWebView 'Canvas Downloader' window to the foreground."""
     if ctypes is None:
-        logger.debug("ctypes not available — skipping window focus")
+        logger.debug("ctypes not available - skipping window focus")
         return
 
     try:
@@ -97,7 +97,7 @@ def _show_windows_toast(title: str, body: str):
     - On click, focuses the existing PyWebView 'Canvas Downloader' window.
     """
     if toast is None:
-        logger.debug("win11toast not installed — skipping native notification")
+        logger.debug("win11toast not installed - skipping native notification")
         return
 
     try:
@@ -153,10 +153,10 @@ def _play_macos_sound():
 def _show_macos_notification(title: str, body: str):
     """Display a native macOS Notification Center notification.
 
-    Primary path: pync (wraps terminal-notifier) — notification is attributed
+    Primary path: pync (wraps terminal-notifier) - notification is attributed
     to 'Canvas Downloader' and clicking it activates the app via its bundle ID.
 
-    Fallback: osascript display notification — attributed to 'Script Editor'
+    Fallback: osascript display notification - attributed to 'Script Editor'
     but always available without additional dependencies.
     """
     # Primary: pync via terminal-notifier
@@ -216,7 +216,7 @@ def play_completion_beep(
         message is used.
 
     Safe to call from the main Streamlit thread or from async contexts.
-    Any failure is logged at debug level — notifications are a polish
+    Any failure is logged at debug level - notifications are a polish
     feature and must never interrupt download/sync lifecycle.
     """
     if mode == 'sync':
@@ -233,7 +233,7 @@ def play_completion_beep(
     body = summary or (
         'Your files are ready.' if mode == 'download'
         else 'Your courses are up to date.' if mode == 'sync'
-        else 'All files are already synced — nothing to download.' if mode in ('sync_uptodate', 'quick_sync_uptodate')
+        else 'All files are already synced - nothing to download.' if mode in ('sync_uptodate', 'quick_sync_uptodate')
         else 'Course analysis completed. Waiting for your review.'
     )
 

@@ -5,7 +5,7 @@
 # Canvas Downloader
 
 **Batch-download your entire Canvas LMS course library in minutes.**  
-Smart sync, AI-ready file conversion, and zero cloud dependency — all in a native desktop app.
+Smart sync, AI-ready file conversion, and zero cloud dependency - all in a native desktop app.
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
@@ -21,9 +21,9 @@ Smart sync, AI-ready file conversion, and zero cloud dependency — all in a nat
 
 ## What Is This?
 
-Canvas Downloader is a **standalone desktop application** that connects directly to your university's Canvas LMS via the official API and batch-downloads every file from every course — no browser extension, no web scraping, no cloud middleman.
+Canvas Downloader is a **standalone desktop application** that connects directly to your university's Canvas LMS via the official API and batch-downloads every file from every course - no browser extension, no web scraping, no cloud middleman.
 
-It goes beyond a simple downloader: a **persistent sync engine** tracks changes course-by-course (new files, teacher updates, local edits), and an **AI-preparation pipeline** automatically converts your downloads into formats Google's NotebookLM can ingest — PowerPoint → PDF, video → MP3, HTML → Markdown, and more.
+It goes beyond a simple downloader: a **persistent sync engine** tracks changes course-by-course (new files, teacher updates, local edits), and an **AI-preparation pipeline** automatically converts your downloads into formats Google's NotebookLM can ingest - PowerPoint → PDF, video → MP3, HTML → Markdown, and more.
 
 **Built for university students. Impressive enough to put on a résumé.**
 
@@ -33,12 +33,12 @@ It goes beyond a simple downloader: a **persistent sync engine** tracks changes 
 
 ### Core Download Engine
 
-- **Multi-course batch download** — select any combination of courses and pull everything in one shot
-- **Canvas module structure preserved** — files land in the same folder hierarchy Canvas uses
-- **Async parallel downloads** — `asyncio` + `aiohttp` with configurable concurrency; Canvas rate-limit backoff built in
-- **Atomic file writes** — `.part` staging pattern; a crash mid-download never leaves corrupted files
-- **File size filters** — skip large video files you don't need right now
-- **Full Canvas content support** — module files, assignments, syllabi, announcements, discussions, quizzes, and rubrics
+- **Multi-course batch download** - select any combination of courses and pull everything in one shot
+- **Canvas module structure preserved** - files land in the same folder hierarchy Canvas uses
+- **Async parallel downloads** - `asyncio` + `aiohttp` with configurable concurrency; Canvas rate-limit backoff built in
+- **Atomic file writes** - `.part` staging pattern; a crash mid-download never leaves corrupted files
+- **File size filters** - skip large video files you don't need right now
+- **Full Canvas content support** - module files, assignments, syllabi, announcements, discussions, quizzes, and rubrics
 
 ### Smart Sync Mode
 
@@ -50,7 +50,7 @@ Keep any local folder **permanently in sync** with its Canvas course. The sync e
 | **Update (clean)** | Canvas updated, your copy is untouched | Replace in place |
 | **Update (modified)** | Canvas updated, but you edited yours | Keep yours + save new as `_NewVersion` |
 | **Locally deleted** | You deleted it, Canvas still has it | Skip (respects intent) |
-| **Deleted on Canvas** | Teacher removed it | Info only — never deletes from disk |
+| **Deleted on Canvas** | Teacher removed it | Info only - never deletes from disk |
 | **Up-to-date** | Identical on both sides | Nothing (shown as count badge) |
 | **Ignored** | Permanently excluded by you | Always skip |
 
@@ -74,7 +74,7 @@ Safety details: archives enforce a **50 GB uncompressed limit** and **100:1 comp
 
 ### Preset System
 
-Save your exact download configuration — courses, content types, conversion settings, output folder — as a named preset. Recall it in one click next time. Presets are stored as plain JSON and can be shared between machines.
+Save your exact download configuration - courses, content types, conversion settings, output folder - as a named preset. Recall it in one click next time. Presets are stored as plain JSON and can be shared between machines.
 
 ### Progress & Monitoring
 
@@ -92,13 +92,13 @@ No Python installation required. Grab the latest release for your platform:
 
 | Platform | Package | Requirements |
 |---|---|---|
-| **Windows 10/11** | `Canvas_Downloader_Setup.exe` | Nothing — batteries included |
+| **Windows 10/11** | `Canvas_Downloader_Setup.exe` | Nothing - batteries included |
 | **macOS 11+** | `Canvas Downloader.app.zip` | macOS 11 Big Sur or later |
 
 ### Windows
 
 1. Run `Canvas_Downloader_Setup.exe`
-2. Follow the installer — it places a shortcut on your Desktop
+2. Follow the installer - it places a shortcut on your Desktop
 3. Launch **Canvas Downloader**
 
 > **Windows SmartScreen warning?** Click "More info" → "Run anyway". The app is unsigned (code-signing certificates cost ~$500/year). The source is fully open above.
@@ -109,7 +109,7 @@ No Python installation required. Grab the latest release for your platform:
 2. Move `Canvas Downloader.app` to your `/Applications` folder
 3. Right-click → **Open** the first time (Gatekeeper bypass for unsigned apps)
 
-> For automated Office conversions (PowerPoint → PDF, etc.) macOS will prompt for Automation permissions for Word/Excel/PowerPoint — grant them when asked.
+> For automated Office conversions (PowerPoint → PDF, etc.) macOS will prompt for Automation permissions for Word/Excel/PowerPoint - grant them when asked.
 
 ---
 
@@ -121,21 +121,21 @@ No Python installation required. Grab the latest release for your platform:
 2. Scroll to **Approved Integrations** → **+ New Access Token**
 3. Give it a name, no expiry needed, and copy the token
 
-Your token is stored in your OS keyring (Windows Credential Manager / macOS Keychain) — never written to disk in plaintext.
+Your token is stored in your OS keyring (Windows Credential Manager / macOS Keychain) - never written to disk in plaintext.
 
 ### 2. Connect & Download
 
 1. Launch Canvas Downloader
 2. Paste your API token and your institution's Canvas URL (e.g. `https://canvas.university.edu`)
-3. **Step 1** — Select the courses you want
-4. **Step 2** — Configure what to download (module files, assignments, quizzes, etc.) and whether to run AI conversions
-5. **Step 3** — Watch the dashboard and wait for the completion chime
+3. **Step 1** - Select the courses you want
+4. **Step 2** - Configure what to download (module files, assignments, quizzes, etc.) and whether to run AI conversions
+5. **Step 3** - Watch the dashboard and wait for the completion chime
 
 ### 3. Set Up Sync (Optional)
 
 1. Switch to **Sync Mode** from the sidebar
 2. Create a sync pair: pick a local folder and link it to a Canvas course
-3. Run **Analyze** — see exactly what has changed since your last sync
+3. Run **Analyze** - see exactly what has changed since your last sync
 4. Review the diff, adjust per-file actions, confirm, and execute
 
 ---
@@ -199,7 +199,7 @@ Streamlit's reactive model makes complex multi-step wizard UIs fast to build and
 SQLite in WAL mode gives concurrent-read safety, survives crashes mid-sync, and travels with the folder (`.canvas_sync.db` is hidden alongside the synced files). A plain JSON manifest would need locking at every write and lacks atomic transactions.
 
 **How does cross-platform Office automation work?**  
-Windows uses `win32com.client` to drive Word/Excel/PowerPoint as COM servers. macOS uses `osascript` AppleScript via a shared bridge (`engine/applescript_bridge.py`). Both branches implement identical semantics — the calling code never checks the platform. COM instances are self-healing: stale or crashed instances are detected and restarted mid-batch.
+Windows uses `win32com.client` to drive Word/Excel/PowerPoint as COM servers. macOS uses `osascript` AppleScript via a shared bridge (`engine/applescript_bridge.py`). Both branches implement identical semantics - the calling code never checks the platform. COM instances are self-healing: stale or crashed instances are detected and restarted mid-batch.
 
 **What makes the sync change detection reliable?**  
 Files are fingerprinted with MD5 on first download and the hash is stored in SQLite. On subsequent syncs the manifest hash is compared against both the local file and the Canvas file's reported checksum. Levenshtein distance matching handles teacher renames (e.g. `Lecture 3.pdf` → `Lecture 03 - Updated.pdf`) without double-downloading.
@@ -215,12 +215,12 @@ Files are fingerprinted with MD5 on first download and the hash is stored in SQL
 | Canvas API | [canvasapi 3.3](https://canvasapi.readthedocs.io) |
 | Async HTTP | [aiohttp 3.11](https://docs.aiohttp.org) + asyncio |
 | Async File I/O | [aiofiles 24.1](https://github.com/Tinche/aiofiles) |
-| Sync Database | SQLite3 (stdlib) — WAL mode, per-folder manifest |
-| Windows Automation | [pywin32 308](https://github.com/mhammond/pywin32) — COM interface to Office |
-| macOS Automation | `osascript` AppleScript — feature-parity with COM |
+| Sync Database | SQLite3 (stdlib) - WAL mode, per-folder manifest |
+| Windows Automation | [pywin32 308](https://github.com/mhammond/pywin32) - COM interface to Office |
+| macOS Automation | `osascript` AppleScript - feature-parity with COM |
 | Video Processing | [MoviePy 2.1](https://zulko.github.io/moviepy/) + FFmpeg via imageio_ffmpeg |
 | HTML → Markdown | [BeautifulSoup4 4.12](https://www.crummy.com/software/BeautifulSoup/) + [markdownify 0.14](https://github.com/matthewwithanm/python-markdownify) |
-| Credential Storage | [keyring 25.6](https://github.com/jaraco/keyring) — OS Keychain / Credential Manager |
+| Credential Storage | [keyring 25.6](https://github.com/jaraco/keyring) - OS Keychain / Credential Manager |
 | Notifications | win11toast (Windows) · pync (macOS) |
 | Packaging | [PyInstaller](https://pyinstaller.org) + Inno Setup (Windows installer) |
 
@@ -262,8 +262,8 @@ The macOS spec includes the `com.apple.security.automation.apple-events` entitle
 
 ## Security Notes
 
-- Your Canvas API token is stored exclusively in your OS keyring — never written to any file on disk
-- The Streamlit server binds to `127.0.0.1` only — zero network exposure
+- Your Canvas API token is stored exclusively in your OS keyring - never written to any file on disk
+- The Streamlit server binds to `127.0.0.1` only - zero network exposure
 - Archive extraction enforces a 50 GB / 100:1 ratio hard limit against zip bombs
 - All Canvas data rendered into HTML is passed through `html.escape()` before injection
 
@@ -273,13 +273,13 @@ The macOS spec includes the `com.apple.security.automation.apple-events` entitle
 
 Issues and PRs are welcome. If you find a bug or want to request a feature, open an issue on GitHub.
 
-When contributing code, follow the CSS/UI rules in `CLAUDE.md` — they exist because we learned the hard way.
+When contributing code, follow the CSS/UI rules in `CLAUDE.md` - they exist because we learned the hard way.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT - see [LICENSE](LICENSE) for details.
 
 ---
 

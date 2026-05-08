@@ -1,11 +1,11 @@
 """
-ui.sync_confirmation — Sync confirmation dialog.
+ui.sync_confirmation - Sync confirmation dialog.
 
 Extracted from ``sync_ui.py`` (Phase 5).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
-  - ``show_sync_confirmation_inner()`` — confirmation dialog body
+  - ``show_sync_confirmation_inner()`` - confirmation dialog body
     (the @st.dialog wrapper stays in sync_ui.py)
 """
 
@@ -281,7 +281,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     html_content = (
         f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.'
         + (
-            f'<br><span style="color:#fcd34d;">&#9998; {modified_update_count} of these are files you\'ve edited locally — the new Canvas version will be saved alongside as <code>_NewVersion</code> so your edits are preserved.</span>'
+            f'<br><span style="color:#fcd34d;">&#9998; {modified_update_count} of these are files you\'ve edited locally - the new Canvas version will be saved alongside as <code>_NewVersion</code> so your edits are preserved.</span>'
             if modified_update_count > 0 else ''
         ) +
         '</div>'

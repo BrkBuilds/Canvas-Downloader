@@ -1,1 +1,1 @@
-"""ui — Extracted UI components for Canvas Downloader."""
+"""ui - Extracted UI components for Canvas Downloader."""

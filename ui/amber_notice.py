@@ -1,5 +1,5 @@
 """
-ui.amber_notice — Reusable amber/gold notice card for non-fatal warnings.
+ui.amber_notice - Reusable amber/gold notice card for non-fatal warnings.
 
 Use this to surface system boundaries, informational warnings, or state
 constraints without resorting to error-red UI.  Matches the "linked folder"
@@ -8,7 +8,7 @@ notice aesthetic (warm golden background, structured title/detail layout).
 Usage:
     from ui.amber_notice import render_amber_notice
 
-    render_amber_notice("Some folders couldn't be found — fix or remove them before syncing.")
+    render_amber_notice("Some folders couldn't be found - fix or remove them before syncing.")
     render_amber_notice(
         "Quick Sync skipped some files.",
         detail="Locally deleted and edited files are skipped automatically.",

@@ -1,15 +1,15 @@
 """
-ui.presets — Preset system: save, load, hub dialog, and card rendering.
+ui.presets - Preset system: save, load, hub dialog, and card rendering.
 
 Extracted from ``app.py`` (Phase 6).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
-  - ``render_preset_buttons()``     — Step 2 header preset action buttons
-  - ``_build_preset_summary()``     — dynamic grammar-correct summary
-  - ``_render_preset_card()``       — single preset card inside hub
-  - ``_save_config_dialog()``       — @st.dialog for saving a preset
-  - ``_presets_hub_dialog()``       — @st.dialog for the hub browser
+  - ``render_preset_buttons()``     - Step 2 header preset action buttons
+  - ``_build_preset_summary()``     - dynamic grammar-correct summary
+  - ``_render_preset_card()``       - single preset card inside hub
+  - ``_save_config_dialog()``       - @st.dialog for saving a preset
+  - ``_presets_hub_dialog()``       - @st.dialog for the hub browser
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ def _build_preset_summary(settings):
         sec_str = f"📝 {sec_count} Canvas Content"
     else:
         sec_str = ""
-    # 4. Conversions — correct grammar
+    # 4. Conversions - correct grammar
     conv_count = sum(1 for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k))
     conv_total = len(PresetManager.NOTEBOOK_SUB_KEYS)
     if conv_count == conv_total:
@@ -278,7 +278,7 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
                 _render_preset_card(mgr, _bp, is_builtin=True,
                                     b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)
 
-    # Close button — forces full app rerun for fresh state
+    # Close button - forces full app rerun for fresh state
     if st.button("Close", type="secondary", use_container_width=True, key="btn_preset_hub_close"):
         try:
             st.rerun(scope="app")

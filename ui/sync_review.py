@@ -1,11 +1,11 @@
 """
-ui.sync_review — Analysis review screen (Step 2 of sync flow).
+ui.sync_review - Analysis review screen (Step 2 of sync flow).
 
 Extracted from ``sync_ui.py`` (Phase 5).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
-  - ``show_analysis_review()`` — full review screen with per-course cards,
+  - ``show_analysis_review()`` - full review screen with per-course cards,
     file selection, sync confirmation trigger
 """
 
@@ -106,7 +106,7 @@ _HELP_TEXT = (
         f"<div style='{_cc_clean}'>"
         f"<div style='{_cat_name}'>Updates (Clean)</div>"
         f"<div style='{_cat_desc}'>Canvas has a newer version, and you haven't edited your local copy.</div>"
-        f"<div style='{_cat_act}'>Replaced in place with the newest version — same name, same location.</div>"
+        f"<div style='{_cat_act}'>Replaced in place with the newest version - same name, same location.</div>"
         f"<div style='{_sb_checked}'>✔ Checked by default</div>"
         "</div>"
         f"<div style='{_cc_edited}'>"
@@ -118,7 +118,7 @@ _HELP_TEXT = (
         f"<div style='{_cc_loc_del}'>"
         f"<div style='{_cat_name}'>Locally Deleted</div>"
         f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
-        f"<div style='{_cat_act}'>Your deletion is respected — won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
+        f"<div style='{_cat_act}'>Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
         f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
         "</div>"
         f"<div style='{_cc_can_del}'>"
@@ -405,7 +405,7 @@ def show_analysis_review(on_confirm_sync):
         if not hasattr(pair_data['result'], 'ignored_files'):
             pair_data['result'].ignored_files = []
         
-        # Build lookup set of IDs being ignored (Fix: was undefined — NameError)
+        # Build lookup set of IDs being ignored (Fix: was undefined - NameError)
         file_ids_to_ignore = {get_id(item) for item in items_to_ignore}
             
         # Rebuild origin list directly safely
@@ -523,12 +523,12 @@ def show_analysis_review(on_confirm_sync):
 
 
 
-    # Nothing actionable to sync — redirect to completion screen.
+    # Nothing actionable to sync - redirect to completion screen.
     # Exception: if the user manually ignored files, stay on the review page so they
     # can restore or go back. Only auto-route when analysis genuinely found nothing.
     if total_new == 0 and total_upd == 0 and total_del == 0 and total_loc_del == 0:
         if total_ignored == 0:
-            # Genuinely nothing to sync — advance to completion screen
+            # Genuinely nothing to sync - advance to completion screen
             st.session_state['synced_count'] = 0
             st.session_state['synced_bytes'] = 0
             st.session_state['sync_errors'] = []
@@ -538,7 +538,7 @@ def show_analysis_review(on_confirm_sync):
             st.session_state['download_status'] = 'sync_complete'
             st.session_state['step'] = 4
             st.rerun()
-        # else: user ignored all files — fall through to render the page normally.
+        # else: user ignored all files - fall through to render the page normally.
         # The action buttons section below will show the disabled sync button.
 
 
@@ -584,7 +584,7 @@ def show_analysis_review(on_confirm_sync):
         col_main, _ = st.columns([3.5, 8.5])
         with col_main:
             # Hoist CSS above card (CLAUDE.md: inject above target)
-            # st-key-* class sits directly on stVerticalBlockBorderWrapper — target it flat.
+            # st-key-* class sits directly on stVerticalBlockBorderWrapper - target it flat.
             st.html(f"""<style>
             /* Card */
             div.st-key-sync_filter_box_outer {{
@@ -614,7 +614,7 @@ def show_analysis_review(on_confirm_sync):
             div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label > div {{
                 margin-left: -2px !important;
             }}
-            /* Visual checkbox span — nudge up 1px for optical vertical alignment */
+            /* Visual checkbox span - nudge up 1px for optical vertical alignment */
             div.st-key-sync_filter_box_outer [data-testid="stCheckbox"] label > span {{
                 position: relative !important;
                 top: -1px !important;
@@ -797,7 +797,7 @@ def show_analysis_review(on_confirm_sync):
                     if css_blocks:
                         st.html(f"<style>{''.join(css_blocks)}</style>")
 
-                # Separator + action buttons — padding wraps hr inside shadow root so spacing is real
+                # Separator + action buttons - padding wraps hr inside shadow root so spacing is real
                 st.html("<div style='padding: 5px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
 
                 # border=True required for st-key class to be reliably emitted (CLAUDE.md Border Strip rule)
@@ -988,7 +988,7 @@ def show_analysis_review(on_confirm_sync):
         border: none !important;
     }}
 
-    /* ===== IGNORED FILES — RESTORE ROW HOVER (button-triggered) ===== */
+    /* ===== IGNORED FILES - RESTORE ROW HOVER (button-triggered) ===== */
     div[class*="st-key-ign_restore_row_"] {{
         border-radius: 6px !important;
         transition: background-color 0.2s ease !important;
@@ -1009,7 +1009,7 @@ def show_analysis_review(on_confirm_sync):
         border: none !important;
     }}
 
-    /* ===== IGNORED FILES EXPANDER — BULLET POINTS & WHITE TEXT ===== */
+    /* ===== IGNORED FILES EXPANDER - BULLET POINTS & WHITE TEXT ===== */
     /* Add white bullet point before each ignored file name */
     div[class*="st-key-cat_ignored"] div[class*="st-key-ign_restore_row_"] .stHorizontalBlock [data-testid="stColumn"]:first-child div[data-testid="stMarkdownContainer"] > div::before {{
         content: "•" !important;
@@ -1085,7 +1085,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_locdel_"] button p {{
         display: none !important;
     }}
-    /* Default state: eye icon — nudged up 1px to align visual center with the taller ignore icon */
+    /* Default state: eye icon - nudged up 1px to align visual center with the taller ignore icon */
     div[class*="st-key-ign_new_"] button::before,
     div[class*="st-key-ign_upd_"] button::before,
     div[class*="st-key-ign_updmod_"] button::before,
@@ -1104,7 +1104,7 @@ def show_analysis_review(on_confirm_sync):
         transform: translateY(-1px) scale(1);
         transform-origin: center;
     }}
-    /* Hover state: ignore icon (eye with slash) — scales in from 1→1.2 as it fades in */
+    /* Hover state: ignore icon (eye with slash) - scales in from 1→1.2 as it fades in */
     div[class*="st-key-ign_new_"] button::after,
     div[class*="st-key-ign_upd_"] button::after,
     div[class*="st-key-ign_updmod_"] button::after,
@@ -1130,7 +1130,7 @@ def show_analysis_review(on_confirm_sync):
         background: transparent !important;
         border: none !important;
     }}
-    /* On hover: eye fades out while ALSO scaling to 1.2 — so the "grow" is continuous across both icons */
+    /* On hover: eye fades out while ALSO scaling to 1.2 - so the "grow" is continuous across both icons */
     div[class*="st-key-ign_new_"] button:hover::before,
     div[class*="st-key-ign_upd_"] button:hover::before,
     div[class*="st-key-ign_updmod_"] button:hover::before,
@@ -1260,8 +1260,8 @@ def show_analysis_review(on_confirm_sync):
             display_name = friendly_course_name(pair['course_name'])
             folder_display = short_path(pair['local_folder'])
             
-            # Build status pill — pending takes priority over up-to-date
-            # Strictly use uptodate_files only — do NOT add untracked_shortcuts
+            # Build status pill - pending takes priority over up-to-date
+            # Strictly use uptodate_files only - do NOT add untracked_shortcuts
             # as those are already counted in new_files or other actionable categories
             uptodate_count = len(result.uptodate_files)
             pending_count = (
@@ -1278,7 +1278,7 @@ def show_analysis_review(on_confirm_sync):
             _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
             _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
             _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0;" />'
-            # No background — plain grey text labels stacked on the right
+            # No background - plain grey text labels stacked on the right
             _tag_style = (
                 "font-size: 0.73rem; color: rgba(255,255,255,0.65); font-weight: 500; "
                 "display:inline-flex; align-items:center; white-space:nowrap;"
@@ -1335,7 +1335,7 @@ def show_analysis_review(on_confirm_sync):
 
 
 
-            # New files — always starts OPEN
+            # New files - always starts OPEN
             if result.new_files:
                 total_new = len(result.new_files)
                 selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
@@ -1366,7 +1366,7 @@ def show_analysis_review(on_confirm_sync):
                                     with col2:
                                         st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
-            # Updated files — always starts OPEN
+            # Updated files - always starts OPEN
             # Updates Available (clean) \u2014 default CHECKED. Local file is
             # byte-identical to what we downloaded, so we overwrite in place.
             if result.updated_clean_files:
@@ -1431,7 +1431,7 @@ def show_analysis_review(on_confirm_sync):
                                     with col2:
                                         st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
 
-            # Missing files — always starts OPEN
+            # Missing files - always starts OPEN
             # (Missing Files category retired \u2014 rolled into New Files.)
 
             # Locally Deleted Files (Student deleted locally to save space)
@@ -1465,7 +1465,7 @@ def show_analysis_review(on_confirm_sync):
                                     with col2:
                                         st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
-            # Deleted files — always starts OPEN
+            # Deleted files - always starts OPEN
             if result.deleted_on_canvas:
                 lbl_del = "Deleted on Canvas (Kept Locally)"
                 
@@ -1527,7 +1527,7 @@ def show_analysis_review(on_confirm_sync):
         total_selected_files += sum(1 for si in result.locally_deleted_files if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False))
 
     if total_active_files == 0:
-        # All files have been manually ignored — show amber notice, keep buttons visible
+        # All files have been manually ignored - show amber notice, keep buttons visible
         from ui.amber_notice import render_amber_notice
         render_amber_notice(
             "All files are currently ignored.",
@@ -1599,7 +1599,7 @@ def show_analysis_review(on_confirm_sync):
 
                     # Total count & size for confirmation
                     total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
-                    # Compute total byte size — new and updated CanvasFileInfo have .size,
+                    # Compute total byte size - new and updated CanvasFileInfo have .size,
                     # redownload items are SyncInfo; look up their size from canvas_files
                     total_bytes = 0
                     for s in sync_selections:

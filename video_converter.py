@@ -43,7 +43,7 @@ def _safe_close(clip, label="clip"):
     except FuturesTimeoutError:
         logger.warning(
             f"moviepy {label}.close() timed out after "
-            f"{_CLOSE_TIMEOUT_SECONDS}s — abandoning hung FFmpeg process and forcing termination"
+            f"{_CLOSE_TIMEOUT_SECONDS}s - abandoning hung FFmpeg process and forcing termination"
         )
         try:
             import psutil
@@ -72,7 +72,7 @@ def _safe_close(clip, label="clip"):
                 _terminate_proc(clip.audio.reader.proc)
         except ImportError:
             logger.warning(
-                "psutil not available — cannot force-kill hung FFmpeg process. "
+                "psutil not available - cannot force-kill hung FFmpeg process. "
                 "It may remain as an orphan until the application exits."
             )
     except Exception:

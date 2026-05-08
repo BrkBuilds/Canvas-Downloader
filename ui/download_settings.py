@@ -1,11 +1,11 @@
 """
-ui.download_settings — Step 2 download settings page.
+ui.download_settings - Step 2 download settings page.
 
 Extracted from ``app.py`` (Phase 6).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
-  - ``render_download_settings()`` — full Step 2: preset buttons, Card 1
+  - ``render_download_settings()`` - full Step 2: preset buttons, Card 1
     (Core Course Files), Card 2 (Canvas Content), Card 3 (AI Engine),
     Output Path, Course Summary, Confirm button.
 """
@@ -573,7 +573,7 @@ def render_download_settings(fetch_courses_fn):
         </style>
         """)
 
-        # Card elevation CSS — Version-Agnostic Target for Streamlit 1.51+
+        # Card elevation CSS - Version-Agnostic Target for Streamlit 1.51+
         # NOTE: The conditional Card 2 flex rule (depends on `card2_expanded`)
         # is re-injected inside `_card2_fragment` so the height-sync updates
         # when only Card 2 reruns.
@@ -604,7 +604,7 @@ def render_download_settings(fetch_courses_fn):
         flex: 1 !important;
     }
 
-    /* Vertical alignment shim — Card 2's trojan div has a more aggressive
+    /* Vertical alignment shim - Card 2's trojan div has a more aggressive
        negative margin-top (-25px) than Card 1's (-10px), which makes its
        outer container collapse 15px higher up. Push Card 2 back down so
        the card boxes start at the same Y as Card 1. */
@@ -1312,12 +1312,12 @@ def render_download_settings(fetch_courses_fn):
 
             # --- Dynamic CSS only ---
             # Static layout/geometry/description/hover rules live in
-            # styles/global.css (under "Card 3 — static button styling").
+            # styles/global.css (under "Card 3 - static button styling").
             # Here we only emit the parts that depend on session state:
             # icon URLs and active-state coloring + active checkmark SVG.
             conv_css_blocks = []
 
-            # Master (Select All) — dynamic active state + icon
+            # Master (Select All) - dynamic active state + icon
             m_active = st.session_state.get('notebooklm_master', False)
             b64_conv_m = safe_b64('icon_conv_select_all.png')
             m_conv_img_rule = f"background-image: url('data:image/png;base64,{b64_conv_m}') !important;" if b64_conv_m else ""
@@ -1332,7 +1332,7 @@ def render_download_settings(fetch_courses_fn):
                     'div.st-key-btn_convert_master button:hover { border-bottom: 1px solid #a64d0f !important; box-shadow: inset 0 -3px 0 0 #a64d0f !important; }\n'
                 )
 
-            # Child buttons — icon (always) + active state colors + active checkmark
+            # Child buttons - icon (always) + active state colors + active checkmark
             ACTIVE_CHECK_SVG = (
                 "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' rx='4' fill='%23ff9838' mask='url(%23m)'/%3E%3C/svg%3E\")"
             )
@@ -1348,7 +1348,7 @@ def render_download_settings(fetch_courses_fn):
                         f'div.st-key-btn_{conv_key} button:hover::before {{ border-color: transparent !important; }}\n'
                     )
                 else:
-                    # Inactive — only the icon; defaults come from global.css
+                    # Inactive - only the icon; defaults come from global.css
                     conv_css_blocks.append(
                         f'div.st-key-btn_{conv_key} button {{ {c_conv_img_rule} }}\n'
                     )
@@ -1743,7 +1743,7 @@ def render_download_settings(fetch_courses_fn):
                 try:
                     # ── PRE-FLIGHT: Writability probe ──
                     # Fail fast with a clear message if the download folder is
-                    # read-only, missing, or otherwise unwritable — before the
+                    # read-only, missing, or otherwise unwritable - before the
                     # user wastes minutes on the course scanning phase.
                     _dl_path = Path(st.session_state.get('download_path', ''))
                     try:
