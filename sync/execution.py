@@ -1,8 +1,8 @@
 """
-sync.execution — Sync download execution loop and post-processing.
+sync.execution - Sync download execution loop and post-processing.
 
 Extracted from ``sync_ui.py`` L4107-5039 (Phase 4).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
   - ``run_sync()``  (was ``_run_sync``)
@@ -63,7 +63,7 @@ def run_sync():
     # --- Backward-compatible import of cancel callback ---
     from core.cancellation import cancel_sync as cancel_process_callback
 
-    # Initialize phase flags explicitly at start of run — but ONLY if not already cancelled.
+    # Initialize phase flags explicitly at start of run - but ONLY if not already cancelled.
     # If a Phase 3 cancel triggered the rerun, we must preserve is_post_processing=True
     # so that _show_sync_cancelled can read it for the correct status message.
     if not st.session_state.get('sync_cancel_requested', False) and not st.session_state.get('sync_cancelled', False):
@@ -100,12 +100,12 @@ def run_sync():
         else:
             # Route to the sync cancelled screen (step 4 handles all sync
             # sub-states).  Previous code sent users to step=2 which is
-            # the Download Settings page — wrong mode entirely.
+            # the Download Settings page - wrong mode entirely.
             st.session_state['download_status'] = 'sync_cancelled'
             
         st.rerun()
 
-    # --- Inject red hover CSS for cancel buttons (dynamic — requires theme vars) ---
+    # --- Inject red hover CSS for cancel buttons (dynamic - requires theme vars) ---
     st.markdown(f"""
     <style>
     .st-key-cancel_download_btn button:hover,
@@ -342,7 +342,7 @@ def run_sync():
 
                     # Max-file-size gate: skip oversized files silently
                     # (counts as a non-error skip, keeps progress totals honest).
-                    # Only applies to real Canvas files (positive id) — synthetic
+                    # Only applies to real Canvas files (positive id) - synthetic
                     # entities like Pages or secondary content carry size=0 anyway.
                     _f_size = getattr(file, 'size', 0) or 0
                     if (
@@ -356,7 +356,7 @@ def run_sync():
                             st.session_state['size_skipped_files'] = []
                         st.session_state['size_skipped_files'].append(f"{display_file_name} ({_f_mb:.1f} MB)")
                         total_files = max(0, total_files - 1)  # keep denominator accurate
-                        current_file -= 1  # undo the increment — this file never ran
+                        current_file -= 1  # undo the increment - this file never ran
                         terminal_log.append(
                             f"<span style='color:{theme.TEXT_SECONDARY}'>[⏭️] Skipped (too large): </span>"
                             f"{esc(display_file_name)} "
@@ -365,7 +365,7 @@ def run_sync():
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         continue
 
-                    # UNCONDITIONAL status text update — fires instantly for every file (no throttle)
+                    # UNCONDITIONAL status text update - fires instantly for every file (no throttle)
                     active_file_placeholder.markdown(f"<div style='color: {theme.ACCENT_LINK}; margin-bottom: 10px; font-weight: 500;'>🔄 Currently downloading: {esc(display_file_name)}...</div>", unsafe_allow_html=True)
                     
                     # Throttled progress update (Prevent Streamlit from choking on rapid tiny files)
@@ -379,7 +379,7 @@ def run_sync():
                         # file.filename may contain subfolder prefixes
                         # (e.g. "Assignments/Name/doc.pdf"). Sanitize each
                         # path component individually to preserve hierarchy,
-                        # then extract only the basename — the parent
+                        # then extract only the basename - the parent
                         # directory is already handled by calc_path routing.
                         _fn_parts = Path(file.filename).parts
                         filename = cm._sanitize_filename(_fn_parts[-1]) if _fn_parts else cm._sanitize_filename(file.filename)
@@ -515,7 +515,7 @@ def run_sync():
 
                                         # On-disk dedup: attachments whose manifest entry
                                         # already points to a file currently present on
-                                        # disk should not be re-queued — that's the
+                                        # disk should not be re-queued - that's the
                                         # "delete only the .html, redownload it" failure
                                         # mode that produces ``attachment (1).pdf``.
                                         # Attachment IDs are positive in Mode A and
@@ -543,7 +543,7 @@ def run_sync():
                                             if _manifest_entry:
                                                 _existing_path = local_path / _manifest_entry.get('local_path', '')
                                                 if _existing_path.exists():
-                                                    continue  # Already on disk — skip re-queue
+                                                    continue  # Already on disk - skip re-queue
 
                                             # Guard against cross-queue and intra-document duplicates
                                             if att_id in _queued_ids or _manifest_att_id in _queued_ids:
@@ -566,7 +566,7 @@ def run_sync():
                                                     (attach_dir / cm._sanitize_filename(att_filename)).relative_to(local_path)
                                                 ).replace('\\', '/')
                                             except ValueError:
-                                                # Fallback: attachment dir is outside local_path — use filename only
+                                                # Fallback: attachment dir is outside local_path - use filename only
                                                 att_info._target_local_path = cm._sanitize_filename(att_filename)
                                             all_files.append(att_info)
                                             total_files += 1
@@ -738,16 +738,16 @@ def run_sync():
                                                         except OSError:
                                                             pass
                                                 
-                                                break  # Success — exit retry loop
+                                                break  # Success - exit retry loop
                                             
                                             elif response.status == 429:
-                                                # Rate limited — respect Retry-After header
+                                                # Rate limited - respect Retry-After header
                                                 should_sleep_duration = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
                                                 terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Rate limited: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry in {should_sleep_duration}s)</span>")
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                             
                                             elif 500 <= response.status < 600:
-                                                # Server error — retry with exponential backoff
+                                                # Server error - retry with exponential backoff
                                                 should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 if attempt < SYNC_MAX_RETRIES - 1:
                                                     terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Server error ({response.status}): </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
@@ -769,7 +769,7 @@ def run_sync():
                                                 break  # Don't retry client errors
                                 
                                 except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
-                                    # Network error — retry with backoff
+                                    # Network error - retry with backoff
                                     if attempt < SYNC_MAX_RETRIES - 1:
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                         terminal_log.append(f"<span style='color:{theme.WARNING}'>[⏳] Network error: </span> {esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
@@ -985,7 +985,7 @@ def run_sync():
     cancel_placeholder.empty()
     active_file_placeholder.empty()
 
-    # Cancel button hover CSS already injected at top of run_sync() — no duplicate needed.
+    # Cancel button hover CSS already injected at top of run_sync() - no duplicate needed.
 
     st.session_state['is_post_processing'] = True
 

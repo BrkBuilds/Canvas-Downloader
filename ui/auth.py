@@ -1,11 +1,11 @@
 """
-ui.auth — Sidebar authentication, navigation, and global settings.
+ui.auth - Sidebar authentication, navigation, and global settings.
 
 Extracted from ``app.py`` (Phase 7).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
-  - ``render_sidebar()`` — full sidebar: auth form, token loading,
+  - ``render_sidebar()`` - full sidebar: auth form, token loading,
     navigation buttons, global settings dialog, logout, version badge
 """
 
@@ -430,7 +430,7 @@ def _render_authenticated_nav_top():
     # ── Navigation buttons ─────────────────────────────────────────
     mode = st.session_state.get('current_mode', 'download')
 
-    # Active-state CSS is dynamic (depends on session state) — inject separately
+    # Active-state CSS is dynamic (depends on session state) - inject separately
     if mode in ['download', 'sync']:
         active_key = f"st-key-nav_btn_{mode}"
         st.html(f"""<style>
@@ -750,7 +750,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     display_user = user_name.replace("Logged in as:", "").replace("Logged in as", "").strip()
 
     with st.container(border=False, key="sidebar_bottom_block"):
-        # Settings button — also auto-reopens after native folder picker closes the dialog
+        # Settings button - also auto-reopens after native folder picker closes the dialog
         if st.button("Settings", use_container_width=True, key="nav_btn_settings"):
             _global_settings_dialog()
         elif st.session_state.pop('_stg_reopen_dialog', False):
@@ -762,7 +762,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         # Separator
         st.html("<hr style='margin: 8px 0 16px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />")
 
-        # User info + logout — keyed container with absolute-positioned logout
+        # User info + logout - keyed container with absolute-positioned logout
         with st.container(border=False, key="user_info_row"):
             if display_user:
                 first_name = display_user.split()[0] if display_user.split() else display_user

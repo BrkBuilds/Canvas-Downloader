@@ -5,7 +5,8 @@ div[data-testid="stModal"] {
     justify-content: center !important;
     background-color: rgba(0, 0, 0, 0.7) !important;
 }
-div[data-testid="stModal"] > div[role="dialog"] {
+
+div[data-testid="stModal"]>div[role="dialog"] {
     position: relative !important;
     top: 0 !important;
     left: 0 !important;
@@ -20,6 +21,7 @@ div[data-testid="stModal"] > div[role="dialog"] {
     padding: 0 !important;
     overflow: hidden !important;
 }
+
 /* Make the bulk action buttons inside sync-review category expanders slightly shorter and subtle */
 div[class*="st-key-cat_"] [data-testid="stExpanderDetails"] button[kind="secondary"] {
     height: 34px !important;
@@ -30,11 +32,13 @@ div[class*="st-key-cat_"] [data-testid="stExpanderDetails"] button[kind="seconda
     align-items: center !important;
     justify-content: center !important;
 }
-/* Reduce divider vertical margins — scoped to sync review category containers */
+
+/* Reduce divider vertical margins - scoped to sync review category containers */
 div[class*="st-key-cat_"] hr {
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }
+
 /* Tightly align the caption */
 .tight-caption p {
     margin-top: 0px !important;
@@ -42,41 +46,70 @@ div[class*="st-key-cat_"] hr {
 }
 
 /* Color-coded expander backgrounds */
-div[class*="st-key-cat_new"] div[data-testid="stExpander"] details summary { background-color: rgba(59, 130, 246, 0.1) !important; }
-div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary { background-color: rgba(16, 185, 129, 0.1) !important; }
-div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details summary { background-color: rgba(245, 158, 11, 0.1) !important; }
-div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary { background-color: rgba(139, 92, 246, 0.1) !important; }
-div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details summary { background-color: rgba(239, 68, 68, 0.1) !important; }
+div[class*="st-key-cat_new"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+}
 
-div[class*="st-key-cat_new"] div[data-testid="stExpander"] details { border: 1px solid rgba(59, 130, 246, 0.4) !important; }
-div[class*="st-key-cat_update"] div[data-testid="stExpander"] details { border: 1px solid rgba(16, 185, 129, 0.4) !important; }
-div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details { border: 1px solid rgba(245, 158, 11, 0.4) !important; }
-div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details { border: 1px solid rgba(167, 139, 250, 0.4) !important; } 
-div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details { border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(139, 92, 246, 0.1) !important;
+}
+
+div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+div[class*="st-key-cat_new"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+div[class*="st-key-cat_update"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(167, 139, 250, 0.4) !important;
+}
+
+div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
 
 /* The 'Guy in the Corner' Ignored Files styling */
-div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary { 
-    background-color: rgba(18, 18, 22, 0.9) !important; 
+div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(18, 18, 22, 0.9) !important;
     border: none !important;
 }
-div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details { 
-    border: 1px solid rgba(75, 85, 99, 0.4) !important; 
+
+div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(75, 85, 99, 0.4) !important;
     background-color: rgba(15, 15, 18, 0.85) !important;
     border-radius: 8px !important;
 }
 
 /* 1. Squeeze the row boundaries to absolute minimums */
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] {
-    padding-top: 0px !important;      
-    padding-bottom: 2px !important;   
-    margin-bottom: 0px !important;    
+    padding-top: 0px !important;
+    padding-bottom: 2px !important;
+    margin-bottom: 0px !important;
     min-height: 0px !important;
-    align-items: stretch !important; 
+    align-items: stretch !important;
 }
 
 /* 2. Completely eliminate gap between rows */
-div[class*="st-key-sync_review_file_list"] > div[data-testid="stVerticalBlock"] {
-    gap: 0px !important; 
+div[class*="st-key-sync_review_file_list"]>div[data-testid="stVerticalBlock"] {
+    gap: 0px !important;
 }
 
 /* 3. OVERRIDE STREAMLIT'S INVISIBLE MIN-HEIGHTS ON WIDGETS */
@@ -86,13 +119,15 @@ div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] 
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] label:not([data-baseweb="checkbox"]) {
     margin: 0 !important;
     padding: 0 !important;
-    min-height: 0 !important; /* Kills the dead space forcing the row open */
+    min-height: 0 !important;
+    /* Kills the dead space forcing the row open */
 }
 
 /* 4. Compress the button's vertical footprint */
 div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] button {
     margin: 0 !important;
-    min-height: 1.8rem !important; /* Shrinks the button's invisible boundary */
+    min-height: 1.8rem !important;
+    /* Shrinks the button's invisible boundary */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
@@ -126,7 +161,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
 }
 
 /* 4. Remove inner gap of the column's vertical block so it's tight */
-.st-key-filetypes_flex_box div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {
+.st-key-filetypes_flex_box div[data-testid="stColumn"]>div[data-testid="stVerticalBlock"] {
     gap: 0 !important;
 }
 
@@ -137,7 +172,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
 }
 
 /* 6. Tighten the outer filter box container */
-.st-key-sync_filter_box_outer > div[data-testid="stVerticalBlock"] {
+.st-key-sync_filter_box_outer>div[data-testid="stVerticalBlock"] {
     padding-top: 5px !important;
     padding-bottom: 5px !important;
     gap: 0 !important;
@@ -147,16 +182,19 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"] {
     margin-top: -4px !important;
 }
+
 /* Add gap between label and the filetype tag container */
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:has(.st-key-filetypes_flex_box) {
     margin-top: 6px !important;
 }
+
 /* Reset margin for elements nested inside the tag flex grid and the bulk buttons row
-   — the broad rule above must not clobber individual button/column element containers */
+   - the broad rule above must not clobber individual button/column element containers */
 .st-key-filetypes_flex_box div[data-testid="stElementContainer"],
 .st-key-bulk_btns_row div[data-testid="stElementContainer"] {
     margin-top: 0 !important;
 }
+
 /* Pull the toggle (first child) to the very top */
 .st-key-sync_filter_box_outer div[data-testid="stElementContainer"]:first-child {
     margin-top: -15px !important;
@@ -166,8 +204,9 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
 .st-key-sync_filter_box_outer hr {
     margin-top: -3px !important;
     margin-bottom: 0 !important;
-    border-color: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }
+
 .st-key-sync_filter_box_outer div[data-testid="stMarkdownContainer"] p {
     margin-bottom: 0 !important;
 }

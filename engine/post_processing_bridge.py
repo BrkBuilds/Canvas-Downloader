@@ -1,5 +1,5 @@
 """
-Post-Processing Bridge — Unified post-processing invocation for Canvas Downloader.
+Post-Processing Bridge - Unified post-processing invocation for Canvas Downloader.
 
 Wraps UIBridge setup, ``run_all_conversions()`` execution, and sidecar
 ledger injection into a single function used by both the standard download
@@ -71,7 +71,7 @@ def invoke_post_processing(
     course_name : str
         Human-readable course name.
     placeholders : DashboardPlaceholders
-        Explicit Streamlit placeholders — never touches global UI state.
+        Explicit Streamlit placeholders - never touches global UI state.
     log_deque : collections.deque
         Terminal log lines (shared with the calling update_ui).
     error_log_path : Path

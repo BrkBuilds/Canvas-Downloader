@@ -1,8 +1,8 @@
 """
-sync.completion — Sync completion, cancellation, and error display.
+sync.completion - Sync completion, cancellation, and error display.
 
 Extracted from ``sync_ui.py`` L5044-5298 (Phase 4).
-Strict physical move — NO logic changes.
+Strict physical move - NO logic changes.
 
 Contains:
   - ``show_sync_cancelled()``  (was ``_show_sync_cancelled``)
@@ -93,7 +93,7 @@ def show_sync_cancelled():
 
 def show_sync_complete():
     """Render the sync-complete screen with results and retry options."""
-    # Completion beep — fired exactly once per sync via session sentinel.
+    # Completion beep - fired exactly once per sync via session sentinel.
     # cleanup_sync_state() resets this flag, so the next sync rearms it.
     if (
         st.session_state.get('notifications_enabled', True)
@@ -127,7 +127,7 @@ def show_sync_complete():
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
     with st.container(border=True, key='completion_dashboard'):
-        # Sync errors are plain strings — classify by checking for LTI/stream markers
+        # Sync errors are plain strings - classify by checking for LTI/stream markers
         _sync_retriable = sum(
             1 for err in sync_errors
             if hasattr(err, 'error_type') and isinstance(getattr(err, 'context', None), dict)
@@ -261,11 +261,11 @@ def show_sync_complete():
             retry_failed=_sync_retry_failed,
         )
 
-        # Amber notice when all retries exhausted — guide user to manual download
+        # Amber notice when all retries exhausted - guide user to manual download
         if _sync_retry_failed:
             from ui.amber_notice import render_amber_notice
             render_amber_notice(
-                "Retry didn't work — these files may be temporarily unavailable.",
+                "Retry didn't work - these files may be temporarily unavailable.",
                 detail="Check your internet connection and try again later, or download them directly from Canvas.",
             )
 

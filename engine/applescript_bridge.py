@@ -1,8 +1,8 @@
 """
-engine.applescript_bridge — Shared AppleScript execution utility for macOS.
+engine.applescript_bridge - Shared AppleScript execution utility for macOS.
 
 Extracted from excel_converter.py, word_converter.py, pdf_converter.py
-(Phase 3 remediation — F-08) to eliminate triple-duplicated code.
+(Phase 3 remediation - F-08) to eliminate triple-duplicated code.
 
 Provides a single, robust ``run_applescript()`` function that all Office
 converters delegate to for macOS AppleScript-based file conversion.
@@ -53,7 +53,7 @@ def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:
             capture_output=True, text=True, timeout=10,
         )
     except Exception:
-        pass  # Best-effort only — don't let cleanup failures surface
+        pass  # Best-effort only - don't let cleanup failures surface
 
 
 def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
@@ -65,7 +65,7 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     Args:
         src: Source file path (used only for context logging; the actual
              POSIX path is baked into *script*).
-        dst: Expected output path — checked for existence after execution.
+        dst: Expected output path - checked for existence after execution.
         app_name: Human-readable application name for log messages
                   (e.g. ``"Excel"``, ``"Word"``, ``"PowerPoint"``).
         script: The complete AppleScript source to execute.
@@ -91,7 +91,7 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         return False
     except subprocess.TimeoutExpired:
         logger.error(
-            f"[AppleScript] {app_name} conversion timed out after 120s — "
+            f"[AppleScript] {app_name} conversion timed out after 120s - "
             "attempting to close the open document to recover"
         )
         posix_src = str(src.resolve()).replace('"', '\\"')

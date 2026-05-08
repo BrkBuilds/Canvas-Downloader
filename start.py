@@ -1,7 +1,7 @@
 """
-start.py — Unified application launcher for Canvas Downloader.
+start.py - Unified application launcher for Canvas Downloader.
 
-Architecture — platform split:
+Architecture - platform split:
   Windows: pywebview wraps the Streamlit server in a native EdgeChromium
            desktop window.  The main thread runs ``webview.start()``.
   macOS:   CustomTkinter (macos_controller.CanvasController) shows a small
@@ -29,7 +29,7 @@ import logging
 
 from streamlit.web import cli as stcli
 
-# Logging disabled — no debug log file needed for the launcher.
+# Logging disabled - no debug log file needed for the launcher.
 logging.disable(logging.CRITICAL)
 
 # ── Shared Utilities ──────────────────────────────────────────────

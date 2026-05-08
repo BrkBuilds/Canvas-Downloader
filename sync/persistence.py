@@ -1,5 +1,5 @@
 """
-sync.persistence — Atomic CRUD operations for sync pair configuration.
+sync.persistence - Atomic CRUD operations for sync pair configuration.
 
 All mutations go through ``atomic_update_sync_pairs()`` which uses
 ``threading.Lock`` + ``.tmp`` file atomic replacement (``os.replace``)

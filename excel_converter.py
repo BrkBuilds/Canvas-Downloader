@@ -81,7 +81,7 @@ class ExcelToPDF:
         self.app = None
 
     def _is_alive(self) -> bool:
-        """Quick COM channel health check — catches stale RPC handles."""
+        """Quick COM channel health check - catches stale RPC handles."""
         if not self.app:
             return False
         try:
@@ -141,7 +141,7 @@ class ExcelToPDF:
             return None, "AppleScript conversion failed (is Microsoft Excel installed?)"
 
         # Windows: COM automation with path shadowing
-        # Proactive health check — catches the "alternating failure" pattern
+        # Proactive health check - catches the "alternating failure" pattern
         # where the PREVIOUS export silently corrupted the COM channel.
         self._ensure_app()
         if not self.app:
@@ -207,10 +207,10 @@ class ExcelToData:
     Produces a single ``<filename>_Data.txt`` sidecar per workbook, containing
     Markdown-headed sheet sections with CSV-formatted cell data.  This gives
     AI tools (ChatGPT, Claude, Gemini, NotebookLM) a structured, ingestible
-    representation of tabular data — far superior to PDF parsing.
+    representation of tabular data - far superior to PDF parsing.
 
-    Windows:  COM automation — reads ``sheet.UsedRange.Value`` (2D tuple).
-    macOS:    AppleScript — extracts ``value of used range`` as TSV, then
+    Windows:  COM automation - reads ``sheet.UsedRange.Value`` (2D tuple).
+    macOS:    AppleScript - extracts ``value of used range`` as TSV, then
               reformats via Python's ``csv`` module.
 
     The original ``.xlsx`` is intentionally **NOT** deleted.  If the user also
@@ -415,7 +415,7 @@ class ExcelToData:
             logger.error("[AppleScript] osascript not found")
             return []
         except subprocess.TimeoutExpired:
-            logger.error("[AppleScript] Excel data extraction timed out after 120s — attempting recovery")
+            logger.error("[AppleScript] Excel data extraction timed out after 120s - attempting recovery")
             from engine.applescript_bridge import _try_close_document_after_timeout
             _try_close_document_after_timeout("Excel", str(src.resolve()).replace('"', '\\"'))
             return []

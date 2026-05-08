@@ -1,9 +1,9 @@
 """
-Progress Dashboard — Unified progress UI rendering for Canvas Downloader.
+Progress Dashboard - Unified progress UI rendering for Canvas Downloader.
 
 Provides shared HTML rendering functions used by both the download flow
 (app.py) and the sync flow (sync_ui.py).  All Streamlit placeholders are
-passed explicitly as arguments — never imported from global state.
+passed explicitly as arguments - never imported from global state.
 
 Usage:
     from engine.progress_dashboard import (
@@ -30,11 +30,11 @@ class DashboardPlaceholders:
     progress dashboard.  Passed explicitly into every render call so the
     engine never touches global UI state.
     """
-    header: object          # st.empty() — course name + phase label
-    progress: object        # st.empty() — progress bar
-    metrics: object         # st.empty() — 4-metric row (downloaded/speed/files/eta)
-    active_file: object     # st.empty() — "Currently downloading: …"
-    log: object             # st.empty() — terminal log widget
+    header: object          # st.empty() - course name + phase label
+    progress: object        # st.empty() - progress bar
+    metrics: object         # st.empty() - 4-metric row (downloaded/speed/files/eta)
+    active_file: object     # st.empty() - "Currently downloading: …"
+    log: object             # st.empty() - terminal log widget
 
 
 @dataclass

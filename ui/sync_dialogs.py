@@ -1,14 +1,14 @@
 """
-ui.sync_dialogs — Sync history, filetype selector, ignored files, course settings.
+ui.sync_dialogs - Sync history, filetype selector, ignored files, course settings.
 
 Extracted from ``sync_ui.py`` (Phase 5).
 
 Contains:
-  - ``render_sync_history()`` — sync history expander
-  - ``render_filetype_selector()`` — filetype filter for review screen
-  - ``show_course_ignored_files()`` — per-course ignored files dialog
-  - ``select_course_dialog_inner()`` — course selection dialog
-  - ``render_pending_folder_ui()`` — pending folder pairing UI
+  - ``render_sync_history()`` - sync history expander
+  - ``render_filetype_selector()`` - filetype filter for review screen
+  - ``show_course_ignored_files()`` - per-course ignored files dialog
+  - ``select_course_dialog_inner()`` - course selection dialog
+  - ``render_pending_folder_ui()`` - pending folder pairing UI
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def _remove_pairs_by_signature_lazy(sigs):
 
 
 def render_filetype_selector(all_files, prefix, file_key_fn):
-    """Bulk Selection Matrix — filetype unit checkboxes that act as remote controls.
+    """Bulk Selection Matrix - filetype unit checkboxes that act as remote controls.
     
     Each unit checkbox toggles ALL files of that extension on/off.
     Shows dynamic (selected/total) counters next to each extension.
@@ -133,7 +133,7 @@ def render_filetype_selector(all_files, prefix, file_key_fn):
 
 
 def show_course_ignored_files(course_name, course_id, course_data):
-    """Per-course ignored files dialog — Smart Select tag-button architecture.
+    """Per-course ignored files dialog - Smart Select tag-button architecture.
 
     Uses the Zero-Width Space Hack for a custom dialog header with Base64 icon.
     Implements the same tag-button filetype selector as the Sync Review page.
@@ -558,7 +558,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
             /* Scroll container: border=True gives reliable st-key-* class.
                Strip the native border here. height:auto lets the list shrink
                to fit short Favorites lists; max-height caps growth so the
-               dialog never overflows the viewport — All Courses scrolls
+               dialog never overflows the viewport - All Courses scrolls
                internally via overflow-y:auto once content exceeds max-height. */
             div[class*="st-key-course_list_scroll_container"] {
                 border: none !important;
@@ -647,7 +647,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 
 
 def render_pending_folder_ui(courses, course_names, course_options, ):
-    """Inline UI shown while adding/editing a sync-pair — unified card."""
+    """Inline UI shown while adding/editing a sync-pair - unified card."""
     pending_folder = st.session_state.get('pending_sync_folder', "")
     folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder&nbsp;&nbsp; ➝"
     editing_idx = st.session_state.get('editing_pair_idx')
@@ -690,7 +690,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
              btn_label = 'Select Course'
         
         # Two columns like folder row: [1, 1, 1] to keep it left-aligned
-        # REVISED: [1, 1, 1] — relying on CSS flex auto-width to handle content size
+        # REVISED: [1, 1, 1] - relying on CSS flex auto-width to handle content size
         col_c_info, col_c_btn, col_c_spacer = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
         
         with col_c_info:
@@ -749,7 +749,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                  selected_course_name = None
 
             # Persist only to the inline-form temp state. Do NOT mutate
-            # st.session_state['sync_pairs'][editing_idx] here — the pair's
+            # st.session_state['sync_pairs'][editing_idx] here - the pair's
             # original course_id is the signature used by
             # update_pair_by_signature on Confirm. Mutating it in-memory
             # poisoned the signature lookup, so the disk-side replace
@@ -840,7 +840,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # Error container Relocated HERE (Below dropdown/warnings, Above buttons)
         error_container = st.empty()
 
-        # (3) Confirm + Cancel — compact, side-by-side, cancel has red tint
+        # (3) Confirm + Cancel - compact, side-by-side, cancel has red tint
         # Made columns narrower (10% each) to reduce button width significantly (per user request)
         col_cancel, col_add, _ = st.columns([1, 1.5, 7.5])
         
@@ -896,7 +896,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         unsafe_allow_html=True
                     )
                 elif selected_course_id and selected_course_id in course_names:
-                    # Direct lookup — no need to scan by name, the ID is
+                    # Direct lookup - no need to scan by name, the ID is
                     # authoritative from the course selector.
 
                     # If the folder's manifest was bound to a different
