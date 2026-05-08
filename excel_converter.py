@@ -351,10 +351,11 @@ class ExcelToData:
         posix_dir = str(temp_dir.resolve())
 
         # Safely dump each sheet to a native CSV file using Mac Office
-        # Sheet CSVs are named "{index}_{sheetName}.csv" to avoid collisions on
+        # Sheet CSVs are named "{index}_{safeName}.csv" to avoid collisions on
         # the case-insensitive macOS filesystem when two sheets share a name.
-        # The AppleScript returns "index\tsheetName" lines so Python can
-        # reconstruct the filename without guessing.
+        # The AppleScript sanitizes the sheet name (replacing '/' with '-') before
+        # using it in the file path, and returns "index\toriginalName" lines so
+        # Python can reconstruct the filename with the same sanitization applied.
         script = f'''
             set output to ""
             tell application "Microsoft Excel"
@@ -366,8 +367,10 @@ class ExcelToData:
                     set theSheet to sheet i of theBook
                     set sheetName to name of theSheet
                     try
+                        -- Sanitize sheet name: replace '/' with '-' so it is safe as a filename component
+                        set safeName to do shell script "printf '%s' " & quoted form of (sheetName as text) & " | tr '/' '-'"
                         tell theSheet to select
-                        set outPath to "{posix_dir}/" & i & "_" & sheetName & ".csv"
+                        set outPath to "{posix_dir}/" & i & "_" & safeName & ".csv"
                         save as active sheet filename POSIX file outPath file format CSV
                         set output to output & i & tab & sheetName & linefeed
                     end try
@@ -388,7 +391,9 @@ class ExcelToData:
                     if not line or '\t' not in line:
                         continue
                     idx_str, s_name = line.split('\t', 1)
-                    csv_path = temp_dir / f"{idx_str.strip()}_{s_name.strip()}.csv"
+                    # Mirror the AppleScript sanitization to locate the CSV file
+                    safe_name = s_name.strip().replace('/', '-')
+                    csv_path = temp_dir / f"{idx_str.strip()}_{safe_name}.csv"
                     if csv_path.exists():
                         # Read the saved CSV and standardise encoding
                         try:
