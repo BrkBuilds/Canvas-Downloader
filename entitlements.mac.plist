@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        com.apple.security.automation.apple-events
+        Required (macOS 10.14+) to send Apple Events to third-party apps
+        (Microsoft Word, Excel, PowerPoint) for Office-to-PDF conversion.
+        Without this entitlement the TCC framework may silently deny the
+        osascript calls even after the user grants permission in System Settings.
+    -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+</dict>
+</plist>

@@ -7,7 +7,10 @@ try:
 except ImportError:
     pass  # Allow importing for type checking on Windows
 
-from PIL import Image
+try:
+    from PIL import Image as _PILImage
+except ImportError:
+    _PILImage = None
 
 # ── Constants ──
 CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -70,8 +73,10 @@ class CanvasController:
         # Load Icon
         icon_path = self._resolve_path(os.path.join("assets", "icon.png"))
         try:
-            self.icon_image = ctk.CTkImage(light_image=Image.open(icon_path), 
-                                           dark_image=Image.open(icon_path), 
+            if _PILImage is None:
+                raise ImportError("Pillow not available")
+            self.icon_image = ctk.CTkImage(light_image=_PILImage.open(icon_path),
+                                           dark_image=_PILImage.open(icon_path),
                                            size=(32, 32))
             self.icon_label = ctk.CTkLabel(self.header_frame, image=self.icon_image, text="")
             self.icon_label.pack(side="left", padx=(0, 10))
@@ -140,8 +145,12 @@ class CanvasController:
         self.footer_frame = ctk.CTkFrame(self.container, fg_color="transparent")
         self.footer_frame.pack(fill="x", side="bottom")
         
-        import version
-        self.version_label = ctk.CTkLabel(self.footer_frame, text=f"v{version.__version__}", 
+        try:
+            import version as _version
+            _ver_str = f"v{_version.__version__}"
+        except Exception:
+            _ver_str = "v?"
+        self.version_label = ctk.CTkLabel(self.footer_frame, text=_ver_str,
                                           font=ctk.CTkFont(family="Helvetica", size=11),
                                           text_color="#444444")
         self.version_label.pack(side="left")
@@ -237,16 +246,21 @@ class CanvasController:
         if self.state == 'error':
             # The user clicked "Try Again"
             self.set_state('starting')
-            # Trigger external callback to retry boot sequence
             if hasattr(self, 'retry_callback'):
                 threading.Thread(target=self.retry_callback, daemon=True).start()
             return
-            
+
         if os.path.exists(CHROME_PATH):
             subprocess.Popen([CHROME_PATH, self.url])
         else:
-            # Re-verify in case they installed it
-            self.set_state('error', 'Google Chrome not found', 'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome')
+            # Fallback: let macOS Launch Services find Chrome regardless of install location
+            # (covers ~/Applications installs, non-standard paths, etc.)
+            result = subprocess.run(
+                ['open', '-a', 'Google Chrome', self.url],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                self.set_state('error', 'Google Chrome not found', 'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome')
 
     def run(self):
         """Start the CustomTkinter main loop (must be called from main thread)."""
