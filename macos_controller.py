@@ -35,8 +35,7 @@ class CanvasController:
     def __init__(self, streamlit_url: str, on_quit: callable):
         self.url = streamlit_url
         self.on_quit = on_quit
-        self.state = 'starting'  # starting | ready | shutting_down | error
-        self.countdown = 3
+        self.state = 'starting'  # starting | ready | error
         
         # Configure appearance
         ctk.set_appearance_mode("dark")
@@ -141,6 +140,12 @@ class CanvasController:
                                            command=self._on_quit_click)
         self.btn_secondary.pack(fill="x")
 
+        self.quit_warning = ctk.CTkLabel(self.buttons_frame, 
+                                         text="Closing this window will also shut down Canvas Downloader",
+                                         font=ctk.CTkFont(family="Helvetica", size=11),
+                                         text_color=TEXT_MUTED)
+        self.quit_warning.pack(pady=(6, 0))
+
         # --- Footer ---
         self.footer_frame = ctk.CTkFrame(self.container, fg_color="transparent")
         self.footer_frame.pack(fill="x", side="bottom")
@@ -195,14 +200,6 @@ class CanvasController:
             self.btn_primary.configure(state="normal", fg_color=ACCENT_BLUE, text_color=TEXT_PRIMARY, text="Open Canvas Downloader")
             self.btn_secondary.configure(state="normal", text_color=TEXT_SECONDARY, border_color=BTN_SUBTLE)
             
-        elif state == 'shutting_down':
-            self.status_canvas.itemconfig(self.circle_id, fill=WARNING_AMBER)
-            self.status_canvas.itemconfig(self.countdown_text_id, text=str(self.countdown))
-            self.status_title.configure(text="Closing Canvas Downloader...", text_color=WARNING_AMBER)
-            self.status_sub.configure(text=f"Shutting down in {self.countdown} seconds")
-            self.btn_primary.configure(state="disabled", fg_color="#2b4c5e", text_color="#5a687a")
-            self.btn_secondary.configure(state="disabled", text_color="#444444", border_color="#1a1e28")
-            
         elif state == 'error':
             self.status_canvas.itemconfig(self.circle_id, fill=ERROR_RED)
             self.status_title.configure(text=message or "Google Chrome not found", text_color=ERROR_RED)
@@ -215,31 +212,9 @@ class CanvasController:
         self._on_quit_click()
 
     def _on_quit_click(self):
-        """Initiate graceful shutdown countdown."""
-        if self.state == 'shutting_down':
-            return
-            
-        if self.state == 'error':
-            # Fast quit if already errored
-            self.on_quit()
-            self.app.destroy()
-            return
-            
-        self.state = 'shutting_down'
-        self.countdown = 3
-        self._apply_state('shutting_down')
-        self._tick_countdown()
-
-    def _tick_countdown(self):
-        """Animate 3...2...1 then exit."""
-        if self.countdown > 0:
-            self.countdown -= 1
-            self.status_canvas.itemconfig(self.countdown_text_id, text=str(self.countdown))
-            self.status_sub.configure(text=f"Shutting down in {self.countdown} seconds")
-            self.app.after(1000, self._tick_countdown)
-        else:
-            self.on_quit()
-            self.app.destroy()
+        """Handle application exit."""
+        self.on_quit()
+        self.app.destroy()
 
     def open_chrome(self):
         """Open/reopen the Streamlit URL in Chrome."""
