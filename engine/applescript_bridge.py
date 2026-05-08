@@ -52,6 +52,19 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         logger.error(
             f"[AppleScript] {app_name} conversion timed out after 120s"
         )
+        # The osascript process was killed by subprocess.run, but the Office
+        # application it was driving may still be running with a document open,
+        # which would block the next conversion from opening the same file.
+        # Best-effort: tell the app to close all open documents and quit.
+        try:
+            subprocess.run(
+                ['osascript', '-e',
+                 f'tell application "Microsoft {app_name}" to quit saving no'],
+                timeout=10,
+                capture_output=True,
+            )
+        except Exception:
+            pass
         return False
     except Exception as e:
         logger.error(f"[AppleScript] {app_name} error: {e}")

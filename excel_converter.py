@@ -368,7 +368,7 @@ class ExcelToData:
                     try
                         tell theSheet to select
                         set outPath to "{posix_dir}/" & i & "_" & sheetName & ".csv"
-                        save as active sheet filename POSIX file outPath file format CSV file format
+                        save as active sheet filename POSIX file outPath file format CSV
                         set output to output & i & tab & sheetName & linefeed
                     end try
                 end repeat
