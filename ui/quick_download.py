@@ -9,6 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 from ui_helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
+from ui_shared import render_help_card
 from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS
 
 
@@ -770,11 +771,78 @@ div.st-key-page_nav_quick_back button:hover {{
 
     with main_col:
         # ── Page header ──────────────────────────────────────────────────
+        _qd_help_title = "Quick Download Guide"
+        _qd_help_text = (
+            "<b>Quick Download is the fastest way to get your course materials without worrying about technical settings.</b>"
+            "<br><br>"
+            "<b>How it works</b><br>"
+            "Instead of manually configuring dozens of options, you choose a <b>Preset</b>. "
+            "A preset is a 'recipe' that defines exactly what gets downloaded and how it's organized."
+            "<br><br>"
+            "<b>Picking the right Preset</b><br>"
+            "<ul style='margin-top: 5px; margin-bottom: 10px; padding-left: 20px; color: #cbd5e1; font-size: 0.9rem;'>"
+            "<li><b>Complete Canvas Download</b>: The standard choice. Downloads every file, assignment, and quiz, keeping the module structure intact.</li>"
+            "<li><b>AI Study Pack</b>: Optimized for AI analysis. Downloads everything and automatically converts Office files (PPTX/Word) to PDF for easy uploading to LLMs.</li>"
+            "<li><b>NotebookLM Ready</b>: Special 'Flat' export. All files are converted to text-friendly formats and placed in one folder, bypassing NotebookLM's subfolder limitations.</li>"
+            "<li><b>Slides & PDFs Only</b>: Clean and focused. Only grabs lecture slides and PDF documents, skipping assignments and administrative files.</li>"
+            "<li><b>Files Only</b>: Pure file sync. Only downloads items found in the 'Files' tab of your course.</li>"
+            "</ul>"
+            "<b>Organization Styles</b><br>"
+            "You can choose between <b>Subfolders</b> (matches Canvas Modules exactly) or <b>Flat</b> (all files in one single folder). "
+            "<i>Note: Some presets lock this choice to ensure compatibility with specific tools.</i>"
+            "<br><br>"
+            "<b>Batch Processing</b><br>"
+            "The preset you choose will be applied to <b>ALL</b> courses you selected in the previous step. "
+            "You can review your selected courses in the dropdown at the bottom of the page."
+            "<hr>"
+            "<b>Pro Tip:</b> If you need to tweak individual settings (like specific file extensions or advanced AI settings), "
+            "click <b>'Go to Custom Download'</b> in the top right corner."
+        )
+
+        # Snug Header Hack — H1 + Help button on one flex row
+        st.html("""
+            <style>
+            div.st-key-qd_title_help_row [data-testid="stHorizontalBlock"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-end !important;
+                gap: 10px !important;
+                justify-content: flex-start !important;
+            }
+            div.st-key-qd_title_help_row [data-testid="column"],
+            div.st-key-qd_title_help_row [data-testid="stColumn"] {
+                width: auto !important;
+                flex: 0 0 auto !important;
+                min-width: 0px !important;
+                padding: 0 !important;
+            }
+            div.st-key-qd_title_help_row h1 {
+                margin-right: 0 !important;
+                padding-right: 0 !important;
+                line-height: 1 !important;
+            }
+            div.st-key-qd_title_help_row div[class*="st-key-quick_download_explainer_help_btn"] {
+                margin-bottom: 5px !important;
+                margin-left: 0 !important;
+            }
+            </style>
+        """)
+
         hdr_col, adv_col = st.columns([3, 1.4], vertical_alignment="center")
         with hdr_col:
+            with st.container(key="qd_title_help_row"):
+                _c1, _c2 = st.columns([1, 10])
+                with _c1:
+                    st.markdown("<h1 style='font-size:1.8rem; font-weight:800; margin:0; color:#f8fafc; letter-spacing:-0.02em; white-space: nowrap;'>Quick Download</h1>", unsafe_allow_html=True)
+                with _c2:
+                    render_help_card(
+                        key_prefix="quick_download_explainer",
+                        title=_qd_help_title,
+                        text_html=_qd_help_text,
+                        icon="",
+                        mode="button"
+                    )
             st.markdown(
-                "<h1 style='font-size:1.8rem; font-weight:800; margin:0; color:#f8fafc; "
-                "letter-spacing:-0.02em;'>Quick Download</h1>"
                 "<p style='color:#94a3b8; font-size:0.95rem; margin:6px 0 0 0; line-height:1.4;'>"
                 "Select how you want your courses downloaded. We'll handle the rest."
                 "</p>",
@@ -787,27 +855,13 @@ div.st-key-page_nav_quick_back button:hover {{
 
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
-        # ── Helper card ──────────────────────────────────────────────────
-        st.markdown(
-            "<div style='"
-            "background: rgba(59,113,184,0.08);"
-            "border: 1px solid rgba(59,113,184,0.25);"
-            "border-left: 3px solid rgba(59,113,184,0.7);"
-            "border-radius: 10px;"
-            "padding: 14px 18px;"
-            "margin-bottom: 4px;"
-            "'>"
-            "<p style='font-size:0.9rem; color:#e2e8f0; font-weight:600; margin:0 0 5px 0;'>"
-            "Quick Download"
-            "</p>"
-            "<p style='font-size:0.83rem; color:#94a3b8; margin:0; line-height:1.6;'>"
-            "Pick one of the presets below &#8212; each is a complete, ready-made configuration for a common use case. "
-            "Choose how your files are organised, verify your download folder, and hit <strong style='color:#e2e8f0;'>Start Download</strong>. "
-            "Need full control over every setting? Use "
-            "<strong style='color:#e2e8f0;'>Custom Download</strong> instead."
-            "</p>"
-            "</div>",
-            unsafe_allow_html=True,
+        # Help Card Expansion
+        render_help_card(
+            key_prefix="quick_download_explainer",
+            title=_qd_help_title,
+            text_html=_qd_help_text,
+            icon="",
+            mode="card"
         )
 
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
@@ -856,7 +910,7 @@ div.st-key-page_nav_quick_back button:hover {{
         _org_lock_note = (
             " <span style='font-size:0.72rem; font-weight:400; color:#64748b; "
             "text-transform:none; letter-spacing:0; margin-left:4px;'>"
-            "&#128274; Fixed by preset</span>"
+            "(Locked by preset)</span>"
         ) if org_is_locked else ""
         st.markdown(
             "<div style='display:flex; align-items:center; gap:10px; margin:0 0 10px 0;'>"
