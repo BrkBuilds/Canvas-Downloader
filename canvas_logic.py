@@ -424,7 +424,7 @@ class CanvasManager:
                         # This works as "best effort".
                         pass
                 elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
-                    ext = ".html" if item.type == 'Page' else ".url"
+                    ext = ".html" if item.type == 'Page' else (".webloc" if platform.system() == 'Darwin' else ".url")
                     safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
                     if isolate or item.type != 'Page':
                         # Pages get the routing prefix in Mode A; ExternalUrls
@@ -3074,36 +3074,6 @@ class CanvasManager:
         except Exception as e:
             log_debug(f"Failed to download secondary entity {entity_type} (ID {file_id}): {e}", debug_file)
             raise  # Let exceptions bubble up so the sync retry loop can handle them
-
-    def _create_link(self, title, url, target_path, progress_callback=None, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=None):
-        safe_title = self._sanitize_filename(title)
-        filepath = target_path / f"{safe_title}.url"
-        filepath = self._handle_conflict(filepath)
-        
-        try:
-            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
-                f.write("[InternetShortcut]\n")
-                f.write(f"URL={url}\n")
-            if progress_callback: progress_callback(f'Created link: {safe_title}.url', progress_type='link', explicit_filepath=str(filepath))
-
-            if sync_manager and course_base_path and canvas_item_id:
-                try:
-                    rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
-                    sync_manager.record_downloaded_file(
-                        canvas_file_id=canvas_item_id,
-                        canvas_filename=filepath.name,
-                        local_path=rel_path,
-                        canvas_updated_at=datetime.now(timezone.utc).isoformat(),
-                        original_size=0
-                    )
-                except Exception:
-                    pass
-            return filepath
-        except Exception as e:
-            err = DownloadError(course_name, title, "Link Creation", str(e), raw_error=e)
-            if progress_callback: progress_callback(err, progress_type='error')
-            self._log_error(error_root_path, err)
-            return None
 
     # --- Entity-Specific Fetchers -----------------------------------------
 

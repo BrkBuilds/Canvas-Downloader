@@ -785,7 +785,32 @@ div.st-key-page_nav_quick_back button:hover {{
                 st.session_state['quick_download_mode'] = False
                 st.rerun()
 
-        st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+        # ── Helper card ──────────────────────────────────────────────────
+        st.markdown(
+            "<div style='"
+            "background: rgba(59,113,184,0.08);"
+            "border: 1px solid rgba(59,113,184,0.25);"
+            "border-left: 3px solid rgba(59,113,184,0.7);"
+            "border-radius: 10px;"
+            "padding: 14px 18px;"
+            "margin-bottom: 4px;"
+            "'>"
+            "<p style='font-size:0.9rem; color:#e2e8f0; font-weight:600; margin:0 0 5px 0;'>"
+            "Quick Download"
+            "</p>"
+            "<p style='font-size:0.83rem; color:#94a3b8; margin:0; line-height:1.6;'>"
+            "Pick one of the presets below &#8212; each is a complete, ready-made configuration for a common use case. "
+            "Choose how your files are organised, verify your download folder, and hit <strong style='color:#e2e8f0;'>Start Download</strong>. "
+            "Need full control over every setting? Use "
+            "<strong style='color:#e2e8f0;'>Custom Download</strong> instead."
+            "</p>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
         # ── Section 1: Presets ───────────────────────────────────────────
         st.markdown(

@@ -163,5 +163,5 @@ To build an interactive expand/collapse inline with HTML content (no JS, no Stre
 
 ## Build
 - Windows: `pyinstaller Canvas_Downloader.spec`
-- macOS: `pyinstaller --clean Canvas_Downloader_macOS.spec` + `codesign --force --deep -s - Canvas\ Downloader.app`
+- macOS: `pyinstaller --clean Canvas_Downloader_macOS.spec` + `codesign --force --deep -s - --entitlements entitlements.mac.plist Canvas\ Downloader.app`
 - Launcher: `start.py` — daemonized Streamlit thread + `pywebview.start()` on main thread (required for macOS Cocoa).
