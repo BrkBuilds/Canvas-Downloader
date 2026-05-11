@@ -76,6 +76,36 @@ def render_completion_card(synced_count: int, error_count: int,
             "</p></div>",
             unsafe_allow_html=True,
         )
+        if mode == 'download':
+            st.markdown(
+                "<div style='"
+                "display:flex;align-items:flex-start;gap:10px;"
+                "background:rgba(245,158,11,0.1);"
+                "border:1px solid rgba(245,158,11,0.3);"
+                "border-radius:8px;padding:12px 14px;margin-top:14px;"
+                "'>"
+                "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+                "stroke='#f59e0b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+                "style='width:18px;height:18px;flex-shrink:0;margin-top:2px;'>"
+                "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path>"
+                "<line x1='12' y1='9' x2='12' y2='13'></line>"
+                "<line x1='12' y1='17' x2='12.01' y2='17'></line>"
+                "</svg>"
+                "<div>"
+                "<div style='color:#fbbf24;font-weight:600;font-size:0.88em;margin-bottom:3px;'>"
+                "No files were found - possible connection issue"
+                "</div>"
+                "<p style='color:#d1d5db;font-size:0.82em;margin:0;line-height:1.5;'>"
+                "Your Canvas account connected successfully, but no files or modules were returned. "
+                "This can happen when your API token is geo-restricted (accessing from a different country than usual), "
+                "when a firewall or VPN is affecting the connection to your university's server, "
+                "or during a temporary Canvas outage. "
+                "Try again on your usual network."
+                "</p>"
+                "</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
         return
 
     # Stats grid
