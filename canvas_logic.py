@@ -17,11 +17,27 @@ import threading
 import aiofiles
 from canvas_debug import log_debug, clear_debug_log
 import logging
+import requests
+from requests.adapters import HTTPAdapter
 
 from sync_manager import SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo
 from ui_helpers import make_long_path
 
 logger = logging.getLogger(__name__)
+
+
+class _CanvasTimeoutAdapter(HTTPAdapter):
+    """Injects a default (connect, read) timeout into every synchronous canvasapi request.
+
+    Without this, course.get_modules() / course.get_files() etc. can hang
+    indefinitely on high-latency or unreliable connections (e.g. cross-continent).
+    The timeout causes requests.exceptions.Timeout to propagate through canvasapi,
+    which then surfaces as a proper error rather than a silent hang.
+    """
+    def send(self, request, **kwargs):
+        kwargs.setdefault('timeout', (15, 60))
+        return super().send(request, **kwargs)
+
 
 # --- Global Async Locks ---
 _download_locks = {}
@@ -219,6 +235,15 @@ class CanvasManager:
         # Initialize Canvas object
         try:
             self.canvas = Canvas(self.api_url, self.api_key)
+            # Apply a default timeout to all synchronous canvasapi requests so that
+            # calls like course.get_modules() raise Timeout instead of hanging forever
+            # on slow or cross-continent connections.
+            try:
+                _adapter = _CanvasTimeoutAdapter()
+                self.canvas._Canvas__requester._session.mount('https://', _adapter)
+                self.canvas._Canvas__requester._session.mount('http://', _adapter)
+            except Exception:
+                pass  # Non-fatal — private API may change between canvasapi versions
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
