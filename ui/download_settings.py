@@ -211,7 +211,7 @@ def render_download_settings(fetch_courses_fn):
         f"<details style='{_row}'><summary style='{_b3}'>Legacy Word Docs to PDF</summary>"
         f"<div style='{_ans3}'>Converts old Word document formats (.doc, .rtf, .odt) to PDF. Modern .docx files are not affected. The original is <b>replaced</b> by the PDF. Requires Microsoft Word or LibreOffice.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Excel to PDF &amp; AI Data</summary>"
-        f"<div style='{_ans3}'>Converts Excel spreadsheets into a visual PDF and a plain text file with all the cell data AI tools can process. The <b>original spreadsheet is kept</b> alongside the two new files. Requires Microsoft Excel or LibreOffice.</div></details>"
+        f"<div style='{_ans3}'>Converts Excel spreadsheets into two files: a visual PDF (preserves layout, charts, and formatting) and a structured plain text data file optimized for AI. The data file includes a cell coordinate grid (A1, B2...) that matches the PDF, formula annotations showing the math behind calculated cells, and merged cell values. The <b>original spreadsheet is kept</b> alongside both new files. <b>Note:</b> The AI data file is generated only for modern Excel formats (.xlsx, .xlsm). Legacy .xls files are converted to PDF only. Requires Microsoft Excel.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Canvas Pages to Plain Text</summary>"
         f"<div style='{_ans3}'>Converts Canvas web pages downloaded via Card 2 into clean plain text files, stripping all web formatting. Makes them easy to paste into or upload to AI tools.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Code &amp; Data to .txt</summary>"
@@ -221,7 +221,7 @@ def render_download_settings(fetch_courses_fn):
         f"<details style='{_row}'><summary style='{_b3}'>Video to Audio</summary>"
         f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3. Requires FFmpeg.</div></details>"
         "<div style='background-color: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
-        "<span style='color: #fbd38d; font-weight: 600;'>&#9888;&#65039; Required software:</span> PowerPoint, Word, and Excel conversions require Microsoft Office or the free LibreOffice app. Video to Audio requires FFmpeg. If the required software is not installed, that conversion is silently skipped and your original file is kept."
+        "<span style='color: #fbd38d; font-weight: 600;'>&#9888;&#65039; Required software:</span> PowerPoint and Word conversions require Microsoft Office or the free LibreOffice app. Excel PDF conversion requires Microsoft Excel; AI data extraction works for .xlsx/.xlsm only (not legacy .xls). Video to Audio requires FFmpeg. If the required software is not installed, that step is silently skipped and your original file is kept."
         "</div>"
         "</div></details>"
 
@@ -284,7 +284,7 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>If I enable PowerPoint to PDF, does the original file get deleted?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "Yes - the original PowerPoint file is replaced by the PDF to avoid duplicates. The same applies to Legacy Word to PDF and Video to Audio. <b>Exception:</b> Excel keeps the original spreadsheet alongside the new PDF and data file. If you need to keep originals, skip these conversions or make a backup first."
+        "Yes - the original PowerPoint file is replaced by the PDF to avoid duplicates. The same applies to Legacy Word to PDF and Video to Audio. <b>Exception:</b> Excel keeps the original spreadsheet alongside the PDF and the AI data file — you end up with three files per spreadsheet. If you need to keep originals for other converters, skip those conversions or make a backup first."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does Submissions (Results) save, and will my professor know?</summary>"
@@ -1282,7 +1282,7 @@ def render_download_settings(fetch_courses_fn):
                 ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png', None),
                 ('convert_pptx',  'PowerPoint ⭢ PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires Microsoft PowerPoint or LibreOffice'),
                 ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires Microsoft Word or LibreOffice'),
-                ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export spreadsheets as visual PDFs and LLM-ready CSV sidecars.',                'icon_conv_excel.png', 'Requires Microsoft Excel or LibreOffice'),
+                ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export each spreadsheet as PDF + structured .txt with all cell data.',                'icon_conv_excel.png', 'Requires Microsoft Excel. AI data file only for .xlsx/.xlsm (not .xls)'),
                 ('convert_html',  'Canvas Pages ⭢ Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
                 ('convert_code',  'Code & Data ⭢ .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),
                 ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png', None),

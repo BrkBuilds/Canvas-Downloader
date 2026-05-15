@@ -402,7 +402,7 @@ def _build_filetype_pills_html(files: list) -> str:
         html += (
             f'<div class="filetype-pill">'
             f'<img class="ft-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="other"/>'
-            f'<span class="ft-label">OTHER FILES</span>'
+            f'<span class="ft-label">OTHER FILETYPES</span>'
             f'<span class="ft-count">{other_count}</span>'
             f'</div>'
         )
@@ -731,7 +731,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         'convert_zip': 'Unpack Archives (.zip)',
         'convert_pptx': 'PPTX ➡ PDF',
         'convert_word': 'Legacy Word ➡ PDF',
-        'convert_excel': 'Excel ➡ PDF & Data',
+        'convert_excel': 'Excel ➡ PDF & AI Data',
         'convert_html': 'HTML ➡ PDF',
         'convert_code': 'Code ➡ .TXT',
         'convert_urls': 'Links ➡ TXT',
