@@ -243,7 +243,7 @@ class CanvasManager:
                 self.canvas._Canvas__requester._session.mount('https://', _adapter)
                 self.canvas._Canvas__requester._session.mount('http://', _adapter)
             except Exception:
-                pass  # Non-fatal — private API may change between canvasapi versions
+                pass  # Non-fatal - private API may change between canvasapi versions
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
