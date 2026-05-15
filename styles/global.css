@@ -652,7 +652,7 @@ div.st-key-btn_convert_word button::after {
 }
 
 div.st-key-btn_convert_excel button::after {
-    content: "Export spreadsheets as visual PDFs and LLM-ready CSV sidecars." !important;
+    content: "Export each spreadsheet as PDF + structured .txt with all cell data" !important;
 }
 
 div.st-key-btn_convert_html button::after {
