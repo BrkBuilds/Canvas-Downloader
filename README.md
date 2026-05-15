@@ -44,7 +44,7 @@ Free, open source, and runs entirely on your machine.
 
 ### Sync Mode
 
-Keep any local folder **permanently in sync** with its Canvas course — one click to pull every new lecture, updated slide deck, and freshly posted file since your last run. The sync engine tracks seven distinct file states:
+Keep any local folder **permanently in sync** with its Canvas course - one click to pull every new lecture, updated slide deck, and freshly posted file since your last run. The sync engine tracks seven distinct file states:
 
 | State | Description | Default Action |
 |---|---|---|
@@ -58,9 +58,9 @@ Keep any local folder **permanently in sync** with its Canvas course — one cli
 
 Change detection uses **MD5 fingerprinting** stored in a per-folder SQLite manifest (`.canvas_sync.db`). Renamed files are resolved with **Levenshtein distance** so a renamed lecture slides file isn't treated as a brand-new download.
 
-### AI Optimization — NotebookLM-Ready in One Click
+### AI Optimization - NotebookLM-Ready in One Click
 
-Enable a single toggle and every download is automatically converted into a format Google's NotebookLM (or any AI tool) can ingest directly — no manual reformatting needed:
+Enable a single toggle and every download is automatically converted into a format Google's NotebookLM (or any AI tool) can ingest directly - no manual reformatting needed:
 
 | Source | Output | Platform | Engine |
 |---|---|---|---|
@@ -71,9 +71,9 @@ Enable a single toggle and every download is automatically converted into a form
 | `.mp4` `.mov` `.avi` `.mkv` `.webm` (+15 more) | `.mp3` | Win + macOS | FFmpeg via MoviePy |
 | `.html` | `.md` | Win + macOS | BeautifulSoup + markdownify |
 | `.zip` `.tar` `.tar.gz` | extracted | Win + macOS | stdlib (zip-bomb protection) |
-| 50+ code extensions | `.py.txt` `.js.txt` etc. (extension appended — preserves format hint) | Win + macOS | UTF-8 native |
+| 50+ code extensions | `.py.txt` `.js.txt` etc. (extension appended - preserves format hint) | Win + macOS | UTF-8 native |
 
-The Excel data sidecar (`Financials_Data.txt`) is a structured plain-text file containing every sheet's data in CSV format with a cell coordinate grid (A1, B2...) that matches the companion PDF, formula annotations (`250 [Formula: =B2*C2]`), merged cell values repeated across the full merged range, and hidden row/column markers. This lets AI tools cross-reference the visual PDF with precise cell data and understand the underlying formulas — far more useful than PDF parsing alone.
+The Excel data sidecar (`Financials_Data.txt`) is a structured plain-text file containing every sheet's data in CSV format with a cell coordinate grid (A1, B2...) that matches the companion PDF, formula annotations (`250 [Formula: =B2*C2]`), merged cell values repeated across the full merged range, and hidden row/column markers. This lets AI tools cross-reference the visual PDF with precise cell data and understand the underlying formulas - far more useful than PDF parsing alone.
 
 **Note:** The AI data file is generated only for modern Excel formats (`.xlsx`, `.xlsm`). Legacy `.xls` files (Excel 97-2003 format) are converted to PDF only, as the data extraction engine (openpyxl) does not support the binary `.xls` format.
 
@@ -134,26 +134,26 @@ Your token is stored in your OS keyring (Windows Credential Manager / macOS Keyc
 
 There are two paths depending on whether you've been here before:
 
-**First time — Custom Download:**
+**First time - Custom Download:**
 1. Launch Canvas Downloader and connect with your token + Canvas URL
-2. **Step 1** — Select which courses to download
-3. **Step 2** — Configure what to pull: module files, assignments, quizzes, syllabi, etc. Enable the AI conversion suite if you want NotebookLM-ready output
-4. **Step 3** — Watch the live dashboard; a chime plays when everything is done
+2. **Step 1** - Select which courses to download
+3. **Step 2** - Configure what to pull: module files, assignments, quizzes, syllabi, etc. Enable the AI conversion suite if you want NotebookLM-ready output
+4. **Step 3** - Watch the live dashboard; a chime plays when everything is done
 
-**Returning user — Quick Download:**
+**Returning user - Quick Download:**
 - If you've saved a preset from a previous session, it appears on the home screen
-- Hit **Quick Download** to re-run your saved configuration in one click — no stepping through settings again
+- Hit **Quick Download** to re-run your saved configuration in one click - no stepping through settings again
 
 ### 3. Sync Mode
 
-**First time — Analyze, Review & Sync:**
+**First time - Analyze, Review & Sync:**
 1. Switch to **Sync Mode** from the sidebar
 2. Create a sync pair: pick a local folder and link it to a Canvas course
-3. Hit **Analyze** — the engine diffs your folder against Canvas and categorises every file (new, updated, modified, deleted, etc.)
+3. Hit **Analyze** - the engine diffs your folder against Canvas and categorises every file (new, updated, modified, deleted, etc.)
 4. Review the diff per course, adjust per-file actions if needed, confirm, and execute
 
-**Returning user — Quick Sync:**
-- Once sync pairs are configured, the **Quick Sync All** button re-runs the full analysis and sync for all your pairs in one go — no wizard required
+**Returning user - Quick Sync:**
+- Once sync pairs are configured, the **Quick Sync All** button re-runs the full analysis and sync for all your pairs in one go - no wizard required
 
 ---
 
