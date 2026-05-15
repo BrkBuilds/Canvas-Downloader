@@ -58,7 +58,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast'
+    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast', 'openpyxl'
 ]
 for package in packages_to_collect:
     try:

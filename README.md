@@ -66,13 +66,16 @@ Enable a single toggle and every download is automatically converted into a form
 |---|---|---|---|
 | `.pptx` | `.pdf` | Win + macOS | COM automation / AppleScript |
 | `.doc` `.docm` | `.pdf` | Win + macOS | COM automation / AppleScript |
-| `.xls` `.xlsx` | `.pdf` + `_Data.txt` (CSV-formatted data) | Win + macOS | COM automation / AppleScript |
+| `.xlsx` `.xlsm` | `.pdf` + `_Data.txt` (structured AI data) | Win + macOS | openpyxl (data) / COM + AppleScript (PDF) |
+| `.xls` (legacy) | `.pdf` only | Win + macOS | COM automation / AppleScript |
 | `.mp4` `.mov` `.avi` `.mkv` `.webm` (+15 more) | `.mp3` | Win + macOS | FFmpeg via MoviePy |
 | `.html` | `.md` | Win + macOS | BeautifulSoup + markdownify |
 | `.zip` `.tar` `.tar.gz` | extracted | Win + macOS | stdlib (zip-bomb protection) |
 | 50+ code extensions | `.py.txt` `.js.txt` etc. (extension appended — preserves format hint) | Win + macOS | UTF-8 native |
 
-The Excel data sidecar (`Financials_Data.txt`) contains CSV-formatted sheet data with AI context headers — far more useful to language models than a PDF rendering of a spreadsheet.
+The Excel data sidecar (`Financials_Data.txt`) is a structured plain-text file containing every sheet's data in CSV format with a cell coordinate grid (A1, B2...) that matches the companion PDF, formula annotations (`250 [Formula: =B2*C2]`), merged cell values repeated across the full merged range, and hidden row/column markers. This lets AI tools cross-reference the visual PDF with precise cell data and understand the underlying formulas — far more useful than PDF parsing alone.
+
+**Note:** The AI data file is generated only for modern Excel formats (`.xlsx`, `.xlsm`). Legacy `.xls` files (Excel 97-2003 format) are converted to PDF only, as the data extraction engine (openpyxl) does not support the binary `.xls` format.
 
 Safety details: archives enforce a **50 GB uncompressed limit** and **100:1 compression-ratio guard**. Video conversion wraps FFmpeg cleanup in a thread-pool with a 10-second timeout to survive corrupt files.
 
@@ -196,7 +199,7 @@ post_processing.py           ← Unified conversion pipeline runner
 # Converters (each a standalone module)
 pdf_converter.py             ← PowerPoint → PDF
 word_converter.py            ← Word → PDF
-excel_converter.py           ← Excel → PDF + CSV
+excel_converter.py           ← Excel → PDF (COM/AppleScript) + structured AI data file (openpyxl)
 video_converter.py           ← Video → MP3
 md_converter.py              ← HTML → Markdown
 code_converter.py            ← Code files → .txt

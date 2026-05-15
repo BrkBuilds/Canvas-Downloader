@@ -70,7 +70,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
 
         ui.header_placeholder.markdown(f'''
         <div style="margin-bottom: 0.5rem;">
-            <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">🪄 Post-Processing</p>
+            <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">Post-Processing</p>
             <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">Converting {esc(task_name)}</h3>
         </div>
         ''', unsafe_allow_html=True)
@@ -632,7 +632,9 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
     # Each call to _glob_files produces an independent list - no iterator exhaustion.
     if contract.get('convert_excel', False):
-        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
+        # .xls (Excel 97-2003) is binary format openpyxl cannot read; exclude from data extraction.
+        # ExcelToPDF via COM/AppleScript handles .xls fine - it stays in the PDF glob below.
+        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files)
         if excel_data_files:
             run_excel_data_conversion([(f, sm, None) for f in excel_data_files], ui)
 

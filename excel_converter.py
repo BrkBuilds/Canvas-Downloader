@@ -1,10 +1,8 @@
 import csv
 import io
-import os
 import sys
 import time
 import logging
-import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -207,335 +205,223 @@ class ExcelToPDF:
 class ExcelToData:
     """Context manager for batch Excel-to-structured-text extraction.
 
-    Produces a single ``<filename>_Data.txt`` sidecar per workbook, containing
-    Markdown-headed sheet sections with CSV-formatted cell data.  This gives
-    AI tools (ChatGPT, Claude, Gemini, NotebookLM) a structured, ingestible
-    representation of tabular data - far superior to PDF parsing.
-
-    Windows:  COM automation - reads ``sheet.UsedRange.Value`` (2D tuple).
-    macOS:    AppleScript - extracts ``value of used range`` as TSV, then
-              reformats via Python's ``csv`` module.
+    Uses openpyxl (cross-platform, no COM/AppleScript dependency) to produce a
+    ``<filename>_Data.txt`` sidecar per workbook with:
+    - Coordinate grid (A/B/C columns, 1/2/3 rows) matching the companion PDF
+    - Formula annotations: ``250 [Formula: =B2*C2]``
+    - Merged cell values repeated across the full merged range
+    - Hidden row/column markers: ``[HIDDEN]``
+    - In-cell newlines converted to ``<br>`` to preserve CSV line integrity
 
     The original ``.xlsx`` is intentionally **NOT** deleted.  If the user also
     has Excel→PDF enabled, that converter handles deletion.
+
+    Note: openpyxl reads cached formula results (``data_only=True``).  Values
+    reflect what was computed when the file was last saved in Excel.
     """
 
     _META_CONTEXT = (
-        "META-CONTEXT: This document contains extracted tabular data (values only) "
-        "from a single- or multi-sheet Microsoft Excel workbook. The data is structured "
-        "as Comma-Separated Values (CSV). Each sheet's data is separated by a markdown "
-        "header (### Sheet: [Name]). Empty commas represent blank cells used for grid spacing."
+        "META-CONTEXT: This document contains structured data extracted from a Microsoft Excel workbook. "
+        "Each sheet is separated by a markdown header (### Sheet: [Name]). "
+        "Data is formatted as CSV with a coordinate grid: the first row contains column letters (A, B, C...) "
+        "and the first column contains row numbers (1, 2, 3...) that match the companion PDF. "
+        "Cell annotations: [Formula: =...] shows the underlying formula for calculated cells; "
+        "[HIDDEN] marks rows or columns that were hidden in the original file. "
+        "Merged cell values are repeated across the full merged range. "
+        "Percentage-formatted cells show the display value with a % suffix (e.g. 15.5%). "
+        "Date cells are formatted as YYYY-MM-DD. Boolean cells show TRUE or FALSE. "
+        "Empty cells are blank."
     )
 
-    def __init__(self):
-        self.app = None
-
-    # ── lifecycle ──────────────────────────────────────────────────
     def __enter__(self):
-        if sys.platform == 'darwin':
-            return self  # AppleScript path, no COM needed
-        try:
-            import pythoncom
-            pythoncom.CoInitialize()
-        except ImportError:
-            pass
-        except Exception:
-            pass
-        self._init_app()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._kill_app()
-        try:
-            import pythoncom
-            import threading
-            t = threading.Thread(target=pythoncom.CoUninitialize, daemon=True)
-            t.start()
-            t.join(timeout=5.0)
-        except Exception:
-            pass
-
-    # ── COM management ─────────────────────────────────────────────
-    def _init_app(self):
-        """Spin up a fresh, locked-down Excel instance."""
-        try:
-            import win32com.client
-            self.app = win32com.client.DispatchEx("Excel.Application")
-            self.app.Visible = False
-            self.app.DisplayAlerts = False
-            self.app.EnableEvents = False
-            try:
-                self.app.AutomationSecurity = 3
-            except Exception:
-                pass
-            try:
-                self.app.Interactive = False
-            except Exception:
-                pass
-        except ImportError:
-            logger.warning("pywin32 not installed or not on Windows. Excel data extraction disabled.")
-            self.app = None
-        except Exception as e:
-            logger.error(f"[COM] Excel init failed: {e}")
-            self.app = None
-
-    def _kill_app(self):
-        """Forcefully shut down the COM instance."""
-        if self.app:
-            try:
-                self.app.Quit()
-            except Exception:
-                pass
-        self.app = None
-
-    def _is_alive(self) -> bool:
-        if not self.app:
-            return False
-        try:
-            _ = self.app.Version
-            return True
-        except Exception:
-            return False
-
-    def _ensure_app(self):
-        if not self._is_alive():
-            self._kill_app()
-            self._init_app()
+        pass
 
     # ── helpers ────────────────────────────────────────────────────
 
     @staticmethod
-    def _clean_value(v):
-        """Coerce a single COM cell value to a clean string."""
-        if v is None:
-            return ""
-        # COM sometimes returns datetime objects, floats, etc.
-        return str(v)
-
-    @staticmethod
-    def _rows_to_csv_text(rows) -> str:
-        """Convert a 2D iterable to CSV-formatted text using csv.writer."""
-        buf = io.StringIO()
-        writer = csv.writer(buf, lineterminator='\n')
-        for row in rows:
-            writer.writerow(row)
-        return buf.getvalue()
-
-    @staticmethod
-    def _is_empty_range(data) -> bool:
-        """Check if UsedRange.Value returned essentially empty data."""
-        if data is None:
-            return True
-        # Single-cell ranges return a scalar, not a tuple
-        if not isinstance(data, tuple):
-            return str(data).strip() == ""
-        for row in data:
-            if not isinstance(row, tuple):
-                # Single-column range: data is a 1D tuple of scalars
-                if str(row).strip() != "":
-                    return False
-            else:
-                for cell in row:
-                    if cell is not None and str(cell).strip() != "":
-                        return False
-        return True
-
-    # ── AppleScript bridge (macOS) ─────────────────────────────────
-
-    def _extract_applescript(self, src: Path) -> list:
-        """Extract sheet data from Excel via AppleScript on macOS.
-
-        Returns list of (sheet_name, csv_text) tuples. Uses temporary native
-        CSV export to prevent internal cell linebreaks from destroying tabular alignment.
-        """
-        import tempfile
-        import shutil
-
-        posix_src = str(src.resolve()).replace('"', '\\"')
-        temp_dir = Path(tempfile.gettempdir()) / f"excel_data_{os.urandom(8).hex()}"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        posix_dir = str(temp_dir.resolve())
-
-        # Safely dump each sheet to a native CSV file using Mac Office
-        # Sheet CSVs are named "{index}_{safeName}.csv" to avoid collisions on
-        # the case-insensitive macOS filesystem when two sheets share a name.
-        # The AppleScript sanitizes the sheet name (replacing '/' with '-') before
-        # using it in the file path, and returns "index\toriginalName" lines so
-        # Python can reconstruct the filename with the same sanitization applied.
-        script = f'''
-            set output to ""
-            tell application "Microsoft Excel"
-                set display alerts to false
-                open POSIX file "{posix_src}"
-                set theBook to active workbook
-                set sheetCount to count of sheets of theBook
-                repeat with i from 1 to sheetCount
-                    set theSheet to sheet i of theBook
-                    set sheetName to name of theSheet
-                    try
-                        -- Sanitize sheet name: replace '/' with '-' so it is safe as a filename component
-                        set safeName to do shell script "printf '%s' " & quoted form of (sheetName as text) & " | tr '/' '-'"
-                        tell theSheet to select
-                        set outPath to "{posix_dir}/" & i & "_" & safeName & ".csv"
-                        save as active sheet filename POSIX file outPath file format CSV
-                        set output to output & i & tab & sheetName & linefeed
-                    end try
-                end repeat
-                close theBook saving no
-            end tell
-            return output
-        '''
+    def _build_merged_value_map(ws_val) -> dict:
+        """Map (row, col) → (value, number_format) for all non-top-left cells in merged ranges."""
+        merged = {}
         try:
-            result = subprocess.run(
-                ['osascript', '-e', script],
-                capture_output=True, text=True, timeout=120
-            )
-            sheets = []
-            if result.returncode == 0:
-                for line in result.stdout.splitlines():
-                    line = line.strip()
-                    if not line or '\t' not in line:
-                        continue
-                    idx_str, s_name = line.split('\t', 1)
-                    # Mirror the AppleScript sanitization to locate the CSV file
-                    safe_name = s_name.strip().replace('/', '-')
-                    csv_path = temp_dir / f"{idx_str.strip()}_{safe_name}.csv"
-                    if csv_path.exists():
-                        # Read the saved CSV and standardise encoding
-                        try:
-                            with open(csv_path, 'r', encoding='utf-8-sig', errors='replace') as f:
-                                csv_text = f.read()
-                        except UnicodeDecodeError:
-                            with open(csv_path, 'r', encoding='mac_roman', errors='replace') as f:
-                                csv_text = f.read()
+            for rng in ws_val.merged_cells.ranges:
+                top_cell = ws_val.cell(rng.min_row, rng.min_col)
+                top_val = top_cell.value
+                top_fmt = top_cell.number_format or 'General'
+                for row in range(rng.min_row, rng.max_row + 1):
+                    for col in range(rng.min_col, rng.max_col + 1):
+                        if row == rng.min_row and col == rng.min_col:
+                            continue
+                        merged[(row, col)] = (top_val, top_fmt)
+        except Exception:
+            pass
+        return merged
 
-                        # Skip completely empty sheets
-                        if csv_text.strip():
-                            sheets.append((s_name.strip(), csv_text.strip() + '\n'))
+    @staticmethod
+    def _format_value(raw_val, number_format: str) -> str:
+        """Convert a raw openpyxl cell value to a display string with type awareness."""
+        import datetime
+        if isinstance(raw_val, bool):
+            return 'TRUE' if raw_val else 'FALSE'
+        if isinstance(raw_val, datetime.datetime):
+            if raw_val.hour == 0 and raw_val.minute == 0 and raw_val.second == 0:
+                return raw_val.strftime('%Y-%m-%d')
+            return raw_val.strftime('%Y-%m-%d %H:%M')
+        if isinstance(raw_val, datetime.date):
+            return raw_val.strftime('%Y-%m-%d')
+        if isinstance(raw_val, (int, float)) and '%' in (number_format or ''):
+            return f"{raw_val * 100:.4g}%"
+        return str(raw_val)
 
-            else:
-                logger.error(f"[AppleScript] Excel data extraction failed: {result.stderr.strip()}")
-            return sheets
+    @staticmethod
+    def _hidden_rows(ws) -> set:
+        try:
+            return {i for i, rd in ws.row_dimensions.items() if rd.hidden}
+        except Exception:
+            return set()
 
-        except FileNotFoundError:
-            logger.error("[AppleScript] osascript not found")
+    @staticmethod
+    def _hidden_cols(ws) -> set:
+        try:
+            from openpyxl.utils import column_index_from_string
+            return {column_index_from_string(letter) for letter, cd in ws.column_dimensions.items() if cd.hidden}
+        except Exception:
+            return set()
+
+    @staticmethod
+    def _clean(text: str) -> str:
+        """Strip CR and replace LF with <br> so in-cell newlines don't break CSV lines."""
+        return text.replace('\r', '').replace('\n', ' <br> ')
+
+    def _extract_sheet(self, ws_val, ws_form) -> list[list[str]]:
+        """Return one sheet as a 2D list of strings with coordinate grid header."""
+        from openpyxl.utils import get_column_letter
+
+        min_r, min_c = ws_val.min_row, ws_val.min_column
+        max_r, max_c = ws_val.max_row, ws_val.max_column
+
+        if min_r is None:
             return []
-        except subprocess.TimeoutExpired:
-            logger.error("[AppleScript] Excel data extraction timed out after 120s - attempting recovery")
-            from engine.applescript_bridge import _try_close_document_after_timeout
-            _try_close_document_after_timeout("Excel", str(src.resolve()).replace('"', '\\"'))
-            return []
-        except Exception as e:
-            logger.error(f"[AppleScript] Excel data extraction error: {e}")
-            return []
-        finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+
+        # Guard against inflated dimension attributes (Excel sometimes writes max_row=1048576
+        # for sheets with only formatting applied to full columns, causing catastrophic iteration).
+        max_r = min(max_r, 20000)
+        max_c = min(max_c, 1000)
+
+        merged = self._build_merged_value_map(ws_val)
+        hidden_row_set = self._hidden_rows(ws_val)
+        hidden_col_set = self._hidden_cols(ws_val)
+
+        rows_out = []
+
+        # Coordinate header row: ["", "A", "B", "C", ...]
+        header = [""] + [get_column_letter(c) for c in range(min_c, max_c + 1)]
+        rows_out.append(header)
+
+        for row_idx in range(min_r, max_r + 1):
+            row_hidden = row_idx in hidden_row_set
+            row_label = f"{row_idx} [HIDDEN]" if row_hidden else str(row_idx)
+            row_data = [row_label]
+
+            for col_idx in range(min_c, max_c + 1):
+                col_hidden = col_idx in hidden_col_set
+
+                merged_entry = merged.get((row_idx, col_idx))
+                if merged_entry is not None:
+                    raw_val, cell_fmt = merged_entry
+                else:
+                    cell = ws_val.cell(row=row_idx, column=col_idx)
+                    raw_val = cell.value
+                    cell_fmt = cell.number_format or 'General'
+
+                form_val = ws_form.cell(row=row_idx, column=col_idx).value
+                has_formula = isinstance(form_val, str) and form_val.startswith('=')
+
+                if raw_val is None and not has_formula:
+                    cell_str = "[HIDDEN]" if col_hidden else ""
+                elif raw_val is None:
+                    # Formula with no cached value
+                    cell_str = f"[Formula: {self._clean(form_val)}]"
+                    if col_hidden:
+                        cell_str += " [HIDDEN]"
+                else:
+                    clean_val = self._clean(self._format_value(raw_val, cell_fmt))
+                    if has_formula:
+                        cell_str = f"{clean_val} [Formula: {self._clean(form_val)}]"
+                    else:
+                        cell_str = clean_val
+                    if col_hidden:
+                        cell_str += " [HIDDEN]"
+
+                row_data.append(cell_str)
+
+            rows_out.append(row_data)
+
+        return rows_out
 
     # ── conversion ─────────────────────────────────────────────────
+
     def convert(self, excel_path: str | Path) -> tuple[str | None, str]:
         """Extract data from *excel_path* into a ``_Data.txt`` sidecar.
 
         Returns ``(data_txt_path, "")`` on success
         or ``(None, error_string)`` on failure.
         """
-        src = Path(excel_path).resolve()
-        # Output: Financials.xlsx → Financials_Data.txt
-        dst = src.with_name(src.stem + "_Data.txt")
-
-        # macOS: AppleScript bridge
-        if sys.platform == 'darwin':
-            sheets = self._extract_applescript(src)
-            if not sheets:
-                return None, "AppleScript data extraction failed (is Microsoft Excel installed?)"
-            try:
-                with open(dst, 'w', encoding='utf-8-sig', newline='') as f:
-                    f.write(self._META_CONTEXT + "\n\n")
-                    for sheet_name, csv_text in sheets:
-                        f.write(f"### Sheet: {sheet_name}\n")
-                        f.write(csv_text)
-                        f.write("\n\n")
-                return str(dst), ""
-            except PermissionError:
-                return None, "Data sidecar in use by another program"
-            except Exception as e:
-                return None, f"Failed to write data file: {e}"
-
-        # Windows: COM automation
-        self._ensure_app()
-        if not self.app:
-            return None, "Excel COM application could not be initialized."
+        try:
+            import openpyxl
+        except ImportError:
+            return None, "openpyxl is not installed (run: pip install openpyxl)"
 
         from ui_helpers import office_safe_path
 
-        # Reuse office_safe_path for long-path safety.
-        # We only need the safe source path; we'll write the _Data.txt
-        # to the true long-path destination directly.
-        with office_safe_path(src) as (safe_src, _safe_pdf, _true_pdf):
-            abs_excel = str(safe_src)
-            wb = None
+        src = Path(excel_path).resolve()
+        dst = src.with_name(src.stem + "_Data.txt")
 
+        # office_safe_path copies the file to a short temp path for paths >240 chars
+        # (Win32 COM limitation).  For typical paths it is a zero-cost pass-through.
+        # Using it here avoids the \\?\ prefix that make_long_path adds unconditionally,
+        # which zipfile/openpyxl can choke on depending on the Windows configuration.
+        with office_safe_path(src) as (safe_src, _, _):
             try:
-                wb = self.app.Workbooks.Open(abs_excel, UpdateLinks=0, ReadOnly=True)
-                time.sleep(0.3)
-
-                sheet_sections = []
-                for sheet in wb.Worksheets:
-                    try:
-                        data = sheet.UsedRange.Value
-                    except Exception:
-                        continue  # Skip sheets that can't be read
-
-                    if self._is_empty_range(data):
-                        continue  # Skip empty sheets
-
-                    # Normalize the data structure
-                    rows = []
-                    if not isinstance(data, tuple):
-                        # Single cell
-                        rows.append([self._clean_value(data)])
-                    elif data and not isinstance(data[0], tuple):
-                        # Single-row range: data is a flat tuple
-                        rows.append([self._clean_value(v) for v in data])
-                    else:
-                        # Normal 2D range
-                        for row in data:
-                            rows.append([self._clean_value(v) for v in row])
-
-                    csv_text = self._rows_to_csv_text(rows)
-                    sheet_sections.append((sheet.Name, csv_text))
-
-                wb.Close(SaveChanges=False)
-                wb = None
-                time.sleep(0.2)
-
-                if not sheet_sections:
-                    return None, "No sheets with data found in workbook."
-
-                # Write unified _Data.txt
-                try:
-                    with open(str(dst), 'w', encoding='utf-8-sig', newline='') as f:
-                        f.write(self._META_CONTEXT + "\n\n")
-                        for sheet_name, csv_text in sheet_sections:
-                            f.write(f"### Sheet: {sheet_name}\n")
-                            f.write(csv_text)
-                            f.write("\n\n")
-                except PermissionError:
-                    return None, "Data sidecar in use by another program"
-                except Exception as e:
-                    return None, f"Failed to write data file: {e}"
-
-                return str(dst), ""
-
+                wb_val = openpyxl.load_workbook(str(safe_src), data_only=True)
+                wb_form = openpyxl.load_workbook(str(safe_src), data_only=False)
             except Exception as e:
-                error_msg = str(e)
-                if wb is not None:
-                    try:
-                        wb.Close(SaveChanges=False)
-                    except Exception:
-                        pass
-                # SELF-HEAL
-                self._kill_app()
-                self._init_app()
-                return None, f"COM Error: {error_msg}"
+                return None, f"Failed to open workbook: {e}"
+
+        # Both workbooks are fully in memory; temp copy (if any) is now released.
+        sheet_sections = []
+        for sheet_name in wb_val.sheetnames:
+            try:
+                rows = self._extract_sheet(wb_val[sheet_name], wb_form[sheet_name])
+                if rows:
+                    sheet_sections.append((sheet_name, rows))
+            except Exception as e:
+                logger.warning(f"[openpyxl] Skipping sheet '{sheet_name}': {e}")
+
+        wb_val.close()
+        wb_form.close()
+
+        if not sheet_sections:
+            return None, "No sheets with data found in workbook."
+
+        try:
+            with open(str(dst), 'w', encoding='utf-8-sig', newline='') as f:
+                f.write(self._META_CONTEXT + "\n\n")
+                for sheet_name, rows in sheet_sections:
+                    f.write(f"### Sheet: {sheet_name}\n")
+                    buf = io.StringIO()
+                    writer = csv.writer(buf, lineterminator='\n')
+                    for row in rows:
+                        writer.writerow(row)
+                    f.write(buf.getvalue())
+                    f.write("\n\n")
+        except PermissionError:
+            return None, "Data sidecar in use by another program"
+        except Exception as e:
+            return None, f"Failed to write data file: {e}"
+
+        return str(dst), ""
 
 
