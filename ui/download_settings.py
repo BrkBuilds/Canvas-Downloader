@@ -284,7 +284,7 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>If I enable PowerPoint to PDF, does the original file get deleted?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "Yes - the original PowerPoint file is replaced by the PDF to avoid duplicates. The same applies to Legacy Word to PDF and Video to Audio. <b>Exception:</b> Excel keeps the original spreadsheet alongside the PDF and the AI data file — you end up with three files per spreadsheet. If you need to keep originals for other converters, skip those conversions or make a backup first."
+        "Yes - the original PowerPoint file is replaced by the PDF to avoid duplicates. The same applies to Legacy Word to PDF and Video to Audio. <b>Exception:</b> Excel keeps the original spreadsheet alongside the PDF and the AI data file - you end up with three files per spreadsheet. If you need to keep originals for other converters, skip those conversions or make a backup first."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does Submissions (Results) save, and will my professor know?</summary>"

@@ -34,11 +34,16 @@ OutputBaseFilename=Canvas_Downloader_Setup_{#AppVersion}
 ; Branding
 SetupIconFile=assets\icon.ico
 WizardStyle=modern
-WizardSmallImageFile=assets\icon.png
+WizardImageFile=assets\WizardImageFile.png
+WizardSmallImageFile=assets\WizardSmallImageFile.png
 
-; Compression
-Compression=lzma2/ultra64
-SolidCompression=yes
+; Compression (DEV MODE - FAST)
+Compression=none
+SolidCompression=no
+
+; (Revert to these when building the final release:)
+; Compression=lzma2/ultra64
+; SolidCompression=yes
 
 ; Platform requirements
 MinVersion=10.0
@@ -67,7 +72,8 @@ Name: "startmenu";  Description: "Create a &Start Menu shortcut";  GroupDescript
 Name: "desktopicon"; Description: "Create a &desktop shortcut";     GroupDescription: "Shortcuts:"
 
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Comment out this line during UI testing so it doesn't pack your whole app
+; Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; Start Menu (modern: no Uninstall entry - users remove via Settings > Apps)
@@ -82,3 +88,25 @@ Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait
 [UninstallDelete]
 ; Remove everything Inno Setup placed in {app} on uninstall
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+procedure InitializeWizard;
+var
+  IndentOffset, RightMarginOffset: Integer;
+begin
+  // 1. Shift elements to the right to perfectly left-align with "Which additional tasks..."
+  // ScaleX ensures this scales correctly on high-resolution/4K monitors
+  IndentOffset := ScaleX(12);
+
+  // 2. Shrink the width to force text to wrap before hitting the icon's vertical line
+  RightMarginOffset := ScaleX(32);
+
+  // --- Adjust the Body Text ("Select the additional tasks...") ---
+  WizardForm.SelectTasksLabel.Left := WizardForm.SelectTasksLabel.Left + IndentOffset;
+  WizardForm.SelectTasksLabel.Width := WizardForm.SelectTasksLabel.Width - IndentOffset - RightMarginOffset;
+
+  // --- Adjust the Task Checklist ("Shortcuts:") ---
+  // We apply the exact same offset so it stays perfectly left-aligned with the text above it
+  WizardForm.TasksList.Left := WizardForm.TasksList.Left + IndentOffset;
+  WizardForm.TasksList.Width := WizardForm.TasksList.Width - IndentOffset - RightMarginOffset;
+end;
