@@ -14,10 +14,90 @@ Usage:
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from dataclasses import dataclass
+from html import escape as _html_escape
 
 import theme
+
+# ═══════════════════════════════════════════════
+# SVG Icon Constants (inline, no emoji)
+# ═══════════════════════════════════════════════
+
+def _download_svg(color: str) -> str:
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
+        f'fill="none" stroke="{color}" stroke-width="2.5" stroke-linecap="round" '
+        f'stroke-linejoin="round" style="display:inline-block;vertical-align:middle;'
+        f'flex-shrink:0;margin-top:-1px">'
+        f'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+        f'<polyline points="7 10 12 15 17 10"/>'
+        f'<line x1="12" y1="15" x2="12" y2="3"/>'
+        f'</svg>'
+    )
+
+def _gear_svg(color: str) -> str:
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
+        f'fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" '
+        f'stroke-linejoin="round" style="display:inline-block;vertical-align:middle;'
+        f'flex-shrink:0;margin-top:-1px">'
+        f'<circle cx="12" cy="12" r="3"/>'
+        f'<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06'
+        f'a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09'
+        f'A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83'
+        f'l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09'
+        f'A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83'
+        f'l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09'
+        f'a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83'
+        f'l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09'
+        f'a1.65 1.65 0 0 0-1.51 1z"/>'
+        f'</svg>'
+    )
+
+_ACTIVE_FILE_PREFIXES = ('Downloading file: ', 'Created link: ', 'Creating link: ', 'Saved: ')
+
+
+# ═══════════════════════════════════════════════
+# Active File Indicator
+# ═══════════════════════════════════════════════
+
+def render_active_file(placeholder, filename: str, phase: str = 'download') -> None:
+    """Render the active-file indicator with SVG icon and left-accent card design.
+
+    Replaces the old emoji-based 'Currently downloading:' label.
+    phase: 'download' | 'postprocess'
+    Strips Canvas callback prefixes ('Downloading file: ', etc.) automatically.
+    """
+    clean = str(filename)
+    for pfx in _ACTIVE_FILE_PREFIXES:
+        if clean.startswith(pfx):
+            clean = clean[len(pfx):]
+            break
+    clean = _html_escape(clean)
+
+    if phase == 'postprocess':
+        color = '#f97316'
+        label = 'Processing'
+        icon = _gear_svg(color)
+    else:
+        color = theme.ACCENT_LINK
+        label = 'Downloading'
+        icon = _download_svg(color)
+
+    placeholder.markdown(f'''
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 14px;
+        background:rgba(255,255,255,0.04);
+        border-radius:6px; margin-bottom:12px; overflow:hidden;">
+      {icon}
+      <div style="overflow:hidden; min-width:0; flex:1;">
+        <div style="color:{color}; font-size:0.7rem; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.06em; line-height:1; margin-bottom:4px;">{label}</div>
+        <div style="color:{theme.TEXT_PRIMARY}; font-size:0.875rem; font-weight:500;
+            background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.5;">{clean}</div>
+      </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════
@@ -50,7 +130,7 @@ class DashboardMetrics:
     eta_string: str = "--:--"
     percent: int = 0
     # Header content
-    header_label: str = "📦 Downloading Courses"
+    header_label: str = "Downloading Courses"
     course_name: str = ""
 
 
@@ -129,7 +209,7 @@ def render_terminal_log(placeholders: DashboardPlaceholders, log_deque) -> None:
     """Render the terminal-style log widget from a deque of HTML-safe lines."""
     log_content = "<br>".join(reversed(list(log_deque))) if log_deque else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     placeholders.log.markdown(f'''
-    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 140px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {log_content}
     </div>
     ''', unsafe_allow_html=True)
@@ -228,7 +308,7 @@ def build_terminal_html(lines) -> str:
     """Return the terminal-log HTML as a string (for sync_ui.py)."""
     joined = "<br>".join(reversed(list(lines))) if lines else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     return f"""
-    <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.5; min-height: 200px; max-height: 250px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+    <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.6; height: 160px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {joined}
     </div>
     """

@@ -198,6 +198,14 @@ def cleanup_download_state() -> None:
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
+    # Clear course selection — download is done, start fresh for next run.
+    # Both the logical list AND the individual checkbox widget keys must be
+    # cleared; Streamlit uses stored widget keys on re-render if they exist.
+    st.session_state['selected_course_ids'] = []
+    for key in list(st.session_state.keys()):
+        if key.startswith('dl_chk_'):
+            del st.session_state[key]
+
     st.session_state['step'] = 1
 
 
