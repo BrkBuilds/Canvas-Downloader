@@ -471,7 +471,7 @@ def _update_last_synced_batch(updates_list):
 def _select_sync_folder():
     """Open native folder picker and store result in pending_sync_folder."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
 
