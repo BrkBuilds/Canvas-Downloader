@@ -10,6 +10,10 @@
 - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 
 ## Recent Activity
+- **Session 2026-05-16: FFmpeg UI Dependency Removal**
+    - **UI Text Purge**: Removed all user-facing references to FFmpeg as a mandatory external dependency in `ui/download_settings.py`.
+    - **Documentation Updates**: Purged "Requires FFmpeg" notes and manual installation guides from `docs/guide.html` and `docs/index.html`.
+    - **UX Streamlining**: Simplified the FAQ and requirement sections to reflect that the software is fully self-contained, handling all conversion requirements automatically through its bundled architecture.
 - **Session 2026-05-08: UI Standardization & "Physical Volume" Aesthetic Refinement**
     - **Global Button Icon Alignment**: Standardized button icon alignment across `sync_ui.py`, `course_selector.py`, `ui_shared.py`, `sync_dialogs.py`, `auth.py`, and `sync_review.py`. Removed all legacy manual top-offsets (e.g., `top: -2px`, `translateY(-2px)`) in favor of a robust flexbox-based centering strategy.
     - **Padding Balance**: Adjusted vertical padding on primary action buttons (from `0px 10px 4px 10px` to `0px 10px`) to ensure perfect visual centering of icons and text.

@@ -75,6 +75,15 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startmenu
 ; Desktop
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
+[Registry]
+; Register AUMID so Windows attributes toast notifications to Canvas Downloader.
+; Without this, clicking a notification activates an unregistered AUMID and
+; Windows foregrounds a random window (e.g. whatever was last active).
+; Flags: uninsdeletekey ensures cleanup on uninstall.
+Root: HKCU; Subkey: "SOFTWARE\Classes\AppUserModelId\CanvasDownloader.App"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "SOFTWARE\Classes\AppUserModelId\CanvasDownloader.App"; ValueType: string; ValueName: "DisplayName"; ValueData: "Canvas Downloader"
+Root: HKCU; Subkey: "SOFTWARE\Classes\AppUserModelId\CanvasDownloader.App"; ValueType: string; ValueName: "IconUri"; ValueData: "{app}\assets\icon.ico"
+
 [Run]
 ; "Launch Canvas Downloader" checkbox on the final page
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
