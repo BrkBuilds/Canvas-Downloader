@@ -9,7 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 from ui_helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
-from ui_shared import render_help_card
+from ui_shared import render_help_card, HELP_ICONS
 from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS
 
 
@@ -775,28 +775,28 @@ div.st-key-page_nav_quick_back button:hover {{
         _qd_help_text = (
             "<b>Quick Download is the fastest way to get your course materials without worrying about technical settings.</b>"
             "<br><br>"
-            "<b>How it works</b><br>"
+            f"<b>{HELP_ICONS['gear']} How it works</b><br>"
             "Instead of manually configuring dozens of options, you choose a <b>Preset</b>. "
             "A preset is a 'recipe' that defines exactly what gets downloaded and how it's organized."
             "<br><br>"
-            "<b>Picking the right Preset</b><br>"
-            "<ul style='margin-top: 5px; margin-bottom: 10px; padding-left: 20px; color: #cbd5e1; font-size: 0.9rem;'>"
+            f"<b>{HELP_ICONS['save']} Picking the right Preset</b><br>"
+            "<ul style='margin-top: 5px; margin-bottom: 10px; padding-left: 20px; font-size: 0.9rem;'>"
             "<li><b>Complete Canvas Download</b>: The standard choice. Downloads every file, assignment, and quiz, keeping the module structure intact.</li>"
             "<li><b>AI Study Pack</b>: Optimized for AI analysis. Downloads everything and automatically converts Office files (PPTX/Word) to PDF for easy uploading to LLMs.</li>"
             "<li><b>NotebookLM Ready</b>: Special 'Flat' export. All files are converted to text-friendly formats and placed in one folder, bypassing NotebookLM's subfolder limitations.</li>"
             "<li><b>Slides & PDFs Only</b>: Clean and focused. Only grabs lecture slides and PDF documents, skipping assignments and administrative files.</li>"
             "<li><b>Files Only</b>: Pure file sync. Only downloads items found in the 'Files' tab of your course.</li>"
             "</ul>"
-            "<b>Organization Styles</b><br>"
+            f"<b>{HELP_ICONS['folder']} Organization Styles</b><br>"
             "You can choose between <b>Subfolders</b> (matches Canvas Modules exactly) or <b>Flat</b> (all files in one single folder). "
             "<i>Note: Some presets lock this choice to ensure compatibility with specific tools.</i>"
             "<br><br>"
-            "<b>Batch Processing</b><br>"
+            f"<b>{HELP_ICONS['package']} Batch Processing</b><br>"
             "The preset you choose will be applied to <b>ALL</b> courses you selected in the previous step. "
             "You can review your selected courses in the dropdown at the bottom of the page."
             "<hr>"
-            "<b>Pro Tip:</b> If you need to tweak individual settings (like specific file extensions or advanced AI settings), "
-            "click <b>'Go to Custom Download'</b> in the top right corner."
+            f"<b>{HELP_ICONS['lightbulb']} Pro Tip:</b> If you need to tweak individual settings (like specific file extensions or advanced AI settings), "
+            f"click <b>{HELP_ICONS['gear']} 'Go to Custom Download'</b> in the top right corner."
         )
 
         # Snug Header Hack - H1 + Help button on one flex row

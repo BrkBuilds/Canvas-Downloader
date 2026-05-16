@@ -182,7 +182,7 @@ def show_sync_complete():
             from ui.amber_notice import render_amber_notice
             render_amber_notice(
                 f"Quick Sync skipped {joined_parts}.",
-                icon="⚡",
+                icon="⚠️",
                 detail="To download them, run a normal 'Analyze, Review & Sync' and select them manually.",
             )
 

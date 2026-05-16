@@ -20,6 +20,69 @@ SECONDARY_ENTITY_ICONS = {
     'page':         '📄',
 }
 
+# --- Professional inline SVG icons for help card section headers ---
+# Feather-style stroke icons. Use inside help card text_html to replace emojis.
+# Sized at 18×18 with themed stroke colors for consistency.
+_ICON_STYLE = 'display:inline-block;vertical-align:middle;position:relative;top:-1px;margin:0 4px;flex-shrink:0;'
+_MAT_STYLE = '<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,1,0" rel="stylesheet">'
+
+def _mat(icon_name, color='#38BDF8', size=18):
+    """Render a Google Material Symbols Rounded icon natively."""
+    # Material icons have internal padding, so we boost the font-size slightly
+    # to visually match the bounding box of raster images of the same nominal size.
+    adj_size = size + 4
+    return (
+        f'{_MAT_STYLE}<span class="material-symbols-rounded" '
+        f'style="font-size: {adj_size}px; color: {color}; vertical-align: middle; '
+        f'margin: 0 4px; top: -1px; position: relative;">{icon_name}</span>'
+    )
+
+def _img(filename, size=18):
+    from ui_helpers import get_base64_image
+    b64 = get_base64_image(f"assets/{filename}")
+    mime = "image/svg+xml" if filename.lower().endswith('.svg') else "image/png"
+    return f'<img src="data:{mime};base64,{b64}" width="{size}" height="{size}" style="{_ICON_STYLE} top: -2px;" />'
+
+HELP_ICONS = {
+    'lightbulb': _mat('lightbulb'),
+    'folder': _mat('folder'),
+    'gear': _img('icon_custom_download.png'),
+    'bolt': _img('icon_sync_quick.png'),
+    'bolt_small': _img('icon_sync_quick.png', size=11),
+    'search': _img('icon_sync_review.png'),
+    'search_small': _img('icon_sync_review.png', size=11),
+    'save': _img('icon_preset_user.png'),
+    'quick_download': _img('icon_quick_download.png'),
+    'shield': _mat('shield'),
+    'download': _img('icon_download.png'),
+    'database': _mat('database'),
+    'wrench': _mat('build'),
+    'question': _mat('help'),
+    'star': _mat('star'),
+    'warning': '⚠️',
+    'package': _mat('inventory_2'),
+    'check_circle': _mat('check_circle'),
+    'cursor': _mat('arrow_selector_tool'),
+    'eye': _mat('visibility'),
+    'refresh': _img('icon_sync.png'),
+    'compare': _img('icon_sync_pair.png'),
+    'archive': _mat('archive'),
+    'menu': _mat('menu'),
+    'folder_open': _img('icon_preset_builtin.png'),
+    'restore': _img('icon_restore.png', size=16),
+    'calendar': _mat('calendar_today', color='#bac2cc'),
+    'error': _mat('error', color='#ff7b72'),
+    
+    # Sync Review Category Assets
+    'cat_new': _img('Icon_Sync_Review_New_File.png', size=16),
+    'cat_update': _img('Icon_Sync_Review_Update.png', size=16),
+    'cat_miss': _img('Icon_Sync_Review_Missing_File.png', size=16),
+    'cat_locdel': _img('Icon_Sync_Review_Locally_Deleted.png', size=16),
+    'cat_candel': _img('Icon_Sync_Review_Deleted_On_Canvas.png', size=16),
+    'cat_ignore': _img('Icon_Ignore.svg', size=16),
+    'cat_uptodate': _mat('check_circle', color='#10B981', size=16)
+}
+
 
 def render_completion_card(synced_count: int, error_count: int,
                            total_bytes: int, mode: str = 'download',
@@ -693,7 +756,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     """Render a rich HTML preview of active settings using color-coded badges."""
     # Build Blue Core Badges
     _mode_disp = "With Subfolders" if settings.get('download_mode') == 'modules' else "All in One Folder"
-    _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Presentations & PDFs"
+    _filter_disp = "All Files" if settings.get('file_filter') == 'all' else "Slides & PDFs"
     
     c_core = "#3fd9ff"
     core_html = f"""
@@ -806,7 +869,7 @@ def error_log_dialog(log_paths):
         st.rerun(scope="app")
 
 
-def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "💡", mode: str = "auto"):
+def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "", mode: str = "auto"):
     """
     Renders a unified Help Explainer Card component.
     
@@ -846,10 +909,18 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "�
                 st.session_state[state_key] = False
                 st.rerun()
             
+            # Determine icon HTML: SVG content rendered directly, empty string skipped, fallback to emoji span
+            if not icon:
+                _icon_html = HELP_ICONS.get('lightbulb', '')
+            elif icon.strip().startswith('<svg') or icon.strip().startswith('<img'):
+                _icon_html = icon
+            else:
+                _icon_html = f'<span style="font-size: 1.1rem; line-height: 1;">{icon}</span>'
+
             st.markdown(f"""
             <div>
                 <p style="margin: 0 0 6px 0; font-weight: 700; color: #f8fafc; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.1rem; line-height: 1;">{icon}</span>{esc(title)}
+                    {_icon_html}{esc(title)}
                 </p>
                 <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); line-height: 1.5;">
                     {text_html}
