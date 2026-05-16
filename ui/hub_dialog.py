@@ -102,7 +102,7 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
 def hub_select_folder():
     """Open native folder picker for the Hub dialog (isolated state)."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_temp_folder') or None)
     if folder_path:
         st.session_state['hub_temp_folder'] = folder_path
 
@@ -110,7 +110,8 @@ def hub_select_folder():
 def rescue_select_folder(pair_idx: int):
     """Open native folder picker for rescue mode (isolated per-pair state)."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    current = (st.session_state.get('rescue_paths') or {}).get(pair_idx) or None
+    folder_path = native_folder_picker(initial_dir=current)
     if folder_path:
         rescue_paths = st.session_state.get('rescue_paths', {})
         rescue_paths[pair_idx] = folder_path
@@ -167,7 +168,7 @@ def hub_cancel_edit():
 def hub_pick_folder_cb():
     """Callback to open native folder picker and store result directly in edit temp state."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_edit_temp_folder') or None)
     if folder_path:
         st.session_state['hub_edit_temp_folder'] = folder_path
 
