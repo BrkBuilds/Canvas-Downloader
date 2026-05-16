@@ -37,22 +37,17 @@ WizardStyle=modern
 WizardImageFile=assets\WizardImageFile.png
 WizardSmallImageFile=assets\WizardSmallImageFile.png
 
-; Compression (DEV MODE - FAST)
-Compression=none
-SolidCompression=no
-
-; (Revert to these when building the final release:)
-; Compression=lzma2/ultra64
-; SolidCompression=yes
+; Compression
+Compression=lzma2/ultra64
+SolidCompression=yes
 
 ; Platform requirements
 MinVersion=10.0
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
-; Privileges: per-user by default, user can choose machine-wide (triggers UAC)
+; Privileges: per-user installation (no UAC dialog)
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 
 ; Behaviour
 CloseApplications=yes
@@ -72,8 +67,7 @@ Name: "startmenu";  Description: "Create a &Start Menu shortcut";  GroupDescript
 Name: "desktopicon"; Description: "Create a &desktop shortcut";     GroupDescription: "Shortcuts:"
 
 [Files]
-; Comment out this line during UI testing so it doesn't pack your whole app
-; Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; Start Menu (modern: no Uninstall entry - users remove via Settings > Apps)
