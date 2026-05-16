@@ -32,9 +32,9 @@ from ui_helpers import (
 def _select_sync_folder_lazy():
     """Open native folder picker and store result in pending_sync_folder."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    import streamlit as st
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
-        import streamlit as st
         st.session_state['pending_sync_folder'] = folder_path
 
 def _update_pair_by_signature_lazy(old_sig, new_pair):

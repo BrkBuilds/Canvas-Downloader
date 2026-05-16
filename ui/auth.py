@@ -638,7 +638,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 with _pc1:
                     if st.button("Choose Folder", key="stg_btn_pick", use_container_width=True):
                         from ui_helpers import native_folder_picker
-                        picked = native_folder_picker()
+                        picked = native_folder_picker(initial_dir=st.session_state.get('_temp_default_path') or None)
                         if picked:
                             st.session_state['_temp_default_path'] = picked
                             st.session_state['_stg_reopen_dialog'] = True

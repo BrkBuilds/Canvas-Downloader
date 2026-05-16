@@ -412,21 +412,41 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
 
 # --- Folder Opener ---
 
-def native_folder_picker() -> str | None:
+def native_folder_picker(initial_dir: str | None = None) -> str | None:
     """Open native folder picker dialog safely across threads inside Streamlit.
     Builds the Tkinter root with correct attributes, destroys it on close,
     and handles missing assets gracefully.
-    
+
+    Args:
+        initial_dir: Preferred starting directory. Falls back to default_download_path
+                     session state, then the user's Downloads folder.
     Returns:
         Absolute path to selected folder as string, or None if cancelled.
     """
+    # Resolve the best starting directory: given path → session default → Downloads
+    start_dir: str | None = None
+    if initial_dir and os.path.isdir(initial_dir):
+        start_dir = initial_dir
+    if start_dir is None:
+        try:
+            import streamlit as st
+            default = st.session_state.get('default_download_path', '') or ''
+            if default and os.path.isdir(default):
+                start_dir = default
+        except Exception:
+            pass
+    if start_dir is None:
+        downloads = str(Path.home() / 'Downloads')
+        start_dir = downloads if os.path.isdir(downloads) else str(Path.home())
+
     import platform
     if platform.system() == 'Darwin':
         import subprocess
         try:
+            script = f'POSIX path of (choose folder default location (POSIX file "{start_dir}"))'
             result = subprocess.run(
-                ['osascript', '-e', 'POSIX path of (choose folder)'],
-                capture_output=True, text=True,
+                ['osascript', '-e', script],
+                capture_output=True, text=True, timeout=60,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip()
@@ -436,19 +456,19 @@ def native_folder_picker() -> str | None:
 
     import tkinter as tk
     from tkinter import filedialog
-    
+
     root = tk.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
-    
+
     try:
         icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
         if os.path.exists(icon_path):
             root.iconbitmap(icon_path)
     except Exception:
         pass
-        
-    folder_path = filedialog.askdirectory(master=root)
+
+    folder_path = filedialog.askdirectory(master=root, initialdir=start_dir)
     root.destroy()
     return folder_path if folder_path else None
 
