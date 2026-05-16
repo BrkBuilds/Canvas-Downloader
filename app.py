@@ -79,7 +79,7 @@ components.html("""<script>
     // this pattern the MutationObserver (tied to the old iframe context) is
     // garbage-collected and the overlay stops working after the first rerun.
     var win=window.parent, doc=win.document;
-    var p=win._cdp||(win._cdp={vis:false,hT:null,safeT:null,el:null,obs:null,clickAdded:false});
+    var p=win._cdp||(win._cdp={vis:false,hT:null,safeT:null,el:null,obs:null,clickAdded:false,awaitChange:false,preFP:null});
 
     // --- Create overlay element once ---
     if(!p.el){
@@ -140,43 +140,61 @@ components.html("""<script>
                     p.hT=setTimeout(waitForReady,150);
                     return;
                 }
-                // Phase 3 - Script is done, but React DOM reconciliation continues
-                // on slow machines (removing old page elements, applying final CSS).
-                // MutationObserver-based settle DOES NOT WORK here because the old
-                // stale elements generate no mutations while they linger.
-                // Instead, poll the page geometry (scrollHeight + element count)
-                // every 200 ms.  Only hide after 4 consecutive identical readings
-                // (800 ms of layout stability).  This directly detects the moment
-                // old elements are removed - scrollHeight drops and element count
-                // changes - regardless of whether mutations fire.
+                // Phase 3 - Script is done, but React DOM reconciliation may still
+                // be running.  Two strategies depending on p.awaitChange:
+                //
+                // Normal (awaitChange=false): Python took long enough that React has
+                // already reconciled. Count 4 consecutive stable geometry readings
+                // (800 ms) and hide. Original behaviour - correct for all regular
+                // page shifts.
+                //
+                // awaitChange=true ("Go to front page" buttons only): Python is very
+                // fast (cleanup + cached render), so there is a timing race - React
+                // may or may not have reconciled by the time Phase 3 starts.
+                // We compare against p.preFP (fingerprint captured at click time,
+                // when the old page was definitely still there):
+                //   - If DOM already differs from preFP → React reconciled during
+                //     Phase 1/2; just count stability normally (no extra wait).
+                //   - If DOM still matches preFP → old page is still displayed;
+                //     wait for the first geometry change, then count stability.
+                // This correctly covers both fast and slow React reconciliation.
                 var target=doc.querySelector('[data-testid="stMain"]')||doc.body;
+                var hasChanged=!p.awaitChange||(pageFingerprint(target)!==(p.preFP||''));
                 var lastFP='';
                 var stableCount=0;
                 function pollStable(){
                     var fp=pageFingerprint(target);
-                    if(fp===lastFP){
-                        stableCount++;
-                        if(stableCount>=4){
-                            // Layout has been stable for 800 ms.  Safe to hide.
-                            if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
-                            // Scroll to top - Streamlit uses internal scroll
-                            // containers, not the window.  Hit all candidates.
-                            win.scrollTo(0,0);
-                            var sc=doc.querySelectorAll(
-                                '[data-testid="stMain"],'
-                                +'[data-testid="stAppViewContainer"],'
-                                +'[data-testid="stVerticalBlock"]'
-                            );
-                            for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
-                            requestAnimationFrame(function(){
-                                p.el.style.display='none';p.vis=false;p.hT=null;
-                            });
-                            return;
+                    if(!hasChanged){
+                        if(fp!==p.preFP){
+                            // DOM moved past pre-click state - begin stability.
+                            hasChanged=true;lastFP=fp;stableCount=0;
                         }
-                    } else {
-                        // Layout changed - reset stability counter.
-                        stableCount=0;
-                        lastFP=fp;
+                        // else: old page still displayed - keep polling.
+                    }else{
+                        if(fp===lastFP){
+                            stableCount++;
+                            if(stableCount>=6){
+                                // Layout stable for 800 ms.  Safe to hide.
+                                if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+                                p.awaitChange=false;p.preFP=null;
+                                // Scroll to top - Streamlit uses internal scroll
+                                // containers, not the window.  Hit all candidates.
+                                win.scrollTo(0,0);
+                                var sc=doc.querySelectorAll(
+                                    '[data-testid="stMain"],'
+                                    +'[data-testid="stAppViewContainer"],'
+                                    +'[data-testid="stVerticalBlock"]'
+                                );
+                                for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
+                                requestAnimationFrame(function(){
+                                    p.el.style.display='none';p.vis=false;p.hT=null;
+                                });
+                                return;
+                            }
+                        }else{
+                            // Layout still changing - reset stability counter.
+                            stableCount=0;lastFP=fp;
+                        }
                     }
                     p.hT=setTimeout(pollStable,200);
                 }
@@ -212,17 +230,31 @@ components.html("""<script>
             var btn = e.target.closest(NAV_SEL);
             if(!btn)return;
             
-            // Custom validation: Don't show overlay if clicking Course Selector download buttons with no courses selected
-            if (btn.matches('div[class*="st-key-btn_custom_download"], div[class*="st-key-btn_quick_download"]')) {
-                var checkedCourses = doc.querySelectorAll('div[class*="st-key-dl_chk_"] input[type="checkbox"]:checked');
-                var countEl = doc.getElementById('cdp_selected_courses_count');
-                var backendCount = countEl ? parseInt(countEl.getAttribute('data-count'), 10) : 0;
-                
-                if (checkedCourses.length === 0 && backendCount === 0) {
-                    return; // Prevent overlay, let Streamlit rerun and show the error natively
+            // Sidebar nav buttons: skip overlay when already at the target mode's
+            // step 1 (clicking would cause a no-op rerun with no page change).
+            if(btn.matches('div[class*="st-key-nav_btn_download"]')||btn.matches('div[class*="st-key-nav_btn_sync"]')){
+                var stEl=doc.getElementById('cdp_nav_state');
+                if(stEl){
+                    var curMode=stEl.getAttribute('data-mode')||'';
+                    var curStep=parseInt(stEl.getAttribute('data-step')||'0',10);
+                    var tMode=btn.matches('div[class*="st-key-nav_btn_download"]')?'download':'sync';
+                    if(curMode===tMode&&curStep===1)return;
                 }
             }
-            
+            // Custom validation: Don't show overlay if clicking Course Selector download buttons with no courses selected
+            if(btn.matches('div[class*="st-key-btn_custom_download"],div[class*="st-key-btn_quick_download"]')){
+                var checkedCourses=doc.querySelectorAll('div[class*="st-key-dl_chk_"] input[type="checkbox"]:checked');
+                var countEl=doc.getElementById('cdp_selected_courses_count');
+                var backendCount=countEl?parseInt(countEl.getAttribute('data-count'),10):0;
+                if(checkedCourses.length===0&&backendCount===0)return;
+            }
+            // "Go to front page" buttons: capture the pre-click DOM fingerprint so
+            // Phase 3 can tell whether React has already reconciled the new page by
+            // the time it runs (in which case just count stability), or whether the
+            // old page is still displayed (in which case wait for the DOM to change
+            // first, then count stability).
+            p.awaitChange=!!btn.closest('div[class*="st-key-page_nav_front_page"]');
+            if(p.awaitChange) p.preFP=pageFingerprint(doc.querySelector('[data-testid="stMain"]')||doc.body);
             show();
         },true);
     }

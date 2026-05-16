@@ -1,5 +1,10 @@
 ## Latest Updates
 
+- [x] **FFmpeg UI Dependency Removal** (2026-05-16):
+    - [x] **UI Text Purge**: Removed all "Requires FFmpeg" warnings and manual installation notes from `ui/download_settings.py`.
+    - [x] **Documentation Updates**: Updated `docs/guide.html` and `docs/index.html` to remove FFmpeg from the list of required external software.
+    - [x] **Streamlined Messaging**: Shifted the focus in FAQs to emphasize that the application handles all conversion requirements automatically (via bundled binaries), reducing user friction.
+
 - [x] **UI Standardization & "Physical Volume" Aesthetic Refinement** (2026-05-08):
     - [x] **Global Button Icon Alignment**: Standardized button icon alignment across `sync_ui.py`, `course_selector.py`, `ui_shared.py`, `sync_dialogs.py`, `auth.py`, and `sync_review.py`. Removed all legacy manual top-offsets (e.g., `top: -2px`, `translateY(-2px)`) in favor of a robust flexbox-based centering strategy.
     - [x] **Padding Balance**: Adjusted vertical padding on primary action buttons (from `0px 10px 4px 10px` to `0px 10px`) to ensure perfect visual centering of icons and text.

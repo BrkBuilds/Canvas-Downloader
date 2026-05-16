@@ -26,7 +26,7 @@ def _build_preset_summary(settings):
     # 1. Organization
     mode_str = "📁 With Subfolders" if settings.get('download_mode') == 'modules' else "📁 All in One Folder"
     # 2. File Filter
-    filter_str = "📦 All Files" if settings.get('file_filter') == 'all' else "📦 Presentations & PDFs"
+    filter_str = "📦 All Files" if settings.get('file_filter') == 'all' else "📦 Slides & PDFs"
     # 3. Canvas Content
     sec_count = sum(1 for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k))
     sec_total = len(PresetManager.SECONDARY_CONTENT_KEYS)

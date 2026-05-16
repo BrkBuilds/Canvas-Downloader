@@ -26,12 +26,12 @@ if system == 'Windows':
         import winsound
     except ImportError:
         winsound = None
-        
+
     try:
         import ctypes
     except ImportError:
         ctypes = None
-        
+
     try:
         from win11toast import toast
     except ImportError:
@@ -47,6 +47,17 @@ if system == 'Darwin':
 
 logger = logging.getLogger(__name__)
 
+_WINDOWS_AUMID = 'CanvasDownloader.App'
+
+
+def _is_packaged() -> bool:
+    return getattr(sys, 'frozen', False)
+
+
+def _get_streamlit_url() -> str:
+    port = os.environ.get('STREAMLIT_SERVER_PORT', '8501')
+    return f'http://127.0.0.1:{port}'
+
 
 # ── Windows ───────────────────────────────────────────────────────────
 
@@ -60,7 +71,7 @@ def _play_windows_sound():
         sound_path = r"C:\Windows\Media\Windows Notify Calendar.wav"
         if os.path.exists(sound_path):
             winsound.PlaySound(
-                sound_path, 
+                sound_path,
                 winsound.SND_FILENAME | winsound.SND_NODEFAULT | winsound.SND_ASYNC
             )
         else:
@@ -87,37 +98,61 @@ def _focus_canvas_window():
         logger.debug(f"Failed to focus Canvas Downloader window: {e}")
 
 
+def _ensure_aumid_registered(icon_path: str = ''):
+    """Register the AUMID in HKCU so Windows attributes notifications to Canvas Downloader.
+
+    Without a registered AUMID, Windows tries to activate an unknown app on
+    notification click, which can foreground whatever window it finds (e.g. Notion).
+    Writing to HKCU works for per-user installs without elevation.
+    """
+    try:
+        import winreg
+        key_path = f'SOFTWARE\\Classes\\AppUserModelId\\{_WINDOWS_AUMID}'
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+            winreg.SetValueEx(key, 'DisplayName', 0, winreg.REG_SZ, 'Canvas Downloader')
+            if icon_path and os.path.exists(icon_path):
+                winreg.SetValueEx(key, 'IconUri', 0, winreg.REG_SZ, icon_path)
+    except Exception as e:
+        logger.debug(f"AUMID registration failed: {e}")
+
+
 def _show_windows_toast(title: str, body: str):
     """Display a native Windows 10/11 toast notification.
 
-    - Reverted app_id to 'Canvas Downloader' because Windows 11 blocks header icons for
-      portable executables without a registered Start Menu shortcut.
-    - Added an inline body icon (`appLogoOverride`) utilizing the local assets folder.
-    - Audio is silenced because we already play our own sound via winsound.
-    - On click, focuses the existing PyWebView 'Canvas Downloader' window.
+    Packaged build: registers the AUMID, attributes the toast to Canvas Downloader,
+    and focuses the PyWebView window on click.
+
+    CLI mode: omits app_id entirely so Windows never tries to activate an
+    unregistered AUMID (which was causing random apps like Notion to foreground).
+    Clicking the notification in CLI mode does nothing, which is intentional.
     """
     if toast is None:
         logger.debug("win11toast not installed - skipping native notification")
         return
 
     try:
-        # Resolve absolute path to the app's icon
-        if getattr(sys, 'frozen', False):
+        if _is_packaged():
             base_dir = sys._MEIPASS
         else:
             base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            
+
         icon_path = os.path.join(base_dir, 'assets', 'icon.png')
-        
+
         kwargs = {
-            'app_id': 'Canvas Downloader',
             'audio': {'silent': 'true'},
-            'on_click': lambda _args: _focus_canvas_window(),
             'on_dismissed': lambda _args: None,
             'on_failed': lambda _args: None,
         }
-        
-        # Inject the body icon if the asset exists
+
+        if _is_packaged():
+            # Register AUMID so Windows attributes the click to Canvas Downloader,
+            # then focus the PyWebView window when the notification is clicked.
+            _ensure_aumid_registered(icon_path)
+            kwargs['app_id'] = _WINDOWS_AUMID
+            kwargs['on_click'] = lambda _args: _focus_canvas_window()
+        # CLI mode: no app_id, no on_click — notification appears and clicking
+        # closes it without activating any window.
+
         if os.path.exists(icon_path):
             kwargs['icon'] = {
                 'src': icon_path,
@@ -153,27 +188,35 @@ def _play_macos_sound():
 def _show_macos_notification(title: str, body: str):
     """Display a native macOS Notification Center notification.
 
-    Primary path: pync (wraps terminal-notifier) - notification is attributed
-    to 'Canvas Downloader' and clicking it activates the app via its bundle ID.
+    Packaged .app build: clicking the notification opens/focuses Chrome at
+    the Streamlit URL via terminal-notifier's -open flag. This is better than
+    activate='com.canvasdownloader.app', which would bring the CustomTkinter
+    controller to front rather than the actual Chrome app window.
 
-    Fallback: osascript display notification - attributed to 'Script Editor'
-    but always available without additional dependencies.
+    CLI mode: no click action — notification appears and clicking dismisses it.
+
+    Fallback: osascript display notification (no click handler in either mode,
+    as the osascript API doesn't support it).
     """
-    # Primary: pync via terminal-notifier
     if _PyncNotifier is not None:
         try:
-            _PyncNotifier.notify(
-                body,
-                title='Canvas Downloader',
-                subtitle=title,
-                activate='com.canvasdownloader.app',
-                group='com.canvasdownloader.app',
-            )
+            kwargs = {
+                'title': 'Canvas Downloader',
+                'subtitle': title,
+                'group': 'com.canvasdownloader.app',
+            }
+            if _is_packaged():
+                # Open Chrome at the app URL when the notification is clicked.
+                # Using 'open' rather than 'activate' so the browser window comes
+                # to front instead of the CustomTkinter server controller.
+                kwargs['open'] = _get_streamlit_url()
+
+            _PyncNotifier.notify(body, **kwargs)
             return
         except Exception as e:
             logger.debug(f"pync notification failed: {e}")
 
-    # Fallback: osascript (notification appears from 'Script Editor')
+    # Fallback: osascript (notification appears from 'Script Editor', no click handler)
     try:
         safe_title = title.replace('"', '\\"')
         safe_body = body.replace('"', '\\"')
