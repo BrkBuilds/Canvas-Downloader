@@ -54,7 +54,7 @@ from sync.completion import (
     show_sync_errors as _show_sync_errors_impl,
 )
 from ui_shared import error_log_dialog as _view_error_log_dialog_impl
-from ui_shared import render_help_card
+from ui_shared import render_help_card, HELP_ICONS
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +72,8 @@ _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; pa
 _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
 _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
 _cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
-_cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
-_cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+_cc_loc_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+_cc_can_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
 _cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
 _cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
 _cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
@@ -85,13 +85,13 @@ _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; 
 _SYNC_HELP_TEXT = (
     # -- Introduction --------------------------------------------------------
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
-    "Welcome to Sync Mode! This feature intelligently keeps your computer up to date with Canvas by tracking your download history and only fetching what is new or changed. <br>To begin, link a local folder to a Canvas course to create a <b style='color: #ffffff;'>Course Pair</b>. These pairs form your <b style='color: #ffffff;'>Sync List</b>, which you can save as a <b style='color: #ffffff;'>Saved Group</b> (e.g., <em>Semester 1</em>) to easily load in next time. <br>When you are ready to download, use <b style='color: #3fd9ff;'>⚡ Quick Sync</b> to automatically grab new files and safe updates in one click, or use <b style='color: #3fd9ff;'>🔍 Analyze &amp; Review</b> to manually inspect every change and select what to keep."
+    f"Welcome to Sync Mode! This feature intelligently keeps your computer up to date with Canvas by tracking your download history and only fetching what is new or changed. <br>To begin, link a local folder to a Canvas course to create a <b style='color: #ffffff;'>Course Pair</b>. These pairs form your <b style='color: #ffffff;'>Sync List</b>, which you can save as a <b style='color: #ffffff;'>Saved Group</b> (e.g., <em>Semester 1</em>) to easily load in next time. <br>When you are ready to download, use <b style='color: #3fd9ff;'>{HELP_ICONS['bolt']} Quick Sync</b> to automatically grab new files and safe updates in one click, or use <b style='color: #3fd9ff;'>{HELP_ICONS['search']} Analyze &amp; Review</b> to manually inspect every change and select what to keep."
     "</div>"
     "<hr>"
 
     # -- Sync Mode Fundamentals & Getting Started ----------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#128194; Sync mode fundamentals &amp; getting started</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['folder']} Sync mode fundamentals &amp; getting started</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     
     # Introduction & How to add
@@ -106,7 +106,7 @@ _SYNC_HELP_TEXT = (
     
     # The Hidden Database
     "<div>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>🗄️ The Hidden Database</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['database']} The Hidden Database</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "Inside every synced folder, the app places a tiny, hidden database file. This acts as the folder's memory, tracking what you've already downloaded, what you've edited, and what to skip.<br>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.6; margin-bottom: 12px;'>If you link a pre-existing folder, the app will scan Canvas and build this memory from scratch. <br><b style='color: #ffffff;'>For best results, we recommend linking folders originally downloaded via Canvas Downloader</b>.<br>"
@@ -118,7 +118,7 @@ _SYNC_HELP_TEXT = (
 
     # Download Configurations
     "<div>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>⚙️ Syncing &amp; Download settings</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['gear']} Syncing &amp; Download settings</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "<b style='color: #ffffff;'>Courses inherit their original download settings.</b>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;margin-bottom: 8px;'> - If you initially downloaded a course with AI Optimization settings enabled, the sync engine will automatically apply those same conversions to any new files that you Sync & Download<br>"
@@ -129,7 +129,7 @@ _SYNC_HELP_TEXT = (
     "</div>"
 
     # Managing Course Pair
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>🛠️ Managing your Course Pair</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['wrench']} Managing your Course Pair</div>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.5; margin-bottom: 12px;'>"
     "Each course pair card on your list has inline actions to help you manage it:"
     "<ul style='margin-top: 4px; margin-bottom: 0; padding-left: 20px;'>"
@@ -145,7 +145,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Saved Groups & Pairs ------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>💾 How to use Saved Groups &amp; Pairs</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['save']} How to use Saved Groups &amp; Pairs</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65; margin-bottom: 14px;'>"
     "The <b style='color: #ffffff;'>Saved Groups &amp; Pairs</b> hub (button in the top right) lets you manage all your added Course Pairs and Groups so you only have to save them once.<br>"
@@ -155,15 +155,15 @@ _SYNC_HELP_TEXT = (
     "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
     # Save a Pair
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>📁 Save a Pair</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['folder']} Save a Pair</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
-    "After adding a pair to the Sync List, click the save icon 💾 on the top right of the pair card. Give it a name, and save it. It is now stored in the hub and can be loaded in a single click in any future session."
+    f"After adding a pair to the Sync List, click the save icon {HELP_ICONS['save']} on the top right of the pair card. Give it a name, and save it. It is now stored in the hub and can be loaded in a single click in any future session."
     "</div>"
     "</div>"
 
     # Save a Group
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>🗃️ Save a Group</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['archive']} Save a Group</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "A Group is a named collection of multiple pairs - e.g. all your semester courses. Add all the pairs you want to the sync list, and click <b style='color: #ffffff;'>Save Group</b> next to 'add course'.<br>"
     "<div style='margin-top: 8px; padding: 6px 8px; background: rgba(147, 90, 0, 0.4); border-radius: 4px; color: rgba(255,255,255,0.9); font-size: 0.75rem; line-height: 1.4;'>"
@@ -175,7 +175,7 @@ _SYNC_HELP_TEXT = (
 
     # Load from the Hub
     "<div style='background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px; margin-bottom: 16px;'>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>☰ Load from the Hub</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['menu']} Load from the Hub</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "Click <b style='color: #ffffff;'>Saved Groups &amp; Pairs</b> in the top right. Browse your saved groups and individual pairs. Click any entry to load it onto the sync page instantly. You can load multiple groups one after another to build a combined list.<br><br>"
     "Both Pairs and Groups can be viewed and edited (e.g. change name, update course folder path if it was changed, etc) - all from the sync hub. You can even add brand new course pairs to a group from the hub itself! <br>The configuration (Download settings set initially for each course folder downloaded) is viewable in the Saved Groups &amp; Pairs hub, for each pair."
@@ -188,51 +188,51 @@ _SYNC_HELP_TEXT = (
 
     # -- Workflow ------------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#128260; The Sync process - how to sync.</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['refresh']} The Sync process - how to sync.</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
 
     # Workflow container
     "<div style='background: #0f0f0f; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 16px 18px; margin-bottom: 8px;'>"
 
     # Quick Sync flow
-    f"<div style='{_slbl} margin-top: 0;'>⚡ Quick Sync</div>"
+    f"<div style='{_slbl} margin-top: 0;'>{HELP_ICONS['bolt']} Quick Sync</div>"
     "<div style='display: flex; align-items: center; margin-bottom: 14px;'>"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
-    f"<div style='{_step_title}'>👆 Click Quick Sync</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['cursor']} Click Quick Sync</div>"
     f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li>Analysis scans Canvas, compares every file to your local course folder.</li><li><b style='color: #ffffff;'>Looks for all new or updated files.</b></li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>2</div><div>"
-    f"<div style='{_step_title}'>📥 Downloading</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['download']} Downloading</div>"
     f"<div style='{_step_body}'><ul><li>New files and clean updates download automatically.</li><li>Files you have edited or deleted are automatically skipped and not downloaded.</li><li>Watch the download progress on the dashboard.</li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>3</div><div>"
-    f"<div style='{_step_title}'>✅ Done</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['check_circle']} Done</div>"
     f"<div style='{_step_body}'><b style='color: #ffffff;'>Sync & Download complete! Your course folders are now fully up to date.</b><br><ul><li>See which files were downloaded for each course, and any errors.</li><li>Use the <b style='color: #ffffff;'>retry button</b> for any failed downloads.</li><li>Use the <b style='color: #ffffff;'>Open Folder</b> button to see the synced course folder directly</li></ul></div>"
     "</div></div></div>"
     "</div>"
     "<hr>"
 
     # Analyze, Review & Sync flow
-    f"<div style='{_slbl}'>🔍 Analyze, Review &amp; Sync</div>"
+    f"<div style='{_slbl}'>{HELP_ICONS['search']} Analyze, Review &amp; Sync</div>"
     "<div style='display: flex; align-items: center; margin-bottom: 0;'>"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
-    f"<div style='{_step_title}'>👆 Click Analyze, Review & Sync</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['cursor']} Click Analyze, Review & Sync</div>"
     f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync list.</li><li> Analysis scans Canvas, compares every file to your local course folder.</li><li> <b style='color: #ffffff;'>Looks for all files with changes, and sorts them into 7 categories.</b></li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>2</div><div>"
-    f"<div style='{_step_title}'>🔍 Review changes</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['search']} Review changes</div>"
     f"<div style='{_step_body}'><ul><li>All files that have changes are organized here by category. </li><li>Select files you want to download.</li><li>Deselect files you don't want to download</li><li>Ignore files to skip and hide in future syncs.</li><li>Click <b style='color: #ffffff;'>Sync &amp; Download</b> to continue.</li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>3</div><div>"
-    f"<div style='{_step_title}'>👁️ Confirm &amp; Download</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['eye']} Confirm &amp; Download</div>"
     f"<div style='{_step_body}'><ul><li>A pop-up shows you everything you need to know about the files that will be downloaded. </li><li>Click Confirm to download, or go back to review page and make changes.</li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>4</div><div>"
-    f"<div style='{_step_title}'>📥 Downloading</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['download']} Downloading</div>"
     f"<div style='{_step_body}'><ul><li>Files selected to download in the review page, will download.</li><li>Watch the download progress on the dashboard.</li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>5</div><div>"
-    f"<div style='{_step_title}'>✅ Done!</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['check_circle']} Done!</div>"
     f"<div style='{_step_body}'><b style='color: #ffffff;'>Sync & Download complete! Your course folders are now fully up to date.</b><br><ul><li>See which files were downloaded for each course, and any errors.</li><li>Use the <b style='color: #ffffff;'>retry button </b>for any failed downloads.</li><li>Use the <b style='color: #ffffff;'>Open Folder</b> button to see the synced course folder directly</li></ul></div>"
     "</div></div></div>"
     "</div>"
@@ -243,42 +243,42 @@ _SYNC_HELP_TEXT = (
 
     # -- File Categories -----------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🔎 Sync Review: The 7 file categories explained.</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['search']} Sync Review: The 7 file categories explained.</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); margin-bottom: 10px;'>After sync analysis, every file is placed into one of these 7 categories. Read below to understand how the app sees every file category and what it does with each.</div>"
     f"<div style='display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 4px;'>"
     f"<div style='{_cc_new}'>"
-    f"<div style='{_cat_name}'>New Files</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_new']} New Files</div>"
     f"<div style='{_cat_desc}'>Files on Canvas added by your teacher, that are not in your course folder yet.</div>"
     f"<div style='{_cat_act}'>Downloaded fresh into the correct subfolder.</div>"
     f"<div style='{_sb_checked}'>✔ Checked by default</div>"
     "</div>"
     f"<div style='{_cc_clean}'>"
-    f"<div style='{_cat_name}'>Updates (Clean)</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_update']} Updates (Clean)</div>"
     f"<div style='{_cat_desc}'>Canvas has a newer version, and you haven't edited your local copy.</div>"
     f"<div style='{_cat_act}'>Replaced in place with the newest version - same name, same location.</div>"
     f"<div style='{_sb_checked}'>✔ Checked by default</div>"
     "</div>"
     f"<div style='{_cc_edited}'>"
-    f"<div style='{_cat_name}'>Updates (You Edited)</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_miss']} Edited locally</div>"
     f"<div style='{_cat_desc}'>Canvas has a newer version, and you've modified your local copy (e.g., added annotations, filled in answers).</div>"
     f"<div style='{_cat_act}'>New version saved as <em>filename_NewVersion</em> alongside your original. Your edits are never touched.</div>"
     f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
     "</div>"
     f"<div style='{_cc_loc_del}'>"
-    f"<div style='{_cat_name}'>Locally Deleted</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_locdel']} Locally Deleted</div>"
     f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
     f"<div style='{_cat_act}'>Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
     f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
     "</div>"
     f"<div style='{_cc_can_del}'>"
-    f"<div style='{_cat_name}'>Deleted on Canvas</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_candel']} Deleted on Canvas</div>"
     f"<div style='{_cat_desc}'>The teacher removed a file from Canvas, but it is still in your course folder.</div>"
     f"<div style='{_cat_act}'>Your local copy stays exactly where it is. The app never deletes local files.</div>"
     f"<div style='{_sb_info}'>ℹ Info only - no action</div>"
     "</div>"
     f"<div style='{_cc_ignored}'>"
-    f"<div style='{_cat_name}'>Ignored Files</div>"
+    f"<div style='{_cat_name}'>{HELP_ICONS['cat_ignore']} Ignored Files</div>"
     f"<div style='{_cat_desc}'>Files you permanently skipped, so they never appear in future syncs.</div>"
     f"<div style='{_cat_act}'>Restore them any time in the <b style='color: #ffffff;'>Ignored Files</b> section in Sync Review or the Sync front page.</div>"
     f"<div style='{_sb_info}'>Permanent skip</div>"
@@ -296,12 +296,12 @@ _SYNC_HELP_TEXT = (
 
     # -- Quick Sync vs Analyze -----------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🤔 Quick Sync vs Analyze &amp; Review &amp; Sync</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['compare']} Quick Sync vs Analyze &amp; Review &amp; Sync</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: #e6e6e6; margin-bottom: 10px;'>Both modes scan Canvas - the difference is the usecase, and how much control you have over what gets downloaded.</div>"
     "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>⚡ Quick Sync</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['bolt']} Quick Sync</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.7;'>"
     "✅ Auto-download all new files<br>"
     "✅ Auto-update unedited files that have changes in canvas<br>"
@@ -313,7 +313,7 @@ _SYNC_HELP_TEXT = (
     "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem;font-weight: 600;'>Quick everyday use between lectures, morning catch-up - whenever you need the latest files from canvas as quick as possible.</span>"
     "</div></div>"
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
-    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>🔍 Analyze, Review &amp; Sync</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['search']} Analyze, Review &amp; Sync</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.7;'>"
     "✅ Full overview over all course folder & canvas changes over 7 different categories<br>"
     "✅ Select per-file what you want to download, and what you don't - full control<br>"
@@ -340,7 +340,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Safety Guarantees ---------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🤝 Safety Guarantees</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['shield']} Safety Guarantees</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 2.0;'>"
     "Syncing is designed to be totally safe. The app <b style='color: #ffffff;'>guarantees</b>:<br>"
@@ -356,7 +356,7 @@ _SYNC_HELP_TEXT = (
 
     # -- FAQ -----------------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['question']} Frequently Asked Questions</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between Sync Mode and Download Mode?</summary>"
@@ -1120,7 +1120,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     key_prefix="sync_setup",
                     title=_SYNC_HELP_TITLE,
                     text_html=_SYNC_HELP_TEXT,
-                    icon="💡",
                     mode="button"
                 )
     with col_hub:
@@ -1134,7 +1133,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         key_prefix="sync_setup",
         title=_SYNC_HELP_TITLE,
         text_html=_SYNC_HELP_TEXT,
-        icon="💡",
         mode="card"
     )
 
@@ -1727,7 +1725,7 @@ def _render_sync_history():
                     time_str = raw_time
                     dt = None
                     
-                date_key = format_relative_date(raw_time, include_time=False, include_emoji=True)
+                date_key = format_relative_date(raw_time, include_time=False, include_emoji=False)
                     
                 grouped_history[date_key].append({
                     'entry': entry,
@@ -1760,7 +1758,7 @@ def _render_sync_history():
             for date_key, items in grouped_history.items():
                 # Sticky Header
                 html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 0px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{date_key}</div>
+                                    <div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{HELP_ICONS['calendar']} {date_key}</div>
                                     </div>""")
                 
                 # Container for the day's cards
@@ -1808,7 +1806,7 @@ def _render_sync_history():
                         categorized_files = {'new': [], 'updated': synced_files, 'protected': []}
                         
                     sync_mode_str = entry.get('sync_mode', 'normal')
-                    sync_mode_text = "⚡ Quick Sync" if sync_mode_str == 'quick' else "🔍 Analyze, Review & Sync"
+                    sync_mode_text = f"{HELP_ICONS['bolt_small']} Quick Sync" if sync_mode_str == 'quick' else f"{HELP_ICONS['search_small']} Analyze, Review & Sync"
 
                     accordion_content = ""
                     if count > 0 or errors > 0:
@@ -1817,7 +1815,7 @@ def _render_sync_history():
                         # New Files
                         if categorized_files.get('new'):
                             accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">🆕 New Files Added <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["new"])})</span></div>'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_new"]} New Files Added <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["new"])})</span></div>'
                             accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
                             for f in categorized_files['new']:
                                 accordion_content += render_file_li(f)
@@ -1826,7 +1824,7 @@ def _render_sync_history():
                         # Updated Files
                         if categorized_files.get('updated'):
                             accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">🔄 Updates Overwritten <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["updated"])})</span></div>'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_update"]} Updates Overwritten <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["updated"])})</span></div>'
                             accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Your local files were untouched, so they were replaced with the updated files</div>'
                             accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
                             for f in categorized_files['updated']:
@@ -1836,7 +1834,7 @@ def _render_sync_history():
                         # Protected Files
                         if categorized_files.get('protected'):
                             accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">✏️ Modified Files Protected <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["protected"])})</span></div>'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_miss"]} Modified Files Protected <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["protected"])})</span></div>'
                             accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Saved alongside your edited files</div>'
                             accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
                             for f in categorized_files['protected']:
@@ -1846,7 +1844,7 @@ def _render_sync_history():
                         # Errors
                         if errors > 0 and error_details:
                             accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">❌ Skipped / Failed <span style="color: #ff7b72; font-weight: 500;">({errors})</span></div>'
+                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["error"]} Skipped / Failed <span style="color: #ff7b72; font-weight: 500;">({errors})</span></div>'
                             
                             error_dict = defaultdict(list)
                             for err in error_details:

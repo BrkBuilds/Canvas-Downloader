@@ -429,6 +429,10 @@ def _render_authenticated_nav_top():
     """Render the top part of the authenticated sidebar: navigation buttons."""
     # ── Navigation buttons ─────────────────────────────────────────
     mode = st.session_state.get('current_mode', 'download')
+    step = st.session_state.get('step', 1)
+
+    # Expose current mode+step for the JS overlay logic (read via doc.getElementById).
+    st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
 
     # Active-state CSS is dynamic (depends on session state) - inject separately
     if mode in ['download', 'sync']:
@@ -442,19 +446,22 @@ def _render_authenticated_nav_top():
         section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
         </style>""")
 
-    # Download mode button
+    # Download mode button — always navigates to download step 1.
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
-        if mode != 'download':
+        if mode != 'download' or step != 1:
+            from core.state_registry import cleanup_download_state
+            cleanup_download_state()
             st.session_state['current_mode'] = 'download'
-            st.session_state['step'] = 1
             st.session_state['sync_mode'] = False
             st.session_state['sync_pairs'] = []
             st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
 
-    # Sync mode button
+    # Sync mode button — always navigates to sync step 1.
     if st.button('Sync Local Folders', use_container_width=True, key="nav_btn_sync"):
-        if mode != 'sync':
+        if mode != 'sync' or step != 1:
+            from core.state_registry import cleanup_sync_state
+            cleanup_sync_state()
             st.session_state['current_mode'] = 'sync'
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = True

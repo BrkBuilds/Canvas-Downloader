@@ -22,7 +22,7 @@ from ui_helpers import (
     render_download_wizard,
     get_base64_image,
 )
-from ui_shared import render_help_card
+from ui_shared import render_help_card, HELP_ICONS
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -595,22 +595,22 @@ def render_course_selector(fetch_courses_fn):
     _cs_help_text = (
         "<b>Select the courses you want to download, then press Continue.</b>"
         "<br><br>"
-        "<b>📦 Batch Downloading</b><br>"
-        "You can download as many courses as you want at once. The application will process them sequentially.<br> "
-        "All selected courses will be downloaded as separate folders (e.g. 📁 <em>Programming 101</em>, 📁 <em>History 201</em>)."
+        f"<b>{HELP_ICONS['package']} Batch Downloading</b><br>"
+        f"You can download as many courses as you want at once. The application will process them sequentially.<br> "
+        f"All selected courses will be downloaded as separate folders (e.g. {HELP_ICONS['folder']} <em>Programming 101</em>, {HELP_ICONS['folder']} <em>History 201</em>)."
         "<br><br>"
-        "<b>⭐ Favorites vs All Courses</b><br>"
+        f"<b>{HELP_ICONS['star']} Favorites vs All Courses</b><br>"
         "The toggle at the top lets you filter between your favorited courses and your full course list.<br> "
         "Your favorited courses can be managed directly in Canvas.<br><br>"
-        "<b>⚙️ Download Settings & Course Selection</b><br>"
+        f"<b>{HELP_ICONS['gear']} Download Settings & Course Selection</b><br>"
         "You will configure your download settings in the next step.<br>"
         "<div style='background-color: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; margin-top: 8px; border-radius: 0px 4px 4px 0px;'>"
-        "<span style='color: #fbd38d; font-weight: 600;'>⚠️ Notice:</span> The download settings you choose in the next page, will apply to <b>ALL</b> courses selected here. <br>"
+        f"<span style='color: #fbd38d; font-weight: 600;'>{HELP_ICONS['warning']} Notice:</span> The download settings you choose in the next page, will apply to <b>ALL</b> courses selected here. <br>"
         "For example, if you enable AI Optimization, it will be applied to the entire batch. <br>"
         "If you need different settings for different courses, you must perform separate download runs."
         "</div>"
         "<hr>"
-        "<b>❓ Frequently Asked Questions</b><br>"
+        f"<b>{HELP_ICONS['question']} Frequently Asked Questions</b><br>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What happens if a folder with the course name already exists on my computer?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db;'>"
@@ -672,7 +672,6 @@ def render_course_selector(fetch_courses_fn):
                 key_prefix="course_selector",
                 title=_cs_help_title,
                 text_html=_cs_help_text,
-                icon="💡",
                 mode="button"
             )
 
@@ -681,7 +680,6 @@ def render_course_selector(fetch_courses_fn):
         key_prefix="course_selector",
         title=_cs_help_title,
         text_html=_cs_help_text,
-        icon="💡",
         mode="card"
     )
 

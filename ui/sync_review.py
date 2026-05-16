@@ -28,6 +28,7 @@ from ui_helpers import (
     get_base64_image,
 )
 from core.state_registry import cleanup_sync_state
+from ui_shared import HELP_ICONS
 
 
 
@@ -42,8 +43,8 @@ _cc_base = "flex: 1 1 calc(25% - 12px); min-width: 200px; border-radius: 8px; pa
 _cc_new = f"{_cc_base} background: rgba(30, 60, 90, 0.25); border: 1px solid rgba(59, 130, 246, 0.65);"
 _cc_clean = f"{_cc_base} background: rgba(20, 70, 40, 0.25); border: 1px solid rgba(34, 197, 94, 0.65);"
 _cc_edited = f"{_cc_base} background: rgba(90, 60, 20, 0.25); border: 1px solid rgba(245, 158, 11, 0.65);"
-_cc_loc_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
-_cc_can_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+_cc_loc_del = f"{_cc_base} background: rgba(60, 30, 90, 0.25); border: 1px solid rgba(168, 85, 247, 0.65);"
+_cc_can_del = f"{_cc_base} background: rgba(90, 30, 35, 0.25); border: 1px solid rgba(239, 68, 68, 0.65);"
 _cc_uptodate = f"{_cc_base} background: rgba(40, 45, 50, 0.25); border: 1px solid rgba(150, 150, 150, 0.5);"
 _cc_ignored = f"{_cc_base} background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(100, 116, 139, 0.65);"
 _cat_name = "font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 6px;"
@@ -75,16 +76,16 @@ _HELP_TEXT = (
         
         # -- UI Elements --
         "<details style='margin-top: 4px;'>"
-        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🛠️ UI Tools Explained</summary>"
+        f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['wrench']} Review Tools explained</summary>"
         "<div style='margin-top: 6px; padding-left: 12px;'>"
         "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.88); line-height: 1.6; margin-bottom: 12px;'>"
         "The review page gives you powerful tools to manage large course updates instantly:"
         "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 20px; line-height: 1.7;'>"
         "<li><b style='color: #ffffff;'>Smart Select (By filetype):</b> The grey/blue tag buttons group every changed file by extension (e.g. <code>.pdf</code>, <code>.docx</code>). Click a filetype tag to instantly toggle all files of that type across all courses.</li>"
         "<li><b style='color: #ffffff;'>Select All / Deselect All:</b> One-click bulk actions located right beneath the Smart Select buttons. They instantly check or uncheck every visible file.</li>"
-        "<li><b style='color: #ffffff;'>The Ignore Icon (👁️):</b> Hover over the far-right edge of any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>"
+        f"<li><b style='color: #ffffff;'>The Ignore Icon ({HELP_ICONS['cat_ignore']}):</b> Hover over the far-right edge of any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>"
         "<li><b style='color: #ffffff;'>Move deselected files to Ignored:</b> This powerful button sits at the top of every expanded category. Click it to instantly sweep every unchecked file in that specific list into your permanent Ignored bucket.</li>"
-        "<li><b style='color: #ffffff;'>Restore Icons (↩️):</b> Inside the \"Ignored Files\" category at the bottom of any course, you can click the restore arrow next to a file, or use the \"Restore All\" button to bring them back into active sync.</li>"
+        f"<li><b style='color: #ffffff;'>Restore Icons ({HELP_ICONS['restore']}):</b> Inside the \"Ignored Files\" category at the bottom of any course, you can click the restore arrow next to a file, or use the \"Restore All\" button to bring them back into active sync.</li>"
         "</ul>"
         "</div>"
         "</div>"
@@ -93,42 +94,42 @@ _HELP_TEXT = (
 
         # -- File Categories --
         "<details style='margin-top: 4px;' open>"
-        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>🔎 The 7 File Categories</summary>"
+        f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['search']} The 7 File Categories</summary>"
         "<div style='margin-top: 6px; padding-left: 12px;'>"
         "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); margin-bottom: 10px;'>After sync analysis, every file is placed into one of these 7 categories. This determines the default action the app takes.<br><b>Notice: The file counts in each category card at the top show the total amount of files in each category across all courses synced. <br>See per-course breakdown in each course's category lists.</b></div>"
         f"<div style='display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 4px;'>"
         f"<div style='{_cc_new}'>"
-        f"<div style='{_cat_name}'>New Files</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_new']} New Files</div>"
         f"<div style='{_cat_desc}'>Files on Canvas added by your teacher, that are not in your course folder yet.</div>"
         f"<div style='{_cat_act}'>Downloaded fresh into the correct subfolder.</div>"
         f"<div style='{_sb_checked}'>✔ Checked by default</div>"
         "</div>"
         f"<div style='{_cc_clean}'>"
-        f"<div style='{_cat_name}'>Updates (Clean)</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_update']} Updates (Clean)</div>"
         f"<div style='{_cat_desc}'>Canvas has a newer version, and you haven't edited your local copy.</div>"
         f"<div style='{_cat_act}'>Replaced in place with the newest version - same name, same location.</div>"
         f"<div style='{_sb_checked}'>✔ Checked by default</div>"
         "</div>"
         f"<div style='{_cc_edited}'>"
-        f"<div style='{_cat_name}'>Updates (You Edited)</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_miss']} Edited locally</div>"
         f"<div style='{_cat_desc}'>Canvas has a newer version, and you've modified your local copy (e.g., added annotations, filled in answers).</div>"
         f"<div style='{_cat_act}'>New version saved as <em>filename_NewVersion</em> alongside your original. Your edits are never touched.</div>"
         f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
         "</div>"
         f"<div style='{_cc_loc_del}'>"
-        f"<div style='{_cat_name}'>Locally Deleted</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_locdel']} Locally Deleted</div>"
         f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
         f"<div style='{_cat_act}'>Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
         f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
         "</div>"
         f"<div style='{_cc_can_del}'>"
-        f"<div style='{_cat_name}'>Deleted on Canvas</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_candel']} Deleted on Canvas</div>"
         f"<div style='{_cat_desc}'>The teacher removed a file from Canvas, but it is still in your course folder.</div>"
         f"<div style='{_cat_act}'>Your local copy stays exactly where it is. The app never deletes local files.</div>"
         f"<div style='{_sb_info}'>ℹ Info only - no action</div>"
         "</div>"
         f"<div style='{_cc_ignored}'>"
-        f"<div style='{_cat_name}'>Ignored Files</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_ignore']} Ignored Files</div>"
         f"<div style='{_cat_desc}'>Files you permanently skipped, so they never appear in future syncs.</div>"
         f"<div style='{_cat_act}'>Restore them any time in the <b style='color: #ffffff;'>Ignored Files</b> section.</div>"
         f"<div style='{_sb_info}'>Permanent skip</div>"
@@ -146,7 +147,7 @@ _HELP_TEXT = (
 
         # -- FAQ --
         "<details style='margin-top: 4px;'>"
-        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+        f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['question']} Frequently Asked Questions</summary>"
         "<div style='margin-top: 6px; padding-left: 12px;'>"
         
         "<details style='margin-top: 8px; cursor: pointer;'>"
@@ -223,7 +224,6 @@ def show_analysis_review(on_confirm_sync):
                 key_prefix="sync_review_explainer",
                 title=_HELP_TITLE,
                 text_html=_HELP_TEXT,
-                icon="💡",
                 mode="button"
             )
 
@@ -232,7 +232,6 @@ def show_analysis_review(on_confirm_sync):
         key_prefix="sync_review_explainer",
         title=_HELP_TITLE,
         text_html=_HELP_TEXT,
-        icon="💡",
         mode="card"
     )
 

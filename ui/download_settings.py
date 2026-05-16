@@ -34,7 +34,7 @@ from core.state_registry import (
     NOTEBOOK_SUB_KEYS,
     TOTAL_SECONDARY_SUBS,
 )
-from ui_shared import render_help_card
+from ui_shared import render_help_card, HELP_ICONS
 
 
 def _resolve_path(path):
@@ -154,7 +154,7 @@ def render_download_settings(fetch_courses_fn):
         "<hr>"
 
         # ── Section title ─────────────────────────────────────────────────────
-        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>&#9881;&#65039; Settings Explained in Detail</div>"
+        f"<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>{HELP_ICONS['gear']} Settings Explained in Detail</div>"
 
         # ── Card 1 ────────────────────────────────────────────────────────────
         "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(255,255,255,0.13); border-radius: 7px; overflow: hidden;'>"
@@ -164,7 +164,7 @@ def render_download_settings(fetch_courses_fn):
         f"<div style='{_lbl}'>Which files to download</div>"
         f"<details style='{_row}'><summary style='{_b1}'>All Files</summary>"
         f"<div style='{_ans1}'>Downloads every file your professor uploaded: PDFs, PowerPoint slides, Word documents, images, videos, spreadsheets, zip archives, and more. Best if you want a complete offline copy of your course.</div></details>"
-        f"<details style='{_row}'><summary style='{_b1}'>Presentations &amp; PDFs</summary>"
+        f"<details style='{_row}'><summary style='{_b1}'>Slides &amp; PDFs</summary>"
         f"<div style='{_ans1}'>Downloads only lecture slides (PowerPoint files) and PDF documents. Use this if you want to skip large videos or data sets and just get the study materials.</div></details>"
         f"<div style='{_lbl}'>Folder structure</div>"
         f"<details style='{_row}'><summary style='{_b1}'>With Subfolders</summary>"
@@ -219,34 +219,34 @@ def render_download_settings(fetch_courses_fn):
         f"<details style='{_row}'><summary style='{_b3}'>Gather Web Links</summary>"
         f"<div style='{_ans3}'>Collects all website shortcut files across your course folder and combines them into a single text file per course. Useful for keeping track of every external link your professor added.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Video to Audio</summary>"
-        f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3. Requires FFmpeg.</div></details>"
+        f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3.</div></details>"
         "<div style='background-color: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
-        "<span style='color: #fbd38d; font-weight: 600;'>&#9888;&#65039; Required software:</span> PowerPoint and Word conversions require Microsoft Office or the free LibreOffice app. Excel PDF conversion requires Microsoft Excel; AI data extraction works for .xlsx/.xlsm only (not legacy .xls). Video to Audio requires FFmpeg. If the required software is not installed, that step is silently skipped and your original file is kept."
+        f"<span style='color: #fbd38d; font-weight: 600;'>{HELP_ICONS['warning']} Required software:</span> PowerPoint and Word conversions require Microsoft Office or the free LibreOffice app. Excel PDF conversion requires Microsoft Excel; AI data extraction works for .xlsx/.xlsm only (not legacy .xls). If the required software is not installed, that step is silently skipped and your original file is kept."
         "</div>"
         "</div></details>"
 
         # ── Output Folder ─────────────────────────────────────────────────────
         "<hr>"
-        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 6px;'>&#128193; Output Folder</div>"
+        f"<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 6px;'>{HELP_ICONS['folder']} Output Folder</div>"
         "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8);'>"
         "The folder where all downloaded courses are saved. Each course automatically gets its own named subfolder inside it. Click <b>Select Folder</b> to change the destination path."
         "</div>"
         "<hr>"
 
         # ── Presets ───────────────────────────────────────────────────────────
-        "<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>&#128190; Download Settings Presets</div>"
+        f"<div style='font-weight: 700; color: #ffffff; font-size: 0.95rem; margin-bottom: 8px;'>{HELP_ICONS['save']} Download Settings Presets</div>"
         "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.8); margin-bottom: 10px;'>"
         "A Preset saves your entire Card 1, 2, and 3 configuration under a name you choose. Once saved, you can restore your full setup in one click instead of re-configuring everything from scratch."
         "</div>"
         "<div style='display: flex; gap: 10px; margin-bottom: 10px;'>"
         "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
-        "<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>&#128190; Saving a preset</div>"
+        f"<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>{HELP_ICONS['save']} Saving a preset</div>"
         "<div style='color: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.6;'>"
         "Configure Cards 1, 2 &amp; 3, then click <b style='color: #e2e8f0;'>Save Preset</b> in the top right. Give it a name - like <em>AI Ready</em> - and click Save. Settings are stored locally on your computer."
         "</div>"
         "</div>"
         "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
-        "<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>&#128193; Loading a preset</div>"
+        f"<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>{HELP_ICONS['folder_open']} Loading a preset</div>"
         "<div style='color: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.6;'>"
         "Click the <b style='color: #e2e8f0;'>Presets</b> button in the top right. The Preset Hub opens - click any preset name to instantly apply its settings to all three cards."
         "</div>"
@@ -257,19 +257,19 @@ def render_download_settings(fetch_courses_fn):
         "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.7;'>"
         "&#8226; <b style='color: #e2e8f0;'>AI Ready</b> - Card 3 fully enabled. Ideal for courses you feed to NotebookLM or ChatGPT.<br>"
         "&#8226; <b style='color: #e2e8f0;'>Quick Backup</b> - All Files selected, no conversions. Fast offline copy with no post-processing.<br>"
-        "&#8226; <b style='color: #e2e8f0;'>Study Files</b> - Presentations &amp; PDFs only, PowerPoint and Word converted to PDF."
+        "&#8226; <b style='color: #e2e8f0;'>Study Files</b> - Slides &amp; PDFs only, PowerPoint and Word converted to PDF."
         "</div>"
         "</div>"
         "<hr>"
 
         # ── FAQ ───────────────────────────────────────────────────────────────
         "<details style='margin-top: 4px;'>"
-        "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 0.95rem; user-select: none; padding: 4px 0;'>&#10067; Frequently Asked Questions</summary>"
+        f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 0.95rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['question']} Frequently Asked Questions</summary>"
         "<div style='margin-top: 6px; padding-left: 12px;'>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
-        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between All Files and Presentations &amp; PDFs?</summary>"
+        "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between All Files and Slides &amp; PDFs?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "<b>All Files</b> grabs everything your professor uploaded - PDFs, slides, Word documents, images, videos, spreadsheets, zip archives, and more. <b>Presentations &amp; PDFs</b> only grabs lecture slides and PDF files. Use the filtered option if you want to skip large videos or data sets."
+        "<b>All Files</b> grabs everything your professor uploaded - PDFs, slides, Word documents, images, videos, spreadsheets, zip archives, and more. <b>Slides &amp; PDFs</b> only grabs lecture slides and PDF files. Use the filtered option if you want to skip large videos or data sets."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does With Subfolders actually look like on my computer?</summary>"
@@ -304,12 +304,12 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do the AI conversions in Card 3 work on all computers?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "It depends on the conversion. PowerPoint and Word conversions require <b>Microsoft Office</b> or the free <b>LibreOffice</b> app. Video to Audio requires <b>FFmpeg</b>. If not installed, that conversion is silently skipped. Unpacking archives, converting Canvas pages, adding .txt to code files, and gathering web links all work on any computer with no extra software."
+        "It depends on the conversion. PowerPoint and Word conversions require <b>Microsoft Office</b> or the free <b>LibreOffice</b> app. Unpacking archives, converting Canvas pages, adding .txt to code files, and gathering web links all work on any computer with no extra software."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Preset and should I use one?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "A Preset saves your current settings (Cards 1, 2, and 3) under a name so you can reload them instantly next time. Click <b>&#128190; Save Preset</b> after configuring, and the <b>Presets</b> button to open the Preset Hub and apply a saved one."
+        f"A Preset saves your current settings (Cards 1, 2, and 3) under a name so you can reload them instantly next time. Click <b>{HELP_ICONS['save']} Save Preset</b> after configuring, and the <b>Presets</b> button to open the Preset Hub and apply a saved one."
         "</div></details>"
         "</div>"
         "</details>"
@@ -813,7 +813,7 @@ def render_download_settings(fetch_courses_fn):
                         with inc_left:
                             st.button("All Files (default)", key="btn_include_all", use_container_width=True, on_click=update_include_state, args=("all",))
                         with inc_right:
-                            st.button("Presentations & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
+                            st.button("Slides & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
                 st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
 
