@@ -251,14 +251,14 @@ ensure_download_state()
 
 def select_folder():
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('download_path') or None)
     if folder_path:
         st.session_state['download_path'] = folder_path
 
 def select_sync_folder():
     """Open folder picker for sync mode and store in pending_sync_folder."""
     from ui_helpers import native_folder_picker
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
 

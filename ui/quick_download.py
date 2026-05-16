@@ -120,7 +120,7 @@ def _select_org_cb(mode: str) -> None:
 
 
 def _select_folder_cb() -> None:
-    path = native_folder_picker()
+    path = native_folder_picker(initial_dir=st.session_state.get('download_path') or None)
     if path:
         st.session_state['download_path'] = path
 

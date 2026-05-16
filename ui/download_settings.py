@@ -69,7 +69,7 @@ def safe_b64(name):
 
 def _select_folder():
     """Open native folder picker and store result in download_path."""
-    folder_path = native_folder_picker()
+    folder_path = native_folder_picker(initial_dir=st.session_state.get('download_path') or None)
     if folder_path:
         st.session_state['download_path'] = folder_path
 
