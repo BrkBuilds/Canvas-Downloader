@@ -2282,6 +2282,8 @@ class CanvasManager:
                     
                     # Request block inside semaphore
                     async with sem:
+                        if attempt == 0 and progress_callback:
+                            progress_callback(filename, progress_type='downloading_start')
                         log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
                         async with session.get(url) as response:
                             if response.status == 403 or response.status == 429:

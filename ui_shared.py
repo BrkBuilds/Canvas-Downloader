@@ -255,8 +255,6 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
             for _sf in size_skipped_files:
                 st.markdown(f"- {_sf}")
 
-    if card_class == 'success':
-        st.balloons()
 
 
 _FC_FOLDER_SVG = (
