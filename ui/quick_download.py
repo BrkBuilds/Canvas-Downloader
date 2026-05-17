@@ -21,7 +21,7 @@ _QUICK_PRESETS = [
     {
         'id': 'quick_full',
         'name': 'Complete Canvas Download',
-        'desc': 'All files and Canvas content, organized by module.',
+        'desc': 'All files and Canvas content, just like you see it in Canvas.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'modules', 'file_filter': 'all',
@@ -37,8 +37,8 @@ _QUICK_PRESETS = [
     },
     {
         'id': 'quick_ai',
-        'name': 'AI Study Pack',
-        'desc': 'Full course with PPTX & Word converted to PDF for AI upload.',
+        'name': 'Daily study pack (Optimized)',
+        'desc': 'Full course with PPTX converted to PDF, for easy AI upload.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'modules', 'file_filter': 'all',
@@ -54,15 +54,15 @@ _QUICK_PRESETS = [
     },
     {
         'id': 'quick_notebooklm',
-        'name': 'NotebookLM Ready',
-        'desc': 'All files as AI-readable formats in one flat folder.',
+        'name': '100% AI & NotebookLM Ready',
+        'desc': 'All files AI-Optimized, ready to drag & drop into notebookLM.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'flat', 'file_filter': 'all',
-            'dl_isolate_secondary': False,
-            'dl_assignments': False, 'dl_syllabus': False, 'dl_announcements': False,
-            'dl_discussions': False, 'dl_quizzes': False, 'dl_rubrics': False,
-            'dl_submissions': False, 'dl_secondary_master': False,
+            'dl_isolate_secondary': True,
+            'dl_assignments': True, 'dl_syllabus': True, 'dl_announcements': True,
+            'dl_discussions': True, 'dl_quizzes': True, 'dl_rubrics': True,
+            'dl_submissions': True, 'dl_secondary_master': True,
             'notebooklm_master': True,
             'convert_zip': True,  'convert_pptx': True,  'convert_word': True,
             'convert_excel': True, 'convert_html': True, 'convert_code': True,
@@ -72,7 +72,7 @@ _QUICK_PRESETS = [
     {
         'id': 'quick_slides',
         'name': 'Slides & PDFs Only',
-        'desc': 'Lecture slides and PDFs only. No assignments or quizzes.',
+        'desc': 'Download only slides and pdf files, nothing else.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'modules', 'file_filter': 'study',
@@ -89,7 +89,7 @@ _QUICK_PRESETS = [
     {
         'id': 'quick_files_only',
         'name': 'Files Only',
-        'desc': 'All course files by module. No Canvas-only web content.',
+        'desc': 'Only the files uploaded by your teacher, no Canvas Content or fluff.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'modules', 'file_filter': 'all',
@@ -98,7 +98,7 @@ _QUICK_PRESETS = [
             'dl_discussions': False, 'dl_quizzes': False, 'dl_rubrics': False,
             'dl_submissions': False, 'dl_secondary_master': False,
             'notebooklm_master': False,
-            'convert_zip': True,  'convert_pptx': False, 'convert_word': False,
+            'convert_zip': False,  'convert_pptx': False, 'convert_word': False,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
         },
@@ -644,58 +644,47 @@ div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary p code
     margin-left: 8px !important;
     font-family: inherit !important;
 }}
-/* Edit button */
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button {{
+/* Bottom "Customize" Button - Match Description Text */
+div.st-key-qd_goto_advanced button {{
     background: transparent !important;
     border: none !important;
-    color: #ffffff !important;
-    font-size: 0.77rem !important;
+    color: #64748b !important;
+    font-size: 0.82rem !important;
     font-weight: 500 !important;
-    border-radius: 6px !important;
-    height: 32px !important;
+    padding: 0 !important;
+    text-align: left !important;
     width: auto !important;
-    transform: none !important;
     box-shadow: none !important;
-    margin-top: 10px !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.5 !important;
+    transition: color 0.2s ease !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    min-height: 0px !important;
+}}
+div.st-key-qd_goto_advanced button:hover {{
+    color: #94a3b8 !important;
+    background: transparent !important;
+}}
+div.st-key-qd_goto_advanced button p {{
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 8px !important;
-    opacity: 0.45 !important;
-    transition: color 0.15s ease, opacity 0.15s ease !important;
 }}
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button::before {{
-    content: "" !important;
+div.st-key-qd_goto_advanced button p::before {{
+    content: "";
     display: inline-block !important;
     width: 14px !important;
     height: 14px !important;
     background-image: url('data:image/png;base64,{b64_custom_dl}') !important;
     background-size: contain !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    flex-shrink: 0 !important;
-    transition: opacity 0.15s ease !important;
+    opacity: 50%;
+    margin-right: 8px !important;
 }}
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button:hover {{
-    color: #e2e8f0 !important;
-    background: transparent !important;
-    border: none !important;
-    transform: none !important;
-    box-shadow: none !important;
-    opacity: 1 !important;
-}}
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button:hover::before {{
-    opacity: 1 !important;
-}}
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button > div,
-div.st-key-qd_config_wrap div.st-key-qd_goto_advanced button p {{
-    justify-content: flex-start !important;
-    text-align: left !important;
-    width: auto !important;
-    margin: 0 !important;
-}}
+
 
 /* ═══════════════════════════════════════════════════════
    NAV BUTTONS
@@ -869,7 +858,7 @@ div.st-key-page_nav_quick_back button:hover {{
         # ── Section 1: Presets ───────────────────────────────────────────
         st.markdown(
             "<div style='display:flex; align-items:center; gap:10px; margin:0 0 10px 0;'>"
-            "<div style='background:#1d4ed8; color:#ffffff; width:26px; height:26px; border-radius:6px; "
+            "<div style='background:rgba(56, 189, 248, 0.5); color:#ffffff; width:26px; height:26px; border-radius:6px; "
             "display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;'>1</div>"
             "<p style='font-size:0.8rem; font-weight:600; letter-spacing:0.04em; "
             "text-transform:uppercase; color:#e2e8f0; margin:0;'>Choose which files to download</p>"
@@ -914,7 +903,7 @@ div.st-key-page_nav_quick_back button:hover {{
         ) if org_is_locked else ""
         st.markdown(
             "<div style='display:flex; align-items:center; gap:10px; margin:0 0 10px 0;'>"
-            "<div style='background:#1d4ed8; color:#ffffff; width:26px; height:26px; border-radius:6px; "
+            "<div style='background:rgba(56, 189, 248, 0.5); color:#ffffff; width:26px; height:26px; border-radius:6px; "
             "display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;'>2</div>"
             f"<p style='font-size:0.8rem; font-weight:600; letter-spacing:0.04em; "
             f"text-transform:uppercase; color:#e2e8f0; margin:0;'>Choose how files are organised{_org_lock_note}</p>"
@@ -946,7 +935,7 @@ div.st-key-page_nav_quick_back button:hover {{
         download_path = st.session_state.get('download_path', str(Path.home() / "Downloads"))
         st.markdown(
             "<div style='display:flex; align-items:center; gap:10px; margin:0 0 10px 0;'>"
-            "<div style='background:#1d4ed8; color:#ffffff; width:26px; height:26px; border-radius:6px; "
+            "<div style='background:rgba(56, 189, 248, 0.5); color:#ffffff; width:26px; height:26px; border-radius:6px; "
             "display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;'>3</div>"
             "<p style='font-size:0.8rem; font-weight:600; letter-spacing:0.04em; "
             "text-transform:uppercase; color:#e2e8f0; margin:0;'>Verify your download destination</p>"
@@ -976,12 +965,12 @@ div.st-key-page_nav_quick_back button:hover {{
                             d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                     </svg>
                     <div style="flex:1; min-width:0;">
-                        <div style="font-weight:600; color:#e2e8f0; font-size:0.9rem;
+                        <div style="font-weight:600; color:#ffffff; font-size:0.98rem; line-height:1.15;
                                     white-space:normal; overflow-wrap:anywhere;">
                             {esc(folder_name)}
                         </div>
-                        <div style="font-size:0.75rem; color:#64748b;
-                                    white-space:normal; overflow-wrap:anywhere; margin-top: 1px;">
+                        <div style="font-size:0.83rem; color:#94a3b8; line-height:1.15;
+                                    white-space:normal; overflow-wrap:anywhere; margin-top: 0px;">
                             {esc(folder_parent)}
                         </div>
                     </div>
@@ -1026,15 +1015,12 @@ div.st-key-page_nav_quick_back button:hover {{
                 st.html(
                     "<div style='margin-bottom: 12px;'>"
                     "<p style='color:#64748b; font-size:0.82rem; margin:0 0 10px 0; line-height:1.5;'>"
-                    "The badges below show every setting in the selected preset. "
-                    "Open this to verify what will be downloaded and how files will be processed "
-                    "before you hit Start."
-                    "</p>"
+                    "The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted). "
                     f"{_config_badges}"
                     "</div>"
                 )
                 if st.button(
-                    "Customize this configuration in Custom Download →",
+                    "Customize this configuration in Custom Download",
                     key="qd_goto_advanced",
                     use_container_width=True,
                 ):
@@ -1071,7 +1057,7 @@ div.st-key-page_nav_quick_back button:hover {{
         with act_back:
             back_clicked = st.button("← Back", key="page_nav_quick_back", use_container_width=True)
         with act_start:
-            start_clicked = st.button("Start Download", key="page_nav_quick_start", type="primary", use_container_width=True)
+            start_clicked = st.button("Confirm and Download", key="page_nav_quick_start", type="primary", use_container_width=True)
 
         if back_clicked:
             st.session_state['quick_download_mode'] = False

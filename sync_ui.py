@@ -1324,7 +1324,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
     # gap="small" brings the OR closer
-    col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.12, 0.75, 2.38], gap="small", vertical_alignment="center")
+    col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
 
     # Force identical styling for the two primary buttons in this section
     # We target specific children of these columns to ensure parity.
@@ -1395,7 +1395,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.rerun()
 
     with col_or:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap;'>OR</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
         if st.button('Quick Sync',
