@@ -606,16 +606,13 @@ def render_download_settings(fetch_courses_fn):
 
     /* Vertical alignment shim - Card 2's trojan div has a more aggressive
        negative margin-top (-25px) than Card 1's (-10px), which makes its
-       outer container collapse 15px higher up. Push Card 2 back down so
-       the card boxes start at the same Y as Card 1. */
+       outer container collapse 15px higher up. Use padding-top (not margin-top)
+       so Card 2's flex box still fills the full column height — margin would
+       shrink the box and leave Card 2's bottom edge 15px short of Card 1's. */
     div[class*="st-key-card_native_content"] {
         margin-top: 15px !important;
     }
 
-    /* Push the "Include Files" section to the bottom of Card 1 */
-    div[class*="st-key-card1_include_section"] {
-        margin-top: auto !important;
-    }
     </style>
     """)
 
@@ -691,7 +688,7 @@ def render_download_settings(fetch_courses_fn):
             /* 3. Base Button: Flex Column + Relative Position */
             div[class*="st-key-btn_include_"] button {{
                 position: relative !important;
-                height: 150px !important;
+                min-height: 150px !important;
                 background-color: transparent !important;
                 background-repeat: no-repeat !important;
                 background-position: center 18px !important;
@@ -815,7 +812,7 @@ def render_download_settings(fetch_courses_fn):
                         with inc_right:
                             st.button("Slides & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
-                st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+                st.html("<div style='padding-bottom: 7px;'></div>")
 
                 # 2. Organization Block (Large Buttons)
                 def update_org_state(mode):
@@ -849,7 +846,7 @@ def render_download_settings(fetch_courses_fn):
                 /* Base Card Styling for BOTH buttons */
                 div[class*="st-key-btn_org_"] button {{
                     position: relative !important;
-                    height: 150px !important;
+                    min-height: 150px !important;
                     background-color: transparent !important;
                     background-repeat: no-repeat !important;
                     background-position: center 18px !important;
@@ -1478,80 +1475,77 @@ def render_download_settings(fetch_courses_fn):
         with st.container(border=True, key="card_ai_engine"):
             _render_card3_inner()
 
-        # 2. Output Card
-        with st.container(border=True, key="review_output_card"):
-            st.markdown("<h3 style='margin-top: -15px; margin-bottom: -35px;'>Output Folder</h3>", unsafe_allow_html=True)
+        # Separator above Output Folder section
+        st.markdown(
+            "<hr style='border:none; border-top:1px solid rgba(255,255,255,0.08); margin:28px 0 20px 0;'>",
+            unsafe_allow_html=True,
+        )
 
-            dl_path = st.session_state['download_path']
-            dl_path_escaped = dl_path.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#39;").replace('"', "&quot;")
+        st.markdown(
+            "<div style='font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-top: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;'>"
+            "Verify your download destination"
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
-            # Render path + button side-by-side.
-            # Nuclear CSS: apply flex-direction:row at EVERY DOM depth to hit whatever
-            # level Streamlit nests the element-containers at. The `> div` chain covers
-            # stVerticalBlockBorderWrapper, stVerticalBlock, and any other intermediates.
-            st.html("""<style>
-    div.st-key-path_display_row,
-    div.st-key-path_display_row > div,
-    div.st-key-path_display_row > div > div,
-    div.st-key-path_display_row > div > div > div {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: flex-end !important;
-        gap: 10px !important;
-        flex-wrap: nowrap !important;
-        width: auto !important;
-    }
-    div.st-key-path_display_row div[data-testid="element-container"],
-    div.st-key-path_display_row div.stElementContainer {
-        width: auto !important;
-        flex: 0 0 auto !important;
-        margin-bottom: 12px !important;
+        dl_path = st.session_state['download_path']
+        
+        st.html("""<style>
+div.st-key-review_browse_folder button {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #cbd5e1 !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    height: 58px !important;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+    transform: none !important;
+}
+div.st-key-review_browse_folder button:hover {
+    background: rgba(255,255,255,0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.25) !important;
+    transform: none !important;
+}
+</style>""")
 
-    }
-    div.st-key-path_display_row div[data-testid="element-container"]:first-child,
-    div.st-key-path_display_row div.stElementContainer:first-child {
-        max-width: calc(100% - 180px) !important;
-    }
-    div.st-key-path_display_row button {
-        white-space: nowrap !important;
-        height: 42px !important;
-        padding: 0 20px !important;
-        margin-bottom: -8px !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.13) !important;
-        color: rgba(255, 255, 255, 0.85) !important;
-    }
-    div.st-key-path_display_row button:hover {
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border-color: rgba(255, 255, 255, 0.18) !important;
-    }
-    </style>""")
-            st.html('<div style="padding-bottom: 1rem;"></div>')
-
-            with st.container(key="path_display_row"):
-                st.markdown(f"""<div>
-    <label style="font-size: 0.82rem; color: rgba(250,250,250,0.6); margin-top: 3px; margin-bottom: 0px; display: block;">Path</label>
-    <div style="
-        display: inline-block;
-        max-width: 100%;
-        background-color: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 0.875rem;
-        color: rgba(250, 250, 250, 0.5);
-        letter-spacing: 0.75px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 1.5;
-        font-family: 'Source Sans Pro', sans-serif;
-        box-sizing: border-box;
-        cursor: default;
-        user-select: none;
-    ">{dl_path_escaped}</div>
-    </div>""", unsafe_allow_html=True)
-                st.button('📂 Select Folder', key='action_dl_folder', on_click=_select_folder)
+        f_col, btn_col = st.columns([4, 0.8], gap="small")
+        with f_col:
+            folder_name   = Path(dl_path).name or dl_path
+            folder_parent = str(Path(dl_path).parent)
+            st.markdown(
+                f"""
+                <div title="{esc(dl_path)}" style="
+                    background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 8px;
+                    padding: 8px 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 58px;
+                    box-sizing: border-box;
+                    cursor: default;">
+                    <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" style="flex-shrink:0;">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; color:#ffffff; font-size:0.98rem; line-height:1.15;
+                                    white-space:normal; overflow-wrap:anywhere;">
+                            {esc(folder_name)}
+                        </div>
+                        <div style="font-size:0.83rem; color:#94a3b8; line-height:1.15;
+                                    white-space:normal; overflow-wrap:anywhere; margin-top: 0px;">
+                            {esc(folder_parent)}
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with btn_col:
+            st.button("Change folder", key="review_browse_folder", use_container_width=True, on_click=_select_folder)
 
         # --- Unified Course Summary Dropdown (full-width, native <details>) ---
         _dl_courses = st.session_state.get('courses_to_download', [])

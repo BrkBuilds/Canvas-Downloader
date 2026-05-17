@@ -361,6 +361,7 @@ def _render_multi_select_list(
 
     # Preserve off-screen selections (hidden by CBS filters)
     for sid in selected_ids:
+
         if sid not in visible_ids:
             new_selected_ids.append(sid)
 
@@ -406,7 +407,6 @@ def _render_multi_select_list(
         margin-top: 3px !important;
     }}
     </style>""")
-    st.html('<div style="padding-bottom: 1rem;"></div>')
 
     dynamic_css = []
 
@@ -439,15 +439,21 @@ def _render_multi_select_list(
         if checked:
             new_selected_ids.append(course.id)
 
-    if dynamic_css:
-        if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
-            f_key = f"{namespace}_chk_{courses[0].id}"
-            dynamic_css.append(f"""
-            div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
-            """)
-        st.html(f'<style>{"".join(dynamic_css)}</style>')
-        st.html('<div style="padding-bottom: 1rem;"></div>')
+    boundary_css = []
+    if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
+        f_key = f"{namespace}_chk_{courses[0].id}"
+        boundary_css.append(f"""
+        div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
+        """)
+    if len(courses) > 0:
+        l_key = f"{namespace}_chk_{courses[-1].id}"
+        boundary_css.append(f"""
+        div.st-key-{l_key} {{ margin-bottom: 0px !important; }}
+        """)
 
+    combined_css = dynamic_css + boundary_css
+    if combined_css:
+        st.html(f'<style>{"".join(combined_css)}</style>')
     st.session_state['selected_course_ids'] = new_selected_ids
     return new_selected_ids
 
@@ -572,7 +578,7 @@ def _course_list_section(courses: list) -> None:
 
     with st.container(key="course_list_box", border=True):
         render_course_list(
-            filtered_courses, "dl", multi_select=True, first_item_top_offset="-10px"
+            filtered_courses, "dl", multi_select=True, first_item_top_offset="1px"
         )
 
 
@@ -939,13 +945,15 @@ def render_course_selector(fetch_courses_fn):
     }}
     </style>""")
 
-    col_custom, col_or, col_quick, _ = st.columns([0.75, 0.12, 0.75, 2.38], gap="small", vertical_alignment="center")
+    col_custom, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
     with col_custom:
         advanced_clicked = st.button('Custom Download', type="primary", use_container_width=True, key="btn_custom_download")
     with col_or:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em;'>OR</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
     with col_quick:
         quick_clicked = st.button('Quick Download', type="primary", use_container_width=True, key="btn_quick_download")
+
+    st.html("<div style='height: 20px;'></div>")
 
     if quick_clicked or advanced_clicked:
         if not st.session_state['selected_course_ids']:
