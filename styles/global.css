@@ -588,8 +588,7 @@ div[class*="st-key-btn_convert_"] button p {
 
 /* Conv button base geometry */
 div[class*="st-key-btn_convert_"] button {
-    height: 58px !important;
-    min-height: 0px !important;
+    min-height: 58px !important;
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     padding-right: 10px !important;
