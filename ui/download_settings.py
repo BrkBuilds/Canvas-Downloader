@@ -812,7 +812,7 @@ def render_download_settings(fetch_courses_fn):
                         with inc_right:
                             st.button("Slides & PDFs", key="btn_include_study", use_container_width=True, on_click=update_include_state, args=("study",))
 
-                st.html("<div style='padding-bottom: 7px;'></div>")
+                st.html("<div style='padding-bottom: 0px;'></div>")
 
                 # 2. Organization Block (Large Buttons)
                 def update_org_state(mode):
@@ -1610,7 +1610,7 @@ div.st-key-review_browse_folder button:hover {
     }}
     .summary-text {{
         color: #ffffff;
-        font-size: 1.15rem;
+        font-size: 0.92rem;
         font-weight: 700;
         display: flex;
         align-items: center;
