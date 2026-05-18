@@ -1,0 +1,1173 @@
+# Active Context: Canvas Downloader
+
+## Current Focus
+    - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
+    - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
+
+## Next Steps
+- **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
+- **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
+- **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
+
+## Recent Activity
+- **Session 2026-05-18 (Session 3): Quick Download Guide Modernization & UI Spelling Cleanups**
+    - **Preset Descriptions Alignment**: Fully updated and professionalized the quick download preset descriptions in the guide text (`ui/quick_download.py`) to align exactly with their backend configuration realities (including Daily study pack PDF/Office conversions, NotebookLM flat-layout conversion details, Slides & PDFs Only filtering rules, and Files Only limitations).
+    - **Collapsible FAQ Section**: Implemented a comprehensive, styled Details accordion block in `ui/quick_download.py` featuring student-centric FAQs on Preset definitions, custom override options, locked folder structures, conversion safety, and upgrade behavior.
+    - **Global British Spelling Purge**: Standardized UI text and code comments to US English (e.g. changing "Organisation" / "organised" in `ui/quick_download.py` lines 895 & 906 to "Organization" / "organized"), achieving total design and textual parity across the codebase.
+    - **Sync Review Typos Fixed**: Fixed a trailing space punctuation error (`courses .` to `courses.`) in `ui/sync_review.py` line 85.
+
+- **Session 2026-05-18 (Session 2): Sync UI History Helper Card Expansion**
+    - **Sync History Section**: Integrated a new "Sync History" details expander section in `_SYNC_HELP_TEXT` inside `sync_ui.py`, positioned between the "Quick Sync vs Analyze" and "Safety Guarantees" sections.
+    - **Student-Friendly Guidance**: Summarized the rolling 15-sync-log capacity, the filter modes ("View All" vs "By Course"), the clear-history action with confirmation prompt, and detailed how to inspect the status badges (Success, Errors, No Changes) and file categories (New Files, Updates, Protected Files, Skipped/Failed Files with errors).
+
+- **Session 2026-05-18: Sync UI FAQ Helper Card Expansion**
+    - **User FAQ Integrations**: Added three technically-accurate answers to the Frequently Asked Questions collapsible section in `sync_ui.py` covering concurrent sync capacities (no limit sequential batch processing), local-only untracked files safety (completely safe and untouched), and ignored files functionality (saving space by skipping specific Canvas items).
+    - **Proactive FAQ Expansions**: Added two highly practical, model-suggested entries addressing sync handling of files locked by other applications (graceful failure reporting and retry workflow) and sync engine resilience during internet loss or crashes (atomic resume bypassing completed files).
+    - **Typo Cleanup**: Restored visual professionalism by cleaning up a minor typo in the existing FAQs (changing 'ALLL' to 'ALL').
+
+- **Session 2026-05-16: FFmpeg UI Dependency Removal**
+    - **UI Text Purge**: Removed all user-facing references to FFmpeg as a mandatory external dependency in `ui/download_settings.py`.
+    - **Documentation Updates**: Purged "Requires FFmpeg" notes and manual installation guides from `docs/guide.html` and `docs/index.html`.
+    - **UX Streamlining**: Simplified the FAQ and requirement sections to reflect that the software is fully self-contained, handling all conversion requirements automatically through its bundled architecture.
+- **Session 2026-05-08: UI Standardization & "Physical Volume" Aesthetic Refinement**
+    - **Global Button Icon Alignment**: Standardized button icon alignment across `sync_ui.py`, `course_selector.py`, `ui_shared.py`, `sync_dialogs.py`, `auth.py`, and `sync_review.py`. Removed all legacy manual top-offsets (e.g., `top: -2px`, `translateY(-2px)`) in favor of a robust flexbox-based centering strategy.
+    - **Padding Balance**: Adjusted vertical padding on primary action buttons (from `0px 10px 4px 10px` to `0px 10px`) to ensure perfect visual centering of icons and text.
+    - **Quick Download UI Finalization**: Migrated the legacy markdown help block in `quick_download.py` to the standardized `render_help_card` component. Removed the 5px margin-bottom from the help button to ensure it sits flush with the H1 header baseline.
+    - **Emoji Cleanup**: Removed remaining legacy emojis from `quick_download.py` and `course_selector.py` to maintain a professional, minimalist aesthetic.
+    - **Snug Header Alignment**: Applied "Snug Header" corrections to ensure help buttons and header text share a consistent baseline across all main pages.
+
+- **Session 2026-05-06: macOS "Bring Your Own Browser" Refactoring**
+    - **Engine Shift**: Abandoned `PySide6` and `PySide6-WebEngine`. Removed `webview` dependency for macOS to drastically reduce bundle size (~250MB to ~70MB) and bypass ARM64 wheel unavailability.
+    - **New Controller**: Implemented `macos_controller.py` using **CustomTkinter** to provide a lightweight (~300KB), modern, dark-mode native interface for non-technical users to manage the Streamlit daemon lifecycle.
+    - **Chrome-Only Policy**: The application strictly launches the user's Google Chrome natively, enforcing CSS parity required by our Chromium-optimized interface.
+    - **Unified CI Build**: Consolidated the complex multi-build job (Intel/ARM split) in `.github/workflows/build-macos.yml` into a single, native `macos-latest` job for faster, simpler compilation.
+    
+- **Session 2026-05-06: Global UI Layout Hardening**
+    - **Wrapping Prevention**: Injected `white-space: nowrap;` to critical small UI structures (like the 'OR' divider between Sync actions) to permanently prevent awkward text-wrapping (e.g., "O" and "R" breaking onto separate lines).
+    - **Responsive Geometry Guard**: Implemented a hard constraint `min_size=(1024, 700)` into `webview.create_window()` inside `start.py`. This ensures that when the application is distributed and compiled across various hardware, the pywebview container can never be resized small enough to trigger Streamlit's native mobile column-collapsing, permanently protecting the multi-column desktop layout.
+
+- **Session 2026-05-02: Quick Download Interface Redesign**
+    - **Tactile "Physical Volume" UI**: Overhauled `ui/quick_download.py` from a 5-column layout to a minimalist, centered vertical list. Applied shadow-root isolated CSS via `st.html` for high-saturation gradients, beveled edges, and instant hover states.
+    - **UX Simplification**: Replaced complex expanders with sequential, logical navigation for non-technical users. Simplified output path display to a read-only field with a "Change" button.
+    - **Technical Hardening**: Maintained full parity with `core.state_registry` configuration mapping, keeping the core download logic intact. Ensured CSS injection pattern prevents "ghost flashes".
+    - **Codebase Stability**: Confirmed no remaining P0/P1 blockers. The interface is production-ready.
+
+- **Session 2026-04-30: Final Production Readiness Audit**
+    - **Windows Edge Cases**: Enhanced `_sanitize_filename` to intercept and prefix Windows reserved filenames (`CON`, `PRN`, `AUX`, `COM1-9`, `LPT1-9`) to prevent `OSError` crashes during file creation.
+    - **Legal Compliance**: Explicitly included the `LICENSE` file within the PyInstaller `datas` array for both Windows and macOS specs, guaranteeing offline bundling of the MIT license inside the standalone executables.
+
+- **Session 2026-04-30: Build Architecture & Distribution Optimization**
+    - **Windows Distribution**: Finalized PyInstaller `Canvas_Downloader.spec` in one-dir mode and `Canvas_Downloader_Setup.iss` for Inno Setup installer. Achieved ~1.5s cold launch time by disabling UPX compression and removing one-file extraction overhead.
+    - **macOS Distribution**: Finalized `Canvas_Downloader_macOS.spec` for one-dir + BUNDLE (`.app`).
+    - **Parity**: Both OSes now use identical one-dir internal architecture.
+    - **Startup Optimization**: Reduced health poll interval in `start.py` from 1.0s to 0.1s to decrease startup latency.
+    - **Loading Overlay 3-Phase Settling**: Implemented a robust 3-Phase Geometry-Polling logic to prevent broken UI flashes during slow navigation in Streamlit.
+
+- **Session 2026-04-30: Post-Compilation UI & Reliability Bug Fixes**
+    - **PyInstaller Path Resolution**: Updated `ui/presets.py` to use `get_base64_image` instead of a local loader, ensuring preset icons resolve correctly against `sys._MEIPASS` when compiled.
+    - **Presets UI Standardization**: Changed the preset configuration expander summary to `⚙️ See Configuration` to match the Sync Hub styling, reducing visual noise.
+    - **Settings Styling**: Corrected the "Saved Path" text color in the configuration summary to full white (`#ffffff`) to match core settings headers.
+    - **Streamlit Key TypeError Fix**: Removed the unsupported `key` argument from `st.markdown` in `ui/amber_notice.py`, resolving crashes when adding courses to folders in the Sync Page.
+15: - **Session 2026-04-30: Sync UI Hardening - Proactive Guardrails & Amber Notices**
+    - **Amber Notice Component**: Created `ui/amber_notice.py` - a reusable, styled amber/gold notification card for non-fatal warnings. Matches the "Physical Volume" aesthetic with dark amber background, gold text, and configurable icon/detail parameters.
+    - **Button State Hardening (Step 1)**: Extended Analyze & Quick Sync button disabling beyond just empty pairs. Now also blocks when any sync pair has a missing/unreachable folder. Added dynamic `help=` tooltips explaining exactly why buttons are disabled in student-friendly language.
+    - **Disabled Gradient Button CSS**: Added explicit `:disabled` CSS overrides for both the solid blue Analyze button and the gradient Quick Sync button, replacing washed-out gradients with clean muted grey + grey icon filter.
+    - **Missing Folder Amber Notice**: Replaced the red `st.warning` for missing folders with an amber notice card listing the affected paths and guidance on how to fix it.
+    - **Step 4 Empty Pairs Guard**: Upgraded the harsh `st.error` to a friendly amber notice explaining the "no folders found" state likely happened after a page refresh.
+    - **Disk Space Warning (Confirmation)**: Added an amber notice in `sync_confirmation.py` when the download will consume >70% of remaining disk space.
+    - **Retry Exhaustion Notice (Completion)**: Added an amber notice in `sync/completion.py` guiding students to check connectivity or download manually from Canvas when all retry attempts have failed.
+    - **Global Amber Migration**: Scanned the codebase and migrated standalone hardcoded amber notices to the `render_amber_notice` component in `ui/sync_review.py` (All files ignored) and `sync/completion.py` (Quick Sync skipped files), ensuring visual consistency across all warning surfaces.
+    - **Verified**: Confirmed all modified files compile and structural CSS/embedded HTML warnings (help cards) are left untouched as intended. ✅ Sync UI Hardening Complete.
+15: - **Session 2026-04-30: Comprehensive Sync Audit & Reliability Hardening**
+16:     - **Crash Vector Mitigation**: Added index guards to `sync_confirmation.py` to prevent `IndexError` on empty folder sets.
+17:     - **State Leakage Cleanup**: Fixed `hub_cleanup()` in `hub_dialog.py` to ensure edit-state keys are properly popped when closing modals.
+18:     - **Logic Alignment**: Updated Group Deduplication to use `(course_id, local_folder)` tuples, aligning with the backend persistence layer.
+19:     - **Archived Course Support**: Refactored the sync confirmation flow to handle "course no longer available" scenarios gracefully.
+20:     - **XSS Hardening**: Implemented mandatory escaping (`esc()`) for all course and file names rendered in HTML sync history reports.
+21:     - **Visual Feedback**: Added distinctive red-border styling for "missing folder" sync pair cards to improve user visibility of broken paths.
+22:     - **Overlap Warnings**: Integrated informational toasts when adding the same course under multiple local folders.
+23: - **Session 2026-04-30: Loading Screen & Transition Stabilization**
+24:     - **Intelligent Overlay Control**: Refactored `ui_helpers.py` to include a centralized `hide_loading_overlay()` function with settlement logic.
+25:     - **Streamlit Status Integration**: Integrated monitoring of Streamlit's `stStatusWidget` to synchronize overlay hiding with script completion.
+26:     - **UX Hardening**: Conducted multi-device testing to tune settlement delays for optimal responsiveness vs stability.
+27: 
+28: - **Session 2026-04-29: Deep Systems Audit & Hardening (v2.0.0)**
+29:     - **Atomic Persistence Hardening**: Finalized the migration to the `.tmp` -> `fsync` -> `os.replace` pattern for all link shortcuts (.url, .webloc) and HTML redirect files in `canvas_logic.py` and `sync/execution.py`.
+30:     - **Security Injection Mitigation**: Hardened HTML redirect generation by implementing mandatory `html.escape()` for meta refresh tags and anchor links, eliminating theoretical XSS vectors.
+31:     - **Architectural Consolidation**: Unified duplicate, platform-conflicting `_create_link` definitions into a single, canonical, platform-aware implementation in `CanvasManager`.
+32:     - **Production Readiness Verification**: Conducted a "Deep Systems, Entropy, and Edge-of-Reality" audit. Confirmed 0 P0/P1 blockers.
+33:     - **Memory Bank Synchronization**: Updated all core documentation to reflect the production-hardened state and finalized the `V2_Production_Readiness_Report.md`.
+34: 
+35: - **Session 2026-04-29: Comprehensive Sync UI Performance & Architecture Overhaul**
+    - **Rerun Stability (Category 1):**
+        - Done: **R1 (Course Selector)**: Wrapped the course list block in `@st.fragment` and implemented a `persistent_` key prefix for the CBS toggle to prevent state drift and full-page reruns on selection (ui/course_selector.py).
+        - Done: **R2 (Sync Review)**: Converted "Select All" / "Deselect All" to use callbacks and removed explicit `st.rerun()` calls, preventing violent expander collapse by confining reruns to the fragment scope (ui/sync_review.py).
+        - Done: **R3 (Sync Step 1)**: Wrapped the pair card list in `@st.fragment` (`_sync_pairs_section`) to confine card management actions (Edit/Remove/Add) and prevent redundant help-text rebuilding (sync_ui.py).
+        - Verified: **R4 (Download Settings)**: Confirmed all settings cards are already isolated via `@st.fragment` (ui/download_settings.py).
+    - **Speed & Optimization (Category 2):**
+        - Done: **S1/F2 (Ignored Files Cache)**: Implemented `_ignored_files_cache` in `st.session_state` to eliminate redundant O(N) SQLite table scans during reruns, reducing DB load from O(N) per render to O(1) per cache hit (sync_ui.py).
+        - Done: **S3 (String Hoisting)**: Hoisted massive help-text HTML blocks to module-level constants in `sync_ui.py` and `ui/sync_review.py` to eliminate O(reruns) string allocation overhead.
+        - Done: **S5 (CSS Scoping)**: Scoped global button height CSS to specific Analyze/Quick Sync keys to prevent cross-page layout bleed.
+    - **UI Bleed & Isolation (Category 4):**
+        - Done: **B1 (Chevron Scaling Bug)**: Resolved the full-screen chevron expansion issue by implementing a session-state flag (`_inject_sync_review_css`) in `cleanup_sync_state()`. This prevents the `sync_review.css` from re-injecting into the front-page DOM where it lacks proper scoping (sync_ui.py).
+        - Done: **B2 (Shadow-Root Isolation)**: Converted all `st.markdown` CSS injections to `st.html` to move styles into shadow DOM isolation, resolving "Ghost Box" 1rem margin gaps and preventing cross-page leakage.
+        - Done: **S5/B2 (Shadow Spacing)**: Standardized using internal `padding` in `st.html` containers to inflate height inside shadow roots where `margin` is collapsed.
+    - **Fragment Integration (Category 3):**
+        - Done: **F1-F3**: Successfully implemented fragment boundaries for Course Selection, Sync List management, and Sync Review categories to ensure a fluid, non-jittery UX.
+
+- **Session 2026-04-28: Documentation Overhaul & macOS Consistency Fixes**
+    - Done: Full rewrite of `README.md`, `BUILD_INSTRUCTIONS.md`, and `MACOS_BUILD_GUIDE.md` to remove stale architectural references (Tkinter, base64 tokens) and update technical specs (PyWebView/Chromium, size estimates).
+    - Done: Unified token security via `keyring` across both Windows and macOS, including migration logic for legacy base64 and plaintext tokens in `ui/auth.py`.
+    - Done: Forced Chromium rendering on macOS (`gui='qt'` via PySide6 + QtWebEngine) for 1:1 CSS parity with Windows.
+    - Done: Updated macOS build spec to include `.streamlit` config and exclude Windows-only toast/sound modules.
+    - Done: Fixed macOS folder picker and `open` behavior in `ui_helpers.py` to prevent failures in PyWebView contexts.
+    - Done: Integrated `pync` for native macOS notifications with app-focus support on click in `engine/notifications.py`.
+    - Done: Corrected Windows frozen build config path to `%APPDATA%/CanvasDownloader/` to match macOS Application Support standards.
+    - Done: Fixed sheet name collision in `excel_converter.py` on macOS by implementing indexed CSV exports.
+    - Done: Fixed Word alert suppression in AppleScript via explicit integer `0` for `wdAlertsNone` parity.
+14: 
+15: - **Session 2026-04-28: Global 12-Hour Time Format & Date Standardization**
+    - Done: Implemented a central `format_time_display()` utility in `ui_helpers.py` that reads `st.session_state['use_12h_format']` to convert `HH:MM` to `h:MM AM/PM`.
+    - Done: Updated the "Settings" dialog's "Preferences" section from a 2-column to a 3-column layout, adding the "Time format" toggle card with matching equal-height CSS and persistence in `canvas_downloader_settings.json`.
+    - Done: Refactored `format_relative_date()` and `_format_canvas_date()` to respect the 12h toggle, switching both time format and date ordering: European default (`24 Apr`, `26th August`) vs. American standard (`Apr 24`, `August 26th`) when 12h is enabled.
+    - Done: Applied the formatting globally across sync cards, sync history, sync review metadata, and the "Sync Report" execution log.
+    - Done: Hardened date formatting in the sync execution log to switch between "Monday the 28th of April, 2026" (European) and "Monday, April 28th, 2026" (American) based on user preference.
+
+- **Session 2026-04-28: Inline Sync Edit Fixes & Course-Identity Guard**
+
+- **Session 2026-04-27: Sync Engine Robustness & Mode A/B Parity**
+    - Done: Refactored `analyze_course` in `sync_manager.py` to remove the Phase 1 existence guard and prioritize local existence checks in Phase 2. This ensures locally-deleted files are unambiguously classified as `locally_deleted_files` regardless of Canvas timestamps.
+    - Done: Standardized `SyncFileInfo.target_local_path` to always reflect the analyzer's calculated path, and updated `target_paths` lookup to resolve both positive and synthetic negative IDs.
+    - Done: Enhanced `canvas_logic.py` to handle the `isolate_secondary_content` setting once per run. In Mode A (inline), synthetic content filenames now include routing prefixes (e.g., `Type: ParentName - ...`), and module-linked entities propagate their parent's module to attachment IDs for correct subfolder routing.
+    - Done: Implemented `_adopt_redownload` in `sync/execution.py` to handle redownloads of locally-deleted files with clean overwrites (no `_NewVersion` suffix), ensuring path reclamation for updates and redownloads.
+    - Done: Improved attachment deduplication by checking the manifest and on-disk presence before re-queuing, preventing duplicate attachments (e.g., `(1).pdf`) when only the parent `.html` is redownloaded.
+    - Done: Standardized path separators to forward slashes (`/`) in all manifest write operations to ensure cross-platform consistency.
+
+- **Session 2026-04-27: Sync Analysis Optimization & UI Unblocking**
+    - Done: Addressed severe I/O bottleneck in the scanning phase by eliminating the duplicate module scan. Refactored `_get_files_from_modules` in `canvas_logic.py` to build a `module_map` during its initial run and threaded it through `get_course_files_metadata` directly into `analyze_course` in `sync_manager.py`. This saves ~30 redundant Canvas API calls per course during Sync Review.
+    - Done: Eliminated Streamlit UI thread freezing during the Sync Analysis phase. Extracted all blocking API calls into `_analyze_course_blocking` and wrapped execution in `asyncio.to_thread` utilizing the existing `safe_thread_wrapper` pattern to safely inject Streamlit's `ScriptRunContext`. This allows the Progress Bar and Cancel button to remain highly responsive.
+    - Verified: Preserved complete backward compatibility. The `module_map` parameter in `analyze_course` defaults to `None` with a functional API fallback, and `app.py` safely unpacks the new 3-tuple return from `get_course_files_metadata` without affecting the standard download flow.
+
+- **Session 2026-04-24: Debugging Sync Review File Restoration**
+    - Done: Fixed a bug where restoring ignored files from the database placed them incorrectly into the "Missing Files" expander by default.
+    - Done: Updated `analyze_course` in `sync_manager.py` to pre-calculate the intrinsic `origin_category` (e.g., `new_files`, `updated_files`, `missing_files`, `locally_deleted_files`) even if a file is marked as ignored.
+    - Done: Attached `origin_category` and `original_item` directly to the `SyncFileInfo` instances of ignored files during load, ensuring UI restoration logic routes them back to the exact list they originated from perfectly.
+- **Session 2026-04-22: Download & Sync Completion UI Overhaul**
+    - Done: Unified the completion screen layout by replacing multiple disjointed success/warning/error alert bars with a single cohesive `render_completion_card` that natively handles success, partial success, and failure states, including skipped discovery feedback.
+    - Done: Refactored raw JSON error output from Canvas into an expandable, CSS-styled `.error-panel` featuring human-readable translations (e.g., "Access Denied" vs 401 Unauthorized JSON).
+    - Done: Strategically integrated the "Retry Failed Items" button *inside* the error panel to provide contextual actionability directly next to the error list.
+    - Done: Replaced visually overwhelming expanded file lists with a compact, pill-based filetype summary component (`_render_filetype_summary`) utilizing Base64-injected SVG icons (PDF, HTML, ZIP, etc.).
+    - Done: Audited `app.py` and `sync/completion.py` to ensure both Download and Sync completion screens invoke the new unified `render_completion_card`, `render_error_section`, and `render_folder_cards` components.
+    - Done: Applied strict "no emoji" policy across completion UI, leveraging pure CSS and Base64 SVGs for a premium, physical volume aesthetic via `styles/completion.css`.
+
+- **Action on Right, Cancel on Left Standardization**: Conducted a comprehensive UX audit and remediation, enforcing a "Primary Action on Right, Secondary/destructive on Left" pattern across all wizards, dialogs, and bulk action bars.
+- **"Physical Volume" Button Aesthetic**: Re-engineered the primary sync action buttons with a premium, tactile "Physical Volume" look. This includes high-saturation 135° gradients (Dark Blue to Teal for Quick Sync), 3D inset beveled lips (`box-shadow: inset ...`), and subtle 0.2 opacity outer glows on hover.
+- **Synchronized Transition Timing**: Standardized all primary buttons to a snappy **0.2s ease-in-out** transition. Resolved the "instantaneous" hover bug for CSS gradients by utilizing a `filter: brightness()` transition pattern.
+- **Unified Sync Hub Branding**: Finalized the replacement of legacy emojis with Base64 PNG assets across the entire Sync Hub, including the new "Add Course folder to Sync" buttons and modal headers.
+
+- **Session 2026-04-20: Add Course Button Aesthetic Refinement**
+    - Done: Refined the "Add Course folder to Sync" buttons in `sync_ui.py` to use a solid `#4a7a9b` background color with no transparency and removed the border.
+    - Done: Updated hover states to a lighter `#6a9abb` solid background to maintain interactive feedback without transparency.
+    - Verified: Confirmed the SVG/PNG base64 icons are preserved and correctly aligned within the new solid button structure.
+
+- **Session 2026-04-19: Native OS Notifications & Branded Toast Alerts**
+    - Done: Replaced generic system error beeps with the premium "Windows Notify Calendar" chime (`.wav`) for a more pleasant user experience.
+    - Done: Integrated `win11toast` for native Windows 10/11 notifications, correctly branded as "Canvas Downloader" to build user trust.
+    - Done: Implemented a native focus-on-click mechanism for Windows toasts using `ctypes` (`SetForegroundWindow`) to bring the existing PyWebView window to the front, avoiding redundant browser instances.
+    - Done: Refined Windows toast aesthetics by removing oversized body icons, resulting in a clean, professional header-only icon layout matching OS standards.
+    - Done: Implemented native macOS notifications via `osascript`, ensuring consistent feedback and automatic app-icon integration for compiled bundles.
+    - Done: Updated the "Settings" UI (`ui/auth.py`) to reflect the new notification system, renaming the section and clarifying the dual sound/toast functionality.
+    - Done: Fixed PyInstaller sound/icon compilation bugs. Hoisted `winsound` and `win11toast` imports to module level to ensure static bundling, and redirected compiled Windows toasts to use `sys.executable` as the `app_id` to dynamically inherit the embedded executable icon in the notification header.
+
+- **Session 2026-04-16: Smart Select Refinement & Layout Harmony (Phase 5/6)**
+    - Done: Refactored legacy `ui/sync_review.py` Smart Select file-type filters from checkboxes into dynamic styled tag buttons (`st.button`).
+    - Done: Implemented 3-state CSS injection for tag buttons-OFF (deep black, pure white text), PARTIAL (dark navy), ON (bright blue).
+    - Done: Leveraged Streamlit markdown to embed dynamic fractional counts natively within tags: `(all)`, `(none)`, `(1/2)` mapped directly inside `:grey[...]`.
+    - Done: Tuned tag size (`height: 28px`, `padding: 2px 14px`), optimized typography (`0.7rem` weight 400 for suffixes), and replaced transparency-based hover effects (`brightness()`) with solid color transitions to prevent bleeding.
+    - Done: Enforced mathematical layout flex rules (`row-gap: 8px`, `column-gap: 8px`) ensuring perfect symmetrical grid flow when file extensions exceed the 1-row card width.
+    - Done: Perfected the `ui/sync_review.py` expander card margins, notably rectifying the zero-padding issue on the top expander and ensuring the "Ignored Files" separator maintains symmetrical `16px` vertical breathing room.
+    - Verified: Confirmed `handle_restore` and `handle_restore_all` explicitly force their target files to `st.session_state = True`, securely auto-selecting them upon restoration.
+
+- **Session 2026-04-15: Application-Wide UX Standardization & Polish**
+    - Done: Refactored all button layouts to enforce **"Action on Right, Cancel on Left"** pattern across Download Step 1/2, Sync Review, and all Modal Dialogs.
+    - Done: Standardized "Ignored Files" button icon size to **19px** and adjusted counter spacing to **2px** with greyed-out parentheses/numbers.
+    - Done: Swapped "Select All" / "Clear Selection" (or "Deselect All") positions in Step 1 and Sync Review to keep triggers left-aligned near checklists.
+    - Done: Standardized footer button columns (e.g., `st.columns([3, 1])` or `[5, 1, 1.2]`) ensuring consistent alignment for primary confirm/save buttons on the far right.
+    - Done: Applied "Action-Right" rule to Presets Hub, Authentication Sidebar, and Sync Confirmation dialogs.
+
+- **Session 2026-04-15: Sync Review Tooltips & Dialog Polish**
+    - Done: Implemented high-fidelity, unclippable hover tooltips for the Sync Review screen using static positioning relative to the hover target rather than cursor tracking.
+    - Done: Engineered precise 175ms debounce delays for both the appearance and disappearance of tooltips, providing a premium, non-jittery UX.
+    - Done: Streamlined the Sync UI by permanently removing the redundant and buggy "manage all ignored files" global dialog.
+    - Done: Standardized the inline "ignored files" button presentation across the UI, and removed the distracting dotted border from the "Ignored Files" expander card.
+    - Done: Refined application toasts, ensuring modal-driven responses correctly trigger global session states and seamlessly surface to the user.
+
+- **Session 2026-04-14: Emojis & Settings Menu Auditing**
+    - Done: Conducted a global audit of application emojis, replacing legacy text-based emojis with modern, custom Base64-encoded SVG/PNG icons using CSS `::before` pseudo-element injection for buttons.
+    - Done: Modernized the "Settings" menu UI, introducing non-intrusive and toggleable settings that improve the UX while adhering to the established clean design language.
+
+- **Session 2026-04-14: sync_review.py - Smart Select Card Restyling**
+    - Done: Restyled the "Smart Select" filetype checkbox card in `ui/sync_review.py` with dark card background, rounded corners, and shadow.
+    - Done: Fixed horizontal button layout - replaced unreliable `:has()` CSS flex hack with `st.columns([1,1])` + `use_container_width=True` for a true 50/50 split.
+    - Done: Tuned checkbox ↔ label gap using `gap` on the `label` flex container (confirmed `display: flex !important` is required). Final value: `gap: 0` + `margin-left: -2px` on text wrapper div.
+    - Done: Fixed checkbox vertical misalignment with `position: relative; top: -1px` on the visual checkbox `span`.
+    - Done: Fixed separator spacing - `margin` on `<hr>` inside `st.html()` is swallowed by the shadow root. Fix: wrap with `<div style='padding: 10px 0'>` so the padding is real layout height.
+    - Done: Renamed "Clear Selection" → "Deselect All".
+
+- **Session 2026-04-14: Sync UI Button Overhaul & Transition Synchronization**
+    - Done: Implemented "Physical Volume" tactile styling for `btn_quick_sync` and `btn_analyze_sync`.
+    - Done: Engineered the `filter: brightness()` CSS trick to allow smooth transitions on gradient backgrounds.
+    - Done: Synchronized all primary buttons to a 0.2s duration.
+    - Done: Finalized `icon_add.png` migration for all "Add Course" buttons in `sync_ui.py`.
+    - Done: Added `letter-spacing: 0.75px` to the "Output Path" display div in `ui/download_settings.py` for improved path readability.
+    - Done: Updated Card 2 and Card 3 chevron colors to use a consistent gray scheme, removing misleading active colors when expanded.
+    - Done: Propagated "Analyze, Review & Sync" premium layout to the "Confirm and Download" button (minus icon) and resized the "Save Preset" column to ~75% width.
+
+- **Session 2026-04-13: Plus Emoji Replacement Migration**
+    - Done: Loaded `icon_add.png` as Base64 across `sync_ui.py` and `ui/hub_dialog.py`.
+    - Done: Implemented `::before` pseudo-element injection for `btn_add_folder`, `btn_add_folder_empty`, `hub_add_...`, and `btn_hub_add_new_pair`.
+    - Done: Removed all ➕ emojis from button text labels to finalize the modern aesthetic.
+    - Done: Verified zero "Ghost Flashes" by applying Static Hoisting to all new CSS blocks.
+
+- **Session 2026-04-10: Sidebar Authentication UI Finalization**
+    - Done: Implemented edge-to-edge, flat-corner styling for sidebar notifications (`border-radius: 0px`).
+    - Done: Reordered `ui/auth.py` logic to place error messages above the separator.
+    - Done: Standardized sidebar padding (20px) for all notification variants.
+
+- **Session 2026-04-07: Hub UI Modernization & The Zero-Width Space Hack**
+    - Done: Replaced legacy emojis with custom Base64 PNG assets in the Sync Hub.
+    - Done: Implemented the `\u200b` (Zero-Width Space) hack for `@st.dialog` titles to bypass Streamlit 1.51+ backend validation.
+    - Done: Refactored `btn_hub_main` icon injection to use `::before` pseudo-elements.
+    - Done: Updated `HACKS_AND_GUARDRAILS_FOR_UI_CHANGES.md` with the new Modal Header pattern.
+
+## Recent Changes (Session 2026-04-05 - Course Selection List Redesign)
+- **CSS Architecture Pivot**: Completely abandoned Streamlit's `st.columns` nested structural hierarchy for checklist rendering. Transitioned to a native full-width `<st.checkbox>` to drastically increase the native hit area for row selection without hacky invisible labels.
+- **Pseudo-Element Data Injection**: Solved the challenge of "stacked" text inside checkboxes by utilizing CSS `::after` pseudo-elements injected onto the Streamlit Markdown container. This dynamically pulls the `course_code` to a secondary line beneath the `course_name` with independent typography (subdued grey) while preserving the single-click hierarchy.
+- **Interactive Pseudo-Classes**: Implemented `:has(input[type="checkbox"]:checked)` container queries to natively apply background highlighting (`rgba(56, 189, 248, 0.08)`) and border-indicators upon row selection dynamically.
+- **Action Button Relocation**: Restyled the bulky "Select All" and "Clear Selection" bulk actions into lightweight text links and isolated them natively parallel to the "CBS Filters" toggle switch for optimal grouping.
+
+
+## Recent Changes (Session 2026-04-05 - Course Selection Toggle Modernization)
+- **Segmented Control Refactor**: Abandoned the rigid `st.radio` component in `ui/course_selector.py` in favor of a premium, button-based segmented control architecture.
+- **Native Button Architecture**: Implemented `st.button` inside `st.columns` with `on_click` callbacks to manage toggle state (`favorites` vs `all`), achieving superior styling control and responsiveness.
+- **Premium Aesthetics**:
+    - **Dark Tray**: Created a width-constrained (`380px`), dark rounded-square tray (`rgba(0,0,0,0.25)`, `12px` radius).
+    - **Active Blue Tint**: Implemented high-fidelity active states with blue borders (`rgba(56, 189, 248, 0.3)`) and subtle blue-tinted backgrounds.
+    - **SVG Icon Injection**: Integrated dynamic SVG icons (Star for Favorites, List for All) that swap colors (blue/grey) based on active state using CSS `background-image` and data URIs.
+- **Streamlit Container Key Fix**: Discovered and resolved a critical bug where `st.container(key=...)` failed to generate the `st-key-` CSS class in the DOM. Successfully bypassed this by forcing `border=True` and masking the native border via CSS.
+- **Static Hoisting Enforcement**: Applied "Static Hoisting" to all toggle CSS, ensuring styles are injected into the browser *before* buttons are rendered to eliminate grey "ghost flashes" during reruns.
+
+## Recent Changes (Session 2026-04-05 - UI Encoding Remediation)
+- **Global Encoding Guardrail**: Established a mandatory UTF-8 workspace rule. All future internal file operations and script-based read/writes must explicitly specify `encoding='utf-8'` to prevent Windows-default (CP1252) Mojibake corruption.
+- **Mojibake Purge & Emoji Restoration**:
+    - Conducted a comprehensive scan of the `ui/` directory and core application files for character encoding artifacts.
+    - Identified and surgically repaired extensive corruption in `ui/sync_review.py` where emojis had been replaced by Mojibake strings (e.g., `ðŸ”`, `âš ï¸ `).
+    - Restored full UTF-8 emoji fidelity across all Review Changes screens, including Metric Cards (🆕, 🔄, ⚠️, 🗑️, 🚫), Expander Titles, and Action Buttons (🧹, ↩️).
+    - Verified 1:1 parity with the intended design language across all course-specific UI blocks.
+
+## Recent Changes (Session 2026-04-04 - macOS Parity Remediation)
+- **Phase 1: PyInstaller Spec Parity**:
+    - Rewrote `Canvas_Downloader_macOS.spec` to synchronize `datas`, `collect_all`, and `hiddenimports` with the Windows version.
+    - Integrated macOS FFmpeg binary via `imageio_ffmpeg` for video post-processing.
+- **Phase 2: Native Architecture Unification**:
+    - Re-architected `start.py` to completely eliminate the legacy macOS AppleScript lifecycle loop.
+    - Both operating systems now run the identical sequence: daemonized background Streamlit Thread + main thread `pywebview.start()` for native Edge/Cocoa rendering.
+- **Phase 3: AppleScript Bridge Extraction**:
+    - Eliminated code duplication across `pdf_converter.py`, `word_converter.py`, and `excel_converter.py` by centralizing the `osascript` payload runner to `engine/applescript_bridge.py`.
+    - Patched structural Python bugs (`except str`) and AppleScript literal line breaks inside Excel data extraction (`\n`).
+- **Phase 4: Auth & Sandbox Security**:
+    - Converted `import keyring` to platform-dependent lazy loads deeply nested inside `ui/auth.py` functions to prevent Darwin `ImportError` / permission cascades.
+    - Stabilized user logout sequence via an atomic `.tmp` swap pattern against JSON configuration files.
+
+## Recent Changes (Session 2026-04-04 - Modular Architecture Audit Remediation)
+- **Phase 1: State Cleanup Architecture**:
+    - Centralized blacklist cleanup adopted in `app.py` via `cleanup_download_state()`.
+    - Initialized defensive `sync_cancel_requested` flag natively in `SYNC_DEFAULTS` to protect against missing `.get()` fallbacks.
+- **Phase 2: Constant Consolidation**:
+    - Replaced local list variables in `post_processing_bridge.py`, `ui/download_settings.py`, and `sync/analysis.py`.
+    - Rewired `PresetManager` class attributes to draw from the registry natively.
+- **Phase 3: CSS & DOM Stability**:
+    - Removed broken/redundant cancel button hover CSS blocks from `sync/execution.py` and consolidated missing selectors.
+    - Added `theme.py` constants uniformly mapping to `engine/progress_dashboard.py` terminal HTML output.
+    - Added `_CSS_CACHE` dictionary to `styles/__init__.py` to eliminate redundant disk I/O on every UI rerun.
+- **Phase 4: Dialog Topology (`DuplicateWidgetID` Fix)**:
+    - Centralized `error_log_dialog()` inside `ui_shared.py` using uniquely keyed containers.
+    - Stripped duplicate local dialog wrapper functions actively imported by `app.py`, `sync/completion.py`, and `sync_ui.py`.
+- **Phase 5: Dependency Hygiene**:
+    - Deferred `CONFIG_FILE` path evaluation in `ui/auth.py` to minimize import-time footprint.
+    - Purged dead code helper functions (`resolve_path`, `get_base64_image`, `_get_chevron_base64`) from `app.py`.
+
+## Recent Changes (Session 2026-04-04 - Monolith Teardown Completion: Phases 0–7)
+- **Phase 0: CSS Extraction (`styles/`)**:
+    - Decoupled ~1,800 lines of inline CSS from both `app.py` and `sync_ui.py` into dedicated `.css` files.
+    - Implemented `inject_css` and `inject_css_template` strategies.
+- **Phase 1: Core Systems (`core/`)**:
+    - Centralized all single-source-of-truth session variables in `core/state_registry.py`.
+    - Consolidated global cancellation boolean trackers and polling logic into `core/cancellation.py`.
+- **Phase 2 & 3: Engine Abstractions (`engine/`)**:
+    - Extracted identical terminal log and visual dashboard UI into `engine/progress_dashboard.py`.
+    - Unified the heavy post-processing initialization blocks across Sync/Download into `engine/post_processing_bridge.py`.
+    - Maintained async integrity by strictly separating `update_ui` patterns between the distinct aiohttp vs canvasapi event loops (`Option B Enforced`).
+- **Phase 4: Sync Engine Extrication (`sync/`)**:
+    - Disentangled background execution logic from `sync_ui.py`.
+    - Migrated atomic persistence loops (`os.replace` + `threading.Lock`) to `sync/persistence.py`.
+    - Shifted sync diffing and async downloading logic to `sync/analysis.py` and `sync/execution.py`.
+- **Phase 5: Sync UI Components (`sync_ui.py` -> `ui/`)**:
+    - Migrated all sync configurations into `ui/sync_dialogs.py` and `ui/hub_dialog.py`.
+    - Extracted the analysis review and pre-flight confirmation UI into `ui/sync_review.py` and `ui/sync_confirmation.py`.
+    - Successfully completed the 77% line reduction of `sync_ui.py`.
+- **Phase 6: Download UI Component Extraction (`app.py` -> `ui/`)**:
+    - **Presets**: Migrated the entire preset engine, hub, and UI controls into `ui/presets.py`.
+    - **Step 1 UI**: Extracted the course selector list, CBS metadata filters, and check logic into `ui/course_selector.py`.
+    - **Step 2 UI**: Moved the massive 1,400-line download settings page (Card 1 Core, Card 2 Canvas Native, Card 3 AI Conversions, Output Path) into `ui/download_settings.py`.
+- **Phase 7: Auth & App.py Orchestrator Refactor (`app.py` -> `ui/auth.py`)**:
+    - Extracted the globally-persistent sidebar logic (Auth, Debug Mode, Concurrent Downloads, Nav) into `ui/auth.py`.
+    - Reduced `app.py` line count by 64% (from 3,464 to 1,241 lines), finalizing its transition into a thin orchestrator routing to shared UI and Engine modules.
+- **Architectural Circular Import Defenses**:
+    - Enforced a parameterized "Delegation Pattern" (e.g. `render_download_settings(fetch_courses_fn)`) to strictly prevent circular imports between the central `app.py` orchestrator and its extracted `ui/` components.
+
+## Recent Changes (Session 2026-04-04 - Final Modularization Audit & Cleanup)
+- **Resolved Static Analysis Issues (`canvas_logic.py`)**:
+    - Fixed `NameError` crash in `download_isolated_batch_async` by hoisting the `debug_file` assignment above the `try` block initializing `SyncManager`.
+    - Eliminated pyflakes warnings across asynchronous fetch loops by removing unused exception assignments (`except Exception as e:` -> `except Exception:`), deleting unused proxy flags (`files_access_failed`), and cleaning up unformatted f-strings.
+- **Orphaned Import Sweep (Global)**:
+    - Executed an exhaustive codebase sweep utilizing `pyflakes` to identify and remove stale namespace bindings resulting from the Monolith Teardown.
+    - Cleaned `ui/hub_dialog.py`, `ui/presets.py`, `ui/sync_confirmation.py`, `ui/sync_review.py`, `sync_ui.py`, `ui_shared.py`, `url_compiler.py`, and `word_converter.py`, significantly reducing cognitive load and lowering cyclic dependency risks.
+- **Removed Legacy Modules**:
+    - Verified the removal of temporary architecture files (`ui/_extract_step2.py`) as they were no longer required post-modularization.
+
+## Recent Changes (Session 2026-04-03 - Surgical Removal of 3-Tier Sync UI Architecture)
+- **UI Deletion (`sync_ui.py`)**:
+    - **Switchboard Removal**: Deleted the entire "Sync Mode & Settings" switchboard, including the 3-mode tab row and all associated configuration panels.
+    - **Diff Table Removal**: Removed the "Mixed Settings Detected" HTML diff table and its associated logic.
+    - **Per-Course UI Removal**: Deleted the individual course selectboxes and per-course settings override checkboxes.
+    - **CSS Pruning**: Stripped all CSS injections related to the tree-view styling and the legacy diff table layout.
+- **Backend/Logic Cleanup (`sync_ui.py`)**:
+    - **Initialization Sweep Removal**: Eradicated the startup logic that scanned all courses to pre-populate session state for Custom Sync modes.
+    - **Handoff Simplification**: Refactored the `_show_sync_confirmation` handoff to unconditionally use the SQLite contract extraction, removing the `_config_mode` branching logic.
+    - **State Sanitization**: Updated `_cleanup_sync_state` to wipe all trace of the 3-tier system keys, preventing state amnesia or cross-contamination.
+- **Architectural Directive**:
+    - Established that the "Download Settings" (Step 2) is the sole authoritative source of truth for sync configurations. Manual Sync no longer supports "on-the-fly" overrides in the final review stage.
+
+## Recent Changes (Session 2026-04-02 - Step 2 UI Refinements & Unified Dropdown)
+- **Unified Course Dropdown Relocation (`app.py`)**:
+    - **Relocation**: Moved the course summary from the Step 2 header to the bottom of the page, acting as a final summary. It now sits between the "Output Path" card and the Action Buttons.
+    - **Full-Width Aesthetics**: Scaled the dropdown to `100%` width. Increased summary text size (`1.05rem`), chevron size (`1.3rem`), and vertical padding (`12px 16px`) for better visual presence.
+    - **Alignment & Spacing**: Refined `ul.course-list-box` padding to `0 16px` to pull list items flush with the chevron. Adjusted vertical margins to `10px` top and `35px` bottom to balance the layout.
+    - **Styling**: Implemented a dark theme (`#111418` background when open), pure white text for course names, and a custom dark scrollbar.
+- **Output Path Read-Only Affordance**:
+    - **Aesthetics**: Restyled the "Output Path" display box with a dashed border (`rgba(255, 255, 255, 0.2)`), dimmed text (`opacity: 0.7`), and `cursor: default` to clearly signal it is read-only.
+    - **Button Styling**: Updated the "Select Folder" button to a neutral grey background (`rgba(255, 255, 255, 0.05)`) to distinguish it from the path display and the primary "Next/Confirm" buttons.
+
+## Recent Changes (Session 2026-04-02 - Output Path UI Stabilization)
+- **Nuclear Flex Row Pattern (`app.py`)**:
+    - **Problem**: Streamlit's `st.text_input` and `st.columns` are hostile to "content-hugging" layouts. Columns pre-divide space into fractions, and inputs always stretch to 100%, causing either massive empty space or text clipping on wide screens.
+    - **Solution**: Abandoned `st.columns` and `st.text_input`. Rendered the path as a styled HTML `inline-block` (providing native content-length measurement) and used "Nuclear CSS" to flip the parent `st-key` container's flex-direction to `row` at every intermediate DOM depth.
+    - **Architecture**: Targeted `div.st-key-X` down through 3 levels of `> div` to hit the `stVerticalBlock` regardless of Streamlit's internal nesting changes.
+    - **Safety**: Applied `text-overflow: ellipsis` and `max-width: calc(100% - 180px)` to the path container to ensure the "Select Folder" button is never pushed off-screen by extreme path lengths.
+    - **Alignment**: Synchronized the button height to 44px and used a 7px `margin-top` to achieve perfect vertical parity with the custom-styled path box.
+
+## Recent Changes (Session 2026-04-01 - Hover Displacement & Geometric Lockdown)
+- **Geometric Alignment**:
+    - **Specs**: Height: `150px`, Icon Scale: `55px`, Padding-Top: `85px`, Title Margin: `0px`, Subtitle line-height: `1.1`.
+- **Pseudo-Element Anchor Hardening**:
+    - **Stability**: Stripped all dynamic hover-offset logic and locked all radio button states to a unified `top: 16px !important; right: 16px !important; box-sizing: border-box !important;`.
+
+## Recent Changes (Session 2026-03-31 - Download Settings UI Modernization)
+- **Checkbox -> Radio Transition Architecture (`app.py`)**:
+    - **Problem**: In Step 2, mutually exclusive choices (Include Files, Card 1 Organization, Card 2 Organization) were visually indistinguishable from multi-select checkboxes, leading to poor UX affordance.
+    - **Solution**: Migrated all mutually exclusive groups to circular radio buttons.
+    - **Implementation**: Utilized `border-radius: 50%` on `::before` pseudo-elements. Replaced standard square masks with 16px circular SVG masks featuring a 3px border and a centered solid dot (`<circle cx='8' cy='8' r='3'/>`) matched to the card's theme color.
+- **SVG Alpha Mask Checkmark Pattern (`app.py`)**:
+    - **Problem**: Standard "Checkmark-on-Solid-Box" indicators felt heavy and opaque.
+    - **Solution**: Engineered a "Cutout" checkmark using SVG mask indices. The indicator is a solid colored box, but the checkmark itself is transparent, allowing the underlying card background (and its hover/active colors) to "shine through" the icon.
+    - **Aesthetic**: This creates a premium, high-fidelity look where the checkmark color dynamically reacts to the card's background state.
+- **State-Aware Hover Logic**:
+    - **Standardization**: Unified hover behaviors across Cards 1, 2, and 3.
+    - **Suppression Logic**: Borders and indicator outlines only light up in the theme color when the button is in an *untoggled* state. Once toggled/active, the hover effect is suppressed to maintain focus on the selection.
+- **Primary Action Flow Relocation (`app.py`)**:
+    - **Positioning**: Moved the "Save Configuration" button from the top-right header to a dedicated full-width slot directly above the final action row ("Back", "Confirm").
+    - **Alignment Geometry**: Used a precise column ratio (`[1.875, 1]`) to ensure the Save button spans exactly the combined width of the "Back" and "Confirm" buttons, maintaining perfect vertical symmetry.
+- **Text Wrapping & Hitbox Safeguards**:
+    - **Padding**: Added `padding-right: 16px` to all card buttons to prevent long descriptions from overlapping the absolute-positioned indicators.
+    - **Layout Stability**: Hardened the flex-chain rules to prevent Card 1 buttons from "mangling" or shrinking during dynamic interactions.
+
+## Recent Changes (Session 2026-03-29 - Saved Settings & Presets)
+- **PresetManager Engine (`preset_manager.py`)**:
+    - **Core Function**: Abstracted a new data layer to allow power users to save and reuse complex Step 2 toggle configurations (Content, Organization, AI/NotebookLM conversions, and path).
+    - **Atomic Persistence**: Reused the proven `SavedGroupsManager` paradigm (`.tmp` file + `os.replace` + `threading.Lock`) to serialize user presets directly to `saved_download_presets.json` safely.
+    - **Immutable Built-ins**: Hardcoded 3 immutable system presets ("1:1 Full Canvas Course Download", "AI Power-User Student", "NotebookLM Optimized") to provide immediate value and protect baseline UX.
+    - **Master Toggle Re-derivation**: Engineered `apply_preset()` to not only dump the 19+ sub-state keys but also actively map and re-derive the mathematical states for `dl_secondary_master` and `notebooklm_master` toggles to maintain perfect UI visual parity without triggering React-style render loops.
+- **UI Integration (`app.py`)**:
+    - **Header Refactor**: Evolved the monolithic Step 2 markdown header into a stable 2-column layout (`[0.6, 0.4]`) to securely house the new "💾 Save Configuration" and "⚙️ Presets" buttons flush-right.
+    - **Dialog Architecture (`@st.dialog`)**: Deployed two new modals for saving and managing presets. The hub utilizes a tabbed interface ("🌟 Built-in Presets" vs "👤 My Presets") to organize the cards cleanly.
+    - **Dialog Scope Rerun (`st.rerun(scope="app")`)**: Fixed a severe UI state desync where clicking "Apply" inside a dialog wouldn't update the underlying main screen. By invoking `st.rerun(scope="app")`, the modal is instantly destroyed and the entire page re-evaluates the newly injected `session_state` variables.
+    - **Ghost Toast Pattern / Pending Toasts**: Solved the issue where `st.toast` calls initiated inside a dialog disappear instantly when `scope="app"` closes the modal. Implemented a `pending_toast` string in `session_state` that is consumed ("popped") at the top of the `elif step == 2:` block natively, ensuring the toast renders over the main UI *after* the dialog dies.
+    - **Global Dialog Placement**: Addressed a severe Pyrefly linting/lexical scoping error where dialog definitions (`@st.dialog`) nested inside the `if step == 1:` block were completely inaccessible during Step 2. Hoisted the definitions directly beneath the main `_main_content.container()` wrapper so they exist universally regardless of step state.
+    - **UI Polish & QA Fixes**: Completely matched the visual parity of the Sync Hub UI. Fixed the f-string string interpolation bug that was causing invalid CSS braces (`{{`) to break all dialog and button styles. Transitioned the hub from native `st.tabs` to a custom session-state driven button-tab architecture with Base64 injected inline icons (`icon_preset_user.png` and `icon_preset_builtin.png`). Transformed the static preset summary tags into a dynamic, grammatically-correct `st.expander` rendering exact setting payloads. Added explicit card elevation, fixed-height scrolling constraints (`height=450`), and explicit danger hover states for the delete buttons to finalize the UX audit.
+    - **Streamlit Markdown Engine ("Zero-Indentation Rule")**: Hard-learned lesson: complex HTML strings passed to `st.markdown(html, unsafe_allow_html=True)` will violently break into raw text `<pre><code>` blocks if they contain any leading indentation. Refactored the `_render_settings_preview_html` payloads to be strictly left-aligned (0 space indentation).
+    - **Precise Setup & State Tracking**: Implemented rigid CSS overrides targeting `details summary > *` to guarantee expander titles remain crisply white, bypassing Streamlit's internal wrapper mutations. Additionally, engineered a verbose dictionary translation mapping for conversions (e.g., `convert_pptx` -> `PPTX ➡ PDF`) and perfectly matched core application hex colors (`#3fd9ff`, `#2DFFA0`, `#FF9838`) to ensure intuitive parity between the summary previews and the true Settings menu.
+
+## Recent Changes (Session 2026-03-28 - Excel → AI Data Pipeline)
+- **Zero-Dependency Extraction Engine (`excel_converter.py`)**:
+    - **Root Cause**: The existing PDF converter optimizes Excel sheets for visual review but destroys raw tabular alignment, making the output difficult for AI Agents (NotebookLM, Claude) to parse accurately. Adding heavy dependencies like `pandas` or `openpyxl` violates the project's lightweight footprint.
+    - **Solution**: Engineered a zero-dependency `ExcelToData` context manager that extracts raw tabular data straight from memory using COM or AppleScript, appending the results to a unified `_Data.txt` sidecar.
+    - **Windows COM Scalar Trap**: Discovered that if a worksheet contains exactly one cell with data, `sheet.UsedRange.Value` returns a raw scalar instead of a tuple, which crashes `csv.writer`. Fixed natively by dynamically coercing scalars and 1D tuples into uniform 2D lists prior to CSV writing.
+    - **macOS AppleScript Newline Trap**: Standard `cell r of column c` string concatenation fails fatally on internal cell line-breaks (`\n`), corrupting row alignment. Refactored the payload to command Mac Office to export the active sheet to a temporary `CSV file format` file safely handling internal returns natively, before python ingest.
+    - **AI Context Header Initialization**: Injected a `META-CONTEXT` header at the absolute top of every generated `_Data.txt` file, explicitly asserting the CSV structure and empty cell grid behavior to optimize LLM deterministic inference without guesswork.
+    - **Single-Toggle UX Pivot**: Simplified the GUI by stripping out the standalone Data extraction toggle across all 12 system tracking layers. The primary toggle was rebranded as "Excel → PDF & AI Data", binding both `run_excel_data_conversion` and `run_excel_conversion` pipelines sequentially to a single user action.
+    - **Pipeline Execution Ordering (`post_processing.py`)**: Enforced explicit ordering: Data extraction executes *first* (while `.xlsx` exists), and PDF conversion executes *second* (which destroys the source `.xlsx`).
+    - **Iterator Exhaustion Defense**: Avoided generator exhaustion within the dual-pipeline by calling `_glob_files(..., explicit_files)` independently for each conversion runner.
+    - **PermissionError Guard for Locked Files**: Patched both the Windows and macOS write blocks inside `ExcelToData` to strictly catch `PermissionError` natively. Now, if the `_Data.txt` file is open in a strict program (e.g., Excel), `WinError 32` gracefully trips an intentional failure (returning the error string "Data sidecar in use by another program") rather than triggering a devastating engine crash during the loop.
+    - **Sync Ledger Integrity**: Deliberately shielded the `_Data.txt` sidecars from manifest tracking to prevent the Sync Engine from incorrectly flagging missing/extant files on subsequent syncs.
+
+## Recent Changes (Session 2026-03-27 - Harmonizing Download Settings UI)
+- **Dynamic CSS Flex-Chain (`app.py`)**:
+    - **Root Cause**: When the "Canvas-Native Content" (Card 2) expanded to reveal segmented controls, "Core Course Files" (Card 1) remained at its natural height. Streamlit 1.51 injects an `stLayoutWrapper` parent with `flex: 0 1 auto` that blocks vertical stretching, despite the parent `stVerticalBlock` having `flex: 1 1 0%`.
+    - **Solution**: Injected a surgical 2-tier CSS flex chain. Tier 1 forces the `stLayoutWrapper` direct parent of the keyed cards to `flex: 1 !important` using a `:has(>)` selector. Tier 2 ensures the keyed cards themselves (`st-key-card_...`) maintain `flex: 1 !important`.
+    - **DOM Architecture Discovery**: Discovered that `st.container(border=True, key=...)` does *not* create an inner `stContainer` element. The `st-key-*` wrapper itself (an `stVerticalBlock`) is the bordered container.
+    - **Abandoned JS Workarounds**: Explicitly rejected `MutationObserver` DOM-syncing due to React rendering conflicts, race conditions, and infinite feedback loops triggered by Streamlit's state engine.
+- [x] **Active Feature: Harmonizing Download Settings UI (Complete)**: Transitioned to a pure CSS 2-rule flex-chain solution (185px height) that robustly forces Card 1 and Card 2 to align flush at the bottom across all layout states.
+- **UI & Copy Refinement (Session 2026-03-27 - Polishing Step 2 UX)**:
+    - **Permanent Card Visibility**: Removed conditional `if _sec_active > 0` wrapper around Card 2's segmented control. The "Organization" options are now permanently visible to prevent jarring layout shifts.
+    - **Native CSS Disabled State**: Implemented a robust `button[disabled]` CSS selector in `_get_sec_org_segmented_css` to handle dimming (`opacity: 0.4`, `filter: grayscale(100%)`) natively when no secondary content is selected.
+    - **Proportional Geometry**: Bumped Card 1 button heights to `185px` and icons to `80px` to perfectly match the persistent vertical footprint of Card 2.
+    - **Typography Dimming**: Introduced `#475569` as the "Deep Dim" color for disabled section labels, ensuring a clear visual hierarchy between locked and active states.
+    - **Copy Overhaul**: Updated terminology across Step 2 for clarity. "AI Compatibility Engine" is now explicitly marketed as "Optimized for NotebookLM". "Subfolders" in Card 2 became "Dedicated Subfolders". Descriptions for assignments and submissions were refined for accuracy (e.g., noting that submission files are not included in metadata downloads).
+
+## Recent Changes (Session 2026-03-26 - Temp File Shadowing Pipeline & Encoding Fix)
+- **Win32 MAX_PATH Bypass (`ui_helpers.py`, `pdf_converter.py`, `word_converter.py`, `excel_converter.py`)**:
+    - **Root Cause**: Deeply nested Canvas course folder structures generate absolute file paths exceeding Win32 MAX_PATH (255 chars), causing Office COM APIs (`Presentations.Open`, `Documents.Open`, `Workbooks.Open`) to hard-crash.
+    - **Solution**: Implemented `office_safe_path()` context manager in `ui_helpers.py` that transparently shadows long paths (≥240 chars) into `%TEMP%` with short UUID-based names, yields safe paths for COM, and moves results back on exit.
+    - **Ghost PDF Guard**: Exit block checks `temp_pdf.exists()` before `shutil.move()` - handles COM failures without orphaned ghost PDFs.
+    - **Unconditional Cleanup**: Temp source file always deleted via `temp_source.unlink(missing_ok=True)` in `finally` block.
+    - **Cross-Drive Safety**: Uses `shutil.move(str, str)` for Windows cross-drive and overwrite compatibility.
+    - **Converter Injection**: All three converters (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`) wrap their Windows COM blocks in `with office_safe_path(...)`. macOS AppleScript branches are completely untouched.
+    - **Threshold**: 240 characters (15-char safety margin below MAX_PATH).
+- **ZIP Encoding Fix (`archive_extractor.py`)**:
+    - **Root Cause**: Python's `zipfile` defaults to CP437 filename decoding, mangling Danish characters (ø, æ, å) into Mojibake.
+    - **Python 3.11+**: Uses native `metadata_encoding='utf-8'` parameter.
+    - **Python <3.11**: Iterates `infolist()`, re-decodes CP437→UTF-8 for entries without UTF-8 flag (bit 11), passes mutated members list to `extractall()`.
+- [x] **Active Feature: Temp File Shadowing Pipeline (Complete)**: Permanently bypasses Win32 MAX_PATH crashes in all Office COM converters.
+- [x] **Active Feature: ZIP Encoding Fix (Complete)**: Fixes Danish character Mojibake in extracted archive folder/file names.
+
+
+- **Step 2 UI Modernization & CSS Stabilization (`app.py`)**:
+    - **CSS Architecture Pivot**: Replaced the failing `stVerticalBlockBorderWrapper` selector (deprecated in Streamlit 1.51.0) with a robust, version-agnostic "Trojan Horse" architecture.
+    - **Trojan Horse Pattern**: Injected a custom class (`step-2-card-target`) into the injected HTML of each card header for the three Step 2 cards.
+    - **Indestructible Selector**: Implemented a modern `:has()` CSS selector array targeting `div[data-testid="stContainer"]:has(.step-2-card-target)` to apply background elevation (`rgba(255, 255, 255, 0.04)`), ensuring visual parity across Streamlit versions.
+    - **Direct Key Targeting**: Augmented the selector with explicit Streamlit Key targeting (`st-key-card_core_files`, etc.) for maximum reliability.
+    - **Typography Refinements**: Polished "(Optional)" text in Card 2 and 3 headers by isolating it in a `<span>` with muted color (`#64748b`), reduced weight, and smaller size.
+    - **Icon Badge Layout**: Finalized the "Corner Badge" icon layout where icons are centered on the top-left border of cards, with descriptions fully flush-left.
+    - **Vertical Rhythm Fix (Step 2)**: Tightened the vertical gap between card titles and descriptions by exactly 5px. Neutralized `margin-bottom` on `<p>` title tags and adjusted `margin-top` on `::after` pseudo-elements across all Step 2 grids ("Include Files", "Organization", "Canvas-Native Content", "AI Compatibility Engine").
+    - **Step 2 Organization Control Refinement**: Scaled icons to 28px, increased min-height to 62px (+5px), and bumped padding-left to 52px (+4px) for better visual proportions and balance.
+    - **Step 2 Interactive Feel Refinement**: Improved interactive responsiveness for "File Filter" and "Organization" segmented controls. Implemented 75% baseline opacity, smooth 0.2s multi-property transitions, and 100% opacity hover states (including white text for contrast) while protecting active state visuals.
+
+
+## Recent Changes (Session 2026-03-25 - Step 2 UI Modernization: Conversion Settings)
+- **Conversion Settings UI Revamp (`app.py`)**:
+    - Replaced legacy tree-view checkboxes with a premium 4x2 grid of orange-themed (`#f97316`) button-toggle cards.
+    - Implemented a "Select All" master button spanning all 4 columns with a dedicated description sub-text.
+    - Integrated a dynamic selection counter (`None selected` / `X enabled` / `All enabled`) in the card header for real-time feedback.
+    - Engineered idempotent callbacks (`_toggle_conv_master`, `_toggle_conv_sub`) to handle complex state synchronization between the master toggle and individual settings.
+    - Applied high-fidelity CSS overrides for icons, borders, and hover effects, achieving visual parity with the "Additional Course Content" component.
+    - Refined icon scaling: increased sub-button icons to 30px (25% increase) while maintaining 24px for the master button for optimal balance.
+
+- **Additional Course Content UI Refactor (`app.py`)**:
+    - Replaced native `st.radio` components with high-fidelity segmented button controls matching the "Include Files" design.
+    - Implemented a 4-column responsive grid for secondary entity toggles (Assignments, Announcements, etc.).
+    - Bound all UI states to `st.session_state['dl_isolate_secondary']` to ensure 1:1 backend logical parity.
+- **2-Column Top Row Conversion (`app.py`)**:
+    - Refactored the core Download Settings view from a 3-column layout into a 2-column (`[1, 1, 1.5]`) layout for "Organization" and "Content", meticulously preserving the original card width on ultra-wide monitors without stretching.
+- **Constrained Bottom Row (`app.py`)**:
+    - Extracted "Additional Settings / NotebookLM" into a dedicated bottom row, horizontally constrained by a dummy column wrapper (`[2, 1.5]`). This spans the exact combined width of the top two equal-width cards, keeping it perfectly flush.
+    - Verified `sync_ui.py` does not utilize this interactive block and uses a read-only 4-col layout instead, requiring no parity changes.
+
+- [x] **Active Feature: Step 2 UI Modernization & CSS Stabilization (Complete)**: Transitioned to a version-agnostic "Trojan Horse" architecture for the Step 2 cards. Injected custom classes into header HTML and used modern `:has()` CSS selectors to ensure stable background elevation across Streamlit 1.51+ versions.
+- [x] **Active Feature: Conversion Settings UI Revamp (Complete)**: Modernized the conversion settings into a high-fidelity orange grid of button-toggle cards. Implemented robust state synchronization, dynamic counters, and scaled iconography.
+
+- [x] **Active Feature: Additional Course Content UI Refactor (Complete)**: Refactored secondary content toggles into a premium segmented control/grid layout with 100% backend logical parity.
+- [x] **Active Feature: Native Button Card Architecture (Complete)**: Refactored the "File Organization" UI in `app.py` to use a native `st.button` card architecture. This ensures 100% click reliability across the entire card surface by styling the native button itself into the card, bypassing brittle DOM overlay hacks.
+- [x] **Active Feature: Step 2 UI Structural Refactor (Complete)**: Refactored the core Download Settings view in `app.py` into a premium 3-column Card layout. Implemented strict horizontal symmetry using identical <h3> structures and hoisted all Python callbacks/CSS to the top-level scope to prevent DOM unmounting. Replaced the NotebookLM st.expander with a bordered container for unified visual weight.
+- [x] **Active Feature: Archive Extractor Pivot - Sync Engine Bypass (Complete)**: Transitioned archive processing (`.zip`, `.tar.gz`) away from the legacy 0-byte `.extracted` "Ghost Stub" pattern. Archives are now purely extracted and deleted. The sync diffing engine was upgraded with `_is_archive_path` traps to natively bypass deletion checks for these payloads during scanning, mirroring the URL Shortcut bypass.
+- [x] **Active Feature: Sync Engine Bypass for URL Compiler (Pivot Complete)**: Initially implemented a "Ghost Stub" pattern, but pivoted to a cleaner "Pure Deletion & Sync Engine Bypass" approach. Original .url and .webloc files are now strictly deleted after compilation into NotebookLM_External_Links.txt, and the Sync Engine is modified to intelligently ignore their absence, ensuring 100% NotebookLM compatibility without breaking sync integrity.
+- [x] **Active Feature: Final E2E Validation**: Monitoring the system for any remaining edge cases in the sync engine or UI feedback loops now that the core metric and diffing blocks have been audited and patched.
+- [x] **Active Feature: Secondary Entity Phase Rebuilding (Completed)**: Successfully patched the UI Metric denominator locking issue in `app.py` and the `Step 5` Order of Operations failure in `sync_manager.py`.
+- [x] **Active Feature: Structural Audit Fixes (Complete)**: Rectified the parameter hallucination in `sync_manager.py`'s database commit (`local_relative_path` -> `local_path`), implemented dynamic UI metric fetching in `app.py` to prevent overflow, and enforced strict Byte-to-MB conversion for secondary attachments in the `update_ui` callback.
+- [x] **Active Feature: Catch-All Overlap & UI Ledger Parity (Complete)**: Eradicated a 30-file phantom jump in the `x/y` tracker by enforcing strict exclusion parity between the Module scanning phase and the Catch-All phase. Injected `module_file_ids` tracking into `canvas_logic.py` and moved UI increments strictly inside the `if msg:` block in `app.py` to prevent silent skips from inflating counts.
+- [x] **Active Feature: UI Metric Desync Rectification (Phase 2 Complete)**: Resolved the final UI ledger mismatch by enforcing `explicit_filepath` injections into the `progress_callback` loops of `_save_secondary_entity` and `_create_link`. Eradicated `TypeError` crashes during byte comparison checks when Canvas APIs inject explicit `None` payloads via `or 0` coalescing cascade.
+- [x] **Canvas API "Anonymous Discussion" Access Debugging (Complete)**: Resolved fetch phase access errors for active discussion topics.
+- [x] **Attachment ID REVERT & Sync Retry Fix (Complete)**: Reverted a failed negative ID scheme for attachments to use true positive Canvas file IDs (essential for SQLite deduplication). Fixed a critical blank UI issue when retrying failed sync items by resetting the `sync_cancelled` flag.
+- [x] **Active Feature: Arch. Audit Follow-Up - Critical Windows Concurrency Fixes (Complete)**: Rectified sharing violations in SQLite, injected strict async file mutexing for `.part` downloads in the sync loop, and transitioned to atomic `os.replace` backed by `PermissionError` rescue logic to protect against files opened in external editors.
+- [x] **Active Feature: Phase 6 Final Architecture Audit Resolution**: Executed the final 5 architecture fixes. Resolved async event loop freezing, fixed asyncio memory leaks, eliminated JSON TOCTOU race conditions using thread locks, substituted Tkinter for native PowerShell folder pickers on Windows, and implemented aggressive FFmpeg process tree pruning via `psutil`.
+- [x] **Active Feature: Phase 4 Secondary Content Engine UI (Complete)**: Executed a comprehensive UI pass refining the user experience of toggling and organizing Canvas secondary entities. Fixed layout overlap, corrected missing CSS tree-lines, built dynamic conditional widgets, injected custom radio component tooltips, and securely aligned backend default variables with the "In Course Folder" paradigm.
+- [x] **Active Feature: Phase 3 Secondary Content Engine Backend (Complete)**: Architected and verified the full backend engine (`canvas_logic.py`, `sync_manager.py`) for downloading Assignments, Syllabus, Announcements, Discussions, Quizzes, and Rubrics using dynamically generated HTML artifacts and a Negative ID Offset Registry.
+- [x] **Active Feature: Phase 2 Deferred Issues (Complete)**: Evaluated and implemented the deferred major/minor issues from the V1 Master Audit. Addressed JSON atomic writes, FFmpeg subprocess stalls, post-processing failure UI surfacing, and import hoisting. Dropped architectural monolith splitting for V2.0.
+- [x] **Active Feature: V1.0 Master Audit Refinements (Complete)**: Executed the final 10 codebase fixes addressing edge cases, data concurrency, URL injection, and UX state persistence based on the final audit report.
+- [x] **Active Feature: V1.0 Master Audit Roadmap (Complete)**: Executed the final critical blockers identified in the Master Audit Report (missing `time` import in `excel_converter`, unconditional COM imports in `word_converter`, XML `.webloc` string escaping, `tarfile` zip-bomb/traversal protection, and UI duplication extraction). The only remaining task is establishing a baseline test suite.
+- **Ghost DB Receipt Fix**: Resolved a critical bug where secondary attachments (PDFs in announcements/assignments) were downloaded to disk but not recorded in the SQLite manifest due to an `AttributeError` (Interface Mismatch).
+- **Interface Hydration (SimpleNamespace)**: Implemented `types.SimpleNamespace` to hydrate raw attachment dictionaries into dot-notation compliant objects, ensuring the existing `_download_file_async` pipeline can commit them to the database without modification.
+- **Active Feature: V1.0 Polish Sweep (Complete)**: Executed the remaining Tier 2 and Tier 3 findings from the Master Audit Report. Centralized design tokens, added strict HTML escaping, hoisted inline imports, eliminated bare except clauses, and instituted a formal `version.py` tracker.
+- **Active Feature: PyWebView Native Presentation**: Implemented a transition in the Windows executable from spawning an external browser tab to rendering Streamlit natively inside an encapsulated edge-based OS window using `pywebview`.
+- **Active Feature: V3.0 Architecture Audit Fixes (Complete)**: Implemented deep structural fixes across the async download engine to permanently eradicate data loss edge cases, race conditions, and semaphore locks identified in the V3 audit.
+- **Active Feature: V1.0 Audit Fixes (Complete)**: Implemented all Critical (🔴) and Major (🟡) fixes identified in the 360-degree Master Audit Report to ensure release readiness.
+- **Active Feature: Saved Sync Groups (Phases 1-3 Complete)**: Full 3-phase implementation of reusable course/folder group management. Backend manager, save workflow, 3-layered Hub dialog, and pre-flight merge engine are all shipping.
+
+- **DEEP QA AUDIT VERIFIED (V2 Fixes)**: Conducted an exhaustive code-reading audit of the V2 structural fixes. Verified Path Integrity (Absolute vs Basename separation), Structural Error Guards (preventing retry loops), Tuple Identity (O(1) mapping robustness), and ACID Transactions (Await-and-Inject pattern). Confirmed the engine is mathematically robust against orphaned attachments and state amnesia.
+- **ARCHITECTURAL DESK-CHECK VERIFIED (Secondary Content & Retry)**: Performed a comprehensive QA assessment verifying 5 core pillars: Discovery & Pathing (synthetic negative IDs + true positive attachment IDs), two-layer Deduplication Safety, Sync Diffing (handling locally deleted subfolders), Download Execution (subfolder recreation and attachment passback), and Sniper Retry State (clean UI recovery without blanking).
+- **GLOBAL POST-PROCESSING CANCELLATION GUARD (`app.py`)**: Identified and patched a critical vulnerability in the main download flow. Previously, the post-processing pipeline (`run_all_conversions`) lacked a cancellation check, allowing it to trigger even after a user aborted the download. This is now fully guarded by `cancel_requested` and `download_cancelled` state checks.
+
+- **SYNC AMNESIA ERADICATED (`sync_ui.py`)**: Repaired a regression where "Retry Failed Downloads" in Sync Mode wiped historical session metrics. Refactored the internal `synced_counter` initialization within `download_sync_files_batch` to aggregate existing `st.session_state` progress dynamically during retries.
+- **SUCCESS AMNESIA FIXED: Retry State Sandboxing (`app.py`)**: Engineered a definitive fix for the UI metric-wipe bug. Introduced `retry_isolated_details`, `retry_downloaded_items`, and `retry_failed_items` session state keys to sandbox retry operations. The application no longer clears global download metrics (`downloaded_items`, `download_file_details`) during a retry, preserving historical run data and preventing "Amnesia" after successful retries.
+- **SERIALIZATION TRAP NEUTRALIZED: Safe Property Extraction (`app.py`)**: Fortified the Post-Retry Synthesis block against Streamlit's "Proxy Dictionary" serialization bug. Implemented a strict `getattr(obj, attr, None) if not isinstance(obj, dict) else obj.get(attr)` pattern for `course_name`, `item_name`, and `context`. This explicitly prevents `AttributeError` crashes when Streamlit converts `DownloadError` objects into dictionaries across session re-runs.
+- **CONDITIONAL PROGRESS ROUTING (`app.py`)**: Bifurcated the `update_ui` callback logic. It now detects if `download_status == 'isolated_retry'` to route progress increments to either the sandbox or global state variables, preventing cross-contamination of metrics.
+- **SAFE ERROR RESOLUTION & AUDIT LOGGING (`app.py`)**: Rewrote the reconciliation loop to safely compare retried file paths against historical errors. Resolved errors are now accurately removed from the UI list, counters are adjusted, and `[RESOLVED]` entries are appended to the local `download_errors.txt` log, ensuring an immutable record of the environment "fighting back."
+- **REHYDRATION SYNTHESIS (`app.py`)**: Implemented a final merge stage that hydrates `download_file_details` with successes from the retry sandbox, ensuring that once the retry finishes, the "Done" screen reflects the absolute total state of the session.
+- **UI PATH BLEED V2: Presentation/Data Separation (`app.py`)**: (Revised) Completely decoupled the data persistence from the UI presentation layer. `retry_isolated_details` now strictly stores the full OS-level `explicit_filepath` to ensure `post_processing.py` can resolve targets. The UI `render_folder_cards` function now extracts `Path(p).name` JIT, maintaining a pristine completion screen without breaking the backend.
+- **STRUCTURAL ERROR LOOP GUARD (`app.py`)**: Implemented the `has_retriable_errors` boolean check. This evaluates if any items in the error list have file-specific context. The "Retry Failed Items" button is now hidden if only un-retriable structural errors remain, preventing infinite loops.
+- **TUPLE IDENTITY DEFENSE (`sync_ui.py`)**: Fortified the O(1) hash map re-queuing logic against SQLite tuple decomposition. Injected a robust `getattr(failed_item, 'id', getattr(failed_item, 'canvas_file_id', failed_item[0] if isinstance(failed_item, tuple) else None))` fallback to prevent identity loss during Sync Mode retries.
+- **ACID TRANSACTION FIX ("Orphaned Attachment Amnesia")**: Found and fixed a critical data-loss vulnerability in `sync_ui.py`. Previously, secondary entities (Assignments, pages) executed a database commit *before* their associated file attachments were queued. We decoupled the commit, updated `download_secondary_entity` to return `canvas_updated_at`, and now manually trigger the DB write strictly *after* all child attachments are safely injected into the async download queue.
+- **SNIPER RETRY ACID REFACTOR ("Await-and-Inject")**: Completed a comprehensive architectural refactor of `download_isolated_batch_async` in `canvas_logic.py`. Replaced blind `asyncio` queueing with a strict "Await-and-Inject" pattern. The retry loop now synchronously awaits the discovery of secondary entities, unpacks the 4-tuple metadata, and executes an atomic database commit via `sync_manager.record_downloaded_file()` *before* dynamically injecting attachment download tasks into the live queue. This permanently eliminates "Database Amnesia" where parent entities were recorded while their children remained orphaned or lost.
+
+## Recent Changes (Session 2026-03-28 - Post-Processing UI Ledger Sync)
+- **Sidecar Ledger Synchronization (`app.py`, `sync_ui.py`, `post_processing.py`)**:
+    - **Single Source of Truth**: Synchronized `_Data.txt` sidecars generated by the ExcelToData pipeline with the Phase 2 UI ledgers (`download_file_details` and `synced_details`), restoring accurate counts to the Completion Screen and folder expanders.
+    - **Sync Engine Isolation**: Explicitly preserved isolation by bypassing the SQLite manifest. Sidecars are transported functionally via a `generated_sidecar_paths` accumulator on the `UIBridge` dataclass, preventing the Sync Engine from incorrectly flagging them as locally deleted.
+    - **Idempotency & Type-Safety**: Extracted and deduplicated string-based paths natively within each flow (`set()` string hashing for Download; parent-path pair resolution for Sync), avoiding dangerous dictionary set collisions or infinite UI expansion upon retry.
+
+## Recent Changes (Session 2026-03-23 - Native Button Card Architecture)
+- **Native Button Card Architecture Implementation (`app.py`)**:
+    - **Physical Overlap Pivot**: Abandoned brittle `position: absolute` and "Invisible Overlay" hacks in favor of styling native `st.button` widgets as cards. This guarantees the entire rectangular area is natively clickable and responsive.
+    - **CSS-Driven Aesthetics**: Injected scoped CSS targeting `div[class*="st-key-btn_org_"] button` to apply backgrounds, padding, and border-radius.
+    - **Pseudo-Element Metadata**: Utilized `::after` pseudo-elements to inject descriptive text ("Matches Canvas Modules", "All files in one folder") directly into the button surface without adding DOM bloat.
+    - **Base64 Icon Integration**: Embedded `get_base64_image` icons directly into the CSS `background-image` property for zero-dependency visual fidelity.
+    - **Dynamic Active Highlighting**: Implemented real-time border and background color shifts (`st.session_state['download_mode']`) using f-string CSS injection.
+    - [x] **Segmented Control - **Unified Card Labels**: Updated organizational labels in both Card 1 and Card 2 to a sleek, muted style (`#cbd5e1`, 0.9rem, 600 weight) for visual consistency.
+    - **Card 2 Copy Update**: Updated copy to "Choose how Canvas-Native Content should be organized:" and applied Hitbox Margin Defeat (`margin-bottom: 0px;`).
+    - [x] **Segmented Control Injection**: Upgraded the "Include Files" segmented buttons by crushing stHorizontalBlock gaps, implementing flex-column layouts for vertical alignment, and separating icon states into ::before pseudo-element toggles.
+    - [x] **Hover State Parity**: Injected global hover rules and active-state protection to ensure unselected cards react to mouse interaction without overriding the primary selection highlight.
+    - **Interactive Hover Logic**: Integrated dynamic hover states for all Native Button Cards, including subtle background shifts and icon "wake-up" transitions (`filter: grayscale(10%)`) that are gracefully preserved or overridden by the active session state.
+
+## Recent Changes (Session 2026-03-23 - Step 2 UI Structural Refactor)
+- **3-Column Card Layout Implementation (`app.py`)**:
+    - **Structural Geometry**: Transitioned "Step 2: Download Settings" from a vertical stack to a balanced `st.columns(3, gap="medium")` layout.
+    - **Horizontal Symmetry Guard**: Enforced exact horizontal alignment by replicating the custom `<h3>` header structure at the top of each column, ensuring column borders and titles start at the same pixel-row.
+    - **Logic & CSS Hoisting**: Hoisted all `@st.fragment` callbacks (like `folder_picker`) and multi-line CSS `<style>` blocks to the very top of `render_download_step2`. This prevents Streamlit from unmounting/re-rendering widgets mid-interaction when nested container states change.
+    - **Container Modernization**: Replaced the previous `st.expander` for NotebookLM with a permanent `st.container(border=True)`. This grants the "Additional Settings" block the same visual weight as the primary "Organization" and "Content" cards.
+
+## Recent Changes (Session 2026-03-22 - URL Pivot: Sync Engine Bypass)
+- **Merge-Append Strategy (`url_compiler.py`)**: Upgraded the URL compiler from destructive overwrite to a stateful ledger system.
+    - **State Hydration**: The script now reads `NotebookLM_External_Links.txt` on startup, extracting existing URLs into an in-memory `set` to prevent duplicates.
+    - **Robust Parsing**: Implemented aggressive `.strip()` and strict `utf-8` encoding to prevent `UnicodeDecodeError` and ensure deduplication accuracy.
+    - **Deduplication Logic**: Decoupled physical file management from text compilation; duplicate files are still unlinked even if their URLs are already in the ledger.
+- **Extension Trap Guardrail**: Implemented strict path-suffix checking (`.url`, `.webloc`) in `sync_manager.py` loops (Phase 1, Phase 2, and Step 5) to accurately identify shortcuts regardless of unstable Canvas API metadata names.
+- **Contract-Aware Bypassing**: The bypass logic is conditionally activated only when the `sync_contract` confirms that URL compilation is enabled for the specific course.
+
+## Recent Changes (Session 2026-03-22 - Presentation Layer & Deduplication Fixes)
+- **Data-Layer Deduplication for Sync Review UI (`sync_manager.py`)**: Implemented strict, O(1) string-based deduplication (`dedup_loc_del_ids` and `_phase1_locdel_seen`) in `analyze_course()` before yielding `locally_deleted_files`. This permanently neutralizes a critical `StreamlitDuplicateElementKey` crash when secondary content attachments with true positive IDs were surfaced from both module and secondary API scans simultaneously.
+- **Physical Path Alignment (Path Blindness Fix) (`sync_ui.py`)**: Completely eradicated the "Path Blindness" bug in the Sync Review UI. Checkboxes now dynamically extract `Path(sync_info.local_path).name` to display the exact physical filename (e.g., `File (1).pdf`) instead of the generic Canvas API name. This ensures the UI perfectly matches the user's filesystem.
+- **Success Screen Path Fidelity (`sync_ui.py`)**: Fixed "Success Screen Amnesia" by modifying `download_sync_files_batch` to populate the `synced_details` array and terminal logs with `filepath.name` (the actual collision-resolved name written to disk) instead of the pre-download display name.
+- **Secondary Content Success Tracking (`sync_ui.py`)**: Standardized the secondary content success logs to inject `sec_filepath.name`, ensuring consistency across all syncable entity types.
+
+## Recent Changes (Session 2026-03-22 - Sync Filename & Path Alignment)
+- **Sync Filename Generation Alignment (`canvas_logic.py`)**: Fixed a bug where synthetic HTML files for Announcements were vanishing from the "Locally Deleted" bucket. Spliced the missing `date_prefix` logic into `get_secondary_content_metadata` to enforce 1:1 parity with the initial download manifest.
+- **Sync Confirmation 0-Bytes UI Bug (`sync_ui.py`)**: Rectified a Python typing mismatch in the `total_bytes` redownload calculator. The integer-indexed Hash Map (`f.id`) was being queried using string-coerced SQLite IDs (e.g., `"-90001235"`), resulting in silent `.get()` failures and 0-byte fallbacks. Enforced string coercion `str(f.id)` universally across dictionary instantiation and lookups, accurately restoring file sizes in the "Confirm Sync" expander.
+- **Attachment Path Flattening Defense (`sync_ui.py`)**: Fixed a parallel type-mismatch in `download_sync_files_batch` where target paths for redownloaded items defaulted to the `course_root`. Standardized `str(info.canvas_file_id) == str(getattr(file, 'id', None))` so the engine perfectly hooks the `_target_local_path` strings out of the SQLite mapping, guaranteeing missing attachments are restored to their precise subfolder (e.g., `Announcements/Weekly update/`) instead of flattening.
+
+## Recent Changes (Session 2026-03-22 - Catch-All Overlap & UI Ledger Parity)
+- **Catch-All Exclusion Parity (`canvas_logic.py`)**: Injected a dual-guard clause `if int(file.id) in {int(i) for i in downloaded_file_ids} or int(file.id) in {int(i) for i in module_file_ids}:` into the Catch-All phase. This ensures files processed via modules (even if skipped on disk) are never re-queued by the secondary scan.
+- **Module ID Tracking (`canvas_logic.py`)**: Added `module_file_ids` set to the module execution loop to capture Canvas File IDs dynamically during the first pass.
+- **Empty Message Ledger Bypass (`app.py`)**: Relocated `downloaded_items += 1` strictly inside the `if msg:` block for `skipped` progress types. This mathematically prevents "Phantom Skips" (files already on disk) from incrementing the UI numerator unless they are being reported to the user.
+- **Signature Standardization Follow-up**: Fixed two leftover `local_relative_path` references causing `NameError` exceptions during secondary content sync in `sync_manager.py` (`add_file_to_manifest`) and `sync_ui.py` (`download_sync_files_batch`), successfully aligning them with the new `local_path` parameter signature.
+
+- [x] **Post-Retry Synthesis Integrity (`app.py`)**: (NEW) Fixed a critical `IndentationError` on line 2103 where the reconciliation loop following successful retries was incorrectly indented outside its parent conditional block, causing the application to crash on launch.
+- **RETRY ATTACHMENT UI FEEDBACK**: Integrated `progress_type='attachment'` into the `isolated_retry` completion block. This ensures that dynamically discovered attachments during a sniper retry correctly increment UI progress bars and reflect in the final "Done" screen metrics.
+- **RETRY POST-PROCESSING CANCELLATION GUARD (`app.py`)**: Injected a `st.session_state.get('download_cancelled')` check at the start of the retry post-processing pipeline. If a user cancels a retry attempt mid-download, the application now correctly skips the sluggish conversion phase instead of falling through to the "overkill" loop.
+## Recent Changes (Session 2026-03-21 - Structural Audit Execution & Guardrail Verification)
+- **Signature Standardization (`sync_manager.py`)**: Renamed `local_relative_path` to the standard `local_path` in the `record_downloaded_file` signature and dictionary mapping to ensure SQLite manifest strings are correctly populated.
+- **ACID Commit Guard Update (`canvas_logic.py`)**: Performed a global sweep and updated all 11 explicit calls to `sync_manager.record_downloaded_file` to pass the correct `local_path` keyword.
+- **Dynamic UI Metrics (`app.py`)**: Refactored `render_dashboard` to pull `total_mb` dynamically from `st.session_state` and added a `max(0, active_total_mb - current_mb)` guard to permanently eradicate negative "Time Remaining" overflows.
+- **Byte-to-MB Conversion Hook (`app.py`, `canvas_logic.py`)**: Injected `size=att.get('size', 0)` into the attachment `progress_callback` and implemented a strict `(size / (1024 * 1024))` conversion factor in the `update_ui` state mutator to ensure progress metrics remain accurate for multi-megabyte attachments.
+
+## Recent Changes (Session 2026-03-21 - Secondary Entity Extraction & Manifest Parity Audit)
+- **UI Lexical Scope Fix (`app.py`)**: Resolved the metric fraction lock (e.g., 64/31 stuck) by refactoring `render_dashboard` to pull `active_total` and `active_current` from `st.session_state` at render-time. The UI now dynamically reflects increments to the file count and total items.
+- **Step 5 Order of Operations Fix (`sync_manager.py`)**: Corrected an logic error in the diffing engine where synthetic entities were being bypassed even if they were missing locally. Implemented a strict `if (not exists) / elif (is_synthetic) / else (deleted_on_canvas)` structure to ensure missing files are always detected first.
+- **Registry Expansion (`sync_manager.py`)**: Fixed a fatal `KeyError` by mapping `'attachment': 60000000` to the `SECONDARY_ID_OFFSETS` dictionary.
+
+
+## Recent Changes (Session 2026-03-21 - Attachment ID Reversion & Retry UI Fix)
+- **Attachment ID Scheme Reverted (`canvas_logic.py`)**: Reverted `make_secondary_id('attachment', id)` to use true positive Canvas `file.id` for all attachments within Assignments, Discussions, etc. This ensures correct SQLite manifest deduplication.
+- **Negative ID Decoding Removed (`canvas_logic.py`, `sync_ui.py`)**: Stripped all "refresh/decode" logic associated with negative attachment IDs since they are no longer in use. Entities themselves (HTML) still use negative IDs.
+- **Sync Retry UI Blanking Fixed (`sync_ui.py`)**: Injected `st.session_state['sync_cancelled'] = False` into the "Retry Failed Downloads" button callback. This prevents a stale cancel flag from causing a blank screen/short-circuit during the retry phase.
+- **Verification & Compilation**: Verified zero remaining `make_secondary_id('attachment'` references and confirmed the codebase compiles cleanly (`py_compile`).
+
+## Recent Changes (Session 2026-03-21 - Login & Import Troubleshooting)
+- **CANVAS API LOGIN RESTORED (`canvas_logic.py`)**: Resolved a fatal login failure where `CanvasManager` was passing an invalid `request_kwargs={'timeout': 30}` argument to the `Canvas` constructor. This argument was found to be unsupported by the installed `canvasapi` version, causing silent initialization failures and subsequent "Check your URL" warnings.
+- **IMPORT NAMESPACE CORRECTION (`canvas_logic.py`)**: Fixed an `ImportError` where `CanvasFileInfo` was being incorrectly imported from `ui_shared`. It has been correctly rerouted to its true origin in `sync_manager.py`.
+- **UI RECONCILIATION INDENTATION FIX (`app.py`)**: Corrected an `IndentationError` in the "Retry Failed Items" completion block that prevented the script from compiling.
+## Recent Changes (Session 2026-03-21 - ACID Retry Architecture Refactor)
+- **Await-and-Inject Pattern Implementation (`canvas_logic.py`)**: Refactored the sniper retry loop to handle complex entities (Assignments, Quizzes, Discussions) with mathematical precision. The engine now halts to unpack `(sec_filepath, sec_id, sec_attachments, canvas_updated)` returns, ensuring the parent is committed to SQLite with its true Canvas timestamp before any children are spun off into the background.
+- **Async Task Injection**: Implemented dynamic `asyncio.create_task` calls within the retry loop. Discovered attachments are minted as `CanvasFileInfo` objects and "injected" directly into the running task list, inheriting the main loop's error handling and semaphore protections.
+- **Strict Path Relay V2**: Validated that `retry_isolated_details` strictly stores absolute OS paths, while the UI utilizes JIT `Path(p).name` extraction. This preserves backend file resolution for post-processing while maintaining a clean, basename-only presentation layer.
+
+## Recent Changes (Session 2026-03-20 - Retry Logic Audit & Final Architecture Fixes)
+- **Direct Path Relay for Retry Loop (`app.py`, `canvas_logic.py`)**: Completely abandoned "String Hacking" and `_clean_display_name` wrappers parsing terminal output strings to rebuild target `os.path` targets. Upgraded the entire `isolated_retry` infrastructure to strictly ingest the exact `explicit_filepath` injected directly by the async download engine into the UI callback args. This permanently solves the silent post-processing retry failure and Path Flattening overlap bugs (Bug 1 & 3).
+- **Asynchronous File Mutexing for Legacy Shortcuts (`canvas_logic.py`, `sync_ui.py`)**: Identified a critical source of Event Loop blocking where `.url`, `.webloc`, and `.html` shortcuts were being generated using synchronous `open()` contexts. Refactored `download_isolated_batch_async` and `download_sync_files_batch` to use `aiofiles.open(str(filepath.resolve()), ...)` with robust string casting to circumvent Windows-specific `Path` string coercion bugs (Bug 2).
+- **'Skipped' UI Router (`app.py`)**: Fixed an accounting UI desync where `update_ui` lacked a `elif progress_type == 'skipped':` branch. Skipped items are now accurately tallied and injected into `st.session_state['download_file_details']` using their `explicit_filepath`, ensuring downstream post-processing accurately tracks files bypassed during isolated retries (Bug 4).
+- **REGRESSION DEFENSE IMPLEMENTATION (Strict Typing & Context Safety)**: Engineered structural safeguards to lock in retry logic stability. Implemented `safe_thread_wrapper` in `canvas_logic.py` using `add_script_run_ctx` for async Streamlit context propagation. Enforced strict `Dict[int, CanvasFileInfo/SyncFileInfo]` type hinting in `sync_ui.py` with PEP-8 compliant module-level import hoisting.
+- **POST-PROCESSING EFFICIENCY: Targeted Retry Harvest (`post_processing.py` & `app.py`)**: Eradicated the "overkill" bug where retrying a single file triggered re-processing of the entire course directory. Refactored `run_all_conversions()` and `_glob_files()` to support a normalized, absolute-path `explicit_files` list. `app.py` now harvested successful downloads directly from `st.session_state['download_file_details']`, accurately targeting only the retried files for conversion.
+- **PATH NORMALIZATION GUARD (`post_processing.py`)**: Implemented strict `Path(p).resolve()` sets for file comparison inside the converter's globbing logic. This prevents cross-platform slash mismatch bugs (\ vs /) and ensures that explicit file targeting is mathematically robust.
+- **SYNC IDENTITY PRESERVATION: O(1) Hash Map Re-Queuing (`sync_ui.py`)**: Solved the `_NewVersion` identity loss bug. When retrying failed "updates" or "redownloads," the app now uses Dictionary Hash Maps to pre-index the original structured objects (e.g., `CanvasFileInfo` with its `_NewVersion` flag). By "plucking" from the map using `getattr(id)` or tuple keys, the retry logic correctly preserves the original download intent, preventing incorrectly renamed conflict files.
+- **FINAL RETRY ARCHITECTURE AUDIT**: Conducted a definitive codebase audit verifying that "Sniper Retries" strictly download only failed files, handle directory creation fails (`Path.mkdir`), orchestrate state-rehydration safely via `retry_selections`, and bypass Streamlit UI threads appropriately in both modes.
+- **DEEP DIVE POST-PROCESSING BUGFIX (`app.py`)**: Fixed a severe logic gap in "Sniper Retry" where valid absolute paths were erroneously filtered through `cm._sanitize_filename(n)`, destroying file paths (removing `:` and `\`) and causing 100% of retried files to be skipped in the conversion step.
+- **DEEP DIVE SYNC WIZARD ROUTING BUGFIX (`sync_ui.py`)**: Repaired an infinite UI loop triggered by the "Retry Failed Downloads" button in Sync Mode by natively injecting the explicit phase variable (`st.session_state['step'] = 3`).
+
+## Recent Changes (Session 2026-03-20 - Sync Retry Architecture Fixes)
+- **CRITICAL: Streamlit Re-hydration Crash Eradicated (`sync_ui.py`)**: Completely decoupled the synchronous `cm_retry.get_course(course_id)` Canvas API call from the Streamlit button callback (`"Retry Failed Downloads"`). It now safely passes a null blueprint (`course=None`) down to the async execution block (`download_sync_files_batch`). The async pipeline uses `await asyncio.to_thread` to securely open the network channel, catching endpoints timeouts and natively returning error logs to the Streamlit UI without crashing the global user session.
+- **ThreadContext Boundary Protection (`sync_ui.py`)**: Secured the transition natively off the Streamlit main thread by explicitly extracting `api_token` and `api_url` from `st.session_state` *before* invoking `asyncio.run()`, successfully preventing `StreamlitAPIException` (missing ThreadContext) crashes.
+- **STRUCTURAL FLAW: Discovery Omission Tracking (`sync_manager.py` & `sync_ui.py`)**: Modified the `AnalysisResult` dataclass to structurally track deep API failures (e.g., 500 error when scanning Canvas module folders) during the Course Analysis step by incrementing a new `structural_errors` metric. Added a visually matching `st.warning` in the Sync Completion screen that warns the user if entire modules were silently dropped due to backend API unavailability, alerting them that targeted "Sniper Retries" cannot recover these missing files and a full course rescan is necessary.
+
+## Recent Changes (Session 2026-03-19 - Secondary Content Sync Diagnostics & Architecture Restructure)
+- **Add Course Folder to Sync UI Polish (`sync_ui.py`)**: Increased the width of the main `Add Course folder to Sync` button by 50% to prevent text wrapping, and adjusted its top margin from `-35px` to `-50px` to halve the visual distance to the pair cards above it. Also enforced `use_container_width=True` and a `2.25` column ratio on the empty-state variant to ensure visual uniformity across all states.
+- **Empty State UI Polish (`sync_ui.py`)**: Adjusted the top margin of the empty state `Add Course folder to Sync` button (` margin-top: -10px`) to pull it closer to the top edge of its container, refining the visual alignment in the Sync Review screen.
+- **False-Positive HTML Updates Fixed**: Overhauled `_is_canvas_newer()` in `sync_manager.py` to immediately return `False` for all IDs in the negative secondary content registry (`id < 0`). Time-based diffing for synthetic entities was inherently flawed due to Canvas API timestamp drift frequently exceeding the 300s tolerance window. Local existence is now the sole diffing check for secondary HTML files.
+- **Split-Brain Pathing Resolved**: Uncovered and fixed a critical namespace divergence in `get_secondary_content_metadata()`. Extracted inline attachments are now dynamically prefixed with their parent entity's exact subfolder structure (e.g., `Assignments/MyAssignment/document.pdf`) before being wrapped into `CanvasFileInfo` objects, enabling the sync engine to properly track and cross-reference them against the local manifest.
+- **Zero-Byte Synthetic Auto-Discovery**: Handled an edge-case in `analyze_course()` preventing recovery of lost manifests. Bypassed the strict `local_size == c_file.size` auto-discovery parity check exclusively for negative-ID entities, since SQLite records them strictly as `original_size=0` while physical extraction creates padded 5-50KB HTML artifacts locally.
+- **Manifest Naming Asymmetry Addressed**: Repaired `_save_secondary_entity()` to explicitly pass the full prefixed path (e.g. `Assignments/...`) into the SQLite wrapper's `canvas_filename` parameter, eradicating memory asymmetry between the backend deduplication loop and bare basename storage.
+- **Safe Path Sanitization (Sync Loop)**: Fixed a path-traversal regression in `sync_ui.py` where `_sanitize_filename` was mangling directory slashes in subfolder-prefixed attachment names. Implemented `Path.parts` extraction to isolate and sanitize only the final component, preserving the `/` separators.
+- **Bulletproof Attachment Deduplication**: Injected a dynamic hash set guard (`_queued_ids`) into the sync loop's attachment offloading routine. This actively tracks IDs during iteration, preventing both cross-queue duplication (HTML + attachment deleted) and intra-document duplicate links from triggering redundant downloads.
+
+## Recent Changes (Session 2026-03-19 - Secondary Content Path Divergence & Performance)
+- **Dynamic Scanning Phase (`canvas_logic.py`, `app.py`)**: Introduced an `is_scanning_phase` boolean flag passed from the `app.py` UI down into `get_course_files_metadata` and `get_secondary_content_metadata`. This dramatically improves initial load performance by deliberately skipping expensive individual `course.get_assignment()` API calls during the analysis phase, relying instead on aggregate Canvas list endpoints.
+- **Dynamic Totals Incrementing (`app.py`)**: Integrated a reactive UI lock in `update_ui` that manually increments `st.session_state['total_items'] += 1` uniquely when `progress_type == 'attachment'` triggers. This elegantly resolves `[x/y]` file count visual overlap bugs (where downloaded files eclipsed the initial scanned total) that occurred due to skipping deep-attachment scanning for performance.
+- **Structural Integrity & Path Parity (`canvas_logic.py`)**: Natively bound the `CanvasFileInfo` data model directly to the `_ENTITY_ROUTING` dictionary. Filenames for all 6 secondary entity types (Assignments, Quizzes, Discussions, etc.) now correctly inherit their prefix directories (e.g., `Assignments/Name.html`) and subdirectories (e.g., `Assignments/Name/Name.html` for attachments), guaranteeing the Sync engine's path analysis perfectly mirrors the physical extraction layout built by the initial Download engine.
+
+## Recent Changes (Session 2026-03-19 - Discussion & Announcement Reply Fetching)
+- **Recursive Reply Engine (`canvas_logic.py`)**: Developed `_build_discussion_replies_html_sync` to recursively fetch and render threaded Canvas discussion replies. Offloaded via `asyncio.to_thread` to prevent event loop blocking.
+- **Canvas Rich Text Preservation (`canvas_logic.py`)**: Explicitly removed `esc()` sanitization from the core `message` body of discussion replies. Since Canvas returns pre-formatted HTML from its Rich Text Editor, escaping the string destroyed the document structure. Author names, dates, and attachment URLs remain strictly escaped.
+- **Threaded UI Aesthetic (`canvas_logic.py`)**: Implemented a Notion-style chatroom design with `3px solid #3b82f6` left-borders for nested hierarchy, system font stacks, and delicate margin controls.
+- **UI Bug Fixes**: Resolved the "Literal `\n` String" bug by correcting the string joiner logic. Fixed "Massive Vertical Gaps" by removing `white-space: pre-wrap;` and allowing block-level `<p>` tags to govern their own margins.
+
+## Recent Changes (Session 2026-03-19 - Secondary Content Inline Attachments & Metadata)
+- **Assignment Inline HTML Parsing (`canvas_logic.py`)**: Implemented `_extract_canvas_file_links()` utilizing `beautifulsoup4` to recursively parse raw HTML descriptions within Assignments. This resolves a critical limitation where instructors embed Canvas file links (`<a href="/files/...">`) directly inside the text editor rather than using the native `attachments` array. Discovered links are routed through a `try/except (Unauthorized, ResourceDoesNotExist)` block around synchronous `course.get_file(id)` calls to gracefully skip dead links without crashing the async loop.
+- **Positive ID Parity for Inline Links (`canvas_logic.py`)**: Validated that all inline-discovered file attachments are fed into the system using their true, positive Canvas API IDs. This architectural decision guarantees they integrate perfectly with the SQLite `canvas_sync.db` deduplication engine.
+- **Universal Metadata Hydration (`canvas_logic.py`)**: Executed a sweeping update across all 6 secondary content generators (Assignments, Quizzes, Discussions, Announcements, Syllabus, Rubrics). Injected the target entity's `html_url` property into the payload `metadata` arrays for both the initial download pipeline and the active sync engine.
+- **Clickable Hyperlink Rendering (`canvas_logic.py`)**: Modified the central HTML template builder `_build_entity_html` to auto-detect metadata values starting with `http://` or `https://`. These raw URLs are now wrapped in `<a href="..." target="_blank">` anchor tags, converting the static metadata row into a functional springboard bridging the offline HTML document directly back to the active Canvas page.
+
+## Recent Changes (Session 2026-03-19 - Secondary Content Post-Fix Bug Fixes)
+- **Attachment Pathing Normalization (`sync_ui.py`)**: Resolved a critical path-traversal bug where Assignment and Announcement file attachments were generating absolute OS paths instead of relative project paths (`file.relative_to(local_path)`). This absolute path was crashing the download loop when passed to `CanvasFileInfo`.
+- **Sync Review UI Crash (`sync_ui.py`)**: Fixed a `TypeError` destructuring crash during the presentation of the "Updates Available" table. Modified the visual iteration loop to access object properties (`f.size`) instead of attempting to treat the Canvas objects like tuples (`f[0].size`).
+- **Universal Attachment Offloading (`canvas_logic.py`, `sync_ui.py`)**: Modified the architecture of `download_secondary_entity()` to return a 3-tuple `(filepath, synthetic_id, attachments)`. This extracts inner Canvas files (e.g. Assignment attachments) and allows `sync_ui.py` to mint real, positive ID `CanvasFileInfo` objects containing direct URLs, dynamically appending them to the active `all_files` sync iteration queue. This allows attachments to inherently benefit from the main async loop's retries, `.part` atomicity, and cancellation monitoring.
+- **Canvas API Timestamp Drift Tolerance (`sync_manager.py`)**: Solved the False Positive "Updates Available" bug affecting synthetic entities by injecting a 60-second tolerance window into `_is_canvas_newer()` strictly for IDs matching the secondary content negative registry ranges (`id <= -10000000`).
+- **Sync Review Tuple Crash (`sync_ui.py`)**: Resolved a `TypeError: 'CanvasFileInfo' object is not subscriptable` in `_show_analysis_review()` layout logic by correctly referencing `f.size` instead of `f[0].size` after the variables had already been destructured from the initial payload tuples.
+
+## Recent Changes (Session 2026-03-19 - Metric Card UI Hotfix)
+- **Inactive Metric Card Styling (`sync_ui.py`)**: Resolved a CSS parsing bug where literal Python f-string brackets (`"{theme.SUCCESS_ALT}"`) were inadvertently passed directly to the `_render_metric_card` function rather than being evaluated. This generated invalid CSS (e.g. `linear-gradient(..., {theme.SUCCESS_ALT}1A)`), causing modern browsers to silently drop the background and border properties for zero-value sync counters. Removed the string wrappers, allowing proper hex resolution and restoring the intended muted/dimmed aesthetic for inactive file type metrics.
+
+## Recent Changes (Session 2026-03-14 - Native PyWebView Encapsulation & Size Optimization)
+- **Executable Size Optimization (`Canvas_Downloader.spec`)**: Resolved massive Python bloating (~350MB executable size) caused by Streamlit's `collect_all` directive improperly bundling heavy data science and AWS libraries. Added `polars` (~154MB) and `botocore`/`boto3` (~17MB) into the PyInstaller `excludes` list. The final application now properly targets a ~130MB baseline footprint, accommodating the core framework and the 83MB FFmpeg Engine needed for video audio extraction. User specifically elected to retain `tkinter` dependencies to preserve native Windows File Explorer dialog pickers.
+- **Windows Browser Evasion (`start.py`)**: Stripped the legacy `tkinter` dependency from the `CanvasLauncher` class and rewrote the global script lifecycle to use a blocking `pywebview` window. The Streamlit backend now effectively masquerades as a true native desktop application on Windows, removing reliance on unpredictable external web browsers like Chrome or Edge.
+- **Dependency Pipeline Updated (`Canvas_Downloader.spec`)**: Rewrote the PyInstaller build graph to execute `collect_all('webview')`, physically packing `EdgeWebView2` bootstraps into the binary while leaving the untouched macOS equivalent unaffected by this UI shift.
+
+## Recent Changes (Session 2026-03-13 - Phase 7: Audited Concurrency & Security Fixes)
+- **Resolved SQLite Win32 IO Sharing Violation (`sync_manager.py`)**: Removed all `os.name == 'nt'` `_windows_unhide_file()` attribute flags from within the `save_manifest` and other DB transactional methods. This solves the core trace of concurrent thread locks thrown by SQLite operations being interrupted by Windows Defender / OS-level file permission assertions mid-write.
+- **Asyncio Sync Mutexing for File Paths (`sync_ui.py`)**: Designed and injected `manage_sync_download_lock` into `_run_sync`. A global `_sync_lock_mutex` now serializes dictionary bindings that vend `asyncio.Lock()` objects uniquely keyed per physical file path. This successfully throttles concurrent network threads downloading the same resource across dual cross-mapped courses without duplicating handles or mangling raw byte streams inside `aiofiles`.
+- **Atomic Windows Replacing with Deep Permission Guards (`sync_ui.py`, `canvas_logic.py`)**: Eradicated the legacy `os.rename` approach for completing `.part` downloads on Windows, substituting it with the atomic OS primitive `os.replace`. Recognizing that Windows rigidly enforces file usage (unlike POSIX), embedded explicit `PermissionError` (`[WinError 32]`) exception blocks. If a user natively opens a target file (e.g. Acrobat Reader viewing a syllabus) during a sync loop, the application intercepts the crash, surgically unlinks the redundant `[].part` payload, and bubbles an intelligent log message, avoiding an overarching fatal exit.
+
+## Recent Changes (Session 2026-03-13 - Phase 6 Final Architecture Audit Resolution)
+- **Async SQLite Unblocking (`canvas_logic.py`)**: Offloaded the synchronous `record_downloaded_file` database commit directly into a background thread utilizing `await asyncio.to_thread`. This definitively stops heavy IO writes from pausing the core concurrent asyncio event loop.
+- **Asyncio Memory Leak Fixed (`canvas_logic.py`)**: Purged the unbound `_download_locks` dictionary memory leak by structurally deploying an `@asynccontextmanager`. Locks now employ a dynamic reference `count`; when the active count reaches zero, the specific path's `asyncio.Lock()` is explicitly deleted from memory via `try...finally`.
+- **JSON TOCTOU Race Eradicated (`ui_helpers.py`, `sync_manager.py`)**: Discovered that `.tmp` atomic replacements did *not* resolve the TOCTOU issue where two simultaneous Read-Modify-Write threads would blindly overwrite each other's updates. Completely rewrote `save_sync_pairs` into `atomic_update_sync_pairs` and `SavedGroupsManager` routines by wrapping their execution in robust `threading.Lock()` mutexes.
+- **PowerShell PyInstaller Safety (`ui_helpers.py`)**: Substituted the unstable Streamlit-Tkinter `sys.executable -c` Windows folder picker string. Deployed a highly-reliable `powershell.exe -Command` wrapped string invoking `System.Windows.Forms.FolderBrowserDialog`. This perfectly aligns with the PyInstaller constraint on preventing thread-based crashes.
+- **Definitive Zombie Pruning (`video_converter.py`)**: Integrated `psutil` into the `moviepy` executor. In instances where corrupt video payloads completely stall FFmpeg, abandoning the `Future` is no longer acceptable. The timeout loop now actively crawls the `Process` tree to systematically send forceful termination signals (`kill()`) to the exact worker processes, guaranteeing resource reclamation.
+
+## Recent Changes (Session 2026-03-13 - Phase 4 Secondary Content Engine UI)
+- **UI Architecture Sequencing (`app.py`, `sync_ui.py`)**: Restructured the visual flow of the secondary content configuration block. Checkboxes ("Select what to include") now deliberately precede structural routing decisions ("Organize by:"), aligning the UI with standard user intent models.
+- **Dynamic UX Condensing**: Engineered the structural radio buttons ("In Course Folder" vs "In Subfolders") to collapse entirely into a null state if `_active == 0` (no secondary checkboxes selected), eliminating extraneous cognitive load.
+- **Component Limitation Bypassing**: Streamlit's `st.radio` lacks granular `help=""` tooltips per option. Engineered a seamless workaround by injecting a custom HTML `div` below the radio group with grayed-out `ⓘ` instructional text matching standard Streamlit aesthetics.
+- **Initialization State Alignment**: Purged 8 instances of `True` (In Subfolders) defaulting for `isolate_secondary_content` / `dl_isolate_secondary` scattered across SQLite handoffs, session states, and initial renders, unifying the application around the safer `False` ("In Course Folder/Modules") baseline.
+- **CSS Variable Injection Repair**: Traced and fixed a CSS rendering bug where the vertical tree-lines disappeared. Replaced broken literal `{theme.BG_CARD_HOVER}` enclosed in triple quotes with active Python string concatenation to ensure the `bg_card_hover` hex correctly interpolated into the style block.
+- **Precision Hitbox Padding (`margin-bottom`)**: Resolved a Streamlit layout engine defect where negative margins (`margin-bottom: -15px`) on text labels caused transparent hitboxes to overlap and physically block clicks on checkboxes directly beneath them. Margins were carefully audited and relaxed to `margin-bottom: 0px` combined with dynamic `margin-top` adjustments to preserve tight visuals without sacrificing interactive integrity.
+
+## Recent Changes (Session 2026-03-12 - Phase 3 Secondary Content Engine Backend)
+- **Negative ID Offset Registry (`sync_manager.py`)**: Designed a 10-million wide integer range registry (`SECONDARY_ID_OFFSETS`) per synthetic entity. This safely records HTML-wrapped Canvas entities (like Assignments `-10M` or Quizzes `-50M`) in the SQLite database without risking primary key collisions with real Canvas file IDs.
+- **Universal HTML Construction (`canvas_logic.py`)**: Centralized the payload conversion logic into `_build_entity_html()` and `_save_secondary_entity()`, guaranteeing all 6 new Canvas entities receive consistent, styled HTML bodies embedding metadata (due dates, total points).
+- **ISO 8601 Date Formatting Engine (`canvas_logic.py`)**: Built `_format_canvas_date` to globally intercept and parse raw UTC ('Z') timestamp strings directly within the HTML metadata generation loop. Canvas API dates (e.g., `2025-08-26T14:07:50Z`) are now automatically evaluated against the user's local operating system timezone and cleanly rendered into human-centric ordinal formats (e.g., `August 26th, 2025 at 14:07`) before being wrapped in the modern UI cards.
+- **Modern Responsive Document Styling (`canvas_logic.py`)**: Completely overhauled the injected HTML/CSS payload for secondary entities. Transformed the raw 1990s Canvas HTML text into a sleek, Notion-style reading experience. Injected a `-apple-system` font stack, a light grey `--bg-canvas` backdrop, and a clean white 60%-width document "Card" container with a soft drop shadow (`box-shadow: 0 4px 6px -1px rgba(...)`). Implemented responsive breakpoints (`80%` on medium, `95%` on mobile) and heavily stylized the metadata block with left-border accent colors (`#3b82f6`) and bold labels. Styled inner Canvas HTML elements like tables, responsive images, code blocks, and blockquotes for perfect offline readability.
+- **Mode A/B Routing System (`canvas_logic.py`)**: Implemented `_resolve_secondary_path()` to support two physical layouts: Mode A (Inline injection using prefixed names like `Assignment: Homework.html`) and Mode B (Isolated subfolders like `Assignments/Homework.html`).
+- **True Positive ID Attachment Handling (`canvas_logic.py`)**: Resolved a critical architectural flaw by strictly tracking Assignment and Announcement attachments via their true Canvas `file.id`. This ensures perfect SQLite deduplication if the exact same file exists natively in the instructor's 'Files' tab.
+- **Sync Plane Integration (`canvas_logic.py`)**: Expanded `_get_files_from_modules()` to emit mock `CanvasFileInfo` objects for secondary items found directly inside modules. Added `get_secondary_content_metadata()` to fetch and merge standalone entities into the main diffing pipeline, granting full visibility to the Sync UI.
+
+## Recent Changes (Session 2026-03-12 - Phase 2 Deferred Issues)
+- **JSON Atomic Writes (`sync_manager.py`)**: Migrated the non-atomic `add_entry` logic in `SyncHistoryManager` to write payload data sequentially to a `.tmp` file before executing a secure `os.replace()`, preventing unrecoverable `.json` corruption if the thread crashes mid-save.
+- **FFmpeg Hang Protection (`video_converter.py`)**: Wrapped `moviepy`'s internal `.close()` calls within an isolated `ThreadPoolExecutor`. If the underlying FFmpeg subprocess hangs indefinitely on a corrupt video fragment, the 10-second `timeout` guard cleanly abandons the thread instead of paralyzing the entire download queue.
+- **Failure UI Visibility (`app.py`, `sync_ui.py`, `post_processing.py`)**: Added semantic `pp_success_count` and `pp_failure_count` attributes to the `UIBridge` dataclass. The 7 converter runners now actively push failure state. Wired `st.session_state` persistence to permanently warn users via a UI banner on the final completion screens if any post-processing hooks trigger a conversion failure.
+- **Import Optimizations (`app.py`, `canvas_logic.py`)**: Cleaned up the module headers. Hoisted `platform` and `base64` strictly to module-level imports, stripped redundant inline `aiofiles` and `shutil` duplicates, and actively block-commented the intentional deferred status of `streamlit` inside core logic to preserve framework independence.
+
+## Recent Changes (Session 2026-03-12 - V1.0 Final Blockers & Polish)
+- **Atomic Data Integrity (`canvas_logic.py`)**: Secured the `shutil.move` cross-drive fallback with a `try/finally` block to proactively `os.unlink` partially transferred destination files if the move process crashes or is interrupted.
+- **Path Divergence Fix (`canvas_logic.py`)**: Prevented `_handle_conflict()` from mutating filenames that were explicitly requested via `explicit_filepath` and already deduplicated upstream by the module parser.
+- **SQLite Concurrency Defense (`sync_manager.py`)**: Upgraded `ignore_file` and `restore_file` to use an explicit 3-retry loop wrapped around `sqlite3.connect(timeout=30.0)`, aligning manual UI triggers with the exact lock-contention resilience used during bulk syncing.
+- **INI Injection Prevention (`canvas_logic.py`)**: Sanitized Canvas URLs payload strings by strictly stripping `\r\n` characters before embedding them within the `.url` Windows shortcut format.
+- **Session Bleed Prevention (`app.py`)**: Fixed a severe UX glitch where completing a download maliciously wiped the application's authentication state (`canvas_downloader_token`, `auth_status`) and customized user paths. `keys_to_keep` is now defensively expanded.
+- **Cache Stagnation (`app.py`)**: Enforced a `ttl=600` parameter on the `@st.cache_data` Course List fetcher, forcing the app to rehydrate course data every 10 minutes rather than locking stale layouts infinitely.
+- **Filesystem Dotfile Preservation (`canvas_logic.py`)**: Modified `_sanitize_filename` from `.strip('. _')` to `.lstrip(' _').rstrip('. _')` to preserve vital leading dots for dotfiles (`.gitignore`, `.env`) while still neutralizing trailing period OS bugs.
+- **Namespacing & Clean Logging (`sync_manager.py`, `sync_ui.py`)**: Elevated `compute_local_md5` from a monkey-patched assignment into a strict `@staticmethod` within `SyncManager`, and eliminated terminal noise in `sync_ui.py` by converting raw `print()` loops into standard `logger.debug()`.
+
+## Recent Changes (Session 2026-03-11 - V1.0 Final Clearance Execution)
+- **AppleScript Lifecycle Controller (macOS)**: Completely rewrote the `start.py` macOS launcher. Scrapped the infinite loop to avoid zombie processes. Replaced it with a native, blocking AppleScript dialog (`osascript` "Open Browser" / "Stop Server") that controls the Streamlit daemon thread and allows smooth, user-driven graceful termination.
+- **Path Traversal Guard (`archive_extractor.py`)**: Implemented a mandatory manual path validation check (`os.path.abspath(os.path.join(...)).startswith(...)`) for `tarfile` extraction on Python versions < 3.12 lacking the `data_filter` attribute.
+- **Theme Color Interpolation (`post_processing.py`)**: Corrected 19 instances where `theme.XYZ` constants were rendered as literal strings instead of evaluated f-strings (including 3 `_COLOR_MAP` entries and 16 `_log_msg` calls).
+- **Graceful Subprocess Cleanup (`video_converter.py`)**: Restructured the moviepy audio extraction logic within a `try/finally` block to explicitly call `.close()` on both the audio subclip and the main video clip, stopping FFmpeg subprocess leaks.
+- **Database Lock Defense (`sync_manager.py`)**: Hardened the concurrent SQLite writes inside `update_converted_file` by injecting `timeout=30.0` into the `sqlite3.connect` call.
+- **2026-03-20**: **Retry Logic Audit & Sniper Fixes**:
+    - Conducted a comprehensive audit of the "Retry Failed Items" functionality across both Download and Sync modes.
+    - Fixed a critical state leak in `app.py` where `st.session_state['seen_error_sigs']` was not being reset during retries, leading to silenced error logs.
+    - Resolved a `FileNotFoundError` in `canvas_logic.py` within the `download_isolated_batch_async` loop (Sniper Retry) by adding explicit `Path.mkdir(parents=True, exist_ok=True)` logic to ensure target directories exist before file writes.
+    - Verified that Sync Mode's retry logic is already robust due to its re-hydration of the full `CanvasManager` context and existing directory creation guards.
+- **Error Visibility & Noise Reduction**: Upgraded fallback scan errors in `canvas_logic.py` from silent `pass` to `log_debug`; stripped `esc()` HTML escaping from plaintext error logs in `post_processing.py`; moved `datetime` imports out of inner loops in `app.py`; and ensured `BaseException` catches globally re-raise `KeyboardInterrupt` / `SystemExit`.
+
+## Recent Changes (Session 2026-03-11 - macOS V1.0 Polish & Crash Fixes)
+- **Tkinter Thread-Bomb Eradicated (`ui_helpers.py`)**: Rewrote `native_folder_picker()` to branch for Darwin and use `osascript` subprocess calls (`choose folder`), avoiding main-thread Tkinter segfaults when called from Streamlit background threads.
+- **AppleScript UX Hang Prevention (`ui_helpers.py`)**: Upgraded the `native_folder_picker()` `osascript` payload to explicitly force the prompt to the foreground (`tell application (path to frontmost application as text)`). Bound the subprocess to a strict 60-second timeout catching `subprocess.TimeoutExpired`, permanently neutralizing a critical UX freeze where backgrounded dialogs could lock the Streamlit execution thread indefinitely.
+- **Finder Foreground Forcing (`ui_helpers.py`)**: Enhanced `open_folder()` on macOS to use a dual-command flow (`open -R` followed by `osascript tell application "Finder" to activate`) to force the window cleanly to the foreground.
+- **AppleScript GUI Dialog Hangs (`*_converter.py`)**: Injected `set display alerts to false` (and `wdAlertsNone`) into the AppleScript execution strings for Excel, Word, and PPTX to permanently suppress blocking native GUI dialogs that previously hung the conversion pipelines.
+- **Hidden File Windows API Guard (`sync_manager.py`)**: Added strict `os.name != 'nt'` early exits to `_windows_hide_file` and `_windows_unhide_file` to completely shield macOS and Linux environments from fatal `ctypes.windll` exception crashes.
+- **macOS Build Entitlements (`Canvas_Downloader_macOS.spec` / `entitlements.plist`)**: Generated a dedicated `entitlements.plist` activating the `com.apple.security.automation.apple-events` permission. Integrated this into the macOS PyInstaller build spec to ensure the compiled `.app` bundle is trusted by the OS to trigger external Office automation processes.
+- **Keychain Prompt Evasion (`app.py`)**: Designed a sophisticated bypass for macOS `keyring` permission loops. On Darwin, Canvas API tokens are now structurally encoded via Base64 and merged silently into the active `canvas_downloader_settings.json` payload, providing seamless, persistent authentication without triggering OS-level credential dialogs.
+
+## Recent Changes (Session 2026-03-11 - macOS V1.0 Native Release)
+- **P0 CRITICAL: Tkinter Thread-Bomb Eradicated (`app.py`)**: Stripped all legacy `tkinter` imports from the main Streamlit module. macOS (Darwin) fundamentally rejects cross-thread UI calls and crashes instantly; this completes our migration to AppleScript subprocesses for folder selection.
+- **P1: Hybrid API Token Storage (`app.py`)**: Rewrote the authentication loop to bypass relentless macOS Keychain privacy prompts. Windows securely relies on `keyring`, while Darwin (`platform.system() == 'Darwin'`) explicitly uses Base64-encoded fallback storage within the user's `canvas_downloader_settings.json`.
+- **P2: macOS Icon Fallback Guard (`start.py`)**: Guarded the `.iconphoto()` deployment inside a strict `try/except` block to gracefully bypass non-fatal `TclError` exceptions that spontaneously occur on macOS Big Sur and above.
+- **P0 CRITICAL: Excel Converter Crash Fix (`excel_converter.py`)**: Removed top-level `import pythoncom` / `import win32com.client` that caused `ModuleNotFoundError` on macOS. All COM imports are now lazy (inside `__enter__` and `_init_app`) with `try/except ImportError`, matching the pattern already used by `word_converter.py`.
+- **P0: Platform-Guarded Dependencies (`requirements.txt`)**: Added `; sys_platform == 'win32'` marker to `pywin32==308` so `pip install` no longer fails on macOS/Linux.
+- **P0: Cross-Platform .spec Fix (`Canvas_Downloader.spec`)**: Removed `'difflib'` from excludes (it was breaking `sync_manager.py`'s heal manifest on BOTH platforms). Also removed stale `'translations.py'` reference from datas.
+- **P1: Config Path Safety (`ui_helpers.py` + `app.py`)**: Unified `get_config_dir()` to route config files to `~/Library/Application Support/CanvasDownloader/` on frozen macOS bundles (preventing `PermissionError` from writing inside read-only `.app` bundles). `app.py`'s `get_config_path()` now delegates to this unified function.
+- **P2: AppleScript Office Bridge (`excel_converter.py`, `word_converter.py`, `pdf_converter.py`)**: Implemented full AppleScript (`osascript`) fallbacks inside each converter's `convert()` method. When `sys.platform == 'darwin'`, the converters bypass COM and use `subprocess.run(['osascript', '-e', ...])` to control Microsoft Excel, Word, and PowerPoint natively on macOS. Features: 120s timeout, `POSIX file` path format, quote escaping for defense-in-depth, stateless per-invocation (no self-healing needed).
+- **P2: `.webloc` Support (`url_compiler.py`)**: Added platform-aware globbing (`*.webloc` on Darwin, `*.url` on Windows) and a `plistlib`-based parser for macOS bookmark files. The NotebookLM URL compilation feature now works identically on both platforms.
+
+## Architectural Decisions - macOS
+- **AppleScript helpers are duplicated** (~15 lines each) as `@staticmethod` in each of the 3 converter classes rather than shared in a module. Keeps converters self-contained.
+- **No UI warnings** for missing Mac Office. Silent graceful failure (returns `None` + logs error), matching Windows behavior.
+- **Config path routing**: `sys.frozen + Darwin → ~/Library/Application Support/`. `sys.frozen + Windows → exe directory`. `Script mode → __file__ parent`.
+
+## Recent Changes (Session 2026-03-11 - V1.0 Final Action Plan Execution)
+- **COM Self-Healing (`word_converter.py`)**: Ported the robust self-healing architecture from `excel_converter.py` into the legacy Word document converter. Added `_ensure_app()` to perform a lightweight health check before every single conversion. If a corrupted document crashes the COM channel, the converter forcefully kills the dead Word instance and re-initializes it, preventing cascading batch failures.
+- **Disk Space Hardening (`ui_helpers.py`)**: Fixed a vulnerability in `check_disk_space()` where nested, non-existent target paths (e.g. `X:\future_folder`) caused `shutil.disk_usage()` to throw an exception, silently returning a false-positive `True`. It now iteratively walks up the path tree until it finds the closest existing parent directory (e.g. `X:\`) to accurately evaluate available drive space.
+
+## Recent Changes (Session 2026-03-11 - V1.0 Polish Sweep & Final Audit Items)
+- **Item 3: Dead Error UI Fix**: Fixed a logical contradiction in `app.py`'s cancellation handler that prevented error messages from correctly displaying after an aborted download loop.
+- **Item 5: Centralized Logging**: Purged amateur `print()` statements from all 7 converter loops (`pdf`, `word`, `excel`, `video`, `code`, etc.) and replaced them with standard Python `logging` for persistent disk traceability.
+- **Item 8: Centralized Versioning**: Created `version.py` (`__version__ = "2.0.0"`) and injected a styled version badge `Canvas Downloader v2.0.0` dynamically into the bottom of the Streamlit sidebar.
+- **Item 9: Import Hoisting**: Eradicated 26 inline imports (e.g., `import time`, `import json`) buried deep inside functions/loops across `app.py`, `sync_ui.py`, `sync_manager.py`, and `ui_helpers.py`, hoisting them cleanly to the top-level module scope for performance and PEP-8 compliance. Deferred imports were intentionally kept for highly specific scopes (e.g. `win32com`, `tkinter`).
+- **Item 10: Strict Exception Defensive Coding**: Scanned the entire workspace and upgraded 9 dangerous bare `except:` clauses to explicit `except Exception:` blocks across `app.py`, `canvas_logic.py`, and `video_converter.py` to prevent silencing vital system interrupts (like `KeyboardInterrupt`).
+- **Item 13: Aggressive CSS Token Centralization**: Extracted 20+ hardcoded hex colors into a unified `theme.py` design system. Executed a massive workspace-wide sweep replacing 249 raw hex string occurrences across `app.py`, `sync_ui.py`, and `post_processing.py` with dynamic f-string references (e.g., `theme.TEXT_PRIMARY`, `theme.ERROR_ALT`), establishing a single source of truth for the app's visual identity.
+- **Item 14: Strict UI String Validation (HTML Escaping)**: Engineered an `esc()` utility inside `ui_helpers.py` wrapping the standard `html.escape`. Deployed this function uniformly to wrap 46 instances of user-controlled variables (like Course Names and File Names) injected into HTML spans across the entire application, neutralizing XSS and DOM-corruption attack surfaces.
+
+## Recent Changes (Session 2026-03-10 - V3.0 Architecture Audit Fixes)
+- **Resolved "Modules Mode" Silent Data Loss (`canvas_logic.py`)**: Deleted the `downloaded_file_ids` ID-based deduplication tracker that was incorrectly skipping files present in multiple Canvas modules. Replaced it with a system that only tracks module files for Catch-All exclusion, ensuring every module link is processed.
+- **Synchronous Path Conflict Resolution (`canvas_logic.py`)**: Fixed a concurrency bug where exact duplicate filenames crashing into the same local folder were being quietly discarded by the `seen_target_paths` and `seen_flat_paths` sets. Implemented synchronous `(1)`, `(2)` suffix generation before dispatching the `asyncio` file download task, guaranteeing 100% data preservation and zero `[WinError 32]` collisions.
+- **Prevented Global Timeout Starvation (`canvas_logic.py` & `sync_ui.py`)**: Replaced the rigid `aiohttp.ClientTimeout(total=300)` with an adaptive timeout structure (`total=None, sock_read=60, sock_connect=15`). This ensures massive video files downloading over slow connections are no longer killed unconditionally at the 5-minute mark.
+- **Eliminated Semaphore Freezing (`sync_ui.py`)**: Restructured the HTTP `429 Too Many Requests` rate limit handler. The `asyncio.sleep(wait)` backoff penalty is now mathematically pushed completely *outside* of the active `async with sem:` block. This immediately releases the slot back to the concurrency pool, allowing other files to download while the rate-limited task awaits its timeout.
+- **Fortified SQLite Volatility (`sync_manager.py`)**: Injected `timeout=30.0` into the `sqlite3.connect` call within `_save_single_file_to_db` to gracefully handle extreme parallel insert flooding at the end of high-concurrency download batches, eliminating fatal `database is locked` crashes.
+
+## Recent Changes (Session 2026-03-10 - V1.0 Audit Fixes)
+- **Token Encryption (Keyring)**: Replaced plaintext token storage in JSON with OS-native credential vault storage via the `keyring` Python package. Includes auto-migration for legacy JSON tokens and secure wipe on logout.
+- **DB Corruption Rescue**: Fortified `SyncManager._init_db` against SQLite corruption crashes. Added `PRAGMA quick_check` and an auto-rescue mechanism that renames corrupted `.canvas_sync.db` files and cleanly re-initializes.
+- **In-App Error Viewer**: Implemented `_view_error_log_dialog()` and `_download_error_log_dialog()` using `@st.dialog` to display the contents of `download_errors.txt` inside the app. Wired into the Done/Cancelled screens for both standard Download and Sync modes.
+- **Write Validation**: Ensured failed disk writes to `canvas_downloader_settings.json` now explicitly alert the user via `st.error()` rather than failing silently.
+
+## Recent Changes (Session 2026-03-10 - Translation System Eradication)
+- **Pure English Architecture**: Completely deleted `translations.py`. Purged all `get_text()`, `pluralize()`, and `language` parameters from 6 core source files (`app.py`, `sync_ui.py`, `ui_helpers.py`, `canvas_logic.py`, `sync_manager.py`, `start.py`).
+- **Standardized String Formatting**: Replaced translation-key lookups with direct English strings or f-strings. Replaced the `pluralize()` utility with inline Python ternary operators (e.g., `f"{count} file{'s' if count != 1 else ''}"`) for zero-dependency rendering.
+- **Simplified Class Constructors**: Stripped the `language` parameter from `CanvasManager` and `SyncManager` constructors. All backend logic now operates without language-state awareness.
+- **UI Decoupling**: Removed the sidebar language selector and purged all `language` and `ui_lang` keys from `st.session_state`.
+- **Sync Review HTML Fix**: Resolved an HTML rendering bug in `sync_ui.py` where literal tags were visible; ensured all headers use `st.markdown(..., unsafe_allow_html=True)` and corrected emoji corruption.
+
+## Recent Changes (Session 2026-03-10 - 3-Tier Batch Sync Configuration UX)
+- **Complete UX Paradigm Shift**: Replaced the single "Context-Aware Override" checkbox with a 3-mode `st.radio` switchboard: Mode 0 (Keep Existing), Mode 1 (Global Override), Mode 2 (Individual Course Tweaks).
+- **Settings Diff Table**: Mode 1 renders an HTML diff table showing ✅/❌ per course per setting when a batch has mixed configs - solves the "blind spot" problem.
+- **Per-Course Editing**: Mode 2 uses a `st.selectbox` course picker with dynamically-keyed checkboxes (`ind_convert_*_{cid}`). Streamlit auto-persists all edits per course.
+- **Backend Handoff Parity**: `_show_sync_confirmation` branches on `_sync_config_mode`. Mode 0 loads SQLite, Mode 1 writes global, Mode 2 writes per-course. All paths bind `res_data['contract']` for Phase 3.
+- **Initialization Sweep Bug Fix from Audit**: Moved `try/except` inside the `for` loop so one corrupted JSON contract can't abort the entire sweep. Also now sweeps `file_filter` for mixed-state detection.
+
+## Recent Changes (Session 2026-03-10 - 3-Tier Sync Audit Refinements)
+- **Diff Table Context**: The HTML settings diff table in Mode 1 now renders unconditionally for batches of 2+ courses (regardless of uniform/mixed state). Uniform batches must also display the table to provide users visual confirmation of their identical baseline settings before applying global overrides.
+- **Handoff Exception Silencing**: Pushed `try/except` blocks deep inside the `for` loops across all three Modes (0, 1, and 2) in `_show_sync_confirmation`. This prevents a single malformed SQLite contract from implicitly zeroing out the payloads of all subsequent healthy courses in the batch.
+- **`_CONVERT_KEYS` Unification**: Eliminated the redundant `_CONVERT_KEYS_LOCAL` list in the handoff function, explicitly passing `_CONVERT_KEYS_HANDOFF = ['convert_zip', ...]` inline to ensure identical index mapping with the upstream init sweep.
+- **Global Key Cleanup**: Appended exhaustive `.pop()` commands at the end of the `Sync Now` handoff sequence to aggressively wipe `st.session_state` global conversion keys (`convert_*`, `notebooklm_master`, `file_filter`). This guarantees Zero-Bleed if the user navigates directly back to the `Download Page`.
+
+## Recent Changes (Session 2026-03-10 - Truthful Batch Settings UI Paradigm)
+- **Context-Aware Settings Override**: Completely overhauled how the Manual Sync (Step 2) Review screen handles global conversion settings during a multi-course batch sync.
+- **Mixed State Detection**: Built a logic sweep into `_show_analysis_review` initialization that scans the `sync_contract` of every selected course. It mathematically detects if `len(set(_batch_settings_map[key])) > 1` (i.e. Course A converts PPTX but Course B does not).
+- **Truthful UI Locking**: If a mixed batch is detected, the 8 conversion checkboxes are correctly forced to an unchecked `disabled=True` state, and a warning `⚠️ Mixed Settings Detected` is rendered. This explicitly prevents Course A from visually dictating the state of Course B, an anti-pattern caused by Streamlit's lack of "indeterminate" checkboxes.
+- **Master Override Toggle**: Introduced a `🔄 Override settings for all selected courses` checkbox. Checking it enables the conversion checkboxes, providing pure user intent that they wish to destructively override the historically saved individual contracts with a new, uniform setting for the batch.
+- **Backend Execution Parity**: Modified the `"Yes, Start Sync"` execution handoff. If a batch is mixed AND the user opts out of overriding it, the execution loop explicitly extracts each course's unique `sync_contract` from SQLite and passes it into `_s['res_data']['contract']`. This completely solves the memory-state failure point and aligns the Manual Sync architecture 1:1 with Quick Sync, allowing `get_synced_file_paths(target_exts, conversion_key)` in Phase 3 to read individual course truths rather than falling back to the mutated global `st.session_state`.
+
+## Recent Changes (Session 2026-03-09 - Quick Sync Architecture Refactor)
+- **Per-Course Batch Conversions Fix**: Discovered and resolved a major architectural flaw in `sync_ui.py` (`_run_sync`) post-processing where the iterative Quick Sync loop would overwrite the `persistent_convert_*` global flags. Refactored the `get_synced_file_paths(target_exts, conversion_key)` helper to extract `convert_*` settings strictly from each individual course's payload contract (`res_data['contract']`). This ensures that during a multi-course batch sync, Course A can be converted to PDF while Course B is skipped, rather than the final course blindly dictating the entire batch.
+- **Zero-Download Bypass**: Modified `_run_analysis()` to prevent Quick Sync from unnecessarily falling back to the manual review screen (Step 2) when 0 "new" or "updated" files exist. If a sync attempt only features "locally deleted" or "deleted on canvas" files, it now bypasses straight to Step 5 (Sync Complete).
+- **Bulletproof Skipped File Tally**: Established `st.session_state['qs_skipped']` using a robust dictionary/attribute checking loop designed to tally locally deleted and canvas deleted files before zero-download overrides. This enables the Success Screen to output a single, detailed warning outlining exactly how many deleted files were bypassed.
+- **Cancel Routing Precision**: Injected an indestructible `qs_cancel_route` flag into the Quick Sync button trigger. When a user cancels the download loop (Phase 3), the cancel handler reads this flag to definitively route them back to Step 1 instead of Step 2.
+- **Streamlit Ghost UI (Pass 1)**: Corrected a Streamlit layout oddity where an invisible submit button was breaking the DOM layout by injecting an HTML block with a JS payload (`window.parent.document.querySelector()`) to systematically hunt down and disable `display` on the specific layout node during Pass 1.
+
+## Recent Changes (Session 2026-03-09 - Safe Fragment UX Refactor)
+- **Safe Fragment Toasts**: Fixed a fatal white-screen crash where Streamlit wipes the DOM if `st.toast()` is called directly within an `on_click` callback attached to a fragment (`@st.dialog`). Reverted direct toast calls inside mutating callbacks (e.g., `_delete_group_callback`, `_save_inline_edit_cb`) to assign messages to a scoped `st.session_state['hub_toast']` variable. This toast is then safely consumed and displayed `st.toast()` at the very beginning of the `_saved_groups_hub_dialog` execution body.
+- **Supercharged Close Button**: Solved a stale background UI issue by upgrading the explicit "Close" buttons inside the Hub Dialog. Replaced standard `st.rerun()` calls with `st.rerun(scope="app")` (wrapped in a `try/except TypeError` block for backward compatibility). This forces the entire application to redraw instantly, ensuring the main UI evaluates and reflects any pending database mutations correctly.
+- **Hidden Native Close Button**: Injected a CSS rule (`display: none !important`) targeting `div[data-testid="stDialog"] button[aria-label="Close"]` inside `_inject_hub_global_css()`. This hides the native Streamlit 'X' close button, perfectly funneling all user exits through the custom state-aware "Close" button to guarantee the `scope="app"` full DOM refresh fires.
+
+## Recent Changes (Session 2026-03-09 - Hub Dialog Button Rerender Fix & Logic Audit)
+- **Standalone Pair Logic Fix**: Fixed a bug where the inline "Save Pair" (💾) button became erroneously disabled if a pair was already saved nested inside a multi-course Group. Updated the `_saved_pair_sigs` signature builder to strict-filter `is_single_pair == True`, accurately isolating Standalone Pairs from Group Pairs.
+- **Group ID Database Separation**: Validated the architecture of `SavedGroupsManager`. Re-saving an existing nested Pair as a Standalone Pair correctly generates a novel `group_id` with `is_single_pair=True`, completely averting database collisions and UX overlap. Inline edits to Standalone Pairs remain perfectly isolated from their identically-named Group counterparts because state mutations are strictly scoped by `group_id`.
+- **Hub Card Spacing Reduction**: Tightened the vertical rhythm of the Hub list by assigning specific CSS keys (`hub_group_item_` and `hub_pair_item_`) to the card containers and injecting a `-12px` (user tweaked to `-2px`) bottom margin. This effectively counteracts Streamlit's native flexbox gap, converting the individual cards into a cohesive visual sequence.
+- **Tab State Synchronization**: Refactored the `_saved_groups_hub_dialog` tab navigation ("View All", "Groups", "Pairs") avoiding conditional `if st.button:` logic. Implemented a `set_view_mode` `on_click` callback to guarantee session state updates *before* the Streamlit dialog layout is evaluated. This solves the double-click state-lag bug where active tab styling failed to update instantly.
+- **Expander CSS Restoration**: Re-wired CSS selectors to use the updated `st-key-hub_group_item_` key to restore lost styling on group expander titles and unordered list alignment (1.5rem padding, bullet point nudging).
+- **Pair Course Text Layout**: Transformed the single pair display from `🎓 {course_name}` to `Course: {course_name}` encapsulated in a highly-targetable `<div class='pair-course-subtitle'>`. Styled the text to directly match the group expander summaries and appended `margin-bottom: 8px` formatting for breathing room.
+- **UI Element Polish**: Replaced "Back to Groups" button text with "Back to overview". Injected direct key-targeting CSS (`[class*="st-key-hub_add_"]`) bypassing the generic Streamlit `stTooltipHoverTarget` class to force disabled/tooltipped buttons to scale cleanly to a uniform `40px` min-height, resolving a layout drift bug.
+
+## Recent Changes (Session 2026-03-08 - Saved Groups UI Polish & Card Layout)
+- **Layer 2 Pair Card Layout Restructure**: Fixed a persistent visual clipping bug caused by Streamlit's native nested column containers `st.columns` conflicting with border-bottom padding. Reverted the `c_title, c_save` layout to a pure sequential Markdown rendering flow, preserving the card's native vertical flexbox rhythm.
+- **Save Button Absolute Positioning**: Transitioned the inline `💾` button to `position: absolute` pinned to the top-right corner (`top: 15px`, `right: 16px`) of the `st.container`. Collapsed the button's flex block using `height: 0` while keeping `overflow: visible`, completely preventing the button from displacing the card's folder path text.
+- **Card Vertical Padding and Gap Control**: Injected precise padding rules (`padding: 5px 12px 20px 12px`) into the course cards to accommodate the absolutely positioned button while preventing bottom clip. Enforced a `gap: 10px` and `justify-content: flex-start` on the internal text to align content to the top edge seamlessly.
+- **Ghost Emoji Styling**: Stripped all Streamlit background, border, and padding chrome from the `st-key-save_pair_` buttons, transforming them into floating emojis with scaling hover states without disrupting layout geometry.
+- **Tab Navigation Revision**: Replaced the chunky segmented control navigation in the Hub dialog with native button tabs wrapped in a scoped container (`hub_tabs_container`), styled to mimic a slim macOS tab-bar.
+- **Streamlit Dialog State Stability**: Removed `st.rerun()` calls from the Hub dialog layer navigation callbacks (`_change_hub_layer`), relying strictly on `on_click` state mutations to prevent the entire SPA dialog from closing unexpectedly.
+
+## Recent Changes (Session 2026-03-05 - Saved Sync Groups: Full Feature)
+
+### Phase 1: Backend Manager & Save Workflow
+- **`SavedGroupsManager` class (`sync_manager.py`)**: JSON-backed persistence (`saved_sync_groups.json`) with `load_groups()`, `save_group()`, `delete_group()`, `update_group()`, and `matches_existing_group()` (signature-based duplicate detection using `frozenset` of `(course_id, local_folder)` tuples). Uses `uuid.uuid4().hex` for IDs.
+- **Save Dialog (`sync_ui.py`)**: `@st.dialog("💾 Save as Group")` with text input, Create/Cancel buttons, and CSS overrides for disabled states. Uses `pending_toast` pattern to avoid ghost toasts.
+- **"Save List as Group" button**: Disabled when <2 pairs or exact match to an existing group. Columns: `[1.5, 1.5, 7]` layout with `gap="small"` for aggressive left alignment next to "Add Course folder".
+
+### UI Layout Polish & Architecture (This Session)
+- **Hub Config Data Binding Fix**: Corrected logical bugs in `_render_hub_config` where the "Flat/Subfolder" checkbox and "NotebookLM" checkbox failed to read their respective metadata keys properly. The function now correctly reads `download_mode` directly from the `SyncManager` and evaluates the NotebookLM status by logically checking if all 8 conversion sub-settings are `True`.
+- **Inline Edit Architecture Refactor**: Completely eliminated `layer_3` and `layer_4_add_pair` from the Hub Dialog. Replaced them with context-aware, in-place edit cards (`hub_editing_pair_idx`) and a dedicated Add-Pair inline state (`hub_is_adding_new_pair`). Utilized an explicit `_cancel_edit_name_cb` on-click pattern to dismiss states safely, resulting in a cleaner, flatter Layer 2 UI component without heavy re-renders.
+- **Windows Focus Stealing Bypass**: Integrated a `ctypes` Alt-key simulation (`VK_MENU`) inside the cross-platform `open_folder()` utility. By momentarily simulating an ALT release before spawning `os.startfile(path)`, the script cleanly bypasses the restrictive Windows 10/11 taskbar focus lock, forcing the newly launched File Explorer window directly into the visual foreground.
+- **Config Expander HTML Redesign**: Replaced the previous emoji-based summary in `_render_hub_config()` with a professional 3-column HTML layout. Instead of native Streamlit disabled checkboxes (which wash out the UI), wrapped active `input type='checkbox'` DOM elements in `pointer-events: none` CSS wrappers. This allowed retaining bright colors and native `#3b82f6` Streamlit blue checkboxes in read-only mode, coupled with tight recursive indentation for visually hierarchical sub-settings.
+- **Aggressive Layout Refinement & Bullet Specificity**: Escaped Streamlit's internal 1rem `stExpanderDetails` margins not via the global CSS wrapper (which clashed dynamically) but through aggressive explicit inline `<style>` injections (`margin-top: -15px`). Realigned Streamlit's native markdown `<ul>` elements inside the `layer_1` accordion expanders by explicitly crushing the native `margin-inline-start` properties on `.stMarkdownContainer`, allowing bullets to shift left perfectly under the expander arrow.
+- **CSS Specificity Fix for Bulletproof Button Styling**: Diagnosed and fixed a CSS specificity conflict where Hub Dialog buttons lost their custom styling when the sync list was empty. Root cause: a broad `div[data-testid="stDialog"] button[kind="secondary"]` selector in `_save_group_dialog` (specificity `(0,2,1)`) was overriding per-key selectors (specificity `(0,1,1)`). Fix: boosted ALL dialog button selectors by prepending `div[data-testid="stDialog"]` to every key-based rule.
+- **Page-Level CSS Injection (CRITICAL)**: `st.empty().container()` in `app.py` discards `<style>` tags during DOM transitions (empty→non-empty state changes). All Hub CSS is now injected in `app.py` at PAGE level (line ~484), OUTSIDE the `st.empty()` context. The `_inject_hub_global_css()` function is called from `app.py`, NOT from `render_sync_step1`. This is the definitive architectural fix.
+- **Future-Proofing Rule (CSS Specificity & Leakage)**: (1) ALL dialog button CSS selectors MUST include a `div[data-testid="stDialog"]` prefix. (2) NEVER inject `<style>` tags inside `st.empty().container()` - they will be discarded during DOM transitions. Always inject at the page level. (3) NEVER use the `:has()` pseudo-class combined with sibling combinators (`~`) and broad selectors (e.g., `div:has(span#id) ~ div button`) within the main app to style empty states. The `:has(#id)` selector climbs the entire DOM tree to root-level ancestor `div`s, and the `~ div` sibling combinator will then inadvertently match the Streamlit `stDialog` portal container. This causes main-app CSS to leak into modals with devastatingly high specificity (`1,1,4`), overriding all targeted dialog button styles. Always scope empty-state button CSS uniquely by their native Streamlit widget key (e.g., `div.st-key-btn_empty_state button`).
+- **Top-Level CSS Hoisting for Bulletproof Rendering**: Moved both the comprehensive Hub Dialog `<style>` block and the main Hub button `<style>` block (previously nested inside `col_hub`) to the absolute top level of the `render_sync_step1` main page rendering flow. This structural refactor completely bypasses Streamlit's aggressive virtual DOM diffing logic, which was previously unmounting nested CSS blocks when the application transitioned to an empty state, ensuring the Hub Dialog's visual hierarchy remains 100% stable at all times.
+- **Tightened Layer 2 Pair Cards Vertical Rhythm**: Consolidated the Streamlit native markdown text elements (h3 title and folder path span) inside Layer 2 pair cards into a single HTML structure. This completely bypassed Streamlit's implicit paragraph spacing, allowing for precise 14px font sizing and flush alignment. Additionally, reduced the container's top padding (`padding-top: 8px`) to tighten the vertical space above the title, creating a more cohesive and compact card layout.
+- **Layer 2 Pair Cards & Button Hierarchy**: Adjusted the styling of the Course/Folder pair cards in Layer 2 to match the established visual hierarchy from Layer 1. The pair card background was made slightly lighter (`rgba(255, 255, 255, 0.05)`). The "Open Folder" and "Edit Pair" buttons, along with the "See Configuration" expander summary, were styled to be lighter than the card background and brighten further on hover. The "Remove" button was updated with defensive design, defaulting to a darker recessed grey (`rgba(0, 0, 0, 0.3)`) but retaining its danger red hover state.
+- **Layer 1 Group Action Buttons Hierarchy**: Injected specific CSS rules targeting the dynamic keys for the three action buttons inside Layer 1 Group Cards ("Add to Sync List", "Edit Group", "Delete"). Restyled them to establish a clear visual hierarchy: "Edit" defaults to a light grey and gets lighter on hover. "Add to Sync List" is a solid 3D-inset indigo that gets brighter with a glow on hover (matching the primary Analyze/Quick Sync styling). "Delete" is recessed with a dark grey background and transitions to danger red on hover. Also reduced button heights to match the 32px compact height of Layer 2 pair buttons.
+- **Preset Action Buttons**: Standardized "Apply Preset" buttons in the Download Settings presets hub to match the solid 3D-inset indigo aesthetic of the "Add to Sync List" button, and reduced all preset card buttons to the 32px compact height.
+- **Layer 1 Group Cards Elevation**: Injected a dynamic key (`hub_overview_group_card_{g_idx}`) to the groups overview cards and added a specific CSS rule to apply a subtle yellowish tint (`rgba(255, 230, 150, 0.1)`) and a soft drop shadow. This elevates the visual hierarchy to match the depth introduced in Layer 2.
+- **Group Feature Color Coordination**: Visually linked the "Save List as Group" and "Saved Groups" (Hub) buttons using a "Dusty Slate-Indigo" theme (`background-color: rgba(110, 115, 180, 0.35)` with `border: 1px solid rgba(110, 115, 180, 0.6)`). This desaturated, slightly transparent palette merges perfectly into the dark mode UI while retaining a sleek IDE aesthetic.
+- **Dialog Cancel Button Styling**: Refined the hover state for the secondary "Cancel" button inside the `_save_group_dialog` to match the app's standard "Ghost Danger" aesthetic. The solid red background (`#ef4444`) was replaced with a persistent dark background (`#262730`) while only the border and text transition to Streamlit standard red (`#ff4b4b`), keeping the UI balanced.
+- **Streamlit 1.34+ SPA Dialog Routing Fix**: Patched a critical navigation bug within the `_saved_groups_hub_dialog`. In newer Streamlit versions, calling `st.rerun()` inside an `@st.dialog` acts as a native "close and rerun main app" command. The fix was two-fold: (1) stripped `st.rerun()` from all intra-dialog buttons, and (2) refactored all layer-navigation buttons to use `on_click=_change_hub_layer` callbacks. This ensures session state is mutated *before* the dialog function re-evaluates its layout, eliminating the double-click bug caused by Streamlit's top-to-bottom execution model. The `_change_hub_layer` helper supports `_pop_keys` for cleanup on back-navigation.
+- **Hub Dialog Top-Level Refinements**: Standardized the `_saved_groups_hub_dialog` visual hierarchy by substituting basic text with Markdown headers (`### 🗂️`) and bold course counts. Swapped the buggy CSS `vh` height logic for a native `st.container(height=400, border=False)` around the group iterator loop. This guarantees a scrollable inner list of groups while pinning the `btn_hub_close` button persistently at the bottom of the dialog. Enforced strict Streamlit keys (`btn_hub_close`, `btn_hub_delete_*`) to allow isolated CSS targeting, and completely refactored the Dialog CSS block to eliminate conflicting rules, guaranteeing the Delete buttons achieve the "Ghost Danger" (red border/text over dark background) hover state uniformly. Fine-tuned the exact pixel spacing of the Hub navigation via aggressive CSS injections: squeezing the massive native margins off `h3` and `p` elements inside Layer 2, locking the tertiary "Back" buttons to explicit keys (`btn_back_to_groups`, `btn_cancel_add_pair`, `btn_hub_back_l3`), pinning down fixed opacities (`0.75` shifting to `1`) on hover for all tertiary buttons. After determining that aggressive CSS layout overrides (`width: 100%`, negative margins, High-Specificity container targeting, and custom `border-bottom` separators) were inherently fighting Streamlit's DOM logic and secretly causing left-shifted content and layout instability, a "Great Purge" was executed. All destructive layout hacks, including custom header lines and scroll container border removals, were entirely stripped. The dialog was successfully reverted to Streamlit's native, perfectly-centered modal geometry, ensuring long-term rendering stability. The tertiary Back buttons align naturally within this restored layout flow.
+- **Hub Dialog Layer 2 UX Overhaul**: Completely redesigned the Layer 2 ("Edit Group") screen. Implemented a progressive disclosure UX pattern for the Group Name: a clean "View Mode" features a dominant `h1` title (line-height: 1), vertically compressed layout, and Flexbox CSS (`flex-end`) to perfectly baseline-align the compact "Edit" button flush with the bottom of the title. Clicking edit seamlessly toggles into an "Edit Mode" inline title editor (75/25 column split) wrapped in a distinct meta-container (`hub_edit_group_meta`) with a subtle grey-yellow background tint to separate settings from content. Crucially, saving the name utilizes an `on_click` callback to mutate state instantly instead of `st.rerun()`, preventing the `@st.dialog` from abruptly closing. Elevated the pair card visual hierarchy with Markdown layout (`#### 🎓` for course names) and injected dynamic keys (`hub_pair_card_{p_idx}`) to apply a faint background lightening and soft drop shadow, creating visual depth. Standardized card actions into an equal-width 3-column layout (Open Folder, Edit Pair, Remove) and injected the 'Ghost Danger' CSS targeting the new `btn_hub_remove_pair_*` key. Introduced an `on_click=_remove_pair_from_group` callback for instant list truncation without abruptly closing the SPA. Appended a global "Add a new course" navigation hook explicitly styled with a faint blue/indigo, highly-transparent aesthetic to match the main app's theme without overwhelming the dark mode UI. Unified all inner-dialog *navigation* elements by enforcing the `type="tertiary"` parameter directly on every `st.button` constructor across all modal layers (including error and rescue states). This root Python fix allowed the deployment of a single, clean universal `button[kind="tertiary"]` CSS rule guaranteeing borderless, grey-to-white hover states application-wide and eliminating fragmented, key-specific CSS overrides. Note: the form-action "Cancel" button in Layer 3 alongside "Save Changes" was intentionally kept as `secondary` to maintain proper button hierarchy.
+- **Ignored Files Button Legibility**: Upgraded the CSS block for `div[class*="st-key-ignored_btn_"]` to be state-aware. When enabled, it enforces `color: #ffffff !important` overcoming Streamlit's dimmed secondary button styling. When `[disabled]`, the text and emojis revert to a dim grey (`rgba(255, 255, 255, 0.4)`) to clearly indicate the button is untrackable (i.e. 0 ignored files).
+- **Step Tracker Spacing**: Injected a 15px physical spacer immediately under `render_sync_wizard` to give breathing room before the Sync list area.
+- **Hub Button Row Alignment**: Fixed the `<h3>` "Canvas Courses to Sync" margin displacement caused by previous CSS hacks. Shifted the column ratio to `[0.7, 0.3]` and set vertical alignment to `center`. Explicitly reset the heading's inline styling to `margin-top: -10px; margin-bottom: 0px; padding-bottom: 0px;` to enforce perfect vertical symmetry within the row and pull the title up flush with the button.
+- **Hub Button Vertical Spacing**: Replaced the brittle top-margin hack with a robust 3-part CSS strategy:
+  1. Stripped default margins from `div.st-key-btn_hub_main` to align it naturally with the step header.
+  2. Targeted the parent `stHorizontalBlock` row containing the Hub button using `:has(.st-key-btn_hub_main)` to kill its padding and negative bottom margin.
+  3. Yanked the main `div.st-key-sync_list_outline` container up uniformly by -10px, achieving a perfect, tight 5px visual gap below the button row.
+- **Action Button Alignment**: Overrode the `[0.22, 0.22, 0.56]` column layout for the Add and Save buttons to a much firmer `[1.5, 1.5, 7]` container split, strictly pinning both buttons to the left wall. Included `use_container_width=True` on the Add button for size parity.
+
+### Phase 2: The Hub (Refactored SPA Dialog)
+- **Architecture**: Single `@st.dialog("📚 Saved Groups", width="large")` with flattened `st.session_state['hub_layer']` navigation (now exclusively `layer_1`, `layer_2`, and `rescue_mode`). Layers 3 and 4 were obliterated.
+- **Dialog Persistence Pattern**: Streamlit natively keeps dialogs open. The Hub dialog is now triggered strictly within the `if st.button:` block. The old dangling `hub_dialog_open` session state flag was removed entirely to prevent state-leakage ("Ghost Dialogs") triggering unexpectedly upon unrelated reruns.
+- **Layer 1 (Overview)**: Group cards with ➕ Add to Sync List, ✏️ Edit Group, 🗑️ Delete. Delete uses `pending_toast` pattern.
+- **Layer 2 (Group Details & Inline Editing)**: Editable group name (with dedicated Cancel button) + pair cards. Pairs toggle an inline editor card using `hub_editing_pair_idx`. Each pair has 📂 Open Folder, ✏️ Edit Pair, and ⚙️ See Configuration expander. Config reads `sync_contract` JSON from `.canvas_sync.db` via `SyncManager._load_metadata('sync_contract')` and renders cleanly padded HTML Checkboxes with `convert_*` booleans. Add functionality generates a blank inline edit component at the bottom via `hub_is_adding_new_pair`.
+
+### Phase 3: Pre-Flight Merge Engine
+- **Duplicate Filtering**: Compares incoming `course_id`s against existing `sync_pairs`. Drops duplicates silently with count toast.
+- **Folder Existence Check**: `Path(pair['local_folder']).exists()` for each unique pair. If all exist → merge immediately + persist + close Hub. If any missing → `rescue_mode`.
+- **Rescue Mode**: Warning UI listing only missing pairs. Per-pair "📂 Locate folder" buttons using `_rescue_select_folder(pair_idx)` with isolated `rescue_paths` dict. "Confirm & Add Group" button disabled until all remapped. On confirm: updates group JSON + merges into session + persists.
+
+### Code Quality Audit Fixes (This Session)
+- **Ghost Toast Bug**: Fixed in 4 locations (delete, rename, edit pair, all-duplicates) - converted `st.toast()` + `st.rerun()` to `pending_toast` pattern consumed at top of `render_sync_step1`.
+- **Delete Button Danger Styling**: CSS targets `div[class*="st-key-hub_del_"] button:hover` for red (#7f1d1d bg, #ef4444 border).
+- **Cancel Button Red Hover**: CSS targets `hub_cancel_*` and `cancel_save_group` keys.
+- **Config Expander Spacing**: Changed from `"\n\n".join()` (double-spaced) to `"<br>".join()` (tight).
+- **Dialog Primary Buttons**: Full blue/disabled styling ported from Save dialog into Hub CSS.
+
+### Key Streamlit Patterns Learned
+1. **No Nested Dialogs**: Streamlit crashes on `@st.dialog` inside `@st.dialog`. Use inline widgets (`st.selectbox`) instead.
+2. **Dialog Persistence**: `@st.dialog` functions must be called on every rerun to stay open. Use a session state flag (`hub_dialog_open`) and call the dialog outside the button's `if` block.
+3. **Ghost Toast Pattern**: `st.toast()` + `st.rerun()` = invisible toast. Always use `st.session_state['pending_toast']` consumed at the top of the render function.
+4. **Isolated Tkinter State**: When using tkinter folder pickers inside dialogs, store results in dialog-specific session state keys (e.g., `hub_temp_folder`) to prevent contamination of the main UI state.
+5. **CSS Key Targeting**: Use `div[class*="st-key-{widget_key}"] button` selectors to style specific buttons by their session state key.
+6. **Focus Hack Bypass**: Opening an `os.startfile` command via backend Python often steals background focus. In Windows natively, leveraging a quick `ctypes` ALT-key (`0x12`) release via `keybd_event` tricks the OS out of its background-app defensive stance.
+
+## Recent Changes (Session 2026-03-04 - Ignored Files UI Polish)
+- **Bulk Selection Matrix Architecture**:
+  - Rewrote both the multi-course (`_ignored_files_dialog`) and single-course (`_show_course_ignored_files_inner`) dialogs to abandon "visibility filtering" in favor of remote-control bulk selection. All files are now constantly visible.
+  - Implemented smart `(selected/total)` filetype unit counters that elegantly disappear when selection matches 0 or the total amount.
+  - Wired explicit bidirectional state forcing `st.session_state[unit_key] = is_all_checked` before widgets render, ensuring manual file unchecking perfectly mimics the logical unit state without latency/ghosting.
+- **Ghost File Elimination (Data Freshness)**:
+  - Inside both dialog execution blocks, enforced top-of-routine database fresh fetches `files = sm.get_ignored_files()`. When files are restored, the dialog instantly reruns and recalculates the exact list seamlessly.
+- **Visual Polish & Bug Mitigation**:
+  - Resolved Streamlit Dark Mode dialog flashing by locking container max heights to `500px`.
+  - Tightened UI horizontal spacing using specific negative margin HTML fragments (`margin-top: -10px; margin-bottom: 15px`) around "Or" separators.
+  - Refined modal `Close` buttons exclusively to `type="secondary"` to differentiate from destructive/primary actions.
+  - Standardized "🗑️" emojis to "🚫" uniformly tracking ignored items globally.
+
+## Recent Changes (Session 2026-03-04 - V1.0 Architecture Audit Fixes)
+- **Eliminated `handle_sweep` NameError (`sync_ui.py`)**:
+  - Found and fixed a critical bug where `file_ids_to_ignore` was referenced but never defined. Instantiated it directly from `items_to_ignore` to prevent runtime crashes during bulk "Ignore unchecked" operations in the Review Phase.
+- **Orphaned `.part` File Cleanup (`sync_ui.py`)**:
+  - Refactored the sync download loop to use a strict `try/finally` block. If the `atomic_rename_done` flag fails to trigger, the temporary `.part` file is unconditionally unlinked, preventing disk bloat during network drops or disk full scenarios.
+- **Sync Download Resilience (`sync_ui.py`)**:
+  - Engineered parity with `canvas_logic.py`'s download engine by porting the 5-retry exponential backoff loop directly into Phase 3's download block. The Sync engine now transparently retries 429 Rate Limits (respecting `Retry-After`), 5xx server errors, and temporary network timeouts instead of permanently failing actionable files.
+- **Dynamic Disk Space Validation (`canvas_logic.py` & `ui_helpers.py`)**:
+  - Upgraded the legacy static 1GB floor to a responsive `max(1GB, payload_bytes * 1.2)` algorithm. This accurately calculates a 20% safety margin for massive downloads (e.g. 10GB courses), catching structural capacity issues immediately prior to execution.
+
+## Recent Changes (Session 2026-03-04 - Sync Contract & Atomic Execution)
+- **Zero-Amnesia UPSERTs (`sync_manager.py`)**:
+  - Replaced `INSERT OR REPLACE` with `INSERT INTO ... ON CONFLICT(canvas_file_id) DO UPDATE SET` across both the scalar `_save_single_file_to_db` and bulk `save_manifest` methods.
+  - Explicitly excluded the `is_ignored` column from the `UPDATE` payload, mathematically guaranteeing that a user's Review Phase ignore-decisions survive both Sync Run #0 pipeline writes and subsequent sync executions.
+- **The Sync Contract Architecture (`sync_metadata`)**:
+  - Engineered a persistent configuration state. The Download pipeline now packages `file_filter` alongside all 8 `convert_*` post-processing booleans into a JSON blob and commits it to the SQLite `sync_metadata` table under the `sync_contract` key.
+  - Quick Sync universally queries this DB contract before falling back to `session_state` defaults, guaranteeing perfect structural replication on 1-click runs.
+  - **Filter Gatekeeping (`sync_ui.py`)**: Upgraded the "Quick Sync All" flow to actively intercept and filter `actionable_new`, `actionable_missing`, and `actionable_upd` file lists against the `file_filter` (e.g. `study` extensions) retrieved from the DB contract before queuing them. Also resolved a critical Python namespace shadowing bug (`UnboundLocalError`) by hoisting the `from pathlib import Path` requirement out of the Quick Sync local scope and utilizing the global `Path` import.
+- **UI Contract Binding (`sync_ui.py`)**:
+  - Overhauled `_show_analysis_review` to auto-load the course's Sync Contract and unconditionally overwrite the active `session_state` conversion keys on first render. 
+  - Validated that downstream DB saves perfectly harvest user mutations from the checkboxes during the "Yes, Start Sync" execution phase.
+- **Zero-Files UX Revamp**:
+  - Eliminated the `st.error` dead-end that occurred when a user ignored the last actionable file in a payload. Replaced it with a positive `st.success` exit ramp and a "Done - Return to Front Page" button that cleans state and triggers `st.rerun()`.
+
+## Recent Changes (Session 2026-03-04 - Sync Run #0 Handoff Architecture)
+- **DB Population During Initial Download**:
+  - Bridged the disconnect between the Download Engine (`canvas_logic.py`) and Sync Engine (`sync_manager.py`). The Download Engine now instantiates the `SyncManager` and populates `.canvas_sync.db` in real-time as files download.
+  - Implemented `record_downloaded_file()` in `SyncManager` to perform direct, concurrent SQLite writes (bypassing the in-memory dict) immediately after atomic `.part` renames.
+- **Authoritative Structure Detection**:
+  - Created a `sync_metadata` table to persistently store the selected `download_mode` ('flat', 'modules', 'files') at the end of the initial download.
+  - Upgraded `detect_structure()` to query this metadata as the absolute source of truth before falling back to filesystem heuristics.
+- **Safety & Purity Guards**:
+  - Preserved cancellation purity by strictly recording DB entries *after* 100% byte verification and `.part` rename phase. Cancelled connections never reach the SQLite write phase.
+
+## Recent Changes (Session 2026-03-04 - Settings Redesign & Debug Persist)
+- **Settings Modal UI ("Card" Layout)**:
+  - Redesigned the global settings modal (`⚙️ Settings`) by leveraging Streamlit's `st.container(border=True)` to create discrete layout "Cards" for Download Settings and Sync Settings.
+  - Eliminated vertical dead space by consolidating headers and descriptions into custom HTML blocks with strictly controlled CSS margins.
+  - Capped `Max Concurrent Downloads` slider at 15 and explicitly warned users about Canvas rate limits causing crashes.
+  - Injected custom CSS to style the slider track a vibrant light blue (`#38bdf8`).
+- **Debug Mode Persistence**:
+  - Rewired the `debug_mode` state so that the `canvas_downloader_settings.json` backend logic permanently saves and automatically loads the troubleshooting toggle choice.
+  - The Settings Modal now maps the `Enable Troubleshooting Mode` checkbox value directly against the persistent config file variables.
+
+## Recent Changes (Session 2026-03-04 - Error Logging & Concurrency Fixes)
+- **Error Deduplication & Cleanup**:
+  - Truncated `download_errors.txt` at the start of each run via `clear_error_log()`.
+  - Removed redundant disk-fallback reader in `app.py` that extended in-memory session arrays.
+  - Eliminated the `session_errors.txt` force-write dump since `_log_error` handles real-time disk persistence.
+- **Sniper Retry Flow (`app.py`)**:
+  - Rewired the "Retry Failed Items" button to instantly bypass the scanning/analysis phase and jump straight into `download_status = 'running'` for surgical retries of failed links.
+- **Path-Based Concurrency Deduplication (`canvas_logic.py`)**:
+  - Discovered that relying on Canvas API file IDs fails to deduplicate LTI/synthetic shortcuts and multi-module inclusions, leading to `[WinError 32]` collisions when async workers attempt to write to the same `.part` file.
+  - Implemented hard path-based deduplication (`target_folder / sanitize(filename)`) guarded by `seen_target_paths` and `seen_flat_paths` sets across all 4 entry points (modules, flat scan, flat-fallback, catch-all).
+- **Universal Error Logger Deduplication**:
+  - Implemented a 2-layer signature-based deduplication (`course|item|message`) to prevent duplicate rendering of LTI/catch-all failure loops.
+  - Layer 1 (Disk): Checks `CanvasManager._logged_error_sigs` before appending to `download_errors.txt`.
+  - Layer 2 (UI): Checks `st.session_state['seen_error_sigs']` in the `update_ui` callback before updating the list.
+
+## Recent Changes (Session 2026-03-20 - v1.0 Audit Resolution)
+- **Sniper Retry Architecture (`app.py`)**:
+  - Overhauled the "Retry Failed Items" button logic. Instead of resetting the download status to `'scanning'` (forcing a multi-minute Canvas analysis phase), the button now surgically applies `download_status = 'running'`.
+  - Cached variables (`courses_to_download`, `total_items`, `total_mb`) are explicitly preserved, instantly fast-forwarding the UI matrix directly back into execution mode to redownload isolated failures.
+- **Fail-Safe Networking (`canvas_logic.py`)**:
+  - **Fail-Safe Networking**: (DEPRECATED) Attempted to inject a socket timeout via `request_kwargs={'timeout': 30}` in the `Canvas` client. *Observation: This caused a fatal TypeError in the current `canvasapi` version and was removed on 2026-03-21.*
+  - **Content-Type Validation**: Added a pre-write guard in `_download_file_async`. If Canvas unexpectedly returns a `200 OK` status with `text/html` instead of binary data (a known catastrophic failure mode for the LMS), the block manually raises a `ValueError` rather than silently saving an HTML error page masked as a PDF or Zip.
+- **Crash Immunity & Sandboxing**:
+  - **Graceful Process Handling**: Eradicated 5 rogue `except BaseException:` catch-alls across `app.py`, `post_processing.py`, and `sync_ui.py`. The app correctly routes `SystemExit` (for PyInstaller teardowns) and `KeyboardInterrupt` while utilizing standard `except Exception:` isolation.
+  - **Defensive Importing**: Wrapped the vulnerable `import psutil` within `video_converter.py` in a `try/except ImportError` block, allowing the application to safely launch even on malformed environments lacking the C-extension dependency, degrading to a graceful terminal warning instead of a hard crash.
+
+## Recent Changes (Session 2026-03-04 - UI Polish & Status Sync)
+- **Unified Blue Status Indicator (`sync_ui.py` & `app.py`)**:
+  - **Desync Fix (Phase 2 Download)**: Moved the `active_file_placeholder` update for current filenames **outside** the 0.4s UI throttle block in `sync_ui.py`. The status text now updates instantly for every file, ensuring it never lags behind the terminal output.
+  - **Standardized Styling**: Implemented a consistent `#38bdf8` blue color with `font-weight: 500` for all "Currently downloading:" and "Currently processing:" status messages.
+  - **Post-Processing Visibility**: Injected the blue status indicator into all 7 conversion/extraction loops (Archives, PPTX, HTML, Code, Word, Excel, Video) in both `sync_ui.py` and `app.py`.
+  - **Cleanup Hooks**: Added `active_file_placeholder.empty()` calls after all post-processing completions to ensure the status text is cleared once the course/batch is finished.
+
+## Recent Changes (Session 2026-03-13 - Built-to-Last Architecture Fixes)
+- **Concurrency & Rate Limit Unblocking (`canvas_logic.py`)**:
+  - **Semaphore Release Penalty**: Moved `asyncio.sleep()` for 403/429 Canvas rate limiting outside the core processing lock (`async with sem:`). Rate-limited tasks now peacefully wait out their penalty without stealing active concurrent connection slots from healthy tasks.
+  - **Target-Path Serialization**: Interwoven a new mutex dictionary global lock (`_download_locks`) directly into `.part` file operations. Multiple threads attempting to write overlapping file structures are seamlessly serialized byte-for-byte instead of colliding or throwing OS File in Use exceptions.
+- **Deadlock Eradication (`video_converter.py` & `sync_manager.py`)**:
+  - **Zombie FFmpeg Neutralization**: Disassembled the synchronous `with ThreadPoolExecutor` used for `moviepy` destruction. Invoked strict asynchronous exit directives (`wait=False, cancel_futures=True`) to prevent the entire download thread from hanging infinitely on corrupted MP4/MOV headers.
+  - **DB Flood Defense Escalation**: Standardized all `sqlite3.connect` initializations globally to block for up to `30.0` seconds instead of 20.0, granting slow hard drives massive breathing room to write sync states.
+- **Atomic State Guarantees (`ui_helpers.py`)**:
+  - **Configuration Immutability**: All edits to `canvas_sync_pairs.json` now employ a `.tmp` file and `os.replace` shadow-swap, protecting configuration states from cross-thread tear interference.
+
+## Recent Changes (Session 2026-03-03 - UI Polish)
+- **Quick Sync Flow Repair (`sync_ui.py`)**:
+  - **Payload Completion**: Fixed a bug where `AnalysisResult.locally_deleted_files` was fundamentally ignored by the Quick Sync interceptor, causing courses with only local deletions to incorrectly fall back to the Review page (reporting `total_count = 0`). Locally deleted files are now correctly merged into the `redownload` payload matching the normal flow.
+  - **State Key Consistency**: Synchronized session state checkbox keys in the Quick Sync flow to use `cid` (Course ID) rather than `idx` (loop index), matching the normal UI flow to prevent toggle desync on back-navigation.
+  - **Post-Processing Variables**: Added persistence hooks (`persistent_convert_*`) to the Quick Sync flow, ensuring background conversions (e.g., zip extraction, PDF rendering) aren't bypassed.
+  - **Cancel Guard Reset**: Enforced a nuclear reset of four `cancel_requested` permutations directly inside the "Analyze" and "Quick Sync" button triggers to prevent stale states from silently aborting the analysis loop on iteration 0.
+- **Dynamic Download Headers (`app.py` & `translations.py`)**:
+  - Replaced the hardcoded "Step 3: Downloading..." success header with conditional rendering tied to `st.session_state['download_status']`.
+  - Added new `step4_download_header` containing "Step 4: Complete!" to English and Danish translation dictionaries to accurately reflect the 'done' state.
+- **Sync Review Layout Finalization (`sync_ui.py`)**:
+  - **CSS Truncation**: Fixed the "Confirm Sync" dialog breaking vertical rhythm on single-course syncs by applying a flex layout with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` to the destination row, along with a hover `title` attribute for long course names.
+  - **Settings Relocation**: Moved the NotebookLM / File Format expander from the middle of the file selection UI down to the absolute bottom, immediately above the Action buttons.
+  - **Visual Hierarchy**: Prepended the "🛠️" emoji to the settings expanders in both `app.py` and `sync_ui.py` for cross-mode consistency. Injected a custom-styled `<hr>` separator and a strict `20px` height spacer `div` to enforce margin isolation above the final Action buttons, bypassing Streamlit's native collapsing margins.
+
+## Recent Changes (Session 2026-03-03 - Atomic Symbiosis)
+- **Database Surgery (`sync_manager.py`)**:
+  - Replaced bulk `DELETE FROM sync_manifest` query with iterative `INSERT OR REPLACE` upserts to prevent data loss on mid-sync crashes.
+  - Eliminated the defunct `create_initial_manifest()` function and transitioned entirely to active auto-discovery pipelines in `analyze_course()`.
+- **The `.part` File Pattern (`app.py` & `sync_ui.py`)**:
+  - Rewrote both `_download_file_async` loops to stream bytes exclusively to `filename.ext.part` files.
+  - Added instant cancel-flag evaluations directly inside the 1MB chunk `while` loops for immediate interruption.
+  - Handled interrupted state by actively `unlink()`ing the partial file and enforcing exact byte-size verification before `rename()`ing to the target extension.
+- **Semantic Purity Guards**:
+  - Fixed premature committing in `sync_ui.py` by filtering the pre-download DB dump to exclusively save `.is_ignored()` settings, preventing auto-discovered files from flashing into the DB before validation.
+  - Structurally shifted the final Phase 2 `sync_mgr.save_manifest()` cascade to execute strictly *after* the top-level Cancel evaluator, ensuring an aborted run triggers zero post-download state mutations.
+
+## Recent Changes (Session 2026-03-03 - Cancel UX Overhaul)
+- **Cancel Infrastructure Overhaul**:
+  - **Instant Callback**: Added `cancel_process_callback()` module-level function using `on_click=` pattern instead of `if button():` return-value checking. This fires immediately even during heavy blocking loops.
+  - **Persistent Cancel Button**: The cancel button no longer disappears during post-processing. After clearing Phase 2 UI containers, a new "Cancel Post-Processing" button is rendered with `on_click` callback.
+  - **8-Loop Cancel Guards**: Every post-processing `for` loop (Archives, PPTX, HTML, Code, URLs, Word, Excel, Video) now checks `sync_cancelled` at the top of each iteration and breaks gracefully with a red cancellation log message.
+  - **Red Hover CSS**: Injected `button[data-testid="stBaseButton-secondary"]:hover` CSS in both Phase 2 and Post-Processing phases - red outline (#ef4444), dark red-gray bg (#2c1616).
+  - **Premium Cancelled Screen**: Redesigned `_show_sync_cancelled()` with a gradient card (linear-gradient from #2c1616 to #1a1a2e), red border, file count badge, and full-width "Go to front page" primary button.
+  - **State Management**: Added `sync_cancelled` to `_init_sync_session_state()` defaults and `_cleanup_sync_state()` cleanup list.
+  - **Phase 2/3 Isolation Guard**: Added an explicit `if sync_cancelled: st.rerun()` guard between the Phase 2 async block and Phase 3 Post-Processing setup. This blocks the Python script from falling through and setting `is_post_processing = True` when a download is aborted.
+  - **COM Button Render Forcing**: Reused the Phase 2 `cancel_placeholder` for the Phase 3 button because its DOM position renders it immune to the CSS `display: none` cleanup rules. Increased the pre-COM `time.sleep()` to `0.3s` to guarantee Streamlit flushes the HTML button to the browser before the Win32COM thread locks.
+  - **Rerun Flag Protection**: Guarded the top-level `is_post_processing = False` initialization inside `_run_sync` so it doesn't wipe the flag during the final `on_click` cancel rerun, allowing the red cancellation card to accurately say "Cancelled during post-processing."
+
+## Recent Changes (Session 2026-03-02)
+- **Post-Processing Dual Logging**:
+  - Added a setup block in `app.py` (before all NotebookLM hooks) that imports `log_debug` from `canvas_debug`, computes `debug_file` from session state, and defines a `log_post_process_error()` helper for writing to `download_errors.txt`.
+  - Added 32 `log_debug()` calls across all 8 hooks (start, progress, success, error, complete messages) - plain text is mirrored to `debug_log.txt` when Debug Mode is on.
+  - Added 7 `log_post_process_error()` calls on every ❌ failure path, writing timestamped entries to `download_errors.txt` with a `[Post-Processing]` tag.
+  - `sync_ui.py` confirmed to have zero post-processing hooks - no changes needed.
+- **NotebookLM UI Refactor (Step 2)**:
+  - Removed the `st.expander` wrapper for the 8 NotebookLM sub-settings.
+  - Placed sub-checkboxes directly beneath the master toggle and injected custom "Tree-View" CSS targeting their widget keys (`.st-key-convert_zip`, etc.).
+  - The CSS structurally nests the items with a 28px margin, 2px solid left-border (#3E4353), and tightened vertical padding, creating a clear visual parent-child relationship without Python indentation rules.
+
+## Recent Changes (Session 2026-03-02 - Excel COM Polish)
+- **Robust Excel COM Converter Rewrite**:
+  - **Removed CountA() Inspection**: Discovered that calling `CountA` on 17-billion-cell Excel sheets hung the COM thread, causing RPC timeouts and cascading batch failures. Removed all sheet data inspection.
+  - **Removed ActiveWindow Selection**: Headless COM without a visible UI often fails to instantiate an `ActiveWindow`, crashing `SelectedSheets.ExportAsFixedFormat`.
+  - **Global Export Strategy**: Simplified script to export the entire workbook via `wb.ExportAsFixedFormat` regardless of empty sheets. (Empty sheets safely produce small, valid PDFs).
+  - **Proactive COM Health Checks**: Added `_is_alive()` ping (`self.app.Version`) at the start of every conversion to immediately detect and revive a COM channel silently corrupted by a previous file's `wb.Close()`.
+  - **COM Throttling**: Added `time.sleep(0.3)` pauses between major COM commands to give the print spooler time to settle.
+- **Global Append Logging**:
+  - `debug_log.txt` and `download_errors.txt` now default to the root workspace directory rather than per-course folders.
+  - Added programmatic course headers (e.g., `=== Post-Processing: CourseName ===`) injected into the single session log, preventing file overwrites during multi-course syncs.
+- **Cancel UX Safety**: Added `try...except` guards around `progress_container.progress()` to prevent `NameError` crashes if a user cancels a download before the UI placeholder has fully rendered.
+
+## Recent Changes (Session 2026-04-01 - Review & Output UI Redesign)
+- **Review & Output Card Consolidation**:
+  - **Shared Badge Renderer Extraction**: Created `render_config_summary_badges` in `ui_shared.py`, combining dynamic tag UI logic into a single callable function capable of receiving explicit dictionaries instead of locked session state objects.
+  - **Adapter Pattern for Sync DB**: Implemented an explicit adapter in `sync_ui.py` modifying saved SQLite configuration data into runtime session keys (`dl_island_pages` -> `dl_pages`) so they can seamlessly execute the new central badge renderer without mutation.
+  - **CSS 3-Column Grid**: Overhauled the badge presentation from a vertical list to a `display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr` layout keeping horizontal space tight across Core, Canvas, and AI content.
+- **Escape Hatch for CSS Bleed**:
+  - **Widget Tagging Strategy**: Discovered an unintended CSS wildcard inheritance (`div[class*="st-key-btn_"]`) hijacking primary buttons at the bottom of Step 2. Actively renamed all such layout triggers to `action_dl_*` (bypassing the toggle selector namespace) while correctly hoisting the CSS rules vertically upward.
+  - **Action Button Grid Collapsing**: Forced negative `-15px !important` top margins specifically targeting the horizontal block wrappers surrounding standard buttons using `:has(.st-key-action_dl_confirm)` layout hooks.
+
+## Recent Changes (Session 2026-03-01 Revision)
+- **Step 2 Download Settings Overhaul**:
+  - **Terminology Pivot**: Changed "Full" download structure to "Flat" for better user clarity.
+  - **Aggressive Header Suction**: Replaced native Streamlit markdown headers with custom HTML `h3` tags using `-25px` bottom margins to eliminate dead vertical space.
+  - **Merged CSS Injection**: Combined scoped CSS `<style>` blocks with HTML headers in single `st.markdown` calls to remove implicit `div` wrapper gaps.
+  - **Destination Alignment**: Implemented a `[1, 6]` fractional column ratio with a `28px` invisible spacer to horizontally and vertically align the "Select Folder" button with the "Path" input box.
+- **Settings Relocation**:
+  - **Debug Mode**: Moved "Enable Troubleshooting Mode (Debug Log)" from the main wizard view into the global `⚙️ Application Settings` modal.
+- **NotebookLM Sync Logic**:
+  - **Dynamic (x/y) Counter**: Implemented a mathematical sync logic for master/sub toggles that tracks current active features in real-time.
+
+## Recent Changes (Session 2026-03-01 - NotebookLM Full Suite)
+- **NotebookLM Compatible Download Expansion**:
+  - **Archive Extraction**: Built `archive_extractor.py` to automatically unzip `.zip` and `.tar.gz` payloads. Originally designed with a 0-byte `.extracted` "Ghost Stub" system to satisfy the sync engine, but later architecturally pivoted to a Pure Deletion model where the sync engine dynamically bypasses missing archives via `_is_archive_path` traps. Injected this step at the *very top* of the post-processing pipeline to ensure unpacked format-viable files (like raw HTML or PPTX trapped in a zip) are handed to downstream converters.
+  - **Video to Audio**: Implemented `video_converter.py` using `moviepy` to rip `.mp3` tracks from massive `.mp4/.mov` payloads, deleting the original video to save space and enable NotebookLM transcription.
+  - **Legacy Word to PDF**: Expanded the Win32COM architecture via `word_converter.py` to target `.doc`, `.rtf`, and `.odt` files, upgrading them to modern `.pdf` format.
+  - **HTML to Markdown**: Built `md_converter.py` using `beautifulsoup4` and `markdownify` to strip Canvas Pages of nested HTML boilerplate and convert them into clean `.md` files.
+  - **Code & Data Preservation**: Developed `code_converter.py` to intercept the top 50 student programming/data extensions (e.g., `.py`, `.java`, `.json`) and safely append a `.txt` suffix (e.g., `script_py.txt`) while enforcing UTF-8 encoding.
+  - **URL Complier**: Engineered `url_compiler.py` to scrape directories for synthetic `.url` shortcuts and aggregate them into a single `NotebookLM_External_Links.txt` reference file per course.
+  - **Win32COM PowerPoint to PDF**: (Previously Implemented) `pdf_converter.py` for `.pptx` and `.ppt`.
+  - **Excel to PDF (Tabular Integrity)**: Built `excel_converter.py` to handle `.xlsx`, `.xls`, and `.xlsm`. Designed a specific `PageSetup` logic (`FitToPagesWide = 1`, `FitToPagesTall = False`, zero margins) to ensure wide spreadsheets are rendered as 1-page-wide, infinitely-tall PDFs, preserving tabular structure for LLM ingestion. Original files are deleted post-conversion.
+  - **COM Context Manager Refactoring**: Upgraded the core Win32COM PDF converters (`pdf_converter.py`, `word_converter.py`, `excel_converter.py`) from isolated utility functions into Python Context Managers (`__enter__`, `__exit__`). Wrapped the download conversion loops in `app.py` directly inside these context managers to solve massive CPU bottlenecking. The heavy Office COM application is now initialized only *once* per entire file batch, rather than cold-booting and tearing down for every single file.
+- **Streamlit UI Hijacking & Post-Processing**:
+  - **Progress Bar Re-routing**: Prevented the download UI from appearing "frozen" at 100% by hijacking the main download progress bar, status text, and metrics placeholders to visually track the slow post-processing extraction/conversion loops.
+  - **Native Terminal Hooks**: Removed isolated `st.status` expanders and injected the conversion progress directly into the custom `log_deque` / `terminal_log` HTML rendering loops.
+- **Streamlit State & COM Debugging**:
+  - **Widget Cleanup Bypass**: Fixed a bug where transitioning from the Settings Step to the Download Step destroyed the NotebookLM checkbox value. Captured the value into a `persistent_convert_pptx` state key precisely on button-click before `st.rerun()`.
+  - **UI Thread Flushing**: Injected explicit `time.sleep(0.2)` pauses immediately after rendering the post-processing UI framework. This guarantees Streamlit completes the browser DOM paint before the thread locks up on heavy blocking Python or Win32COM operations.
+  - **Office 365 Strict Constraints**: Wrapped `powerpoint.Visible = False` in a `try...except` block, safely bypassing modern click-to-run Office versions that throw exceptions when attempting to hide the application window.
+
+## Recent Changes (Session 2026-02-28)
+- **Batch Sync Stability & Duplicate Key Fixes**:
+  - **Dynamic Container Keys**: Resolved `StreamlitDuplicateElementKey` bug by appending `_{course.id}` to all `st.container` keys in `sync_ui.py`.
+  - **Wildcard CSS Scoping**: Updated the global expander styling to use wildcard attribute selectors (`div[class*="st-key-cat_new"]`), ensuring color-coded borders work across all dynamically keyed course blocks.
+  - **Phase 1 Global Cancel**: Injected a unified "Cancel Analysis" button above the Canvas scanning loop, allowing users to safely abort Phase 1 of a multi-course sync.
+- **Sync Review UI Layout Finalization**:
+  - **Compact Headers & Numbering**: Reduced header bottom margin (16px → 4px) and padding for a slim profile; added blue index numbering (`1.`, `2.`, etc.) for batch tracking.
+  - **Course Isolation Spacing**: Injected 20px physical gaps between course container blocks to prevent visual bleeding.
+  - **Dynamic Expander Counters**: Live selection tracking (`selected / total`) projected via CSS `::after` ghost text to maintain expander persistence.
+  - **Clean Title Formatting**: Replaced bullets (`•`) with double-space padding for a sleeker, symbol-free finish.
+  - **Button Spacing Correction**: Fixed margin-collapsing on Bulk Selection buttons via keyed container overrides.
+- **Progress Parity & Dialog Polish**:
+  - **Vertical Centering**: Forced `st.dialog` to center-screen via global CSS injection.
+  - **Frontend Yield Hack**: Implemented JS-triggered "hidden button" clicks to ensure modals unmount before heavy processing starts.
+
+## Recent Changes (Session 2026-02-27)
+- **Synthetic Shortcut Sync Support**:
+  - **Manifest Integration**: Support for Pages, ExternalUrls, and ExternalTools using the "Negative ID Pattern" to prevent database collisions.
+  - **LTI URL Priority Fix**: Prefer `html_url` for ExternalTools to ensure correct Canvas-wrapped authentication.
+- **Sync Review UI Restructure**:
+  - **Flush Header Band**: Negative margin bleed trick to create seamless course headers.
+- **Synthetic Shortcut Sync Support**:
+  - **Manifest Integration**: Modified `_save_page` and `_create_link` to return filepaths. Captured these in download loops to create `CanvasFileInfo` mock objects with negative IDs (e.g., `-int(item.id)`).
+  - **Shortcut-Aware Live Fetching**: Upgraded `_get_files_from_modules` in `canvas_logic.py` to generate reciprocal mock objects during sync analysis, ensuring the Sync engine "sees" Pages and ExternalUrls as matching database entries.
+  - **LTI URL Priority Fix**: Flipped extraction logic to strictly prefer `html_url` over `external_url`, ensuring ExternalTools route through the Canvas wrapper for correct JWT authentication.
+  - **Size Normalization**: Hardcoded `size=0` for all synthetic items across both Manifest generation and Live Fetching to prevent perpetual "Update Available" size mismatches.
+- **Sync Engine Reconciliation**:
+  - **Negative ID Bypass**: Injected a bypass in `sync_manager.py`'s `_is_canvas_newer()` function. If `canvas_file.id < 0`, the engine skips timestamp comparison (which is unreliable for module items) and falls through to a strict local existence check.
+  - **Restoration Interception**: Modified `sync_ui.py`'s download batch loop to detect negative IDs and recreate `.url`/`.html` shortcut files directly using Pathlib instead of attempting an HTTP byte-download.
+- **Sync Execution UI Overhaul**: (Previous session changes maintained...)
+  - **Speed & ETA Dashboard**: Replaced the static Streamlit text metric with a sleek, injected HTML/CSS 4-column dashboard rendering Sync Progress (X/Y), Downloaded (MB), Speed (MB/s), and ETA (MM:SS).
+  - **Live Terminal Log**: Added a native-looking terminal window tracking active asynchronous downloads in real-time. Checkmarks and cross emojis visually categorize file successes, skips, and failures.
+- **Sync Review Feature Fixes**:
+  - **Ignored Files Rendering**: Fixed a conditional block that hid the analyze summary if zero actionable files existed; the section now persists if `total_ignored > 0`.
+  - **Locally Deleted Binding**: Checkboxes for manually deleted local files now initialize by checking the global aggregate filters before falling back to False.
+  - **Key Synchronization**: Unified all file-level checkbox keys to use `course_id`, ensuring state Persistence across filter changes.
+  - **Zero-Value Metric Card Muting**: Transitioned from static HTML cards to a dynamic `_render_metric_card` Python helper. Zero-value cards intelligently drop their background opacity to 10% and remove box-shadows.
+- **Confirm Sync Modal UX**:
+  - **Vertical Centering**: Injected CSS globally within Step 4 to force `st.dialog` to appear dead-center in the viewport.
+  - **Immediate Closure Strategy**: Implemented a "Frontend Yield" hack using a hidden button click triggered by a 200ms `setTimeout` JS script.
+- **Standard Download UX Parity**:
+  - **Confirmation Dialog**: Ported the `@st.dialog` vertical centering modal logic over to `app.py` Step 2.
+  - **Dashboard Analytics**: Upgraded the standard download progress block (Step 3) to strictly utilize the injected HTML Sync metrics rendering structure.
+- **Sync Review & Lists Clickability (Session 2026-04-21)**:
+  - **The Flex-Stretch Chain Hack**: Fixed the persistent vertical "dead zone" clickability issues in the Sync Review file list. Streamlit's `st.columns(vertical_alignment="center")` inherently injects a 5px margin on columns and center-aligns the parent row block, causing the child `<label>` to not fill the row height. We surgically killed the margin, forced `align-items: stretch` on the horizontal block, and applied `flex: 1; display: flex; flex-direction: column` across all intermediate wrappers (`stColumn`, `stVerticalBlock`, `stElementContainer`, `stCheckbox`) to stretch the checkbox label to fill 100% of the row area, making every pixel clickable.
+  - **Vertical Icon/Text Nudging**: Applied micro-adjustments using `margin-top: -1px` for the checkbox SVG and `margin-top: 2px` for the file name text to achieve perfect horizontal centering within the fully stretched rows.
+  - **Ignored Files Spacing**: Shrunk the vertical `margin-bottom` on the ignored files list to massively increase UI density and resemble the Ignored Files Modal styling, pulling elements closer together.
+  - **Brightness Fixes**: Removed `opacity`/`filter` dimming on ignored files, resetting their text colors to solid white with an explicit `#ffffff` rule to fix illegibility issues.
+
+## Recent Changes (Session 2026-04-04 - Stabilizing Course Selection UI)
+- **Eradication of Dynamic Sorting**: 
+  - Modified `ui/course_selector.py` (Download Wizard), `ui/sync_dialogs.py` (Sync Pairing), and `ui/hub_dialog.py` (Sync Hub).
+  - Removed lambda sorting keys that prioritized selected items (e.g., `0 if c.id == active_selection else 1`).
+  - Enforced a strict, static alphabetical sort based on the course's display name (`(c.name or "").lower()`).
+- **UX Stabilization**: The course list now remains static regardless of selection state, preserving user spatial memory. Filtering logic remains fully operational.
+
+## Active Tasks
+- [x] Implement robust Row Separator CSS using keyed container scoping
+- [x] Implement Opt-Out filter paradigm and fix state-lock bugs
+- [x] Port Sync Progress UI to Analysis phase
+- [x] Refine Trash/Ignored UX (Clean grey text, Persistent expander)
+- [x] Fix terminal log rendering lag by immediate markdown updates
+- [x] Standardize filename unquoting across all UI components
+- [x] Refine "Select files to sync" box (Group header, filter options, and global uncheck buttons)
+- [x] Refine "Sync Review" expanders (Wrap course blocks in master containers)
+
+## Architecture Notes
+- **Scoped Layout Overrides**: Use `st.container(key="...")` combined with targeted CSS (e.g., `.st-key-X > div[data-testid="stVerticalBlock"]`) to override Streamlit's default 1rem gaps without affecting the rest of the application.
+- **Separator Tightening**: Targeting `hr` within keyed containers allows for pixel-perfect vertical positioning of logical dividers.
+- **Idempotent Data Mutation**: When writing state callbacks tied to `st.button` `on_click` events in Streamlit, always ensure the array manipulations are strictly idempotent. Rapidly double-clicking buttons triggers the event twice before the rendering loop executes, leading to duplicate entities in session-state arrays which subsequently crashes Streamlit if those entries dynamically generate widget keys.
+- **Frontend Yield for Dialogs**: When starting a heavy, blocking task immediately after closing an `st.dialog`, use a hidden button click triggered via `components.html` with a small JS timeout (e.g., 200ms). This allows the Streamlit frontend to receive the "unmount modal" command and clear the UI before the Python server locks up on the heavy processing loop.
+- **Edge-to-Edge Layout Constraints (W3C)**: The W3C CSS Spec dictates that containers with `overflow-y: auto` also act as horizontal clipping masks. Because Streamlit sidebars use `overflow-y` by default, Windows OS physically reserves ~16px for a scroll track, rendering full-width edge-to-edge buttons mathematically impossible regardless of padding zeroing. **Solution**: Force `overflow-y: hidden !important` on `stSidebar`, `stSidebarUserContent`, and `stSidebarContent` explicitly. Since our Application Sidebar is static and requires no scroll, this obliterates the scrollbar gap, handing back the 16px to our buttons and allowing perfect geometric symmetry.
+## Recent Changes (Session 2026-05-06 - Error Log Toggle)
+- Modified the application configuration to set the 'Error log file' generation feature to OFF by default across UI state (ui_shared.py, ui/auth.py), sync execution logic, and core download orchestration (pp.py, canvas_logic.py).
+

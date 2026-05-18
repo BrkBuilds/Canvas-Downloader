@@ -57,15 +57,15 @@ _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; 
 _HELP_TEXT = (
         # -- Workflow & Selection Rules --
         "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
-        "Welcome to the Review page! Here you have full control over exactly what gets downloaded to your computer.<br><br>"
-        "<b style='color: #ffffff; font-size: 1rem;'>The Selection Process (Crucial):</b><br>"
+        "Welcome to the Review page! Here you have full control over exactly what gets downloaded to your computer.<br>"
+        "<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px;'>The Selection Process (Crucial)</div>"
         "Every file on this screen is either checked (☑) or unchecked (☐).<br>"
         "<ul style='margin-top: 6px; margin-bottom: 12px; padding-left: 20px;'>"
         "<li><b style='color: #ffffff;'>Checked Files (☑)</b>: Will be downloaded or updated during this sync. Once synced, they won't appear here again until the teacher updates them.</li>"
         "<li><b style='color: #ffffff;'>Unchecked Files (☐)</b>: Will <b style='color: #ffffff;'>NOT</b> be downloaded. <b style='color: #ffffff;'>However, they will reappear in your next sync.</b> If you never want to see an unchecked file again, you must <b style='color: #ffffff;'>Ignore</b> it (see UI Tools below).</li>"
         "</ul>"
         
-        "<b style='color: #ffffff; font-size: 1rem;'>Your Step-by-Step Workflow:</b><br>"
+        "<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px;'>Your Step-by-Step Workflow</div>"
         "<b>1. Review Categories:</b> Expand the file categories below to see which files are new, updated, or deleted.<br>"
         "<b>2. Smart Select:</b> Use the quick-filters on the right to instantly check or uncheck entire filetypes (e.g. check all PDFs, uncheck all MP4s).<br>"
         "<b>3. Customize:</b> Manually check the box for specific files you want to sync, and uncheck those you don't need right now.<br>"
@@ -81,11 +81,11 @@ _HELP_TEXT = (
         "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.88); line-height: 1.6; margin-bottom: 12px;'>"
         "The review page gives you powerful tools to manage large course updates instantly:"
         "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 20px; line-height: 1.7;'>"
-        "<li><b style='color: #ffffff;'>Smart Select (By filetype):</b> The grey/blue tag buttons group every changed file by extension (e.g. <code>.pdf</code>, <code>.docx</code>). Click a filetype tag to instantly toggle all files of that type across all courses.</li>"
-        "<li><b style='color: #ffffff;'>Select All / Deselect All:</b> One-click bulk actions located right beneath the Smart Select buttons. They instantly check or uncheck every visible file.</li>"
-        f"<li><b style='color: #ffffff;'>The Ignore Icon ({HELP_ICONS['cat_ignore']}):</b> Hover over the far-right edge of any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>"
-        "<li><b style='color: #ffffff;'>Move deselected files to Ignored:</b> This powerful button sits at the top of every expanded category. Click it to instantly sweep every unchecked file in that specific list into your permanent Ignored bucket.</li>"
-        f"<li><b style='color: #ffffff;'>Restore Icons ({HELP_ICONS['restore']}):</b> Inside the \"Ignored Files\" category at the bottom of any course, you can click the restore arrow next to a file, or use the \"Restore All\" button to bring them back into active sync.</li>"
+        "<li><b style='color: #ffffff;'>Smart Select (By filetype):</b> The grey/blue tag buttons group every file across all lists and courses, by filetype (e.g. <code>.pdf</code>, <code>.docx</code>). Click a filetype tag to instantly check all files of that type. Click it again to uncheck all files of that type.</li>"
+        "<li><b style='color: #ffffff;'>Select All / Deselect All:</b> One-click bulk actions located right beneath the Smart Select buttons. They instantly check or uncheck every file across all lists and courses.</li>"
+        f"<li><b style='color: #ffffff;'>Ignore file button ({HELP_ICONS['cat_ignore']}):</b> Hover over the far-right of any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>"
+        "<li><b style='color: #ffffff;'>Move deselected files to Ignored:</b> This button sits at the top of every category for each course. Click it to instantly sweep every unchecked file in <b>that specific list</b> into your 'Ignored Files' bucket for that course.</li>"
+        f"<li><b style='color: #ffffff;'>Restore file button ({HELP_ICONS['restore']}):</b> Inside the \"Ignored Files\" category at the bottom of any course, you can click the restore arrow next to a file, or use the \"Restore All\" button to bring them back into active sync.</li>"
         "</ul>"
         "</div>"
         "</div>"
@@ -117,7 +117,7 @@ _HELP_TEXT = (
         f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
         "</div>"
         f"<div style='{_cc_loc_del}'>"
-        f"<div style='{_cat_name}'>{HELP_ICONS['cat_locdel']} Locally Deleted</div>"
+        f"<div style='{_cat_name}'>{HELP_ICONS['cat_locdel']} Deleted Locally</div>"
         f"<div style='{_cat_desc}'>You deleted a file from your folder, but Canvas still has it.</div>"
         f"<div style='{_cat_act}'>Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</div>"
         f"<div style='{_sb_unchecked}'>☐ Unchecked by default</div>"
@@ -159,7 +159,7 @@ _HELP_TEXT = (
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why are some files unchecked by default?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "The app protects your intentional actions. Files you've edited locally are unchecked to prevent cluttering your folder with <code>_NewVersion</code> files unless you explicitly ask for them. Locally deleted files are unchecked because we assume you deleted them to save space."
+        "The app protects your intentional actions. Files you've edited locally are unchecked to prevent cluttering your folder with <code>_NewVersion</code> files unless you explicitly ask for them. Files deleted locally are unchecked because we assume you deleted them to save space."
         "</div></details>"
         
         "<details style='margin-top: 8px; cursor: pointer;'>"
@@ -1441,7 +1441,7 @@ def show_analysis_review(on_confirm_sync):
                 
 
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
-                    with st.expander("Locally Deleted"):
+                    with st.expander("Deleted Locally"):
                         deselected_locdel = total_locdel - selected_locdel
                         is_disabled_locdel = (selected_locdel == total_locdel)
                         help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
