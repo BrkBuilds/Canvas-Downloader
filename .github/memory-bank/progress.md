@@ -1,14 +1,8 @@
 ## Latest Updates
 
-- [x] **Helper Card Spelling &amp; Grammar Audit** (2026-05-18):
-    - [x] **Download Settings Audit**: Audited `ui/download_settings.py` for minor spelling/grammar mistakes and improved clarity in help sections (e.g., PowerPoint, Video to Audio conversions, Sync Mode references).
-    - [x] **Sync UI FAQ Audit**: Audited and thoroughly polished the entire `_SYNC_HELP_TEXT` FAQ and flow documentation block in `sync_ui.py`. Fixed all identified spelling, grammar, punctuation, and capitalization issues, resolved HTML entity mappings (`&` to `&amp;`), and successfully deleted a duplicate "Course Pair" FAQ question to keep the documentation professional and concise.
-    - [x] **Syntax Verification**: Proactively verified successful Python compilation on all modified UI files (`ui/course_selector.py`, `ui/download_settings.py`, and `sync_ui.py`) to confirm no syntax or escaping regressions were introduced.
-
-- [x] **UI Typography &amp; Headers Parity** (2026-05-18):
-    - [x] **Header Size Parity**: Made the helper card main title text (rendered via `render_help_card` in `ui_shared.py`) perfectly match the expander headings' font size (`1.25rem` with `font-weight: 700` and full `#ffffff` color).
-    - [x] **Helper Card Headings Parity**: Standardized all headings inside the `course_selector.py`, `download_settings.py`, `quick_download.py`, and `sync_review.py` helper cards to use consistent `1.25rem` styled `div` or `summary` elements instead of varying `1rem` bold/br tags, ensuring complete visual and typographical parity across all help surfaces.
-    - [x] **Terminology Parity**: Standardized "Locally Deleted" to "Deleted Locally" (Title Case) when used as a standalone category header, "deleted locally" in post-modifying descriptive sentences (matching "edited locally"), and "locally deleted" in adjective positions modifying the noun "files" (e.g., "locally deleted files") to avoid awkward phrasing like "deleted locally files".
+- [x] **Sync UI History Helper Card Expansion** (2026-05-18):
+    - [x] **Sync History Section**: Integrated a new "Sync History" details expander section in `_SYNC_HELP_TEXT` inside `sync_ui.py`, positioned between the "Quick Sync vs Analyze" and "Safety Guarantees" sections.
+    - [x] **Student-Friendly Guidance**: Summarized the rolling 15-sync-log capacity, the filter modes ("View All" vs "By Course"), the clear-history action with confirmation prompt, and detailed how to inspect the status badges (Success, Errors, No Changes) and file categories (New Files, Updates, Protected Files, Skipped/Failed Files with errors).
 
 - [x] **Sync UI FAQ Helper Card Expansion** (2026-05-18):
     - [x] **User FAQ Integrations**: Added three technically-accurate answers to the Frequently Asked Questions collapsible section in `sync_ui.py` covering concurrent sync capacities (no limit sequential batch processing), local-only untracked files safety (completely safe and untouched), and ignored files functionality (saving space by skipping specific Canvas items).

@@ -11,7 +11,7 @@ Usage:
     render_amber_notice("Some folders couldn't be found - fix or remove them before syncing.")
     render_amber_notice(
         "Quick Sync skipped some files.",
-        detail="Locally deleted and edited files are skipped automatically.",
+        detail="Locally deleted files and edited files are skipped automatically.",
     )
 """
 

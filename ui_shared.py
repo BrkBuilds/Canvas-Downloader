@@ -72,6 +72,9 @@ HELP_ICONS = {
     'restore': _img('icon_restore.png', size=16),
     'calendar': _mat('calendar_today', color='#bac2cc'),
     'error': _mat('error', color='#ff7b72'),
+    'sync_hub': _img('icon_sync_hub.png'),
+    'sync_pair': _img('icon_sync_pair.png'),
+    'sync_group': _img('icon_sync_group.png'),
     
     # Sync Review Category Assets
     'cat_new': _img('Icon_Sync_Review_New_File.png', size=16),
@@ -919,7 +922,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
 
             st.markdown(f"""
             <div>
-                <p style="margin: 0 0 6px 0; font-weight: 700; color: #f8fafc; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <p style="margin: 0 0 12px 0; font-weight: 700; color: #ffffff; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
                     {_icon_html}{esc(title)}
                 </p>
                 <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); line-height: 1.5;">

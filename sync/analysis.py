@@ -432,7 +432,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         if total_updated_modified > 0:
             parts.append(f"{total_updated_modified} edited locally")
         if total_local_del > 0:
-            parts.append(f"{total_local_del} locally deleted file{'s' if total_local_del != 1 else ''}")
+            parts.append(f"{total_local_del} file{'s' if total_local_del != 1 else ''} deleted locally")
 
         summary = ", ".join(parts) + " found."
         play_completion_beep(mode='sync_review', summary=summary.strip())
