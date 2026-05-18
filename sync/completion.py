@@ -174,7 +174,7 @@ def show_sync_complete():
             if edited > 0:
                 parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
             if local_del > 0:
-                parts.append(f"{local_del} locally deleted {'file' if local_del == 1 else 'files'}")
+                parts.append(f"{local_del} {'file' if local_del == 1 else 'files'} deleted locally")
             if canvas_del > 0:
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
 

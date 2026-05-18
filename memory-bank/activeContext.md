@@ -10,6 +10,21 @@
 - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 
 ## Recent Activity
+- **Session 2026-05-18: Helper Card Spelling &amp; Grammar Audit**
+    - **Download Settings Audit**: Audited `ui/download_settings.py` for minor spelling/grammar mistakes and improved clarity in help sections (e.g., PowerPoint, Video to Audio conversions, Sync Mode references).
+    - **Sync UI FAQ Audit**: Audited and thoroughly polished the entire `_SYNC_HELP_TEXT` FAQ and flow documentation block in `sync_ui.py`. Fixed all identified spelling, grammar, punctuation, and capitalization issues, resolved HTML entity mappings (`&` to `&amp;`), and successfully deleted a duplicate "Course Pair" FAQ question to keep the documentation professional and concise.
+    - **Syntax Verification**: Proactively verified successful Python compilation on all modified UI files (`ui/course_selector.py`, `ui/download_settings.py`, and `sync_ui.py`) to confirm no syntax or escaping regressions were introduced.
+
+- **Session 2026-05-18: UI Typography &amp; Headers Parity**
+    - **Header Size Parity**: Made the helper card main title text (rendered via `render_help_card` in `ui_shared.py`) perfectly match the expander headings' font size (`1.25rem` with `font-weight: 700` and full `#ffffff` color).
+    - **Helper Card Headings Parity**: Standardized all headings inside the `course_selector.py`, `download_settings.py`, `quick_download.py`, and `sync_review.py` helper cards to use consistent `1.25rem` styled `div` or `summary` elements instead of varying `1rem` bold/br tags, ensuring complete visual and typographical parity across all help surfaces.
+    - **Terminology Parity**: Standardized "Locally Deleted" to "Deleted Locally" (Title Case) when used as a standalone category header, "deleted locally" in post-modifying descriptive sentences (matching "edited locally"), and "locally deleted" in adjective positions modifying the noun "files" (e.g., "locally deleted files") to avoid awkward phrasing like "deleted locally files".
+
+- **Session 2026-05-18: Sync UI FAQ Helper Card Expansion**
+    - **User FAQ Integrations**: Added three technically-accurate answers to the Frequently Asked Questions collapsible section in `sync_ui.py` covering concurrent sync capacities (no limit sequential batch processing), local-only untracked files safety (completely safe and untouched), and ignored files functionality (saving space by skipping specific Canvas items).
+    - **Proactive FAQ Expansions**: Added two highly practical, model-suggested entries addressing sync handling of files locked by other applications (graceful failure reporting and retry workflow) and sync engine resilience during internet loss or crashes (atomic resume bypassing completed files).
+    - **Typo Cleanup**: Restored visual professionalism by cleaning up a minor typo in the existing FAQs (changing 'ALLL' to 'ALL').
+
 - **Session 2026-05-16: FFmpeg UI Dependency Removal**
     - **UI Text Purge**: Removed all user-facing references to FFmpeg as a mandatory external dependency in `ui/download_settings.py`.
     - **Documentation Updates**: Purged "Requires FFmpeg" notes and manual installation guides from `docs/guide.html` and `docs/index.html`.

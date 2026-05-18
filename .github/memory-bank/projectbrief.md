@@ -1,0 +1,40 @@
+# Project Brief: Canvas Downloader
+
+## Core Purpose & Business Value
+The **Canvas Downloader** is a robust desktop application built to solve a critical pain point for university students and educators: the inability to easily batch-download and synchronize complete course structures (files, pages, external links) from the Canvas LMS. This application provides immense value by creating an offline, searchable, and always-up-to-date repository of educational materials.
+
+Recently, the application has evolved beyond simple downloading to include a **NotebookLM Compatible Download** suite, automatically converting complex educational formats into AI-digestible plaintext formats, bridging the gap between raw LMS content and modern AI research tools.
+
+## Key Features & Capabilities
+1. **Dual-Mode Download Workflow**:
+   - **Quick Download**: Simplified workflow for first-time/casual users. Five preset cards (Complete Canvas, AI Study Pack, NotebookLM Ready, Slides & PDFs Only, Files Only) with minimal required choices. Users select preset + folder organization + output path, then download with zero custom configurations. Includes a standardized help section and professional, minimalist aesthetics.
+   - **Custom Download**: Full-featured configuration for power users. Complete control over secondary content (assignments, syllabus, discussions, etc.), conversion options, file filtering, and organization.
+2. **Batch Downloading & Directory Structuring**:
+   - Pulls all modules, sub-modules, and files, directly replicating the Canvas structure locally.
+   - Offers robust options for organized folder hierarchies or flattened directories ("Flat" mode).
+2. **Smart Synchronization Engine**:
+   - Matches local folders with Canvas courses and tracks them via a hidden SQLite manifest (`.canvas_sync.db`).
+   - Intelligently downloads only new or altered files, skipping unchanged content (utilizing `sync_manager.py`).
+   - **Unified Default Sync Engine**: Manual Sync and Quick Sync now share a single, robust architecture that strictly adheres to the "Default Sync" contract saved in the course's SQLite manifest (`.canvas_sync.db`). This eliminates on-the-fly UI overrides in favor of a persistent, predictable configuration source of truth.
+   - Safely renames local edits (e.g., `_NewVersion.pdf`) to avoid overwriting user notes.
+3. **Synthetic Shortcut Sync**:
+   - Downloads Canvas Pages (`.html`) and External Links/Tools (`.url`) securely, using a "Negative ID" pattern.
+4. **NotebookLM Compatible Features (AI Optimization)**:
+   - **PowerPoints to PDF**: Native `win32com.client` conversion (`.pptx` -> `.pdf`).
+   - **Legacy Word to PDF**: Native conversion for old formats (`.doc`, `.rtf`, `.odt` -> `.pdf`).
+   - **Excel → PDF & AI Data**: Native `win32com.client` conversion (`.xlsx`, `.xls`, `.xlsm` -> `.pdf & .txt`). Dual-pipeline native conversion. Generates a high-fidelity visual `.pdf` and a structured `_Data.txt` sidecar (Smart-CSV) with a `META-CONTEXT` header for deterministic AI parsing.
+   - **HTML to Markdown**: Converts Canvas Pages to clean `.md` (`beautifulsoup4`, `markdownify`).
+   - **Code/Data to TXT**: Appends `.txt` to ~50 programming/data formats (e.g., `script_py.txt`) while enforcing UTF-8.
+   - **Link Compilation**: Scrapes `.url` shortcuts into a master `NotebookLM_External_Links.txt` file per course.
+   - **Video to Audio**: Extracts `.mp3` tracks from `.mp4`/`.mov` using `moviepy`, deleting the heavy original video.
+   - **Auto-Extract Archives**: Unzips `.zip`/`.tar.gz` and natively bypasses the sync engine's deletion checks without ballooning disk space.
+
+## Architecture & Technology
+- **Frontend**: Streamlit, leveraging advanced custom CSS injection, fraction-column layouts, and `.st.dialog` modals to create a native-feeling desktop experience in a local browser window.
+- **Backend**: Python 3.10+, utilizing `aiohttp` and `asyncio` for highly concurrent, non-blocking downloads.
+- **Data Layer**: SQLite3 for the manifest database and JSON for configuration/sync pair tracking.
+- **APIs**: `canvasapi` heavily utilized for fetching course structures.
+- **Distribution**: Packaged via PyInstaller into a standalone Windows `.exe` to remove the need for standard users to install Python environments.
+
+## Development Approach
+The development is focused on high-performance concurrent processing coupled with an incredibly polished, responsive UI. Error handling is paramount, relying on fallback string matching (Levenshtein distance) and robust COM thread execution (with UI flushing) to smoothly bypass external environment limitations (e.g., missing Office installations or restricted LTI media blocks).

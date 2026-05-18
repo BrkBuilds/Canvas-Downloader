@@ -10,10 +10,10 @@
 - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 
 ## Recent Activity
-- **Session 2026-05-18 (Session 3): Quick Download Guide Modernization & UI Spelling Cleanups**
-    - **Preset Descriptions Alignment**: Fully updated and professionalized the quick download preset descriptions in the guide text (`ui/quick_download.py`) to align exactly with their backend configuration realities (including Daily study pack PDF/Office conversions, NotebookLM flat-layout conversion details, Slides & PDFs Only filtering rules, and Files Only limitations).
-    - **Collapsible FAQ Section**: Implemented a comprehensive, styled Details accordion block in `ui/quick_download.py` featuring student-centric FAQs on Preset definitions, custom override options, locked folder structures, conversion safety, and upgrade behavior.
-    - **Global British Spelling Purge**: Standardized UI text and code comments to US English (e.g. changing "Organisation" / "organised" in `ui/quick_download.py` lines 895 & 906 to "Organization" / "organized"), achieving total design and textual parity across the codebase.
+- **Session 2026-05-19: Quick Download Guide Modernization & Skimmable Preset Refinement**
+    - **Ultra-Compact Preset Descriptions**: Condensed the quick download preset descriptions to a single, punchy line each to accommodate busy university students who prefer skimming.
+    - **Collapsible FAQ & Pro Tip Refinements**: Integrated a comprehensive details accordion FAQ block in `ui/quick_download.py`, resolved incomplete sentence formatting, and restored correct styling and gear iconography for the Pro Tip.
+    - **Global British Spelling Purge**: Standardized UI text and code comments to US English (e.g. changing "Organisation" / "organised" in `ui/quick_download.py` to "Organization" / "organized"), achieving total design and textual parity across the codebase.
     - **Sync Review Typos Fixed**: Fixed a trailing space punctuation error (`courses .` to `courses.`) in `ui/sync_review.py` line 85.
 
 - **Session 2026-05-18 (Session 2): Sync UI History Helper Card Expansion**
