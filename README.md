@@ -51,7 +51,7 @@ Keep any local folder **permanently in sync** with its Canvas course - one click
 | **New** | Canvas has it, you don't | Download |
 | **Update (clean)** | Canvas updated, your copy is untouched | Replace in place |
 | **Update (modified)** | Canvas updated, but you edited yours | Keep yours + save new as `_NewVersion` |
-| **Locally deleted** | You deleted it, Canvas still has it | Skip (respects intent) |
+| **Deleted locally** | You deleted it, Canvas still has it | Skip (respects intent) |
 | **Deleted on Canvas** | Teacher removed it | Info only - never deletes from disk |
 | **Up-to-date** | Identical on both sides | Nothing (shown as count badge) |
 | **Ignored** | Permanently excluded by you | Always skip |
