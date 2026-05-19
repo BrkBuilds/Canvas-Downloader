@@ -79,9 +79,23 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
         full_content = existing_content + "\n" + "\n".join(compiled_links)
 
     tmp_path = output_path.with_suffix('.tmp')
-    with open(tmp_path, 'w', encoding='utf-8') as f:
-        f.write(full_content)
-    _os.replace(str(tmp_path), str(output_path))
+    try:
+        with open(tmp_path, 'w', encoding='utf-8') as f:
+            f.write(full_content)
+            f.flush()
+            try:
+                _os.fsync(f.fileno())
+            except OSError:
+                pass
+        _os.replace(str(tmp_path), str(output_path))
+    except OSError:
+        # Clean up orphaned temp file on failure so it doesn't pollute the folder
+        try:
+            if tmp_path.exists():
+                tmp_path.unlink()
+        except OSError:
+            pass
+        raise
 
     return output_path, processed_shortcuts
 

@@ -101,9 +101,17 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
             capture_output=True, text=True, timeout=120,
         )
         if result.returncode != 0:
-            logger.error(
-                f"[AppleScript] {app_name} failed: {result.stderr.strip()}"
-            )
+            err_msg = result.stderr.strip()
+            if "-1743" in err_msg:
+                logger.error(
+                    f"[AppleScript Security] TCC Automation Permission Denied (error -1743). "
+                    f"Please verify that Canvas Downloader has 'Automation' permissions enabled "
+                    f"to control Microsoft {app_name} in macOS System Settings > Privacy & Security > Automation."
+                )
+            else:
+                logger.error(
+                    f"[AppleScript] {app_name} failed: {err_msg}"
+                )
             return False
         return dst.exists()
 
