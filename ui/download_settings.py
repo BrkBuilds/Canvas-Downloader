@@ -1782,7 +1782,7 @@ div.st-key-review_browse_folder button:hover {
                     st.session_state['downloaded_items'] = 0
                     st.session_state['course_mb_downloaded'] = {}
                     st.session_state['log_content'] = ""  # Initialize log content
-                    st.session_state['seen_error_sigs'] = []  # List-backed dedup (Streamlit serialization safe)
+                    st.session_state['seen_error_sigs'] = set()
 
                     # Task 1: Save the State on Button Click (Streamlit Widget Cleanup Fix)
                     st.session_state['persistent_convert_zip'] = st.session_state.get('convert_zip', False)

@@ -287,7 +287,6 @@ def _restore_nav_from_query_params() -> None:
     """
     if '_session_alive' in st.session_state:
         return  # not a fresh session — don't override in-session navigation
-    st.session_state['_session_alive'] = True
     try:
         raw_mode = st.query_params.get('mode', '')
         raw_step = st.query_params.get('step', '')
@@ -309,6 +308,8 @@ def _restore_nav_from_query_params() -> None:
                 st.session_state['quick_download_mode'] = True
     except Exception:
         pass
+    finally:
+        st.session_state['_session_alive'] = True  # Always set, even on exception or early return
 
 
 def _write_nav_to_query_params() -> None:
@@ -382,7 +383,8 @@ def fetch_courses(token, url):
     all_courses.sort(key=lambda c: (c.name or "").lower())
     try:
         fav_ids = {c.id for c in mgr.get_courses(favorites_only=True)}
-    except Exception:
+    except Exception as e:
+        logger.warning(f"fetch_courses: favorites fetch failed, treating all as non-favorite: {e}")
         fav_ids = set()
     for c in all_courses:
         c.is_favorite = c.id in fav_ids
@@ -705,8 +707,8 @@ with _main_content.container():
                             st.session_state['download_file_details'] = {}
 
                         if progress_type == 'skipped':
+                            st.session_state['downloaded_items'] += 1   # always count the skip
                             if msg:
-                                st.session_state['downloaded_items'] += 1
                                 log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped: {msg}</span>")
                                 if kwargs.get('explicit_filepath'):
                                     course_key = course.name
@@ -815,8 +817,9 @@ with _main_content.container():
                                         st.session_state['download_errors_list'] = []
                                     st.session_state['download_errors_list'].append(error_obj)
                                     
-                                    error_text = f"[{esc(course.name)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                    log_deque.append(f"<span style='color: #FF7B72;'>❌ {esc(error_text)}</span>")
+                                    _msg_text = esc(error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                    error_text = f"[{esc(course.name)}] {_msg_text}"
+                                    log_deque.append(f"<span style='color: #FF7B72;'>❌ {error_text}</span>")
                                     
                             render_dashboard()
 
@@ -833,10 +836,12 @@ with _main_content.container():
                             render_dashboard()
                     except (KeyboardInterrupt, SystemExit):
                         raise
-                    except Exception:
-                        # Catch Streamlit's StopException / RerunException during async
-                        # teardown without killing the download event loop. Cancellation
-                        # flows via st.session_state['cancel_requested'] instead.
+                    except Exception as _e:
+                        # Swallow only Streamlit control-flow exceptions (StopException, RerunException)
+                        # and RuntimeError from asyncio teardown. Re-raise anything unexpected in debug mode.
+                        _ename = type(_e).__name__
+                        if _ename not in ('StopException', 'RerunException', 'RuntimeError'):
+                            logger.debug(f"update_ui swallowed unexpected exception: {type(_e).__name__}: {_e}")
                         pass
                 
 
@@ -884,15 +889,6 @@ with _main_content.container():
                         'convert_urls', 'convert_word', 'convert_video', 'convert_excel'
                     )
                 )
-                if _has_pp:
-                    st.session_state['is_post_processing'] = True
-                    cancel_placeholder.empty()
-                    pp_cancel_placeholder.button(
-                        "Cancel Post-Processing",
-                        key="cancel_pp_download",
-                        type="secondary",
-                        on_click=cancel_download_callback,
-                    )
 
                 # --- Post-Processing: Setup logging for NotebookLM hooks ---
                 save_dir = st.session_state['download_path']
@@ -915,6 +911,15 @@ with _main_content.container():
                 course_folder = Path(st.session_state['download_path']) / course_name_sanitized
 
                 if course_folder.exists():
+                    if _has_pp:
+                        st.session_state['is_post_processing'] = True
+                        cancel_placeholder.empty()
+                        pp_cancel_placeholder.button(
+                            "Cancel Post-Processing",
+                            key="cancel_pp_download",
+                            type="secondary",
+                            on_click=cancel_download_callback,
+                        )
                     invoke_post_processing(
                         course_folder=course_folder,
                         course_id=course.id,
@@ -1129,11 +1134,10 @@ with _main_content.container():
                                 sig = f"{error_obj.course_name}|{error_obj.item_name}"
                             else:
                                 sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
-                            seen_list = st.session_state.get('seen_error_sigs', [])
-                            seen_set = set(seen_list)  # O(1) lookup from persisted list
-                            if sig not in seen_set:
-                                seen_list.append(sig)
-                                st.session_state['seen_error_sigs'] = seen_list
+                            seen = st.session_state.get('seen_error_sigs', set())
+                            if sig not in seen:
+                                seen.add(sig)
+                                st.session_state['seen_error_sigs'] = seen
                                 
                                 # Increment retry counter INSIDE dedup guard so
                                 # suppressed duplicates don't inflate the count.
@@ -1143,8 +1147,9 @@ with _main_content.container():
                                 if 'download_errors_list' not in st.session_state: st.session_state['download_errors_list'] = []
                                 st.session_state['download_errors_list'].append(error_obj)
                                 
-                                error_text = f"[{esc(course_name_ref)}] " + (error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                log_deque.append(f"<span style='color: #FF7B72;'>❌ {esc(error_text)}</span>")
+                                _msg_text = esc(error_obj.message if hasattr(error_obj, 'message') else str(msg))
+                                error_text = f"[{esc(course_name_ref)}] {_msg_text}"
+                                log_deque.append(f"<span style='color: #FF7B72;'>❌ {error_text}</span>")
                         render_dashboard(course_name_ref)
 
                     elif msg and progress_type == 'log':
