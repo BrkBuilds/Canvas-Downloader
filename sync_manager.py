@@ -113,6 +113,14 @@ def _is_archive_path(path_str: str) -> bool:
     return Path(lower).suffix in _ARCHIVE_EXTS
 
 
+def make_long_path(p: str | Path) -> str:
+    """Prepend Windows long path prefix to absolute paths to prevent WinError 206."""
+    s = str(p)
+    if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
+        return '\\\\?\\' + s
+    return s
+
+
 def make_secondary_id(entity_type: str, raw_id: int) -> int:
     """Generate a unique negative canvas_file_id for a synthetic entity.
 
@@ -163,11 +171,22 @@ class SyncManager:
             db_path = Path(local_path) / DB_FILENAME
             if not db_path.exists():
                 return None
-            with sqlite3.connect(db_path, timeout=10.0) as conn:
-                cursor = conn.execute(
-                    'SELECT value FROM sync_metadata WHERE key = ?', ('course_id',)
-                )
-                row = cursor.fetchone()
+            
+            row = None
+            for attempt in range(3):
+                try:
+                    with sqlite3.connect(make_long_path(db_path), timeout=10.0) as conn:
+                        cursor = conn.execute(
+                            'SELECT value FROM sync_metadata WHERE key = ?', ('course_id',)
+                        )
+                        row = cursor.fetchone()
+                    break
+                except sqlite3.OperationalError as e:
+                    if 'locked' in str(e).lower() and attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise
+            
             if not row or row[0] is None:
                 return None
             return int(row[0])
@@ -185,11 +204,22 @@ class SyncManager:
             db_path = Path(local_path) / DB_FILENAME
             if not db_path.exists():
                 return None
-            with sqlite3.connect(db_path, timeout=10.0) as conn:
-                cursor = conn.execute(
-                    'SELECT value FROM sync_metadata WHERE key = ?', ('course_name',)
-                )
-                row = cursor.fetchone()
+            
+            row = None
+            for attempt in range(3):
+                try:
+                    with sqlite3.connect(make_long_path(db_path), timeout=10.0) as conn:
+                        cursor = conn.execute(
+                            'SELECT value FROM sync_metadata WHERE key = ?', ('course_name',)
+                        )
+                        row = cursor.fetchone()
+                    break
+                except sqlite3.OperationalError as e:
+                    if 'locked' in str(e).lower() and attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise
+            
             return row[0] if row and row[0] else None
         except sqlite3.Error:
             return None
@@ -209,10 +239,19 @@ class SyncManager:
             db_path = Path(local_path) / DB_FILENAME
             if not db_path.exists():
                 return True
-            with sqlite3.connect(db_path, timeout=30.0) as conn:
-                conn.execute('DELETE FROM sync_manifest')
-                conn.execute('DELETE FROM sync_metadata')
-                conn.commit()
+            
+            for attempt in range(3):
+                try:
+                    with sqlite3.connect(make_long_path(db_path), timeout=30.0) as conn:
+                        conn.execute('DELETE FROM sync_manifest')
+                        conn.execute('DELETE FROM sync_metadata')
+                        conn.commit()
+                    break
+                except sqlite3.OperationalError as e:
+                    if 'locked' in str(e).lower() and attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise
             return True
         except sqlite3.Error as e:
             logger.error(f"Failed to reset folder binding at {local_path}: {e}")
@@ -225,10 +264,18 @@ class SyncManager:
         if not db_path.exists():
             return None
         try:
-            with sqlite3.connect(db_path, timeout=5.0) as conn:
-                cursor = conn.execute("SELECT value FROM sync_metadata WHERE key = 'last_synced'")
-                row = cursor.fetchone()
-                return row[0] if row else None
+            for attempt in range(3):
+                try:
+                    with sqlite3.connect(make_long_path(db_path), timeout=5.0) as conn:
+                        cursor = conn.execute("SELECT value FROM sync_metadata WHERE key = 'last_synced'")
+                        row = cursor.fetchone()
+                        return row[0] if row else None
+                except sqlite3.OperationalError as e:
+                    if 'locked' in str(e).lower() and attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise
+            return None
         except Exception:
             return None
 
@@ -260,7 +307,7 @@ class SyncManager:
             self._windows_unhide_file(self.db_path)
         
         try:
-            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                 cursor = conn.cursor()
                 
                 # Enable WAL mode for better concurrency and synchronous=NORMAL for speed/safety
@@ -354,7 +401,7 @@ class SyncManager:
         
         for attempt in range(max_retries):
             try:
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     cursor = conn.cursor()
                     cursor.execute('SELECT canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5 FROM sync_manifest')
                     for row in cursor.fetchall():
@@ -396,7 +443,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
                     
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     cursor = conn.cursor()
                     now_iso = datetime.now(timezone.utc).isoformat()
                     cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_iso))
@@ -460,7 +507,7 @@ class SyncManager:
             import ctypes
             FILE_ATTRIBUTE_NORMAL = 0x80
             ctypes.windll.kernel32.SetFileAttributesW(
-                str(filepath), FILE_ATTRIBUTE_NORMAL
+                make_long_path(filepath), FILE_ATTRIBUTE_NORMAL
             )
         except Exception:
             pass
@@ -476,7 +523,7 @@ class SyncManager:
             import ctypes
             FILE_ATTRIBUTE_HIDDEN = 0x02
             ctypes.windll.kernel32.SetFileAttributesW(
-                str(filepath), FILE_ATTRIBUTE_HIDDEN
+                make_long_path(filepath), FILE_ATTRIBUTE_HIDDEN
             )
         except Exception:
             pass
@@ -951,7 +998,7 @@ class SyncManager:
     def _save_metadata(self, key: str, value: str) -> bool:
         """Save a key-value pair to the sync_metadata table."""
         try:
-            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                 conn.execute(
                     'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
                     (key, value)
@@ -965,7 +1012,7 @@ class SyncManager:
     def _load_metadata(self, key: str) -> str | None:
         """Load a value from the sync_metadata table. Returns None if not found."""
         try:
-            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                 cursor = conn.execute(
                     'SELECT value FROM sync_metadata WHERE key = ?', (key,)
                 )
@@ -1124,7 +1171,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
                     
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     cursor = conn.cursor()
                     cursor.execute('''
                         INSERT INTO sync_manifest 
@@ -1180,7 +1227,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
                 
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     conn.execute(
                         '''UPDATE sync_manifest 
                            SET local_path = ?, original_size = ?, original_md5 = ?
@@ -1223,7 +1270,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     conn.execute(
                         '''INSERT INTO sync_manifest 
                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
@@ -1250,7 +1297,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     conn.execute(
                         'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
                         (canvas_file_id,)
@@ -1288,19 +1335,28 @@ class SyncManager:
                 rows.append((item, ''))
             
         success = False
-        try:
-            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
-                conn.executemany(
-                    '''INSERT INTO sync_manifest 
-                       (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                       VALUES (?, ?, '', '', '', 0, 1, '')
-                       ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
-                    rows
-                )
-                conn.commit()
-            success = True
-        except sqlite3.Error as e:
-            logger.warning(f"Error bulk ignoring files: {e}")
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.executemany(
+                        '''INSERT INTO sync_manifest 
+                           (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
+                           VALUES (?, ?, '', '', '', 0, 1, '')
+                           ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
+                        rows
+                    )
+                    conn.commit()
+                success = True
+                break
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"Error bulk ignoring files: {e}")
+                break
+            except sqlite3.Error as e:
+                logger.warning(f"Error bulk ignoring files: {e}")
+                break
                 
         return success
 
@@ -1310,16 +1366,25 @@ class SyncManager:
             return True
             
         success = False
-        try:
-            with sqlite3.connect(self.db_path, timeout=30.0) as conn:
-                conn.executemany(
-                    'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
-                    [(fid,) for fid in file_ids]
-                )
-                conn.commit()
-            success = True
-        except sqlite3.Error as e:
-            logger.warning(f"Error bulk restoring files: {e}")
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.executemany(
+                        'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
+                        [(fid,) for fid in file_ids]
+                    )
+                    conn.commit()
+                success = True
+                break
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"Error bulk restoring files: {e}")
+                break
+            except sqlite3.Error as e:
+                logger.warning(f"Error bulk restoring files: {e}")
+                break
                 
         return success
 
@@ -1367,14 +1432,25 @@ class SyncHistoryManager:
             # Keep last 50 entries
             if len(history) > 50:
                 history = history[-50:]
+            tmp_path = self.history_path.with_suffix('.tmp')
             try:
-                tmp_path = self.history_path.with_suffix('.tmp')
                 with open(tmp_path, 'w', encoding='utf-8') as f:
                     json.dump(history, f, indent=2, ensure_ascii=False)
+                    f.flush()
+                    try:
+                        os.fsync(f.fileno())
+                    except OSError:
+                        pass
                 # Atomic replace - prevents corrupt JSON on crash-during-write
                 os.replace(str(tmp_path), str(self.history_path))
             except OSError as e:
                 logger.warning(f"Error saving sync history: {e}")
+                # Clean up orphaned tmp file on failure
+                try:
+                    if tmp_path.exists():
+                        tmp_path.unlink()
+                except OSError:
+                    pass
 
     def clear_history(self):
         """Clear all sync history."""
