@@ -99,7 +99,7 @@ def render_filetype_selector(all_files, prefix, file_key_fn):
     st.markdown('<p style="margin-bottom: -5px; font-size: 0.875rem; color: rgba(250,250,250,0.6);">Select by filetype:</p>', unsafe_allow_html=True)
 
     with st.container(key=f"{prefix}_units"):
-        cols = st.columns(min(len(all_exts_sorted), 90))
+        cols = st.columns(min(len(all_exts_sorted), 10))
         for i, ext in enumerate(all_exts_sorted):
             unit_key = f"{prefix}_unit_{ext}"
             file_keys_for_ext = ext_to_keys[ext]

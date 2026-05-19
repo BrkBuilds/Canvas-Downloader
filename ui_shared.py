@@ -24,15 +24,22 @@ SECONDARY_ENTITY_ICONS = {
 # Feather-style stroke icons. Use inside help card text_html to replace emojis.
 # Sized at 18×18 with themed stroke colors for consistency.
 _ICON_STYLE = 'display:inline-block;vertical-align:middle;position:relative;top:-1px;margin:0 4px;flex-shrink:0;'
-_MAT_STYLE = '<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,1,0" rel="stylesheet">'
+_MATERIAL_FONT_LINK = '<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,1,0" rel="stylesheet">'
+
+def inject_material_icons_font() -> None:
+    """Inject the Google Material Symbols font link once at app startup (M-24).
+
+    Call this once from app.py/sync_ui.py instead of embedding the <link>
+    in every _mat() icon call, which caused the font to be requested dozens
+    of times per page render.
+    """
+    st.html(_MATERIAL_FONT_LINK)
 
 def _mat(icon_name, color='#38BDF8', size=18):
     """Render a Google Material Symbols Rounded icon natively."""
-    # Material icons have internal padding, so we boost the font-size slightly
-    # to visually match the bounding box of raster images of the same nominal size.
     adj_size = size + 4
     return (
-        f'{_MAT_STYLE}<span class="material-symbols-rounded" '
+        f'<span class="material-symbols-rounded" '
         f'style="font-size: {adj_size}px; color: {color}; vertical-align: middle; '
         f'margin: 0 4px; top: -1px; position: relative;">{icon_name}</span>'
     )
@@ -43,48 +50,74 @@ def _img(filename, size=18):
     mime = "image/svg+xml" if filename.lower().endswith('.svg') else "image/png"
     return f'<img src="data:{mime};base64,{b64}" width="{size}" height="{size}" style="{_ICON_STYLE} top: -2px;" />'
 
-HELP_ICONS = {
-    'lightbulb': _mat('lightbulb'),
-    'folder': _mat('folder'),
-    'gear': _img('icon_custom_download.png'),
-    'bolt': _img('icon_sync_quick.png'),
-    'bolt_small': _img('icon_sync_quick.png', size=11),
-    'search': _img('icon_sync_review.png'),
-    'search_small': _img('icon_sync_review.png', size=11),
-    'save': _img('icon_preset_user.png'),
-    'quick_download': _img('icon_quick_download.png'),
-    'shield': _mat('shield'),
-    'download': _img('icon_download.png'),
-    'database': _mat('database'),
-    'wrench': _mat('build'),
-    'question': _mat('help'),
-    'star': _mat('star'),
-    'warning': '⚠️',
-    'package': _mat('inventory_2'),
-    'check_circle': _mat('check_circle'),
-    'cursor': _mat('arrow_selector_tool'),
-    'eye': _mat('visibility'),
-    'refresh': _img('icon_sync.png'),
-    'compare': _img('icon_sync_pair.png'),
-    'archive': _mat('archive'),
-    'menu': _mat('menu'),
-    'folder_open': _img('icon_preset_builtin.png'),
-    'restore': _img('icon_restore.png', size=16),
-    'calendar': _mat('calendar_today', color='#bac2cc'),
-    'error': _mat('error', color='#ff7b72'),
-    'sync_hub': _img('icon_sync_hub.png'),
-    'sync_pair': _img('icon_sync_pair.png'),
-    'sync_group': _img('icon_sync_group.png'),
-    
-    # Sync Review Category Assets
-    'cat_new': _img('Icon_Sync_Review_New_File.png', size=16),
-    'cat_update': _img('Icon_Sync_Review_Update.png', size=16),
-    'cat_miss': _img('Icon_Sync_Review_Missing_File.png', size=16),
-    'cat_locdel': _img('Icon_Sync_Review_Locally_Deleted.png', size=16),
-    'cat_candel': _img('Icon_Sync_Review_Deleted_On_Canvas.png', size=16),
-    'cat_ignore': _img('Icon_Ignore.svg', size=16),
-    'cat_uptodate': _mat('check_circle', color='#10B981', size=16)
-}
+def _build_help_icons() -> dict:
+    return {
+        'lightbulb': _mat('lightbulb'),
+        'folder': _mat('folder'),
+        'gear': _img('icon_custom_download.png'),
+        'bolt': _img('icon_sync_quick.png'),
+        'bolt_small': _img('icon_sync_quick.png', size=11),
+        'search': _img('icon_sync_review.png'),
+        'search_small': _img('icon_sync_review.png', size=11),
+        'save': _img('icon_preset_user.png'),
+        'quick_download': _img('icon_quick_download.png'),
+        'shield': _mat('shield'),
+        'download': _img('icon_download.png'),
+        'database': _mat('database'),
+        'wrench': _mat('build'),
+        'question': _mat('help'),
+        'star': _mat('star'),
+        'warning': '⚠️',
+        'package': _mat('inventory_2'),
+        'check_circle': _mat('check_circle'),
+        'cursor': _mat('arrow_selector_tool'),
+        'eye': _mat('visibility'),
+        'refresh': _img('icon_sync.png'),
+        'compare': _img('icon_sync_pair.png'),
+        'archive': _mat('archive'),
+        'menu': _mat('menu'),
+        'folder_open': _img('icon_preset_builtin.png'),
+        'restore': _img('icon_restore.png', size=16),
+        'calendar': _mat('calendar_today', color='#bac2cc'),
+        'error': _mat('error', color='#ff7b72'),
+        'sync_hub': _img('icon_sync_hub.png'),
+        'sync_pair': _img('icon_sync_pair.png'),
+        'sync_group': _img('icon_sync_group.png'),
+        # Sync Review Category Assets
+        'cat_new': _img('Icon_Sync_Review_New_File.png', size=16),
+        'cat_update': _img('Icon_Sync_Review_Update.png', size=16),
+        'cat_miss': _img('Icon_Sync_Review_Missing_File.png', size=16),
+        'cat_locdel': _img('Icon_Sync_Review_Locally_Deleted.png', size=16),
+        'cat_candel': _img('Icon_Sync_Review_Deleted_On_Canvas.png', size=16),
+        'cat_ignore': _img('Icon_Ignore.svg', size=16),
+        'cat_uptodate': _mat('check_circle', color='#10B981', size=16),
+    }
+
+# Lazy singleton — computed on first access so missing assets at import time
+# don't permanently bake broken icons into the cache (M-23).
+_HELP_ICONS_CACHE: dict | None = None
+
+class _LazyHelpIcons:
+    """Dict-like proxy that builds HELP_ICONS on first access."""
+    def __getitem__(self, key: str) -> str:
+        global _HELP_ICONS_CACHE
+        if _HELP_ICONS_CACHE is None:
+            _HELP_ICONS_CACHE = _build_help_icons()
+        return _HELP_ICONS_CACHE[key]
+
+    def get(self, key: str, default=None):
+        global _HELP_ICONS_CACHE
+        if _HELP_ICONS_CACHE is None:
+            _HELP_ICONS_CACHE = _build_help_icons()
+        return _HELP_ICONS_CACHE.get(key, default)
+
+    def __contains__(self, key: str) -> bool:
+        global _HELP_ICONS_CACHE
+        if _HELP_ICONS_CACHE is None:
+            _HELP_ICONS_CACHE = _build_help_icons()
+        return key in _HELP_ICONS_CACHE
+
+HELP_ICONS = _LazyHelpIcons()
 
 
 def render_completion_card(synced_count: int, error_count: int,
@@ -571,6 +604,8 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             link_html = ''
             
             api_url = st.session_state.get('api_url', '').rstrip('/')
+            if api_url and not api_url.startswith(('http://', 'https://')):
+                api_url = ''
             if api_url and hasattr(err, 'context') and isinstance(err.context, dict):
                 f_dict = err.context.get('file_dict', {})
                 fid = f_dict.get('id')
@@ -842,7 +877,7 @@ def error_log_dialog(log_paths):
     """
     st.markdown("""
         <style>
-            div.st-key-error_log_scroll_shared {
+            div[data-testid="stDialog"] div.st-key-error_log_scroll_shared {
                 height: 55vh !important;
                 min-height: 55vh !important;
                 max-height: 55vh !important;

@@ -321,7 +321,7 @@ def render_login_page(fetch_courses_fn):
                         valid, msg = cm.validate_token()
                         if valid:
                             st.session_state['is_authenticated'] = True
-                            st.session_state['user_name'] = msg.split(": ")[1] if ": " in msg else msg
+                            st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
                             st.rerun()
             except Exception:
                 pass

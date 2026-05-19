@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import streamlit as st
+from ui_helpers import esc
 
 
 def render_amber_notice(
@@ -50,7 +51,7 @@ def render_amber_notice(
             f"font-size: 0.85rem; "
             f"margin-top: 5px; "
             f"line-height: 1.5;"
-            f"'>{detail}</div>"
+            f"'>{esc(detail)}</div>"
         )
 
     html = (
@@ -64,7 +65,7 @@ def render_amber_notice(
         f"line-height: 1.5;"
         f"'>"
         f"<div style='color: #fbbf24; font-weight: 700;'>"
-        f"{icon} {message}"
+        f"{icon} {esc(message)}"
         f"</div>"
         f"{detail_html}"
         f"</div>"
