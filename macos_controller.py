@@ -4,8 +4,16 @@ import subprocess
 import threading
 try:
     import customtkinter as ctk
-except ImportError:
-    pass  # Allow importing for type checking on Windows
+except ImportError as _ctk_err:
+    # On Windows this module is imported for type-checking only — ctk is never called.
+    # On macOS a missing customtkinter is fatal at runtime; raise a clear error.
+    import sys as _sys
+    if _sys.platform == 'darwin':
+        raise RuntimeError(
+            "customtkinter is required on macOS but is not installed. "
+            "Run: pip install customtkinter"
+        ) from _ctk_err
+    ctk = None  # type: ignore[assignment]
 
 try:
     from PIL import Image as _PILImage
@@ -13,7 +21,6 @@ except ImportError:
     _PILImage = None
 
 # ── Constants ──
-CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 WINDOW_WIDTH = 420
 WINDOW_HEIGHT = 380
 
@@ -225,19 +232,14 @@ class CanvasController:
                 threading.Thread(target=self.retry_callback, daemon=True).start()
             return
 
-        if os.path.exists(CHROME_PATH):
-            subprocess.Popen([CHROME_PATH, '--new-window', self.url])
-        else:
-            # Fallback: let macOS Launch Services find Chrome regardless of install location
-            # (covers ~/Applications installs, non-standard paths, etc.)
-            # --args passes flags through to Chrome; --new-window forces a focused new window
-            # even when Chrome is already running with other tabs open.
-            result = subprocess.run(
-                ['open', '-a', 'Google Chrome', '--args', '--new-window', self.url],
-                capture_output=True,
-            )
-            if result.returncode != 0:
-                self.set_state('error', 'Google Chrome not found', 'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome')
+        # Use 'open -a' so macOS Launch Services finds Chrome regardless of install
+        # location (~/Applications, non-standard paths, etc.)
+        result = subprocess.run(
+            ['open', '-a', 'Google Chrome', '--args', '--new-window', self.url],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            self.set_state('error', 'Google Chrome not found', 'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome')
 
     def run(self):
         """Start the CustomTkinter main loop (must be called from main thread)."""

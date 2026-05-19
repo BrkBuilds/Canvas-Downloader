@@ -42,12 +42,11 @@ def cancel_sync() -> None:
 def is_download_cancelled() -> bool:
     """Check if a download cancellation has been requested.
 
+    Checks only download-specific flags to prevent sync cancel flags from
+    bleeding into download checks (L-6/L-22 cross-contamination fix).
     Replaces check_cancellation() in app.py (formerly L335-336).
     """
-    return (
-        st.session_state.get('cancel_requested', False)
-        or st.session_state.get('download_cancelled', False)
-    )
+    return st.session_state.get('download_cancelled', False)
 
 
 def is_sync_cancelled() -> bool:

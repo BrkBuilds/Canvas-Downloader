@@ -83,7 +83,7 @@ def _play_windows_sound():
 
 def _focus_canvas_window():
     """Bring the PyWebView 'Canvas Downloader' window to the foreground."""
-    if ctypes is None:
+    if system != 'Windows' or ctypes is None:
         logger.debug("ctypes not available - skipping window focus")
         return
 
@@ -218,8 +218,8 @@ def _show_macos_notification(title: str, body: str):
 
     # Fallback: osascript (notification appears from 'Script Editor', no click handler)
     try:
-        safe_title = title.replace('"', '\\"')
-        safe_body = body.replace('"', '\\"')
+        safe_title = title.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
+        safe_body = body.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
         script = (
             f'display notification "{safe_body}" '
             f'with title "Canvas Downloader" '

@@ -60,7 +60,12 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     # Load secondary content contract so analysis includes negative-ID entities
     _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
     if _raw_secondary is not None:
-        _raw_secondary = json.loads(_raw_secondary)
+        try:
+            _raw_secondary = json.loads(_raw_secondary)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # Truncated or corrupt stored JSON — treat as absent and fall through
+            # to the session-state fallback below.
+            _raw_secondary = None
     if _raw_secondary is None:
         # First-ever analysis for this pair — no DB contract yet.
         # Fall back to session state so the user's current settings are honoured.
@@ -223,12 +228,15 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
         try:
             # --- Fix 2: Offload blocking API work to a background thread ---
-            # Uses the same safe_thread_wrapper pattern as sync/execution.py
-            # to preserve Streamlit's ScriptRunContext on the worker thread.
-            from streamlit.runtime.scriptrunner import get_script_run_ctx
+            # Capture script context on the script thread, then run asyncio in
+            # a dedicated worker thread so asyncio.run() never conflicts with
+            # Tornado's already-running event loop (would raise RuntimeError).
+            from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
             _current_ctx = get_script_run_ctx()
 
             async def _run_course_analysis():
+                import threading as _th
+                _add_ctx(_th.current_thread(), _current_ctx)
                 return await asyncio.to_thread(
                     safe_thread_wrapper,
                     _analyze_course_blocking,
@@ -237,9 +245,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     sync_progress_hook,
                 )
 
-            course, sync_mgr, manifest, canvas_files, result, detected = (
-                asyncio.run(_run_course_analysis())
-            )
+            import concurrent.futures as _cf
+            with _cf.ThreadPoolExecutor(max_workers=1) as _pool:
+                course, sync_mgr, manifest, canvas_files, result, detected = (
+                    _pool.submit(asyncio.run, _run_course_analysis()).result()
+                )
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
             
@@ -359,31 +369,17 @@ def run_analysis(sync_pairs, main_placeholder=None):
             if not isinstance(pair_res, dict):
                 continue
 
-            # A. Check root level dictionary keys first (fallback from Step 2 logic)
-            if 'locdel' in pair_res:
-                total_locdel += len(pair_res['locdel'])
-            if 'canvasdel' in pair_res: # Adjust if your root key is different
-                total_canvasdel += len(pair_res['canvasdel'])
-
-            # B. Check the 'result' object/dict
             res_obj = pair_res.get('result')
-            if res_obj:
-                # If it's an object with attributes:
-                if hasattr(res_obj, 'locally_deleted_files') and res_obj.locally_deleted_files is not None:
-                    total_locdel += len(res_obj.locally_deleted_files)
-                if hasattr(res_obj, 'deleted_on_canvas') and res_obj.deleted_on_canvas is not None:
-                    total_canvasdel += len(res_obj.deleted_on_canvas)
-                if hasattr(res_obj, 'updated_modified_files') and res_obj.updated_modified_files is not None:
-                    total_edited += len(res_obj.updated_modified_files)
+            if res_obj is None:
+                continue
 
-                # If it's a dictionary:
-                if isinstance(res_obj, dict):
-                    if 'locally_deleted_files' in res_obj and res_obj['locally_deleted_files'] is not None:
-                        total_locdel += len(res_obj['locally_deleted_files'])
-                    if 'deleted_on_canvas' in res_obj and res_obj['deleted_on_canvas'] is not None:
-                        total_canvasdel += len(res_obj['deleted_on_canvas'])
-                    if 'updated_modified_files' in res_obj and res_obj['updated_modified_files'] is not None:
-                        total_edited += len(res_obj['updated_modified_files'])
+            # all_results always contains AnalysisResult objects (never plain dicts)
+            if hasattr(res_obj, 'locally_deleted_files') and res_obj.locally_deleted_files is not None:
+                total_locdel += len(res_obj.locally_deleted_files)
+            if hasattr(res_obj, 'deleted_on_canvas') and res_obj.deleted_on_canvas is not None:
+                total_canvasdel += len(res_obj.deleted_on_canvas)
+            if hasattr(res_obj, 'updated_modified_files') and res_obj.updated_modified_files is not None:
+                total_edited += len(res_obj.updated_modified_files)
 
         st.session_state['qs_skipped'] = {
             'local_del': total_locdel,

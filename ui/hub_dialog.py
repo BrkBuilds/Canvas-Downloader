@@ -79,7 +79,7 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
     col_cancel, col_create = st.columns([1, 1], vertical_alignment="bottom")
     with col_cancel:
         if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
-            st.rerun()
+            st.rerun(scope="app")
     with col_create:
         create_disabled = not item_name or not item_name.strip()
         if st.button("Create", type="primary", use_container_width=True,
@@ -91,7 +91,7 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
             else:
                 mgr.save_group(item_name.strip(), sync_pairs)
             st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
-            st.rerun()
+            st.rerun(scope="app")
 
 
 
