@@ -399,7 +399,7 @@ class SyncManager:
                 with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                     cursor = conn.cursor()
                     now_iso = datetime.now(timezone.utc).isoformat()
-                    cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_sync', now_iso))
+                    cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_iso))
                     
                     # Atomic upsert: INSERT ON CONFLICT per row (preserves is_ignored)
                     for file_id_str, info in manifest.get('files', {}).items():
@@ -547,15 +547,17 @@ class SyncManager:
             orig_norm_name = robust_filename_normalize(orig_name)
             orig_size = missing_info.get('original_size', -1)
             orig_md5 = missing_info.get('original_md5', '')
-            
+
             best_match_idx = -1
-            
+            matched_tier = 0
+
             # TIER 1: Exact Normalized Filename Match (Handles user editing a file but keeping name)
             for idx, orphan in enumerate(orphaned_files):
                 if orphan['norm_name'] == orig_norm_name:
                     best_match_idx = idx
+                    matched_tier = 1
                     break
-                    
+
             # TIER 2: Exact MD5 Match (Handles user renaming a file but NOT editing it)
             if best_match_idx == -1 and orig_md5 and orig_size > 0:
                 for idx, orphan in enumerate(orphaned_files):
@@ -564,8 +566,9 @@ class SyncManager:
                             orphan['md5'] = self.compute_local_md5(orphan['path'])
                         if orphan['md5'] == orig_md5:
                             best_match_idx = idx
+                            matched_tier = 2
                             break
-                            
+
             # TIER 3: Levenshtein Distance > 0.85
             if best_match_idx == -1:
                 best_ratio = -1.0
@@ -574,21 +577,24 @@ class SyncManager:
                     if ratio > best_ratio:
                         best_ratio = ratio
                         best_match_idx = idx
-                
+
                 if best_ratio <= 0.85:
                     best_match_idx = -1
-            
+                else:
+                    matched_tier = 3
+
             # If we found a match via any tier, heal it
             if best_match_idx != -1:
                 matched_orphan = orphaned_files.pop(best_match_idx)
                 try:
                     relative_path = matched_orphan['path'].relative_to(self.local_path)
                     files_section[file_id]['local_path'] = str(relative_path).replace('\\', '/')
-                    # Update the manifest with the new size/md5 if it changed due to Tier 1 matching
-                    if matched_orphan['md5'] is None:
-                        matched_orphan['md5'] = self.compute_local_md5(matched_orphan['path'])
-                    files_section[file_id]['original_size'] = matched_orphan['size']
-                    files_section[file_id]['original_md5'] = matched_orphan['md5']
+                    # Only refresh size/md5 for Tier 2 (content-identical rename).
+                    # Tier 1/3 may represent user-edited files; preserving the original
+                    # baseline lets the next sync correctly detect local modifications.
+                    if matched_tier == 2:
+                        files_section[file_id]['original_size'] = matched_orphan['size']
+                        files_section[file_id]['original_md5'] = matched_orphan['md5']
                 except ValueError:
                     pass
         
@@ -671,9 +677,11 @@ class SyncManager:
         raw_new_files = []
         raw_locally_deleted = []
 
-        # Deduplicate canvas files based on their target path and size
+        # Deduplicate canvas files by canvas_file_id.
+        # Path+size dedup was dropping legitimate files that share a name/size
+        # across modules (e.g. the same filename uploaded to two modules).
         unique_canvas_files = []
-        seen_path_sizes = set()
+        seen_file_ids: set[str] = set()
 
         for c_file in canvas_files:
             file_id = str(c_file.id)
@@ -691,9 +699,8 @@ class SyncManager:
             else:
                 calc_path = c_file.filename
 
-            path_size_key = (calc_path.lower(), getattr(c_file, 'size', 0))
-            if path_size_key not in seen_path_sizes:
-                seen_path_sizes.add(path_size_key)
+            if file_id not in seen_file_ids:
+                seen_file_ids.add(file_id)
                 unique_canvas_files.append((c_file, calc_path))
 
         for c_file, calc_path in unique_canvas_files:
@@ -779,9 +786,12 @@ class SyncManager:
                         _origin_category = 'new_files'
                         _original_item = c_file
                 elif self._is_canvas_newer(c_file, entry):
-                    _mod_state = self._classify_local_modification(
-                        local_path, entry.get('original_md5', '')
-                    )
+                    # Skip the expensive MD5 classification for ignored files;
+                    # mod_state is irrelevant until the user explicitly un-ignores them.
+                    if not entry.get('is_ignored', False):
+                        _mod_state = self._classify_local_modification(
+                            local_path, entry.get('original_md5', '')
+                        )
                     _origin_category = (
                         'updated_modified_files' if _mod_state == 'modified'
                         else 'updated_clean_files'
@@ -951,8 +961,6 @@ class SyncManager:
         except sqlite3.Error as e:
             logger.warning(f"Error saving metadata '{key}': {e}")
             return False
-        finally:
-            pass
 
     def _load_metadata(self, key: str) -> str | None:
         """Load a value from the sync_metadata table. Returns None if not found."""
@@ -965,8 +973,6 @@ class SyncManager:
                 return row[0] if row else None
         except sqlite3.Error:
             return None
-        finally:
-            pass
 
     def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
                                 local_path: str, canvas_updated_at: str,
@@ -1327,13 +1333,14 @@ class SyncManager:
 
 class SyncHistoryManager:
     """Manages a log of past sync operations."""
-    
+
     def __init__(self, config_dir: str):
         """
         Args:
             config_dir: Directory where config files are stored
         """
         self.history_path = Path(config_dir) / SYNC_HISTORY_FILENAME
+        self._lock = threading.Lock()
     
     def load_history(self) -> list[dict]:
         """Load sync history from disk."""
@@ -1347,26 +1354,27 @@ class SyncHistoryManager:
     
     def add_entry(self, entry: dict):
         """Add a sync history entry and save.
-        
-        Uses atomic temp-file + os.replace() to prevent JSON corruption
-        if the process crashes mid-write.
-        
+
+        Uses a threading.Lock + atomic temp-file + os.replace() to prevent
+        concurrent writes from producing a corrupt or truncated history file.
+
         Args:
             entry: Dict with keys like 'timestamp', 'courses', 'files_synced', 'errors', 'categories'
         """
-        history = self.load_history()
-        history.append(entry)
-        # Keep last 50 entries
-        if len(history) > 50:
-            history = history[-50:]
-        try:
-            tmp_path = self.history_path.with_suffix('.tmp')
-            with open(tmp_path, 'w', encoding='utf-8') as f:
-                json.dump(history, f, indent=2, ensure_ascii=False)
-            # Atomic replace - prevents corrupt JSON on crash-during-write
-            os.replace(str(tmp_path), str(self.history_path))
-        except OSError as e:
-            logger.warning(f"Error saving sync history: {e}")
+        with self._lock:
+            history = self.load_history()
+            history.append(entry)
+            # Keep last 50 entries
+            if len(history) > 50:
+                history = history[-50:]
+            try:
+                tmp_path = self.history_path.with_suffix('.tmp')
+                with open(tmp_path, 'w', encoding='utf-8') as f:
+                    json.dump(history, f, indent=2, ensure_ascii=False)
+                # Atomic replace - prevents corrupt JSON on crash-during-write
+                os.replace(str(tmp_path), str(self.history_path))
+            except OSError as e:
+                logger.warning(f"Error saving sync history: {e}")
 
     def clear_history(self):
         """Clear all sync history."""

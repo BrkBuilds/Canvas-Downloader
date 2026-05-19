@@ -228,7 +228,7 @@ class DownloadError:
         self.message = message
         self.raw_error = str(raw_error) if isinstance(raw_error, Exception) else raw_error
         self.context = context or {}
-        self.timestamp = datetime.now()
+        self.timestamp = datetime.now(timezone.utc)
 
     def __str__(self):
         return f"[{self.course_name}] {self.message}"
@@ -261,8 +261,12 @@ class CanvasManager:
                 _adapter = _CanvasTimeoutAdapter()
                 self.canvas._Canvas__requester._session.mount('https://', _adapter)
                 self.canvas._Canvas__requester._session.mount('http://', _adapter)
-            except Exception:
-                pass  # Non-fatal - private API may change between canvasapi versions
+            except Exception as _e:
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    f"Could not mount timeout adapter on canvasapi session: {_e}. "
+                    "API calls will have no timeout and may hang on slow connections."
+                )
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
@@ -1150,14 +1154,9 @@ class CanvasManager:
                             if hasattr(item, 'content_id'):
                                 module_file_ids.add(item.content_id)
                             
-                            if file_filter == 'study':
-                                # We can't easily check extension of module item without file object, 
-                                # but usually we count it. Accurately? 
-                                # Let's assume for now if filter='study', we only count files?
-                                # Ideally we'd fetch the file to check ext, but that's slow.
-                                # Let's just count it for now.
-                                count += 1
-                            else:
+                            if file_filter != 'study':
+                                # Study mode can't verify extension without a slow file fetch;
+                                # count is derived from the catch-all section below instead.
                                 count += 1
                                 
                         elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
@@ -1820,11 +1819,12 @@ class CanvasManager:
                                 
                                 # Write file formats based directly on extension
                                 if ext == '.html':
-                                    content = f'<meta http-equiv="refresh" content="0; url={url_to_save}">'
+                                    content = f'<meta http-equiv="refresh" content="0; url={html.escape(url_to_save, quote=True)}">'
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(content)
                                 elif ext == '.url':
-                                    content = f'[InternetShortcut]\nURL={url_to_save}'
+                                    _safe_url = url_to_save.replace('\r', '').replace('\n', '%0A')
+                                    content = f'[InternetShortcut]\nURL={_safe_url}'
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(content)
                                 elif ext == '.webloc':
@@ -2340,7 +2340,11 @@ class CanvasManager:
                         log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
                         async with session.get(url) as response:
                             if response.status == 403 or response.status == 429:
-                                wait = int(response.headers.get('Retry-After', RETRY_DELAY * (2 ** attempt)))
+                                _retry_after_raw = response.headers.get('Retry-After', '')
+                                try:
+                                    wait = int(_retry_after_raw)
+                                except (ValueError, TypeError):
+                                    wait = RETRY_DELAY * (2 ** attempt)
                                 raise ValueError(f"RATE_LIMIT:{wait}")
                             elif 500 <= response.status < 600:
                                 raise ValueError(f"SERVER_ERROR:{response.status}")
@@ -4038,7 +4042,16 @@ class CanvasManager:
             filepath = parent / new_name
             counter += 1
         if counter >= 1000:
-            filepath = parent / f"{base}_{uuid.uuid4().hex[:8]}{ext}"
+            for _ in range(100):
+                candidate = parent / f"{base}_{uuid.uuid4().hex[:8]}{ext}"
+                if not candidate.exists():
+                    filepath = candidate
+                    break
+            else:
+                import logging as _log
+                _log.getLogger(__name__).warning(
+                    f"_handle_conflict: could not find a free name for {base}{ext} after UUID fallback"
+                )
         return filepath
 
     def _sanitize_filename(self, filename, replace_spaces=False, max_length=120):

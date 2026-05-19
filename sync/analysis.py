@@ -202,8 +202,10 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
         display_name = friendly_course_name(pair['course_name'])
         
-        # Define the granular hook for this specific course
-        def sync_progress_hook(current, total, status_text):
+        # Default-argument capture binds pair_num and display_name to the
+        # current iteration's values, preventing late-binding over loop variables.
+        def sync_progress_hook(current, total, status_text,
+                               _pair_num=pair_num, _display_name=display_name):
             try:
                 if st.session_state.get('cancel_requested') or st.session_state.get('sync_cancelled'):
                     return
@@ -211,7 +213,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 analysis_ui_placeholder.markdown(f"""
                 <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
                     <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{esc(display_name)}</b></p>
+                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b></p>
                     <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
                     <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
                         <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
