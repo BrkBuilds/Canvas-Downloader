@@ -183,11 +183,55 @@ if __name__ == "__main__":
         threading.Thread(target=_start_streamlit_server, daemon=True).start()
 
         # 2. Wait for the health endpoint before opening the native window.
-        if not _wait_for_server():
-            logger.warning("Streamlit server did not respond in time; opening window anyway.")
+        server_ok = _wait_for_server()
 
         # 3. Create and start the native desktop window.
-        webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))
-        webview.start()
+        if server_ok:
+            webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))
+        else:
+            # Show a user-friendly error page instead of a blank/broken window.
+            _reason = (
+                'The application server encountered a fatal error during startup.'
+                if _server_failed_event.is_set()
+                else 'The application server did not respond in time.'
+            )
+            _ERROR_HTML = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Canvas Downloader — Startup Error</title>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      background: #0f1117; color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem;
+    }}
+    .card {{
+      background: #1e2130; border: 1px solid #2d3148;
+      border-radius: 12px; padding: 2.5rem 3rem;
+      max-width: 560px; text-align: center;
+    }}
+    .icon {{ font-size: 3rem; margin-bottom: 1rem; }}
+    h1 {{ font-size: 1.4rem; font-weight: 600; color: #ff6b6b; margin-bottom: 0.75rem; }}
+    p  {{ font-size: 0.95rem; color: #9ca3af; line-height: 1.6; margin-bottom: 0.5rem; }}
+    .hint {{ font-size: 0.8rem; color: #4b5563; margin-top: 1.25rem; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">⚠️</div>
+    <h1>Canvas Downloader failed to start</h1>
+    <p>{_reason}</p>
+    <p>Please close this window and try reopening the app.<br>
+       If the problem persists, make sure no other instance is already running.</p>
+    <p class="hint">Need help? Visit the support page or check the application logs.</p>
+  </div>
+</body>
+</html>"""
+            webview.create_window('Canvas Downloader', html=_ERROR_HTML, min_size=(640, 420))
+            logger.error(f"Startup failed — {_reason}")
 
+        webview.start()
         sys.exit(0)
