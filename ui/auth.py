@@ -36,14 +36,17 @@ KEYRING_SERVICE = "CanvasDownloader"
 
 
 def render_sidebar(fetch_courses_fn):
-    """Render the full sidebar: auth, navigation, settings, logout.
+    """Render the full sidebar: navigation, settings, logout.
 
     Must be called inside ``with st.sidebar:``.
 
     Args:
-        fetch_courses_fn: The ``@st.cache_data``-wrapped ``fetch_courses()``
+        fetch_courses_fn: The ``@st.cache_resource``-wrapped ``fetch_courses()``
             function from app.py.  Needed so logout can call ``.clear()``.
     """
+    if not st.session_state.get('is_authenticated'):
+        return
+
     from ui_helpers import get_base64_image
     icon_b64    = get_base64_image("assets/icon.png")
     icon_dl_b64 = get_base64_image("assets/icon_download.png")
@@ -212,111 +215,885 @@ div.st-key-nav_btn_logout button:hover::after {{
 <hr style="margin: 0 0 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);" />
 """)
 
-        # ── Auto-load token (only once per session) ─────────────────────────
-        if not st.session_state['token_loaded']:
-            st.session_state['token_loaded'] = True
-            if os.path.exists(CONFIG_FILE):
-                try:
-                    with open(CONFIG_FILE, "r", encoding='utf-8') as f:
-                        config = json.load(f)
-                        st.session_state['api_url'] = config.get('api_url', '')
+        _render_authenticated_nav_top()
 
-                        if 'concurrent_downloads' in config:
-                            st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
+    _render_authenticated_nav_bottom(fetch_courses_fn)
 
-                        if 'debug_mode' in config:
-                            st.session_state['debug_mode'] = config.get('debug_mode', False)
 
-                        if 'enable_cbs_filters' in config:
-                            st.session_state['enable_cbs_filters'] = config.get('enable_cbs_filters', False)
 
-                        if 'error_log_enabled' in config:
-                            st.session_state['error_log_enabled'] = config.get('error_log_enabled', False)
+def render_login_page(fetch_courses_fn):
+    """Render the full-page, premium login portal in the main page body."""
+    if st.session_state.get('is_authenticated'):
+        return
 
-                        if 'max_file_size_enabled' in config:
-                            st.session_state['max_file_size_enabled'] = config.get('max_file_size_enabled', False)
-                        if 'max_file_size_mb' in config:
-                            st.session_state['max_file_size_mb'] = int(config.get('max_file_size_mb', 500))
+    # ── Auto-load token (only once per session) ─────────────────────────
+    if not st.session_state.get('token_loaded'):
+        st.session_state['token_loaded'] = True
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r", encoding='utf-8') as f:
+                    config = json.load(f)
+                    st.session_state['api_url'] = config.get('api_url', '')
 
-                        if 'notifications_enabled' in config:
-                            st.session_state['notifications_enabled'] = config.get('notifications_enabled', True)
+                    if 'concurrent_downloads' in config:
+                        st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
 
-                        if 'use_12h_format' in config:
-                            st.session_state['use_12h_format'] = config.get('use_12h_format', False)
+                    if 'debug_mode' in config:
+                        st.session_state['debug_mode'] = config.get('debug_mode', False)
 
-                        if 'default_download_path' in config:
-                            saved_default = config.get('default_download_path', '') or ''
-                            st.session_state['default_download_path'] = saved_default
-                            # Pre-fill download_path with the saved default on fresh session
-                            # (only if the user hasn't already picked a custom path this session).
-                            import os as _os
-                            from pathlib import Path as _Path
-                            _downloads_default = str(_Path.home() / "Downloads")
-                            current_path = st.session_state.get('download_path', '')
-                            if saved_default and _os.path.isdir(saved_default) and current_path == _downloads_default:
-                                st.session_state['download_path'] = saved_default
+                    if 'enable_cbs_filters' in config:
+                        st.session_state['enable_cbs_filters'] = config.get('enable_cbs_filters', False)
 
-                        loaded_token = ''
-                        # Unified keyring load for all platforms (macOS Keychain / Windows Credential Manager)
+                    if 'error_log_enabled' in config:
+                        st.session_state['error_log_enabled'] = config.get('error_log_enabled', False)
+
+                    if 'max_file_size_enabled' in config:
+                        st.session_state['max_file_size_enabled'] = config.get('max_file_size_enabled', False)
+                    if 'max_file_size_mb' in config:
+                        st.session_state['max_file_size_mb'] = int(config.get('max_file_size_mb', 500))
+
+                    if 'notifications_enabled' in config:
+                        st.session_state['notifications_enabled'] = config.get('notifications_enabled', True)
+
+                    if 'use_12h_format' in config:
+                        st.session_state['use_12h_format'] = config.get('use_12h_format', False)
+
+                    if 'default_download_path' in config:
+                        saved_default = config.get('default_download_path', '') or ''
+                        st.session_state['default_download_path'] = saved_default
+                        # Pre-fill download_path with the saved default on fresh session
+                        import os as _os
+                        from pathlib import Path as _Path
+                        _downloads_default = str(_Path.home() / "Downloads")
+                        current_path = st.session_state.get('download_path', '')
+                        if saved_default and _os.path.isdir(saved_default) and current_path == _downloads_default:
+                            st.session_state['download_path'] = saved_default
+
+                    loaded_token = ''
+                    # Unified keyring load for all platforms
+                    try:
+                        import keyring
+                        keyring_user = st.session_state['api_url'] or 'default'
+                        loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
+                    except Exception:
+                        pass
+
+                    # Legacy migration: macOS base64 token stored in JSON
+                    if not loaded_token and config.get('mac_api_token', ''):
                         try:
-                            import keyring
-                            keyring_user = st.session_state['api_url'] or 'default'
-                            loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
-                        except Exception:
-                            pass  # Keyring unavailable, fall through to legacy checks
-
-                        # Legacy migration: macOS base64 token stored in JSON before keyring unification
-                        if not loaded_token and config.get('mac_api_token', ''):
-                            try:
-                                loaded_token = base64.b64decode(
-                                    config['mac_api_token'].encode('utf-8')
-                                ).decode('utf-8')
-                                # Migrate to keyring and strip insecure field from JSON
-                                try:
-                                    import keyring
-                                    keyring_user = st.session_state['api_url'] or 'default'
-                                    keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
-                                    config.pop('mac_api_token', None)
-                                    with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
-                                        json.dump(config, fw)
-                                except Exception:
-                                    pass  # Migration failed, token still in RAM this session
-                            except Exception:
-                                pass
-
-                        # Legacy migration: Windows plain-JSON token
-                        if not loaded_token and config.get('api_token', ''):
-                            loaded_token = config['api_token']
+                            loaded_token = base64.b64decode(
+                                config['mac_api_token'].encode('utf-8')
+                            ).decode('utf-8')
                             try:
                                 import keyring
                                 keyring_user = st.session_state['api_url'] or 'default'
                                 keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
-                                config.pop('api_token', None)
+                                config.pop('mac_api_token', None)
                                 with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                     json.dump(config, fw)
                             except Exception:
-                                pass  # Migration failed, will work from RAM this session
+                                pass
+                        except Exception:
+                            pass
 
-                        st.session_state['api_token'] = loaded_token
+                    # Legacy migration: Windows plain-JSON token
+                    if not loaded_token and config.get('api_token', ''):
+                        loaded_token = config['api_token']
+                        try:
+                            import keyring
+                            keyring_user = st.session_state['api_url'] or 'default'
+                            keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                            config.pop('api_token', None)
+                            with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
+                                json.dump(config, fw)
+                        except Exception:
+                            pass
 
-                        if st.session_state['api_token']:
-                            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                            valid, msg = cm.validate_token()
-                            if valid:
-                                st.session_state['is_authenticated'] = True
-                                st.session_state['user_name'] = msg
-                except Exception:
-                    pass
+                    st.session_state['api_token'] = loaded_token
 
-        # ── Login form OR authenticated navigation top ────────────────────────
-        if not st.session_state['is_authenticated']:
-            _render_login_form()
-        else:
-            _render_authenticated_nav_top()
+                    if st.session_state['api_token']:
+                        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                        valid, msg = cm.validate_token()
+                        if valid:
+                            st.session_state['is_authenticated'] = True
+                            st.session_state['user_name'] = msg.split(": ")[1] if ": " in msg else msg
+                            st.rerun()
+            except Exception:
+                pass
 
-    if st.session_state['is_authenticated']:
-        _render_authenticated_nav_bottom(fetch_courses_fn)
+    from ui_helpers import get_base64_image
 
+    icon_b64 = get_base64_image("assets/icon.png")
+
+    # Scoped physical volume styles for the main page login card
+    st.html("""<style>
+    /* Centered portal container */
+    .login-portal-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        max-width: 480px;
+        margin: 40px auto 0 auto;
+        padding: 0 10px;
+    }
+
+    /* Branded Header */
+    .login-brand-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .login-brand-logo {
+        width: 68px;
+        height: 68px;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+        margin-bottom: 12px;
+        display: inline-block;
+    }
+
+    .login-brand-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .login-brand-subtitle {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-top: 6px;
+    }
+
+    /* The "Physical Volume" card tray */
+    div[class*="st-key-login_card_wrapper"] {
+        background: #151c24 !important; /* Shade or two lighter than #0e1117, teal-ish blue */
+        border: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0px 50px rgba(0, 0, 0, 0.5) !important;
+        padding: 30px 24px !important;
+        width: 100% !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] > div[data-testid="stVerticalBlockBorderWrapper"],
+    div[class*="st-key-login_card_wrapper"] > div[data-testid="stVerticalBlock"] {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    /* Add borders around the input fields inside the card */
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] [data-baseweb="input"] {
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border-radius: 6px !important;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] [data-baseweb="input"]:focus-within {
+        border-color: #1f77b4 !important;
+        box-shadow: 0 0 0 2px rgba(31, 119, 180, 0.2) !important;
+    }
+
+    /* Style Streamlit's native help trigger button/icon next to the label */
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] label {
+        margin: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: unset !important;
+        min-width: unset !important;
+        height: auto !important;
+        width: auto !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] button [data-testid="stIconMaterial"],
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] button svg {
+        display: none !important; /* Hide native icon */
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] button::before {
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        -webkit-mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNicgaGVpZ2h0PScxNicgdmlld0JveD0nMCAwIDI0IDI0JyBmaWxsPSdub25lJyBzdHJva2U9J2N1cnJlbnRDb2xvcicgc3Ryb2tlLXdpZHRoPScyLjUnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PGNpcmNsZSBjeD0nMTInIGN5PScxMicgcj0nMTAnPjwvY2lyY2xlPjxwYXRoIGQ9J005LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyc+PC9wYXRoPjxsaW5lIHgxPScxMicgeTE9JzE3JyB4Mj0nMTIuMDEnIHkyPScxNyc+PC9saW5lPjwvc3ZnPg==') !important;
+        mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNicgaGVpZ2h0PScxNicgdmlld0JveD0nMCAwIDI0IDI0JyBmaWxsPSdub25lJyBzdHJva2U9J2N1cnJlbnRDb2xvcicgc3Ryb2tlLXdpZHRoPScyLjUnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PGNpcmNsZSBjeD0nMTInIGN5PScxMicgcj0nMTAnPjwvY2lyY2xlPjxwYXRoIGQ9J005LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyc+PC9wYXRoPjxsaW5lIHgxPScxMicgeTE9JzE3JyB4Mj0nMTIuMDEnIHkyPScxNyc+PC9saW5lPjwvc3ZnPg==') !important;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        transition: background-color 0.15s ease !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] button:hover::before {
+        background-color: #60a5fa !important; /* Thicker and lighter blue color on hover */
+    }
+
+    /* Native Streamlit Tooltip Overrides */
+    div[data-baseweb="tooltip"],
+    div[data-baseweb="popover"] {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    div[role="tooltip"] {
+        background-color: #181c20 !important; /* Neutral dark grey */
+        border: 1px solid rgba(255, 255, 255, 0.15) !important; /* Clean white border */
+        border-radius: 8px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        padding: 20px !important; /* Uniform, harmonious padding on all sides */
+        width: 320px !important; /* Fixed elegant width */
+        box-sizing: border-box !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    div[role="tooltip"] * {
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    div[role="tooltip"] div,
+    div[role="tooltip"] span {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    div[role="tooltip"] p {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-size: 0.85rem !important;
+        line-height: 1.5 !important;
+        color: #ffffff !important;
+        margin: 0 !important; /* Reset margins on text lines for absolute symmetry */
+        padding: 0 !important;
+    }
+
+    div[role="tooltip"] p + p {
+        margin-top: 14px !important; /* Spacing between sections */
+    }
+
+    .login-brand-header-separator {
+        width: 160px !important;
+        height: 1px !important;
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        margin: 16px auto 12px auto !important;
+    }
+
+    .login-github-header-tag {
+        margin-top: 0px !important;
+        margin-bottom: 28px !important; /* Spacing below the github tag to the login form */
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 16px !important; /* Spacing between the tags */
+        width: 100% !important;
+    }
+
+    .github-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        color: #64748b !important;
+        text-decoration: none !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        transition: color 0.2s ease-in-out !important;
+    }
+
+    .github-link:hover {
+        color: #f1f5f9 !important;
+    }
+
+    .github-icon {
+        opacity: 0.85 !important;
+    }
+
+    .login-page-security-footer {
+        font-size: 0.84rem !important;
+        color: #64748b !important;
+        text-align: center !important;
+        margin-top: 36px !important;
+        margin-bottom: 4px !important;
+        max-width: 480px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        line-height: 1.55 !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 8px !important;
+    }
+
+    .security-shield-icon {
+        color: #8a99ad !important;
+        flex-shrink: 0 !important;
+        margin-top: 2px !important;
+        opacity: 0.8 !important;
+    }
+
+    .login-form-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 20px;
+        letter-spacing: -0.01em;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding-bottom: 12px;
+    }
+
+    /* Submit Button styling: Solid Blue Physical Volume matching Analyze, Review & Sync */
+    div.st-key-login_submit_btn button {
+        background-color: #1f77b4 !important;
+        border: none !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        height: 3.2em !important;
+        min-height: 3.2em !important;
+        width: 100% !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }
+
+    div.st-key-login_submit_btn button:hover {
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* RECURSIVE CENTERING: START - Universal child selector */
+    div.st-key-login_submit_btn button > div,
+    div.st-key-login_submit_btn button > div > p {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    div.st-key-login_submit_btn button p {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+    }
+
+    /* Scoped styling for help expanders */
+    div[class*="st-key-login_help_expanders"] {
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+    }
+
+    /* Remove borders, backgrounds, and shadows from expanders inside this container */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin-bottom: 0px !important;
+        padding: 0 !important;
+    }
+
+    /* Target details and summary to remove all borders/backgrounds */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary > * {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-grow: 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+        gap: 8px !important;
+    }
+
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary > * > * {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-grow: 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
+
+    /* Style the summary text inside modern Streamlit expander */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary p {
+        color: #94a3b8 !important; /* Elegant muted color */
+        font-weight: 500 !important;
+        transition: color 0.2s ease-in-out !important;
+        text-align: center !important;
+    }
+
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary:hover p {
+        color: #f1f5f9 !important; /* Brighter on hover */
+    }
+
+    /* Style the chevron arrow inside help expanders to match the grey text */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary svg {
+        color: #94a3b8 !important;
+        transition: color 0.1s ease-in-out !important;
+    }
+
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary:hover svg {
+        color: #f1f5f9 !important;
+    }
+
+    /* Turn header text & chevron white when help expanders are open/expanded */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details[open] summary p {
+        color: #ffffff !important;
+    }
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details[open] summary svg {
+        color: #ffffff !important;
+    }
+
+    /* Reset Streamlit flex block gap inside the footer container for precise spacing control */
+    div[class*="st-key-login_footer_container"] div[data-testid="stVerticalBlock"] {
+        gap: 0px !important;
+    }
+
+    /* Scoped styling for the privacy expander */
+    div[class*="st-key-login_privacy_expander"] {
+        max-width: 420px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+    }
+
+    .login-privacy-separator {
+        width: 160px !important;
+        height: 1px !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        margin: 18px auto !important; 
+    }
+
+    .login-privacy-separator-bottom {
+        margin-top: 0px !important; /* Pull visually closer to the privacy expander above it */
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin-bottom: 0px !important;
+        padding: 0 !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] details {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary > * {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-grow: 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+        gap: 8px !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary > * > * {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-grow: 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary p {
+        font-size: 0.86rem !important;
+        color: #64748b !important; /* Elegant muted slate color */
+        font-weight: 600 !important; /* Semi-bold */
+        transition: color 0.2s ease-in-out !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary p::before {
+        content: "" !important;
+        display: inline-block !important;
+        width: 14px !important;
+        height: 14px !important;
+        margin-right: 6px !important;
+        background-color: currentColor !important;
+        -webkit-mask: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2022s8-4%208-10V5l-8-3-8%203v7c0%206%208%2010%208%2010z%22%2F%3E%3C%2Fsvg%3E') no-repeat center / contain !important;
+        mask: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2022s8-4%208-10V5l-8-3-8%203v7c0%206%208%2010%208%2010z%22%2F%3E%3C%2Fsvg%3E') no-repeat center / contain !important;
+        flex-shrink: 0 !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary:hover p {
+        color: #f1f5f9 !important; /* Brighter slate on hover */
+    }
+
+    /* Style the chevron arrow inside the privacy expander to match the grey text */
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary svg {
+        color: #64748b !important;
+        transition: color 0.1s ease-in-out !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] summary:hover svg {
+        color: #f1f5f9 !important;
+    }
+
+    /* Turn header text, mask shield icon, & chevron white when privacy expander is open/expanded */
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] details[open] summary p {
+        color: #ffffff !important;
+    }
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] details[open] summary svg {
+        color: #ffffff !important;
+    }
+
+    div[class*="st-key-login_privacy_expander"] div[data-testid="stExpander"] [data-testid="stMarkdownContainer"] {
+        font-size: 0.88rem !important;
+        line-height: 1.55 !important;
+        color: #b8c5d6 !important;
+    }
+
+    /* Custom styles for precise list items and spacing */
+    .privacy-list-item {
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+        text-align: left !important;
+    }
+    .privacy-list-icon {
+        color: #8a99ad !important;
+        flex-shrink: 0 !important;
+        margin-top: 3px !important;
+        width: 14px !important;
+        height: 14px !important;
+        overflow: visible !important;
+    }
+    .privacy-list-content {
+        flex: 1 !important;
+    }
+    .privacy-list-title {
+        font-weight: 700 !important;
+        color: #b8c5d6 !important; /* Soft grey aesthetic */
+        font-size: 0.88rem !important;
+        margin-bottom: 1px !important;
+    }
+    .privacy-list-desc {
+        font-size: 0.88rem !important;
+        line-height: 1.45 !important;
+        color: #b8c5d6 !important; /* Matches title color precisely */
+    }
+    .privacy-list-desc a {
+        color: #1f77b4 !important;
+        text-decoration: none !important;
+        font-weight: 600 !important;
+        transition: color 0.2s ease-in-out !important;
+    }
+    .privacy-list-desc a:hover {
+        color: #2ba2ec !important;
+        text-decoration: underline !important;
+    }
+    .login-student-signature {
+        text-align: center !important;
+        font-size: 0.78rem !important;
+        color: #475569 !important; /* Soft, very muted slate color */
+        margin-top: 0px !important; /* Matches exactly the 18px bottom margin of the separator above it */
+        margin-bottom: 20px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.01em !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        transition: color 0.2s ease-in-out !important;
+    }
+    .login-student-signature:hover {
+        color: #64748b !important; /* Slightly brighter on hover */
+    }
+    .signature-heart-icon {
+        color: #f97316 !important; /* Premium warm orange colored heart */
+        opacity: 0.8 !important;
+        flex-shrink: 0 !important;
+        overflow: visible !important;
+        transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out !important;
+    }
+    .login-student-signature:hover .signature-heart-icon {
+        transform: scale(1.1) !important; /* Delicate heart scale pulse on hover */
+        opacity: 1 !important;
+    }
+    </style>""")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        # Portal container
+        st.markdown(f"""
+        <div class="login-portal-container">
+            <div class="login-brand-header">
+                <img class="login-brand-logo" src="data:image/png;base64,{icon_b64}"/>
+                <div class="login-brand-title">Canvas Downloader</div>
+                <div class="login-brand-subtitle">Your Canvas courses.<br/>Downloaded. Up to date. Optimized for AI.</div>
+                <div class="login-brand-header-separator"></div>
+                <div class="login-github-header-tag">
+                    <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" class="github-link">
+                        <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        View Source Code on GitHub
+                    </a>
+                    <a href="https://birkls.github.io/Canvas_LMS_batch_file_downloader/" target="_blank" class="github-link">
+                        <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        Go to website
+                    </a>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.container(key="login_card_wrapper"):
+            st.markdown('<div class="login-form-title">Log in to Canvas Downloader</div>', unsafe_allow_html=True)
+            
+            with st.form("auth_form", clear_on_submit=False, border=False):
+                st.text_input(
+                    'Your Canvas URL',
+                    key="url_input",
+                    placeholder="https://your-school.instructure.com"
+                )
+
+                st.text_input(
+                    'Your Canvas API Token',
+                    type="password",
+                    key="token_input",
+                    help=(
+                        "**Why is this needed?**  \n"
+                        "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
+                        "**Is it safe?**  \n"
+                        "Yes! Your token is stored securely on your device, in your operating system."
+                    )
+                )
+
+                submitted = st.form_submit_button('Log In', type="primary", use_container_width=True, key="login_submit_btn")
+
+            if submitted:
+                input_url = st.session_state.url_input.strip()
+                input_token = st.session_state.token_input.strip()
+
+                st.session_state['api_url'] = input_url
+                st.session_state['api_token'] = input_token
+
+                manager = CanvasManager(input_token, input_url)
+                is_valid, message = manager.validate_token()
+
+                if is_valid:
+                    st.session_state['api_token'] = input_token
+                    st.session_state['api_url'] = manager.api_url
+                    st.session_state['is_authenticated'] = True
+                    st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
+
+                    # Setup base config data
+                    config_data = {}
+                    if os.path.exists(CONFIG_FILE):
+                        try:
+                            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                                config_data = json.load(f)
+                        except Exception:
+                            pass
+
+                    config_data['api_url'] = st.session_state['api_url']
+                    if 'concurrent_downloads' in st.session_state:
+                        config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
+                    if 'debug_mode' in st.session_state:
+                        config_data['debug_mode'] = st.session_state['debug_mode']
+
+                    # Save token to OS keyring (macOS Keychain / Windows Credential Manager)
+                    try:
+                        import keyring
+                        keyring_user = st.session_state['api_url'] or 'default'
+                        keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
+                        # Ensure no legacy insecure fields remain in the config JSON
+                        config_data.pop('mac_api_token', None)
+                        config_data.pop('api_token', None)
+                    except Exception as e:
+                        st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
+
+                    try:
+                        _tmp_config = CONFIG_FILE + '.tmp'
+                        with open(_tmp_config, 'w', encoding='utf-8') as f:
+                            json.dump(config_data, f)
+                            f.flush()
+                            os.fsync(f.fileno())
+                        os.replace(_tmp_config, CONFIG_FILE)
+                    except Exception as e:
+                        # Clean up orphaned temp file on failure
+                        try:
+                            if os.path.exists(_tmp_config):
+                                os.unlink(_tmp_config)
+                        except OSError:
+                            pass
+                        st.error(f"Could not save config: {e}")
+
+                    st.rerun()
+                else:
+                    st.error(message)
+
+            pass
+
+        # Standardized expandable help vertically below the card
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        with st.container(key="login_help_expanders"):
+            with st.expander('How to find your true Canvas URL?'):
+                st.markdown(
+                    "**Crucial Step:** You must input the *actual* Canvas URL, not your university's login portal.\n\n"
+                    "**How to find it:**\n"
+                    "1. Log in to Canvas in your web browser.\n"
+                    "2. Examine the address bar **after** logging in.\n"
+                    "3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n"
+                    "4. Copy the base portion of the URL (e.g., `https://school.instructure.com`) and paste it here.\n"
+                )
+
+            with st.expander('How to get an API Access Token?'):
+                st.markdown(
+                    "1. Log into Canvas and click on your **Account** in the left navigation.\n"
+                    "2. Select **Settings** from the account menu.\n"
+                    "3. Scroll down to the **Approved Integrations** section.\n"
+                    "4. Click the button labeled **+ New Access Token**.\n"
+                    "5. Set a purpose (e.g., 'Canvas Downloader') and click **Generate Token**.\n"
+                    "6. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
+                )
+
+        # Open a unified footer container to completely eliminate nested Streamlit block gaps!
+        with st.container(key="login_footer_container"):
+            # Elegant subtle separator between help section and security footer
+            st.markdown("<div class='login-privacy-separator'></div>", unsafe_allow_html=True)
+
+            with st.container(key="login_privacy_expander"):
+                with st.expander('100% Local & Secure'):
+                    st.markdown(
+                        "<div class='privacy-list-item'>"
+                        "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/></svg>"
+                        "<div class='privacy-list-content'>"
+                        "<div class='privacy-list-title'>Native Encryption</div>"
+                        "<div class='privacy-list-desc'>Your API token is securely stored in your operating system's native keychain (Windows Credential Manager / macOS Keychain), never in plain text.</div>"
+                        "</div>"
+                        "</div>"
+                        "<div class='privacy-list-item'>"
+                        "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/></svg>"
+                        "<div class='privacy-list-content'>"
+                        "<div class='privacy-list-title'>Direct Connection</div>"
+                        "<div class='privacy-list-desc'>The app communicates exclusively and directly with the Canvas URL you provide. No proxies or intermediaries. Requests are sent to Canvas to read and fetch files from your Canvas courses, nothing else.</div>"
+                        "</div>"
+                        "</div>"
+                        "<div class='privacy-list-item'>"
+                        "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-4.69L7.69 4.69C9.04 3.63 10.74 3 12 3c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z'/></svg>"
+                        "<div class='privacy-list-content'>"
+                        "<div class='privacy-list-title'>Zero Telemetry</div>"
+                        "<div class='privacy-list-desc'>No tracking, no analytics, and absolutely no third-party data collection.</div>"
+                        "</div>"
+                        "</div>"
+                        "<div class='privacy-list-item'>"
+                        "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z'/></svg>"
+                        "<div class='privacy-list-content'>"
+                        "<div class='privacy-list-title'>Isolated File Access</div>"
+                        "<div class='privacy-list-desc'>The application acts as a one-way street. It only downloads course materials into the specific destination folder you choose. It does not scan, read, or upload any personal files from your computer. Your credentials and data remain entirely under your control and are never shared with external servers.</div>"
+                        "</div>"
+                        "</div>"
+                        "<div class='privacy-list-item'>"
+                        "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z'/></svg>"
+                        "<div class='privacy-list-content'>"
+                        "<div class='privacy-list-title'>Open Source & Verifiable</div>"
+                        "<div class='privacy-list-desc'>Trust shouldn't be blind. The source code is entirely public, allowing anyone to independently verify these security standards. "
+                        "<a href='https://github.com/birkls/Canvas_LMS_batch_file_downloader' target='_blank'>View Source Code on GitHub</a></div>"
+                        "</div>"
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+            # Elegant subtle separator between security footer and student footer
+            st.markdown("<div class='login-privacy-separator login-privacy-separator-bottom'></div>", unsafe_allow_html=True)
+
+            # Delicate humanized student footer with SVG heart hover micro-animation
+            st.markdown(
+                "<div class='login-student-signature'>"
+                "For students, by a student"
+                "<svg class='signature-heart-icon' viewBox='-2 -2 28 28' width='14' height='14'>"
+                "<path fill='currentColor' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/>"
+                "</svg>"
+                "</div>",
+                unsafe_allow_html=True
+            )
 
 
 # ─── Private helpers ────────────────────────────────────────────────────

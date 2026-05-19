@@ -214,6 +214,7 @@ components.html("""<script>
         'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
         'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Local Folders
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
+        'div[class*="st-key-login_submit_btn"]',  // login submission button
         'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
         'div[class*="st-key-btn_quick_sync"]',    // Quick Sync All
         'div[class*="st-key-btn_custom_download"]',// Course Selector: Custom Download
@@ -276,8 +277,72 @@ components.html("""<script>
 })();
 </script>""", height=0)
 
+# --- URL Query-Param Navigation Persistence ---
+
+def _restore_nav_from_query_params() -> None:
+    """On a fresh session, pre-seed mode/step from URL query params before defaults are applied.
+
+    Steps that require live download/sync state (3, 4 for download; 4 for sync)
+    cannot be meaningfully restored and are capped to the nearest safe step.
+    """
+    if '_session_alive' in st.session_state:
+        return  # not a fresh session — don't override in-session navigation
+    st.session_state['_session_alive'] = True
+    try:
+        raw_mode = st.query_params.get('mode', '')
+        raw_step = st.query_params.get('step', '')
+        if raw_mode not in ('download', 'sync'):
+            return
+        step = int(raw_step) if isinstance(raw_step, str) and raw_step.isdigit() else 1
+        if raw_mode == 'download':
+            step = min(step, 2)   # steps 3+ need a live download session
+        else:
+            step = 1              # sync step 4 needs live sync state; step 1 is always safe
+        st.session_state['current_mode'] = raw_mode
+        st.session_state['step'] = step
+        if raw_mode == 'sync':
+            st.session_state['sync_mode'] = True
+        # Restore Quick Download flag so step 2 renders the correct screen.
+        if raw_mode == 'download' and step == 2:
+            raw_quick = st.query_params.get('quick', '')
+            if raw_quick == '1':
+                st.session_state['quick_download_mode'] = True
+    except Exception:
+        pass
+
+
+def _write_nav_to_query_params() -> None:
+    """Keep URL query params in sync with current mode/step on every rerun.
+
+    Uses .update() so both keys are written atomically without triggering an
+    extra rerun (Streamlit silently updates the URL from the server side).
+    """
+    try:
+        if not st.session_state.get('is_authenticated', False):
+            # Auth page: clean URL with just ?mode=auth, no stale params.
+            if st.query_params.get('mode') != 'auth' or set(st.query_params.keys()) != {'mode'}:
+                st.query_params.clear()
+                st.query_params['mode'] = 'auth'
+            return
+        mode = st.session_state.get('current_mode', 'download')
+        step = str(st.session_state.get('step', 1))
+        is_quick = bool(st.session_state.get('quick_download_mode'))
+        # 'quick' is only present in the URL when True; absent otherwise.
+        expected_quick = '1' if is_quick else None
+        if (st.query_params.get('mode') != mode
+                or st.query_params.get('step') != step
+                or st.query_params.get('quick') != expected_quick):
+            if not is_quick and 'quick' in st.query_params:
+                del st.query_params['quick']
+            st.query_params.update({'mode': mode, 'step': step, **({'quick': '1'} if is_quick else {})})
+    except Exception:
+        pass
+
+
 # --- Session State Initialization (centralized in core/state_registry.py) ---
+_restore_nav_from_query_params()
 ensure_download_state()
+_write_nav_to_query_params()
 
 # --- Helper Functions ---
 
@@ -304,7 +369,7 @@ def cancel_download_callback():
 
 
 
-@st.cache_data(ttl=600, show_spinner=False)  # 10-minute TTL; spinner handled by course selector placeholder
+@st.cache_resource(ttl=600, show_spinner=False)  # 10-minute TTL; spinner handled by course selector placeholder
 def fetch_courses(token, url):
     """Return all enrolled courses, each annotated with .is_favorite (bool).
 
@@ -323,15 +388,16 @@ def fetch_courses(token, url):
         c.is_favorite = c.id in fav_ids
     return all_courses
 
-# --- Sidebar: Authentication (delegated to ui.auth) ---
-with st.sidebar:
-    from ui.auth import render_sidebar
-    render_sidebar(fetch_courses)
+# --- Sidebar: Navigation & Settings (delegated to ui.auth) ---
+if st.session_state['is_authenticated']:
+    with st.sidebar:
+        from ui.auth import render_sidebar
+        render_sidebar(fetch_courses)
 
-
-
+# --- Unauthenticated Early-Stop Hook ---
 if not st.session_state['is_authenticated']:
-    st.info('👈 Please authenticate in the sidebar to continue.')
+    from ui.auth import render_login_page
+    render_login_page(fetch_courses)
     st.stop()
 
 # --- Wizard Steps ---
