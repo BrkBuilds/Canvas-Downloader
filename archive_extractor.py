@@ -67,10 +67,20 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                     raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
                 # Guard against zip slip: validate every member path resolves inside
                 # extract_dir before extraction (mirrors the TAR guard below).
-                resolved_root = str(extract_dir.resolve())
+                # Use os.path.commonpath for a robust comparison that is correct
+                # on Windows even when extract_dir carries the \\?\ long-path
+                # prefix (a startswith() check on resolved strings is fragile
+                # because Path.resolve() may strip or normalize the prefix
+                # differently per call).
+                resolved_root = os.path.normpath(str(extract_dir.resolve()))
                 for info in members:
-                    member_dest = (extract_dir / info.filename).resolve()
-                    if not str(member_dest).startswith(resolved_root):
+                    member_dest = os.path.normpath(str((extract_dir / info.filename).resolve()))
+                    try:
+                        common = os.path.commonpath([resolved_root, member_dest])
+                    except ValueError:
+                        # Different drives on Windows - definitely escaping
+                        raise Exception(f"Blocked path traversal attempt in zip: {info.filename}")
+                    if common != resolved_root:
                         raise Exception(f"Blocked path traversal attempt in zip: {info.filename}")
                     zip_ref.extract(info, path=extract_dir)
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
@@ -88,15 +98,23 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                     tar_ref.extractall(extract_dir, filter='data')
                 else:
                     # Python < 3.12: manual path traversal + symlink guard
-                    resolved_target = str(extract_dir.resolve())
+                    resolved_target = os.path.normpath(str(extract_dir.resolve()))
                     for member in tar_members:
-                        member_path = str((extract_dir / member.name).resolve())
-                        if not member_path.startswith(resolved_target):
+                        member_path = os.path.normpath(str((extract_dir / member.name).resolve()))
+                        try:
+                            common = os.path.commonpath([resolved_target, member_path])
+                        except ValueError:
+                            raise Exception(f"Blocked path traversal attempt in tar: {member.name}")
+                        if common != resolved_target:
                             raise Exception(f"Blocked path traversal attempt in tar: {member.name}")
                         if member.issym() or member.islnk():
                             link_dir = (extract_dir / member.name).parent.resolve()
-                            link_path = str((link_dir / member.linkname).resolve())
-                            if not link_path.startswith(resolved_target):
+                            link_path = os.path.normpath(str((link_dir / member.linkname).resolve()))
+                            try:
+                                lcommon = os.path.commonpath([resolved_target, link_path])
+                            except ValueError:
+                                raise Exception(f"Blocked symlink traversal in tar: {member.name} -> {member.linkname}")
+                            if lcommon != resolved_target:
                                 raise Exception(f"Blocked symlink traversal in tar: {member.name} -> {member.linkname}")
                     tar_ref.extractall(extract_dir, members=tar_members)
         else:

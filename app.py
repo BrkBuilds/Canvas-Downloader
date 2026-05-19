@@ -352,8 +352,12 @@ _write_nav_to_query_params()
 
 # C-3: Guard against stale cancel events left by a prior run that bypassed
 # cleanup_download_state(). Safe to reset whenever no background download
-# thread is running — the only state where the event matters is 'downloading'.
-if st.session_state.get('download_status', '') != 'downloading':
+# thread is running — i.e. when not in any of the active download phases
+# (scanning, running, isolated_retry). Note: the earlier value `'downloading'`
+# was a typo that never matched the real download_status values and caused
+# this branch to fire on every rerun, defeating the guard.
+_active_dl_statuses = {'scanning', 'running', 'isolated_retry'}
+if st.session_state.get('download_status', '') not in _active_dl_statuses:
     reset_download_cancel()
 
 # L-4: Clear a stale debug log exactly once per Streamlit session when debug
@@ -524,10 +528,12 @@ with _main_content.container():
             # 2. Define the Cancel button placeholder second (so it sits below)
             cancel_placeholder = st.empty()
             
-            # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP
-            cancel_label = 'Cancel Analysis' if st.session_state.get('current_mode') == 'sync' else 'Cancel Download'
+            # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP.
+            # We're currently in the course-analysis (scanning) phase regardless
+            # of which mode the user picked, so "Cancel Analysis" is more
+            # accurate than "Cancel Download" here.
             cancel_placeholder.button(
-                cancel_label,
+                'Cancel Analysis',
                 type="secondary",
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
@@ -952,9 +958,14 @@ with _main_content.container():
                         mode='download',
                     )
                 # --- End Post-Download Conversion Pipeline ---
+                # Reset post-processing flag now that PP for this course is done.
+                # If we cancel during the NEXT course's download (before its PP
+                # starts), the cancelled screen must say "Cancelled during
+                # download", not "Cancelled during post-processing".
+                st.session_state['is_post_processing'] = False
                 # Clear the blue status text so it doesn't linger on completion
                 active_file_placeholder.empty()
-                
+
                 # Move to next course (unless cancelled)
                 if st.session_state.get('download_cancelled', False):
                     st.session_state['download_status'] = 'cancelled'
@@ -1175,8 +1186,15 @@ with _main_content.container():
                         new_line = f"[{esc(course_name_ref)}] {msg}"
                         log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>ℹ️ {new_line}</span>")
                         render_dashboard(course_name_ref)
-                except Exception:
-                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except Exception as _e:
+                    # Match the main update_ui handler: swallow Streamlit
+                    # control-flow noise quietly but log unexpected errors
+                    # at debug level so they surface during debug runs.
+                    _ename = type(_e).__name__
+                    if _ename not in ('StopException', 'RerunException', 'RuntimeError'):
+                        logger.debug(f"retry update_ui swallowed: {_ename}: {_e}")
 
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
             cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
@@ -1243,6 +1261,10 @@ with _main_content.container():
                                 contract=contract,
                                 explicit_files=success_paths,
                             )
+                            # PP done — clear the flag so subsequent cancel
+                            # messages don't misreport the phase (see same
+                            # rationale in the normal download path).
+                            st.session_state['is_post_processing'] = False
             # --- End Post-Processing Pipeline ---
 
             # --- Success Metrics Rehydration & Error Resolution ---

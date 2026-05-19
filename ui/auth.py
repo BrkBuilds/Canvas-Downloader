@@ -39,6 +39,142 @@ except Exception:
     CONFIG_FILE = os.path.join(tempfile.gettempdir(), 'canvas_downloader_settings.json')
 KEYRING_SERVICE = "CanvasDownloader"
 
+def _safe_keyring_get(service: str, username: str) -> str | None:
+    """Read password from keyring with a 5.0-second background thread timeout watchdog."""
+    import concurrent.futures
+    import keyring
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(keyring.get_password, service, username)
+        try:
+            return future.result(timeout=5.0)
+        except concurrent.futures.TimeoutError:
+            logger.warning("Keyring get_password timed out (5.0s). Environment might be headless or restricted. Falling back.")
+            return None
+        except Exception as e:
+            logger.warning(f"Keyring get_password failed: {e}")
+            return None
+
+def _safe_keyring_set(service: str, username: str, password: str) -> bool:
+    """Write password to keyring with a 5.0-second background thread timeout watchdog."""
+    import concurrent.futures
+    import keyring
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(keyring.set_password, service, username, password)
+        try:
+            future.result(timeout=5.0)
+            return True
+        except concurrent.futures.TimeoutError:
+            logger.warning("Keyring set_password timed out (5.0s). Falling back.")
+            return False
+        except Exception as e:
+            logger.warning(f"Keyring set_password failed: {e}")
+            return False
+
+def _safe_keyring_delete(service: str, username: str) -> bool:
+    """Delete password from keyring with a 5.0-second background thread timeout watchdog."""
+    import concurrent.futures
+    import keyring
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(keyring.delete_password, service, username)
+        try:
+            future.result(timeout=5.0)
+            return True
+        except concurrent.futures.TimeoutError:
+            logger.warning("Keyring delete_password timed out (5.0s).")
+            return False
+        except Exception as e:
+            logger.warning(f"Keyring delete_password failed: {e}")
+            return False
+
+def _get_fallback_path() -> Path:
+    from ui_helpers import get_config_dir
+    from pathlib import Path
+    return Path(get_config_dir()) / ".token_fallback"
+
+def _save_fallback_token(username: str, token: str) -> None:
+    try:
+        from pathlib import Path
+        fallback_path = _get_fallback_path()
+        data = {}
+        if fallback_path.exists():
+            try:
+                with open(fallback_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                pass
+        obfuscated = base64.b64encode(token.encode('utf-8')).decode('utf-8')
+        data[username] = obfuscated
+        
+        tmp_path = fallback_path.with_suffix(".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+
+        try:
+            os.chmod(tmp_path, 0o600)
+        except Exception:
+            pass
+
+        os.replace(tmp_path, fallback_path)
+    except Exception as e:
+        logger.warning(f"Failed to save fallback token: {e}")
+        # Clean up orphaned tmp file
+        try:
+            tmp_path = fallback_path.with_suffix(".tmp")
+            if tmp_path.exists():
+                tmp_path.unlink()
+        except OSError:
+            pass
+
+def _load_fallback_token(username: str) -> str:
+    try:
+        from pathlib import Path
+        fallback_path = _get_fallback_path()
+        if not fallback_path.exists():
+            return ""
+        with open(fallback_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        obfuscated = data.get(username, "")
+        if obfuscated:
+            return base64.b64decode(obfuscated.encode('utf-8')).decode('utf-8')
+    except Exception as e:
+        logger.warning(f"Failed to load fallback token: {e}")
+    return ""
+
+def _delete_fallback_token(username: str) -> None:
+    try:
+        from pathlib import Path
+        fallback_path = _get_fallback_path()
+        if not fallback_path.exists():
+            return
+        data = {}
+        try:
+            with open(fallback_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            pass
+        if username in data:
+            data.pop(username)
+            tmp_path = fallback_path.with_suffix(".tmp")
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+                f.flush()
+                try:
+                    os.fsync(f.fileno())
+                except OSError:
+                    pass
+            try:
+                os.chmod(tmp_path, 0o600)
+            except Exception:
+                pass
+            os.replace(tmp_path, fallback_path)
+    except Exception as e:
+        logger.warning(f"Failed to delete fallback token: {e}")
+
 
 def render_sidebar(fetch_courses_fn):
     """Render the full sidebar: navigation, settings, logout.
@@ -275,16 +411,15 @@ def render_login_page(fetch_courses_fn):
                             st.session_state['download_path'] = saved_default
 
                     loaded_token = ''
-                    # Unified keyring load for all platforms
+                    # Unified keyring load for all platforms with watchdog and fallback
                     try:
-                        import keyring
                         keyring_user = st.session_state['api_url'] or 'default'
-                        loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
-                    except ImportError:
-                        pass  # keyring not installed; legacy migration path handles it
+                        loaded_token = _safe_keyring_get(KEYRING_SERVICE, keyring_user) or ''
+                        if not loaded_token:
+                            # Try fallback storage
+                            loaded_token = _load_fallback_token(keyring_user) or ''
                     except Exception as _kr_err:
-                        logger.warning(f"Keyring unavailable during token load: {_kr_err}")
-                        st.warning(f"Could not read saved API token from system keyring: {_kr_err}. Please re-enter your token.", icon="⚠️")
+                        logger.warning(f"Keyring/fallback unavailable during token load: {_kr_err}")
 
                     # Legacy migration: macOS base64 token stored in JSON
                     if not loaded_token and config.get('mac_api_token', ''):
@@ -293,9 +428,9 @@ def render_login_page(fetch_courses_fn):
                                 config['mac_api_token'].encode('utf-8')
                             ).decode('utf-8')
                             try:
-                                import keyring
                                 keyring_user = st.session_state['api_url'] or 'default'
-                                keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                                _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
+                                _save_fallback_token(keyring_user, loaded_token)
                                 config.pop('mac_api_token', None)
                                 with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                     json.dump(config, fw)
@@ -308,9 +443,9 @@ def render_login_page(fetch_courses_fn):
                     if not loaded_token and config.get('api_token', ''):
                         loaded_token = config['api_token']
                         try:
-                            import keyring
                             keyring_user = st.session_state['api_url'] or 'default'
-                            keyring.set_password(KEYRING_SERVICE, keyring_user, loaded_token)
+                            _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
+                            _save_fallback_token(keyring_user, loaded_token)
                             config.pop('api_token', None)
                             with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                 json.dump(config, fw)
@@ -986,16 +1121,21 @@ def render_login_page(fetch_courses_fn):
                     if 'debug_mode' in st.session_state:
                         config_data['debug_mode'] = st.session_state['debug_mode']
 
-                    # Save token to OS keyring (macOS Keychain / Windows Credential Manager)
+                    # Save token to OS keyring (macOS Keychain / Windows Credential Manager) with fallback
                     try:
-                        import keyring
                         keyring_user = st.session_state['api_url'] or 'default'
-                        keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
+                        token_to_save = st.session_state['api_token']
+                        kr_success = _safe_keyring_set(KEYRING_SERVICE, keyring_user, token_to_save)
+                        # Always save fallback as secondary secure backup (maintains persistence during keyring timeouts/blocks)
+                        _save_fallback_token(keyring_user, token_to_save)
+                        
                         # Ensure no legacy insecure fields remain in the config JSON
                         config_data.pop('mac_api_token', None)
                         config_data.pop('api_token', None)
+                        if not kr_success:
+                            logger.warning("Keyring save failed or timed out. Saved securely to fallback storage instead.")
                     except Exception as e:
-                        st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
+                        st.warning(f"Could not save token: {e}. Token will not persist across sessions.")
 
                     try:
                         _tmp_config = CONFIG_FILE + '.tmp'
@@ -1474,9 +1614,9 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 </div>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout"):
                 try:
-                    import keyring
                     keyring_user = st.session_state.get('api_url', '') or 'default'
-                    keyring.delete_password(KEYRING_SERVICE, keyring_user)
+                    _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
+                    _delete_fallback_token(keyring_user)
                 except Exception:
                     pass
 

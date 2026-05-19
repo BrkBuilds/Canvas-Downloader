@@ -22,6 +22,7 @@ import uuid
 
 import urllib.parse
 import base64
+import unicodedata
 
 from sync_manager import format_file_size  # re-exported for ui.sync_review / ui.sync_confirmation  # noqa: F401
 
@@ -153,14 +154,15 @@ def esc(value) -> str:
     return html.escape(str(value), quote=True)
 
 def robust_filename_normalize(name: str) -> str:
-    """Normalize filename for robust comparison (unquote, strip, lower)."""
+    """Normalize filename for robust comparison (unquote, strip, lower, NFC)."""
     if not name:
         return ""
     try:
         # Handle potential non-string input safely
-        return urllib.parse.unquote_plus(str(name)).strip().lower()
+        val = urllib.parse.unquote_plus(str(name)).strip().lower()
     except Exception:
-        return str(name).strip().lower()
+        val = str(name).strip().lower()
+    return unicodedata.normalize('NFC', val)
 
 
 # --- Pluralization ---
@@ -447,11 +449,21 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
     if platform.system() == 'Darwin':
         import subprocess
         try:
-            safe_dir = start_dir.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
+            # Escape backslash, double-quote, and newline so a path containing
+            # any of these can never break out of the AppleScript string literal.
+            safe_dir = (
+                start_dir.replace('\\', '\\\\')
+                         .replace('"', '\\"')
+                         .replace('\n', ' ')
+                         .replace('\r', ' ')
+            )
             script = f'POSIX path of (choose folder default location (POSIX file "{safe_dir}"))'
+            # No timeout: the user may take an arbitrarily long time to choose
+            # a folder.  A subprocess.TimeoutExpired here would silently
+            # cancel the picker mid-interaction.
             result = subprocess.run(
                 ['osascript', '-e', script],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True, text=True,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip()
@@ -459,23 +471,42 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
         except Exception:
             return None
 
-    import tkinter as tk
-    from tkinter import filedialog
-
-    root = tk.Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-
+    # Tkinter is mandatory for the Windows folder picker. tk.Tk() will raise
+    # tkinter.TclError if no display is available (headless container, broken
+    # X server on Linux, etc.). Wrap the whole construction so a missing GUI
+    # surfaces as "no folder selected" instead of crashing the script thread.
     try:
-        icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
-        if os.path.exists(icon_path):
-            root.iconbitmap(icon_path)
-    except Exception:
-        pass
+        import tkinter as tk
+        from tkinter import filedialog
+    except Exception as e:
+        logger.warning(f"tkinter not available for folder picker: {e}")
+        return None
 
-    folder_path = filedialog.askdirectory(master=root, initialdir=start_dir)
-    root.destroy()
-    return folder_path if folder_path else None
+    root = None
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.wm_attributes('-topmost', 1)
+
+        try:
+            icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
+            if os.path.exists(icon_path):
+                root.iconbitmap(icon_path)
+        except Exception:
+            pass
+
+        folder_path = filedialog.askdirectory(master=root, initialdir=start_dir)
+        return folder_path if folder_path else None
+    except Exception as e:
+        logger.warning(f"Folder picker failed: {e}")
+        return None
+    finally:
+        # Always destroy the Tk root so it can never leak across Streamlit reruns.
+        if root is not None:
+            try:
+                root.destroy()
+            except Exception:
+                pass
 
 def open_folder(path: str):
     """
