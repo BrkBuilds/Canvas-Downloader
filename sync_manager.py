@@ -20,7 +20,7 @@ import threading
 # Module-level logger
 logger = logging.getLogger(__name__)
 
-_groups_lock = threading.Lock()
+_groups_lock = threading.RLock()
 
 # --- Data Classes ---
 
@@ -1409,17 +1409,22 @@ class SavedGroupsManager:
         Returns:
             List of group dicts with keys: group_id, group_name, pairs
         """
-        if not self.groups_path.exists():
-            return []
-        try:
-            with open(self.groups_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            groups = data.get('groups', [])
-            if not isinstance(groups, list):
+        with _groups_lock:
+            if not self.groups_path.exists():
                 return []
-            return groups
-        except (json.JSONDecodeError, IOError):
-            return []
+            try:
+                with open(self.groups_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if not isinstance(data, dict):
+                    logger.warning(f"Sync groups file has invalid root type: {type(data)}")
+                    return []
+                groups = data.get('groups', [])
+                if not isinstance(groups, list):
+                    return []
+                return groups
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Error loading sync groups: {e}")
+                return []
     
     def _save_all(self, groups: list[dict]):
         """Atomically persist the full groups list to disk.

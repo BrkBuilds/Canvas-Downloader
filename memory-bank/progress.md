@@ -1,5 +1,13 @@
 ## Latest Updates
 
+- [x] **Pass 3 Launch-Readiness Concurrency & Distribution Fixes** (2026-05-19):
+    - [x] **Upgraded Concurrency Locks**: Converted all critical state database and settings loading locks (`_presets_lock`, `_groups_lock`, `_sync_pairs_lock`) to `threading.RLock()` to prevent recursive deadlocks.
+    - [x] **Windows Sharing Violation Shield**: Standardized `JSONDecodeError` vs general `IOError` separation inside preset manager and sync manager to avoid deleting or corrupting settings files on transient Windows file access blocks.
+    - [x] **Thread-Safe Unified Logging**: Introduced global `_err_log_lock` in central utilities to serialize concurrent writes to `download_errors.txt` across all downloader and post-processing worker threads.
+    - [x] **Isolated Retry Robustness**: Scouped out premature exits in isolated retry flow, ensuring success metrics are preserved and post-processed cleanly even upon cancellation.
+    - [x] **TOCTOU Race Condition Elimination**: Enclosed conflict resolution (`_handle_conflict()`) evaluation securely inside standard `manage_download_lock` contexts.
+    - [x] **macOS Hardened Runtime Entitlements**: Added necessary entitlements (`entitlements.mac.plist`) to the PyInstaller macOS `BUNDLE` configuration to permit robust osascript Microsoft Office conversion operations.
+
 - [x] **Helper Card Spelling &amp; Grammar Audit** (2026-05-18):
     - [x] **Download Settings Audit**: Audited `ui/download_settings.py` for minor spelling/grammar mistakes and improved clarity in help sections (e.g., PowerPoint, Video to Audio conversions, Sync Mode references).
     - [x] **Sync UI FAQ Audit**: Audited and thoroughly polished the entire `_SYNC_HELP_TEXT` FAQ and flow documentation block in `sync_ui.py`. Fixed all identified spelling, grammar, punctuation, and capitalization issues, resolved HTML entity mappings (`&` to `&amp;`), and successfully deleted a duplicate "Course Pair" FAQ question to keep the documentation professional and concise.

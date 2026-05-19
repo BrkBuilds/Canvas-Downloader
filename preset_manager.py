@@ -23,7 +23,7 @@ from core.state_registry import (
 
 PRESETS_FILENAME = "saved_download_presets.json"
 
-_presets_lock = threading.Lock()
+_presets_lock = threading.RLock()
 
 
 class PresetManager:
@@ -160,30 +160,38 @@ class PresetManager:
         Returns:
             List of preset dicts (never includes built-ins).
         """
-        if not self.presets_path.exists():
-            return []
-        try:
-            with open(self.presets_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            presets = data.get('presets', [])
-            if not isinstance(presets, list):
+        with _presets_lock:
+            if not self.presets_path.exists():
                 return []
-            return presets
-        except (json.JSONDecodeError, IOError) as e:
-            # Back up the corrupted file before discarding.
             try:
-                backup = self.presets_path.with_suffix('.corrupt')
-                backup.unlink(missing_ok=True)  # Remove stale backup on Windows (rename raises FileExistsError)
-                self.presets_path.rename(backup)
-                logger.warning(f"Presets file is corrupted ({e}); backed up to {backup.name}")
-            except Exception:
-                # Last resort: delete the corrupt file so the next save can succeed
+                with open(self.presets_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if not isinstance(data, dict):
+                    logger.warning(f"Presets file has invalid root type: {type(data)}")
+                    return []
+                presets = data.get('presets', [])
+                if not isinstance(presets, list):
+                    return []
+                return presets
+            except json.JSONDecodeError as e:
+                # Back up the corrupted file before discarding.
                 try:
-                    self.presets_path.unlink(missing_ok=True)
-                    logger.warning(f"Presets file is corrupted ({e}) and could not be backed up; deleted.")
+                    backup = self.presets_path.with_suffix('.corrupt')
+                    backup.unlink(missing_ok=True)  # Remove stale backup on Windows (rename raises FileExistsError)
+                    self.presets_path.rename(backup)
+                    logger.warning(f"Presets file is corrupted ({e}); backed up to {backup.name}")
                 except Exception:
-                    pass
-            return []
+                    # Last resort: delete the corrupt file so the next save can succeed
+                    try:
+                        self.presets_path.unlink(missing_ok=True)
+                        logger.warning(f"Presets file is corrupted ({e}) and could not be backed up; deleted.")
+                    except Exception:
+                        pass
+                return []
+            except IOError as e:
+                # Temporary file access error. Do NOT recover or unlink.
+                logger.error(f"Temporary file access error in load_presets: {e}")
+                return []
 
     def get_builtin_presets(self) -> list[dict]:
         """Return the 3 immutable built-in presets (deep copies)."""

@@ -265,10 +265,12 @@ def _log_conversion_error(error_log_path: Path | None, filename: str, message: s
     error_log_path = Path(error_log_path)
     error_file = error_log_path / "download_errors.txt"
 
+    from ui_helpers import _err_log_lock
     try:
         error_log_path.mkdir(parents=True, exist_ok=True)
-        with open(error_file, "a", encoding="utf-8") as f:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"[{timestamp}] PDF Conversion Error - {filename}: {message}\n")
+        with _err_log_lock:
+            with open(error_file, "a", encoding="utf-8") as f:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                f.write(f"[{timestamp}] PDF Conversion Error - {filename}: {message}\n")
     except OSError as e:
         logger.warning(f"Could not write conversion error to log: {e}")
