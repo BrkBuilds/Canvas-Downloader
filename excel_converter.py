@@ -3,6 +3,7 @@ import io
 import sys
 import time
 import logging
+import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -147,13 +148,34 @@ class ExcelToPDF:
         if not self.app:
             return None, "Excel COM application could not be initialized."
 
+        import threading as _th
         from ui_helpers import office_safe_path
+
+        _COM_TIMEOUT_SECONDS = 180
 
         with office_safe_path(src) as (safe_src, safe_pdf, true_pdf):
             abs_excel = str(safe_src)
             abs_pdf = str(safe_pdf)
             wb = None
+            _timed_out = _th.Event()
 
+            def _on_timeout():
+                _timed_out.set()
+                logger.error(
+                    f"[COM Timeout] Excel hung >{_COM_TIMEOUT_SECONDS}s "
+                    f"on {src.name}. Killing EXCEL.EXE."
+                )
+                try:
+                    subprocess.run(
+                        ['taskkill', '/F', '/IM', 'EXCEL.EXE'],
+                        capture_output=True, timeout=10,
+                        creationflags=subprocess.CREATE_NO_WINDOW,
+                    )
+                except Exception:
+                    pass
+
+            _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
+            _timer.start()
             try:
                 wb = self.app.Workbooks.Open(abs_excel, UpdateLinks=0, ReadOnly=True)
                 time.sleep(0.3)  # let COM settle
@@ -178,6 +200,7 @@ class ExcelToPDF:
 
                 wb.Close(SaveChanges=False)
                 wb = None
+                _timer.cancel()
                 time.sleep(0.2)
 
                 # Remove the original spreadsheet (from the true long path)
@@ -186,6 +209,7 @@ class ExcelToPDF:
                 return str(true_pdf), ""
 
             except Exception as e:
+                _timer.cancel()
                 error_msg = str(e)
 
                 if wb is not None:
@@ -198,6 +222,8 @@ class ExcelToPDF:
                 self._kill_app()
                 self._init_app()
 
+                if _timed_out.is_set():
+                    return None, f"Conversion timed out after {_COM_TIMEOUT_SECONDS}s (Excel stopped responding)"
                 return None, f"COM Error: {error_msg}"
 
 

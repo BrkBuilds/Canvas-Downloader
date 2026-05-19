@@ -486,7 +486,7 @@ with _main_content.container():
             if 'start_time' not in st.session_state:
                 st.session_state['start_time'] = time.time()
             if 'log_deque' not in st.session_state:
-                st.session_state['log_deque'] = collections.deque(maxlen=6)
+                st.session_state['log_deque'] = collections.deque(maxlen=200)
                 
             header_placeholder = st.empty()
             progress_placeholder = st.empty()
@@ -663,7 +663,7 @@ with _main_content.container():
                 
                 # Fetch state variables initialized up top
                 start_time = st.session_state.get('start_time', time.time())
-                log_deque = st.session_state.get('log_deque', collections.deque(maxlen=6))
+                log_deque = st.session_state.get('log_deque', collections.deque(maxlen=200))
                 
                 # Initialize counters if first run
                 if 'downloaded_items' not in st.session_state:
@@ -1030,7 +1030,7 @@ with _main_content.container():
             # 3. Explicitly overwrite the global session state so progress metrics use the new denominator
             st.session_state['total_mb'] = total_mb
             start_time = st.session_state.get('start_time', time.time())
-            log_deque = st.session_state.get('log_deque', collections.deque(maxlen=6))
+            log_deque = st.session_state.get('log_deque', collections.deque(maxlen=200))
             
             # Map course_name -> course object
             course_map = {c.name: c for c in st.session_state.get('courses_to_download', [])}

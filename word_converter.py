@@ -144,6 +144,7 @@ class WordToPDF:
                     subprocess.run(
                         ['taskkill', '/F', '/IM', 'WINWORD.EXE'],
                         capture_output=True, timeout=10,
+                        creationflags=subprocess.CREATE_NO_WINDOW,
                     )
                 except Exception:
                     pass
