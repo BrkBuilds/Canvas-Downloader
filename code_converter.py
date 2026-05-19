@@ -48,7 +48,7 @@ def convert_code_to_txt(file_path: str | Path) -> str | None:
             f.write(header + content)
             
         # Delete the original code file
-        original_path.unlink()
+        original_path.unlink(missing_ok=True)
         
         return str(txt_path)
     except Exception as e:

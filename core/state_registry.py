@@ -11,6 +11,7 @@ Usage:
     ensure_sync_state()       # Call once at top of sync_ui.py
 """
 
+import copy
 import streamlit as st
 from pathlib import Path
 
@@ -49,11 +50,17 @@ DOWNLOAD_DEFAULTS = {
     'user_name': '',
     'course_mb_downloaded': {},
     'file_filter': 'all',
+    # Settings keys (missing from earlier versions — M-15)
+    'debug_mode': False,
+    'error_log_enabled': False,
+    'concurrent_downloads': 5,
+    'use_12h_format': False,
+    'skipped_discovery_errors': [],
+    '_sync_cancel_warning_shown': False,
     # Sync mode flags (shared between download and sync)
     'sync_mode': False,
     'analysis_result': None,
     'sync_selected_files': {},
-    'sync_manifest': None,
     'sync_manager': None,
     'current_mode': 'download',
     'sync_pairs': [],
@@ -96,11 +103,9 @@ SYNC_DEFAULTS = {
     'pending_sync_folder': None,
     'analysis_result': None,
     'sync_selected_files': {},
-    'sync_manifest': None,
     'sync_manager': None,
     'sync_mode': False,
     'sync_cancelled': False,
-    'sync_cancel_requested': False,
     'hub_view_mode': 'View All',
     'hub_layer': 'layer_1',
     'hub_editing_pair_idx': None,
@@ -154,7 +159,8 @@ def ensure_download_state() -> None:
     """
     for key, default in DOWNLOAD_DEFAULTS.items():
         if key not in st.session_state:
-            st.session_state[key] = default
+            # deepcopy so mutable defaults (lists, dicts) are not shared across sessions.
+            st.session_state[key] = copy.deepcopy(default)
 
     # Per-toggle sub-keys for NotebookLM conversions
     for nk in NOTEBOOK_SUB_KEYS:
@@ -174,7 +180,7 @@ def ensure_sync_state() -> None:
     """
     for key, default in SYNC_DEFAULTS.items():
         if key not in st.session_state:
-            st.session_state[key] = default
+            st.session_state[key] = copy.deepcopy(default)
 
 
 # ═══════════════════════════════════════════════
@@ -219,10 +225,10 @@ def cleanup_sync_state() -> None:
     for key in SYNC_TRANSIENT_KEYS:
         st.session_state.pop(key, None)
 
-    # Nuclear reset: force all cancel flags to False
+    # Nuclear reset: force sync cancel flags to False.
+    # sync_cancel_requested is already removed by SYNC_TRANSIENT_KEYS pop above.
+    # cancel_requested / download_cancelled are download-specific — do not reset here.
     st.session_state['sync_cancelled'] = False
-    st.session_state['sync_cancel_requested'] = False
-    st.session_state['cancel_requested'] = False
     st.session_state['download_cancelled'] = False
     # Re-arm the completion-sound sentinel for the next sync run.
     st.session_state['completion_beep_fired'] = False

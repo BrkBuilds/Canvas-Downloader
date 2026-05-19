@@ -169,7 +169,15 @@ class PresetManager:
             if not isinstance(presets, list):
                 return []
             return presets
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError) as e:
+            # Back up the corrupted file before discarding — prevents silent data loss
+            # if the user later saves a new preset (which calls _save_all and overwrites).
+            try:
+                backup = self.presets_path.with_suffix('.corrupt')
+                self.presets_path.rename(backup)
+                logger.warning(f"Presets file is corrupted ({e}); backed up to {backup.name}")
+            except Exception:
+                pass
             return []
 
     def get_builtin_presets(self) -> list[dict]:
@@ -283,22 +291,19 @@ class PresetManager:
             else:
                 session_state[key] = settings.get(key, False)
 
-        # 2. Re-derive master toggles from sub-states
+        # 2. Re-derive master toggles from sub-states.
+        # Master is True when ANY sub-key is active (mirrors download_settings logic).
         sec_active = sum(
             1 for k in self.SECONDARY_CONTENT_KEYS
             if session_state.get(k, False)
         )
-        session_state['dl_secondary_master'] = (
-            sec_active == len(self.SECONDARY_CONTENT_KEYS)
-        )
+        session_state['dl_secondary_master'] = sec_active > 0
 
         nb_active = sum(
             1 for k in self.NOTEBOOK_SUB_KEYS
             if session_state.get(k, False)
         )
-        session_state['notebooklm_master'] = (
-            nb_active == len(self.NOTEBOOK_SUB_KEYS)
-        )
+        session_state['notebooklm_master'] = nb_active > 0
 
         # 3. Optionally apply path (only if preset explicitly includes one)
         if preset.get('include_path') and preset.get('download_path'):

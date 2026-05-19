@@ -1,5 +1,4 @@
 import platform
-import plistlib
 from pathlib import Path
 
 def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path | None, list[Path]]:
@@ -53,10 +52,10 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
                 existing_urls.add(link)
                 
     if not compiled_links:
-        # If nothing new to append but we still found shortcuts (duplicates), return them for unlinking
-        if processed_shortcuts:
-            return (output_path if existing_content else None), processed_shortcuts
-        return None, []
+        # No new links found (all duplicates or no shortcuts). Return None for the
+        # compiled path so callers don't log a false success (M-27). Shortcuts are
+        # still returned so callers can clean them up.
+        return None, processed_shortcuts
         
     # 3. Append/Rewrite
     write_mode = 'a' if existing_content else 'w'
@@ -85,6 +84,7 @@ def _extract_url(shortcut_file: Path) -> str | None:
     """Extract URL from a .url (Windows INI) or .webloc (macOS plist) file."""
     if shortcut_file.suffix.lower() == '.webloc':
         try:
+            import plistlib
             with open(shortcut_file, 'rb') as f:
                 plist = plistlib.load(f)
                 return plist.get('URL', None)

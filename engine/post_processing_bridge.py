@@ -134,9 +134,12 @@ def invoke_post_processing(
         **({"explicit_files": explicit_files} if explicit_files else {}),
     )
 
-    # Track post-processing failures globally
+    # Track post-processing results globally
     st.session_state['pp_failure_count'] = (
         st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
+    )
+    st.session_state['pp_success_count'] = (
+        st.session_state.get('pp_success_count', 0) + pp_ui.pp_success_count
     )
 
     # ── Sidecar Ledger Injection ──

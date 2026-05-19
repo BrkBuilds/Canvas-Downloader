@@ -22,6 +22,7 @@ from ui_shared import (
     error_log_dialog,
 )
 from styles import inject_css
+from ui_shared import inject_material_icons_font
 from core.state_registry import (
     ensure_download_state,
 )
@@ -53,6 +54,9 @@ st.html(f"""
 
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
+
+# Google Material Symbols font — injected once here (M-24: was duplicated in every _mat() call).
+inject_material_icons_font()
 
 # Loading overlay - hides the raw intermediate DOM during Streamlit page-navigation reruns.
 # Uses window.parent.document because components.html() runs inside an iframe.
@@ -1186,7 +1190,7 @@ with _main_content.container():
             
             # --- Post-Processing Pipeline for Retry (via engine) ---
             if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
-                if not getattr(st.session_state, '_sync_cancel_warning_shown', False):
+                if not st.session_state.get('_sync_cancel_warning_shown', False):
                     st.warning("Retry cancelled. Skipping post-processing.")
                     st.session_state['_sync_cancel_warning_shown'] = True
             else:

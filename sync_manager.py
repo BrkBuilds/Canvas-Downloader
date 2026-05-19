@@ -244,12 +244,17 @@ class SyncManager:
         self.local_path = Path(local_path)
         self.course_id = course_id
         self.course_name = course_name
-        self.manifest_path = self.local_path / MANIFEST_FILENAME
         self.db_path = self.local_path / DB_FILENAME
+        self._db_lock = threading.Lock()
         self._init_db()
         
     def _init_db(self, attempt=0):
         """Initialize SQLite database for tracking synced files."""
+        with self._db_lock:
+            self._init_db_locked(attempt)
+
+    def _init_db_locked(self, attempt=0):
+        """Internal _init_db body — must only be called while holding self._db_lock."""
         self.local_path.mkdir(parents=True, exist_ok=True)
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
@@ -326,8 +331,8 @@ class SyncManager:
             except Exception as outer_err:
                 logger.error(f"Unexpected error during DB recovery: {outer_err}")
             
-            # Recursively re-init with a clean slate
-            self._init_db(attempt=attempt + 1)
+            # Re-init with a clean slate (already holding lock, so call locked variant directly)
+            self._init_db_locked(attempt=attempt + 1)
             return
             
         if os.name == 'nt':
@@ -516,7 +521,7 @@ class SyncManager:
         orphaned_files = []
         for root, _, files in os.walk(self.local_path):
             for filename in files:
-                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME):
+                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME) or filename.startswith('.canvas_sync'):
                     continue
                 filepath = Path(root) / filename
                 norm_str = os.path.normpath(str(filepath))
@@ -555,13 +560,6 @@ class SyncManager:
             if best_match_idx == -1 and orig_md5 and orig_size > 0:
                 for idx, orphan in enumerate(orphaned_files):
                     if orphan['size'] == orig_size:
-                        # Optimization: Bypass MD5 for files > 50MB and assume size match is enough
-                        if orphan['size'] > 50 * 1024 * 1024:
-                            best_match_idx = idx
-                            # Use existing md5 if any, else just fallback to original
-                            orphan['md5'] = orig_md5 
-                            break
-                        
                         if not orphan['md5']:
                             orphan['md5'] = self.compute_local_md5(orphan['path'])
                         if orphan['md5'] == orig_md5:
@@ -902,7 +900,7 @@ class SyncManager:
             if os.path.normpath(str(filepath)) not in tracked_local_paths:
                 # We count all untracked files (shortcuts, pages, personal notes, etc.)
                 # except the internal sync log
-                if filepath.name != "☁️ Canvas Updates & Deletions.txt" and filepath.name != "download_errors.txt":
+                if not filepath.name.endswith("Canvas Updates & Deletions.txt") and filepath.name != "download_errors.txt":
                     untracked_count += 1
                     
         result.untracked_shortcuts = untracked_count
@@ -1367,7 +1365,7 @@ class SyncHistoryManager:
                 json.dump(history, f, indent=2, ensure_ascii=False)
             # Atomic replace - prevents corrupt JSON on crash-during-write
             os.replace(str(tmp_path), str(self.history_path))
-        except IOError as e:
+        except OSError as e:
             logger.warning(f"Error saving sync history: {e}")
 
     def clear_history(self):

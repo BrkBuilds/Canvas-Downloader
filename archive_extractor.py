@@ -22,19 +22,17 @@ def _filter_zip_members(members):
     ]
 
 def extract_archive(archive_path: str | Path) -> bool | None:
+    # Do NOT apply \\?\ to abs_archive — tarfile.open() rejects it on Python < 3.12.
+    # The archive file itself won't hit MAX_PATH; only extracted contents can.
     abs_archive = Path(archive_path).resolve().absolute()
-    
-    # Windows MAX_PATH protection for the extraction process
-    if os.name == 'nt' and not str(abs_archive).startswith('\\\\?\\'):
-        abs_archive = Path('\\\\?\\' + str(abs_archive))
-    
+
     # Determine the extraction folder name (strip .zip or .tar.gz)
     if abs_archive.name.lower().endswith('.tar.gz'):
         extract_dir = abs_archive.with_name(abs_archive.name[:-7])
     else:
         extract_dir = abs_archive.with_suffix('')
 
-    # Apply long-path prefix to the extraction directory so that deeply
+    # Apply long-path prefix only to the extraction directory so that deeply
     # nested members don't silently fail on Windows MAX_PATH (260 chars).
     if os.name == 'nt' and not str(extract_dir).startswith('\\\\?\\'):
         extract_dir = Path('\\\\?\\' + str(extract_dir))
@@ -80,21 +78,29 @@ def extract_archive(archive_path: str | Path) -> bool | None:
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
             mode = 'r:gz' if abs_archive.name.lower().endswith('.gz') else 'r:'
             with tarfile.open(abs_archive, mode) as tar_ref:
-                uncompressed_size = sum(info.size for info in tar_ref.getmembers() if info.isfile())
+                # Cache members once — streaming .tar.gz archives cannot rewind,
+                # so a second getmembers() call would return an empty list.
+                tar_members = tar_ref.getmembers()
+                uncompressed_size = sum(info.size for info in tar_members if info.isfile())
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                     raise Exception(f"Archive bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
-                
+
                 # Mitigation for CVE-2007-4559 (tarfile path traversal)
                 if hasattr(tarfile, 'data_filter'):
                     tar_ref.extractall(extract_dir, filter='data')
                 else:
-                    # Manual path traversal guard for Python < 3.12
+                    # Python < 3.12: manual path traversal + symlink guard
                     resolved_target = str(extract_dir.resolve())
-                    for member in tar_ref.getmembers():
+                    for member in tar_members:
                         member_path = str((extract_dir / member.name).resolve())
                         if not member_path.startswith(resolved_target):
                             raise Exception(f"Blocked path traversal attempt in tar: {member.name}")
-                    tar_ref.extractall(extract_dir)
+                        if member.issym() or member.islnk():
+                            link_dir = (extract_dir / member.name).parent.resolve()
+                            link_path = str((link_dir / member.linkname).resolve())
+                            if not link_path.startswith(resolved_target):
+                                raise Exception(f"Blocked symlink traversal in tar: {member.name} -> {member.linkname}")
+                    tar_ref.extractall(extract_dir, members=tar_members)
         else:
             return None
             

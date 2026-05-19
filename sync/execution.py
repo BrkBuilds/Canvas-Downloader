@@ -63,6 +63,13 @@ def run_sync():
     # --- Backward-compatible import of cancel callback ---
     from core.cancellation import cancel_sync as cancel_process_callback
 
+    # Capture Streamlit script-run context on the script thread so it can be
+    # propagated to the background thread that runs the async download loop.
+    # (asyncio.run() must execute in a fresh thread to avoid RuntimeError when
+    # Tornado's event loop is already running in this process.)
+    from streamlit.runtime.scriptrunner import get_script_run_ctx as _get_run_ctx
+    _script_ctx = _get_run_ctx()
+
     # Initialize phase flags explicitly at start of run - but ONLY if not already cancelled.
     # If a Phase 3 cancel triggered the rerun, we must preserve is_post_processing=True
     # so that _show_sync_cancelled can read it for the correct status message.
@@ -157,9 +164,11 @@ def run_sync():
         return build_terminal_html(lines)
 
     async def download_sync_files_batch(sync_api_token, sync_api_url):
-        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        import threading as _threading
+        from streamlit.runtime.scriptrunner import add_script_run_ctx as _add_ctx
+        _add_ctx(_threading.current_thread(), _script_ctx)
         from canvas_logic import safe_thread_wrapper
-        current_ctx = get_script_run_ctx()
+        current_ctx = _script_ctx  # captured on script thread above
         
         cm = CanvasManager(sync_api_token, sync_api_url)
         cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
@@ -261,7 +270,24 @@ def run_sync():
                 # We save the auto-healed manifest + any newly ignored files only ONCE per folder, 
                 # exactly when the sync is executing (after user confirmation)
                 if sel['ignore']:
-                    manifest = sync_mgr.mark_files_ignored(manifest, sel['ignore'])
+                    # Update SQLite DB (bulk UPSERT with is_ignored=1)
+                    sync_mgr.bulk_ignore_files([
+                        (getattr(f, 'id', getattr(f, 'canvas_file_id', None)),
+                         getattr(f, 'filename', getattr(f, 'canvas_filename', '')))
+                        for f in sel['ignore']
+                    ])
+                    # Mirror the DB state into the in-memory manifest so the
+                    # persistence loop below sees is_ignored=True immediately.
+                    _ignore_ids = {
+                        str(getattr(f, 'id', getattr(f, 'canvas_file_id', None)))
+                        for f in sel['ignore']
+                    }
+                    _files_sec = manifest.setdefault('files', {})
+                    for _fid in _ignore_ids:
+                        if _fid in _files_sec:
+                            _files_sec[_fid]['is_ignored'] = True
+                        else:
+                            _files_sec[_fid] = {'is_ignored': True, 'local_path': '', 'canvas_filename': ''}
                     res_data['manifest'] = manifest   # keep res_data in sync
                 # Selective persist: only save ignored/healed entries to DB before download
                 # (NOT the full auto-discovered manifest, to avoid premature commit)
@@ -436,7 +462,8 @@ def run_sync():
                         if is_update_modified and filepath.exists():
                             base = filepath.stem
                             ext = filepath.suffix
-                            filepath = local_path / f"{base}{'_NewVersion'}{ext}"
+                            # Place _NewVersion alongside the original, not at course root
+                            filepath = filepath.parent / f"{base}_NewVersion{ext}"
                             filepath = cm._handle_conflict(filepath)
                         elif (is_update_clean or is_redownload) and filepath.exists():
                             # Claim the exact path. Remove the stale file so the
@@ -449,7 +476,8 @@ def run_sync():
                             except OSError:
                                 base = filepath.stem
                                 ext = filepath.suffix
-                                filepath = local_path / f"{base}{'_NewVersion'}{ext}"
+                                # Place _NewVersion alongside the original, not at course root
+                                filepath = filepath.parent / f"{base}_NewVersion{ext}"
                                 filepath = cm._handle_conflict(filepath)
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
@@ -700,9 +728,11 @@ def run_sync():
                                                         download_interrupted = True
                                                         raise write_err
                                                     
-                                                    # Handle interrupted download: delete partial file
+                                                    # Handle interrupted download: clean up and stop retrying
                                                     if download_interrupted:
-                                                        continue  # Skip to next file (outer cancel guard will catch)
+                                                        if st.session_state.get('sync_cancel_requested', False):
+                                                            break  # Cancel confirmed — exit retry loop immediately
+                                                        continue  # Non-cancel interrupt — retry
                                                     
                                                     # 100% success: atomic rename .part → final path
                                                     try:
@@ -858,7 +888,7 @@ def run_sync():
             speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
             render_progress_bar(progress_container, total_files, total_files)
             metrics_dashboard.markdown(render_metrics_html_compat(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
-            active_file_placeholder.markdown("<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
+            active_file_placeholder.markdown(f"<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
             # CANCEL GUARD: Skip all post-download state mutations if cancelled
@@ -868,8 +898,10 @@ def run_sync():
 
             for sel in sync_selections:
                 res_data = sel['res_data']
-                sync_mgr = res_data['sync_manager']
-                manifest = res_data['manifest']
+                sync_mgr = res_data.get('sync_manager')
+                manifest = res_data.get('manifest')
+                if sync_mgr is None or manifest is None:
+                    continue
                 local_path = sync_mgr.local_path
 
                 sync_mgr.save_manifest(manifest)
@@ -923,10 +955,17 @@ def run_sync():
                 
         return synced_details, retry_selections, list(terminal_log)
 
-    # Extract variables locally to preserve streamli ThreadContext boundary
+    # Extract variables locally to preserve Streamlit ThreadContext boundary.
+    # Run the async download loop in a dedicated thread with its own event loop
+    # so that asyncio.run() never conflicts with Tornado's running loop.
     local_sync_api_token = st.session_state.get('api_token', '')
     local_sync_api_url = st.session_state.get('api_url', '')
-    synced_details, retry_selections, _download_log_history = asyncio.run(download_sync_files_batch(local_sync_api_token, local_sync_api_url))
+    import concurrent.futures as _cf
+    with _cf.ThreadPoolExecutor(max_workers=1) as _pool:
+        synced_details, retry_selections, _download_log_history = _pool.submit(
+            asyncio.run,
+            download_sync_files_batch(local_sync_api_token, local_sync_api_url)
+        ).result()
 
     # --- Shared post-processing helpers ---
     def get_synced_file_paths(target_exts, conversion_key=None):
@@ -1160,8 +1199,8 @@ def run_sync():
                 # Extract updates list for this pair
                 updates_for_pair = []
                 res_data = sel.get('res_data', {})
-                if res_data and 'result' in res_data and hasattr(res_data['result'], 'updates'):
-                    updates_for_pair = [urllib.parse.unquote(f.filename) for f in res_data['result'].updates]
+                if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
+                    updates_for_pair = [urllib.parse.unquote(f.filename) for f, _ in res_data['result'].updated_files]
                     
                 for fname in pair_files:
                     if "_NewVersion" in fname:

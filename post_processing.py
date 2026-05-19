@@ -368,15 +368,17 @@ def run_url_compilation(folders, ui: UIBridge, sm=None):
                 continue
             if compiled_path:
                 _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Compiled links for '{esc(course_name)}' into: Compiled_External_Links.txt</span>")
+                ui.pp_success_count += 1
 
-                # Pure Link Deletion (Sync Engine Bypass)
-                for shortcut in processed_shortcuts:
-                    try:
-                        shortcut.unlink(missing_ok=True)
-                    except Exception as e:
-                        logger.warning(f"Failed to purely delete shortcut {shortcut.name}: {e}")
-                        _log_error_to_file(ui.error_log_path, shortcut.name, f"Shortcut deletion failed: {e}")
-                        continue
+            # Delete processed shortcuts whether new links were compiled or they were
+            # already in the file (deduplication handled inside compile_urls_to_txt).
+            for shortcut in processed_shortcuts:
+                try:
+                    shortcut.unlink(missing_ok=True)
+                except Exception as e:
+                    logger.warning(f"Failed to purely delete shortcut {shortcut.name}: {e}")
+                    _log_error_to_file(ui.error_log_path, shortcut.name, f"Shortcut deletion failed: {e}")
+                    continue
 
 
 def run_word_conversion(files, ui: UIBridge):

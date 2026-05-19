@@ -36,16 +36,21 @@ def resolve_path(path):
     return path
 
 @functools.lru_cache(maxsize=128)
-def get_base64_image(image_path):
+def _get_base64_image_cached(image_path: str) -> str:
+    """Cached disk read — only called on success; exceptions propagate uncached."""
+    with open(resolve_path(image_path), "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def get_base64_image(image_path) -> str:
     """Reads a local file and returns its Base64 string representation.
 
-    Cached: assets are static at runtime, so the disk read + encode is
-    done at most once per (frozen) session. Cached output keeps repeated
-    Streamlit reruns from re-reading PNGs from disk.
+    Successes are cached (assets are static at runtime). Failures are NOT
+    cached so that a missing asset during startup doesn't permanently break
+    subsequent renders after the asset becomes available (M-20).
     """
     try:
-        with open(resolve_path(image_path), "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode()
+        return _get_base64_image_cached(str(image_path))
     except Exception as e:
         logger.error(f"Failed to encode image {image_path}: {e}")
         return ""
@@ -332,43 +337,24 @@ def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) ->
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(temp_path, path)
-        except IOError as e:
+            return new_pairs
+        except OSError as e:
             logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
             try:
                 if temp_path.exists():
                     temp_path.unlink()
             except OSError:
                 pass
-                
-        return new_pairs
-
-def save_sync_pairs(pairs: list[dict], config_dir: str = None):
-    """Save sync pairs to disk. Use atomic_update_sync_pairs for modifying.
-    
-    Args:
-        pairs: List of pair dicts
-        config_dir: Config directory path
-    """
-    if config_dir is None:
-        config_dir = get_config_dir()
-    
-    path = Path(config_dir) / SYNC_PAIRS_FILENAME
-    temp_path = path.with_suffix('.tmp')
-    
-    with _sync_pairs_lock:
-        try:
-            with open(temp_path, 'w', encoding='utf-8') as f:
-                json.dump(pairs, f, indent=2, ensure_ascii=False)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(temp_path, path)
-        except IOError as e:
-            logging.getLogger(__name__).warning(f"Failed to save sync pairs: {e}")
-            try:
-                if temp_path.exists():
-                    temp_path.unlink()
-            except OSError:
-                pass
+            # Return what's currently on disk so callers don't act on uncommitted data (M-22).
+            if path.exists():
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            return data
+                except Exception:
+                    pass
+            return pairs
 
 
 # --- Disk Space ---
@@ -405,8 +391,11 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
         min_required = max(min_free_gb * 1024 * 1024 * 1024, int(required_bytes * 1.2))
         has_enough = stat.free >= min_required
         return has_enough, available_mb, total_mb
-    except Exception:
-        # If we can't check, assume OK
+    except OSError as e:
+        logger.warning(f"Could not check disk space at {path!r}: {e}")
+        return True, -1, -1
+    except Exception as e:
+        logger.warning(f"Unexpected error checking disk space: {e}")
         return True, -1, -1
 
 
@@ -443,7 +432,8 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
     if platform.system() == 'Darwin':
         import subprocess
         try:
-            script = f'POSIX path of (choose folder default location (POSIX file "{start_dir}"))'
+            safe_dir = start_dir.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
+            script = f'POSIX path of (choose folder default location (POSIX file "{safe_dir}"))'
             result = subprocess.run(
                 ['osascript', '-e', script],
                 capture_output=True, text=True, timeout=60,
@@ -484,7 +474,11 @@ def open_folder(path: str):
     sys_platform = platform.system()
     
     if sys_platform == "Windows":
-        os.startfile(path)
+        try:
+            os.startfile(path)
+        except OSError as e:
+            logger.warning(f"Could not open folder {path!r}: {e}")
+            return
         
         # --- HACK: Bypass Windows Focus Stealing Prevention ---
         # Windows prevents background processes (like the Streamlit backend) from 

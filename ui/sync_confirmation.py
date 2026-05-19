@@ -21,6 +21,7 @@ from sync_manager import SyncManager
 from ui_helpers import (
     friendly_course_name,
     format_file_size,
+    esc,
 )
 from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT
 
@@ -48,13 +49,13 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             fname = os.path.splitext(get_friendly_name(display_name or raw_name))[0]
             icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
             ext_badge = (
-                f"<span class='li-ext-badge'>{ext.upper()}</span>"
+                f"<span class='li-ext-badge'>{esc(ext.upper())}</span>"
             ) if ext else ""
             size_badge = f"<span class='li-size-badge'>{format_file_size(size_bytes)}</span>"
             return (
                 f"<li>"
-                f'<img class="li-img" src="{icon_url}" alt="{ext}"/>'
-                f"<span class='li-text'>{fname}</span>"
+                f'<img class="li-img" src="{icon_url}" alt="{esc(ext)}"/>'
+                f"<span class='li-text'>{esc(fname)}</span>"
                 f"{ext_badge}"
                 f"{size_badge}"
                 f"</li>"
@@ -70,7 +71,11 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     # Tight HTML structure - NO whitespace
     file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted(file_items))}</ul>"
     sorted_folders = sorted(list(folder_set))
-    folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(f'<li><span class=\'li-icon\'>📁</span><span class=\'li-text\'>{p}</span></li>' for p in sorted_folders)}</ul>"
+    _folder_lis = "".join(
+        "<li><span class='li-icon'>📁</span><span class='li-text'>" + esc(p) + "</span></li>"
+        for p in sorted_folders
+    )
+    folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{_folder_lis}</ul>"
     
     # --- UI Logic ---
     avail_bytes = avail_mb * 1024 * 1024
@@ -101,11 +106,12 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         )
     elif len(folder_set) == 1:
         # Single folder - static row showing friendly name
+        _sf0 = esc(sorted_folders[0])
         dest_html = (
             f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
             f'<div style="font-weight: 600; color: #e2e8f0; white-space: nowrap;">📁 Destination:</div>'
-            f'<div title="{sorted_folders[0]}" style="text-align: right; font-weight: 600; color: #f8fafc; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'
-            f'{sorted_folders[0]}'
+            f'<div title="{_sf0}" style="text-align: right; font-weight: 600; color: #f8fafc; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'
+            f'{_sf0}'
             f'</div>'
             f'</div>'
         )
@@ -324,7 +330,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     col_no, col_yes = st.columns([1, 1], gap="medium")
     with col_no:
         if st.button("No, Go back", use_container_width=True, key="cancel_sync_dialog_btn"):
-            st.rerun()
+            st.rerun(scope="app")
     with col_yes:
         if st.button("Yes, Start Sync", type="primary", use_container_width=True, key="page_nav_start_sync"):
             st.session_state['sync_selections'] = sync_selections
@@ -346,5 +352,5 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             for k in _CONVERT_KEYS_HANDOFF:
                 st.session_state[f'persistent_{k}'] = False
 
-            st.rerun()
+            st.rerun(scope="app")
 

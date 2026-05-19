@@ -133,7 +133,8 @@ if __name__ == "__main__":
         def _boot_sequence():
             if _wait_for_server():
                 controller.set_state('ready')
-                controller.open_chrome()
+                # open_chrome() uses Tkinter internals; must run on the main thread (H-10).
+                controller.app.after(0, controller.open_chrome)
             else:
                 controller.set_state('error', 'Server failed to start', 'Please try closing and reopening the app.')
                 
@@ -154,7 +155,8 @@ if __name__ == "__main__":
         threading.Thread(target=_start_streamlit_server, daemon=True).start()
 
         # 2. Wait for the health endpoint before opening the native window.
-        _wait_for_server()
+        if not _wait_for_server():
+            logging.warning("Streamlit server did not respond in time; opening window anyway.")
 
         # 3. Create and start the native desktop window.
         webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))

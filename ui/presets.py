@@ -103,7 +103,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
                 if any(preset.get('settings', {}).get(k) for k in PresetManager.NOTEBOOK_SUB_KEYS):
                     st.session_state['card3_expanded'] = True
 
-                st.session_state['pending_toast'] = f"✅ Applied preset '{esc(name)}'"
+                st.session_state['pending_toast'] = f"✅ Applied preset '{name}'"
                 try:
                     st.rerun(scope="app")
                 except TypeError:
@@ -113,7 +113,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
             with col_del:
                 def _do_delete(pid=preset['preset_id'], pname=name):
                     mgr.delete_preset(pid)
-                    st.session_state['preset_hub_toast'] = f"🗑️ Preset '{esc(pname)}' deleted."
+                    st.session_state['preset_hub_toast'] = f"🗑️ Preset '{pname}' deleted."
                     
                 st.button("🗑️ Delete", key=f"preset_delete_{preset['preset_id']}",
                           use_container_width=True, on_click=_do_delete)
