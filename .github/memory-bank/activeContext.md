@@ -10,6 +10,13 @@
 - **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 
 ## Recent Activity
+- **Session 2026-05-19: Authentication UI Portal Modernization**
+    - **Centered 50% Width Layout**: Wrapped the main authentication page elements in Streamlit columns (`[1, 2, 1]`) to confine the layout to a stunning, centered 50% width on screen.
+    - **Analyze-Style Solid Blue Log In Button**: Refactored the submit button styles to match the solid blue physical volume style of the "Analyze, Review & Sync" button exactly, including rounded corners, bevel drop shadow, custom typography, hover state glowing changes, and precise flex centering.
+    - **Borderless, Half-Width, & Fully Centered Help Expanders**: Grouped the setup guide expanders below the authentication card inside a custom keyed container (`login_help_expanders`). Configured CSS to render them completely borderless and backgroundless, restricted them to half the column width (`max-width: 480px`) centered vertically below the login form card, and applied advanced flex centering to perfectly align the expander header titles together with their interactive chevron icons.
+    - **Seamless Loading Overlay Trigger**: Added `st-key-login_submit_btn` to the `NAV_SEL` navigation array inside `app.py` to trigger the premium, smooth page-transition loading overlay immediately upon login submission.
+    - **Go to Website Tag Added**: Added the GitHub "Go to website" tag next to the "View Source Code on GitHub" tag on the auth portal header, laid out as a standard, side-by-side centered flexbox.
+
 - **Session 2026-05-19: Quick Download Guide Modernization & Skimmable Preset Refinement**
     - **Ultra-Compact Preset Descriptions**: Condensed the quick download preset descriptions to a single, punchy line each to accommodate busy university students who prefer skimming.
     - **Collapsible FAQ & Pro Tip Refinements**: Integrated a comprehensive details accordion FAQ block in `ui/quick_download.py`, resolved incomplete sentence formatting, and restored correct styling and gear iconography for the Pro Tip.
