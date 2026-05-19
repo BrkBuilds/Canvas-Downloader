@@ -22,7 +22,7 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from sync_manager import SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo
-from ui_helpers import make_long_path
+from ui_helpers import make_long_path, _err_log_lock
 
 logger = logging.getLogger(__name__)
 
@@ -247,8 +247,13 @@ class CanvasManager:
         else:
             if not api_url.startswith("http"):
                 api_url = "https://" + api_url
-            # Remove trailing slash for consistency
-            self.api_url = api_url.rstrip("/")
+            from urllib.parse import urlparse
+            try:
+                parsed = urlparse(api_url)
+                # Reconstruct URL retaining strictly scheme and netloc
+                self.api_url = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+            except Exception:
+                self.api_url = api_url.rstrip("/")
             
         # Initialize Canvas object
         try:
@@ -2215,11 +2220,10 @@ class CanvasManager:
             if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
                 return
 
-        # Only run disk-conflict resolution when the caller hasn't already
-        # resolved naming via seen_flat_paths / seen_target_paths.
-        if not explicit_filepath:
-            filepath = self._handle_conflict(filepath)
-            filename = filepath.name
+        # We save the original filepath to serve as our concurrency lock target key.
+        # This resolves the race where two threads competing for the same base name
+        # evaluate the path before either starts downloading.
+        original_filepath = filepath
 
         # Check duplication by size
         file_size_bytes = getattr(file_obj, 'size', 0) or 0
@@ -2254,7 +2258,13 @@ class CanvasManager:
                 )
             return
 
-        async with manage_download_lock(filepath):
+        async with manage_download_lock(original_filepath):
+            # Only run disk-conflict resolution when the caller hasn't already
+            # resolved naming via seen_flat_paths / seen_target_paths.
+            # Running this inside the lock eliminates the TOCTOU file conflict race.
+            if not explicit_filepath:
+                filepath = self._handle_conflict(filepath)
+                filename = filepath.name
             # Re-check existence inside lock
             if filepath.exists():
                 try:
@@ -4094,8 +4104,9 @@ class CanvasManager:
         log_file = path / "download_errors.txt"
         if log_file.exists():
             try:
-                with open(log_file, "w", encoding="utf-8") as f:
-                    f.write("")  # Truncate
+                with _err_log_lock:
+                    with open(log_file, "w", encoding="utf-8") as f:
+                        f.write("")  # Truncate
             except Exception:
                 pass
 
@@ -4126,8 +4137,9 @@ class CanvasManager:
             else:
                 entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {error}"
                 
-            with open(log_file, "a", encoding="utf-8") as f:
-                f.write(entry + "\n")
+            with _err_log_lock:
+                with open(log_file, "a", encoding="utf-8") as f:
+                    f.write(entry + "\n")
         except Exception:
             # Last resort fallback if logging fails
             pass
