@@ -34,7 +34,7 @@ if system == 'Windows':
 
     try:
         from win11toast import toast
-    except ImportError:
+    except Exception:
         toast = None
 
 # ── macOS Dependencies ──

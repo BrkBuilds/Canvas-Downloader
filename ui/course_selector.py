@@ -16,12 +16,21 @@ import streamlit as st
 
 import theme
 from ui_helpers import (
-    esc,
     get_course_display_parts,
     parse_cbs_metadata,
     render_download_wizard,
     get_base64_image,
 )
+
+
+def _css_escape_content(text: str) -> str:
+    """Escape a string for safe use inside a CSS quoted string (e.g. content: "...").
+
+    html.escape() (used by esc()) produces HTML entities like &amp; which render
+    literally in CSS rather than as their intended characters.  CSS strings only
+    require escaping backslashes and the enclosing quote character.
+    """
+    return text.replace('\\', '\\\\').replace('"', '\\"')
 from ui_shared import render_help_card, HELP_ICONS
 
 
@@ -419,7 +428,7 @@ def _render_multi_select_list(
         if code_clean:
             dynamic_css.append(f"""
             div.st-key-{chk_key} label[data-baseweb="checkbox"] div[data-testid="stMarkdownContainer"]::after {{
-                content: "{esc(code_clean)}";
+                content: "{_css_escape_content(code_clean)}";
                 display: block !important;
                 color: #94a3b8 !important;
                 font-size: 0.85em !important;
@@ -518,7 +527,7 @@ def _render_single_select_list(
         if code_clean:
             dynamic_css.append(f"""
             div.st-key-{chk_key} label[data-baseweb="checkbox"] div[data-testid="stMarkdownContainer"]::after {{
-                content: "{esc(code_clean)}";
+                content: "{_css_escape_content(code_clean)}";
                 display: block !important;
                 color: #94a3b8 !important;
                 font-size: 0.72em !important;

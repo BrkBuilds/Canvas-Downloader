@@ -62,26 +62,27 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
         # still returned so callers can clean them up.
         return None, processed_shortcuts
         
-    # 3. Append/Rewrite
-    write_mode = 'a' if existing_content else 'w'
-    
+    # 3. Atomic rewrite: assemble the full new file content, write to .tmp,
+    #    then os.replace so a mid-write crash never corrupts the output file.
+    import os as _os
+
     if not existing_content:
-        # Build a beautiful, copy-paste friendly output header
-        output_content = (
+        header = (
             f"========================================================\n"
             f" 🤖 Compiled Links for: {course_name}\n"
             f"========================================================\n"
             f"Copy and paste these links directly into your preferred AI tool - e.g. NotebookLM.\n\n"
         )
+        full_content = header + "\n".join(compiled_links)
     else:
-        # Add a newline spacer if we are appending to an existing master list
-        output_content = "\n"
+        # Preserve existing content and append new links after a blank line spacer
+        full_content = existing_content + "\n" + "\n".join(compiled_links)
 
-    output_content += "\n".join(compiled_links)
-    
-    with open(output_path, write_mode, encoding='utf-8') as f:
-        f.write(output_content)
-        
+    tmp_path = output_path.with_suffix('.tmp')
+    with open(tmp_path, 'w', encoding='utf-8') as f:
+        f.write(full_content)
+    _os.replace(str(tmp_path), str(output_path))
+
     return output_path, processed_shortcuts
 
 

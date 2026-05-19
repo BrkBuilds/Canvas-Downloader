@@ -122,14 +122,34 @@ class WordToPDF:
         if self.app is None:
             return None
 
+        import threading as _th
         from ui_helpers import office_safe_path
+
+        _COM_TIMEOUT_SECONDS = 180
 
         with office_safe_path(abs_doc_path) as (safe_src, safe_pdf, true_pdf):
             abs_doc = str(safe_src.resolve().absolute())
             abs_pdf = str(safe_pdf.resolve().absolute())
 
             doc = None
+            _timed_out = _th.Event()
 
+            def _on_timeout():
+                _timed_out.set()
+                logger.error(
+                    f"[COM Timeout] Word hung >{_COM_TIMEOUT_SECONDS}s "
+                    f"on {abs_doc_path.name}. Killing WINWORD.EXE."
+                )
+                try:
+                    subprocess.run(
+                        ['taskkill', '/F', '/IM', 'WINWORD.EXE'],
+                        capture_output=True, timeout=10,
+                    )
+                except Exception:
+                    pass
+
+            _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
+            _timer.start()
             try:
                 logger.debug(f"[COM Converter] Attempting to convert: {abs_doc}")
 
@@ -142,6 +162,7 @@ class WordToPDF:
                 # Close original
                 doc.Close(SaveChanges=0)
                 doc = None
+                _timer.cancel()
 
                 # Delete the original legacy file (from the true long path)
                 abs_doc_path.unlink(missing_ok=True)
@@ -150,7 +171,14 @@ class WordToPDF:
                 return str(true_pdf.resolve().absolute())
 
             except Exception as e:
-                logger.error(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
+                _timer.cancel()
+                if _timed_out.is_set():
+                    logger.error(
+                        f"[COM Timeout] Word conversion timed out after "
+                        f"{_COM_TIMEOUT_SECONDS}s for {abs_doc_path.name}"
+                    )
+                else:
+                    logger.error(f"[COM Error] Failed to convert Word doc {abs_doc}: {e}")
 
                 # Close document if error happened after open
                 if doc is not None:

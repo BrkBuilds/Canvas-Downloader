@@ -62,9 +62,13 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     if _raw_secondary is not None:
         try:
             _raw_secondary = json.loads(_raw_secondary)
-        except (json.JSONDecodeError, TypeError, ValueError):
-            # Truncated or corrupt stored JSON — treat as absent and fall through
-            # to the session-state fallback below.
+        except (json.JSONDecodeError, TypeError, ValueError) as _sec_err:
+            # Truncated or corrupt stored JSON — log a warning and fall through
+            # to the session-state fallback so the user's current settings are used.
+            logger.warning(
+                f"Secondary content contract for course {course_id} is corrupt "
+                f"({_sec_err}); falling back to current session settings."
+            )
             _raw_secondary = None
     if _raw_secondary is None:
         # First-ever analysis for this pair — no DB contract yet.
