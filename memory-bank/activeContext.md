@@ -1,15 +1,22 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+    - Done: **Pass 3 Launch-Readiness Fixes**: Converted settings/database locks to recursive `RLock`, protected loading functions, standardized `IOError` vs `JSONDecodeError` separation on Windows configuration corruption checks, unified cross-thread logging locks, resolved isolated retry cancellation metrics rehydration, handled TOCTOU file collisions under standard locks, and configured macOS entitlements for office-to-PDF conversion.
     - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
-    - Done: **Loading Screen Stabilization**: Implemented a robust "intelligent" hiding mechanism for the page transition loading overlay.
 
 ## Next Steps
 - **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
-- **Automated Testing**: (Stretch) Establish a baseline test suite to prevent regressions.
 
 ## Recent Activity
+- **Session 2026-05-19: Pass 3 Launch-Readiness Concurrency & Distribution Fixes**
+    - **Upgraded Concurrency Locks**: Converted settings database, presets, and sync locks (`_presets_lock`, `_groups_lock`, `_sync_pairs_lock`) to recursive `threading.RLock()` to prevent deadlocking under concurrent loads.
+    - **Windows-Specific Safety Shields**: Standardized separation between standard `json.JSONDecodeError` and general disk `IOError` to shield valid presets from accidental corruption recovery deletions during transient lock periods.
+    - **Unified Thread Logging**: Protected all writes to `download_errors.txt` (across downloader, converters, and post-processing workers) behind a global central utility lock `_err_log_lock`.
+    - **Retry Cancellation Metric Rehydration**: Hardened `app.py` isolated retry status handler to ensure metric updates and file conversions complete successfully and save rehydrated histories even if cancelled.
+    - **TOCTOU Guarding**: Scoped `_handle_conflict()` evaluations within active `manage_download_lock` contexts to prevent concurrent threads from overwriting each other.
+    - **macOS Hardened Runtime Entitlements**: Added `entitlements='entitlements.mac.plist'` to the PyInstaller macOS build spec.
+
 - **Session 2026-05-18: Helper Card Spelling &amp; Grammar Audit**
     - **Download Settings Audit**: Audited `ui/download_settings.py` for minor spelling/grammar mistakes and improved clarity in help sections (e.g., PowerPoint, Video to Audio conversions, Sync Mode references).
     - **Sync UI FAQ Audit**: Audited and thoroughly polished the entire `_SYNC_HELP_TEXT` FAQ and flow documentation block in `sync_ui.py`. Fixed all identified spelling, grammar, punctuation, and capitalization issues, resolved HTML entity mappings (`&` to `&amp;`), and successfully deleted a duplicate "Course Pair" FAQ question to keep the documentation professional and concise.

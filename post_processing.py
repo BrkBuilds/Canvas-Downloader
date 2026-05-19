@@ -173,12 +173,14 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
     if error_log_path is None:
         return
     from datetime import datetime
+    from ui_helpers import _err_log_lock
     err_file = error_log_path / "download_errors.txt"
     try:
         error_log_path.mkdir(parents=True, exist_ok=True)
-        with open(err_file, "a", encoding="utf-8") as f:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
+        with _err_log_lock:
+            with open(err_file, "a", encoding="utf-8") as f:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
     except OSError:
         pass
 

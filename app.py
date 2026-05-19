@@ -989,9 +989,6 @@ with _main_content.container():
                 # -------------------------------------------------------------------
         
         elif st.session_state.get('download_status') == 'isolated_retry':
-            if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
-                st.session_state['download_status'] = 'cancelled'
-                st.rerun()
                 
             header_placeholder = st.empty()
             progress_placeholder = st.empty()

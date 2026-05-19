@@ -25,7 +25,8 @@ import base64
 
 from sync_manager import format_file_size  # re-exported for ui.sync_review / ui.sync_confirmation  # noqa: F401
 
-_sync_pairs_lock = threading.Lock()
+_sync_pairs_lock = threading.RLock()
+_err_log_lock = threading.Lock()
 
 logger = logging.getLogger(__name__)
 
@@ -120,29 +121,31 @@ def office_safe_path(original_path: Path):
         yield temp_source, temp_pdf, original_pdf
 
     finally:
-        # ── Ghost PDF Guard: only move if COM actually produced a PDF ──
-        if temp_pdf.exists():
-            try:
-                # Ensure the true destination directory exists
-                original_pdf.parent.mkdir(parents=True, exist_ok=True)
-                # Cross-drive safe move with overwrite
-                shutil.move(str(temp_pdf), str(original_pdf))
+        try:
+            # ── Ghost PDF Guard: only move if COM actually produced a PDF ──
+            if temp_pdf.exists():
+                try:
+                    # Ensure the true destination directory exists
+                    original_pdf.parent.mkdir(parents=True, exist_ok=True)
+                    # Cross-drive safe move with overwrite
+                    shutil.move(str(temp_pdf), str(original_pdf))
+                    logger.debug(
+                        f"[Path Shadow] Moved PDF back: {temp_pdf.name} → "
+                        f"{original_pdf.name}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"[Path Shadow] Failed to move PDF back from temp: {e}"
+                    )
+            else:
                 logger.debug(
-                    f"[Path Shadow] Moved PDF back: {temp_pdf.name} → "
-                    f"{original_pdf.name}"
+                    "[Path Shadow] No temp PDF generated (COM conversion failed), "
+                    "skipping move-back."
                 )
-            except Exception as e:
-                logger.error(
-                    f"[Path Shadow] Failed to move PDF back from temp: {e}"
-                )
-        else:
-            logger.debug(
-                "[Path Shadow] No temp PDF generated (COM conversion failed), "
-                "skipping move-back."
-            )
-
-        # ── Unconditional cleanup of temp source file ──
-        temp_source.unlink(missing_ok=True)
+        finally:
+            # ── Unconditional cleanup of both temp files ──
+            temp_source.unlink(missing_ok=True)
+            temp_pdf.unlink(missing_ok=True)
 
 
 def esc(value) -> str:
@@ -177,12 +180,22 @@ def get_config_dir() -> str:
     """
     if getattr(sys, 'frozen', False) and platform.system() == 'Darwin':
         base = Path.home() / 'Library' / 'Application Support' / 'CanvasDownloader'
-        base.mkdir(parents=True, exist_ok=True)
+        try:
+            base.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Could not create Darwin config directory {base}: {e}. Falling back to temp.")
+            base = Path(tempfile.gettempdir()) / 'CanvasDownloader'
+            base.mkdir(parents=True, exist_ok=True)
         return str(base)
     elif getattr(sys, 'frozen', False) and platform.system() == 'Windows':
         appdata = os.environ.get('APPDATA') or str(Path.home() / 'AppData' / 'Roaming')
         base = Path(appdata) / 'CanvasDownloader'
-        base.mkdir(parents=True, exist_ok=True)
+        try:
+            base.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Could not create Windows config directory {base}: {e}. Falling back to temp.")
+            base = Path(tempfile.gettempdir()) / 'CanvasDownloader'
+            base.mkdir(parents=True, exist_ok=True)
         return str(base)
     elif getattr(sys, 'frozen', False):
         # Other frozen platforms: fall back to executable directory
@@ -285,18 +298,20 @@ def load_sync_pairs(config_dir: str = None) -> list[dict]:
         config_dir = get_config_dir()
     
     path = Path(config_dir) / SYNC_PAIRS_FILENAME
-    if not path.exists():
-        return []
     
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            pairs = json.load(f)
-        # Validate structure
-        if not isinstance(pairs, list):
+    with _sync_pairs_lock:
+        if not path.exists():
             return []
-        return pairs
-    except (json.JSONDecodeError, IOError):
-        return []
+        
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                pairs = json.load(f)
+            # Validate structure
+            if not isinstance(pairs, list):
+                return []
+            return pairs
+        except (json.JSONDecodeError, IOError):
+            return []
 
 
 def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) -> list[dict]:
