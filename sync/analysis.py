@@ -24,6 +24,7 @@ import streamlit as st
 
 import theme
 from canvas_logic import CanvasManager, safe_thread_wrapper
+from core.cancellation import cancel_sync, is_sync_cancelled, reset_sync_cancel
 from core.state_registry import NOTEBOOK_SUB_KEYS
 from sync_manager import SyncManager
 from ui_helpers import render_sync_wizard, friendly_course_name, esc
@@ -115,6 +116,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
     This is a strict physical move of the original ``_run_analysis`` from
     ``sync_ui.py``.  No logic has been changed.
     """
+    # M-8 / C-3: Reset the sync cancel event at the start of every fresh analysis
+    # run. This clears any stale event left by a prior run that bypassed
+    # cleanup_sync_state(), preventing silent self-abort on the first check.
+    reset_sync_cancel()
+
     # Step wizard
     render_sync_wizard(st, 2)
 
@@ -190,13 +196,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
     cancel_analysis_placeholder = st.empty()
     if cancel_analysis_placeholder.button('Cancel Sync', type="secondary", key="cancel_analysis_btn"):
         cancel_analysis_placeholder.empty()
-        st.session_state['cancel_requested'] = True
+        cancel_sync()  # sets threading.Event + sync_cancel_requested + sync_cancelled
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
     for pair_num, pair in enumerate(sync_pairs, 1):
         # CHECK FOR CANCEL INSIDE THE LOOP
-        if st.session_state.get('cancel_requested', False):
+        if is_sync_cancelled():
             break
             
         # Folder-not-found guard
@@ -211,7 +217,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         def sync_progress_hook(current, total, status_text,
                                _pair_num=pair_num, _display_name=display_name):
             try:
-                if st.session_state.get('cancel_requested') or st.session_state.get('sync_cancelled'):
+                if is_sync_cancelled():
                     return
                 percent = int((current / total) * 100) if total > 0 else 0
                 analysis_ui_placeholder.markdown(f"""

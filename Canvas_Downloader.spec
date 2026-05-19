@@ -57,8 +57,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 # Collect other critical packages
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
-    'aiofiles', 'beautifulsoup4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast', 'openpyxl'
+    'aiofiles', 'bs4', 'markdownify', 'moviepy', 'keyring', 'psutil',
+    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast', 'openpyxl', 'pillow'
 ]
 for package in packages_to_collect:
     try:
@@ -98,7 +98,8 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 
+    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6',
+              'pync', 'customtkinter',
               'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses',
               'sqlalchemy',
               # Heavy packages not used by this app
