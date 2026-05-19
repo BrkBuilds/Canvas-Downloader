@@ -99,7 +99,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         ''', unsafe_allow_html=True)
 
         # Re-render log so it stays in sync with progress/metrics
-        log_content = "<br>".join(reversed(list(ui.log_lines)))
+        log_content = "<br>".join(reversed(list(ui.log_lines)[-200:]))
         ui.log_placeholder.markdown(f'''
         <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
             {log_content}

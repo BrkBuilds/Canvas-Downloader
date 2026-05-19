@@ -280,8 +280,11 @@ def render_login_page(fetch_courses_fn):
                         import keyring
                         keyring_user = st.session_state['api_url'] or 'default'
                         loaded_token = keyring.get_password(KEYRING_SERVICE, keyring_user) or ''
-                    except Exception:
-                        pass
+                    except ImportError:
+                        pass  # keyring not installed; legacy migration path handles it
+                    except Exception as _kr_err:
+                        logger.warning(f"Keyring unavailable during token load: {_kr_err}")
+                        st.warning(f"Could not read saved API token from system keyring: {_kr_err}. Please re-enter your token.", icon="⚠️")
 
                     # Legacy migration: macOS base64 token stored in JSON
                     if not loaded_token and config.get('mac_api_token', ''):

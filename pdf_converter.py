@@ -41,6 +41,7 @@ def _kill_office_process(process_name: str) -> None:
         subprocess.run(
             ['taskkill', '/F', '/IM', process_name],
             capture_output=True, timeout=10,
+            creationflags=subprocess.CREATE_NO_WINDOW,
         )
     except Exception:
         pass
