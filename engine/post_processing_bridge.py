@@ -87,7 +87,10 @@ def invoke_post_processing(
     Returns
     -------
     int
-        Number of post-processing failures reported by the UIBridge.
+        Per-call post-processing failure count reported by the UIBridge.
+        Callers that process multiple courses should read
+        ``st.session_state['pp_failure_count']`` for the cumulative total,
+        as this function accumulates into that key on each invocation.
     """
     # Lazy imports to avoid circular dependency chains
     from post_processing import run_all_conversions, UIBridge
@@ -102,9 +105,9 @@ def invoke_post_processing(
 
     # Select the correct cancellation checker
     if mode == 'sync':
-        cancel_fn = lambda: is_sync_cancelled()
+        cancel_fn = is_sync_cancelled
     else:
-        cancel_fn = lambda: is_download_cancelled()
+        cancel_fn = is_download_cancelled
 
     # Guard: don't start post-processing if already cancelled
     if cancel_fn():

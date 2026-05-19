@@ -15,6 +15,7 @@ import base64
 import json
 import logging
 import os
+from html import escape as _he
 
 import streamlit as st
 
@@ -31,7 +32,11 @@ def _get_config_path() -> str:
 
 # Evaluated once at first render (not at import-time of the module).
 # All reads/writes use CONFIG_FILE as a stable module-level constant.
-CONFIG_FILE = _get_config_path()
+try:
+    CONFIG_FILE = _get_config_path()
+except Exception:
+    import tempfile
+    CONFIG_FILE = os.path.join(tempfile.gettempdir(), 'canvas_downloader_settings.json')
 KEYRING_SERVICE = "CanvasDownloader"
 
 
@@ -1099,109 +1104,6 @@ def render_login_page(fetch_courses_fn):
 # ─── Private helpers ────────────────────────────────────────────────────
 
 
-def _render_login_form():
-    """Render the un-authenticated login form."""
-    # Suppress Streamlit's form validation flash during initial React hydration.
-    # On first boot (clean machine), form components may briefly render a red
-    # validation indicator before reconciliation completes.  A 300 ms fade-in
-    # makes any sub-second flash invisible without hiding legitimate errors.
-    st.html("""<style>
-    section[data-testid="stSidebar"] [data-baseweb="notification"],
-    section[data-testid="stSidebar"] [data-testid="stAlert"] {
-        animation: _sidebarFadeIn 0.3s ease-in forwards;
-        opacity: 0;
-    }
-    @keyframes _sidebarFadeIn { to { opacity: 1; } }
-    </style>""")
-    st.markdown("<div style='padding: 0 20px; margin-top: 10px; margin-bottom: 25px;'><span style='color: #ffffff; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em;'>Authentication</span></div>", unsafe_allow_html=True)
-
-    with st.form("auth_form", clear_on_submit=False, border=False):
-        st.text_input(
-            'Enter Canvas URL',
-            key="url_input",
-            placeholder="https://your-school.instructure.com"
-        )
-
-        st.text_input(
-            'Enter Canvas API Token',
-            type="password",
-            key="token_input"
-        )
-
-        submitted = st.form_submit_button('Log In', type="primary", use_container_width=True)
-
-    if submitted:
-        input_url = st.session_state.url_input.strip()
-        input_token = st.session_state.token_input.strip()
-
-        st.session_state['api_url'] = input_url
-        st.session_state['api_token'] = input_token
-
-        manager = CanvasManager(input_token, input_url)
-        is_valid, message = manager.validate_token()
-
-        if is_valid:
-            st.session_state['api_token'] = input_token
-            st.session_state['api_url'] = manager.api_url
-            st.session_state['is_authenticated'] = True
-            st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
-
-            # Setup base config data
-            config_data = {}
-            if os.path.exists(CONFIG_FILE):
-                try:
-                    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                        config_data = json.load(f)
-                except Exception:
-                    pass
-
-            config_data['api_url'] = st.session_state['api_url']
-            if 'concurrent_downloads' in st.session_state:
-                config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
-            if 'debug_mode' in st.session_state:
-                config_data['debug_mode'] = st.session_state['debug_mode']
-
-            # Save token to OS keyring (macOS Keychain / Windows Credential Manager)
-            try:
-                import keyring
-                keyring_user = st.session_state['api_url'] or 'default'
-                keyring.set_password(KEYRING_SERVICE, keyring_user, st.session_state['api_token'])
-                # Ensure no legacy insecure fields remain in the config JSON
-                config_data.pop('mac_api_token', None)
-                config_data.pop('api_token', None)
-            except Exception as e:
-                st.warning(f"Could not save token to system keyring: {e}. Token will not persist across sessions.")
-
-            try:
-                _tmp_config = CONFIG_FILE + '.tmp'
-                with open(_tmp_config, 'w', encoding='utf-8') as f:
-                    json.dump(config_data, f)
-                    f.flush()
-                    os.fsync(f.fileno())
-                os.replace(_tmp_config, CONFIG_FILE)
-            except Exception as e:
-                # Clean up orphaned temp file on failure
-                try:
-                    if os.path.exists(_tmp_config):
-                        os.unlink(_tmp_config)
-                except OSError:
-                    pass
-                st.error(f"Could not save config: {e}")
-
-            st.rerun()
-        else:
-            st.error(message)
-
-    st.html("<hr style='margin: 10px 0 20px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />")
-
-    # Help expanders
-    with st.expander('How to get a Token?'):
-        st.markdown('\n1. Go to **Account** -> **Settings** on Canvas.\n2. Scroll to **Approved Integrations**.\n3. Click **+ New Access Token**.\n4. Copy the long string and paste it here.\n')
-
-    with st.expander('How to find your Canvas URL?'):
-        st.markdown("\n**Crucial Step:** You must input the *actual* Canvas URL, not your university's login portal.\n\n**How to find it:**\n1. Log in to Canvas in your browser.\n2. Look at the address bar **after** you have logged in.\n3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n4. Copy that URL and paste it here.\n")
-
-
 def _render_authenticated_nav_top():
     """Render the top part of the authenticated sidebar: navigation buttons."""
     # ── Navigation buttons ─────────────────────────────────────────
@@ -1550,6 +1452,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         with st.container(border=False, key="user_info_row"):
             if display_user:
                 first_name = display_user.split()[0] if display_user.split() else display_user
+                safe_first_name = _he(first_name)
                 # Calculate logout button left offset dynamically:
                 # "Logged in as" at 0.75rem ≈ 65px, name at 0.9rem ≈ 8px/char
                 name_px = len(first_name) * 8
@@ -1564,7 +1467,7 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 </style>
 <div style="line-height: 1.2; padding: 0 0 0 20px;">
     <div style="color: #9ca3af; font-size: 0.75rem; padding-bottom: 3px;">Logged in as</div>
-    <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: -6px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{first_name}</div>
+    <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: -6px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{safe_first_name}</div>
 </div>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout"):
                 try:
@@ -1576,6 +1479,8 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 
                 st.session_state['is_authenticated'] = False
                 st.session_state['api_token'] = ""
+                st.session_state['token_loaded'] = False
+                st.session_state['user_name'] = ''
                 st.session_state['step'] = 1
                 st.session_state['current_mode'] = 'download'
                 fetch_courses_fn.clear()
@@ -1588,6 +1493,8 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
                         tmp_path = CONFIG_FILE + '.tmp'
                         with open(tmp_path, 'w', encoding='utf-8') as f:
                             json.dump(config_data, f)
+                            f.flush()
+                            os.fsync(f.fileno())
                         os.replace(tmp_path, CONFIG_FILE)
                     except Exception as e:
                         logger.warning(f"Could not update config on logout: {e}")
