@@ -59,7 +59,22 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
 
     # Load secondary content contract so analysis includes negative-ID entities
     _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
-    _secondary_settings = json.loads(_raw_secondary) if _raw_secondary else None
+    if _raw_secondary is not None:
+        _raw_secondary = json.loads(_raw_secondary)
+    if _raw_secondary is None:
+        # First-ever analysis for this pair — no DB contract yet.
+        # Fall back to session state so the user's current settings are honoured.
+        _raw_secondary = {
+            'download_assignments':   st.session_state.get('persistent_dl_assignments', False),
+            'download_syllabus':      st.session_state.get('persistent_dl_syllabus', False),
+            'download_announcements': st.session_state.get('persistent_dl_announcements', False),
+            'download_discussions':   st.session_state.get('persistent_dl_discussions', False),
+            'download_quizzes':       st.session_state.get('persistent_dl_quizzes', False),
+            'download_rubrics':       st.session_state.get('persistent_dl_rubrics', False),
+            'download_submissions':   st.session_state.get('persistent_dl_submissions', False),
+            'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
+        }
+    _secondary_settings = _raw_secondary  # may still be empty dict — that's fine
 
     progress_hook(0, 1, "Fetching files from Canvas...")
     canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(

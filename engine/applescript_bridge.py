@@ -23,6 +23,19 @@ _APP_DOC_MAP = {
 }
 
 
+def _as_posix(path: Path) -> str:
+    """Return a POSIX path string safe for embedding in an AppleScript string literal.
+
+    Escapes backslashes first, then double-quotes. Use inside AppleScript
+    string literals as: ``POSIX file "{_as_posix(path)}"``
+
+    IMPORTANT: Callers that build AppleScript ``script`` strings must use this
+    function for every path interpolated into the script to prevent AppleScript
+    injection via filenames containing double-quotes or backslashes.
+    """
+    return str(path.resolve()).replace('\\', '\\\\').replace('"', '\\"')
+
+
 def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:
     """Best-effort: close the document that was left open after an osascript
     timeout.  Runs a short-timeout osascript so a hung Office app cannot block
@@ -34,6 +47,10 @@ def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:
     """
     mapping = _APP_DOC_MAP.get(app_name)
     if not mapping:
+        logger.warning(
+            f"[AppleScript] _try_close_document_after_timeout: unknown app_name {app_name!r}; "
+            "open document may need to be closed manually."
+        )
         return
     ms_app_name, doc_term = mapping
 
@@ -73,6 +90,10 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     Returns:
         ``True`` if ``osascript`` exited cleanly **and** *dst* exists
         on disk; ``False`` otherwise.
+
+    IMPORTANT: All POSIX paths embedded in *script* must be escaped using
+    ``_as_posix(path)`` from this module to prevent AppleScript injection
+    via filenames containing double-quotes or backslashes.
     """
     try:
         result = subprocess.run(
@@ -94,7 +115,7 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
             f"[AppleScript] {app_name} conversion timed out after 120s - "
             "attempting to close the open document to recover"
         )
-        posix_src = str(src.resolve()).replace('"', '\\"')
+        posix_src = _as_posix(src)
         _try_close_document_after_timeout(app_name, posix_src)
         return False
     except Exception as e:

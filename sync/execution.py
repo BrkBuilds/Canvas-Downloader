@@ -250,9 +250,9 @@ def run_sync():
                         course = await asyncio.to_thread(safe_thread_wrapper, cm.get_course, current_ctx, pair['course_id'])
                         res_data['course'] = course
                     except Exception as e:
-                        err_str = f"Connection failure to {esc(course_name)}: {str(e)}"
+                        err_str = f"Connection failure to {esc(course_name)}: {esc(str(e))}"
                         error_list.append(err_str)
-                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Reconnection failed: {esc(course_name)} ({str(e)})</span>")
+                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Reconnection failed: {esc(course_name)} ({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         failed_files_for_pair.extend(sel.get('new', []))
                         continue
@@ -262,6 +262,7 @@ def run_sync():
                 # exactly when the sync is executing (after user confirmation)
                 if sel['ignore']:
                     manifest = sync_mgr.mark_files_ignored(manifest, sel['ignore'])
+                    res_data['manifest'] = manifest   # keep res_data in sync
                 # Selective persist: only save ignored/healed entries to DB before download
                 # (NOT the full auto-discovered manifest, to avoid premature commit)
                 for file_id_str, entry in manifest.get('files', {}).items():

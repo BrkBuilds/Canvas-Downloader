@@ -126,6 +126,8 @@ DOWNLOAD_TRANSIENT_KEYS = {
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
+    'persistent_dl_isolate_secondary',
+    'log_content',
 }
 
 # Keys created transiently during sync execution
@@ -193,14 +195,14 @@ def cleanup_download_state() -> None:
     # Re-arm the completion-sound sentinel for the next run.
     st.session_state['completion_beep_fired'] = False
 
-    # Nuclear cache clearing to destroy dead aiohttp sessions
-    st.cache_data.clear()
+    # Clear the course list cache so a re-login or re-run fetches fresh data.
+    st.cache_resource.clear()
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
     # Clear course selection — download is done, start fresh for next run.
-    # Both the logical list AND the individual checkbox widget keys must be
-    # cleared; Streamlit uses stored widget keys on re-render if they exist.
+    # Course-selection checkboxes: clear both the logical ID list and the
+    # per-course widget state keys (Streamlit re-binds widget keys on re-render).
     st.session_state['selected_course_ids'] = []
     for key in list(st.session_state.keys()):
         if key.startswith('dl_chk_'):
@@ -225,8 +227,8 @@ def cleanup_sync_state() -> None:
     # Re-arm the completion-sound sentinel for the next sync run.
     st.session_state['completion_beep_fired'] = False
 
-    # Nuclear cache clearing to destroy dead aiohttp sessions
-    st.cache_data.clear()
+    # Clear the course list cache so a re-login or re-run fetches fresh data.
+    st.cache_resource.clear()
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 

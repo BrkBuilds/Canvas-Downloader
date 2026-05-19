@@ -1149,7 +1149,7 @@ div.st-key-page_nav_quick_back button:hover {{
             st.session_state['downloaded_items']     = 0
             st.session_state['course_mb_downloaded'] = {}
             st.session_state['log_content']          = ""
-            st.session_state['seen_error_sigs']      = []
+            st.session_state['seen_error_sigs']      = set()
 
             for k in NOTEBOOK_SUB_KEYS:
                 st.session_state[f'persistent_{k}'] = settings.get(k, False)

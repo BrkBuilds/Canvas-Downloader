@@ -6,6 +6,7 @@ import shutil
 import html
 import urllib.parse
 import traceback
+import unicodedata
 from pathlib import Path
 from datetime import datetime, timezone
 from canvasapi import Canvas
@@ -40,13 +41,16 @@ class _CanvasTimeoutAdapter(HTTPAdapter):
 
 
 # --- Global Async Locks ---
-_download_locks = {}
-_lock_mutex = asyncio.Lock()
+# Lock objects are event-loop-bound; only store reference counts and loop IDs
+# at module level. New asyncio.Lock() objects are created per-loop to avoid
+# "Task got Future attached to a different loop" across asyncio.run() calls.
+_download_locks: dict = {}  # filepath -> {"lock": asyncio.Lock, "count": int, "loop_id": int}
+_lock_mutex_local = threading.Lock()  # threading.Lock is loop-independent
 
 def safe_thread_wrapper(func, current_ctx, *args, **kwargs):
     """
-    Safely executes a function in a separate thread while preserving Streamlit's 
-    ScriptRunContext. This ensures thread-bound session_state and UI renders 
+    Safely executes a function in a separate thread while preserving Streamlit's
+    ScriptRunContext. This ensures thread-bound session_state and UI renders
     don't throw missing context exceptions.
     """
     import threading
@@ -59,21 +63,26 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def manage_download_lock(filepath):
-    async with _lock_mutex:
-        if filepath not in _download_locks:
-            _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0}
-        lock_data = _download_locks[filepath]
-        lock_data["count"] += 1
-        file_lock = lock_data["lock"]
-    
+    current_loop = asyncio.get_event_loop()
+    current_loop_id = id(current_loop)
+    with _lock_mutex_local:
+        entry = _download_locks.get(filepath)
+        if entry is None or entry.get("loop_id") != current_loop_id:
+            # Fresh entry or stale lock from a dead event loop — create new Lock
+            _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0, "loop_id": current_loop_id}
+        _download_locks[filepath]["count"] += 1
+        file_lock = _download_locks[filepath]["lock"]
+
     try:
         async with file_lock:
             yield
     finally:
-        async with _lock_mutex:
-            lock_data["count"] -= 1
-            if lock_data["count"] == 0:
-                del _download_locks[filepath]
+        with _lock_mutex_local:
+            entry = _download_locks.get(filepath)
+            if entry:
+                entry["count"] -= 1
+                if entry["count"] == 0:
+                    _download_locks.pop(filepath, None)
 
 # --- Constants ---
 MAX_RETRIES = 5
@@ -323,6 +332,7 @@ class CanvasManager:
             canvas_files = course.get_files()
             for file in canvas_files:
                 if not getattr(file, 'url', ''):
+                    logger.debug(f"Skipping locked/restricted file: {getattr(file, 'filename', '<unknown>')} in course {getattr(course, 'name', '?')}")
                     continue
                 try:
                     f_info = CanvasFileInfo(
@@ -716,6 +726,7 @@ class CanvasManager:
                     a_name = getattr(assignment, 'name', 'Assignment')
                     a_updated = getattr(assignment, 'updated_at', '') or ''
 
+                    full_assignment = None
                     if not is_scanning_phase:
                         # Full sync analysis: fetch individually for
                         # timestamp parity and attachment discovery.
@@ -733,12 +744,13 @@ class CanvasManager:
 
                     # Discover attachments (only in full analysis mode)
                     attachments = []
-                    try:
-                        raw_att = getattr(full_assignment, 'attachments', None)
-                        if raw_att and isinstance(raw_att, list):
-                            attachments = list(raw_att)
-                    except Exception:
-                        pass
+                    if full_assignment is not None:
+                        try:
+                            raw_att = getattr(full_assignment, 'attachments', None)
+                            if raw_att and isinstance(raw_att, list):
+                                attachments = list(raw_att)
+                        except Exception:
+                            pass
 
                     existing_att_ids = {
                         a.get('id') for a in attachments if isinstance(a, dict)
@@ -1616,8 +1628,11 @@ class CanvasManager:
                     log_debug(f"Catch-All Phase Error: {e}", debug_file)
                     error_msg = str(e).lower()
                     if "unauthorized" in error_msg or "401" in error_msg or "user not authorised" in error_msg:
-                        # Just log it to standard console/debug, DO NOT add to user's download_errors.txt
-                        print(f"Files tab restricted for {course.name}. Gracefully falling back to module scan.")
+                        # Just log it, DO NOT add to user's download_errors.txt
+                        _msg = f"Files tab restricted for '{course.name}' — skipping catch-all phase."
+                        logger.warning(_msg)
+                        if progress_callback:
+                            progress_callback(_msg, progress_type='log')
                     else:
                         # Handle actual unexpected errors
                         err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e)
@@ -3990,6 +4005,18 @@ class CanvasManager:
 
     def _sanitize_filename(self, filename, replace_spaces=False, max_length=120):
         if not filename: return "untitled"
+        # Normalize to NFC and strip dangerous Unicode characters:
+        # - Bidirectional overrides (e.g. U+202E Right-to-Left Override)
+        # - Zero-width spaces and joiners
+        # - BOM
+        filename = unicodedata.normalize('NFC', filename)
+        _DANGEROUS_UNICODE = (
+            '‮', '‭', '‬', '‫', '‪',  # bidi overrides
+            '​', '‌', '‍', '‎', '‏',  # zero-width
+            '﻿',  # BOM
+        )
+        for ch in _DANGEROUS_UNICODE:
+            filename = filename.replace(ch, '')
         try: filename = urllib.parse.unquote_plus(filename)
         except Exception: pass
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
