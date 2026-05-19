@@ -46,7 +46,12 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
             link = raw_link.strip()
             # We always add it to processed_shortcuts so it gets physically deleted by the post-processor!
             processed_shortcuts.append(shortcut_file)
-            
+
+            # Guard against malformed or non-web URLs (e.g. javascript:, file:, data:)
+            # that could cause harm if pasted into a browser or AI tool.
+            if not (link.startswith('http://') or link.startswith('https://')):
+                continue
+
             if link not in existing_urls:
                 compiled_links.append(f"📌 {shortcut_file.stem}\n{link}\n")
                 existing_urls.add(link)

@@ -633,11 +633,12 @@ def run_sync():
                                     async with aiofiles.open(str(make_long_path(filepath)), 'wb') as f:
                                         await f.write(plistlib.dumps(plist_data, fmt=plistlib.FMT_XML))
                                 else:
-                                    shortcut_content = f"[InternetShortcut]\nURL={file.url}\n"
+                                    _safe_url = file.url.replace('\r', '').replace('\n', '%0A')
+                                    shortcut_content = f"[InternetShortcut]\nURL={_safe_url}\n"
                                     async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                         await f.write(shortcut_content)
                             elif is_html_ext:
-                                html_content = f'<meta http-equiv="refresh" content="0; url={file.url}">'
+                                html_content = f'<meta http-equiv="refresh" content="0; url={esc(file.url)}">'
                                 async with aiofiles.open(str(make_long_path(filepath)), 'w', encoding='utf-8') as f:
                                     await f.write(html_content)
 
@@ -772,8 +773,12 @@ def run_sync():
                                                 break  # Success - exit retry loop
                                             
                                             elif response.status == 429:
-                                                # Rate limited - respect Retry-After header
-                                                should_sleep_duration = int(response.headers.get('Retry-After', SYNC_RETRY_DELAY * (2 ** attempt)))
+                                                # Rate limited - respect Retry-After (RFC 7231: seconds int or HTTP-date string)
+                                                _retry_after_raw = response.headers.get('Retry-After', '')
+                                                try:
+                                                    should_sleep_duration = int(_retry_after_raw)
+                                                except (ValueError, TypeError):
+                                                    should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Rate limited: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry in {should_sleep_duration}s)</span>")
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                             
@@ -832,9 +837,8 @@ def run_sync():
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
-                        error_list.append(f"Error syncing {esc(display_file_name)}: {str(e)}")
-                        str_err = str(e).replace('<', '&lt;').replace('>', '&gt;')
-                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({str_err})</span>")
+                        error_list.append(f"Error syncing {esc(display_file_name)}: {esc(str(e))}")
+                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         
 
@@ -891,10 +895,14 @@ def run_sync():
             active_file_placeholder.markdown(f"<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
-            # CANCEL GUARD: Skip all post-download state mutations if cancelled
+            # CANCEL GUARD: Skip all post-download state mutations if cancelled.
+            # Do NOT call st.rerun() here — this coroutine runs in a background
+            # ThreadPoolExecutor thread. RerunException escaping the thread would
+            # bypass the post-processing pipeline. Signal cancellation via early
+            # return and let the script thread handle the rerun after .result().
             if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
                 st.session_state['download_status'] = 'sync_cancelled'
-                st.rerun()
+                return synced_details, retry_selections, list(terminal_log)
 
             for sel in sync_selections:
                 res_data = sel['res_data']
@@ -966,6 +974,11 @@ def run_sync():
             asyncio.run,
             download_sync_files_batch(local_sync_api_token, local_sync_api_url)
         ).result()
+
+    # Deferred cancel: checked here on the script thread so RerunException
+    # never escapes the background coroutine and skips post-processing.
+    if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+        st.rerun()
 
     # --- Shared post-processing helpers ---
     def get_synced_file_paths(target_exts, conversion_key=None):
