@@ -35,6 +35,7 @@ import streamlit as st
 
 import theme
 from canvas_logic import CanvasManager
+from core.cancellation import cancel_sync, is_sync_cancelled
 from sync_manager import (
     SyncFileInfo, SyncHistoryManager, CanvasFileInfo,
 )
@@ -73,7 +74,7 @@ def run_sync():
     # Initialize phase flags explicitly at start of run - but ONLY if not already cancelled.
     # If a Phase 3 cancel triggered the rerun, we must preserve is_post_processing=True
     # so that _show_sync_cancelled can read it for the correct status message.
-    if not st.session_state.get('sync_cancel_requested', False) and not st.session_state.get('sync_cancelled', False):
+    if not is_sync_cancelled():
         st.session_state['is_post_processing'] = False
 
     # Step wizard
@@ -96,9 +97,8 @@ def run_sync():
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
     if cancel_placeholder.button('Cancel Sync', key="cancel_sync_btn", type="secondary"):
-        st.session_state['sync_cancelled'] = True
-        st.session_state['sync_cancel_requested'] = True
-        
+        cancel_sync()  # sets threading.Event + sync_cancelled + sync_cancel_requested
+
         # Smart routing:
         if st.session_state.get('qs_cancel_route', False):
             st.session_state['step'] = 1
@@ -172,7 +172,7 @@ def run_sync():
         
         cm = CanvasManager(sync_api_token, sync_api_url)
         cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
+        timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state
         concurrent_limit = st.session_state.get('concurrent_downloads', 5)
@@ -225,9 +225,9 @@ def run_sync():
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
             for pair_idx, sel in enumerate(sync_selections):
-                if st.session_state.get('sync_cancel_requested', False):
+                if is_sync_cancelled():
                     break
-                
+
                 failed_files_for_pair = []
 
                 res_data = sel['res_data']
@@ -361,7 +361,7 @@ def run_sync():
                 Path(make_long_path(local_path)).mkdir(parents=True, exist_ok=True)
 
                 for file in all_files:
-                    if st.session_state.get('sync_cancel_requested', False):
+                    if is_sync_cancelled():
                         break
 
                     current_file += 1
@@ -677,7 +677,7 @@ def run_sync():
                             SYNC_RETRY_DELAY = 2  # Base delay in seconds
                             
                             for attempt in range(SYNC_MAX_RETRIES):
-                                if st.session_state.get('sync_cancel_requested', False):
+                                if is_sync_cancelled():
                                     break
                                 
                                 should_sleep_duration = 0
@@ -696,7 +696,7 @@ def run_sync():
                                                         async with aiofiles.open(make_long_path(part_path), 'wb') as f:
                                                             while True:
                                                                 # Instant cancel check INSIDE the chunk loop
-                                                                if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
+                                                                if is_sync_cancelled():
                                                                     download_interrupted = True
                                                                     break
                                                                 
@@ -731,7 +731,7 @@ def run_sync():
                                                     
                                                     # Handle interrupted download: clean up and stop retrying
                                                     if download_interrupted:
-                                                        if st.session_state.get('sync_cancel_requested', False):
+                                                        if is_sync_cancelled():
                                                             break  # Cancel confirmed — exit retry loop immediately
                                                         continue  # Non-cancel interrupt — retry
                                                     
@@ -900,7 +900,7 @@ def run_sync():
             # ThreadPoolExecutor thread. RerunException escaping the thread would
             # bypass the post-processing pipeline. Signal cancellation via early
             # return and let the script thread handle the rerun after .result().
-            if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+            if is_sync_cancelled():
                 st.session_state['download_status'] = 'sync_cancelled'
                 return synced_details, retry_selections, list(terminal_log)
 
@@ -977,7 +977,7 @@ def run_sync():
 
     # Deferred cancel: checked here on the script thread so RerunException
     # never escapes the background coroutine and skips post-processing.
-    if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+    if is_sync_cancelled():
         st.rerun()
 
     # --- Shared post-processing helpers ---
@@ -1020,7 +1020,7 @@ def run_sync():
     # ==========================================
     # SECONDARY GUARD (defense-in-depth): Catch any cancel that slipped past the primary guard above save_manifest
     # ==========================================
-    if st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False):
+    if is_sync_cancelled():
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
@@ -1072,7 +1072,7 @@ def run_sync():
         log_placeholder=log_container,
         active_file_placeholder=active_file_placeholder,
         log_lines=_download_log_history,
-        is_cancelled=lambda: st.session_state.get('sync_cancelled', False) or st.session_state.get('sync_cancel_requested', False),
+        is_cancelled=is_sync_cancelled,
         on_detail_update=_on_detail_update,
         error_log_path=_sync_error_log_path,
     )
@@ -1237,7 +1237,7 @@ def run_sync():
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 
-    if st.session_state.get('sync_cancel_requested', False) or st.session_state.get('sync_cancelled', False):
+    if is_sync_cancelled():
         st.session_state['download_status'] = 'sync_cancelled'
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:

@@ -26,7 +26,7 @@ from ui_shared import inject_material_icons_font
 from core.state_registry import (
     ensure_download_state,
 )
-from core.cancellation import cancel_download, is_download_cancelled
+from core.cancellation import cancel_download, is_download_cancelled, reset_download_cancel
 from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard, render_active_file
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 from engine.notifications import play_completion_beep
@@ -349,6 +349,23 @@ def _write_nav_to_query_params() -> None:
 _restore_nav_from_query_params()
 ensure_download_state()
 _write_nav_to_query_params()
+
+# C-3: Guard against stale cancel events left by a prior run that bypassed
+# cleanup_download_state(). Safe to reset whenever no background download
+# thread is running — the only state where the event matters is 'downloading'.
+if st.session_state.get('download_status', '') != 'downloading':
+    reset_download_cancel()
+
+# L-4: Clear a stale debug log exactly once per Streamlit session when debug
+# mode is already enabled (e.g. persisted from a previous session via keyring).
+# Prevents the user from seeing log entries from an unrelated prior run.
+if '_debug_log_cleared' not in st.session_state:
+    st.session_state['_debug_log_cleared'] = True
+    if st.session_state.get('debug_mode', False):
+        from canvas_debug import clear_debug_log as _clear_debug_log
+        from pathlib import Path as _Path
+        _dbg = _Path(st.session_state.get('download_path', str(_Path.home() / 'Downloads'))) / 'debug_log.txt'
+        _clear_debug_log(str(_dbg))
 
 # --- Helper Functions ---
 

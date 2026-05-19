@@ -1522,14 +1522,15 @@ class SavedGroupsManager:
     
     def matches_existing_group(self, pairs: list[dict]) -> bool:
         """Check if the given pairs exactly match any saved group.
-        
+
         Comparison is based on sorted (course_id, local_folder) tuples,
         ignoring course_name and ordering.
         """
         current_sig = self._pairs_signature(pairs)
-        for group in self.load_groups():
-            if self._pairs_signature(group.get('pairs', [])) == current_sig:
-                return True
+        with _groups_lock:
+            for group in self.load_groups():
+                if self._pairs_signature(group.get('pairs', [])) == current_sig:
+                    return True
         return False
     
     @staticmethod

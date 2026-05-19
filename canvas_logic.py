@@ -96,7 +96,6 @@ async def manage_download_lock(filepath):
 
 # --- Constants ---
 MAX_RETRIES = 5
-TIMEOUT_SECONDS = 300
 RETRY_DELAY = 1
 
 # --- Secondary Content Configuration Defaults ---
@@ -1306,7 +1305,7 @@ class CanvasManager:
             self._max_file_size_bytes = None
         
         tasks = []
-        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
+        timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
 
         async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
             downloaded_files_info = []
@@ -1754,7 +1753,7 @@ class CanvasManager:
             concurrent_limit = 5
         sem = asyncio.Semaphore(concurrent_limit)
         tasks = []
-        timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
+        timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
 
         # Mirror the size-gate setup from download_course_async so the
         # retry path honors the same limit.
