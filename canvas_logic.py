@@ -1294,6 +1294,9 @@ class CanvasManager:
             concurrent_limit = int(_st_sem.session_state.get('concurrent_downloads', 5) or 5)
         except Exception:
             concurrent_limit = 5
+        # Clamp to a sane range so a corrupted setting can't crash
+        # asyncio.Semaphore (rejects non-positive) or fork 1000 sockets.
+        concurrent_limit = max(1, min(concurrent_limit, 20))
         sem = asyncio.Semaphore(concurrent_limit)
 
         # Read max-file-size gate from session state once, store on the
@@ -1311,8 +1314,13 @@ class CanvasManager:
         
         tasks = []
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
+        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit)
 
-        async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
+        async with aiohttp.ClientSession(
+            headers={'Authorization': f'Bearer {self.api_key}'},
+            timeout=timeout,
+            connector=connector
+        ) as session:
             downloaded_files_info = []
             
             try:
@@ -1730,9 +1738,15 @@ class CanvasManager:
         """
         Targeted retry for specifically failed items queued in error_queue.
         """
+        # Reset discovery-error counter at the start of each batch so the
+        # return value reflects only this run.  Without this reset the
+        # counter accumulates across reused CanvasManager instances and the
+        # UI overstates skipped-discovery counts.
+        self.skipped_discovery_errors = 0
+
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
-        
+
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         
         # We instantiate a local sync_manager so files downloaded here are logged
@@ -1753,9 +1767,12 @@ class CanvasManager:
 
         try:
             import streamlit as _st_iso
-            concurrent_limit = _st_iso.session_state.get('concurrent_downloads', 5)
+            concurrent_limit = int(_st_iso.session_state.get('concurrent_downloads', 5) or 5)
         except Exception:
             concurrent_limit = 5
+        # Final safety net: clamp to a sane range so a corrupted setting can't
+        # crash asyncio.Semaphore (rejects non-positive) or fork 1000 sockets.
+        concurrent_limit = max(1, min(concurrent_limit, 20))
         sem = asyncio.Semaphore(concurrent_limit)
         tasks = []
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
@@ -1779,7 +1796,12 @@ class CanvasManager:
         if debug_mode:
             log_debug(f"\n{'='*50}\n--- Isolated Retry Mode for {course.name} ---\n{'='*50}", debug_file)
 
-        async with aiohttp.ClientSession(headers={'Authorization': f'Bearer {self.api_key}'}, timeout=timeout) as session:
+        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit)
+        async with aiohttp.ClientSession(
+            headers={'Authorization': f'Bearer {self.api_key}'},
+            timeout=timeout,
+            connector=connector
+        ) as session:
             for error_obj in error_queue:
                 if check_cancellation and check_cancellation():
                     break
@@ -2348,7 +2370,7 @@ class CanvasManager:
                             progress_callback(filename, progress_type='downloading_start')
                         log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
                         async with session.get(url) as response:
-                            if response.status == 403 or response.status == 429:
+                            if response.status in (403, 429, 503):
                                 _retry_after_raw = response.headers.get('Retry-After', '')
                                 try:
                                     wait = int(_retry_after_raw)
@@ -2493,16 +2515,33 @@ class CanvasManager:
                     if msg.startswith("RATE_LIMIT:"):
                         wait_time = int(msg.split(":")[1])
                         log_debug(f"Rate limited (403/429). Sleeping {wait_time}s outside semaphore.", debug_file)
-                        await asyncio.sleep(wait_time)
+                        # Cancel-aware sleep: poll the cancel flag every second
+                        # instead of blocking for the full Retry-After. Without
+                        # this a long rate-limit can hold up cancellation for
+                        # minutes.
+                        for _ in range(max(1, int(wait_time))):
+                            if check_cancellation and check_cancellation():
+                                return
+                            await asyncio.sleep(1)
                         continue
                     elif msg.startswith("SERVER_ERROR:"):
-                        await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+                        backoff = RETRY_DELAY * (2 ** attempt)
+                        for _ in range(max(1, int(backoff))):
+                            if check_cancellation and check_cancellation():
+                                return
+                            await asyncio.sleep(1)
                         continue
                     raise ve
                     
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     if attempt < MAX_RETRIES - 1:
-                        await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+                        # Cancel-aware backoff sleep so a hung connection
+                        # can be aborted within ~1s of clicking Cancel.
+                        backoff = RETRY_DELAY * (2 ** attempt)
+                        for _ in range(max(1, int(backoff))):
+                            if check_cancellation and check_cancellation():
+                                return
+                            await asyncio.sleep(1)
                     else:
                         err = DownloadError(course_name, filename, "Network Error", f"Max retries exceeded: {e}", raw_error=e, context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                         if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
@@ -2513,6 +2552,17 @@ class CanvasManager:
                     if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                     self._log_error(error_root_path, err)
                     return
+
+            else:
+                err = DownloadError(
+                    course_name, filename, "Rate Limit/Server Exhausted",
+                    f"Failed to download after {MAX_RETRIES} attempts due to repeated rate limits or server errors.",
+                    context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter}
+                )
+                if progress_callback:
+                    progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                self._log_error(error_root_path, err)
+                return
 
     # ═══════════════════════════════════════════════════════════════
     # SECONDARY CONTENT ENGINE
@@ -2787,6 +2837,11 @@ class CanvasManager:
         try:
             with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
                 f.write(content)
+                f.flush()
+                try:
+                    os.fsync(f.fileno())
+                except OSError:
+                    pass
         except Exception as e:
             err = DownloadError(
                 course_name, entity_name,
@@ -4011,11 +4066,21 @@ class CanvasManager:
                 content = plistlib.dumps({'URL': url}, fmt=plistlib.FMT_XML)
                 with open(make_long_path(filepath), 'wb') as f:
                     f.write(content)
+                    f.flush()
+                    try:
+                        os.fsync(f.fileno())
+                    except OSError:
+                        pass
             else:
                 safe_url = url.replace('\r', '').replace('\n', '')
                 content = f'[InternetShortcut]\nURL={safe_url}'
                 with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
                     f.write(content)
+                    f.flush()
+                    try:
+                        os.fsync(f.fileno())
+                    except OSError:
+                        pass
             # Sync Run #0: Record link/URL file to DB using deterministic canvas_item_id
             if sync_manager and course_base_path and canvas_item_id:
                 try:

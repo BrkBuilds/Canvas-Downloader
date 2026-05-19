@@ -39,18 +39,39 @@ def convert_code_to_txt(file_path: str | Path) -> str | None:
         # Read the original file safely, replacing bad characters
         with open(original_path, 'r', encoding='utf-8', errors='replace') as f:
             content = f.read()
-            
+
         # Add a small header so NotebookLM knows what this is
         header = f"--- Original File: {original_path.name} ---\n\n"
-        
-        # Write to the new .txt file forcing UTF-8 encoding
+
+        # Write to the new .txt file forcing UTF-8 encoding, then fsync so the
+        # data is durable on disk before we delete the original.  Without
+        # fsync a power-loss between close() and unlink() can lose the file.
         with open(txt_path, 'w', encoding='utf-8') as f:
             f.write(header + content)
-            
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+
+        # Verify the output exists and is non-empty before deleting the source.
+        if not txt_path.exists() or txt_path.stat().st_size == 0:
+            logger.error(
+                f"Code converter wrote zero-byte output for {original_path.name}; "
+                "keeping original file."
+            )
+            return None
+
         # Delete the original code file
         original_path.unlink(missing_ok=True)
-        
+
         return str(txt_path)
     except Exception as e:
         logger.error(f"Failed to convert code file {original_path.name}: {e}")
+        # Clean up a partial .txt if the write started but failed mid-way.
+        try:
+            if txt_path.exists() and txt_path.stat().st_size == 0:
+                txt_path.unlink(missing_ok=True)
+        except OSError:
+            pass
         return None

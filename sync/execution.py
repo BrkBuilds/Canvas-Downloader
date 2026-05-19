@@ -174,8 +174,14 @@ def run_sync():
         cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
         
-        # Respect global concurrency limit from session state
-        concurrent_limit = st.session_state.get('concurrent_downloads', 5)
+        # Respect global concurrency limit from session state (with safety clamp:
+        # negative or zero values would crash asyncio.Semaphore; insanely large
+        # values would fork too many sockets and likely 429-rate-limit Canvas).
+        try:
+            concurrent_limit = int(st.session_state.get('concurrent_downloads', 5) or 5)
+        except (TypeError, ValueError):
+            concurrent_limit = 5
+        concurrent_limit = max(1, min(concurrent_limit, 20))
         sem = asyncio.Semaphore(concurrent_limit)
 
         # Max-file-size gate (0/None = disabled). Read once up-front so the
@@ -1163,6 +1169,11 @@ def run_sync():
 
     # Clear the blue status text so it doesn't linger on completion
     active_file_placeholder.empty()
+
+    # Post-processing finished - reset the flag so the cancelled-screen
+    # phase detection (used by show_sync_cancelled) doesn't misreport
+    # the phase if a follow-on cancel arrives before cleanup_sync_state.
+    st.session_state['is_post_processing'] = False
 
     st.session_state['synced_count'] = synced_counter[0]
     st.session_state['synced_bytes'] = synced_counter[1]
