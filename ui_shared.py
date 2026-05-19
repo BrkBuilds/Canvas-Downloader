@@ -33,7 +33,7 @@ def inject_material_icons_font() -> None:
     in every _mat() icon call, which caused the font to be requested dozens
     of times per page render.
     """
-    st.html(_MATERIAL_FONT_LINK)
+    st.markdown(_MATERIAL_FONT_LINK, unsafe_allow_html=True)
 
 def _mat(icon_name, color='#38BDF8', size=18):
     """Render a Google Material Symbols Rounded icon natively."""
