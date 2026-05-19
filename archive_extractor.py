@@ -65,7 +65,14 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                 uncompressed_size = sum(info.file_size for info in members)
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                     raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
-                zip_ref.extractall(path=extract_dir, members=members)
+                # Guard against zip slip: validate every member path resolves inside
+                # extract_dir before extraction (mirrors the TAR guard below).
+                resolved_root = str(extract_dir.resolve())
+                for info in members:
+                    member_dest = (extract_dir / info.filename).resolve()
+                    if not str(member_dest).startswith(resolved_root):
+                        raise Exception(f"Blocked path traversal attempt in zip: {info.filename}")
+                    zip_ref.extract(info, path=extract_dir)
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
             mode = 'r:gz' if abs_archive.name.lower().endswith('.gz') else 'r:'
             with tarfile.open(abs_archive, mode) as tar_ref:

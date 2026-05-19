@@ -217,7 +217,7 @@ def run_sync():
             # Setup Tracking Variables
             start_time = _time.time()
             last_ui_update = 0
-            terminal_log = deque(maxlen=10)
+            terminal_log = deque(maxlen=200)
 
             # Initial UI Draw
             metrics_dashboard.markdown(render_metrics_html_compat(0, total_files, 0.0, total_mb, 0.0, "--:--"), unsafe_allow_html=True)

@@ -31,7 +31,11 @@ def convert_html_to_md(html_path: Path | str) -> Path | None:
             
         # Parse HTML
         soup = BeautifulSoup(html_content, "html.parser")
-        
+
+        # Strip script/style/noscript tags so they don't bleed as raw HTML into the .md output
+        for tag in soup.find_all(['script', 'style', 'noscript']):
+            tag.decompose()
+
         # Convert to Markdown
         md_content = markdownify.markdownify(str(soup), heading_style="ATX")
         
