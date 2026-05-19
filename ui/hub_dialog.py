@@ -509,7 +509,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
                                     <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Pair</div>
                                 </div>
-                                <div class='pair-course-subtitle'>Course: {display_name}</div>
+                                <div class='pair-course-subtitle'>Course: {esc(display_name)}</div>
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -842,7 +842,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
                         st.markdown(f"""
                             <div style='margin-bottom: 12px; margin-top: 6px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{display_name}</div>
+                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{esc(display_name)}</div>
                                 <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div><!-- # audit-ignore: local_folder is a filesystem path -->
                             </div>
                         """, unsafe_allow_html=True)
@@ -906,7 +906,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                 f'Course:</span>'
-                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{add_course_disp}</span>',
+                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{esc(add_course_disp)}</span>',
                                 unsafe_allow_html=True,
                             )
                         with col_ac_btn:
@@ -1093,7 +1093,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
             with st.container(border=True):
                 st.markdown(
-                    f"<div style='font-weight:600;'>\U0001F393 {display_name}</div>"
+                    f"<div style='font-weight:600;'>\U0001F393 {esc(display_name)}</div>"
                     f"<div style='font-size:0.82rem; color:{theme.ERROR_LIGHT}; margin-top:2px;'>"  # audit-ignore: old_folder/new_folder are local filesystem paths
                     f"\u274c Missing: <code>{old_folder}</code></div>",
                     unsafe_allow_html=True,
