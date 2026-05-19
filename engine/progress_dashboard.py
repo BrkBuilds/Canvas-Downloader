@@ -143,7 +143,7 @@ def render_progress_header(placeholders: DashboardPlaceholders, label: str, cour
     placeholders.header.markdown(f'''
     <div style="margin-bottom: 0.5rem;"><!-- # audit-ignore: label is app-controlled phase text -->
         <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">{label}</p>
-        <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{course_name}</h3>
+        <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{_html_escape(course_name)}</h3>
     </div>
     ''', unsafe_allow_html=True)
 

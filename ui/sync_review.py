@@ -26,6 +26,7 @@ from ui_helpers import (
     short_path,
     check_disk_space,
     get_base64_image,
+    esc,
 )
 from core.state_registry import cleanup_sync_state
 from ui_shared import HELP_ICONS
@@ -1478,7 +1479,7 @@ def show_analysis_review(on_confirm_sync):
                             _disp_raw = unquote_plus(sync_info.canvas_filename)
                             _name, _ext = os.path.splitext(_disp_raw)
                             _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}</div>", unsafe_allow_html=True)
 
             # Ignored files Bucket
             if hasattr(result, 'ignored_files') and result.ignored_files:
@@ -1497,7 +1498,7 @@ def show_analysis_review(on_confirm_sync):
                                         _disp_raw = unquote_plus(sync_info.canvas_filename)
                                         _name, _ext = os.path.splitext(_disp_raw)
                                         _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{_name}{_ext_clean}</div>", unsafe_allow_html=True)
+                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}</div>", unsafe_allow_html=True)
                                     with col2:
                                         st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
             
