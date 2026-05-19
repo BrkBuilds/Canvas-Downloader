@@ -23,21 +23,43 @@ Threading model (both platforms):
 
 import sys
 import os
+import socket
 import threading
 import time
 import logging
 
 from streamlit.web import cli as stcli
 
-# Logging disabled - no debug log file needed for the launcher.
-logging.disable(logging.CRITICAL)
+logger = logging.getLogger(__name__)
 
-# ── Shared Utilities ──────────────────────────────────────────────
+# ── Port Discovery ────────────────────────────────────────────────
 
-_STREAMLIT_PORT = "8501"
+
+def _find_free_port(preferred: int = 8501) -> int:
+    """Return the preferred port if free, otherwise the first free port in 8502-8519."""
+    for port in [preferred, *range(8502, 8520)]:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    # Last resort: let the OS assign any available port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+
+_STREAMLIT_PORT = str(_find_free_port())
 _STREAMLIT_URL = f"http://127.0.0.1:{_STREAMLIT_PORT}"
 _HEALTH_ENDPOINT = f"{_STREAMLIT_URL}/_stcore/health"
 
+# Event set by _start_streamlit_server on fatal startup failure
+_server_failed_event = threading.Event()
+
+
+# ── Shared Utilities ──────────────────────────────────────────────
 
 def resolve_path(path):
     """Resolve path for frozen (PyInstaller) vs normal execution."""
@@ -62,6 +84,8 @@ def _start_streamlit_server():
     try:
         app_path = resolve_path("app.py")
         if not os.path.exists(app_path):
+            logger.error(f"app.py not found at {app_path}; cannot start Streamlit server.")
+            _server_failed_event.set()
             return
 
         sys.argv = [
@@ -85,18 +109,22 @@ def _start_streamlit_server():
 
     except SystemExit:
         pass
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Streamlit server encountered a fatal error: {e}")
+        _server_failed_event.set()
     finally:
         # Restore the genuine signal.signal in case of reuse.
         signal.signal = _original_signal
 
 
 def _wait_for_server(timeout_seconds: int = 60) -> bool:
-    """Block until the Streamlit health endpoint responds 200, or timeout."""
+    """Block until the Streamlit health endpoint responds 200, timeout, or server fails."""
     import urllib.request
 
     for _ in range(timeout_seconds * 10):
+        if _server_failed_event.is_set():
+            logger.error("Streamlit server failed to start; aborting wait.")
+            return False
         try:
             with urllib.request.urlopen(_HEALTH_ENDPOINT, timeout=1) as resp:
                 if resp.status == 200:
@@ -115,20 +143,20 @@ if __name__ == "__main__":
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
     import platform as _platform
-    
+
     if _platform.system() == 'Darwin':
         # ── macOS: BYOB + CustomTkinter Controller ──
         from macos_controller import CanvasController
-        
+
         # 1. Start Streamlit in daemon thread
         threading.Thread(target=_start_streamlit_server, daemon=True).start()
-        
+
         # 2. Boot UI and let it handle the health check / browser launch
         controller = CanvasController(
             streamlit_url=_STREAMLIT_URL,
             on_quit=lambda: sys.exit(0),
         )
-        
+
         # 3. Background health check and launch sequence
         def _boot_sequence():
             if _wait_for_server():
@@ -137,26 +165,26 @@ if __name__ == "__main__":
                 controller.app.after(0, controller.open_chrome)
             else:
                 controller.set_state('error', 'Server failed to start', 'Please try closing and reopening the app.')
-                
+
         # Let the controller restart the boot sequence if "Try Again" is clicked
         controller.retry_callback = _boot_sequence
-        
+
         threading.Thread(target=_boot_sequence, daemon=True).start()
-        
+
         # 4. tkinter mainloop on main thread (required by macOS Cocoa)
         controller.run()
         sys.exit(0)
-        
+
     else:
-        # ── Windows: unchanged pywebview flow ──
+        # ── Windows: pywebview flow ──
         import webview
-        
+
         # 1. Start Streamlit in a daemonized background thread.
         threading.Thread(target=_start_streamlit_server, daemon=True).start()
 
         # 2. Wait for the health endpoint before opening the native window.
         if not _wait_for_server():
-            logging.warning("Streamlit server did not respond in time; opening window anyway.")
+            logger.warning("Streamlit server did not respond in time; opening window anyway.")
 
         # 3. Create and start the native desktop window.
         webview.create_window('Canvas Downloader', _STREAMLIT_URL, maximized=True, min_size=(1024, 700))

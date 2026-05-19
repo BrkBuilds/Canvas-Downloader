@@ -406,7 +406,7 @@ class ExcelToData:
             return None, "No sheets with data found in workbook."
 
         try:
-            with open(str(dst), 'w', encoding='utf-8-sig', newline='') as f:
+            with open(str(dst), 'w', encoding='utf-8', newline='') as f:
                 f.write(self._META_CONTEXT + "\n\n")
                 for sheet_name, rows in sheet_sections:
                     f.write(f"### Sheet: {sheet_name}\n")
