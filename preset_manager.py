@@ -170,14 +170,19 @@ class PresetManager:
                 return []
             return presets
         except (json.JSONDecodeError, IOError) as e:
-            # Back up the corrupted file before discarding — prevents silent data loss
-            # if the user later saves a new preset (which calls _save_all and overwrites).
+            # Back up the corrupted file before discarding.
             try:
                 backup = self.presets_path.with_suffix('.corrupt')
+                backup.unlink(missing_ok=True)  # Remove stale backup on Windows (rename raises FileExistsError)
                 self.presets_path.rename(backup)
                 logger.warning(f"Presets file is corrupted ({e}); backed up to {backup.name}")
             except Exception:
-                pass
+                # Last resort: delete the corrupt file so the next save can succeed
+                try:
+                    self.presets_path.unlink(missing_ok=True)
+                    logger.warning(f"Presets file is corrupted ({e}) and could not be backed up; deleted.")
+                except Exception:
+                    pass
             return []
 
     def get_builtin_presets(self) -> list[dict]:
@@ -187,29 +192,34 @@ class PresetManager:
 
     # ── Write (Atomic) ──────────────────────────────────────────────
 
-    def _save_all(self, presets: list[dict]):
+    def _save_all_locked(self, presets: list[dict]):
         """Atomically persist the full presets list to disk.
 
+        Must be called while holding _presets_lock.
         Pattern: write to `.tmp`, fsync, then `os.replace`.
         """
-        with _presets_lock:
-            tmp_path = self.presets_path.with_suffix('.tmp')
+        tmp_path = self.presets_path.with_suffix('.tmp')
+        try:
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                json.dump(
+                    {'presets': presets}, f,
+                    indent=2, ensure_ascii=False,
+                )
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(str(tmp_path), str(self.presets_path))
+        except IOError as e:
+            logger.warning(f"Failed to save presets: {e}")
             try:
-                with open(tmp_path, 'w', encoding='utf-8') as f:
-                    json.dump(
-                        {'presets': presets}, f,
-                        indent=2, ensure_ascii=False,
-                    )
-                    f.flush()
-                    os.fsync(f.fileno())
-                os.replace(str(tmp_path), str(self.presets_path))
-            except IOError as e:
-                logger.warning(f"Failed to save presets: {e}")
-                try:
-                    if tmp_path.exists():
-                        tmp_path.unlink()
-                except OSError:
-                    pass
+                if tmp_path.exists():
+                    tmp_path.unlink()
+            except OSError:
+                pass
+
+    def _save_all(self, presets: list[dict]):
+        """Public alias: acquire lock then delegate to _save_all_locked."""
+        with _presets_lock:
+            self._save_all_locked(presets)
 
     def save_preset(
         self,
@@ -224,19 +234,20 @@ class PresetManager:
         Returns:
             The newly created preset dict.
         """
-        presets = self.load_presets()
-        new_preset = {
-            'preset_id': f"preset_{uuid.uuid4().hex[:12]}",
-            'preset_name': name.strip(),
-            'description': description.strip() if description else '',
-            'created_at': datetime.now(timezone.utc).isoformat(),
-            'is_builtin': False,
-            'settings': settings,
-            'include_path': include_path,
-            'download_path': download_path if include_path else '',
-        }
-        presets.append(new_preset)
-        self._save_all(presets)
+        with _presets_lock:
+            presets = self.load_presets()
+            new_preset = {
+                'preset_id': f"preset_{uuid.uuid4().hex[:12]}",
+                'preset_name': name.strip(),
+                'description': description.strip() if description else '',
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'is_builtin': False,
+                'settings': settings,
+                'include_path': include_path,
+                'download_path': download_path if include_path else '',
+            }
+            presets.append(new_preset)
+            self._save_all_locked(presets)
         return new_preset
 
     def delete_preset(self, preset_id: str) -> bool:
@@ -247,12 +258,13 @@ class PresetManager:
         Returns:
             True if found and deleted, False otherwise.
         """
-        presets = self.load_presets()
-        original_len = len(presets)
-        presets = [p for p in presets if p.get('preset_id') != preset_id]
-        if len(presets) == original_len:
-            return False
-        self._save_all(presets)
+        with _presets_lock:
+            presets = self.load_presets()
+            original_len = len(presets)
+            presets = [p for p in presets if p.get('preset_id') != preset_id]
+            if len(presets) == original_len:
+                return False
+            self._save_all_locked(presets)
         return True
 
     # ── State Capture & Apply ───────────────────────────────────────

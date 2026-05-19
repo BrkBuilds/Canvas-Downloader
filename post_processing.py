@@ -126,13 +126,12 @@ def _log_msg(ui: UIBridge, msg: str):
 
         ui.log_lines.append(msg)
 
-        log_content = "<br>".join(reversed(list(ui.log_lines)))
+        log_content = "<br>".join(reversed(list(ui.log_lines)[-200:]))
         ui.log_placeholder.markdown(f'''
         <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
             {log_content}
         </div>
         ''', unsafe_allow_html=True)
-        time.sleep(0.05)
     except Exception:
         pass
 

@@ -1378,12 +1378,13 @@ class SyncHistoryManager:
 
     def clear_history(self):
         """Clear all sync history."""
-        try:
-            if self.history_path.exists():
-                self.history_path.unlink()
-        except IOError as e:
-            import logging
-            logging.warning(f"Error clearing sync history: {e}")
+        with self._lock:
+            try:
+                if self.history_path.exists():
+                    self.history_path.unlink()
+            except IOError as e:
+                import logging
+                logging.warning(f"Error clearing sync history: {e}")
 
 
 # --- Saved Sync Groups Manager ---

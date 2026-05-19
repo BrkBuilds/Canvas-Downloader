@@ -55,7 +55,7 @@ DOWNLOAD_DEFAULTS = {
     'error_log_enabled': False,
     'concurrent_downloads': 5,
     'use_12h_format': False,
-    'skipped_discovery_errors': [],
+    'skipped_discovery_errors': 0,
     '_sync_cancel_warning_shown': False,
     # Sync mode flags (shared between download and sync)
     'sync_mode': False,
@@ -127,7 +127,7 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
     'retry_isolated_details', 'retry_mb_tracker',
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
-    'size_skipped_files',
+    'size_skipped_files', 'skipped_discovery_errors',
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
@@ -195,9 +195,9 @@ def cleanup_download_state() -> None:
     for key in DOWNLOAD_TRANSIENT_KEYS:
         st.session_state.pop(key, None)
 
-    # Nuclear reset: force all cancel flags to False
-    st.session_state['cancel_requested'] = False
-    st.session_state['download_cancelled'] = False
+    # Nuclear reset: clear threading.Event + session_state cancel flags
+    from core.cancellation import reset_download_cancel
+    reset_download_cancel()
     # Re-arm the completion-sound sentinel for the next run.
     st.session_state['completion_beep_fired'] = False
 
@@ -225,10 +225,11 @@ def cleanup_sync_state() -> None:
     for key in SYNC_TRANSIENT_KEYS:
         st.session_state.pop(key, None)
 
-    # Nuclear reset: force sync cancel flags to False.
+    # Nuclear reset: clear threading.Event + session_state sync cancel flags.
     # sync_cancel_requested is already removed by SYNC_TRANSIENT_KEYS pop above.
     # cancel_requested / download_cancelled are download-specific — do not reset here.
-    st.session_state['sync_cancelled'] = False
+    from core.cancellation import reset_sync_cancel
+    reset_sync_cancel()
     st.session_state['download_cancelled'] = False
     # Re-arm the completion-sound sentinel for the next sync run.
     st.session_state['completion_beep_fired'] = False

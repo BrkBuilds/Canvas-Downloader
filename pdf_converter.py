@@ -26,6 +26,25 @@ logger = logging.getLogger(__name__)
 # PowerPoint SaveAs format constant
 PP_SAVE_AS_PDF = 32
 
+# Maximum seconds to wait for a single COM conversion before killing the Office process
+_COM_TIMEOUT_SECONDS = 180
+
+
+def _kill_office_process(process_name: str) -> None:
+    """Forcefully kill a hung Office process by executable name (Windows taskkill).
+
+    Called from a watchdog timer thread when a COM conversion stalls.
+    The kill unblocks the stuck COM call in the main thread by causing it
+    to raise a pywintypes.com_error (RPC server unavailable).
+    """
+    try:
+        subprocess.run(
+            ['taskkill', '/F', '/IM', process_name],
+            capture_output=True, timeout=10,
+        )
+    except Exception:
+        pass
+
 
 class PowerPointToPDF:
     def __init__(self, error_log_path: Path = None):
@@ -135,6 +154,7 @@ class PowerPointToPDF:
         if self.app is None:
             return None
 
+        import threading as _th
         from ui_helpers import office_safe_path
 
         with office_safe_path(pptx_path) as (safe_src, safe_pdf, true_pdf):
@@ -143,7 +163,18 @@ class PowerPointToPDF:
 
             logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
             presentation = None
+            _timed_out = _th.Event()
 
+            def _on_timeout():
+                _timed_out.set()
+                logger.error(
+                    f"[COM Timeout] PowerPoint hung >{_COM_TIMEOUT_SECONDS}s "
+                    f"on {pptx_path.name}. Killing POWERPNT.EXE."
+                )
+                _kill_office_process('POWERPNT.EXE')
+
+            _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
+            _timer.start()
             try:
                 # Open presentation
                 presentation = self.app.Presentations.Open(
@@ -157,6 +188,7 @@ class PowerPointToPDF:
                 presentation.SaveAs(abs_pdf, PP_SAVE_AS_PDF)
                 presentation.Close()
                 presentation = None
+                _timer.cancel()
 
                 # Verify the PDF was actually created (at the safe path)
                 if not safe_pdf.exists():
@@ -178,9 +210,12 @@ class PowerPointToPDF:
                 return str(true_pdf.resolve().absolute())
 
             except Exception as e:
+                _timer.cancel()
                 error_msg = str(e)
 
-                if "Class not registered" in error_msg or "0x80040154" in error_msg:
+                if _timed_out.is_set():
+                    friendly_msg = f"Conversion timed out after {_COM_TIMEOUT_SECONDS}s (PowerPoint stopped responding)"
+                elif "Class not registered" in error_msg or "0x80040154" in error_msg:
                     friendly_msg = "Microsoft PowerPoint is not installed on this machine."
                 elif "RPC" in error_msg:
                     friendly_msg = f"PowerPoint COM server error (is another instance hanging?): {error_msg}"
@@ -188,7 +223,6 @@ class PowerPointToPDF:
                     friendly_msg = f"COM conversion failed: {error_msg}"
 
                 logger.error(f"[COM Error] Failed to convert {abs_pptx}. Error: {error_msg}")
-
                 _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
 
                 # Clean up partial PDF at the safe path (if any)

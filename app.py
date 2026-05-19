@@ -465,7 +465,7 @@ with _main_content.container():
         current_idx = st.session_state['current_course_index']
         
         # UI elements in correct order
-        if st.session_state['download_status'] == 'running':
+        if st.session_state.get('download_status') == 'running':
             if 'start_time' not in st.session_state:
                 st.session_state['start_time'] = time.time()
             if 'log_deque' not in st.session_state:
@@ -497,7 +497,7 @@ with _main_content.container():
             log_area = st.empty()
         
         # Handle download state
-        if st.session_state['download_status'] == 'scanning':
+        if st.session_state.get('download_status') == 'scanning':
             # Modern Course Analysis UI (Phase 1)
             total_courses = len(st.session_state['courses_to_download'])
             
@@ -638,7 +638,7 @@ with _main_content.container():
             
             st.rerun()
 
-        elif st.session_state['download_status'] == 'running':
+        elif st.session_state.get('download_status') == 'running':
             if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
                 st.session_state['download_status'] = 'cancelled'
                 st.rerun()
@@ -971,7 +971,7 @@ with _main_content.container():
                         logger.error(f"Failed to write session log: {e}")
                 # -------------------------------------------------------------------
         
-        elif st.session_state['download_status'] == 'isolated_retry':
+        elif st.session_state.get('download_status') == 'isolated_retry':
             if st.session_state.get('cancel_requested', False) or st.session_state.get('download_cancelled', False):
                 st.session_state['download_status'] = 'cancelled'
                 st.rerun()
@@ -1317,7 +1317,7 @@ with _main_content.container():
                 st.session_state['download_status'] = 'done'
             st.rerun()
 
-        elif st.session_state['download_status'] == 'done':
+        elif st.session_state.get('download_status') == 'done':
             # Completion beep - fired exactly once per run via a session
             # sentinel. Cleaned up by cleanup_download_state() when the user
             # returns to Step 1, which arms it again for the next download.
@@ -1472,7 +1472,7 @@ with _main_content.container():
 
             render_folder_cards(file_details, folder_paths, key_prefix='dl')
         
-        elif st.session_state['download_status'] == 'cancelled':
+        elif st.session_state.get('download_status') == 'cancelled':
             # Premium styled cancellation card (matches sync_ui.py design)
             downloaded_count = st.session_state.get('downloaded_items', 0)
             total_items_count = st.session_state.get('total_items', 0)

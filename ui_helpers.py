@@ -33,7 +33,7 @@ def resolve_path(path):
     """Resolve path for frozen (PyInstaller) vs normal execution."""
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, path)
-    return path
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
 
 @functools.lru_cache(maxsize=128)
 def _get_base64_image_cached(image_path: str) -> str:

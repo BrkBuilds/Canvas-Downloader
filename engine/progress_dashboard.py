@@ -207,7 +207,7 @@ def render_metrics_row(
 
 def render_terminal_log(placeholders: DashboardPlaceholders, log_deque) -> None:
     """Render the terminal-style log widget from a deque of HTML-safe lines."""
-    log_content = "<br>".join(reversed(list(log_deque))) if log_deque else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
+    log_content = "<br>".join(reversed(list(log_deque)[-200:])) if log_deque else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     placeholders.log.markdown(f'''
     <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {log_content}
@@ -306,7 +306,7 @@ def build_metrics_html(
 
 def build_terminal_html(lines) -> str:
     """Return the terminal-log HTML as a string (for sync_ui.py)."""
-    joined = "<br>".join(reversed(list(lines))) if lines else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
+    joined = "<br>".join(reversed(list(lines)[-200:])) if lines else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     return f"""
     <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.6; height: 160px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {joined}
