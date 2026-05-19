@@ -122,9 +122,10 @@ components.html("""<script>
     }
 
     // Returns a lightweight fingerprint of the page layout.  When old elements
-    // are removed the scrollHeight drops and the element count changes.
+    // are removed the scrollHeight drops and the direct child count changes.
+    // childElementCount is O(1) — avoids a full DOM tree walk every 200 ms.
     function pageFingerprint(target){
-        return target.scrollHeight + '|' + target.querySelectorAll('*').length;
+        return target.scrollHeight + '|' + target.childElementCount;
     }
 
     function schedHide(){
