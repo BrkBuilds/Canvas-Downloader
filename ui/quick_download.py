@@ -1142,6 +1142,9 @@ div.st-key-page_nav_quick_back button:hover {{
             ]:
                 st.session_state.pop(_stale, None)
 
+            from core.cancellation import reset_download_cancel
+            reset_download_cancel()
+
             st.session_state['courses_to_download']  = courses_to_download
             st.session_state['current_course_index'] = 0
             st.session_state['cancel_requested']     = False

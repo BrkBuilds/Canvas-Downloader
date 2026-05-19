@@ -1804,6 +1804,10 @@ div.st-key-review_browse_folder button:hover {
                         from canvas_debug import clear_debug_log
                         clear_debug_log(Path(st.session_state['download_path']) / "debug_log.txt")
 
+                    from core.cancellation import reset_download_cancel, reset_sync_cancel
+                    reset_download_cancel()
+                    reset_sync_cancel()
+
                     if st.session_state['current_mode'] == 'sync':
                         # Sync mode - go to Step 4 (Analysis)
                         st.session_state['download_status'] = 'analyzing'

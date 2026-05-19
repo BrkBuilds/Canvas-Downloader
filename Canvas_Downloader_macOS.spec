@@ -159,4 +159,5 @@ app = BUNDLE(
             'Canvas Downloader saves downloaded course files to your chosen folder.'
         ),
     },
+    entitlements='entitlements.mac.plist',
 )
