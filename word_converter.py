@@ -88,8 +88,9 @@ class WordToPDF:
 
     def _convert_applescript_word(self, src: Path, dst: Path) -> bool:
         """Convert a Word document to PDF via AppleScript on macOS."""
-        posix_src = str(src.resolve()).replace('"', '\\"')
-        posix_dst = str(dst.resolve()).replace('"', '\\"')
+        from engine.applescript_bridge import _as_posix
+        posix_src = _as_posix(src)
+        posix_dst = _as_posix(dst)
         script = f'''
             tell application "Microsoft Word"
                 set display alerts to false

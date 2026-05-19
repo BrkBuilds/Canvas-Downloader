@@ -988,6 +988,10 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     _init_sync_session_state()
     _load_persistent_pairs()
 
+    # Inject Google Material Symbols font once per render (M-24).
+    from ui_shared import inject_material_icons_font
+    inject_material_icons_font()
+
     # Step wizard - must be rendered BEFORE any inject_css() calls.
     # inject_hub_global_css() calls inject_css() via st.markdown which creates a
     # 1rem ghost-box margin; rendering the wizard first pins it flush to the top.

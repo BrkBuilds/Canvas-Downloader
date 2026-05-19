@@ -63,26 +63,36 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def manage_download_lock(filepath):
-    current_loop = asyncio.get_event_loop()
+    # get_running_loop() is the correct API from Python 3.7+ when called
+    # from within a running coroutine (get_event_loop() is deprecated for this).
+    current_loop = asyncio.get_running_loop()
     current_loop_id = id(current_loop)
-    with _lock_mutex_local:
-        entry = _download_locks.get(filepath)
-        if entry is None or entry.get("loop_id") != current_loop_id:
-            # Fresh entry or stale lock from a dead event loop — create new Lock
-            _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0, "loop_id": current_loop_id}
-        _download_locks[filepath]["count"] += 1
-        file_lock = _download_locks[filepath]["lock"]
 
-    try:
-        async with file_lock:
-            yield
-    finally:
+    # Push threading.Lock acquisitions to the executor so they never block
+    # the event loop thread if contended under high concurrency (H-16).
+    def _acquire_slot():
+        with _lock_mutex_local:
+            entry = _download_locks.get(filepath)
+            if entry is None or entry.get("loop_id") != current_loop_id:
+                # Fresh entry or stale lock from a dead event loop — new Lock.
+                _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0, "loop_id": current_loop_id}
+            _download_locks[filepath]["count"] += 1
+            return _download_locks[filepath]["lock"]
+
+    def _release_slot():
         with _lock_mutex_local:
             entry = _download_locks.get(filepath)
             if entry:
                 entry["count"] -= 1
                 if entry["count"] == 0:
                     _download_locks.pop(filepath, None)
+
+    file_lock = await current_loop.run_in_executor(None, _acquire_slot)
+    try:
+        async with file_lock:
+            yield
+    finally:
+        await current_loop.run_in_executor(None, _release_slot)
 
 # --- Constants ---
 MAX_RETRIES = 5
@@ -1209,18 +1219,29 @@ class CanvasManager:
             pass
         return total_bytes / (1024 * 1024)
 
-    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False, post_processing_settings=None, secondary_content_settings=None):
+    async def download_course_async(self, course, mode, save_dir, progress_callback=None, check_cancellation=None, file_filter='all', debug_mode=False, post_processing_settings=None, secondary_content_settings=None, estimated_size_mb=0):
         """
         Downloads content for a single course asynchronously.
+
+        Args:
+            estimated_size_mb: Per-course estimated payload in MB for disk-space
+                check. Pass the course-specific value from the caller instead of
+                relying on the aggregate ``total_mb`` session-state key, which is
+                stale after the first course in a multi-course download run.
         """
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
-        
-        # Check disk space - pass estimated payload from session state so the
-        # dynamic threshold catches large downloads (e.g. 15 GB course on a
-        # volume with only 1.5 GB free).
-        import streamlit as _st_disk
-        _estimated_mb = _st_disk.session_state.get('total_mb', 0) or 0
+
+        # Check disk space using the caller-supplied per-course estimate.
+        # Fall back to the session-state aggregate only as a last resort so we
+        # don't silently skip the check when no estimate was provided.
+        _estimated_mb = estimated_size_mb or 0
+        if not _estimated_mb:
+            try:
+                import streamlit as _st_disk
+                _estimated_mb = _st_disk.session_state.get('total_mb', 0) or 0
+            except Exception:
+                _estimated_mb = 0
         _estimated_bytes = int(_estimated_mb * 1024 * 1024)
         if not self._check_disk_space(save_dir, required_bytes=_estimated_bytes):
             _free_gb = 0
@@ -1262,18 +1283,27 @@ class CanvasManager:
         module_handled_ids = set()  # Secondary entity IDs already handled via module dispatch
         mb_tracker = {'bytes_downloaded': 0}
         
-        # Determine semaphore limit from session state if available, default to 5
-        import streamlit as st  # Deferred: keeps canvas_logic reusable without Streamlit dependency
-        concurrent_limit = st.session_state.get('concurrent_downloads', 5)
+        # Determine semaphore limit from session state if available, default to 5.
+        # Wrapped in try/except because this async function may run on a background
+        # thread where Streamlit's session context is not present.
+        try:
+            import streamlit as _st_sem
+            concurrent_limit = int(_st_sem.session_state.get('concurrent_downloads', 5) or 5)
+        except Exception:
+            concurrent_limit = 5
         sem = asyncio.Semaphore(concurrent_limit)
 
         # Read max-file-size gate from session state once, store on the
         # manager so every _download_file_async call can apply it without
         # plumbing a parameter through ~7 dispatch sites.
-        if st.session_state.get('max_file_size_enabled', False):
-            _mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
-            self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
-        else:
+        try:
+            import streamlit as _st_sz
+            if _st_sz.session_state.get('max_file_size_enabled', False):
+                _mb = int(_st_sz.session_state.get('max_file_size_mb', 0) or 0)
+                self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
+            else:
+                self._max_file_size_bytes = None
+        except Exception:
             self._max_file_size_bytes = None
         
         tasks = []
@@ -1718,17 +1748,25 @@ class CanvasManager:
         if not current_ctx:
             raise RuntimeError("CRITICAL THREAD LEAK: Streamlit ScriptRunContext is missing in download_isolated_batch_async.")
 
-        concurrent_limit = st.session_state.get('concurrent_downloads', 5)
+        try:
+            import streamlit as _st_iso
+            concurrent_limit = _st_iso.session_state.get('concurrent_downloads', 5)
+        except Exception:
+            concurrent_limit = 5
         sem = asyncio.Semaphore(concurrent_limit)
         tasks = []
         timeout = aiohttp.ClientTimeout(total=None, sock_read=60, sock_connect=15)
 
         # Mirror the size-gate setup from download_course_async so the
         # retry path honors the same limit.
-        if st.session_state.get('max_file_size_enabled', False):
-            _mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
-            self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
-        else:
+        try:
+            import streamlit as _st_iso_sz
+            if _st_iso_sz.session_state.get('max_file_size_enabled', False):
+                _mb = int(_st_iso_sz.session_state.get('max_file_size_mb', 0) or 0)
+                self._max_file_size_bytes = _mb * 1024 * 1024 if _mb > 0 else None
+            else:
+                self._max_file_size_bytes = None
+        except Exception:
             self._max_file_size_bytes = None
 
         if mb_tracker is None:
@@ -2744,7 +2782,7 @@ class CanvasManager:
             if progress_callback:
                 progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
-            return None, None
+            return None, None, None  # callers unpack (filepath, syn_id, canvas_updated)
 
         # DB record ― synthetic negative ID
         synthetic_id = make_secondary_id(entity_type, canvas_entity_id)
@@ -3111,7 +3149,7 @@ class CanvasManager:
 
             else:
                 log_debug(f"Unknown secondary entity type: {entity_type} for ID {file_id}", debug_file)
-                return None, None, None
+                return None, None, None, None  # callers unpack (filepath, syn_id, attachments, canvas_updated)
 
         except Exception as e:
             log_debug(f"Failed to download secondary entity {entity_type} (ID {file_id}): {e}", debug_file)

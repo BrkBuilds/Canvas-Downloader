@@ -4,11 +4,15 @@ import logging
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
-# PyInstaller FFmpeg fix
+# PyInstaller FFmpeg fix — wrapped in try/except: get_ffmpeg_exe() raises if the
+# binary is missing from the bundle, and we don't want a module-level crash.
 if getattr(sys, 'frozen', False):
-    import imageio_ffmpeg
-    ffmpeg_name = os.path.basename(imageio_ffmpeg.get_ffmpeg_exe())
-    os.environ["IMAGEIO_FFMPEG_EXE"] = os.path.join(sys._MEIPASS, "imageio_ffmpeg", "binaries", ffmpeg_name)
+    try:
+        import imageio_ffmpeg
+        ffmpeg_name = os.path.basename(imageio_ffmpeg.get_ffmpeg_exe())
+        os.environ["IMAGEIO_FFMPEG_EXE"] = os.path.join(sys._MEIPASS, "imageio_ffmpeg", "binaries", ffmpeg_name)
+    except Exception as _ffmpeg_err:
+        logging.getLogger(__name__).warning(f"Could not locate bundled FFmpeg binary: {_ffmpeg_err}")
 
 try:
     # MoviePy v2.x
@@ -78,7 +82,10 @@ def _safe_close(clip, label="clip"):
     except Exception:
         pass
     finally:
-        pool.shutdown(wait=False, cancel_futures=True)
+        if sys.version_info >= (3, 9):
+            pool.shutdown(wait=False, cancel_futures=True)
+        else:
+            pool.shutdown(wait=False)
 
 
 def convert_video_to_mp3(video_path: str | Path) -> str | None:
@@ -104,14 +111,22 @@ def convert_video_to_mp3(video_path: str | Path) -> str | None:
         
     except Exception as e:
         logger.error(f"Failed to convert video {abs_video}: {e}")
+        # Remove any partial .mp3 that write_audiofile may have created before failing.
+        try:
+            Path(abs_mp3).unlink(missing_ok=True)
+        except Exception:
+            pass
         return None
     finally:
-        # CRITICAL: Close audio reader FIRST (holds separate FFmpeg subprocess),
-        # then close the video clip to release all file locks and processes.
-        # Both use _safe_close to prevent indefinite hangs on corrupt videos.
+        # Close audio reader FIRST (holds a separate FFmpeg subprocess), then
+        # the video clip. Each call is isolated so a failure on the audio close
+        # never prevents the video clip from being released (H-17).
         if video_clip is not None:
-            if video_clip.audio:
-                _safe_close(video_clip.audio, "audio")
+            try:
+                if video_clip.audio is not None:
+                    _safe_close(video_clip.audio, "audio")
+            except Exception:
+                pass
             _safe_close(video_clip, "video")
             
         # Delete original video file to save space only if extraction succeeded

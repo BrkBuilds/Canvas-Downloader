@@ -2,8 +2,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-DEFAULT_DEBUG_FILE = "debug_log.txt"
-
 def log_debug(message, debug_file=None):
     """Writes a message to the debug log if enabled."""
     if not debug_file:

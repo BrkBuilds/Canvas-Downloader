@@ -131,7 +131,7 @@ def _select_folder_cb() -> None:
 
 def render_quick_download(fetch_courses_fn) -> None:
     """Render the Quick Download page (Step 2 lite)."""
-    from ui.presets import render_config_summary_badges
+    from ui_shared import render_config_summary_badges
     from ui_helpers import get_course_display_parts
 
     render_download_wizard(st, 2)
