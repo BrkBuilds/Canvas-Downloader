@@ -26,7 +26,7 @@ import theme
 from canvas_logic import CanvasManager, safe_thread_wrapper
 from core.state_registry import NOTEBOOK_SUB_KEYS
 from sync_manager import SyncManager
-from ui_helpers import render_sync_wizard, friendly_course_name
+from ui_helpers import render_sync_wizard, friendly_course_name, esc
 from engine.notifications import play_completion_beep
 
 logger = logging.getLogger(__name__)
@@ -211,7 +211,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 analysis_ui_placeholder.markdown(f"""
                 <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
                     <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
-                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{display_name}</b></p>
+                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {pair_num} of {total_pairs}: <b>{esc(display_name)}</b></p>
                     <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
                     <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
                         <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>

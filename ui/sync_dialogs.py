@@ -682,22 +682,22 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
              selected_course_name = course_names[selected_course_id]
         elif selected_course_id: # If ID exists but not in current course_names (e.g., course deleted)
              current_disp = f"ID: {selected_course_id} (Course not found)"
-        
+
         # Determine button label based on mode
         if editing_idx is not None:
              btn_label = 'Change Course'
         else:
              btn_label = 'Select Course'
-        
+
         # Two columns like folder row: [1, 1, 1] to keep it left-aligned
         # REVISED: [1, 1, 1] - relying on CSS flex auto-width to handle content size
         col_c_info, col_c_btn, col_c_spacer = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
-        
+
         with col_c_info:
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                 f'{"Course: "}</span>'
-                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{current_disp}</span>',
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{esc(current_disp)}</span>',
                 unsafe_allow_html=True
             )
             
