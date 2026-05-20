@@ -711,7 +711,7 @@ def render_progress_bar(container, current: int, total: int,
         </div>
     </div>
     '''
-    container.markdown(progress_html, unsafe_allow_html=True)
+    container.html(progress_html)
 
 
 # --- Step Wizard ---

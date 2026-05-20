@@ -216,11 +216,10 @@ class PresetManager:
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(str(tmp_path), str(self.presets_path))
-        except IOError as e:
+        except Exception as e:
             logger.warning(f"Failed to save presets: {e}")
             try:
-                if tmp_path.exists():
-                    tmp_path.unlink()
+                tmp_path.unlink(missing_ok=True)
             except OSError:
                 pass
 

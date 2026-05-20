@@ -197,7 +197,7 @@ def show_sync_complete():
         total_structural_errors = sum(
             res['res_data']['result'].structural_errors
             for res in st.session_state.get('sync_selections', [])
-            if res.get('res_data') and hasattr(res['res_data'].get('result'), 'structural_errors')
+            if res.get('res_data') and 'result' in res['res_data'] and hasattr(res['res_data']['result'], 'structural_errors')
         )
         if total_structural_errors > 0:
             st.warning(

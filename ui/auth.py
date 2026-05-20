@@ -1104,7 +1104,7 @@ def render_login_page(fetch_courses_fn):
                     st.session_state['api_token'] = input_token
                     st.session_state['api_url'] = manager.api_url
                     st.session_state['is_authenticated'] = True
-                    st.session_state['user_name'] = message.split(": ")[1] if ": " in message else message
+                    st.session_state['user_name'] = message.split(": ", 1)[1] if ": " in message else message
 
                     # Setup base config data
                     config_data = {}

@@ -29,9 +29,9 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
             with open(output_path, 'r', encoding='utf-8') as f:
                 existing_content = f.read()
             for line in existing_content.splitlines():
-                if line.startswith("http"):
-                    # Robust hydration parsing: aggressive strip
-                    existing_urls.add(line.strip())
+                if line.lower().startswith("http"):
+                    # Robust hydration parsing: aggressive strip; lowercase for case-insensitive dedup
+                    existing_urls.add(line.strip().lower())
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning(f"Could not read existing NotebookLM text file for deduplication: {e}")
@@ -52,9 +52,9 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
             if not (link.startswith('http://') or link.startswith('https://')):
                 continue
 
-            if link not in existing_urls:
+            if link.lower() not in existing_urls:
                 compiled_links.append(f"📌 {shortcut_file.stem}\n{link}\n")
-                existing_urls.add(link)
+                existing_urls.add(link.lower())
                 
     if not compiled_links:
         # No new links found (all duplicates or no shortcuts). Return None for the

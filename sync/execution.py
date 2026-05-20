@@ -495,7 +495,10 @@ def run_sync():
                             if _sec_entity_type != 'attachment' and _sec_entity_type not in ('module_item', 'unknown'):
                                 # Load secondary contract for this pair
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
-                                _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
+                                try:
+                                    _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
+                                except (json.JSONDecodeError, TypeError, ValueError):
+                                    _sec_settings = {}
 
                                 # Mode A inline: derive the module subfolder from
                                 # the analyzer's target_local_path so the entity
@@ -922,7 +925,8 @@ def run_sync():
                 
                 # Setup updates reference explicitly to fix `updates is not defined` NameError traceback
                 updates = sel['updates']
-                deletions = res_data['result'].deleted_on_canvas
+                _exec_result = res_data.get('result')
+                deletions = _exec_result.deleted_on_canvas if _exec_result else []
                 if updates or deletions:
                     log_file_path = local_path / "☁️ Canvas Updates & Deletions.txt"
                     
@@ -1001,7 +1005,9 @@ def run_sync():
                     
             pair_idx = sel['pair_idx']
             res_data = sel['res_data']
-            sm = res_data['sync_manager']
+            sm = res_data.get('sync_manager')
+            if sm is None:
+                continue
             for fname in synced_details.get(pair_idx, []):
                 fname_path = Path(fname)
                 # Match on the primary suffix OR on the full compound suffix

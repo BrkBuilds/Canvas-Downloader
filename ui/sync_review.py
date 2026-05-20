@@ -443,14 +443,15 @@ def show_analysis_review(on_confirm_sync):
             st.rerun()
         st.stop()
 
-    total_new = sum(len(r['result'].new_files) for r in all_results)
-    total_upd_clean = sum(len(r['result'].updated_clean_files) for r in all_results)
-    total_upd_mod = sum(len(r['result'].updated_modified_files) for r in all_results)
+    _valid_results = [r for r in all_results if r.get('result') is not None]
+    total_new = sum(len(r['result'].new_files) for r in _valid_results)
+    total_upd_clean = sum(len(r['result'].updated_clean_files) for r in _valid_results)
+    total_upd_mod = sum(len(r['result'].updated_modified_files) for r in _valid_results)
     total_upd = total_upd_clean + total_upd_mod
-    total_loc_del = sum(len(r['result'].locally_deleted_files) for r in all_results)
-    total_del = sum(len(r['result'].deleted_on_canvas) for r in all_results)
-    total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in all_results)
-    total_ignored = sum(len(r['result'].ignored_files) if hasattr(r['result'], 'ignored_files') else 0 for r in all_results)
+    total_loc_del = sum(len(r['result'].locally_deleted_files) for r in _valid_results)
+    total_del = sum(len(r['result'].deleted_on_canvas) for r in _valid_results)
+    total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in _valid_results)
+    total_ignored = sum(len(r['result'].ignored_files) if hasattr(r['result'], 'ignored_files') else 0 for r in _valid_results)
 
     
 
@@ -713,7 +714,7 @@ def show_analysis_review(on_confirm_sync):
                     """)
 
                     with st.container(border=True, key="filetypes_flex_box"):
-                        safe_len = min(len(all_exts_sorted), 90)
+                        safe_len = min(len(all_exts_sorted), 10)
                         cols = st.columns(safe_len)
                         for i, ext in enumerate(all_exts_sorted):
                             col_idx = i % safe_len
