@@ -1155,11 +1155,13 @@ class SyncManager:
         """Add or update a file entry in the manifest after successful download and save immediately to DB."""
         file_id = str(canvas_file.id)
         
-        # If no MD5 is provided but file exists, compute it
+        # If no MD5 is provided but file exists, compute it.
+        # compute_local_md5 returns None on PermissionError — coerce to "" so
+        # the DB always gets a string (NULL causes type ambiguity on read-back).
         if not local_md5:
             full_path = self.local_path / local_path
             if full_path.exists():
-                local_md5 = SyncManager.compute_local_md5(full_path)
+                local_md5 = SyncManager.compute_local_md5(full_path) or ""
                 
         entry = {
             'canvas_file_id': int(file_id),
@@ -1240,7 +1242,7 @@ class SyncManager:
             return False
         
         new_size = full_new_path.stat().st_size
-        new_md5 = SyncManager.compute_local_md5(full_new_path)
+        new_md5 = SyncManager.compute_local_md5(full_new_path) or ""
         
         max_retries = 3
         for attempt in range(max_retries):
@@ -1667,18 +1669,28 @@ def get_file_icon(filename: str) -> str:
     
     return icon_map.get(ext, '📁')
 
-def compute_local_md5(filepath: Path) -> str:
-    """Compute MD5 hash of a file efficiently by reading in chunks."""
+def compute_local_md5(filepath: Path) -> str | None:
+    """Compute MD5 hash of a file efficiently by reading in 1 MB chunks.
+
+    Returns:
+        hex digest string — file was readable and hashed successfully.
+        ""  (empty string) — file does not exist (no hash available).
+        None — file exists but could not be read (PermissionError / locked).
+
+    Callers that only care about availability can treat both falsy values the
+    same way (``if not result``).  Callers that need to distinguish a missing
+    file from an unreadable one should check ``result is None``.
+    """
     if not filepath.exists():
         return ""
     h = hashlib.md5()
     try:
         with open(filepath, 'rb') as f:
-            for chunk in iter(lambda: f.read(8192), b""):
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
                 h.update(chunk)
         return h.hexdigest()
     except OSError:
-        return ""
+        return None
         
 # compute_local_md5 is now a proper @staticmethod on SyncManager (see class body)
 

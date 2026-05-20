@@ -965,6 +965,9 @@ def render_course_selector(fetch_courses_fn):
         if not st.session_state['selected_course_ids']:
             error_container.error('Please select at least one course.')
         else:
+            if quick_clicked:
+                # Always start Quick Download with no preset selected.
+                st.session_state.pop('quick_preset_id', None)
             st.session_state['quick_download_mode'] = quick_clicked
             st.session_state['step'] = 2
             st.rerun()

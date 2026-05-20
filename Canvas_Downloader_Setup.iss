@@ -1,9 +1,19 @@
 ; Canvas Downloader - Inno Setup 6 Installer Script
-; Build order: pyinstaller Canvas_Downloader.spec → iscc Canvas_Downloader_Setup.iss
+; Preferred build: python build_windows.py
+;   (reads version.py, generates version_info.py, runs pyinstaller, then
+;    calls: iscc /DAppVersion=X.Y.Z Canvas_Downloader_Setup.iss)
+;
+; Manual build fallback: iscc Canvas_Downloader_Setup.iss
+;   Uses the #define below. Keep in sync with version.py.
+;
 ; Output: installer_output\Canvas_Downloader_Setup_{version}.exe
 
 #define AppName        "Canvas Downloader"
-#define AppVersion     "2.0.0"
+; AppVersion is injected by build_windows.py via /DAppVersion=X.Y.Z.
+; The #ifndef guard preserves manual-iscc compatibility with the hardcoded fallback.
+#ifndef AppVersion
+  #define AppVersion   "2.0.0"
+#endif
 #define AppPublisher   "Canvas Downloader"
 #define AppExeName     "Canvas Downloader.exe"
 #define AppURL         "https://github.com/birkls/canvas-downloader"

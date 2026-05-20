@@ -200,18 +200,24 @@ def run_analysis(sync_pairs, main_placeholder=None):
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
-    for pair_num, pair in enumerate(sync_pairs, 1):
+    # Single pool reused across all pairs — avoids per-iteration thread
+    # spawn/teardown overhead (~50 ms each on Windows) for large sync groups.
+    import concurrent.futures as _cf
+    from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
+    _analysis_pool = _cf.ThreadPoolExecutor(max_workers=1)
+    try:
+     for pair_num, pair in enumerate(sync_pairs, 1):
         # CHECK FOR CANCEL INSIDE THE LOOP
         if is_sync_cancelled():
             break
-            
+
         # Folder-not-found guard
         if not Path(pair['local_folder']).exists():
             st.error(f"❌ Folder not found: {pair['local_folder']}. It may have been deleted, renamed, or the drive is disconnected.")
             continue
 
         display_name = friendly_course_name(pair['course_name'])
-        
+
         # Default-argument capture binds pair_num and display_name to the
         # current iteration's values, preventing late-binding over loop variables.
         def sync_progress_hook(current, total, status_text,
@@ -239,11 +245,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
         course_name = pair['course_name']
 
         try:
-            # --- Fix 2: Offload blocking API work to a background thread ---
-            # Capture script context on the script thread, then run asyncio in
-            # a dedicated worker thread so asyncio.run() never conflicts with
-            # Tornado's already-running event loop (would raise RuntimeError).
-            from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
+            # Offload blocking API work to the shared background thread so
+            # asyncio.run() never conflicts with Tornado's running loop.
             _current_ctx = get_script_run_ctx()
 
             async def _run_course_analysis():
@@ -257,10 +260,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     sync_progress_hook,
                 )
 
-            import concurrent.futures as _cf
-            with _cf.ThreadPoolExecutor(max_workers=1) as _pool:
-                course, sync_mgr, manifest, canvas_files, result, detected = (
-                    _pool.submit(asyncio.run, _run_course_analysis()).result()
+            course, sync_mgr, manifest, canvas_files, result, detected = (
+                    _analysis_pool.submit(asyncio.run, _run_course_analysis()).result()
                 )
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
@@ -279,6 +280,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
             logger.error(f"Sync Analysis Error: {str(e)}")
             st.error(f"Error accessing course {display_name}: {e}")
             continue
+
+    finally:
+        _analysis_pool.shutdown(wait=True)
 
     # Clean up the UI when all courses are done analyzing
     analysis_ui_placeholder.empty()
