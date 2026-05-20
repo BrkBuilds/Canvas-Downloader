@@ -36,7 +36,9 @@ class _CanvasTimeoutAdapter(HTTPAdapter):
     which then surfaces as a proper error rather than a silent hang.
     """
     def send(self, request, **kwargs):
-        kwargs.setdefault('timeout', (15, 60))
+        # 15s connect / 60s read. Slow Canvas servers on registration day may
+        # exceed this; expose CANVAS_TIMEOUT env var if a user needs more time.
+        kwargs.setdefault('timeout', (15, int(os.environ.get('CANVAS_TIMEOUT', 60))))
         return super().send(request, **kwargs)
 
 
@@ -2855,6 +2857,23 @@ class CanvasManager:
         # DB record ― synthetic negative ID
         synthetic_id = make_secondary_id(entity_type, canvas_entity_id)
 
+        # Record in the sync manifest so subsequent syncs don't re-download this
+        # entity. This is centralised here so every call-site is automatically
+        # correct — including the module-dispatch loop which only calls
+        # _save_secondary_entity and discards the return value.
+        if sync_manager and filepath:
+            try:
+                rel_path = str(filepath.relative_to(course_base_path)).replace('\\', '/')
+                sync_manager.record_downloaded_file(
+                    canvas_file_id=synthetic_id,
+                    canvas_filename=filepath.name,
+                    local_path=rel_path,
+                    canvas_updated_at=canvas_updated_at or '',
+                    original_size=0,
+                )
+            except Exception as _db_err:
+                log_debug(f"DB record failed for {entity_type} '{entity_name}': {_db_err}", debug_file)
+
         if progress_callback:
             progress_callback(
                 entity_name, progress_type='secondary',
@@ -4144,6 +4163,9 @@ class CanvasManager:
             filename = filename.replace(ch, '')
         try: filename = urllib.parse.unquote_plus(filename)
         except Exception: pass
+        # Stripping path separators (/ and \) is what prevents directory traversal
+        # — a Canvas filename like "../../evil" becomes "....evil" then gets
+        # lstripped below. Do not remove these characters from the pattern.
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
         if replace_spaces: sanitized = sanitized.replace(' ', '_')
         sanitized = sanitized.lstrip(' _').rstrip('. _')

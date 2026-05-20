@@ -3,7 +3,6 @@ import io
 import sys
 import time
 import logging
-import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -23,6 +22,7 @@ class ExcelToPDF:
 
     def __init__(self):
         self.app = None
+        self._com_pid = None  # PID of the spawned EXCEL.EXE COM process
 
     # ── lifecycle ──────────────────────────────────────────────────
     def __enter__(self):
@@ -49,9 +49,12 @@ class ExcelToPDF:
 
     # ── COM management ─────────────────────────────────────────────
     def _init_app(self):
-        """Spin up a fresh, locked-down Excel instance."""
+        """Spin up a fresh, locked-down Excel instance and track its PID."""
+        self._com_pid = None
         try:
             import win32com.client
+            from engine.office_pid import snapshot_office_pids, find_new_office_pid
+            _pre = snapshot_office_pids('EXCEL.EXE')
             self.app = win32com.client.DispatchEx("Excel.Application")
             self.app.Visible = False
             self.app.DisplayAlerts = False
@@ -64,6 +67,8 @@ class ExcelToPDF:
                 self.app.Interactive = False        # suppress "Publishing…" dialog
             except Exception:
                 pass
+            self._com_pid = find_new_office_pid('EXCEL.EXE', _pre)
+            logger.debug(f"[COM] Excel started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. Excel conversion disabled.")
             self.app = None
@@ -150,6 +155,7 @@ class ExcelToPDF:
 
         import threading as _th
         from ui_helpers import office_safe_path
+        from engine.office_pid import kill_office_pid
 
         _COM_TIMEOUT_SECONDS = 180
 
@@ -158,21 +164,15 @@ class ExcelToPDF:
             abs_pdf = str(safe_pdf)
             wb = None
             _timed_out = _th.Event()
+            _pid = self._com_pid  # capture before timer fires
 
             def _on_timeout():
                 _timed_out.set()
                 logger.error(
                     f"[COM Timeout] Excel hung >{_COM_TIMEOUT_SECONDS}s "
-                    f"on {src.name}. Killing EXCEL.EXE."
+                    f"on {src.name}. Killing PID {_pid or 'unknown'}."
                 )
-                try:
-                    subprocess.run(
-                        ['taskkill', '/F', '/IM', 'EXCEL.EXE'],
-                        capture_output=True, timeout=10,
-                        creationflags=subprocess.CREATE_NO_WINDOW,
-                    )
-                except Exception:
-                    pass
+                kill_office_pid(_pid or 0, 'EXCEL.EXE')
 
             _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
             _timer.start()
@@ -194,8 +194,14 @@ class ExcelToPDF:
                     except Exception:
                         pass
 
-                # 0 = xlTypePDF
-                wb.ExportAsFixedFormat(0, abs_pdf)
+                # 0 = xlTypePDF. IncludeDocProperties=True avoids a known Office
+                # bug where omitting it triggers a phantom "Save as" dialog when
+                # AutomationSecurity is locked down (msoAutomationSecurityForceDisable).
+                wb.ExportAsFixedFormat(
+                    0, abs_pdf,
+                    IncludeDocProperties=True,
+                    IgnorePrintAreas=False,
+                )
                 time.sleep(0.3)
 
                 wb.Close(SaveChanges=False)

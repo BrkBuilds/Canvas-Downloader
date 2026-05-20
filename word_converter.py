@@ -1,6 +1,5 @@
 import sys
 import logging
-import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -15,6 +14,7 @@ class WordToPDF:
     """
     def __init__(self):
         self.app = None
+        self._com_pid = None  # PID of the spawned WINWORD.EXE COM process
         
     def __enter__(self):
         if sys.platform == 'darwin':
@@ -38,15 +38,20 @@ class WordToPDF:
             pass
 
     def _init_app(self):
-        """Spin up a fresh Word instance."""
+        """Spin up a fresh Word instance and track its PID."""
+        self._com_pid = None
         try:
             import win32com.client
+            from engine.office_pid import snapshot_office_pids, find_new_office_pid
+            _pre = snapshot_office_pids('WINWORD.EXE')
             self.app = win32com.client.DispatchEx("Word.Application")
             try:
                 self.app.Visible = False
             except Exception:
                 pass
             self.app.DisplayAlerts = False
+            self._com_pid = find_new_office_pid('WINWORD.EXE', _pre)
+            logger.debug(f"[COM] Word started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. Word conversion disabled.")
             self.app = None
@@ -124,6 +129,7 @@ class WordToPDF:
 
         import threading as _th
         from ui_helpers import office_safe_path
+        from engine.office_pid import kill_office_pid
 
         _COM_TIMEOUT_SECONDS = 180
 
@@ -133,21 +139,15 @@ class WordToPDF:
 
             doc = None
             _timed_out = _th.Event()
+            _pid = self._com_pid  # capture before timer fires
 
             def _on_timeout():
                 _timed_out.set()
                 logger.error(
                     f"[COM Timeout] Word hung >{_COM_TIMEOUT_SECONDS}s "
-                    f"on {abs_doc_path.name}. Killing WINWORD.EXE."
+                    f"on {abs_doc_path.name}. Killing PID {_pid or 'unknown'}."
                 )
-                try:
-                    subprocess.run(
-                        ['taskkill', '/F', '/IM', 'WINWORD.EXE'],
-                        capture_output=True, timeout=10,
-                        creationflags=subprocess.CREATE_NO_WINDOW,
-                    )
-                except Exception:
-                    pass
+                kill_office_pid(_pid or 0, 'WINWORD.EXE')
 
             _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
             _timer.start()

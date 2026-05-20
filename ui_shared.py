@@ -24,24 +24,42 @@ SECONDARY_ENTITY_ICONS = {
 # Feather-style stroke icons. Use inside help card text_html to replace emojis.
 # Sized at 18×18 with themed stroke colors for consistency.
 _ICON_STYLE = 'display:inline-block;vertical-align:middle;position:relative;top:-1px;margin:0 4px;flex-shrink:0;'
-_MATERIAL_FONT_LINK = '<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,1,0" rel="stylesheet">'
+
+# Inline SVG paths for each icon — keyed by Material icon name.
+# Eliminates the Google Fonts dependency so icons work in the packaged app
+# regardless of network access or font-load timing.
+_MAT_SVG_INNER: dict[str, str] = {
+    'lightbulb': "<line x1='9' y1='18' x2='15' y2='18'/><line x1='10' y1='22' x2='14' y2='22'/><path d='M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z'/>",
+    'folder':    "<path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'/>",
+    'shield':    "<path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/>",
+    'database':  "<ellipse cx='12' cy='5' rx='9' ry='3'/><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'/><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/>",
+    'build':     "<path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'/>",
+    'help':      "<circle cx='12' cy='12' r='10'/><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/><line x1='12' y1='17' x2='12.01' y2='17'/>",
+    'star':      "<polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/>",
+    'inventory_2': "<path d='M21 8V21H3V8'/><rect x='1' y='3' width='22' height='5'/><line x1='10' y1='12' x2='14' y2='12'/>",
+    'check_circle': "<path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/>",
+    'arrow_selector_tool': "<path d='M5 3l14 9-7 1-4 7z'/>",
+    'visibility': "<path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/><circle cx='12' cy='12' r='3'/>",
+    'archive':   "<polyline points='21 8 21 21 3 21 3 8'/><rect x='1' y='3' width='22' height='5'/><line x1='10' y1='12' x2='14' y2='12'/>",
+    'menu':      "<line x1='3' y1='12' x2='21' y2='12'/><line x1='3' y1='6' x2='21' y2='6'/><line x1='3' y1='18' x2='21' y2='18'/>",
+    'calendar_today': "<rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/>",
+    'error':     "<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/>",
+}
 
 def inject_material_icons_font() -> None:
-    """Inject the Google Material Symbols font link once at app startup (M-24).
+    """No-op — Material Symbols font replaced by inline SVGs (issue 2 fix)."""
+    pass
 
-    Call this once from app.py/sync_ui.py instead of embedding the <link>
-    in every _mat() icon call, which caused the font to be requested dozens
-    of times per page render.
-    """
-    st.html(_MATERIAL_FONT_LINK)
-
-def _mat(icon_name, color='#38BDF8', size=18):
-    """Render a Google Material Symbols Rounded icon natively."""
-    adj_size = size + 4
+def _mat(icon_name: str, color: str = '#38BDF8', size: int = 18) -> str:
+    """Return an inline SVG icon. Replaces the Google Material Symbols font approach."""
+    inner = _MAT_SVG_INNER.get(icon_name, _MAT_SVG_INNER['help'])
+    adj = size + 4
     return (
-        f'<span class="material-symbols-rounded" '
-        f'style="font-size: {adj_size}px; color: {color}; vertical-align: middle; '
-        f'margin: 0 4px; top: -1px; position: relative;">{icon_name}</span>'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+        f'fill="none" stroke="{color}" stroke-width="2" '
+        f'stroke-linecap="round" stroke-linejoin="round" '
+        f'width="{adj}" height="{adj}" style="{_ICON_STYLE}">'
+        f'{inner}</svg>'
     )
 
 def _img(filename, size=18):
@@ -270,7 +288,7 @@ f'<div class="stat-label">Failed {"Download" if retriable_count == 1 else "Downl
 f'<div class="stat-icon-wrapper">{slash_icon}</div>'
 '<div class="stat-info">'
 f'<div class="stat-value">{unresolvable_count}</div>'
-f'<div class="stat-label">Unavailable {"File" if unresolvable_count == 1 else "Files"}</div>'
+f'<div class="stat-label">Cannot Be Downloaded</div>'
 '</div>'
 '</div>'
             )
@@ -735,18 +753,17 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
     st.markdown(f"""
-    <details class="error-panel" open>
-        <summary class="error-panel-header">
+    <div class="error-panel">
+        <div class="error-panel-header">
             <div class="ep-header-row">
-                <img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>
                 <span class="ep-title">Error Details</span>
             </div>
-        </summary>
+        </div>
         <div class="error-panel-body">
             {body_html}
             {footer_html}
         </div>
-    </details>
+    </div>
     """, unsafe_allow_html=True)
 
     # Error log viewer button
