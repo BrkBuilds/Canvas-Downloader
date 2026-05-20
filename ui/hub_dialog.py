@@ -506,7 +506,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
                                 <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;'>
-                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}</div>
                                     <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Pair</div>
                                 </div>
                                 <div class='pair-course-subtitle'>Course: {esc(display_name)}</div>
@@ -537,14 +537,14 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     if (existing.get('course_id') == incoming_pair.get('course_id')
                                             and existing.get('local_folder') == incoming_pair.get('local_folder')):
                                         st.session_state['pending_toast'] = "\u26a0\ufe0f This exact pair is already in your sync list."
-                                        st.rerun()
+                                        st.rerun(scope="app")
                                         return
 
                                 # Rule B: Prevent folder collision (Same local_folder path)
                                 for existing in current_list:
                                     if existing.get('local_folder') == incoming_pair.get('local_folder'):
                                         st.session_state['pending_toast'] = "\u26a0\ufe0f Folder collision: this folder is already used by another pair in your sync list."
-                                        st.rerun()
+                                        st.rerun(scope="app")
                                         return
 
                                 # Validation passed - append
@@ -552,7 +552,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 _add_pair_lazy(incoming_pair)
                                 st.session_state['pending_toast'] = f"\u2705 Added '{display_name}' to sync list!"
                                 hub_cleanup()
-                                st.rerun()
+                                st.rerun(scope="app")
                         with c2:
                             st.button("\u270f\ufe0f Edit Pair", key=f"hub_edit_{g_idx}",
                                       use_container_width=True,
@@ -574,7 +574,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
                                 <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{group['group_name']}</div>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}</div>
                                     <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Group</div>
                                 </div>
                             </div>
@@ -658,7 +658,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                             msg += f" ℹ️ {overlap_count} course{'s' if overlap_count != 1 else ''} already synced to a different folder."
                                         st.session_state['pending_toast'] = msg
                                         hub_cleanup()
-                                        st.rerun()
+                                        st.rerun(scope="app")
                                     else:
                                         # Some folders missing - enter rescue mode
                                         st.session_state['hub_layer'] = 'rescue_mode'
@@ -667,7 +667,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                         st.session_state['hub_rescue_missing'] = missing_indices
                                         st.session_state['hub_rescue_skipped'] = skipped
                                         st.session_state['rescue_paths'] = {}
-                                        st.rerun()
+                                        st.rerun(scope="app")
                         # NOTE: c2/c3 are at the same indent level as the
                         # if-block above. On the click-frame, st.rerun()
                         # fires before these render - by design.
@@ -1162,7 +1162,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 msg += f" ℹ️ {overlap_count} course{'s' if overlap_count != 1 else ''} already synced to a different folder."
             st.session_state['pending_toast'] = msg
             hub_cleanup()
-            st.rerun()
+            st.rerun(scope="app")
 
 
 def render_hub_config(pair: dict):

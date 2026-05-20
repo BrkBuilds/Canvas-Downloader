@@ -812,7 +812,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.session_state['editing_pair_idx'] = idx
                         # Pre-populate selected course for editing
                         st.session_state['sync_selected_course_id'] = pair['course_id']
-                        st.rerun()
+                        st.rerun(scope="app")
 
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
@@ -875,7 +875,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
-                        st.rerun()
+                        st.rerun(scope="app")
 
                 with col_save:
                     # Disable if < 2 pairs or current list matches an already saved group
@@ -952,7 +952,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
                         st.session_state.pop('editing_pair_idx', None)
-                        st.rerun()
+                        st.rerun(scope="app")
     
             
             # Helper to optionally load icon

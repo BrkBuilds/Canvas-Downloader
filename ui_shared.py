@@ -33,7 +33,7 @@ def inject_material_icons_font() -> None:
     in every _mat() icon call, which caused the font to be requested dozens
     of times per page render.
     """
-    st.markdown(_MATERIAL_FONT_LINK, unsafe_allow_html=True)
+    st.html(_MATERIAL_FONT_LINK)
 
 def _mat(icon_name, color='#38BDF8', size=18):
     """Render a Google Material Symbols Rounded icon natively."""
@@ -634,7 +634,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                     
                 if canvas_url:
                     _LINK_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'''
-                    link_html = f'<a href="{canvas_url}" target="_blank" rel="noopener noreferrer" class="err-link-btn" title="Open in Canvas">{_LINK_SVG}</a>'
+                    link_html = f'<a href="{esc(canvas_url)}" target="_blank" rel="noopener noreferrer" class="err-link-btn" title="Open in Canvas">{_LINK_SVG}</a>'
 
             return (
                 f'<div class="error-row">'
