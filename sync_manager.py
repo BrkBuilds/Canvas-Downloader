@@ -911,7 +911,26 @@ class SyncManager:
         # Treat it as an UPDATE instead so the student keeps the same mental
         # model. The old local file does not exist (locally_deleted branch),
         # so the update is always 'clean' - no risk of overwriting edits.
-        new_name_map = {robust_filename_normalize(nf.filename): nf for nf in raw_new_files}
+        #
+        # Secondary content (negative IDs — assignments, quizzes, pages, etc.)
+        # is excluded from the name-based dedup because:
+        #   (a) The teacher re-upload loop already skips negative IDs (line below).
+        #   (b) Two assignments with the same sanitized name are distinct entities
+        #       and must both sync.  We add a (1)/(2)/... suffix to the local path
+        #       of the later duplicate so they land as separate files on disk.
+        regular_new_files = [nf for nf in raw_new_files if nf.id >= 0]
+        secondary_new_files = [nf for nf in raw_new_files if nf.id < 0]
+
+        _sec_name_counts: dict = {}
+        for nf in secondary_new_files:
+            norm = robust_filename_normalize(nf.filename)
+            count = _sec_name_counts.get(norm, 0)
+            _sec_name_counts[norm] = count + 1
+            if count > 0:
+                _tp = Path(getattr(nf, '_target_local_path', nf.filename))
+                nf._target_local_path = str(_tp.with_stem(f"{_tp.stem} ({count})"))
+
+        new_name_map = {robust_filename_normalize(nf.filename): nf for nf in regular_new_files}
 
         # Check locally deleted files against re-uploads
         final_locally_deleted = []
@@ -942,7 +961,7 @@ class SyncManager:
                 final_locally_deleted.append(del_info)
 
         # Reconstruct the remaining new files that were not duplicates
-        result.new_files = list(new_name_map.values())
+        result.new_files = list(new_name_map.values()) + secondary_new_files
         result.locally_deleted_files = final_locally_deleted
         
         # Count ALL untracked local files so they reflect in the "up to date" UI

@@ -240,6 +240,7 @@ class PowerPointToPDF:
 
                 return None
             finally:
+                _timer.cancel()
                 if presentation is not None:
                     try:
                         presentation.Close()
