@@ -193,4 +193,6 @@ class WordToPDF:
                 self._init_app()
 
                 return None
+            finally:
+                _timer.cancel()
 

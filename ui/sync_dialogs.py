@@ -441,7 +441,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     st.html("<div style='font-size:0.72em;padding:0;color:rgba(255,255,255,0.45);font-weight:400;margin-top:-15px;margin-bottom:-5px;'>By filetype</div>")
 
                     with st.container(border=True, key=f"{prefix}_ft_flex"):
-                        safe_len = min(len(all_exts_sorted), 90)
+                        safe_len = min(len(all_exts_sorted), 10)
                         cols = st.columns(safe_len)
                         for i, ext in enumerate(all_exts_sorted):
                             safe_ext = ext.replace('.', '')
@@ -599,6 +599,11 @@ def select_course_dialog_inner(courses, current_selected_id, ):
                to the dialog title bar. */
             div[role="dialog"] [data-testid="stDialogScrollableBody"] {
                 padding-top: 0.25rem !important;
+            }
+            /* Hide native X close button — closing without selecting would
+               leave pending_sync_folder in a stale state. */
+            div[data-testid="stDialog"] button[aria-label="Close"] {
+                display: none !important;
             }
         </style>
     """)

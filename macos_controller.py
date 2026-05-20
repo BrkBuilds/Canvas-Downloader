@@ -220,8 +220,8 @@ class CanvasController:
 
     def _on_quit_click(self):
         """Handle application exit."""
-        self.on_quit()
         self.app.destroy()
+        self.on_quit()
 
     def open_chrome(self):
         """Open/reopen the Streamlit URL in Chrome."""
