@@ -980,10 +980,20 @@ def run_sync():
     local_sync_api_url = st.session_state.get('api_url', '')
     import concurrent.futures as _cf
     with _cf.ThreadPoolExecutor(max_workers=1) as _pool:
-        synced_details, retry_selections, _download_log_history = _pool.submit(
+        _future = _pool.submit(
             asyncio.run,
             download_sync_files_batch(local_sync_api_token, local_sync_api_url)
-        ).result()
+        )
+        try:
+            synced_details, retry_selections, _download_log_history = _future.result()
+        except Exception as _worker_exc:
+            # An unhandled exception in the async download worker (e.g. SQLite
+            # write failure, aiohttp teardown error) propagates here. Surface it
+            # as a clean sync-failed state instead of a raw Streamlit traceback.
+            logging.error(f"Sync worker thread raised an unexpected exception: {_worker_exc}", exc_info=True)
+            st.session_state['download_status'] = 'sync_failed'
+            st.session_state['sync_worker_error'] = str(_worker_exc)
+            st.rerun()
 
     # Deferred cancel: checked here on the script thread so RerunException
     # never escapes the background coroutine and skips post-processing.

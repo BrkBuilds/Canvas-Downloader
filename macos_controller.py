@@ -232,14 +232,34 @@ class CanvasController:
                 threading.Thread(target=self.retry_callback, daemon=True).start()
             return
 
-        # Use 'open -a' so macOS Launch Services finds Chrome regardless of install
-        # location (~/Applications, non-standard paths, etc.)
-        result = subprocess.run(
+        # Use 'open -a' so macOS Launch Services finds Chrome regardless of
+        # install location (~/Applications, non-standard paths, etc.).
+        # NOTE: 'open -a' returns 0 even if Chrome refuses to open a new window
+        # (e.g. different profile active), so we verify Chrome is actually
+        # running via pgrep after a short grace period.
+        subprocess.run(
             ['open', '-a', 'Google Chrome', '--args', '--new-window', self.url],
             capture_output=True,
         )
-        if result.returncode != 0:
-            self.set_state('error', 'Google Chrome not found', 'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome')
+        threading.Thread(target=self._verify_chrome_launched, daemon=True).start()
+
+    def _verify_chrome_launched(self):
+        """Poll for up to 3 s to confirm Google Chrome is running after open_chrome()."""
+        import time
+        for _ in range(6):
+            time.sleep(0.5)
+            result = subprocess.run(
+                ['pgrep', '-x', 'Google Chrome'],
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                return  # Chrome is running — all good
+        # Chrome never appeared; surface an error on the main thread.
+        self.set_state(
+            'error',
+            'Google Chrome not found',
+            'Canvas Downloader requires Google Chrome.\nPlease install it from google.com/chrome',
+        )
 
     def run(self):
         """Start the CustomTkinter main loop (must be called from main thread)."""

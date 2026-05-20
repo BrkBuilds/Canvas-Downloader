@@ -654,7 +654,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 def render_pending_folder_ui(courses, course_names, course_options, ):
     """Inline UI shown while adding/editing a sync-pair - unified card."""
     pending_folder = st.session_state.get('pending_sync_folder', "")
-    folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder&nbsp;&nbsp; ➝"
+    folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder →"
     editing_idx = st.session_state.get('editing_pair_idx')
 
     # (1) Everything inside one bordered container
@@ -673,7 +673,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # --- Course Selection (Pop-up Dialog) ---
         
         # Determine current display
-        current_disp = 'Select Canvas Course&nbsp;&nbsp; ➝' # Default "Select Canvas Course"
+        current_disp = 'Select Canvas Course →'
         
         # Get current selected course ID from session state (for editing or new)
         selected_course_id = st.session_state.get('sync_selected_course_id')
