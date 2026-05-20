@@ -137,14 +137,15 @@ def render_quick_download(fetch_courses_fn) -> None:
     render_download_wizard(st, 2)
 
     # ── Session-state defaults ───────────────────────────────────────────
-    st.session_state.setdefault('quick_preset_id', 'quick_full')
+    # No preset selected on fresh entry — user must actively choose one.
+    st.session_state.setdefault('quick_preset_id', None)
     st.session_state.setdefault('quick_org_mode', 'modules')
 
     selected_id  = st.session_state['quick_preset_id']
     selected_org = st.session_state['quick_org_mode']
 
-    active_idx     = next((i for i, p in enumerate(_QUICK_PRESETS) if p['id'] == selected_id), 0)
-    active_preset  = _QUICK_PRESETS[active_idx]
+    active_idx    = next((i for i, p in enumerate(_QUICK_PRESETS) if p['id'] == selected_id), None)
+    active_preset = _QUICK_PRESETS[active_idx] if active_idx is not None else None
     active_org_key = 'subfolders' if selected_org == 'modules' else 'flat'
     org_is_locked  = selected_id == 'quick_notebooklm'
 
@@ -211,7 +212,7 @@ div[class*="st-key-btn_quick_org_"] button {
 div.st-key-btn_quick_preset_{active_idx} button,
 div.st-key-btn_quick_preset_{active_idx} button:hover {{
     border-color: rgba(63, 217, 255, 0.5) !important;
-    background-image: url('data:image/png;base64,{_preset_icons[active_idx]}'), 
+    background-image: url('data:image/png;base64,{_preset_icons[active_idx]}'),
                       linear-gradient(160deg, rgba(63,217,255,0.12) 0%, rgba(63,217,255,0.04) 100%) !important;
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.08) !important;
     transform: none !important;
@@ -225,7 +226,7 @@ div.st-key-btn_quick_preset_{active_idx} button::before {{
     background-repeat: no-repeat !important;
     background-position: center !important;
 }}
-"""
+""" if active_idx is not None else ""
 
     active_org_css = f"""
 div.st-key-btn_quick_org_{active_org_key} button,
@@ -864,6 +865,7 @@ div.st-key-page_nav_quick_back button:hover {{
         with adv_col:
             if st.button("Go to Custom Download →", key="page_nav_quick_advanced", use_container_width=True):
                 st.session_state['quick_download_mode'] = False
+                st.session_state['came_from_quick_dl'] = True
                 st.rerun()
 
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
@@ -1033,23 +1035,27 @@ div.st-key-page_nav_quick_back button:hover {{
                 st.html(f"<div class='qd-dd-body'><ul class='qd-course-list'>{_course_rows}</ul></div>")
 
         # ── See configuration (st.expander + edit button) ────────────────
-        _config_badges = render_config_summary_badges(active_preset['settings'], show_path=False)
         with st.container(key="qd_config_wrap"):
             with st.expander("See configuration"):
-                st.html(
-                    "<div style='margin-bottom: 12px;'>"
-                    "<p style='color:#64748b; font-size:0.82rem; margin:0 0 10px 0; line-height:1.5;'>"
-                    "The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted). "
-                    f"{_config_badges}"
-                    "</div>"
-                )
+                if active_preset is not None:
+                    _config_badges = render_config_summary_badges(active_preset['settings'], show_path=False)
+                    st.html(
+                        "<div style='margin-bottom: 12px;'>"
+                        "<p style='color:#64748b; font-size:0.82rem; margin:0 0 10px 0; line-height:1.5;'>"
+                        "The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted). "
+                        f"{_config_badges}"
+                        "</div>"
+                    )
+                else:
+                    st.html("<div style='color:#64748b; font-size:0.82rem; padding:4px 0 8px 0;'>Select a preset above to preview its configuration.</div>")
                 if st.button(
                     "Customize this configuration in Custom Download",
                     key="qd_goto_advanced",
                     use_container_width=True,
+                    disabled=(active_preset is None),
                 ):
                     # Pre-populate all download settings from the active preset
-                    _s = dict(active_preset['settings'])
+                    _s = dict(active_preset['settings'])  # type: ignore[index]
                     _s['download_mode'] = selected_org  # carry over org choice
                     st.session_state['download_mode']        = _s['download_mode']
                     st.session_state['file_filter']          = _s.get('file_filter', 'all')
@@ -1081,9 +1087,14 @@ div.st-key-page_nav_quick_back button:hover {{
         with act_back:
             back_clicked = st.button("← Back", key="page_nav_quick_back", use_container_width=True)
         with act_start:
-            start_clicked = st.button("Confirm and Download", key="page_nav_quick_start", type="primary", use_container_width=True)
+            start_clicked = st.button(
+                "Confirm and Download", key="page_nav_quick_start", type="primary",
+                use_container_width=True, disabled=(selected_id is None),
+            )
 
         if back_clicked:
+            # Reset preset so re-entering Quick Download from Course Selector starts fresh.
+            st.session_state.pop('quick_preset_id', None)
             st.session_state['quick_download_mode'] = False
             st.session_state['step'] = 1
             st.rerun()

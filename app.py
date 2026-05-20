@@ -1213,7 +1213,7 @@ with _main_content.container():
                     course=course,
                     error_queue=errors,
                     save_dir=st.session_state['download_path'],
-                    progress_callback=lambda msg, progress_type='log', **kwargs: update_ui(msg, progress_type, course_name=kwargs.get('course_name', course.name), **kwargs),
+                    progress_callback=lambda msg, progress_type='log', **kw: update_ui(msg, progress_type, course_name=kw.pop('course_name', course.name), **kw),
                     check_cancellation=check_cancellation,
                     debug_mode=st.session_state.get('debug_mode', False),
                     mb_tracker=st.session_state['retry_mb_tracker']

@@ -30,27 +30,22 @@ PP_SAVE_AS_PDF = 32
 _COM_TIMEOUT_SECONDS = 180
 
 
-def _kill_office_process(process_name: str) -> None:
-    """Forcefully kill a hung Office process by executable name (Windows taskkill).
+def _kill_office_process(process_name: str, pid: int = 0) -> None:
+    """Kill a hung Office process.  Prefers PID-targeted kill; falls back to /IM.
 
     Called from a watchdog timer thread when a COM conversion stalls.
     The kill unblocks the stuck COM call in the main thread by causing it
     to raise a pywintypes.com_error (RPC server unavailable).
     """
-    try:
-        subprocess.run(
-            ['taskkill', '/F', '/IM', process_name],
-            capture_output=True, timeout=10,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-    except Exception:
-        pass
+    from engine.office_pid import kill_office_pid
+    kill_office_pid(pid, process_name)
 
 
 class PowerPointToPDF:
     def __init__(self, error_log_path: Path = None):
         self.error_log_path = error_log_path
         self.app = None
+        self._com_pid = None  # PID of the spawned POWERPNT.EXE COM process
 
     def __enter__(self):
         if sys.platform == 'darwin':
@@ -68,15 +63,20 @@ class PowerPointToPDF:
     # ── COM management (self-healing, mirrors ExcelToPDF / WordToPDF) ──
 
     def _init_app(self):
-        """Spin up a fresh PowerPoint instance."""
+        """Spin up a fresh PowerPoint instance and track its PID."""
+        self._com_pid = None
         try:
             import win32com.client
+            from engine.office_pid import snapshot_office_pids, find_new_office_pid
+            _pre = snapshot_office_pids('POWERPNT.EXE')
             self.app = win32com.client.DispatchEx("PowerPoint.Application")
             try:
                 self.app.Visible = False
                 self.app.DisplayAlerts = False
             except Exception:
                 pass  # Some Office 365 builds restrict these flags
+            self._com_pid = find_new_office_pid('POWERPNT.EXE', _pre)
+            logger.debug(f"[COM] PowerPoint started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. PowerPoint conversion disabled.")
             self.app = None
@@ -165,14 +165,15 @@ class PowerPointToPDF:
             logger.debug(f"[COM Converter] Attempting to convert: {abs_pptx}")
             presentation = None
             _timed_out = _th.Event()
+            _pid = self._com_pid  # capture now; _init_app may clear it on self-heal
 
             def _on_timeout():
                 _timed_out.set()
                 logger.error(
                     f"[COM Timeout] PowerPoint hung >{_COM_TIMEOUT_SECONDS}s "
-                    f"on {pptx_path.name}. Killing POWERPNT.EXE."
+                    f"on {pptx_path.name}. Killing PID {_pid or 'unknown'}."
                 )
-                _kill_office_process('POWERPNT.EXE')
+                _kill_office_process('POWERPNT.EXE', pid=_pid or 0)
 
             _timer = _th.Timer(_COM_TIMEOUT_SECONDS, _on_timeout)
             _timer.start()
