@@ -824,7 +824,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                     border: 1px solid rgba(234, 179, 8, 0.55);
                     border-radius: 6px;
                     padding: 10px 14px;
-                    margin: 4px 0 2px 0;
+                    margin: 4px 0 20px 0;
                     font-size: 0.9rem;
                     line-height: 1.5;
                 ">

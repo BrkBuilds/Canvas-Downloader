@@ -1,5 +1,9 @@
 ## Latest Updates
 
+- [x] **Amber Warning Spacing Polish** (2026-05-22):
+    - [x] **Notice Card Spacing**: Added 10px spacing below amber/gold notice cards by increasing bottom margin from 2px to 12px in `ui/amber_notice.py` to prevent notices from sitting directly on top of action buttons and subsequent elements.
+    - [x] **Inline Warning Card Spacing**: Standardized the hardcoded course folder mismatch warning card in `ui/sync_dialogs.py` to match, changing its bottom margin from 2px to 12px.
+
 - [x] **Production Launch Readiness Audit** (2026-05-20):
     - [x] **Static Audit Scans**: Validated the full workspace against all five coding rules for Streamlit scope rerun safety, UTF-8 text mode opens, strict exceptions, `esc()` XSS escaping, and brace-doubled dynamic CSS.
     - [x] **Cross-Platform Spec Audit**: Confirmed high-fidelity build specs (`Canvas_Downloader.spec`, `Canvas_Downloader_macOS.spec`), security entitlements plist permissions, and localized TCC file picking capabilities.

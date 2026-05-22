@@ -671,10 +671,12 @@ def _inject_hub_global_css():
 
 
 
-@st.fragment
 def _sync_pairs_section(courses, course_names, course_options):
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []
+    _deferred_save_pair = None   # Will hold pair data if inline 💾 is clicked
+    _deferred_save_group = False # Will be True if "Save as Group" is clicked
+    _deferred_ignored = None     # Will hold (course_name, course_id, course_data) if "Ignored Files" is clicked
 
     # Pre-compute set of already-saved (course_id, local_folder) tuples for inline 💾 button
     from ui_helpers import get_config_dir as _get_config_dir
@@ -790,7 +792,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         # Save button rendered after - CSS absolute-positions it to top-right
                         if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
                                      help=_save_help):
-                            _save_pair_dialog(pair)
+                            _deferred_save_pair = pair
                         st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
                             <div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
 
@@ -821,7 +823,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
                         course_data = ignored_by_course.get(pair['course_id'])
                         if course_data:
-                            _show_course_ignored_files(
+                            _deferred_ignored = (
                                 friendly_course_name(pair['course_name']),
                                 pair['course_id'], course_data)
 
@@ -917,7 +919,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                     </style>""")
 
                     if st.button("💾 Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
-                        _save_group_dialog(sync_pairs)
+                        _deferred_save_group = True
 
         else:
             # EMPTY STATE Logic (if not sync_pairs)
@@ -975,6 +977,14 @@ def _sync_pairs_section(courses, course_names, course_options):
                 unsafe_allow_html=True
             )
 
+    # --- Deferred dialog invocations (MUST be outside all column/container contexts) ---
+    if _deferred_save_pair is not None:
+        _save_pair_dialog(_deferred_save_pair)
+    if _deferred_save_group:
+        _save_group_dialog(sync_pairs)
+    if _deferred_ignored is not None:
+        _show_course_ignored_files(*_deferred_ignored)
+
 
 
 def render_sync_step1(fetch_courses_fn, main_placeholder=None):
@@ -1005,8 +1015,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
     b64_add = get_base64_image("assets/icon_add.png")
 
-    # Use st.html (not st.markdown) to avoid ghost-box 1rem margin above the stepper.
-    st.html(f"""<style>
+    st.markdown(f"""<style>
     div.st-key-btn_analyze_sync button p::before {{
         content: "" !important;
         display: inline-block !important;
@@ -1103,7 +1112,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         background-repeat: no-repeat !important;
         background-size: contain !important;
     }}
-    </style>""")
+    </style>""", unsafe_allow_html=True)
 
     # --- Pending toast consumer (fires after dialog rerun) ---
     if 'pending_toast' in st.session_state:
@@ -1199,11 +1208,15 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     text_html=_SYNC_HELP_TEXT,
                     mode="button"
                 )
+    open_hub = False
     with col_hub:
         if st.button("Saved Groups & Pairs", key="btn_hub_main",
                      use_container_width=True):
             _reset_hub_state()
-            _saved_groups_hub_dialog(courses, course_names)
+            open_hub = True
+
+    if open_hub:
+        _saved_groups_hub_dialog(courses, course_names)
 
     # Help Card Expansion (renders below the header + hub button row if open)
     render_help_card(
@@ -1214,153 +1227,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     )
 
     # --- (4) Pair action-button CSS: Remove fixed height, let flex align handle it ---
-    st.html("""
-    <style>
-    div[data-testid="column"] { display: flex; flex-direction: column; justify-content: center; }
 
-    /* Universal disabled button dimming */
-    button[disabled] {
-        opacity: 0.4 !important;
-        filter: grayscale(100%) !important;
-        cursor: not-allowed !important;
-    }
-
-    /* Fix Streamlit tooltip wrappers shrinking buttons vertically */
-    div[class*="st-key-open_folder_"] div[data-testid="stTooltipHoverTarget"],
-    div[class*="st-key-ignored_btn_"] div[data-testid="stTooltipHoverTarget"] {
-        display: block !important;
-        width: 100% !important;
-    }
-    
-    div[class*="st-key-open_folder_"] button,
-    div[class*="st-key-ignored_btn_"] button,
-    div[class*="st-key-edit_pair_"] button,
-    div[class*="st-key-remove_pair_"] button {
-        height: 42px !important;
-        min-height: 42px !important;
-    }
-
-    /* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
-    div[class*="st-key-cancel_pair"] button:hover,
-    div[class*="st-key-cancel_add"] button:hover {
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
-    }
-
-    /* ===== SYNC FOLDER ROW COMPACT LAYOUT =====
-     * Scoped to .st-key-edit_form_container (the bordered container key)
-     * so rules NEVER leak to page-level stVerticalBlocks.
-     */
-    
-    /* 0. Remove top margin from the edit form container itself to match list spacing */
-    .st-key-edit_form_container {
-        margin-top: 0px !important; /* Match bottom spacing (10px) exactly */
-        margin-bottom: 10px !important; /* Ensure consistent bottom spacing */
-    }
-
-    /* 1. Compact padding & gap on the bordered container ONLY */
-    .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
-        padding: 8px 15px !important;
-        gap: 4px !important;
-    }
-
-    /* 2. RESET: Inner stVerticalBlocks inside columns back to 0 */
-    .st-key-edit_form_container div[data-testid="stColumn"] div[data-testid="stVerticalBlock"] {
-        padding: 0 !important;
-        gap: 0 !important;
-    }
-
-    /* 3. Hide ONLY the first child (CSS style block) & empty spacers */
-    .st-key-edit_form_container > div[data-testid="stVerticalBlock"]
-    > div[data-testid="stElementContainer"]:has(div:empty:only-child) {
-         display: none !important;
-    }
-
-    /* 4. Folder/Course row: center items vertically, controlled gap */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder),
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) {
-        align-items: center !important;
-        gap: 10px !important;
-        min-height: 0 !important;
-    }
-
-    /* 5. Columns in folder/course row: shrink-wrap, center contents */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stColumn"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stColumn"] {
-        width: auto !important;
-        flex: 0 0 auto !important;
-        min-width: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    /* 6. Fix stMarkdownContainer negative bottom margin that clips text */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdownContainer"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdownContainer"] {
-        margin: 0 !important;
-    }
-
-    /* 7. stMarkdown wrapper: flex-center for true vertical alignment */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdown"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdown"] {
-        display: flex !important;
-        align-items: center !important;
-        overflow: visible !important;
-    }
-
-    /* 8. Element containers in folder/course row: no margin, visible overflow */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stElementContainer"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stElementContainer"] {
-        margin: 0 !important;
-        overflow: visible !important;
-    }
-
-    /* 9. Kill paragraph margins & normalize line height */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) p,
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) p {
-        margin: 0 !important;
-        line-height: 1.4 !important;
-    }
-
-    /* 10. Change Folder/Course button: compact styling */
-    .st-key-btn_change_folder button,
-    .st-key-btn_open_course_dialog button {
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        padding: 4px 14px !important;
-        font-size: 0.85rem !important;
-        line-height: 1.4 !important;
-        height: auto !important;
-    }
-
-    /* 11. Sync list container minimum height */
-    .st-key-sync_list_outline {
-        min-height: 50vh !important;
-    }
-    .st-key-sync_list_outline > div[data-testid="stVerticalBlockBorderWrapper"] {
-        padding-top: 16px !important;
-    }
-
-    /* 12. Sync Pair Cards Gradient Styling */
-    div[class*="st-key-sync_pair_card_"] {
-        background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        border-radius: 8px !important;
-        padding-top: 5px !important;
-        padding-bottom: 20px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-    }
-
-    /* 13. Missing-folder pair cards - distinctive warning border */
-    div[class*="st-key-sync_pair_card_missing_"] {
-        border-color: rgba(239, 68, 68, 0.5) !important;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
-    }
-
-    /* Ignored Files button: match standard action button border style */
-
-    </style>
-    """)
 
     _sync_pairs_section(courses, course_names, course_options)
 
