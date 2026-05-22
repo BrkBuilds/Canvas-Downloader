@@ -222,13 +222,14 @@ def _format_canvas_date(date_str):
 
 class DownloadError:
     """Structured error object for UI display and logging."""
-    def __init__(self, course_name, item_name, error_type, message, raw_error=None, context=None):
+    def __init__(self, course_name, item_name, error_type, message, raw_error=None, context=None, is_app_error=False):
         self.course_name = course_name
         self.item_name = item_name
         self.error_type = error_type # e.g., '401', 'Rate Limit', 'Network', 'Generic'
         self.message = message
         self.raw_error = str(raw_error) if isinstance(raw_error, Exception) else raw_error
         self.context = context or {}
+        self.is_app_error = is_app_error  # True for engine/infra failures, not individual file failures
         self.timestamp = datetime.now(timezone.utc)
 
     def __str__(self):
@@ -1255,11 +1256,12 @@ class CanvasManager:
             except Exception:
                 pass
             error = DownloadError(
-                course.name, 
-                "Disk Check", 
-                "Disk Full", 
+                course.name,
+                "Disk Check",
+                "Disk Full",
                 f'Insufficient disk space. Estimated payload: {_estimated_mb:.0f} MB, '
-                f'available: {_free_gb:.1f} GB. Need at least {max(1.0, _estimated_mb * 1.2 / 1024):.1f} GB free.'
+                f'available: {_free_gb:.1f} GB. Need at least {max(1.0, _estimated_mb * 1.2 / 1024):.1f} GB free.',
+                is_app_error=True,
             )
             if progress_callback: progress_callback(error, progress_type='error')
             self._log_error(save_dir, error)
@@ -1599,7 +1601,7 @@ class CanvasManager:
                     results = await asyncio.gather(*tasks, return_exceptions=True)
                     for i, result in enumerate(results):
                         if isinstance(result, Exception):
-                            err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                            err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result, is_app_error=True)
                             if progress_callback: progress_callback(err, progress_type='error')
                             self._log_error(save_dir, err)
                         elif result:
@@ -1658,7 +1660,7 @@ class CanvasManager:
                         results = await asyncio.gather(*catch_all_tasks, return_exceptions=True)
                         for result in results:
                             if isinstance(result, Exception):
-                                err = DownloadError(course.name, "Catch-All Task", "Async Error", str(result), raw_error=result)
+                                err = DownloadError(course.name, "Catch-All Task", "Async Error", str(result), raw_error=result, is_app_error=True)
                                 if progress_callback: progress_callback(err, progress_type='error')
                                 self._log_error(save_dir, err)
                             elif result:
@@ -1678,7 +1680,7 @@ class CanvasManager:
                             progress_callback(_msg, progress_type='log')
                     else:
                         # Handle actual unexpected errors
-                        err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e)
+                        err = DownloadError(course.name, "Catch-All Scan", "Hybrid Mode Error", str(e), raw_error=e, is_app_error=True)
                         self._log_error(save_dir, err)
                 # ---- HYBRID MODE CATCH-ALL ENDED ----
 
@@ -1700,6 +1702,7 @@ class CanvasManager:
                             course.name, "Secondary Content",
                             "Secondary Content Error", str(sec_e),
                             raw_error=sec_e,
+                            is_app_error=True,
                         )
                         if progress_callback:
                             progress_callback(err, progress_type='error')
@@ -1718,7 +1721,7 @@ class CanvasManager:
                      
                      downloaded_files_info.extend(await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager))
                  else:
-                     err = DownloadError(course.name, "Course Download", "Processing Error", str(e), raw_error=e)
+                     err = DownloadError(course.name, "Course Download", "Processing Error", str(e), raw_error=e, is_app_error=True)
                      if progress_callback: progress_callback(err, progress_type='error')
                      self._log_error(save_dir, err)
             
@@ -1999,7 +2002,7 @@ class CanvasManager:
                 folder_map[folder.id] = rel_path
             log_debug(f"Mapped {len(folder_map)} folders.", debug_file)
         except Exception as e:
-            err = DownloadError(course.name, "Folder Structure", "Fetch Error", f"Could not fetch folders: {e}", raw_error=e)
+            err = DownloadError(course.name, "Folder Structure", "Fetch Error", f"Could not fetch folders: {e}", raw_error=e, is_app_error=True)
             if progress_callback: progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
             # Continue to allow flat file download if possible?
@@ -2037,7 +2040,7 @@ class CanvasManager:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for result in results:
                     if isinstance(result, Exception):
-                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result, is_app_error=True)
                         if progress_callback: progress_callback(err, progress_type='error')
                         self._log_error(error_root_path, err)
                     elif result:
@@ -2045,10 +2048,10 @@ class CanvasManager:
 
 
         except Exception as e:
-            err = DownloadError(course.name, "File List", "Fetch Error", str(e), raw_error=e)
+            err = DownloadError(course.name, "File List", "Fetch Error", str(e), raw_error=e, is_app_error=True)
             if progress_callback: progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
-        
+
         return downloaded
 
     async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):
@@ -2114,7 +2117,7 @@ class CanvasManager:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for result in results:
                     if isinstance(result, Exception):
-                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result)
+                        err = DownloadError(course.name, "File Task", "Async Error", str(result), raw_error=result, is_app_error=True)
                         if progress_callback: progress_callback(err, progress_type='error')
                         self._log_error(error_root_path, err)
                     elif result:
@@ -2212,20 +2215,20 @@ class CanvasManager:
                    module_results = await asyncio.gather(*module_tasks, return_exceptions=True)
                    for result in module_results:
                        if isinstance(result, Exception):
-                           err = DownloadError(course.name, "Fallback File Task", "Async Error", str(result), raw_error=result)
+                           err = DownloadError(course.name, "Fallback File Task", "Async Error", str(result), raw_error=result, is_app_error=True)
                            if progress_callback: progress_callback(err, progress_type='error')
                            self._log_error(error_root_path, err)
                        elif result:
                            downloaded.append(result)
 
             except Exception as e:
-                err = DownloadError(course.name, "Fallback Module Scan", "Scan Error", str(e), raw_error=e)
+                err = DownloadError(course.name, "Fallback Module Scan", "Scan Error", str(e), raw_error=e, is_app_error=True)
                 if progress_callback: progress_callback(err, progress_type='error')
                 self._log_error(error_root_path, err)
                 log_debug(f"Fallback module scan failed: {e}", debug_file)
 
         except Exception as e:
-             err = DownloadError(course.name, "Flat Download", "Fatal Error", str(e), raw_error=e)
+             err = DownloadError(course.name, "Flat Download", "Fatal Error", str(e), raw_error=e, is_app_error=True)
              if progress_callback: progress_callback(err, progress_type='error')
              self._log_error(error_root_path, err)
         

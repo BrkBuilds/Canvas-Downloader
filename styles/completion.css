@@ -91,6 +91,15 @@
     color: #f87171;
 }
 
+.stat-card.stat-app-error .stat-icon-wrapper {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+
+.stat-card.stat-app-error .stat-value {
+    color: #fbbf24;
+}
+
 .stat-icon-wrapper svg {
     width: 18px;
     height: 18px;
@@ -444,6 +453,88 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 4v6h6'/%3E%3Cpath d='M3.51 15a9 9 0 1 0 2.13-9.36L1 10'/%3E%3C/svg%3E") !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;
+}
+
+/* --- Application Error Section --- */
+.app-error-section {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 8px;
+}
+
+.app-error-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: #fcd34d;
+}
+
+.app-error-section-header svg {
+    flex-shrink: 0;
+}
+
+.app-error-section-title {
+    font-size: 0.88em;
+    font-weight: 600;
+    flex: 1;
+}
+
+.app-error-section-subtitle {
+    font-size: 0.78em;
+    color: #d97706;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.app-error-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-top: 1px solid rgba(245, 158, 11, 0.12);
+}
+
+.app-error-row:first-of-type {
+    border-top: none;
+}
+
+.app-err-type-badge {
+    flex-shrink: 0;
+    font-size: 0.72em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+.app-err-detail {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.app-err-course {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.app-err-msg {
+    font-size: 0.82em;
+    color: #d1d5db;
+    word-break: break-word;
+    line-height: 1.4;
+    font-family: monospace;
 }
 
 /* --- Section Header (Clean, no emojis) --- */
