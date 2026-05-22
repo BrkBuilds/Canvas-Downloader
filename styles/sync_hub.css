@@ -180,16 +180,16 @@ div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button:hover {
     transition: all 0.2s ease-in-out;
 }
 
-/* Compact cards inside Layer 2 */
-div[data-testid="stVerticalBlockBorderWrapper"] {
+/* Compact cards inside Layer 2 - SCOPED to dialog only */
+div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] {
     padding: 12px 15px !important;
 }
 
-div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
+div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
     gap: 0.3rem !important;
 }
 
-div[data-testid="stVerticalBlockBorderWrapper"] button {
+div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] button {
     min-height: 35px !important;
     padding-top: 0.2rem !important;
     padding-bottom: 0.2rem !important;
