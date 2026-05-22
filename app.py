@@ -1404,14 +1404,16 @@ with _main_content.container():
             _retry_failed = retry_attempted and retry_total > 0 and retry_resolved == 0
 
             with st.container(border=True, key='completion_dashboard'):
-                # Split errors into retriable vs unresolvable for separate stat cards
+                # Split errors: retriable file errors / unresolvable file errors / app-level errors
+                _app_errors = sum(1 for err in download_errors if getattr(err, 'is_app_error', False))
+                _file_errors = [err for err in download_errors if not getattr(err, 'is_app_error', False)]
                 _retriable = sum(
-                    1 for err in download_errors
+                    1 for err in _file_errors
                     if isinstance(getattr(err, 'context', None), dict)
                     and err.context.get('filepath')
                     and getattr(err, 'error_type', '') != 'LTI/Media Stream'
                 )
-                _unresolvable = len(download_errors) - _retriable
+                _unresolvable = len(_file_errors) - _retriable
 
                 render_completion_card(
                     synced_count=success_count,
@@ -1425,6 +1427,7 @@ with _main_content.container():
                     retry_total=retry_total,
                     retriable_count=_retriable,
                     unresolvable_count=_unresolvable,
+                    app_error_count=_app_errors,
                     courses_count=len(file_details),
                 )
 
@@ -1442,9 +1445,12 @@ with _main_content.container():
                     if log_file.exists():
                         error_log_paths.append(log_file)
 
-                # Check if retriable errors exist (files with filepath context, not LTI streams)
+                # Check if retriable errors exist (file errors with filepath context, not LTI streams, not app errors)
                 has_retriable_errors = any(
-                    isinstance(getattr(err, 'context', None), dict) and err.context.get('filepath') and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+                    not getattr(err, 'is_app_error', False)
+                    and isinstance(getattr(err, 'context', None), dict)
+                    and err.context.get('filepath')
+                    and getattr(err, 'error_type', '') != 'LTI/Media Stream'
                     for err in download_errors
                 ) if download_errors else False
 
