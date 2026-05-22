@@ -145,6 +145,7 @@ def render_completion_card(synced_count: int, error_count: int,
                            retry_total: int = 0,
                            retriable_count: int = 0,
                            unresolvable_count: int = 0,
+                           app_error_count: int = 0,
                            courses_count: int = 0):
     """Render the unified completion summary card.
 
@@ -269,8 +270,9 @@ f'<div class="stat-label">{size_unit} Downloaded</div>'
 '</div>'
     )
 
-    # Conditional error stat cards - split by retriable vs unresolvable
-    if retriable_count > 0 or unresolvable_count > 0:
+    # Conditional error stat cards - split by retriable vs unresolvable vs app-level
+    _warning_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path><line x1='12' y1='9' x2='12' y2='13'></line><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
+    if retriable_count > 0 or unresolvable_count > 0 or app_error_count > 0:
         # Show separate cards when split counts are provided
         if retriable_count > 0:
             stats_html += (
@@ -289,6 +291,16 @@ f'<div class="stat-icon-wrapper">{slash_icon}</div>'
 '<div class="stat-info">'
 f'<div class="stat-value">{unresolvable_count}</div>'
 f'<div class="stat-label">Cannot Be Downloaded</div>'
+'</div>'
+'</div>'
+            )
+        if app_error_count > 0:
+            stats_html += (
+'<div class="stat-card stat-app-error">'
+f'<div class="stat-icon-wrapper">{_warning_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{app_error_count}</div>'
+f'<div class="stat-label">{"App Error" if app_error_count == 1 else "App Errors"}</div>'
 '</div>'
 '</div>'
             )
@@ -671,9 +683,12 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 f'</div></div>'
             )
 
-    # Split into actionable vs unresolvable
-    actionable, unresolvable = [], []
+    # Split into: retriable file errors / unresolvable file errors / app-level errors
+    actionable, unresolvable, app_errors = [], [], []
     for err in error_list[:20]:
+        if getattr(err, 'is_app_error', False):
+            app_errors.append(err)
+            continue
         is_retriable = (
             hasattr(err, 'item_name')
             and isinstance(getattr(err, 'context', None), dict)
@@ -744,6 +759,39 @@ def render_error_section(error_list: list, error_log_paths: list = None,
 
     body_html = f'<div class="error-columns">{left_col_html}{right_col_html}</div>'
 
+    # App-level errors: separate section below the file columns
+    if app_errors:
+        _WARN_SVG = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:15px;height:15px;flex-shrink:0;margin-top:1px;'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+        app_rows_html = ''
+        for err in app_errors:
+            error_type = esc(getattr(err, 'error_type', 'Application Error') or 'Application Error')
+            course_name = esc(getattr(err, 'course_name', '') or '')
+            message = esc(getattr(err, 'message', '') or '')
+            # Truncate long technical messages
+            if len(message) > 220:
+                message = message[:220] + '…'
+            course_prefix = f'<span class="app-err-course">{course_name}</span> ' if course_name else ''
+            app_rows_html += (
+                f'<div class="app-error-row">'
+                f'<div class="app-err-type-badge">{error_type}</div>'
+                f'<div class="app-err-detail">'
+                f'{course_prefix}'
+                f'<span class="app-err-msg">{message}</span>'
+                f'</div>'
+                f'</div>'
+            )
+        body_html += (
+            f'<div class="app-error-section">'
+            f'<div class="app-error-section-header">'
+            f'{_WARN_SVG}'
+            f'<span class="app-error-section-title">Application Errors</span>'
+            f'<span class="err-group-badge err-group-badge-warn">{len(app_errors)}</span>'
+            f'</div>'
+            f'<div class="app-error-section-subtitle">The download engine encountered internal errors. Check your settings and API connection, then try again.</div>'
+            f'{app_rows_html}'
+            f'</div>'
+        )
+
     if count > 20:
         body_html += f'<div style="padding:6px 0;color:#6b7280;font-size:0.82em;">... and {count - 20} more errors</div>'
 
@@ -781,7 +829,8 @@ def render_error_section(error_list: list, error_log_paths: list = None,
     if has_retriable_errors and retry_btn_callback:
         retriable_count = sum(
             1 for err in error_list
-            if isinstance(getattr(err, 'context', None), dict)
+            if not getattr(err, 'is_app_error', False)
+            and isinstance(getattr(err, 'context', None), dict)
             and err.context.get('filepath')
             and getattr(err, 'error_type', '') != 'LTI/Media Stream'
         )
