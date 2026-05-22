@@ -1610,7 +1610,7 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 </style>
 <div style="line-height: 1.2; padding: 0 0 0 20px;">
     <div style="color: #9ca3af; font-size: 0.75rem; padding-bottom: 3px;">Logged in as</div>
-    <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: -6px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{safe_first_name}</div>
+    <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: 0px;margin-bottom: 15px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{safe_first_name}</div>
 </div>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout"):
                 try:
@@ -1643,9 +1643,26 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
                         logger.warning(f"Could not update config on logout: {e}")
                 st.rerun()
 
-        # Version badge
+        # Version and support badge
         st.html(
-            f"<hr style='margin: 8px 0 0 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.06);' />"
-            f"<div style='text-align:left; color:#9ca3af; font-size:0.75rem; padding: 15px 0 0 20px;'>"
-            f"Canvas Downloader v{__version__}</div>"
+            f"<style>"
+            f".kofi-tag {{"
+            f"    display: inline-flex; align-items: center; gap: 6px; color:#9ca3af; font-size:0.75rem; font-weight:500; text-decoration:none;"
+            f"    background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;"
+            f"    padding: 4px 10px; align-self: flex-start; transition: all 0.2s ease-in-out;"
+            f"}}"
+            f".kofi-tag:hover {{"
+            f"    color: #ffffff !important;"
+            f"    background-color: rgba(255,255,255,0.08) !important;"
+            f"    border-color: rgba(255,255,255,0.2) !important;"
+            f"}}"
+            f"</style>"
+            f"<hr style='margin: 0px 0 0 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.06);' />"
+            f"<div style='display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px; padding: 15px 20px 0px 20px;'>"
+            f"  <div style='color:#9ca3af; font-size:0.75rem; display: flex; align-items: center; line-height: 1;'>v{__version__}</div>"
+            f"  <a href='https://ko-fi.com/brkbuilds' target='_blank' class='kofi-tag' style='margin: 0; align-self: center;'>"
+            f"    <img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjE0IiBmaWxsPSIjZjk3MzE2Ij48cGF0aCBkPSJNMTIgMjEuMzVsLTEuNDUtMS4zMkM1LjQgMTUuMzYgMiAxMi4yOCAyIDguNSAyIDUuNDIgNC40MiAzIDcuNSAzYzEuNzQgMCAzLjQxLjgxIDQuNSAyLjA5QzEzLjA5IDMuODEgMTQuNzYgMyAxNi41IDMgMTkuNTggMyAyMiA1LjQyIDIyIDguNWMwIDMuNzgtMy40IDYuODYtOC41NSAxMS41NEwxMiAyMS4zNXoiLz48L3N2Zz4=' width='14' height='14' alt='Heart' />"
+            f"    Support the project"
+            f"  </a>"
+            f"</div>"
         )

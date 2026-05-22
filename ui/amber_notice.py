@@ -60,7 +60,7 @@ def render_amber_notice(
         f"border: 1px solid rgba(234, 179, 8, 0.55); "
         f"border-radius: 6px; "
         f"padding: 10px 14px; "
-        f"margin: 4px 0 2px 0; "
+        f"margin: 4px 0 20px 0; "
         f"font-size: 0.9rem; "
         f"line-height: 1.5;"
         f"'>"

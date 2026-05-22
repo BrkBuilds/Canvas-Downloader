@@ -3953,7 +3953,7 @@ class CanvasManager:
                         f'Saving rubric: {r_title}', progress_type='page',
                     )
 
-        except (Unauthorized, ResourceDoesNotExist) as e:
+        except (Unauthorized, ResourceDoesNotExist, CanvasException) as e:
             log_debug(f"Rubrics not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(

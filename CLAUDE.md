@@ -57,8 +57,9 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 ### CSS Injection
 - **Static CSS** → `styles/*.css` files, loaded via `styles.inject_css()` (uses `st.html()`, module caching disabled for dev).
 - **Dynamic CSS** (depends on session state or Python vars) → inline `st.html(f'<style>...</style>')` inside `ui/` modules.
-- **Headless Injection Rule**: Never use `st.markdown` for CSS, Base64 wrappers, or HTML spacers. Streamlit React forces `stMarkdownContainer` on it, injecting a 1rem bottom margin ("Ghost Box"). Always use `st.html()` for zero-footprint DOM injection.
-- **Always hoist** dynamic CSS (especially for widget-dependent logic like colors/masks) to the absolute top of the function call before any containers or widgets are declared. Injecting inside/below deep containers (especially in modals) causes Streamlit to drop the payload.
+- **Fragment Rerun Unmounting Bug**: Streamlit's `st.html()` is unstable when used for injecting `<style>` blocks in the main script if a fragment (like `@st.dialog` callbacks) triggers a partial rerun. Streamlit's React reconciliation can silently unmount `st.html()` blocks, completely breaking the main page layout while the dialog is open.
+- **Headless Injection Rule (Updated)**: For layout-critical static CSS, move it entirely to a static `.css` file (e.g., `global.css`). For dynamic CSS that must be injected inline, use `st.markdown(f'<style>...</style>', unsafe_allow_html=True)`. The "Ghost Box" (1rem margin) created by `st.markdown` is already safely eliminated by the `div[data-testid="element-container"]:has(> div[data-testid="stMarkdownContainer"] style) { display: none !important; }` rule in `global.css`. Do **not** use `st.html()` for critical CSS layout structures.
+- **Always hoist** dynamic CSS (especially for widget-dependent logic like colors/masks) to the absolute top of the function call before any containers or widgets are declared. Injecting inside/below deep containers causes Streamlit to drop the payload.
 - **Double-escape** all CSS braces in f-strings: `{{` and `}}`.
 - **Scope** all CSS to keyed containers (`div[class*="st-key-my_key"]`) to prevent global leakage.
 - **Key Lowercasing Rule**: Streamlit lowercases widget `key` strings when generating DOM classes (e.g. `st-key-PDF` becomes `st-key-pdf`). Always apply `.lower()` to keys used in CSS selectors.
@@ -89,6 +90,7 @@ div[class*="st-key-my_key_"] [data-testid="stButton"] { ... }
 These are the same selectors that work for styling the button itself. Do NOT use `:has()` to find `[data-testid="stButton"]` - it fails silently for widget wrapper divs even when `:has()` works for styling other descendants in the same container.
 
 **`[data-testid="stButton"]` wrapper layout:**
+- **st.markdown breaks CSS Sibling Hacks**: Never change an `st.html()` injection block to `st.markdown(unsafe_allow_html=True)` if the injected HTML contains a hidden marker `div` used for CSS sibling targeting (e.g., `div:has(> div > #marker) + div[data-testid="stExpander"]`). `st.markdown()` wraps its contents in a `<p>` tag inside a `stMarkdownContainer`, which breaks the exact DOM hierarchy that CSS sibling selectors rely on, causing the styles to detach instantly. Stick to `st.html()` when injecting structural markers for sibling hacks.
 - By default Streamlit renders `[data-testid="stButton"]` as a block-level full-width wrapper.
 - `margin-left: Xpx` on the wrapper shifts the entire block right. With `use_container_width=False` on the button, the button is content-sized and sits at the left edge of the (now-shifted) wrapper - this is the correct way to indent a button by a fixed pixel amount.
 - Do NOT add `width: auto !important` or change `display` on `[data-testid="stButton"]` - it causes the wrapper to collapse and the button appears squished or disappears.

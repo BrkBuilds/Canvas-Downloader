@@ -13,6 +13,8 @@ Smart sync, AI-ready file conversion, and zero cloud dependency - all in a nativ
 [![Canvas API](https://img.shields.io/badge/Canvas%20LMS-API%20v1-E66000?style=flat-square)](https://canvas.instructure.com/doc/api/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z01ZOY6Q)
+
 [**Download for Windows**](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest) · [**Download for macOS**](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest) · [**View Releases**](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases)
 
 </div>

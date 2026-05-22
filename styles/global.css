@@ -669,3 +669,151 @@ div.st-key-btn_convert_urls button::after {
 div.st-key-btn_convert_video button::after {
     content: "Extract .mp3 audio from video files." !important;
 }
+
+/* ═══════════════════════════════════════════════
+   Moved from sync_ui.py (Pair Action Buttons & Layout)
+   ═══════════════════════════════════════════════ */
+    div[data-testid="column"] { display: flex; flex-direction: column; justify-content: center; }
+
+    /* Universal disabled button dimming */
+    button[disabled] {
+        opacity: 0.4 !important;
+        filter: grayscale(100%) !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Fix Streamlit tooltip wrappers shrinking buttons vertically */
+    div[class*="st-key-open_folder_"] div[data-testid="stTooltipHoverTarget"],
+    div[class*="st-key-ignored_btn_"] div[data-testid="stTooltipHoverTarget"] {
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    div[class*="st-key-open_folder_"] button,
+    div[class*="st-key-ignored_btn_"] button,
+    div[class*="st-key-edit_pair_"] button,
+    div[class*="st-key-remove_pair_"] button {
+        height: 42px !important;
+        min-height: 42px !important;
+    }
+
+    /* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
+    div[class*="st-key-cancel_pair"] button:hover,
+    div[class*="st-key-cancel_add"] button:hover {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+    }
+
+    /* ===== SYNC FOLDER ROW COMPACT LAYOUT =====
+     * Scoped to .st-key-edit_form_container (the bordered container key)
+     * so rules NEVER leak to page-level stVerticalBlocks.
+     */
+    
+    /* 0. Remove top margin from the edit form container itself to match list spacing */
+    .st-key-edit_form_container {
+        margin-top: 0px !important; /* Match bottom spacing (10px) exactly */
+        margin-bottom: 10px !important; /* Ensure consistent bottom spacing */
+    }
+
+    /* 1. Compact padding & gap on the bordered container ONLY */
+    .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
+        padding: 8px 15px !important;
+        gap: 4px !important;
+    }
+
+    /* 2. RESET: Inner stVerticalBlocks inside columns back to 0 */
+    .st-key-edit_form_container div[data-testid="stColumn"] div[data-testid="stVerticalBlock"] {
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    /* 3. Hide ONLY the first child (CSS style block) & empty spacers */
+    .st-key-edit_form_container > div[data-testid="stVerticalBlock"]
+    > div[data-testid="stElementContainer"]:has(div:empty:only-child) {
+         display: none !important;
+    }
+
+    /* 4. Folder/Course row: center items vertically, controlled gap */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder),
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) {
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 0 !important;
+    }
+
+    /* 5. Columns in folder/course row: shrink-wrap, center contents */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stColumn"],
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stColumn"] {
+        width: auto !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* 6. Fix stMarkdownContainer negative bottom margin that clips text */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdownContainer"],
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdownContainer"] {
+        margin: 0 !important;
+    }
+
+    /* 7. stMarkdown wrapper: flex-center for true vertical alignment */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdown"],
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdown"] {
+        display: flex !important;
+        align-items: center !important;
+        overflow: visible !important;
+    }
+
+    /* 8. Element containers in folder/course row: no margin, visible overflow */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stElementContainer"],
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stElementContainer"] {
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* 9. Kill paragraph margins & normalize line height */
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) p,
+    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) p {
+        margin: 0 !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 10. Change Folder/Course button: compact styling */
+    .st-key-btn_change_folder button,
+    .st-key-btn_open_course_dialog button {
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        padding: 4px 14px !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        height: auto !important;
+    }
+
+    /* 11. Sync list container minimum height */
+    .st-key-sync_list_outline {
+        min-height: 50vh !important;
+    }
+    .st-key-sync_list_outline > div[data-testid="stVerticalBlockBorderWrapper"] {
+        padding-top: 16px !important;
+    }
+
+    /* 12. Sync Pair Cards Gradient Styling */
+    div[class*="st-key-sync_pair_card_"] {
+        background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 8px !important;
+        padding-top: 5px !important;
+        padding-bottom: 20px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    /* 13. Missing-folder pair cards - distinctive warning border */
+    div[class*="st-key-sync_pair_card_missing_"] {
+        border-color: rgba(239, 68, 68, 0.5) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
+    }
+
+    /* Ignored Files button: match standard action button border style */
+
+    </style>

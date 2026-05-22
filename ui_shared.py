@@ -752,19 +752,20 @@ def render_error_section(error_list: list, error_log_paths: list = None,
     if st.session_state.get('error_log_enabled', False):
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
-    st.markdown(f"""
-    <div class="error-panel">
-        <div class="error-panel-header">
-            <div class="ep-header-row">
-                <span class="ep-title">Error Details</span>
-            </div>
-        </div>
-        <div class="error-panel-body">
-            {body_html}
-            {footer_html}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<details class="error-panel" open>'
+        f'<summary class="error-panel-header">'
+        f'<div class="ep-header-row">'
+        f'<img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>'
+        f'<span class="ep-title">Error Details</span>'
+        f'</div>'
+        f'</summary>'
+        f'<div class="error-panel-body">'
+        f'{body_html}{footer_html}'
+        f'</div>'
+        f'</details>',
+        unsafe_allow_html=True,
+    )
 
     # Error log viewer button
     if error_log_paths and dialog_fn:
