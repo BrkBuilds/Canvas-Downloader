@@ -2078,40 +2078,51 @@ class CanvasManager:
 
             downloaded_ids = set()
             seen_flat_paths = set()  # Path-based dedup for flat mode
-            for file in files:
-                if check_cancellation and check_cancellation(): break
-                if getattr(file, 'id', None):
-                    downloaded_ids.add(file.id)
-                
-                # Synchronous conflict resolution to prevent data loss
-                base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
-                filepath = base_path / base_filename
-                target_key = str(filepath).lower()
+            # Wrap iteration separately: course.get_files() returns a lazy PaginatedList with no
+            # network I/O, so the retry loop above never actually tests connectivity.  The first
+            # real HTTP request fires here when the iterator is consumed.  Without this inner
+            # try the module-scan fallback below would be silently skipped on a 401/network error.
+            try:
+                for file in files:
+                    if check_cancellation and check_cancellation(): break
+                    if getattr(file, 'id', None):
+                        downloaded_ids.add(file.id)
 
-                if target_key in seen_flat_paths:
-                    counter = 1
-                    while True:
-                        new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
-                        new_filepath = base_path / new_name
-                        if str(new_filepath).lower() not in seen_flat_paths:
-                            filepath = new_filepath
-                            target_key = str(new_filepath).lower()
-                            break
-                        counter += 1
+                    # Synchronous conflict resolution to prevent data loss
+                    base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                    filepath = base_path / base_filename
+                    target_key = str(filepath).lower()
 
-                seen_flat_paths.add(target_key)
-                try:
-                    task = asyncio.create_task(self._download_file_async(
-                        sem, session, file, base_path, progress_callback, mb_tracker, file_filter, 
-                        error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                        sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath,
-                        check_cancellation=check_cancellation
-                    ))
-                    tasks.append(task)
-                except Exception as e:
-                    err = DownloadError(course.name, getattr(file, 'filename', 'unknown'), "Queue Error", str(e), raw_error=e)
-                    if progress_callback: progress_callback(err, progress_type='error')
-                    self._log_error(error_root_path, err)
+                    if target_key in seen_flat_paths:
+                        counter = 1
+                        while True:
+                            new_name = f"{filepath.stem} ({counter}){filepath.suffix}"
+                            new_filepath = base_path / new_name
+                            if str(new_filepath).lower() not in seen_flat_paths:
+                                filepath = new_filepath
+                                target_key = str(new_filepath).lower()
+                                break
+                            counter += 1
+
+                    seen_flat_paths.add(target_key)
+                    try:
+                        task = asyncio.create_task(self._download_file_async(
+                            sem, session, file, base_path, progress_callback, mb_tracker, file_filter,
+                            error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager, course_base_path=base_path, explicit_filepath=filepath,
+                            check_cancellation=check_cancellation
+                        ))
+                        tasks.append(task)
+                    except Exception as e:
+                        err = DownloadError(course.name, getattr(file, 'filename', 'unknown'), "Queue Error", str(e), raw_error=e)
+                        if progress_callback: progress_callback(err, progress_type='error')
+                        self._log_error(error_root_path, err)
+            except Exception as file_list_e:
+                # File listing failed mid-iteration (e.g. 401, network drop).
+                # Log a warning and fall through to the module-scan fallback below.
+                _msg = f"Files tab listing failed, falling back to module scan: {file_list_e}"
+                if progress_callback: progress_callback(_msg, progress_type='log')
+                log_debug(_msg, debug_file)
 
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
