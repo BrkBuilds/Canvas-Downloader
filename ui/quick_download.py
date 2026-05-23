@@ -89,7 +89,7 @@ _QUICK_PRESETS = [
     {
         'id': 'quick_files_only',
         'name': 'Files Only',
-        'desc': 'Only the files uploaded by your teacher, no Canvas Content or fluff.',
+        'desc': 'Only the files uploaded by your teacher, no Canvas Content or other distractions.',
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'modules', 'file_filter': 'all',
@@ -809,7 +809,7 @@ div.st-key-page_nav_quick_back button:hover {{
             "Yes! If you select a folder that already contains downloads from a previous run, the app will safely add any new files and apply updates without deleting your existing work or custom files. However, for continuous syncing, we highly recommend using <b>Sync Mode</b> from the sidebar instead, which is optimized for tracking changes."
             "</div></details>"
             "<hr>"
-            f"<b>{HELP_ICONS['lightbulb']} Pro Tip:</b> If you need to tweak individual settings (like specific file extensions or advanced AI settings), "
+            f"<b>{HELP_ICONS['lightbulb']} Pro Tip:</b> If you need to tweak individual settings (like specific AI Optimizations, or certain Canvas Content), "
             f"click <b>Go to Custom Download'</b> in the top right corner."
         )
 

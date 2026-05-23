@@ -121,11 +121,13 @@ components.html("""<script>
         return !doc.querySelector('[data-testid="stStatusWidget"]');
     }
 
-    // Returns a lightweight fingerprint of the page layout.  When old elements
-    // are removed the scrollHeight drops and the direct child count changes.
-    // childElementCount is O(1) — avoids a full DOM tree walk every 200 ms.
+    // Returns a fingerprint of the page layout.  Uses querySelectorAll('*') on
+    // the main vertical block to catch deep-subtree reconciliation (e.g. old
+    // course-list elements still present) that childElementCount misses.
+    // O(n) but negligible at 200 ms intervals (~1 ms for 500 elements).
     function pageFingerprint(target){
-        return target.scrollHeight + '|' + target.childElementCount;
+        var vb=doc.querySelector('[data-testid="stVerticalBlock"]');
+        return target.scrollHeight+'|'+(vb?vb.querySelectorAll('*').length:target.childElementCount);
     }
 
     function schedHide(){
@@ -168,6 +170,10 @@ components.html("""<script>
                 var lastFP='';
                 var stableCount=0;
                 function pollStable(){
+                    // If a new rerun started (e.g. st.query_params.update() on the
+                    // previous rerun triggered a second server round-trip), go back
+                    // to Phase 2 so we wait for it to finish before counting stability.
+                    if(!isStReady()){p.hT=setTimeout(waitForReady,150);return;}
                     var fp=pageFingerprint(target);
                     if(!hasChanged){
                         if(fp!==p.preFP){
@@ -179,8 +185,7 @@ components.html("""<script>
                         if(fp===lastFP){
                             stableCount++;
                             if(stableCount>=6){
-                                // Layout stable for 800 ms.  Safe to hide.
-                                if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
+                                // Layout stable for ~1200 ms.  Attempt hide.
                                 p.awaitChange=false;p.preFP=null;
                                 // Scroll to top - Streamlit uses internal scroll
                                 // containers, not the window.  Hit all candidates.
@@ -191,7 +196,21 @@ components.html("""<script>
                                     +'[data-testid="stVerticalBlock"]'
                                 );
                                 for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
+                                // Capture the stable fingerprint for the rAF guard.
+                                var commitFP=lastFP;
                                 requestAnimationFrame(function(){
+                                    // Guard against the ~16 ms rAF gap: a late mutation
+                                    // (deep React cleanup, URL-param update, second rerun)
+                                    // may have fired between the stableCount decision and
+                                    // now.  If the DOM changed or a new rerun started,
+                                    // restart Phase 3 instead of hiding prematurely.
+                                    var curFP=pageFingerprint(target);
+                                    if(!isStReady()||curFP!==commitFP){
+                                        stableCount=0;lastFP=curFP;
+                                        p.hT=setTimeout(pollStable,200);
+                                        return;
+                                    }
+                                    if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
                                     p.el.style.display='none';p.vis=false;p.hT=null;
                                 });
                                 return;
