@@ -175,7 +175,27 @@ def _run_macos() -> None:
     _retry_boot_sequence can rebind them via ``nonlocal`` (which requires
     an enclosing *function* scope — an ``if`` block is not sufficient).
     """
-    from macos_controller import CanvasController
+    try:
+        from macos_controller import CanvasController
+    except ImportError as _import_err:
+        # CustomTkinter or the controller module is missing — show a native
+        # Tkinter error dialog so the user gets a readable message rather than
+        # a raw traceback in the console.
+        logger.error(f"Failed to import macos_controller: {_import_err}")
+        try:
+            import tkinter as _tk
+            import tkinter.messagebox as _mb
+            _root = _tk.Tk()
+            _root.withdraw()
+            _mb.showerror(
+                "Canvas Downloader — Startup Error",
+                f"A required UI component could not be loaded:\n\n{_import_err}\n\n"
+                "Please reinstall Canvas Downloader or contact support.",
+            )
+            _root.destroy()
+        except Exception:
+            pass  # If tkinter itself is missing, nothing we can do
+        sys.exit(1)
 
     # Probe a port; the controller's "Try Again" path re-probes with a fresh
     # port via _retry_boot_sequence if the first attempt fails.

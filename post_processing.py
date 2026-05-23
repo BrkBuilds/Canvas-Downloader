@@ -109,8 +109,8 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         time.sleep(0.05)
     except (KeyboardInterrupt, SystemExit):
         raise
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"_render_dashboard swallowed: {type(e).__name__}: {e}")
 
 
 def _log_msg(ui: UIBridge, msg: str):
@@ -132,8 +132,8 @@ def _log_msg(ui: UIBridge, msg: str):
             {log_content}
         </div>
         ''', unsafe_allow_html=True)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"_log_msg swallowed: {type(e).__name__}: {e}")
 
 
 def _show_active_file(ui: UIBridge, filename: str):
@@ -199,7 +199,12 @@ def run_archive_extraction(files, ui: UIBridge):
     """Extract archives (.zip, .tar, .tar.gz)."""
     if not files:
         return
-    from archive_extractor import extract_archive
+    try:
+        from archive_extractor import extract_archive
+    except ImportError as _imp_err:
+        logger.error(f"archive_extractor unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Archive extraction unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Archive files for extraction...</span>")
@@ -234,7 +239,12 @@ def run_pptx_conversion(files, ui: UIBridge):
     """Convert PowerPoint files to PDF."""
     if not files:
         return
-    from pdf_converter import PowerPointToPDF
+    try:
+        from pdf_converter import PowerPointToPDF
+    except ImportError as _imp_err:
+        logger.error(f"pdf_converter unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     pptx_error_log = ui.error_log_path
@@ -274,7 +284,12 @@ def run_html_conversion(files, ui: UIBridge):
     """Convert Canvas Pages (HTML) to Markdown."""
     if not files:
         return
-    from md_converter import convert_html_to_md
+    try:
+        from md_converter import convert_html_to_md
+    except ImportError as _imp_err:
+        logger.error(f"md_converter unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ HTML→Markdown conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} HTML files for Markdown conversion...</span>")
@@ -310,7 +325,12 @@ def run_code_conversion(files, ui: UIBridge):
     """Convert code & data files to .txt."""
     if not files:
         return
-    from code_converter import convert_code_to_txt
+    try:
+        from code_converter import convert_code_to_txt
+    except ImportError as _imp_err:
+        logger.error(f"code_converter unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Code→TXT conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Code & Data files for TXT conversion...</span>")
@@ -350,7 +370,12 @@ def run_url_compilation(folders, ui: UIBridge, sm=None):
     """
     if not folders:
         return
-    from url_compiler import compile_urls_to_txt
+    try:
+        from url_compiler import compile_urls_to_txt
+    except ImportError as _imp_err:
+        logger.error(f"url_compiler unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ URL compilation unavailable: module not found ({_imp_err})</span>")
+        return
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Scanning downloaded modules for .url shortcuts...</span>")
 
@@ -386,7 +411,12 @@ def run_word_conversion(files, ui: UIBridge):
     """Convert legacy Word documents (.doc, .rtf, .odt) to PDF."""
     if not files:
         return
-    from word_converter import WordToPDF
+    try:
+        from word_converter import WordToPDF
+    except ImportError as _imp_err:
+        logger.error(f"word_converter unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word→PDF conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Legacy Word files for PDF conversion...</span>")
@@ -431,7 +461,12 @@ def run_excel_data_conversion(files, ui: UIBridge):
     """
     if not files:
         return
-    from excel_converter import ExcelToData
+    try:
+        from excel_converter import ExcelToData
+    except ImportError as _imp_err:
+        logger.error(f"excel_converter (ExcelToData) unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel data extraction unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Excel files for AI data extraction...</span>")
@@ -477,7 +512,12 @@ def run_excel_conversion(files, ui: UIBridge):
     """
     if not files:
         return
-    from excel_converter import ExcelToPDF
+    try:
+        from excel_converter import ExcelToPDF
+    except ImportError as _imp_err:
+        logger.error(f"excel_converter (ExcelToPDF) unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel→PDF conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Excel files for PDF conversion...</span>")
@@ -517,7 +557,12 @@ def run_video_conversion(files, ui: UIBridge):
     """Extract audio from video files (.mp4, .mov, .mkv) to MP3."""
     if not files:
         return
-    from video_converter import convert_video_to_mp3
+    try:
+        from video_converter import convert_video_to_mp3
+    except ImportError as _imp_err:
+        logger.error(f"video_converter unavailable: {_imp_err}")
+        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Video→MP3 conversion unavailable: module not found ({_imp_err})</span>")
+        return
 
     total = len(files)
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Video files for audio extraction...</span>")
