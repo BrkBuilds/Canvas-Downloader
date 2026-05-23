@@ -148,23 +148,20 @@ components.html("""<script>
                     return;
                 }
                 // Phase 3 - Script is done, but React DOM reconciliation may still
-                // be running.  Two strategies depending on p.awaitChange:
-                //
-                // Normal (awaitChange=false): Python took long enough that React has
-                // already reconciled. Count 4 consecutive stable geometry readings
-                // (800 ms) and hide. Original behaviour - correct for all regular
-                // page shifts.
-                //
-                // awaitChange=true ("Go to front page" buttons only): Python is very
-                // fast (cleanup + cached render), so there is a timing race - React
-                // may or may not have reconciled by the time Phase 3 starts.
-                // We compare against p.preFP (fingerprint captured at click time,
-                // when the old page was definitely still there):
-                //   - If DOM already differs from preFP → React reconciled during
-                //     Phase 1/2; just count stability normally (no extra wait).
-                //   - If DOM still matches preFP → old page is still displayed;
-                //     wait for the first geometry change, then count stability.
-                // This correctly covers both fast and slow React reconciliation.
+                // be running.  awaitChange=true is always set for all nav buttons:
+                // we compare against p.preFP (fingerprint captured at click time)
+                // and do not start counting stability until the DOM has changed
+                // from the pre-click state.  This handles:
+                //   (a) Two-rerun pattern: sidebar nav buttons call st.rerun() at
+                //       the end of Rerun 1, creating a gap where stStatusWidget is
+                //       absent.  Without awaitChange, Phase 3 would count the old
+                //       (unchanged) page as stable and hide prematurely.
+                //   (b) Slow startup: Streamlit may not have injected stStatusWidget
+                //       yet when Phase 2 first polls.
+                // - If DOM already differs from preFP → React reconciled during
+                //   Phase 1/2; just count stability normally (no extra wait).
+                // - If DOM still matches preFP → old page still displayed;
+                //   wait for the first geometry change, then count stability.
                 var target=doc.querySelector('[data-testid="stMain"]')||doc.body;
                 var hasChanged=!p.awaitChange||(pageFingerprint(target)!==(p.preFP||''));
                 var lastFP='';
@@ -273,13 +270,17 @@ components.html("""<script>
                 var backendCount=countEl?parseInt(countEl.getAttribute('data-count'),10):0;
                 if(checkedCourses.length===0&&backendCount===0)return;
             }
-            // "Go to front page" buttons: capture the pre-click DOM fingerprint so
-            // Phase 3 can tell whether React has already reconciled the new page by
-            // the time it runs (in which case just count stability), or whether the
-            // old page is still displayed (in which case wait for the DOM to change
-            // first, then count stability).
-            p.awaitChange=!!btn.closest('div[class*="st-key-page_nav_front_page"]');
-            if(p.awaitChange) p.preFP=pageFingerprint(doc.querySelector('[data-testid="stMain"]')||doc.body);
+            // Always capture the pre-click fingerprint for all nav buttons.
+            // Phase 3 will not count stability until the DOM has actually changed
+            // from the pre-click state. This fixes the two-rerun race condition:
+            // sidebar nav buttons (Download/Sync) call st.rerun() at the end of
+            // Rerun 1, creating a brief gap where stStatusWidget is absent between
+            // Rerun 1 and Rerun 2. Without awaitChange, Phase 3 would see the old
+            // page as "stable" for 1200ms and hide the overlay before the new page
+            // renders. It also handles slow Streamlit startup where stStatusWidget
+            // hasn't been injected yet when Phase 2 first polls.
+            p.awaitChange=true;
+            p.preFP=pageFingerprint(doc.querySelector('[data-testid="stMain"]')||doc.body);
             show();
         },true);
     }
