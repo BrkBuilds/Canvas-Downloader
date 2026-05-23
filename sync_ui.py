@@ -590,10 +590,10 @@ def _change_hub_layer(target_layer, _pop_keys=None, **kwargs):
     change_hub_layer(target_layer, _pop_keys, **kwargs)
 
 
-def _delete_group_callback(mgr, group_id, group_name):
+def _delete_group_callback(mgr, group_id, group_name, is_single_pair=False):
     """Delegate to ui.hub_dialog."""
     from ui.hub_dialog import delete_group_callback
-    delete_group_callback(mgr, group_id, group_name)
+    delete_group_callback(mgr, group_id, group_name, is_single_pair)
 
 
 def _remove_pair_from_group(mgr, group_id, pair_idx):
