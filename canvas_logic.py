@@ -393,6 +393,8 @@ class CanvasManager:
                     
         except Exception as e:
             logger.error(f"Error during module scan fallback: {e}")
+            if progress_callback:
+                progress_callback(f"Module scan failed — some files may be missing: {e}", progress_type='log')
 
         # --- Phase 3: Secondary Content Metadata ---
         # Pass the module map so attachments of module-linked entities can
@@ -410,6 +412,8 @@ class CanvasManager:
                         all_files_map[s_info.id] = s_info
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
+                if progress_callback:
+                    progress_callback(f"Secondary content scan failed — some items may be missing: {e}", progress_type='log')
             
         return list(all_files_map.values()), secondary_fetch_success, module_map
     
@@ -447,14 +451,24 @@ class CanvasManager:
 
         files = []
         module_map = {}
-        modules = list(course.get_modules())
+        try:
+            modules = list(course.get_modules())
+        except Exception as e:
+            logger.warning(f"Could not fetch module list for course {getattr(course, 'id', '?')}: {e}")
+            if progress_callback:
+                progress_callback(f"Could not fetch modules: {e}", progress_type='log')
+            return files, module_map
         total_modules = len(modules)
         for idx, module in enumerate(modules):
             if progress_callback:
                 progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
 
             clean_module_name = self._sanitize_filename(module.name)
-            items = module.get_module_items()
+            try:
+                items = list(module.get_module_items())
+            except Exception as e:
+                logger.warning(f"Could not fetch items for module '{getattr(module, 'name', '?')}': {e}")
+                continue
             for item in items:
                 if item.type == 'File':
                     if not hasattr(item, 'content_id') or not item.content_id:
@@ -475,101 +489,128 @@ class CanvasManager:
                             content_type=getattr(file, 'content-type', ''),
                             folder_id=getattr(file, 'folder_id', None),
                         ))
-                    except Exception:
-                        # If a specific file content_id is invalid, we skip it.
-                        # This works as "best effort".
-                        pass
+                    except Exception as _fetch_err:
+                        logger.warning(
+                            f"Could not fetch file {item.content_id} from module "
+                            f"'{getattr(module, 'name', '?')}': {_fetch_err}"
+                        )
+                        if progress_callback:
+                            progress_callback(
+                                f"Could not access '{getattr(item, 'title', item.content_id)}' "
+                                f"in module '{getattr(module, 'name', '?')}'",
+                                progress_type='log',
+                            )
                 elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
-                    ext = ".html" if item.type == 'Page' else (".webloc" if platform.system() == 'Darwin' else ".url")
-                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
-                    if isolate or item.type != 'Page':
-                        # Pages get the routing prefix in Mode A; ExternalUrls
-                        # use plain shortcut filenames in both modes.
-                        emitted_filename = safe_base + ext
-                    else:
-                        routing = _ENTITY_ROUTING['page']
-                        emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
+                    try:
+                        ext = ".html" if item.type == 'Page' else (".webloc" if platform.system() == 'Darwin' else ".url")
+                        safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
+                        if isolate or item.type != 'Page':
+                            emitted_filename = safe_base + ext
+                        else:
+                            routing = _ENTITY_ROUTING['page']
+                            emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
 
-                    actual_url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None) or getattr(item, 'url', '')
-                    syn_id = -int(item.id) if hasattr(item, 'id') else 0
-                    # Mode A uses module subfolders; Mode B routes to
-                    # ``<Category>/`` regardless of module placement, so we
-                    # only register synthetic IDs in module_map for Mode A.
-                    if syn_id and not isolate:
-                        module_map[syn_id] = clean_module_name
+                        actual_url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None) or getattr(item, 'url', '')
+                        syn_id = -int(item.id) if hasattr(item, 'id') else 0
+                        if syn_id and not isolate:
+                            module_map[syn_id] = clean_module_name
 
-                    mock_info = CanvasFileInfo(
-                        id=syn_id,
-                        filename=emitted_filename,
-                        display_name=safe_base + ext,
-                        size=0,
-                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
-                        url=actual_url,
-                        content_type="text/html" if item.type == 'Page' else "application/x-url"
-                    )
-                    files.append(mock_info)
+                        mock_info = CanvasFileInfo(
+                            id=syn_id,
+                            filename=emitted_filename,
+                            display_name=safe_base + ext,
+                            size=0,
+                            modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                            url=actual_url,
+                            content_type="text/html" if item.type == 'Page' else "application/x-url"
+                        )
+                        files.append(mock_info)
+                    except Exception as _item_err:
+                        logger.warning(
+                            f"Could not process {item.type} item "
+                            f"'{getattr(item, 'title', '?')}' in module "
+                            f"'{getattr(module, 'name', '?')}': {_item_err}"
+                        )
 
                 # --- Secondary entities found in modules ---
                 elif item.type == 'Assignment' and secondary_content_settings and secondary_content_settings.get('download_assignments'):
-                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
-                    content_id = getattr(item, 'content_id', 0) or 0
-                    syn_id = make_secondary_id('assignment', content_id)
-                    if not isolate:
-                        module_map[syn_id] = clean_module_name
-                    if isolate:
-                        emitted_filename = safe_base + '.html'
-                    else:
-                        routing = _ENTITY_ROUTING['assignment']
-                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
-                    files.append(CanvasFileInfo(
-                        id=syn_id,
-                        filename=emitted_filename,
-                        display_name=getattr(item, 'title', 'Untitled'),
-                        size=0,
-                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
-                        url=getattr(item, 'html_url', ''),
-                        content_type='text/html',
-                    ))
+                    try:
+                        safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
+                        content_id = getattr(item, 'content_id', 0) or 0
+                        syn_id = make_secondary_id('assignment', content_id)
+                        if not isolate:
+                            module_map[syn_id] = clean_module_name
+                        if isolate:
+                            emitted_filename = safe_base + '.html'
+                        else:
+                            routing = _ENTITY_ROUTING['assignment']
+                            emitted_filename = f"{routing['prefix']}: {safe_base}.html"
+                        files.append(CanvasFileInfo(
+                            id=syn_id,
+                            filename=emitted_filename,
+                            display_name=getattr(item, 'title', 'Untitled'),
+                            size=0,
+                            modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                            url=getattr(item, 'html_url', ''),
+                            content_type='text/html',
+                        ))
+                    except Exception as _item_err:
+                        logger.warning(
+                            f"Could not process Assignment item '{getattr(item, 'title', '?')}' "
+                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                        )
                 elif item.type == 'Quiz' and secondary_content_settings and secondary_content_settings.get('download_quizzes'):
-                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
-                    content_id = getattr(item, 'content_id', 0) or 0
-                    syn_id = make_secondary_id('quiz', content_id)
-                    if not isolate:
-                        module_map[syn_id] = clean_module_name
-                    if isolate:
-                        emitted_filename = safe_base + '.html'
-                    else:
-                        routing = _ENTITY_ROUTING['quiz']
-                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
-                    files.append(CanvasFileInfo(
-                        id=syn_id,
-                        filename=emitted_filename,
-                        display_name=getattr(item, 'title', 'Untitled'),
-                        size=0,
-                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
-                        url=getattr(item, 'html_url', ''),
-                        content_type='text/html',
-                    ))
+                    try:
+                        safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
+                        content_id = getattr(item, 'content_id', 0) or 0
+                        syn_id = make_secondary_id('quiz', content_id)
+                        if not isolate:
+                            module_map[syn_id] = clean_module_name
+                        if isolate:
+                            emitted_filename = safe_base + '.html'
+                        else:
+                            routing = _ENTITY_ROUTING['quiz']
+                            emitted_filename = f"{routing['prefix']}: {safe_base}.html"
+                        files.append(CanvasFileInfo(
+                            id=syn_id,
+                            filename=emitted_filename,
+                            display_name=getattr(item, 'title', 'Untitled'),
+                            size=0,
+                            modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                            url=getattr(item, 'html_url', ''),
+                            content_type='text/html',
+                        ))
+                    except Exception as _item_err:
+                        logger.warning(
+                            f"Could not process Quiz item '{getattr(item, 'title', '?')}' "
+                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                        )
                 elif item.type == 'Discussion' and secondary_content_settings and secondary_content_settings.get('download_discussions'):
-                    safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
-                    content_id = getattr(item, 'content_id', 0) or 0
-                    syn_id = make_secondary_id('discussion', content_id)
-                    if not isolate:
-                        module_map[syn_id] = clean_module_name
-                    if isolate:
-                        emitted_filename = safe_base + '.html'
-                    else:
-                        routing = _ENTITY_ROUTING['discussion']
-                        emitted_filename = f"{routing['prefix']}: {safe_base}.html"
-                    files.append(CanvasFileInfo(
-                        id=syn_id,
-                        filename=emitted_filename,
-                        display_name=getattr(item, 'title', 'Untitled'),
-                        size=0,
-                        modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
-                        url=getattr(item, 'html_url', ''),
-                        content_type='text/html',
-                    ))
+                    try:
+                        safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
+                        content_id = getattr(item, 'content_id', 0) or 0
+                        syn_id = make_secondary_id('discussion', content_id)
+                        if not isolate:
+                            module_map[syn_id] = clean_module_name
+                        if isolate:
+                            emitted_filename = safe_base + '.html'
+                        else:
+                            routing = _ENTITY_ROUTING['discussion']
+                            emitted_filename = f"{routing['prefix']}: {safe_base}.html"
+                        files.append(CanvasFileInfo(
+                            id=syn_id,
+                            filename=emitted_filename,
+                            display_name=getattr(item, 'title', 'Untitled'),
+                            size=0,
+                            modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
+                            url=getattr(item, 'html_url', ''),
+                            content_type='text/html',
+                        ))
+                    except Exception as _item_err:
+                        logger.warning(
+                            f"Could not process Discussion item '{getattr(item, 'title', '?')}' "
+                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                        )
         return files, module_map
 
     def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False,
@@ -628,7 +669,8 @@ class CanvasManager:
                         content_type='text/html',
                     ))
                 fetch_success['syllabus'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching syllabus failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['syllabus'] = False
 
         # Announcements
@@ -735,7 +777,8 @@ class CanvasManager:
                             content_type=att.get('content-type', ''),
                         ))
                 fetch_success['announcement'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching announcements failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['announcement'] = False
 
         # Standalone Assignments - fetch individually for timestamp parity
@@ -866,7 +909,8 @@ class CanvasManager:
                         ))
 
                 fetch_success['assignment'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching assignments failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['assignment'] = False
 
         # Standalone Discussions (non-announcement)
@@ -964,7 +1008,8 @@ class CanvasManager:
                             content_type=att.get('content-type', ''),
                         ))
                 fetch_success['discussion'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching discussions failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['discussion'] = False
 
         # Quizzes
@@ -1060,7 +1105,8 @@ class CanvasManager:
                             content_type=att.get('content-type', ''),
                         ))
                 fetch_success['quiz'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching quizzes failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['quiz'] = False
 
         # Rubrics
@@ -1086,7 +1132,8 @@ class CanvasManager:
                         content_type='text/markdown',
                     ))
                 fetch_success['rubric'] = True
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Fetching rubrics failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['rubric'] = False
 
         return items, fetch_success
@@ -1517,6 +1564,10 @@ class CanvasManager:
                                                     module_handled_ids.add(a_id)
                                                 except Exception as ae:
                                                     log_debug(f"Module Assignment dispatch error: {ae}", debug_file)
+                                                    logger.warning(f"Assignment dispatch failed for '{getattr(item, 'title', '?')}': {ae}")
+                                                    _ae_err = DownloadError(course.name, getattr(item, 'title', 'Assignment'), "Assignment Dispatch Error", str(ae), raw_error=ae)
+                                                    if progress_callback: progress_callback(_ae_err, progress_type='error')
+                                                    self._log_error(save_dir, _ae_err)
 
                                     elif item.type == 'Quiz':
                                         if secondary_content_settings and secondary_content_settings.get('download_quizzes'):
@@ -1550,6 +1601,10 @@ class CanvasManager:
                                                     module_handled_ids.add(q_id)
                                                 except Exception as qe:
                                                     log_debug(f"Module Quiz dispatch error: {qe}", debug_file)
+                                                    logger.warning(f"Quiz dispatch failed for '{getattr(item, 'title', '?')}': {qe}")
+                                                    _qe_err = DownloadError(course.name, getattr(item, 'title', 'Quiz'), "Quiz Dispatch Error", str(qe), raw_error=qe)
+                                                    if progress_callback: progress_callback(_qe_err, progress_type='error')
+                                                    self._log_error(save_dir, _qe_err)
 
                                     elif item.type == 'Discussion':
                                         if secondary_content_settings and secondary_content_settings.get('download_discussions'):
@@ -1585,6 +1640,10 @@ class CanvasManager:
                                                     module_handled_ids.add(t_id)
                                                 except Exception as de:
                                                     log_debug(f"Module Discussion dispatch error: {de}", debug_file)
+                                                    logger.warning(f"Discussion dispatch failed for '{getattr(item, 'title', '?')}': {de}")
+                                                    _de_err = DownloadError(course.name, getattr(item, 'title', 'Discussion'), "Discussion Dispatch Error", str(de), raw_error=de)
+                                                    if progress_callback: progress_callback(_de_err, progress_type='error')
+                                                    self._log_error(save_dir, _de_err)
                                         
                                 except Exception as item_e:
                                     err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Item Processing Error", str(item_e), raw_error=item_e)
@@ -1737,6 +1796,7 @@ class CanvasManager:
                     import json
                     sync_manager._save_metadata('secondary_content_contract', json.dumps(secondary_content_settings))
             except Exception as e:
+                logger.warning(f"Could not save sync contract to DB for '{course.name}': {e}")
                 log_debug(f"Warning: Could not save sync metadata: {e}", debug_file)
 
     async def download_isolated_batch_async(self, course, error_queue, save_dir, progress_callback=None, check_cancellation=None, debug_mode=False, mb_tracker=None):
@@ -1978,8 +2038,17 @@ class CanvasManager:
                     self.skipped_discovery_errors += 1
             
             if tasks:
-                await asyncio.gather(*tasks, return_exceptions=True)
-                
+                _retry_results = await asyncio.gather(*tasks, return_exceptions=True)
+                for _rr in _retry_results:
+                    if isinstance(_rr, Exception):
+                        logger.error(f"Isolated retry task failed: {_rr}")
+                        if progress_callback:
+                            _rr_err = DownloadError(
+                                getattr(course, 'name', 'Unknown'), "Retry Task",
+                                "Async Retry Error", str(_rr), raw_error=_rr,
+                            )
+                            progress_callback(_rr_err, progress_type='error')
+
             return getattr(self, 'skipped_discovery_errors', 0)
 
     async def _download_folders_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):

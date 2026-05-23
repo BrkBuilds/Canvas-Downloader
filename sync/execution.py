@@ -525,8 +525,8 @@ def run_sync():
                                         _sec_module_path,
                                     )
                                 except Exception as _sec_err:
-                                    # Let the error bubble up to the outer retry loop
-                                    raise _sec_err
+                                    # Re-raise preserving the original traceback
+                                    raise
 
                                 if sec_filepath:
                                     synced_counter[0] += 1
