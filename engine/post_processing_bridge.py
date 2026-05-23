@@ -113,7 +113,12 @@ def invoke_post_processing(
     if cancel_fn():
         return 0
 
-    pp_sm = SyncManager(course_folder, course_id, course_name)
+    try:
+        pp_sm = SyncManager(course_folder, course_id, course_name)
+    except Exception as _sm_err:
+        logger.error(f"Post-processing SyncManager init failed for '{course_name}': {_sm_err}", exc_info=True)
+        return 0
+
     pp_ui = UIBridge(
         header_placeholder=placeholders.header,
         progress_placeholder=placeholders.progress,
@@ -125,14 +130,17 @@ def invoke_post_processing(
         error_log_path=error_log_path,
     )
 
-    run_all_conversions(
-        course_folder=course_folder,
-        sm=pp_sm,
-        contract=contract,
-        ui=pp_ui,
-        course_name=course_name,
-        **({"explicit_files": explicit_files} if explicit_files else {}),
-    )
+    try:
+        run_all_conversions(
+            course_folder=course_folder,
+            sm=pp_sm,
+            contract=contract,
+            ui=pp_ui,
+            course_name=course_name,
+            **({"explicit_files": explicit_files} if explicit_files else {}),
+        )
+    except Exception as _pp_crash:
+        logger.error(f"Post-processing pipeline crashed for '{course_name}': {_pp_crash}", exc_info=True)
 
     # Track post-processing results globally
     st.session_state['pp_failure_count'] = (
