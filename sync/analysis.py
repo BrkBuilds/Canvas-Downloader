@@ -51,7 +51,12 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         - all data needed by the caller, with no side effects.
     """
     progress_hook(0, 1, "Connecting to Canvas API...")
-    course = cm.canvas.get_course(course_id)
+    try:
+        course = cm.canvas.get_course(course_id)
+    except Exception as _gc_err:
+        raise RuntimeError(
+            f"Could not fetch course '{course_name}' (ID {course_id}) from Canvas: {_gc_err}"
+        ) from _gc_err
 
     sync_mgr = SyncManager(str(local_folder), course_id, course_name)
 
@@ -213,7 +218,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
         # Folder-not-found guard
         if not Path(pair['local_folder']).exists():
-            st.error(f"❌ Folder not found: {pair['local_folder']}. It may have been deleted, renamed, or the drive is disconnected.")
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                f"Folder not found: {pair['local_folder']}",
+                detail="The folder may have been deleted, renamed, or the drive is disconnected. Edit or remove the sync pair to continue.",
+            )
             continue
 
         display_name = friendly_course_name(pair['course_name'])
@@ -265,7 +274,15 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 )
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
-            
+
+            if sync_mgr.db_was_reset:
+                from ui.amber_notice import render_amber_notice
+                render_amber_notice(
+                    f"Sync database for \"{display_name}\" was corrupted and has been reset.",
+                    detail="Previous sync history for this folder has been cleared — all files will appear as new on the next sync.",
+                )
+                logger.warning(f"Sync DB was reset for '{display_name}' ({pair.get('local_folder')})")
+
             all_results.append({
                 'pair': pair,
                 'result': result,
@@ -278,7 +295,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
         except Exception as e:
             traceback.print_exc()
             logger.error(f"Sync Analysis Error: {str(e)}")
-            st.error(f"Error accessing course {display_name}: {e}")
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                f"Could not analyse \"{display_name}\"",
+                detail=str(e),
+            )
             continue
 
     finally:

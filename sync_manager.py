@@ -293,6 +293,8 @@ class SyncManager:
         self.course_name = course_name
         self.db_path = self.local_path / DB_FILENAME
         self._db_lock = threading.Lock()
+        self.db_was_reset = False    # set True when corruption forces a fresh DB
+        self._db_init_failed = False # set True when DB init exhausts all retries
         self._init_db()
         
     def _init_db(self, attempt=0):
@@ -356,8 +358,10 @@ class SyncManager:
         except sqlite3.DatabaseError as e:
             # Database is corrupted - rescue by renaming and re-initializing
             logger.error(f"Database corrupted at {self.db_path}: {e}. Resetting to fresh database.")
+            self.db_was_reset = True  # callers can surface a warning to the user
             if attempt >= 3:
                 logger.error(f"Max retries reached trying to fix DB at {self.db_path}. Aborting.")
+                self._db_init_failed = True
                 return
             try:
                 corrupted_path = self.db_path.with_name('.canvas_sync_corrupted.db')
@@ -389,8 +393,15 @@ class SyncManager:
     
     def load_manifest(self) -> dict:
         """
-        Load the sync manifest from SQLite DB into an memory dictionary. 
+        Load the sync manifest from SQLite DB into an memory dictionary.
         """
+        if self._db_init_failed:
+            logger.error(f"Cannot load manifest: DB initialization failed for {self.db_path}")
+            raise RuntimeError(
+                f"Sync database could not be initialized for '{self.course_name}'. "
+                "Cannot load manifest — the sync database may be locked by another process."
+            )
+
         manifest = {
             'course_id': self.course_id,
             'course_name': self.course_name,
@@ -433,11 +444,15 @@ class SyncManager:
             
     def save_manifest(self, manifest: dict) -> bool:
         """Save the in-memory manifest dictionary to the SQLite DB using atomic upserts.
-        
+
         Uses INSERT OR REPLACE per row instead of DELETE + reinsert.
         This ensures that a crash at any point leaves all previously-committed
         rows intact - no data loss scenario.
         """
+        if self._db_init_failed:
+            logger.error(f"Cannot save manifest: DB initialization failed for {self.db_path}")
+            return False
+
         max_retries = 3
         
         for attempt in range(max_retries):
@@ -509,9 +524,9 @@ class SyncManager:
             ctypes.windll.kernel32.SetFileAttributesW(
                 make_long_path(filepath), FILE_ATTRIBUTE_NORMAL
             )
-        except Exception:
-            pass
-    
+        except Exception as e:
+            logger.debug(f"_windows_unhide_file failed for '{filepath}': {e}")
+
     @staticmethod
     def _windows_hide_file(filepath: Path):
         """Set hidden attribute on a file on Windows."""
@@ -525,8 +540,8 @@ class SyncManager:
             ctypes.windll.kernel32.SetFileAttributesW(
                 make_long_path(filepath), FILE_ATTRIBUTE_HIDDEN
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"_windows_hide_file failed for '{filepath}': {e}")
     
     # --- Heal Process ---
     

@@ -646,9 +646,9 @@ with _main_content.container():
                                 for item in items:
                                     if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
                                         total_items += 1
-                        except Exception:
-                            pass
-                            
+                        except Exception as _mod_count_err:
+                            logger.warning(f"Analysis: module item count failed for '{course.name}': {_mod_count_err}")
+
                     # Add module items if mode is modules
                     if st.session_state['download_mode'] == 'modules':
                         try:
@@ -659,14 +659,15 @@ with _main_content.container():
                                     if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
                                         if st.session_state['file_filter'] != 'study':
                                             total_items += 1
-                        except Exception:
-                            pass
+                        except Exception as _mod_count_err:
+                            logger.warning(f"Analysis: module item count failed for '{course.name}': {_mod_count_err}")
                     
                     # Guard against API returning literal None for size which breaks sum()
                     total_mb += sum((getattr(f, 'size', 0) or 0) for f in filtered_files) / (1024 * 1024)
                     
-                except Exception:
+                except Exception as _analysis_err:
                     # Fallback to older count_course_items if Hybrid fetch fails critically
+                    logger.warning(f"Analysis: hybrid fetch failed for '{course.name}', using fallback count: {_analysis_err}")
                     total_items += cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
                     total_mb += cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
             
@@ -852,9 +853,9 @@ with _main_content.container():
                                 else:
                                     error_obj = DownloadError(course.name, "Unknown Item", "Generic Error", str(msg))
                                 
-                                sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}"
+                                sig = f"{error_obj.course_name}|{error_obj.item_name}|{error_obj.error_type}|{str(error_obj.message)[:80]}"
                                 seen = st.session_state.get('seen_error_sigs', set())
-                                
+
                                 if sig not in seen:
                                     seen.add(sig)
                                     st.session_state['seen_error_sigs'] = seen
@@ -918,17 +919,31 @@ with _main_content.container():
                     'download_submissions': st.session_state.get('persistent_dl_submissions', False),
                     'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
                 }
-                asyncio.run(cm.download_course_async(
-                    course,
-                    st.session_state['download_mode'],
-                    st.session_state['download_path'],
-                    progress_callback=update_ui,
-                    check_cancellation=check_cancellation,
-                    file_filter=st.session_state['file_filter'],
-                    debug_mode=st.session_state.get('debug_mode', False),
-                    post_processing_settings=_pp_settings,
-                    secondary_content_settings=_secondary_settings
-                ))
+                try:
+                    asyncio.run(cm.download_course_async(
+                        course,
+                        st.session_state['download_mode'],
+                        st.session_state['download_path'],
+                        progress_callback=update_ui,
+                        check_cancellation=check_cancellation,
+                        file_filter=st.session_state['file_filter'],
+                        debug_mode=st.session_state.get('debug_mode', False),
+                        post_processing_settings=_pp_settings,
+                        secondary_content_settings=_secondary_settings
+                    ))
+                except Exception as _dl_crash:
+                    logger.error(f"Download engine crashed for '{course.name}': {_dl_crash}", exc_info=True)
+                    _crash_err = DownloadError(
+                        course.name, "Download Engine", "Fatal Crash",
+                        f"Download loop terminated unexpectedly: {_dl_crash}",
+                        raw_error=_dl_crash, is_app_error=True,
+                    )
+                    st.session_state.setdefault('download_errors_list', []).append(_crash_err)
+                    log_deque.append(
+                        f"<span style='color: #FF7B72;'>❌ Fatal: download engine crashed for "
+                        f"{esc(course.name)}: {esc(str(_dl_crash))}</span>"
+                    )
+                    render_dashboard()
                 
                 # --- Post-Processing: Setup ---
                 _has_pp = any(
@@ -1229,22 +1244,31 @@ with _main_content.container():
                 
                 render_dashboard(course.name)
                 
-                dropped_errors = asyncio.run(cm.download_isolated_batch_async(
-                    course=course,
-                    error_queue=errors,
-                    save_dir=st.session_state['download_path'],
-                    progress_callback=lambda msg, progress_type='log', **kw: update_ui(msg, progress_type, course_name=kw.pop('course_name', course.name), **kw),
-                    check_cancellation=check_cancellation,
-                    debug_mode=st.session_state.get('debug_mode', False),
-                    mb_tracker=st.session_state['retry_mb_tracker']
-                ))
+                try:
+                    dropped_errors = asyncio.run(cm.download_isolated_batch_async(
+                        course=course,
+                        error_queue=errors,
+                        save_dir=st.session_state['download_path'],
+                        progress_callback=lambda msg, progress_type='log', **kw: update_ui(msg, progress_type, course_name=kw.pop('course_name', course.name), **kw),
+                        check_cancellation=check_cancellation,
+                        debug_mode=st.session_state.get('debug_mode', False),
+                        mb_tracker=st.session_state['retry_mb_tracker']
+                    ))
+                except Exception as _retry_crash:
+                    logger.error(f"Isolated retry engine crashed for '{course.name}': {_retry_crash}", exc_info=True)
+                    update_ui(f"Retry engine crashed: {_retry_crash}", progress_type='log', course_name=course.name)
+                    dropped_errors = 0
                 if dropped_errors:
                     st.session_state['skipped_discovery_errors'] = st.session_state.get('skipped_discovery_errors', 0) + dropped_errors
             
             # --- Post-Processing Pipeline for Retry (via engine) ---
             if st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled'):
                 if not st.session_state.get('_sync_cancel_warning_shown', False):
-                    st.warning("Retry cancelled. Skipping post-processing.")
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(
+                        "Retry cancelled — post-processing skipped.",
+                        detail="Any files that downloaded successfully before cancellation are available in your folder.",
+                    )
                     st.session_state['_sync_cancel_warning_shown'] = True
             else:
                 for course_name in queue_by_course.keys():
