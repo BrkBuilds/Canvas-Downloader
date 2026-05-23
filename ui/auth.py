@@ -494,22 +494,22 @@ def render_login_page(fetch_courses_fn):
         align-items: center;
         justify-content: center;
         max-width: 480px;
-        margin: 40px auto 0 auto;
+        margin: clamp(5px, 2vh, 20px) auto 0 auto;
         padding: 0 10px;
     }
 
     /* Branded Header */
     .login-brand-header {
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: clamp(5px, 1.5vh, 15px);
     }
 
     .login-brand-logo {
-        width: 68px;
-        height: 68px;
-        border-radius: 14px;
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-        margin-bottom: 12px;
+        margin-bottom: clamp(4px, 1vh, 8px);
         display: inline-block;
     }
 
@@ -533,7 +533,7 @@ def render_login_page(fetch_courses_fn):
         border: none !important;
         border-radius: 12px !important;
         box-shadow: 0 0px 50px rgba(0, 0, 0, 0.5) !important;
-        padding: 30px 24px !important;
+        padding: 20px 24px !important;
         width: 100% !important;
     }
 
@@ -551,6 +551,18 @@ def render_login_page(fetch_courses_fn):
         background-color: rgba(0, 0, 0, 0.2) !important;
         border-radius: 6px !important;
         transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+        overflow: hidden !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] [data-baseweb="base-input"],
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] input {
+        background-color: transparent !important;
+    }
+
+    /* Hide native browser password reveal eyes (e.g. Edge) to prevent duplicate double-eyes */
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] input::-ms-reveal,
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] input::-ms-clear {
+        display: none !important;
     }
 
     div[class*="st-key-login_card_wrapper"] div[data-testid="stTextInput"] [data-baseweb="input"]:focus-within {
@@ -652,6 +664,7 @@ def render_login_page(fetch_courses_fn):
         max-height: none !important;
         height: auto !important;
         overflow: visible !important;
+        background-color: transparent !important;
     }
 
     div[role="tooltip"] div,
@@ -677,12 +690,12 @@ def render_login_page(fetch_courses_fn):
         width: 160px !important;
         height: 1px !important;
         background-color: rgba(255, 255, 255, 0.12) !important;
-        margin: 16px auto 12px auto !important;
+        margin: clamp(1vh, 2vh, 16px) auto clamp(0.5vh, 1.5vh, 12px) auto !important;
     }
 
     .login-github-header-tag {
         margin-top: 0px !important;
-        margin-bottom: 28px !important; /* Spacing below the github tag to the login form */
+        margin-bottom: clamp(1vh, 3vh, 28px) !important; /* Spacing below the github tag to the login form */
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
@@ -709,11 +722,46 @@ def render_login_page(fetch_courses_fn):
         opacity: 0.85 !important;
     }
 
+    .youtube-link {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        color: #94a3b8 !important;
+        text-decoration: none !important;
+        font-size: 0.82rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease-in-out !important;
+        margin: clamp(1vh, 2vh, 16px) auto 0 auto !important;
+        max-width: fit-content !important;
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 8px !important;
+        padding: 5px 8px !important;
+    }
+
+    .youtube-link:hover {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.16) !important;
+    }
+
+    .youtube-link:hover .youtube-icon {
+        color: #ef4444 !important;
+    }
+
+    .youtube-icon {
+        opacity: 0.85 !important;
+        color: currentColor !important;
+        transition: color 0.2s ease-in-out !important;
+    }
+
+
     .login-page-security-footer {
         font-size: 0.84rem !important;
         color: #64748b !important;
         text-align: center !important;
-        margin-top: 36px !important;
+        margin-top: clamp(1.5vh, 4vh, 36px) !important;
         margin-bottom: 4px !important;
         max-width: 480px !important;
         margin-left: auto !important;
@@ -736,7 +784,7 @@ def render_login_page(fetch_courses_fn):
         font-size: 1.3rem;
         font-weight: 700;
         color: #ffffff;
-        margin-bottom: 20px;
+        margin-bottom: clamp(1vh, 2.5vh, 20px);
         letter-spacing: -0.01em;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         padding-bottom: 12px;
@@ -883,7 +931,7 @@ def render_login_page(fetch_courses_fn):
         width: 160px !important;
         height: 1px !important;
         background-color: rgba(255, 255, 255, 0.08) !important;
-        margin: 18px auto !important; 
+        margin: clamp(0.5vh, 2vh, 18px) auto !important; 
     }
 
     .login-privacy-separator-bottom {
@@ -1034,7 +1082,7 @@ def render_login_page(fetch_courses_fn):
         font-size: 0.78rem !important;
         color: #475569 !important; /* Soft, very muted slate color */
         margin-top: 0px !important; /* Matches exactly the 18px bottom margin of the separator above it */
-        margin-bottom: 20px !important;
+        margin-bottom: clamp(0.5vh, 2.5vh, 20px) !important;
         font-weight: 500 !important;
         letter-spacing: 0.01em !important;
         display: flex !important;
@@ -1155,7 +1203,11 @@ def render_login_page(fetch_courses_fn):
                         config_data.pop('mac_api_token', None)
                         config_data.pop('api_token', None)
                     except Exception as e:
-                        st.warning(f"Could not save token: {e}. Token will not persist across sessions.")
+                        from ui.amber_notice import render_amber_notice
+                        render_amber_notice(
+                            "Token Storage Warning",
+                            detail=f"Could not save your token securely to your device ({e}). You can continue using the app, but you may need to log in again next time."
+                        )
 
                     try:
                         _tmp_config = CONFIG_FILE + '.tmp'
@@ -1171,25 +1223,65 @@ def render_login_page(fetch_courses_fn):
                                 os.unlink(_tmp_config)
                         except OSError:
                             pass
-                        st.error(f"Could not save config: {e}")
+                        from ui.amber_notice import render_amber_notice
+                        render_amber_notice(
+                            "Settings Storage Warning",
+                            detail=f"Could not save your preferences ({e}). Your session is active, but your settings may not persist."
+                        )
 
                     st.rerun()
                 else:
-                    st.error(message)
+                    err_text_lower = str(message).lower()
+                    from ui.amber_notice import render_amber_notice
+                    
+                    if any(kw in err_text_lower for kw in ["missing schema", "no connection adapters", "invalid url"]):
+                        render_amber_notice(
+                            "Invalid URL Format",
+                            detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://schoolname.instructure.com)."
+                        )
+                    elif any(kw in err_text_lower for kw in ["revoked", "invalid token", "unauthorized", "401"]):
+                        render_amber_notice(
+                            "Authentication Failed",
+                            detail="Your Canvas API token is invalid, expired, or has been revoked. Please expand the 'How to get an API Access Token?' section below to generate a new one."
+                        )
+                    elif "403" in err_text_lower or "forbidden" in err_text_lower:
+                        render_amber_notice(
+                            "Access Denied",
+                            detail="Your token does not have the required permissions. Please generate a new token without restrictions."
+                        )
+                    elif any(kw in err_text_lower for kw in ["500", "502", "503", "504", "server error"]):
+                        render_amber_notice(
+                            "Canvas Server Down",
+                            detail="Your university's Canvas server is currently returning an error or undergoing maintenance. Please try again later."
+                        )
+                    elif any(kw in err_text_lower for kw in ["ssl", "certificate verify failed", "handshake"]):
+                        render_amber_notice(
+                            "Secure Connection Failed",
+                            detail="We couldn't establish a secure connection. If you're on a campus network, you may need to log in to the Wi-Fi portal first, or disable any active VPNs."
+                        )
+                    elif any(kw in err_text_lower for kw in ["url", "not found", "404", "connection", "timeout", "max retries", "name or service not known"]):
+                        render_amber_notice(
+                            "Connection Failed",
+                            detail="We couldn't connect to your Canvas URL. Please verify that the URL is typed correctly (e.g., https://schoolname.instructure.com) and that you are connected to the internet."
+                        )
+                    else:
+                        render_amber_notice(
+                            "Login Failed",
+                            detail=f"An unexpected error occurred during authentication. Please double-check your URL and token. Technical Details: {message}"
+                        )
 
             pass
 
         # Standardized expandable help vertically below the card
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         with st.container(key="login_help_expanders"):
-            with st.expander('How to find your true Canvas URL?'):
+            with st.expander('How to find your Canvas URL?'):
                 st.markdown(
-                    "**Crucial Step:** You must input the *actual* Canvas URL, not your university's login portal.\n\n"
-                    "**How to find it:**\n"
                     "1. Log in to Canvas in your web browser.\n"
                     "2. Examine the address bar **after** logging in.\n"
                     "3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n"
-                    "4. Copy the base portion of the URL (e.g., `https://school.instructure.com`) and paste it here.\n"
+                    "4. Copy the base portion of the URL (`https://schoolname.instructure.com`) and paste it here.\n\n"
+                    "**Important:** You must input the **actual** Canvas URL, not your university's login portal.\n"
                 )
 
             with st.expander('How to get an API Access Token?'):
@@ -1202,8 +1294,15 @@ def render_login_page(fetch_courses_fn):
                     "6. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
                 )
 
-        # Add a dynamic spacer that grows to push the footer to the bottom of the viewport
-        st.html("<div style='min-height: 30px; height: calc(90vh - 980px);'></div>")
+        st.markdown(
+            '<a href="https://youtu.be/SO98BjeTfJU" target="_blank" class="youtube-link">'
+            '<svg class="youtube-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+            'Watch tutorial: How to get your Canvas API Access Token'
+            '</a>',
+            unsafe_allow_html=True
+        )
+
+        # No dynamic spacer used to guarantee footer visibility at all times
 
         # Open a unified footer container to completely eliminate nested Streamlit block gaps!
         with st.container(key="login_footer_container"):
