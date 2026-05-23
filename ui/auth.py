@@ -15,6 +15,7 @@ import base64
 import json
 import logging
 import os
+import sys
 from html import escape as _he
 
 import streamlit as st
@@ -92,19 +93,37 @@ def _get_fallback_path() -> Path:
     return Path(get_config_dir()) / ".token_fallback"
 
 def _save_fallback_token(username: str, token: str) -> None:
+    """Write an encrypted fallback token for Windows only.
+
+    Uses Windows DPAPI (CryptProtectData) so the ciphertext is tied to the
+    current Windows user account and is unreadable by other users or if the
+    file is copied off the machine.  The file format is JSON v2:
+        {"_version": 2, "<url>": "<base64-of-DPAPI-ciphertext>"}
+
+    Not implemented on macOS: Keychain is reliable there and the app should
+    not persist tokens to disk when the OS credential store is unavailable.
+    """
+    if sys.platform != 'win32':
+        return
     try:
-        from pathlib import Path
+        import win32crypt
+        encrypted_bytes = win32crypt.CryptProtectData(
+            token.encode('utf-8'), "CanvasDownloader", None, None, None, 0
+        )
+        encrypted_b64 = base64.b64encode(encrypted_bytes).decode('utf-8')
+
         fallback_path = _get_fallback_path()
-        data = {}
+        data: dict = {"_version": 2}
         if fallback_path.exists():
             try:
                 with open(fallback_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
+                    existing = json.load(f)
+                if existing.get("_version") == 2:
+                    data = existing
             except Exception:
                 pass
-        obfuscated = base64.b64encode(token.encode('utf-8')).decode('utf-8')
-        data[username] = obfuscated
-        
+        data[username] = encrypted_b64
+
         tmp_path = fallback_path.with_suffix(".tmp")
         with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(data, f)
@@ -113,45 +132,45 @@ def _save_fallback_token(username: str, token: str) -> None:
                 os.fsync(f.fileno())
             except OSError:
                 pass
-
-        try:
-            os.chmod(tmp_path, 0o600)
-        except Exception:
-            pass
-
         os.replace(tmp_path, fallback_path)
     except Exception as e:
         logger.warning(f"Failed to save fallback token: {e}")
-        # Clean up orphaned tmp file
         try:
-            tmp_path = fallback_path.with_suffix(".tmp")
+            tmp_path = _get_fallback_path().with_suffix(".tmp")
             if tmp_path.exists():
                 tmp_path.unlink()
         except OSError:
             pass
 
 def _load_fallback_token(username: str) -> str:
+    """Load a DPAPI-encrypted fallback token from disk (Windows only)."""
+    if sys.platform != 'win32':
+        return ""
     try:
-        from pathlib import Path
         fallback_path = _get_fallback_path()
         if not fallback_path.exists():
             return ""
         with open(fallback_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        obfuscated = data.get(username, "")
-        if obfuscated:
-            return base64.b64decode(obfuscated.encode('utf-8')).decode('utf-8')
+        stored = data.get(username, "")
+        if not stored or data.get("_version") != 2:
+            return ""
+        import win32crypt
+        encrypted_bytes = base64.b64decode(stored.encode('utf-8'))
+        _, plaintext = win32crypt.CryptUnprotectData(
+            encrypted_bytes, None, None, None, 0
+        )
+        return plaintext.decode('utf-8')
     except Exception as e:
         logger.warning(f"Failed to load fallback token: {e}")
     return ""
 
 def _delete_fallback_token(username: str) -> None:
     try:
-        from pathlib import Path
         fallback_path = _get_fallback_path()
         if not fallback_path.exists():
             return
-        data = {}
+        data: dict = {}
         try:
             with open(fallback_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -167,10 +186,6 @@ def _delete_fallback_token(username: str) -> None:
                     os.fsync(f.fileno())
                 except OSError:
                     pass
-            try:
-                os.chmod(tmp_path, 0o600)
-            except Exception:
-                pass
             os.replace(tmp_path, fallback_path)
     except Exception as e:
         logger.warning(f"Failed to delete fallback token: {e}")
@@ -429,8 +444,9 @@ def render_login_page(fetch_courses_fn):
                             ).decode('utf-8')
                             try:
                                 keyring_user = st.session_state['api_url'] or 'default'
-                                _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
-                                _save_fallback_token(keyring_user, loaded_token)
+                                kr_ok = _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
+                                if not kr_ok:
+                                    _save_fallback_token(keyring_user, loaded_token)
                                 config.pop('mac_api_token', None)
                                 with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                     json.dump(config, fw)
@@ -444,8 +460,9 @@ def render_login_page(fetch_courses_fn):
                         loaded_token = config['api_token']
                         try:
                             keyring_user = st.session_state['api_url'] or 'default'
-                            _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
-                            _save_fallback_token(keyring_user, loaded_token)
+                            kr_ok = _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
+                            if not kr_ok:
+                                _save_fallback_token(keyring_user, loaded_token)
                             config.pop('api_token', None)
                             with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
                                 json.dump(config, fw)
@@ -1126,14 +1143,17 @@ def render_login_page(fetch_courses_fn):
                         keyring_user = st.session_state['api_url'] or 'default'
                         token_to_save = st.session_state['api_token']
                         kr_success = _safe_keyring_set(KEYRING_SERVICE, keyring_user, token_to_save)
-                        # Always save fallback as secondary secure backup (maintains persistence during keyring timeouts/blocks)
-                        _save_fallback_token(keyring_user, token_to_save)
-                        
+                        if kr_success:
+                            # Keyring succeeded — remove any leftover fallback file entry
+                            _delete_fallback_token(keyring_user)
+                        else:
+                            # Keyring unavailable — persist via DPAPI-encrypted fallback (Windows only)
+                            _save_fallback_token(keyring_user, token_to_save)
+                            logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.")
+
                         # Ensure no legacy insecure fields remain in the config JSON
                         config_data.pop('mac_api_token', None)
                         config_data.pop('api_token', None)
-                        if not kr_success:
-                            logger.warning("Keyring save failed or timed out. Saved securely to fallback storage instead.")
                     except Exception as e:
                         st.warning(f"Could not save token: {e}. Token will not persist across sessions.")
 
