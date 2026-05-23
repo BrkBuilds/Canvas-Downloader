@@ -128,10 +128,11 @@ def change_hub_layer(target_layer, _pop_keys=None, **kwargs):
             st.session_state.pop(k, None)
 
 
-def delete_group_callback(mgr, group_id, group_name):
+def delete_group_callback(mgr, group_id, group_name, is_single_pair: bool = False):
     """Callback to delete a group before the dialog re-renders."""
     mgr.delete_group(group_id)
-    st.session_state['hub_toast'] = f"🗑️ Group '{group_name}' deleted."
+    entity = "Pair" if is_single_pair else "Group"
+    st.session_state['hub_toast'] = f"🗑️ {entity} '{group_name}' deleted."
 
 
 def remove_pair_from_group(mgr, group_id, pair_idx):
@@ -562,7 +563,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             st.button("\U0001F5D1\ufe0f Delete", key=f"btn_hub_delete_{group['group_id']}",
                                       use_container_width=True,
                                       on_click=delete_group_callback,
-                                      args=(mgr, group['group_id'], group['group_name']))
+                                      args=(mgr, group['group_id'], group['group_name'], True))
 
                 else:
                     # === GROUP CARD (Multi-pair group) ===

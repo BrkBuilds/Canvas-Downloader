@@ -1182,6 +1182,9 @@ def render_login_page(fetch_courses_fn):
                     "6. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
                 )
 
+        # Add a dynamic spacer that grows to push the footer to the bottom of the viewport
+        st.html("<div style='min-height: 30px; height: calc(90vh - 980px);'></div>")
+
         # Open a unified footer container to completely eliminate nested Streamlit block gaps!
         with st.container(key="login_footer_container"):
             # Elegant subtle separator between help section and security footer
