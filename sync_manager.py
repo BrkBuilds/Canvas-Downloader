@@ -191,7 +191,10 @@ class SyncManager:
                 return None
             return int(row[0])
         except (sqlite3.Error, ValueError, TypeError):
-            return None
+            # M-6: Return a sentinel so callers can distinguish "no DB yet"
+            # (None → accept the pair) from "DB exists but is unreadable"
+            # (sentinel → warn and block the sync until the user acts).
+            return 'unreadable'
 
     @staticmethod
     def peek_bound_course_name(local_path: str) -> str | None:
@@ -460,8 +463,10 @@ class SyncManager:
                     
                 with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     cursor = conn.cursor()
-                    now_iso = datetime.now(timezone.utc).isoformat()
-                    cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_iso))
+                    # Use plain local-time string so format_relative_date() can parse it
+                    # without special-casing UTC ISO format (C-5 fix).
+                    now_plain = datetime.now().strftime('%Y-%m-%d %H:%M')
+                    cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_plain))
                     
                     # Atomic upsert: INSERT ON CONFLICT per row (preserves is_ignored)
                     for file_id_str, info in manifest.get('files', {}).items():
@@ -481,7 +486,7 @@ class SyncManager:
                             info.get('canvas_filename', ''),
                             info.get('local_path', ''),
                             info.get('canvas_updated_at', ''),
-                            info.get('downloaded_at', now_iso),
+                            info.get('downloaded_at', now_plain),
                             info.get('original_size', 0),
                             1 if info.get('is_ignored') else 0,
                             info.get('original_md5', '')
@@ -791,7 +796,7 @@ class SyncManager:
                                     'downloaded_at': datetime.now(timezone.utc).isoformat(),
                                     'original_size': c_file.size,
                                     'is_ignored': False,
-                                    'original_md5': SyncManager.compute_local_md5(local_path)
+                                    'original_md5': SyncManager.compute_local_md5(local_path) or ''
                                 }
                                 files_section[file_id] = entry
                                 sync_info = self._dict_to_sync_info(file_id, entry, c_file)
@@ -1031,17 +1036,25 @@ class SyncManager:
 
     def _save_metadata(self, key: str, value: str) -> bool:
         """Save a key-value pair to the sync_metadata table."""
-        try:
-            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
-                conn.execute(
-                    'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
-                    (key, value)
-                )
-                conn.commit()
-            return True
-        except sqlite3.Error as e:
-            logger.warning(f"Error saving metadata '{key}': {e}")
-            return False
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.execute(
+                        'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
+                        (key, value)
+                    )
+                    conn.commit()
+                return True
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"Error saving metadata '{key}': {e}")
+                return False
+            except sqlite3.Error as e:
+                logger.warning(f"Error saving metadata '{key}': {e}")
+                return False
+        return False
 
     def _load_metadata(self, key: str) -> str | None:
         """Load a value from the sync_metadata table. Returns None if not found."""
@@ -1329,13 +1342,28 @@ class SyncManager:
         return success
 
     def restore_file(self, canvas_file_id: int) -> bool:
-        """Mark a file as no longer ignored directly in the SQLite DB."""
+        """Mark a file as no longer ignored directly in the SQLite DB.
+
+        M-11: If the row is a stub created by bulk_ignore_files (no local_path,
+        no downloaded_at), DELETE it entirely rather than just clearing the flag.
+        Stubs accumulate over time if left, because orphan rows get re-analysed
+        as phantom new files on every subsequent sync.
+        """
         success = False
         for attempt in range(3):
             try:
                 with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    # Delete stub rows (nothing was ever downloaded)
                     conn.execute(
-                        'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
+                        """DELETE FROM sync_manifest
+                           WHERE canvas_file_id = ?
+                             AND (downloaded_at = '' OR downloaded_at IS NULL)
+                             AND (local_path = '' OR local_path IS NULL)""",
+                        (canvas_file_id,)
+                    )
+                    # Clear the flag for real rows that existed before ignoring
+                    conn.execute(
+                        'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?',
                         (canvas_file_id,)
                     )
                     conn.commit()
@@ -1349,7 +1377,7 @@ class SyncManager:
             except sqlite3.Error as e:
                 logger.warning(f"Error restoring file {canvas_file_id}: {e}")
                 break
-                
+
         return success
 
     def bulk_ignore_files(self, file_ids_and_names: list) -> bool:
@@ -1465,9 +1493,14 @@ class SyncHistoryManager:
         with self._lock:
             history = self.load_history()
             history.append(entry)
-            # Keep last 50 entries
-            if len(history) > 50:
-                history = history[-50:]
+            # L-13: Use user-configured retention; default 50.
+            try:
+                import streamlit as _st
+                _retention = int(_st.session_state.get('sync_history_retention', 50))
+            except Exception:
+                _retention = 50
+            if len(history) > _retention:
+                history = history[-_retention:]
             tmp_path = self.history_path.with_suffix('.tmp')
             try:
                 with open(tmp_path, 'w', encoding='utf-8') as f:

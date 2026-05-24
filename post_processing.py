@@ -11,6 +11,7 @@ Eliminates ~800 lines of duplicated code by providing:
 
 import logging
 import re
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -254,27 +255,34 @@ def run_pptx_conversion(files, ui: UIBridge):
     time.sleep(0.2)
 
     with PowerPointToPDF(error_log_path=pptx_error_log) as converter:
-        for i, (pptx_file, sm, ctx) in enumerate(files, 1):
-            if ui.is_cancelled():
-                _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
-                break
-            old_name = pptx_file.name
-            _show_active_file(ui, old_name)
+        # L-6: Guard COM init failure — self.app is None when CoInitialize or
+        # DispatchEx failed. Without this check the loop runs silently with no
+        # conversions and no error visible to the user.
+        if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint COM init failed — conversions skipped.</span>")
+            ui.pp_failure_count += total
+        else:
+            for i, (pptx_file, sm, ctx) in enumerate(files, 1):
+                if ui.is_cancelled():
+                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    break
+                old_name = pptx_file.name
+                _show_active_file(ui, old_name)
 
-            pdf_path_str = converter.convert(pptx_file)
+                pdf_path_str = converter.convert(pptx_file)
 
-            if pdf_path_str:
-                pdf_path = Path(pdf_path_str)
-                _update_manifest_path(sm, pptx_file, pdf_path)
-                if ui.on_detail_update:
-                    ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
-                ui.pp_success_count += 1
-            else:
-                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
-                _log_error_to_file(ui.error_log_path, old_name, "PDF conversion failed")
-                ui.pp_failure_count += 1
-            _render_dashboard(ui, i, total, "PowerPoint files")
+                if pdf_path_str:
+                    pdf_path = Path(pdf_path_str)
+                    _update_manifest_path(sm, pptx_file, pdf_path)
+                    if ui.on_detail_update:
+                        ui.on_detail_update(ctx, old_name, pdf_path.name)
+                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    ui.pp_success_count += 1
+                else:
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, "PDF conversion failed")
+                    ui.pp_failure_count += 1
+                _render_dashboard(ui, i, total, "PowerPoint files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ PDF conversion complete!</span>")
     ui.active_file_placeholder.empty()
@@ -424,27 +432,31 @@ def run_word_conversion(files, ui: UIBridge):
     time.sleep(0.2)
 
     with WordToPDF() as converter:
-        for i, (word_file, sm, ctx) in enumerate(files, 1):
-            if ui.is_cancelled():
-                _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
-                break
-            old_name = word_file.name
-            _show_active_file(ui, old_name)
+        if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word COM init failed — conversions skipped.</span>")
+            ui.pp_failure_count += total
+        else:
+            for i, (word_file, sm, ctx) in enumerate(files, 1):
+                if ui.is_cancelled():
+                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    break
+                old_name = word_file.name
+                _show_active_file(ui, old_name)
 
-            pdf_path_str = converter.convert(word_file)
+                pdf_path_str = converter.convert(word_file)
 
-            if pdf_path_str:
-                pdf_path = Path(pdf_path_str)
-                _update_manifest_path(sm, word_file, pdf_path)
-                if ui.on_detail_update:
-                    ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
-                ui.pp_success_count += 1
-            else:
-                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
-                _log_error_to_file(ui.error_log_path, old_name, "Word to PDF conversion failed")
-                ui.pp_failure_count += 1
-            _render_dashboard(ui, i, total, "Legacy Word files")
+                if pdf_path_str:
+                    pdf_path = Path(pdf_path_str)
+                    _update_manifest_path(sm, word_file, pdf_path)
+                    if ui.on_detail_update:
+                        ui.on_detail_update(ctx, old_name, pdf_path.name)
+                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    ui.pp_success_count += 1
+                else:
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, "Word to PDF conversion failed")
+                    ui.pp_failure_count += 1
+                _render_dashboard(ui, i, total, "Legacy Word files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Legacy Word to PDF conversion complete!</span>")
     ui.active_file_placeholder.empty()
@@ -525,29 +537,33 @@ def run_excel_conversion(files, ui: UIBridge):
     time.sleep(0.2)
 
     with ExcelToPDF() as converter:
-        for i, (excel_file, sm, ctx) in enumerate(files, 1):
-            if ui.is_cancelled():
-                _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
-                break
-            old_name = excel_file.name
-            _show_active_file(ui, old_name)
+        if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel COM init failed — conversions skipped.</span>")
+            ui.pp_failure_count += total
+        else:
+            for i, (excel_file, sm, ctx) in enumerate(files, 1):
+                if ui.is_cancelled():
+                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    break
+                old_name = excel_file.name
+                _show_active_file(ui, old_name)
 
-            abs_path = str(excel_file.absolute())
-            new_pdf_path, excel_error_msg = converter.convert(abs_path)
+                abs_path = str(excel_file.absolute())
+                new_pdf_path, excel_error_msg = converter.convert(abs_path)
 
-            if new_pdf_path:
-                pdf_path = Path(new_pdf_path)
-                _update_manifest_path(sm, excel_file, pdf_path)
-                if ui.on_detail_update:
-                    ui.on_detail_update(ctx, old_name, pdf_path.name)
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
-                ui.pp_success_count += 1
-            else:
-                err_detail = excel_error_msg if excel_error_msg else "Excel to PDF conversion failed"
-                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({err_detail})</span>")
-                _log_error_to_file(ui.error_log_path, old_name, err_detail)
-                ui.pp_failure_count += 1
-            _render_dashboard(ui, i, total, "Excel files")
+                if new_pdf_path:
+                    pdf_path = Path(new_pdf_path)
+                    _update_manifest_path(sm, excel_file, pdf_path)
+                    if ui.on_detail_update:
+                        ui.on_detail_update(ctx, old_name, pdf_path.name)
+                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    ui.pp_success_count += 1
+                else:
+                    err_detail = excel_error_msg if excel_error_msg else "Excel to PDF conversion failed"
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({err_detail})</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, err_detail)
+                    ui.pp_failure_count += 1
+                _render_dashboard(ui, i, total, "Excel files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Excel to PDF conversion complete!</span>")
     ui.active_file_placeholder.empty()

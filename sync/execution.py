@@ -52,6 +52,10 @@ from engine.progress_dashboard import build_metrics_html, build_terminal_html, r
 
 logger = logging.getLogger(__name__)
 
+# L-10: Hoist retry constants to module level for easy post-launch tuning.
+SYNC_MAX_RETRIES = 5
+SYNC_RETRY_DELAY = 2  # Base delay in seconds for exponential backoff
+
 
 def run_sync():
     """Execute the full sync pipeline: download files, post-process, record history.
@@ -82,7 +86,9 @@ def run_sync():
 
     st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
 
-    sync_selections = st.session_state.get('sync_selections', [])
+    sync_selections = st.session_state.get('sync_selections') or []
+    if not isinstance(sync_selections, list):
+        sync_selections = []
     if not sync_selections:
         st.session_state['download_status'] = 'sync_complete'
         st.session_state['synced_count'] = 0
@@ -242,7 +248,7 @@ def run_sync():
                 canvas_files_map = {f.id: f for f in res_data['canvas_files']}
                 pair = res_data['pair']
 
-                course_name = friendly_course_name(pair['course_name'])
+                course_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
 
                 if sync_mgr is None:
                     error_list.append(f"Skipping {course_name}: Database failed to initialize.")
@@ -495,6 +501,25 @@ def run_sync():
                             if _sec_entity_type != 'attachment' and _sec_entity_type not in ('module_item', 'unknown'):
                                 # Load secondary contract for this pair
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
+                                if _raw_sec is None:
+                                    # H-3: First-ever sync for this pair — seed the secondary
+                                    # contract from session state so future syncs don't use
+                                    # an empty contract and silently skip secondary content.
+                                    _fallback_sec = {
+                                        'download_assignments':   st.session_state.get('persistent_dl_assignments', False),
+                                        'download_syllabus':      st.session_state.get('persistent_dl_syllabus', False),
+                                        'download_announcements': st.session_state.get('persistent_dl_announcements', False),
+                                        'download_discussions':   st.session_state.get('persistent_dl_discussions', False),
+                                        'download_quizzes':       st.session_state.get('persistent_dl_quizzes', False),
+                                        'download_rubrics':       st.session_state.get('persistent_dl_rubrics', False),
+                                        'download_submissions':   st.session_state.get('persistent_dl_submissions', False),
+                                        'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
+                                    }
+                                    try:
+                                        sync_mgr._save_metadata('secondary_content_contract', json.dumps(_fallback_sec))
+                                    except Exception:
+                                        pass
+                                    _raw_sec = json.dumps(_fallback_sec)
                                 try:
                                     _sec_settings = json.loads(_raw_sec) if _raw_sec else {}
                                 except (json.JSONDecodeError, TypeError, ValueError):
@@ -511,19 +536,27 @@ def run_sync():
                                     if str(_calc_dir) not in ('.', ''):
                                         _sec_module_path = local_path / _calc_dir
 
+                                # H-8: cancel check before blocking Canvas API call
+                                if is_sync_cancelled():
+                                    break
+
                                 try:
-                                    sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
-                                        safe_thread_wrapper,
-                                        cm.download_secondary_entity,
-                                        current_ctx,
-                                        res_data['course'],
-                                        file,
-                                        Path(local_path),
-                                        sync_mgr,
-                                        _sec_settings,
-                                        None, None, Path(local_path), course_name,
-                                        _sec_module_path,
-                                    )
+                                    # H-7: rate-limit secondary API calls with the
+                                    # same semaphore as regular file downloads so
+                                    # they don't bypass the concurrency cap.
+                                    async with sem:
+                                        sec_filepath, sec_id, sec_attachments, canvas_updated = await asyncio.to_thread(
+                                            safe_thread_wrapper,
+                                            cm.download_secondary_entity,
+                                            current_ctx,
+                                            res_data['course'],
+                                            file,
+                                            Path(local_path),
+                                            sync_mgr,
+                                            _sec_settings,
+                                            None, None, Path(local_path), course_name,
+                                            _sec_module_path,
+                                        )
                                 except Exception as _sec_err:
                                     # Re-raise preserving the original traceback
                                     raise
@@ -570,14 +603,17 @@ def run_sync():
                                             if not att_url or not att_id:
                                                 continue
 
-                                            # Manifest IDs use positive (Mode A) or
-                                            # synthetic-negative (Mode B) form.  Use
-                                            # whichever the contract dictates so the
-                                            # lookup matches what initial download wrote.
+                                            # H-2: Look up BOTH the positive and synthetic-negative
+                                            # manifest IDs. If the user toggled isolate_secondary_content
+                                            # between syncs, the old entry uses the opposite ID form
+                                            # and a single-form lookup would always miss it, causing the
+                                            # same attachment to be re-downloaded every sync forever.
+                                            _pos_entry = _files_section.get(str(att_id))
+                                            _neg_entry = _files_section.get(str(_make_sec_id('attachment', att_id)))
+                                            _manifest_entry = _pos_entry or _neg_entry
                                             _manifest_att_id = (
                                                 _make_sec_id('attachment', att_id) if _isolate_now else att_id
                                             )
-                                            _manifest_entry = _files_section.get(str(_manifest_att_id))
                                             if _manifest_entry:
                                                 _existing_path = local_path / _manifest_entry.get('local_path', '')
                                                 if _existing_path.exists():
@@ -625,8 +661,12 @@ def run_sync():
                                         except Exception:
                                             pass
                                 else:
+                                    # L-7: Count unknown/failed secondary entities in the error
+                                    # list so the completion screen shows a non-zero error count
+                                    # rather than silently dropping them.
                                     terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>⚠️ Skipped: </span>{esc(display_file_name)}")
                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                    error_list.append(f"Skipped secondary entity: {display_file_name}")
                                 continue
 
                             # ── Legacy Synthetic Shortcuts (Pages, External URLs) ──
@@ -634,6 +674,17 @@ def run_sync():
 
                             is_url_ext = filepath.name.lower().endswith('.url') or filepath.name.lower().endswith('.webloc')
                             is_html_ext = filepath.name.lower().endswith('.html')
+
+                            # H-1: Guard against empty/missing URL before writing shortcut.
+                            # An ExternalUrl module item with a stale or empty URL would
+                            # produce a broken [InternetShortcut]\nURL=\n file.
+                            if (is_url_ext or is_html_ext) and not getattr(file, 'url', ''):
+                                terminal_log.append(
+                                    f"<span style='color:{theme.TEXT_SECONDARY}'>⚠️ Skipped (no URL): </span>{esc(display_file_name)}"
+                                )
+                                log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                error_list.append(f"Skipped {display_file_name}: no URL for shortcut")
+                                continue
 
                             if is_url_ext:
                                 if platform.system() == 'Darwin':
@@ -681,10 +732,6 @@ def run_sync():
                             pass  # Keep original URL as fallback
 
                         if download_url:
-                            # --- Retry constants (mirrors canvas_logic.py) ---
-                            SYNC_MAX_RETRIES = 5
-                            SYNC_RETRY_DELAY = 2  # Base delay in seconds
-                            
                             for attempt in range(SYNC_MAX_RETRIES):
                                 if is_sync_cancelled():
                                     break
@@ -752,7 +799,7 @@ def run_sync():
                                                         logger.error(error_msg)
                                                         try:
                                                             os.unlink(make_long_path(part_path))
-                                                        except Exception:
+                                                        except OSError:
                                                             pass
                                                         raise RuntimeError(error_msg)
                                                     
@@ -863,7 +910,14 @@ def run_sync():
                     # same overwrite-vs-`_NewVersion` routing as the initial run.
                     modified_ids = {getattr(f, 'id', None) for f in sel.get('updates_modified', [])}
                     update_map: Dict[int, CanvasFileInfo] = {getattr(f, 'id', None): f for f in sel['updates']}
-                    redownload_map: Dict[int, SyncFileInfo] = {getattr(r, 'canvas_file_id', r[0] if isinstance(r, tuple) else None): r for r in sel['redownload']}
+                    # M-12: Skip entries with None/zero ID — a corrupt manifest entry
+                    # with canvas_file_id=None would key the dict as None, then match
+                    # every failed file that also has id=None, causing infinite retries.
+                    redownload_map: Dict[int, SyncFileInfo] = {}
+                    for _r in sel['redownload']:
+                        _rid = getattr(_r, 'canvas_file_id', _r[0] if isinstance(_r, tuple) else None)
+                        if _rid is not None:
+                            redownload_map[_rid] = _r
 
                     retry_new: List[CanvasFileInfo] = []
                     retry_updates_clean: List[CanvasFileInfo] = []
@@ -922,7 +976,18 @@ def run_sync():
                 local_path = sync_mgr.local_path
 
                 sync_mgr.save_manifest(manifest)
-                
+
+                # H-5: Force WAL checkpoint so all committed pages are merged
+                # into the main DB file. Without this, a crash immediately after
+                # a bulk sync leaves the manifest in the WAL rather than the DB.
+                try:
+                    import sqlite3 as _sqlite3
+                    from ui_helpers import make_long_path as _mlp
+                    with _sqlite3.connect(_mlp(str(sync_mgr.db_path)), timeout=10.0) as _ckpt_conn:
+                        _ckpt_conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+                except Exception as _ckpt_err:
+                    logger.warning(f"WAL checkpoint failed for {sync_mgr.db_path}: {_ckpt_err}")
+
                 # Setup updates reference explicitly to fix `updates is not defined` NameError traceback
                 updates = sel['updates']
                 _exec_result = res_data.get('result')
@@ -939,7 +1004,7 @@ def run_sync():
                     else:
                         nice_date = now.strftime(f"%A the {ordinal} of %B, %Y")  # European: "Monday the 28th of April, 2026"
                     
-                    course_name = friendly_course_name(res_data['pair']['course_name'])
+                    course_name = friendly_course_name(res_data['pair']['course_name']) or 'Unnamed Course'
                     
                     try:
                         with open(make_long_path(log_file_path), "a", encoding="utf-8") as lf:
@@ -979,7 +1044,7 @@ def run_sync():
     local_sync_api_token = st.session_state.get('api_token', '')
     local_sync_api_url = st.session_state.get('api_url', '')
     import concurrent.futures as _cf
-    with _cf.ThreadPoolExecutor(max_workers=1) as _pool:
+    with _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="canvas-sync-worker") as _pool:
         _future = _pool.submit(
             asyncio.run,
             download_sync_files_batch(local_sync_api_token, local_sync_api_url)
@@ -997,7 +1062,9 @@ def run_sync():
 
     # Deferred cancel: checked here on the script thread so RerunException
     # never escapes the background coroutine and skips post-processing.
+    # L-11: Pre-set status so the rerun doesn't re-enter 'syncing' for one pass.
     if is_sync_cancelled():
+        st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
     # --- Shared post-processing helpers ---
@@ -1122,7 +1189,9 @@ def run_sync():
         get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code'), pp_ui
     )
 
-    # URL Compilation (requires folder-level iteration, not file-level)
+    # M-13: URL Compilation operates on the whole course folder by design —
+    # new and existing .url shortcuts both need to land in the compiled
+    # Compiled_External_Links.txt. Do NOT scope this to synced files only.
     _url_folders = []
     _processed_roots = set()
     for sel in sync_selections:
@@ -1180,7 +1249,9 @@ def run_sync():
                 existing = synced_details.setdefault(matched_pair_idx, [])
                 if sidecar_name not in existing:
                     existing.append(sidecar_name)
-                    synced_counter[0] += 1  # Bump global synced count for completion card
+                    # M-2: Do NOT bump synced_counter for sidecars — they are bonus
+                    # artifacts tied to a parent file already counted. Bumping here
+                    # would show "3 files synced" for 1 Excel → 1 PDF + 1 .txt sidecar.
 
 
     # Clear the blue status text so it doesn't linger on completion
@@ -1261,6 +1332,9 @@ def run_sync():
                 'categorized_files': categorized_files,
                 'sync_mode': st.session_state.get('sync_mode', 'normal')
             })
+            # M-1: Invalidate the step-1 history cache so the next render
+            # re-reads from disk and shows the entry we just wrote.
+            st.session_state.pop('_sync_history_cache', None)
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 

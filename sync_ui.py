@@ -714,6 +714,10 @@ def _sync_pairs_section(courses, course_names, course_options):
     </style>""")
 
     # --- Pre-compute ignored files per course (cached to avoid N SQLite reads per rerun) ---
+    # L-8: Acknowledged race: cleanup_sync_state() pops this cache while a
+    # bulk_ignore_files write could be mid-flight on the sync background thread.
+    # Worst case: cache rebuilds on the next rerun with stale data for one frame.
+    # Acceptable — bulk_ignore writes are fast and idempotent.
     _cache_key = '_ignored_files_cache'
     ignored_by_course = st.session_state.get(_cache_key)
 
@@ -1266,6 +1270,25 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             detail="The folder may have been moved, renamed, or the drive is disconnected. Edit or remove the pair to continue.",
         )
 
+    # H-3: Aggregate mismatch notice — show ALL binding mismatches at once.
+    _mismatches = st.session_state.pop('sync_mismatched_pairs', [])
+    if _mismatches:
+        from ui.amber_notice import render_amber_notice
+        _mismatch_lines = "\n".join(
+            f"  • '{short_path(m['pair']['local_folder'])}' is bound to "
+            f"\"{esc(m['bound_course_name'])}\" but you selected "
+            f"\"{esc(m['requested_course_name'])}\""
+            for m in _mismatches
+        )
+        render_amber_notice(
+            f"{len(_mismatches)} folder{'s' if len(_mismatches) != 1 else ''} "
+            f"{'are' if len(_mismatches) != 1 else 'is'} bound to a different Canvas course.",
+            detail=(
+                f"{_mismatch_lines}\n\n"
+                "Edit each pair to point at the correct course, or remove and re-add it."
+            ),
+        )
+
     # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
     # gap="small" brings the OR closer
     col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
@@ -1374,8 +1397,13 @@ def _render_sync_history():
     try:
         from ui_helpers import get_config_dir
         from sync_manager import SyncHistoryManager, get_file_icon
-        history_mgr = SyncHistoryManager(get_config_dir())
-        history = history_mgr.load_history()
+        # M-1: Cache history in session state — avoids a disk read on every
+        # Streamlit rerun (checkbox clicks, etc.). Invalidated by execution.py
+        # after a new entry is written via st.session_state.pop('_sync_history_cache').
+        if '_sync_history_cache' not in st.session_state:
+            history_mgr = SyncHistoryManager(get_config_dir())
+            st.session_state['_sync_history_cache'] = history_mgr.load_history()
+        history = st.session_state['_sync_history_cache']
     except Exception:
         history = []
 
@@ -1893,10 +1921,29 @@ def render_sync_step4( main_placeholder=None):
 
     status = st.session_state.get('download_status', '')
 
+    # Normalize sync_failed → sync_complete: inject the crash message into
+    # sync_errors so the completion screen's existing error UI surfaces it.
+    if status == 'sync_failed':
+        _worker_err = st.session_state.pop('sync_worker_error', 'Unknown sync engine error')
+        _errs = list(st.session_state.get('sync_errors', []))
+        _errs.insert(0, f"Sync engine error: {_worker_err}")
+        st.session_state['sync_errors'] = _errs
+        st.session_state['download_status'] = 'sync_complete'
+        status = 'sync_complete'
+
     if status == 'analyzing':
         current_pass = st.session_state.get('analysis_pass', 1)
-        
+
         if current_pass == 1:
+            # M-7: Server-side fallback — if JS click never fires (CSP, iframe
+            # sandbox, screen-reader nav), force-advance to pass 2 after 5s.
+            import time as _time
+            if 'analysis_pass1_started_at' not in st.session_state:
+                st.session_state['analysis_pass1_started_at'] = _time.time()
+            elif _time.time() - st.session_state['analysis_pass1_started_at'] > 5:
+                st.session_state['analysis_pass'] = 2
+                st.session_state.pop('analysis_pass1_started_at', None)
+                st.rerun()
             # 1. ALWAYS DRAW THE BASE UI FIRST
             st.markdown(f"""
             <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
@@ -1933,6 +1980,7 @@ def render_sync_step4( main_placeholder=None):
         else:
             # Pass 2: The browser has successfully painted the clean UI.
             # Safe to lock the main thread with heavy synchronous work.
+            st.session_state.pop('analysis_pass1_started_at', None)
             _run_analysis(sync_pairs, main_placeholder)
             
             # Optional: cleanup the flag when done

@@ -96,6 +96,8 @@ DOWNLOAD_DEFAULTS = {
     'quick_download_mode': False,
     'quick_preset_id': 'quick_full',
     'quick_org_mode': 'modules',
+    # L-13: Sync history retention — number of past operations to keep.
+    'sync_history_retention': 50,
 }
 
 SYNC_DEFAULTS = {
@@ -144,6 +146,13 @@ SYNC_TRANSIENT_KEYS = {
     'sync_confirm_folders', 'is_post_processing',
     'retry_selections', 'analysis_pass',
     'size_skipped_files', 'sync_has_ignored_files',
+    # sync_failed recovery keys
+    'sync_worker_error', 'qs_cancel_route', 'qs_skipped',
+    'synced_details', 'pp_failure_count', 'pp_success_count',
+    'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
+    'completion_beep_fired',
+    # M-8: reset per-run warning sentinels so they re-arm on the next sync
+    '_sync_cancel_warning_shown',
 }
 
 
