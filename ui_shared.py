@@ -395,6 +395,7 @@ _FC_FOLDER_SVG = (
 )
 _FC_CHEVRON_SVG = (
     "<svg class='ft-chevron' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " width='16' height='16'"
     " fill='none' stroke='currentColor' stroke-width='2.5'"
     " stroke-linecap='round' stroke-linejoin='round'>"
     "<path d='M9 18l6-6-6-6'/>"
@@ -529,7 +530,7 @@ def _build_filetype_pills_html(files: list) -> str:
         html += (
             f'<div class="filetype-pill">'
             f'<img class="ft-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="other"/>'
-            f'<span class="ft-label">OTHER FILETYPES</span>'
+            f'<span class="ft-label">Other files</span>'
             f'<span class="ft-count">{other_count}</span>'
             f'</div>'
         )

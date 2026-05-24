@@ -753,7 +753,6 @@ class CanvasManager:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
-                        from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
@@ -873,7 +872,6 @@ class CanvasManager:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
-                        from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         # Unify namespace: prepend the parent entity's
@@ -984,7 +982,6 @@ class CanvasManager:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
-                        from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))
@@ -1081,7 +1078,6 @@ class CanvasManager:
                         raw_id = att.get('id')
                         if not raw_id:
                             continue
-                        from sync_manager import make_secondary_id
                         att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
 
                         att_raw_name = att.get('filename', att.get('display_name', 'attachment'))

@@ -254,9 +254,10 @@ def run_sync():
                     error_list.append(f"Skipping {course_name}: Database failed to initialize.")
                     failed_files_for_pair.extend(sel.get('new', []) + sel.get('updates', []))
                     continue
+                _counter_html = f"<p style='margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;'>Syncing Course {pair_idx + 1}/{total_pairs}</p>" if total_pairs > 1 else ""
                 header_html = f"""
                 <div style="margin-bottom: 0.5rem;">
-                    <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">Course {pair_idx + 1} of {total_pairs}</p>
+                    {_counter_html}
                     <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(course_name)}</h3>
                 </div>
                 """
