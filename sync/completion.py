@@ -250,6 +250,10 @@ def show_sync_complete():
                 except Exception:
                     r_sel['res_data']['sync_manager'] = None
 
+            # Record how many errors we're sending to retry so execution.py
+            # can compute retry_resolved_count on the way out.
+            st.session_state['retry_total_attempted'] = len(sync_errors)
+
             st.session_state['sync_selections'] = retry_selections
             st.session_state['download_status'] = 'syncing'
             st.session_state['step'] = 3
