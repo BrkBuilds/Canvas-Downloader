@@ -119,6 +119,22 @@ def invoke_post_processing(
         logger.error(f"Post-processing SyncManager init failed for '{course_name}': {_sm_err}", exc_info=True)
         return 0
 
+    def _on_dl_detail_update(ctx, old_name, new_name):
+        """Replace a converted filename in the download file ledger.
+
+        ctx is the course_name string passed by run_all_conversions.
+        Keeps filetype pills accurate after PP converts PPTX→PDF, HTML→MD, etc.
+        """
+        if not ctx:
+            return
+        ledger = st.session_state.get('download_file_details', {})
+        course_files = ledger.get(ctx, [])
+        for i, fname in enumerate(course_files):
+            if fname == old_name:
+                course_files[i] = new_name
+                break
+        st.session_state['download_file_details'] = ledger
+
     pp_ui = UIBridge(
         header_placeholder=placeholders.header,
         progress_placeholder=placeholders.progress,
@@ -127,6 +143,7 @@ def invoke_post_processing(
         active_file_placeholder=placeholders.active_file,
         log_lines=log_deque,
         is_cancelled=cancel_fn,
+        on_detail_update=_on_dl_detail_update,
         error_log_path=error_log_path,
     )
 
