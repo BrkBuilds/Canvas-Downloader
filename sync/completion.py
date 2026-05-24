@@ -127,22 +127,11 @@ def show_sync_complete():
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
     with st.container(border=True, key='completion_dashboard'):
-        # Sync errors are plain strings - classify by checking for LTI/stream markers
-        _sync_retriable = sum(
-            1 for err in sync_errors
-            if hasattr(err, 'error_type') and isinstance(getattr(err, 'context', None), dict)
-            and err.context.get('filepath')
-            and getattr(err, 'error_type', '') != 'LTI/Media Stream'
-        ) if sync_errors else 0
-        # For sync errors that are plain strings, treat all as retriable
+        # L-3: sync_errors is consistently list[str] — all entries are retriable.
+        # The hasattr/isinstance chain that tried to classify error objects was dead
+        # code; simplify to a direct count.
+        _sync_retriable = len(sync_errors) if sync_errors else 0
         _sync_unresolvable = 0
-        if sync_errors:
-            _plain_str_count = sum(1 for e in sync_errors if isinstance(e, str))
-            _obj_count = len(sync_errors) - _plain_str_count
-            if _obj_count > 0:
-                _sync_unresolvable = _obj_count - _sync_retriable
-            # Plain strings are retriable (generic errors)
-            _sync_retriable += _plain_str_count
 
         _retry_attempted = st.session_state.get('retry_attempted', False)
         _retry_total = st.session_state.get('retry_total_attempted', 0)
@@ -193,6 +182,20 @@ def show_sync_complete():
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
+        # L-12: Warn user when Office watchdog did a broad /IM kill (may have
+        # closed other open Office documents the user had open independently).
+        if st.session_state.pop('pp_force_kill_warning', False):
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                "An Office process was force-closed during conversion.",
+                icon="⚠️",
+                detail=(
+                    "A hung Office process was terminated to unblock conversion. "
+                    "If you had other unsaved Word, Excel, or PowerPoint files open, "
+                    "they may have been closed without saving."
+                ),
+            )
+
         # Surface Structural Discovery Errors gracefully
         total_structural_errors = sum(
             res['res_data']['result'].structural_errors
@@ -233,10 +236,16 @@ def show_sync_complete():
                 pair_info = r_sel['res_data']['pair']
                 r_sel['res_data']['course'] = None
                 try:
-                    r_sel['res_data']['sync_manager'] = SyncManager(
+                    new_sm = SyncManager(
                         local_path=pair_info['local_folder'],
                         course_id=pair_info['course_id'],
                         course_name=pair_info['course_name']
+                    )
+                    # M-9: A SyncManager with _db_init_failed=True is non-None but
+                    # unusable — all DB writes silently fail. Treat it as None so
+                    # execution.py's `if sync_mgr is None: continue` guard fires.
+                    r_sel['res_data']['sync_manager'] = (
+                        None if getattr(new_sm, '_db_init_failed', False) else new_sm
                     )
                 except Exception:
                     r_sel['res_data']['sync_manager'] = None
