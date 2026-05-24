@@ -2919,15 +2919,21 @@ class CanvasManager:
 
         log_debug(f"Saving {entity_type}: {entity_name} -> {filepath}", debug_file)
 
+        part_path = filepath.with_suffix(filepath.suffix + '.part')
         try:
-            with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
+            with open(make_long_path(part_path), 'w', encoding='utf-8') as f:
                 f.write(content)
                 f.flush()
                 try:
                     os.fsync(f.fileno())
                 except OSError:
                     pass
+            os.replace(part_path, filepath)
         except Exception as e:
+            try:
+                part_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             err = DownloadError(
                 course_name, entity_name,
                 f"{entity_type.title()} Save Error", str(e), raw_error=e,
@@ -3037,6 +3043,13 @@ class CanvasManager:
                 a_desc = getattr(assignment, 'description', '') or ''
                 existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
                 for link_info in _extract_canvas_file_links(a_desc):
+                    # H-5: cancel check so a 50-link description doesn't block cancel
+                    try:
+                        from core.cancellation import is_sync_cancelled, is_download_cancelled
+                        if is_sync_cancelled() or is_download_cancelled():
+                            break
+                    except Exception:
+                        pass
                     fid = link_info['file_id']
                     if fid in existing_att_ids:
                         continue  # Already captured via API attachments
@@ -3098,6 +3111,12 @@ class CanvasManager:
                 q_desc = getattr(quiz, 'description', '') or ''
                 existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
                 for link_info in _extract_canvas_file_links(q_desc):
+                    try:
+                        from core.cancellation import is_sync_cancelled, is_download_cancelled
+                        if is_sync_cancelled() or is_download_cancelled():
+                            break
+                    except Exception:
+                        pass
                     fid = link_info['file_id']
                     if fid in existing_att_ids:
                         continue
@@ -3156,6 +3175,12 @@ class CanvasManager:
                 t_msg = getattr(topic, 'message', '') or ''
                 existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
                 for link_info in _extract_canvas_file_links(t_msg):
+                    try:
+                        from core.cancellation import is_sync_cancelled, is_download_cancelled
+                        if is_sync_cancelled() or is_download_cancelled():
+                            break
+                    except Exception:
+                        pass
                     fid = link_info['file_id']
                     if fid in existing_att_ids:
                         continue
@@ -3216,6 +3241,12 @@ class CanvasManager:
                 t_msg = getattr(topic, 'message', '') or ''
                 existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
                 for link_info in _extract_canvas_file_links(t_msg):
+                    try:
+                        from core.cancellation import is_sync_cancelled, is_download_cancelled
+                        if is_sync_cancelled() or is_download_cancelled():
+                            break
+                    except Exception:
+                        pass
                     fid = link_info['file_id']
                     if fid in existing_att_ids:
                         continue

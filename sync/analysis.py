@@ -77,8 +77,9 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             )
             _raw_secondary = None
     if _raw_secondary is None:
-        # First-ever analysis for this pair — no DB contract yet.
-        # Fall back to session state so the user's current settings are honoured.
+        # H-4: First-ever analysis for this pair — no DB contract yet.
+        # Fall back to session state so the user's current settings are honoured,
+        # then persist to DB so future syncs don't lose these settings.
         _raw_secondary = {
             'download_assignments':   st.session_state.get('persistent_dl_assignments', False),
             'download_syllabus':      st.session_state.get('persistent_dl_syllabus', False),
@@ -89,6 +90,13 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             'download_submissions':   st.session_state.get('persistent_dl_submissions', False),
             'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
         }
+        try:
+            import json as _json
+            sync_mgr._save_metadata('secondary_content_contract', _json.dumps(_raw_secondary))
+        except Exception as _persist_err:
+            logger.warning(
+                f"Failed to persist initial secondary content contract for course {course_id}: {_persist_err}"
+            )
     _secondary_settings = _raw_secondary  # may still be empty dict — that's fine
 
     progress_hook(0, 1, "Fetching files from Canvas...")
@@ -130,13 +138,18 @@ def run_analysis(sync_pairs, main_placeholder=None):
     render_sync_wizard(st, 2)
 
     # Check if only syncing a single pair
+    # L-2: Rename filtered subset to pairs_to_analyze so subsequent code
+    # clearly operates on the (potentially single-item) working list,
+    # not the full sync_pairs session state.
     single_idx = st.session_state.get('sync_single_pair_idx')
     if single_idx is not None:
-        sync_pairs = [sync_pairs[single_idx]]
+        pairs_to_analyze = [sync_pairs[single_idx]]
+    else:
+        pairs_to_analyze = sync_pairs
 
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
     all_results = []
-    total_pairs = len(sync_pairs)
+    total_pairs = len(pairs_to_analyze)
 
     # ── Course-identity guard ──────────────────────────────────────────
     # Each folder's .canvas_sync.db is bound to the first course it was
@@ -146,14 +159,25 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # bound course's manifest as "Deleted on Canvas" - terrifying and
     # wrong. Detect and route to a confirmation screen instead.
     mismatched = []
-    for pair_idx, pair in enumerate(sync_pairs):
+    for pair_idx, pair in enumerate(pairs_to_analyze):
         try:
             local_folder = pair.get('local_folder')
             requested_id = pair.get('course_id')
             if not local_folder or not Path(local_folder).exists():
                 continue  # downstream loop handles missing folder
             bound_id = SyncManager.peek_bound_course_id(local_folder)
-            if bound_id is not None and bound_id != requested_id:
+            if bound_id == 'unreadable':
+                # M-6: DB exists but couldn't be read — treat as a mismatch so
+                # the user is warned rather than silently syncing against a corrupt DB.
+                mismatched.append({
+                    'pair_idx': pair_idx,
+                    'pair': pair,
+                    'bound_course_id': 'unreadable',
+                    'bound_course_name': 'an unreadable database',
+                    'requested_course_id': requested_id,
+                    'requested_course_name': pair.get('course_name', f"course #{requested_id}"),
+                })
+            elif bound_id is not None and bound_id != requested_id:
                 bound_name = SyncManager.peek_bound_course_name(local_folder) or f"course #{bound_id}"
                 mismatched.append({
                     'pair_idx': pair_idx,
@@ -168,23 +192,10 @@ def run_analysis(sync_pairs, main_placeholder=None):
             continue
 
     if mismatched:
-        # Route back to step 1 and open the inline editor on the first
-        # mismatched pair so the user sees the binding-notice in context
-        # and can fix the course/folder before syncing.
-        first = mismatched[0]
-        first_pair = first['pair']
-        # Find the real index in the full (un-filtered) sync_pairs list
-        full_pairs = st.session_state.get('sync_pairs', [])
-        real_idx = next(
-            (i for i, p in enumerate(full_pairs)
-             if p.get('course_id') == first_pair.get('course_id')
-             and p.get('local_folder') == first_pair.get('local_folder')),
-            None,
-        )
-        if real_idx is not None:
-            st.session_state['editing_pair_idx'] = real_idx
-            st.session_state['pending_sync_folder'] = first_pair.get('local_folder', '')
-            st.session_state['sync_selected_course_id'] = first_pair.get('course_id')
+        # H-3: Store ALL mismatches so step 1 can render a single aggregate
+        # amber notice listing every affected pair. Previously only the first
+        # mismatch was surfaced, requiring N round-trips to fix N pairs.
+        st.session_state['sync_mismatched_pairs'] = mismatched
         st.session_state['download_status'] = ''
         st.session_state['step'] = 1
         st.session_state.pop('analysis_pass', None)
@@ -209,9 +220,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # spawn/teardown overhead (~50 ms each on Windows) for large sync groups.
     import concurrent.futures as _cf
     from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
-    _analysis_pool = _cf.ThreadPoolExecutor(max_workers=1)
+    _analysis_pool = _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="canvas-sync-analysis")
     try:
-     for pair_num, pair in enumerate(sync_pairs, 1):
+     for pair_num, pair in enumerate(pairs_to_analyze, 1):
         # CHECK FOR CANCEL INSIDE THE LOOP
         if is_sync_cancelled():
             break
@@ -225,7 +236,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             )
             continue
 
-        display_name = friendly_course_name(pair['course_name'])
+        display_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
 
         # Default-argument capture binds pair_num and display_name to the
         # current iteration's values, preventing late-binding over loop variables.
@@ -269,9 +280,21 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     sync_progress_hook,
                 )
 
-            course, sync_mgr, manifest, canvas_files, result, detected = (
-                    _analysis_pool.submit(asyncio.run, _run_course_analysis()).result()
-                )
+            _fut = _analysis_pool.submit(asyncio.run, _run_course_analysis())
+            # Poll with a short timeout so the cancel flag is honoured even
+            # while the background thread is blocked on Canvas API calls.
+            while True:
+                if is_sync_cancelled():
+                    _fut.cancel()
+                    break
+                try:
+                    _analysis_result = _fut.result(timeout=0.3)
+                    break
+                except __import__('concurrent.futures', fromlist=['TimeoutError']).TimeoutError:
+                    continue
+            if is_sync_cancelled():
+                break
+            course, sync_mgr, manifest, canvas_files, result, detected = _analysis_result
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
 
@@ -303,7 +326,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
             continue
 
     finally:
-        _analysis_pool.shutdown(wait=True)
+        # Don't wait for in-flight work if cancelled — let thread finish in bg
+        _analysis_pool.shutdown(wait=False)
 
     # Clean up the UI when all courses are done analyzing
     analysis_ui_placeholder.empty()
@@ -426,18 +450,20 @@ def run_analysis(sync_pairs, main_placeholder=None):
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
         
         if total_count == 0:
-            # 2. Bypass directly to completion
+            # 2. Bypass directly to completion.
+            # Do NOT pop sync_quick_mode here — show_sync_complete reads it
+            # to select the correct 'quick_sync_uptodate' notification tone.
+            # cleanup_sync_state() removes it at the end of the flow.
             st.session_state['synced_count'] = 0
             st.session_state['download_status'] = 'sync_complete'
-            st.session_state.pop('sync_quick_mode', None)
-            
+
             # 3. Force rerun to instantly show the success screen
             st.rerun()
         else:
             logger.debug(f"Quick Sync total_count={total_count} → jumping to 'pre_sync'")
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
-            st.session_state['qs_cancel_route'] = True # INDESTRUCTIBLE CANCEL FLAG
+            st.session_state['qs_cancel_route'] = True  # routes cancel back to step 1 instead of sync_cancelled screen
             
             # Inject "Start Sync" variables so Step 3 starts executing immediately
             for _k in NOTEBOOK_SUB_KEYS:
@@ -467,9 +493,12 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # Nothing to review - skip review step, go straight to completion
             st.session_state['synced_count'] = 0
             st.session_state['download_status'] = 'sync_complete'
-            # Pre-arm the flag so show_sync_complete doesn't fire a second notification
+            # Pre-arm the flag so show_sync_complete doesn't fire a second notification.
+            # M-3: Gate the beep on notifications_enabled so users who disabled
+            # notifications don't still hear the sound.
+            if st.session_state.get('notifications_enabled', True):
+                play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
             st.session_state['completion_beep_fired'] = True
-            play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
             st.rerun()
 
         parts = []

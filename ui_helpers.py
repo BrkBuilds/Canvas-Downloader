@@ -238,9 +238,22 @@ def format_relative_date(raw_time: str, include_time: bool = False, include_emoj
     - More than 7 days ago (current year): "24 Apr at 11:20"
     - Previous year: "12 Nov 2025"
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
     try:
-        dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
+        # Primary format written by save_manifest and _save_metadata after C-5 fix.
+        # Fallback chain handles legacy UTC ISO strings that may exist in older DBs.
+        dt = None
+        for _fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                dt = datetime.strptime(raw_time, _fmt)
+                if dt.tzinfo is not None:
+                    # Convert UTC-aware datetime to naive local time for comparison
+                    dt = dt.astimezone().replace(tzinfo=None)
+                break
+            except ValueError:
+                continue
+        if dt is None:
+            return raw_time
         now = datetime.now()
         
         diff_total_seconds = (now - dt).total_seconds()
@@ -284,7 +297,11 @@ def format_relative_date(raw_time: str, include_time: bool = False, include_emoj
             parts.append(f"at {time_str}")
             
         return " ".join(parts)
-    except Exception:
+    except Exception as _frd_exc:
+        import logging as _logging
+        _logging.getLogger(__name__).debug(
+            f"format_relative_date: could not parse %r: %s", raw_time, _frd_exc
+        )
         return raw_time
 
 

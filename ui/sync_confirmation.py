@@ -336,21 +336,35 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             st.session_state['sync_selections'] = sync_selections
             st.session_state['download_status'] = 'pre_sync'
 
-            # Load each course's individual sync_contract from SQLite
+            # Load each course's individual sync_contract from SQLite.
+            # M-5 fix: when no DB contract exists (first sync or unset pair),
+            # seed the contract from current session state so post-processing
+            # conversions are not silently skipped.
+            _CONVERT_KEYS_HANDOFF = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
+                                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
             for _s in sync_selections:
                 try:
                     _p = _s['res_data']['pair']
                     _sm = SyncManager(_p['local_folder'], _p['course_id'], _p.get('course_name', ''))
                     _raw = _sm._load_metadata('sync_contract')
-                    _s['res_data']['contract'] = json.loads(_raw) if _raw else {}
+                    if _raw:
+                        _s['res_data']['contract'] = json.loads(_raw)
+                    else:
+                        # Seed from session state so conversions aren't silently disabled
+                        _s['res_data']['contract'] = {
+                            k: st.session_state.get(k, False) for k in _CONVERT_KEYS_HANDOFF
+                        }
                 except Exception:
                     _s['res_data']['contract'] = {}
 
-            # Set safe persistent_convert_* defaults (per-course contracts are authoritative)
-            _CONVERT_KEYS_HANDOFF = ['convert_zip', 'convert_pptx', 'convert_word', 'convert_excel',
-                                      'convert_html', 'convert_code', 'convert_urls', 'convert_video']
+            # Mirror the resolved contracts into persistent_* keys so the
+            # execution pipeline's session-state fallback path also works.
+            # Use a per-key OR across all pairs (any course enabling a conversion enables it).
             for k in _CONVERT_KEYS_HANDOFF:
-                st.session_state[f'persistent_{k}'] = False
+                st.session_state[f'persistent_{k}'] = any(
+                    bool(_s.get('res_data', {}).get('contract', {}).get(k, False))
+                    for _s in sync_selections
+                )
 
             st.rerun(scope="app")
 

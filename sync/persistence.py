@@ -10,8 +10,30 @@ Extracted from ``sync_ui.py`` L91-158 (Phase 4).
 
 from __future__ import annotations
 
+import os
 import streamlit as st
+from pathlib import Path
 from ui_helpers import load_sync_pairs, atomic_update_sync_pairs
+
+
+# M-10: Roots that should never be used as a sync folder.
+_BAD_ROOTS_WIN = {
+    'c:\\windows', 'c:\\program files', 'c:\\program files (x86)', 'c:\\programdata',
+}
+_BAD_ROOTS_NIX = {'/etc', '/usr', '/bin', '/sbin', '/var', '/sys', '/proc'}
+
+
+def _validate_pair_folder(folder: str) -> bool:
+    """Return False if folder is an obviously dangerous system root."""
+    try:
+        p_lower = str(Path(folder).resolve()).lower()
+        sep = os.sep
+        for bad in _BAD_ROOTS_WIN | _BAD_ROOTS_NIX:
+            if p_lower == bad or p_lower.startswith(bad + sep) or p_lower.startswith(bad + '/'):
+                return False
+        return True
+    except Exception:
+        return False
 
 
 # ═══════════════════════════════════════════════
@@ -33,9 +55,12 @@ def load_persistent_pairs() -> None:
 
 def add_pair(new_pair: dict) -> None:
     """Add a single sync pair (deduplicates by course_id + local_folder)."""
+    target_folder = new_pair.get('local_folder', '')
+    if not _validate_pair_folder(target_folder):
+        st.toast(f"Folder rejected — system directories cannot be used as sync folders: {target_folder}", icon="⚠️")
+        return
     def modifier(fresh_pairs):
         target_cid = new_pair.get('course_id')
-        target_folder = new_pair.get('local_folder')
         exists = any(
             p.get('course_id') == target_cid and p.get('local_folder') == target_folder
             for p in fresh_pairs
@@ -48,10 +73,14 @@ def add_pair(new_pair: dict) -> None:
 
 def add_pairs_batch(new_pairs_list: list[dict]) -> None:
     """Add multiple sync pairs in a single atomic operation."""
+    rejected = []
     def modifier(fresh_pairs):
         for new_pair in new_pairs_list:
             target_cid = new_pair.get('course_id')
-            target_folder = new_pair.get('local_folder')
+            target_folder = new_pair.get('local_folder', '')
+            if not _validate_pair_folder(target_folder):
+                rejected.append(target_folder)
+                continue
             exists = any(
                 p.get('course_id') == target_cid and p.get('local_folder') == target_folder
                 for p in fresh_pairs
@@ -60,6 +89,8 @@ def add_pairs_batch(new_pairs_list: list[dict]) -> None:
                 fresh_pairs.append(new_pair)
         return fresh_pairs
     st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+    if rejected:
+        st.toast(f"{len(rejected)} folder(s) rejected — system directories cannot be used as sync folders.", icon="⚠️")
 
 
 def update_pair_by_signature(old_signature: dict, new_pair_data: dict) -> None:

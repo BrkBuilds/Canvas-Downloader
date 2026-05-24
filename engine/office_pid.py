@@ -76,5 +76,12 @@ def kill_office_pid(pid: int, exe_name_fallback: str) -> None:
             capture_output=True, timeout=10,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
+        # L-12: Signal that a broad /IM kill fired so the completion screen can
+        # warn the user that other open Office documents may have been closed.
+        try:
+            import streamlit as _st
+            _st.session_state['pp_force_kill_warning'] = True
+        except Exception:
+            pass
     except Exception:
         pass

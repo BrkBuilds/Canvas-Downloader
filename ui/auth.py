@@ -410,6 +410,8 @@ def render_login_page(fetch_courses_fn):
 
                     if 'notifications_enabled' in config:
                         st.session_state['notifications_enabled'] = config.get('notifications_enabled', True)
+                    if 'sync_history_retention' in config:
+                        st.session_state['sync_history_retention'] = int(config.get('sync_history_retention', 50))
 
                     if 'use_12h_format' in config:
                         st.session_state['use_12h_format'] = config.get('use_12h_format', False)
@@ -1617,6 +1619,16 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_clock}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Time format</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Display all times in 12-hour AM/PM format instead of the default 24-hour clock.</div></div>""")
                     temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
 
+            # L-13: Sync history retention — exposed so power users who sync
+            # multiple times daily can extend beyond the default 50 entries.
+            with st.container(border=True, key="stg_card_history"):
+                st.html("""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
+                temp_history_retention = st.number_input(
+                    "Keep last N syncs", min_value=10, max_value=500, step=10,
+                    value=int(st.session_state.get('sync_history_retention', 50)),
+                    key="temp_sync_history_retention",
+                )
+
         # ── Sticky footer ─────────────────────────────────────────────
         st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
 
@@ -1639,6 +1651,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_error_log != st.session_state.get('error_log_enabled', False)
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
+                    or int(temp_history_retention) != int(st.session_state.get('sync_history_retention', 50))
                 )
 
                 st.session_state['concurrent_downloads'] = temp_max
@@ -1649,6 +1662,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['error_log_enabled'] = temp_error_log
                 st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
+                st.session_state['sync_history_retention'] = int(temp_history_retention)
 
                 from pathlib import Path as _Path
                 _downloads_default = str(_Path.home() / "Downloads")
@@ -1675,6 +1689,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['error_log_enabled'] = bool(temp_error_log)
                 config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
+                config_data['sync_history_retention'] = int(temp_history_retention)
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'

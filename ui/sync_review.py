@@ -242,7 +242,10 @@ def show_analysis_review(on_confirm_sync):
 
     def handle_ignore(pair_idx, canvas_file_id, source_list_name, item):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
-        sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
+        # M-4: reuse the already-initialized SyncManager to avoid repeated DB init
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
         # Extract filename for UPSERT (works for new files not yet in DB)
         if isinstance(item, tuple):
             fname = item[0].display_name or item[0].filename if hasattr(item[0], 'filename') else ''
@@ -289,7 +292,9 @@ def show_analysis_review(on_confirm_sync):
 
     def handle_restore(pair_idx, sync_info):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
-        sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
         sm.restore_file(sync_info.canvas_file_id)
         
         sync_info.is_ignored = False
@@ -330,7 +335,9 @@ def show_analysis_review(on_confirm_sync):
 
     def handle_restore_all(pair_idx):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
-        sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
         
         if not hasattr(pair_data['result'], 'ignored_files') or not pair_data['result'].ignored_files:
             return
@@ -399,7 +406,9 @@ def show_analysis_review(on_confirm_sync):
         if not items_to_ignore:
             return
             
-        sm = SyncManager(pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name'])
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
         sm.bulk_ignore_files(file_ids_and_names)
         
         if not hasattr(pair_data['result'], 'ignored_files'):
@@ -1617,11 +1626,39 @@ def show_analysis_review(on_confirm_sync):
                         st.info('Nothing to sync - all files are up to date!')
                         st.stop()
 
-                    # Disk space check (use first pair's folder)
-                    first_folder = sync_selections[0]['res_data']['pair']['local_folder']
-                    has_space, avail_mb, total_mb = check_disk_space(first_folder, required_bytes=total_bytes)
-                    if not has_space:
-                        st.error('Insufficient disk space on the target drive. Need at least 1 GB free to proceed safely.')
+                    # Disk space check — partition bytes by target drive so
+                    # multi-drive sync groups are each validated independently.
+                    import os as _os
+                    _drive_bytes: dict = {}
+                    for _s in sync_selections:
+                        _folder = _s['res_data']['pair']['local_folder']
+                        _drive = _os.path.splitdrive(_folder)[0] or _folder[:2]
+                        # Attribute each selection's payload to its drive
+                        _sel_bytes = 0
+                        for _f in _s.get('new', []):
+                            _sel_bytes += getattr(_f, 'size', 0) or 0
+                        for _f in _s.get('updates', []):
+                            _sel_bytes += getattr(_f, 'size', 0) or 0
+                        _cfmap = {str(_f.id): _f for _f in _s['res_data'].get('canvas_files', [])}
+                        for _si in _s.get('redownload', []):
+                            _cf = _cfmap.get(str(_si.canvas_file_id))
+                            _sel_bytes += (getattr(_cf, 'size', 0) or getattr(_si, 'original_size', 0) or 0)
+                        _drive_bytes[_drive] = _drive_bytes.get(_drive, 0) + _sel_bytes
+                        _drive_bytes[f'__folder__{_drive}'] = _folder  # representative path for check
+
+                    _disk_ok = True
+                    avail_mb, total_mb = 0, 0
+                    for _drv, _req in _drive_bytes.items():
+                        if _drv.startswith('__folder__'):
+                            continue
+                        _rep_folder = _drive_bytes.get(f'__folder__{_drv}', _drv)
+                        _has_space, _avail_mb, _total_mb = check_disk_space(_rep_folder, required_bytes=_req)
+                        if avail_mb == 0:  # capture first drive's values for the confirmation dialog
+                            avail_mb, total_mb = _avail_mb, _total_mb
+                        if not _has_space:
+                            st.error(f'Insufficient disk space on drive {_drv or _rep_folder}. Need at least 1 GB free to proceed safely.')
+                            _disk_ok = False
+                    if not _disk_ok:
                         st.stop()
 
                     folders_count = len(set(
