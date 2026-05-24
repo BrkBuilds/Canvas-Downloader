@@ -422,9 +422,12 @@ class ExcelToData:
                 return None, f"Failed to open workbook: {e}"
 
         # Both workbooks are fully in memory; temp copy (if any) is now released.
+        from openpyxl.chartsheet import Chartsheet
         sheet_sections = []
         for sheet_name in wb_val.sheetnames:
             try:
+                if isinstance(wb_val[sheet_name], Chartsheet):
+                    continue
                 rows = self._extract_sheet(wb_val[sheet_name], wb_form[sheet_name])
                 if rows:
                     sheet_sections.append((sheet_name, rows))

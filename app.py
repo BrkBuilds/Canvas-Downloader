@@ -722,9 +722,10 @@ with _main_content.container():
                     active_total = st.session_state.get('total_items', total_items)
                     active_current = st.session_state.get('retry_downloaded_items', 0) if is_retry else st.session_state.get('downloaded_items', 0)
                     active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
+                    _dl_header = f"Downloading Course {current_idx + 1}/{total}" if total > 1 else "Downloading"
                     render_full_dashboard(
                         _dp, log_deque,
-                        header_label="Downloading Courses",
+                        header_label=_dl_header,
                         course_name=esc(course.name),
                         current_files=active_current,
                         total_files=active_total,
