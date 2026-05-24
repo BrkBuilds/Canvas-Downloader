@@ -1266,6 +1266,13 @@ def run_sync():
     st.session_state['synced_bytes'] = synced_counter[1]
     st.session_state['sync_errors'] = error_list
     st.session_state['pp_failure_count'] = pp_ui.pp_failure_count
+
+    # Retry feedback: if this was a retry pass, compute how many errors were
+    # resolved so the completion card can show "Recovered X of Y".
+    if is_retry:
+        _retry_total = st.session_state.get('retry_total_attempted', 0)
+        st.session_state['retry_resolved_count'] = max(0, _retry_total - len(error_list))
+        st.session_state['retry_attempted'] = True
     # Store detailed synced files for the completion screen dropdowns
     # synced_details is a dict: { pair_idx: [ "filename1", "filename2", ... ] }
     st.session_state['synced_details'] = dict(synced_details)

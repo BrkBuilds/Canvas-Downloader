@@ -661,26 +661,26 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         ] if course_folder.exists() else []
         archive_files.extend(extra_targz)
         if archive_files:
-            run_archive_extraction([(f, sm, None) for f in archive_files], ui)
+            run_archive_extraction([(f, sm, course_name) for f in archive_files], ui)
 
     # PPTX → PDF
     if contract.get('convert_pptx', False):
         pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files)
         if pptx_files:
-            run_pptx_conversion([(f, sm, None) for f in pptx_files], ui)
+            run_pptx_conversion([(f, sm, course_name) for f in pptx_files], ui)
 
     # HTML → Markdown
     if contract.get('convert_html', False):
         html_files = _glob_files(course_folder, {'.html'}, explicit_files)
         if html_files:
-            run_html_conversion([(f, sm, None) for f in html_files], ui)
+            run_html_conversion([(f, sm, course_name) for f in html_files], ui)
 
     # Code → TXT
     if contract.get('convert_code', False):
         from code_converter import CODE_EXTENSIONS
         code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
         if code_files:
-            run_code_conversion([(f, sm, None) for f in code_files], ui)
+            run_code_conversion([(f, sm, course_name) for f in code_files], ui)
 
     # URL Compilation
     if contract.get('convert_urls', False):
@@ -696,7 +696,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     if contract.get('convert_word', False):
         word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files)
         if word_files:
-            run_word_conversion([(f, sm, None) for f in word_files], ui)
+            run_word_conversion([(f, sm, course_name) for f in word_files], ui)
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
@@ -706,14 +706,14 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         # ExcelToPDF via COM/AppleScript handles .xls fine - it stays in the PDF glob below.
         excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files)
         if excel_data_files:
-            run_excel_data_conversion([(f, sm, None) for f in excel_data_files], ui)
+            run_excel_data_conversion([(f, sm, course_name) for f in excel_data_files], ui)
 
         excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
         if excel_pdf_files:
-            run_excel_conversion([(f, sm, None) for f in excel_pdf_files], ui)
+            run_excel_conversion([(f, sm, course_name) for f in excel_pdf_files], ui)
 
     # Video → MP3
     if contract.get('convert_video', False):
         video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files)
         if video_files:
-            run_video_conversion([(f, sm, None) for f in video_files], ui)
+            run_video_conversion([(f, sm, course_name) for f in video_files], ui)
