@@ -1398,22 +1398,8 @@ with _main_content.container():
             st.rerun()
 
         elif st.session_state.get('download_status') == 'done':
-            # Completion beep - fired exactly once per run via a session
-            # sentinel. Cleaned up by cleanup_download_state() when the user
-            # returns to Step 1, which arms it again for the next download.
-            if (
-                st.session_state.get('notifications_enabled', True)
-                and not st.session_state.get('completion_beep_fired', False)
-            ):
-                _dl_count = st.session_state.get('downloaded_items', 0)
-                _dl_courses = len(st.session_state.get('courses_to_download', []))
-                _dl_summary = f"Downloaded {_dl_count} file{'s' if _dl_count != 1 else ''} across {_dl_courses} course{'s' if _dl_courses != 1 else ''}."
-                play_completion_beep(mode='download', summary=_dl_summary)
-                st.session_state['completion_beep_fired'] = True
-
             # --- Premium Completion Screen (Parity with Sync) ---
             download_errors = st.session_state.get('download_errors_list', [])
-            failed_count = st.session_state.get('failed_items', 0)
             # Use ACTUAL downloaded bytes (tracked by mb_progress callback),
             # not the estimated total from the scanning phase which can be 0
             # if Canvas API returns null sizes, and gets overwritten by retry.
@@ -1437,6 +1423,18 @@ with _main_content.container():
             st.session_state['download_file_details'] = file_details
 
             success_count = sum(len(v) for v in file_details.values())
+
+            # Completion beep - fired exactly once per run via a session
+            # sentinel, using the accurate filtered success_count so the
+            # notification matches what the completion card shows.
+            if (
+                st.session_state.get('notifications_enabled', True)
+                and not st.session_state.get('completion_beep_fired', False)
+            ):
+                _dl_courses = len(file_details)
+                _dl_summary = f"Downloaded {success_count} file{'s' if success_count != 1 else ''} across {_dl_courses} course{'s' if _dl_courses != 1 else ''}."
+                play_completion_beep(mode='download', summary=_dl_summary)
+                st.session_state['completion_beep_fired'] = True
 
             # 1. Summary card (absorbs retry feedback + discovery warnings)
             size_skipped = st.session_state.get('size_skipped_files', [])
