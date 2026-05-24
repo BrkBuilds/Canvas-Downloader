@@ -863,7 +863,7 @@ div.st-key-page_nav_quick_back button:hover {{
                 unsafe_allow_html=True,
             )
         with adv_col:
-            if st.button("Go to Custom Download →", key="page_nav_quick_advanced", use_container_width=True):
+            if st.button("Switch to Custom Download →", key="page_nav_quick_advanced", use_container_width=True):
                 st.session_state['quick_download_mode'] = False
                 st.session_state['came_from_quick_dl'] = True
                 st.rerun()

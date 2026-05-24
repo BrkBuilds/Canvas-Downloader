@@ -409,6 +409,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 border-color: #4a90e2 !important;
             }}
 
+            /* Make Cancel/Save buttons match the text input height */
+            div.st-key-hub_cancel_edit_name button,
+            div.st-key-hub_save_name button {{
+                min-height: 48px !important;
+                height: 48px !important;
+            }}
+
             /* ===== ADD BUTTONS - Base64 Icon via ::before ===== */
             div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button p::before,
             div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair button p::before {{
