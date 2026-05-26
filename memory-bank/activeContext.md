@@ -10,10 +10,15 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
-- **Session 2026-05-26: Website Revamp & Onboarding Overhaul**
+- **Session 2026-05-26: Website Revamp, Testimonial Purge & Expander Layout Hardening**
+    - **Website Mode Expanders**: Introduced premium `<details>` expanders with a translucent dark-glass style under "Download Mode" in `docs/index.html`. Placed **Quick Download** (open by default, showing 5 presets with application icons) above **Custom Download** (closed by default, holding custom settings cards and saved user presets).
+    - **Redundant macOS requirements-box Purge**: Deleted the requirements box below the macOS download button to keep the landing page clean and elegant, as the shortened information is already present under the card title.
+    - **Hero Label & Trust Pills Purge**: Removed the "Free - Mac & Windows" label and the "No Passwords Required / 100% local" pills from the Hero section for a professional, distraction-free aesthetic.
+    - **Testimonial Purge**: Surgically removed fake student reviews and the vertical visual separator divider from Birk's introduction container card inside the Hero section of the landing page, converting it into a clean, professional, single-owner developer intro card.
+    - **Grid Expansion Bug Fixes**: Added `align-items: start;` to both `.sec-qa-grid` (Security Section Q&A Cards) and `.faq-grid` (FAQ Section Cards) in `docs/index.html` to prevent vertical stretching of neighboring cards when an accordion details block is expanded. Dynamic expanders now enlarge individually while horizontal neighbors retain their original collapsed heights.
     - **Layout Restoration & Tag Balancing**: Resolved layout issues caused by global tag replacements. Built a precise DOM bracket-matching tag parser in Python to safely isolate block-level changes. Restored original baselines and verified that all 12 FAQ/Security accordion tags and `<div` blocks are symmetrically balanced.
     - **Much Larger Product GIF**: Overrode legacy CSS size limits and adjusted the `.hero-inner` grid columns from `1fr 1fr` to `1fr 1.3fr` (allocating 57% of screen width to the visual area), allowing the looping product demo GIF container to scale up to `640px` wide.
-    - **Unified CBS Creator Card**: Merged the Birk (BSc at CBS) introduction block and the three student testimonial boxes side-by-side inside a single, border-matched translucent background card inside the Hero section container.
+    - **Unified CBS Creator Card**: Merged the Birk (BSc at CBS) introduction block into a single, border-matched translucent background card inside the Hero section container.
     - **Post-Download Redirects**: Implemented `thanks-win.html` and `thanks-mac.html` in `docs/` containing non-intimidating, step-by-step instructions for bypassing OS warnings (SmartScreen / Gatekeeper). Configured delay triggers on landing page download buttons to redirect on click.
     - **Simplified Token & FAQS**: Overhauled the API token onboarding layout with visual steps, and converted security details and FAQ sections into collapsibles using native `<details>` and `<summary>` styling.
     - **Guide Clean-Up**: Streamlined the layout of `docs/guide.html` by hiding detailed technical specs (The Hidden Database, Required software, Syncing & Download Settings) under accordion-style details blocks.

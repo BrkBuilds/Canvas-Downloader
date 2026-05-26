@@ -1,9 +1,18 @@
 ## Latest Updates
 
+- [x] **Website Expanders & Badge Cleanups** (2026-05-26):
+    - [x] **Expander Sections for Download Modes**: Introduced two premium, custom-styled details expanders in `docs/index.html` under "Download Mode" using application icons. Placed **Quick Download** (open by default, listing all 5 core presets with application-matched icons) above **Custom Download** (closed by default, housing the 3 original custom configuration cards and saved user presets).
+    - [x] **Redundant macOS requirements-box Purge**: Removed the redundant requirements box below the macOS download button since the shortened information is already present in high-fidelity under the macOS card title.
+    - [x] **Hero Label & Trust Pills Purge**: Removed the "Free - Mac & Windows" label and the bottom "No Passwords Required / 100% local" trust pill rows from the Hero introduction section for a highly premium, clean aesthetic.
+
+- [x] **Website Testimonial Purge & Grid Stretch Fixes** (2026-05-26):
+    - [x] **Testimonial Removal**: Purged fake student testimonials and visual separators from the Birk intro section card on the landing page, converting the layout to a beautifully simplified, trustworthy single-owner developer intro card.
+    - [x] **Grid Stretch UX Bug Fix**: Patched both the Security Q&A 2x2 grid (`.sec-qa-grid`) and the FAQ 2x2 grid (`.faq-grid`) in `docs/index.html` with `align-items: start;` rules, ensuring dynamic expanders enlarge individually without stretching or creating massive empty grey space in adjacent cells.
+
 - [x] **Website Revamp & Trust Overhaul** (2026-05-26):
     - [x] **Layout Restoration & Tag Balancing**: Engineered a precise DOM bracket-matching tag parser in Python to safely modify large HTML files. Re-checked out pristine baselines and surgically applied revamps, mathematically verifying all 12 FAQ/Security accordion tags and `<div` blocks are symmetrically balanced.
     - [x] **Much Larger Demo GIF**: Modified the `.hero-inner` grid columns from `1fr 1fr` to `1fr 1.3fr` (allocating 57% of screen width to the GIF). Overrode legacy size constraints on `.hero-icon-wrap`, enabling the video/GIF placeholder container to scale dynamically up to `640px` wide on desktop.
-    - [x] **Unified Creator & Social Proof Card**: Merged the Birk (BSc at CBS) introduction block and the three student testimonial boxes side-by-side inside a single, cohesive translucent background container, maximizing onboarding visual rhythm.
+    - [x] **Unified Creator Card**: Merged the Birk (BSc at CBS) introduction block into a single, cohesive translucent background container, maximizing onboarding visual rhythm.
     - [x] **Dedicated Post-Download Redirects**: Implemented `thanks-win.html` and `thanks-mac.html` post-download redirect pages for bypass walkthroughs, and removed all smartscreen/gatekeeper warnings from the landing page.
     - [x] **Simplified Guide Pages**: Cleaned up the technical documentation in `docs/guide.html` by encapsulating complex sections ("The Hidden Database", "Required software", and "Syncing & Download Settings") under collapsible `<details>` toggles.
 
