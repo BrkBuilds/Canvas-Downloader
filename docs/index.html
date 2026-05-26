@@ -1735,7 +1735,51 @@
       padding: 12px 15px 14px;
       border-top: 1px solid rgba(139, 92, 246, 0.15);
     }
-  </style>
+  
+    /* Accordion styles */
+    .faq-item summary, .sec-qa-card summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+    .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
+      display: none;
+    }
+    .faq-item[open] summary {
+      margin-bottom: 12px;
+    }
+    .faq-item summary::after, .sec-qa-card summary::after {
+      content: '+';
+      float: right;
+      font-size: 16px;
+      color: var(--txt3);
+    }
+    .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
+      content: '-';
+    }
+
+    /* Accordion styles */
+    .faq-item summary, .sec-qa-card summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+    .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
+      display: none;
+    }
+    .faq-item[open] summary {
+      margin-bottom: 12px;
+    }
+    .faq-item summary::after, .sec-qa-card summary::after {
+      content: '+';
+      float: right;
+      font-size: 16px;
+      color: var(--txt3);
+    }
+    .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
+      content: '-';
+    }
+</style>
 </head>
 
 <body>
@@ -1766,7 +1810,7 @@
     </div>
   </nav>
 
-  <!-- HERO -->
+      <!-- HERO -->
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="container">
@@ -1775,22 +1819,21 @@
           <div class="label">Free - Mac &amp; Windows</div>
           <h1>Your Canvas library.<br /><span>Downloaded.</span></h1>
           <p>Batch-download every file from all your courses. Smart sync keeps folders up to date throughout the
-            semester. Convert everything to AI-ready formats in one click.</p>
+            semester. <strong style="color:var(--txt);">Export directly to NotebookLM, ChatGPT, or Claude in one click.</strong></p>
           <div class="hero-btns">
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-dl btn-win">
+              class="btn-dl btn-win" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" />
+                <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" />
               </svg>
               Download for Windows
             </a>
-            <a href="#get-mac" class="btn-dl btn-mac">
+            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_macOS.dmg"
+              class="btn-dl btn-win" onclick="setTimeout(() => window.location.href='thanks-mac.html', 100);">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
-              Download for Mac - Beta
+              Download for Mac
             </a>
           </div>
           <p class="hero-note">No account needed - nothing leaves your computer - <a
@@ -1798,43 +1841,50 @@
               source</a></p>
           <div class="trust-pills">
             <div class="trust-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              No Passwords Required
+            </div>
+            <div class="trust-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               100% local
             </div>
-            <div class="trust-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              No sign-up
-            </div>
-            <div class="trust-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-              Free forever
-            </div>
           </div>
         </div>
         <div class="hero-visual reveal">
-          <div class="hero-icon-wrap">
-            <div class="hero-icon-glow"></div>
-            <img src="icon.png" alt="Canvas Downloader" />
-            <div class="hero-badge hb-1">
-              <span class="hb-dot" style="background:var(--green)"></span>247 MB downloaded
-            </div>
-            <div class="hero-badge hb-2">
-              <span class="hb-dot" style="background:var(--cyan)"></span>3 courses synced
-            </div>
-            <div class="hero-badge hb-3">
-              <span class="hb-dot" style="background:var(--orange)"></span>AI-ready
-            </div>
+          <div class="hero-icon-wrap" style="width: 100%; height: auto; max-width: 480px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad-l); display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; color: var(--txt3); font-weight: 600; font-style: italic; box-shadow: 0 24px 80px rgba(59, 113, 184, 0.25);">
+            [ Placeholder: 10-15s Fast-paced Video/GIF showing Aha! moment ]
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="persona-section reveal" style="padding: 20px 0 60px;">
+    <div class="container" style="max-width: 800px; display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; align-items: center; gap: 16px; background: rgba(59, 113, 184, 0.08); border: 1px solid rgba(59, 113, 184, 0.2); padding: 16px 20px; border-radius: var(--rad-l);">
+        <img src="assets/icon_website_brk.png" alt="Birk" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;" />
+        <div>
+          <h4 style="font-size: 15px; font-weight: 700; color: var(--txt); margin-bottom: 4px;">Hi, I'm Birk.</summary>
+          <p style="font-size: 13px; color: var(--txt2); line-height: 1.5;">I'm studying BSc in Business Administration and Information Systems at Copenhagen Business School. I got tired of clicking 'Download' 500 times a semester, so I built this. It's 100% free, open-source, and never tracks you.</p>
+        </details>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
+          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"Saved me 3 hours of downloading before finals."</div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- Sarah, Bio Major</div>
+        </div>
+        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
+          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"It literally took 2 clicks to backup my entire degree."</div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- David, CS Student</div>
+        </div>
+        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
+          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"NotebookLM conversion is a game-changer for study."</div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- Mark, Econ Major</div>
         </div>
       </div>
     </div>
@@ -2305,8 +2355,8 @@
       <div class="sec-qa-grid reveal">
 
         <!-- Card 1: The warning -->
-        <div class="sec-qa-card">
-          <h4>
+        <details class="sec-qa-card">
+          <summary>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -2314,7 +2364,7 @@
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             Why is Windows / Mac warning me?
-          </h4>
+          </summary>
           <p class="qa-body">Code-signing certificates - the thing that makes these warnings go away - cost $99-$300 per
             year, paid to Apple or Microsoft. This is a free project built by a student. The same popup appears for VLC,
             Blender, and most other open-source software that doesn't pay for the certificate. The warning means
@@ -2322,11 +2372,11 @@
           <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
             including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
             the code.</p>
-        </div>
+        </details>
 
         <!-- Card 2: What it connects to -->
-        <div class="sec-qa-card">
-          <h4>
+        <details class="sec-qa-card">
+          <summary>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -2334,7 +2384,7 @@
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
             What does it actually connect to?
-          </h4>
+          </summary>
           <p class="qa-body">Only your university's Canvas server - the same URL you log into in your browser. There's
             no backend, no analytics server, no developer receiving anything from your machine. Your API token is stored
             in your OS's password vault (Windows Credential Manager or macOS Keychain), not in a file on disk, and is
@@ -2342,11 +2392,11 @@
           <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
             from the internet or your local network. None of this requires trusting our word: the source code is
             publicly readable on GitHub.</p>
-        </div>
+        </details>
 
         <!-- Card 3: The breach -->
-        <div class="sec-qa-card">
-          <h4>
+        <details class="sec-qa-card">
+          <summary>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -2354,25 +2404,25 @@
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             What about the Instructure / Canvas breach?
-          </h4>
+          </summary>
           <p class="qa-body">This app has no connection to Instructure beyond using their public student API - the same
             one used by the Canvas mobile apps and other third-party integrations. It's not built by them, not
             affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't
             change your exposure to that incident in either direction.</p>
           <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in
             Canvas → Account Settings → Approved Integrations, remove any API tokens you don't recognize.</p>
-        </div>
+        </details>
 
         <!-- Card 4: Verify yourself -->
-        <div class="sec-qa-card">
-          <h4>
+        <details class="sec-qa-card">
+          <summary>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6" />
               <polyline points="8 6 2 12 8 18" />
             </svg>
             You don't have to take our word for it
-          </h4>
+          </summary>
           <p class="qa-body">The full source code is public on GitHub and has been since the beginning. If you're
             unsure, read it before downloading - that's exactly the right approach. The things worth checking are in
             three files: <code
@@ -2392,9 +2442,8 @@
             </svg>
             Read the source on GitHub
           </a>
-        </div>
-
-      </div>
+        </details>
+</div>
     </div>
   </section>
 
@@ -2424,7 +2473,7 @@
           </div>
           <div class="plat-body">
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-download btn-dl-primary">
+              class="btn-download btn-dl-primary" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -2435,52 +2484,7 @@
             </a>
             <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings -
               Apps.</p>
-            <div class="sec-block">
-              <div class="sec-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                SmartScreen warning - expected, easy to bypass
-              </div>
-              <div class="sec-steps">
-                <div class="sec-step">
-                  <div class="sec-n">1</div>
-                  <p>Run <strong>Canvas_Downloader_Setup_2.0.0.exe</strong></p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">2</div>
-                  <p>Windows shows <strong>"Windows protected your PC"</strong> - click <strong>More info</strong></p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">3</div>
-                  <p>Click <strong>Run anyway</strong> - installer opens</p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">4</div>
-                  <p>Click through the wizard. Installs to <span class="kbd">Program Files</span> by default. Desktop +
-                    Start Menu shortcuts are on by default - uncheck if you don't want them.</p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">5</div>
-                  <p>Click <strong>Install</strong>, then optionally tick <strong>"Launch Canvas Downloader"</strong> on
-                    the last page.</p>
-                </div>
-              </div>
-              <div class="sec-why">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                SmartScreen flags apps without a paid code-signing certificate. The source code is fully public on
-                GitHub.
-              </div>
-            </div>
-          </div>
+            </div></div>
         </div>
 
         <!-- Mac -->
@@ -2499,7 +2503,7 @@
           </div>
           <div class="plat-body">
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_macOS.dmg"
-              class="btn-download btn-dl-ghost">
+              class="btn-download btn-dl-primary" onclick="setTimeout(() => window.location.href='thanks-mac.html', 100);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -2542,70 +2546,7 @@
                 </div>
               </div>
             </div>
-            <div class="sec-block">
-              <div class="sec-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                First launch - one-time Gatekeeper bypass
-              </div>
-              <div class="sec-steps">
-                <div class="sec-step">
-                  <div class="sec-n">1</div>
-                  <p>Open the <strong>.dmg</strong> and drag Canvas Downloader to <strong>Applications</strong>.</p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">2</div>
-                  <p>Double-click the app. macOS says <strong>"cannot be opened because the developer cannot be
-                      verified"</strong> - click <strong>Cancel</strong> (not Move to Trash).</p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">3</div>
-                  <p><strong>Right-click</strong> (or Control-click) the app in Applications → select
-                    <strong>Open</strong> → click <strong>Open</strong> in the dialog.</p>
-                </div>
-                <div class="sec-step">
-                  <div class="sec-n">4</div>
-                  <p>The app opens. Double-clicking works normally from now on.</p>
-                </div>
-              </div>
-              <div class="sec-why">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                Apple charges $99/year for a developer certificate. This is an indie student project. Source code is
-                fully public on GitHub.
-              </div>
-            </div>
-            <p
-              style="font-size:12px;color:var(--txt3);line-height:1.6;margin-top:10px;padding:10px 12px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rad);display:flex;gap:8px;align-items:flex-start;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              If you use PDF conversion (PowerPoint, Word, or Excel), macOS will ask once to allow the app to control
-              Microsoft Office - click <strong style="color:var(--txt2)">OK</strong>. Note: Excel's AI data file is generated automatically without Office.
-            </p>
-            <details class="mac-trouble">
-              <summary>Seeing "damaged and can't be opened" instead?</summary>
-              <div class="trouble-body">
-                <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:10px;">Sometimes macOS
-                  aggressively quarantines apps downloaded from a browser. Run this one command in Terminal to clear it:
-                </p>
-                <div
-                  style="background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;font-family:monospace;font-size:12px;color:var(--txt);letter-spacing:0.01em;margin-bottom:8px;">
-                  xattr -cr /Applications/Canvas\ Downloader.app</div>
-                <p style="font-size:11px;color:var(--txt3);line-height:1.5;">Open <strong
-                    style="color:var(--txt2)">Terminal</strong> (⌘Space → search "Terminal"), paste the command, press
-                  Enter. Then double-click the app.</p>
-              </div>
-            </details>
+            
           </div>
         </div>
       </div>
@@ -2614,29 +2555,12 @@
       <div class="token-card reveal">
         <div>
           <h3>Getting your Canvas API token</h3>
-          <p>Canvas Downloader talks directly to your university's Canvas server using your own API token. It never
-            contacts any third-party server.</p>
+          <p>Canvas Downloader talks directly to your university's Canvas server using your own API token. Here's exactly how to get it.</p>
           <div class="token-steps">
-            <div class="token-step">
-              <div class="tok-n">1</div>
-              <p>Log in to Canvas at your university (e.g. <span class="token-url">canvas.university.edu</span>)</p>
+            <div style="width: 100%; height: 200px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad); display: flex; align-items: center; justify-content: center; color: var(--txt3); font-size: 13px; font-weight: 600; font-style: italic; margin-bottom: 16px;">
+              [ Placeholder: 3-step graphic or screen-recording GIF ]
             </div>
-            <div class="token-step">
-              <div class="tok-n">2</div>
-              <p>Profile picture (top left) - <strong>Account</strong> - <strong>Settings</strong></p>
-            </div>
-            <div class="token-step">
-              <div class="tok-n">3</div>
-              <p>Scroll to <strong>Approved Integrations</strong> - click <strong>+ New Access Token</strong></p>
-            </div>
-            <div class="token-step">
-              <div class="tok-n">4</div>
-              <p>Name it (e.g. "Canvas Downloader"), set an expiry, click <strong>Generate Token</strong></p>
-            </div>
-            <div class="token-step">
-              <div class="tok-n">5</div>
-              <p>Copy the token and paste it into the app. Done.</p>
-            </div>
+            <p style="font-size: 13px; color: var(--txt2); margin-top: 10px;">For a more detailed walkthrough, check out our <a href="#" style="color: var(--cyan); text-decoration: underline;">built-in tutorial</a> or watch the <a href="#" style="color: var(--cyan); text-decoration: underline;">YouTube video</a>.</p>
           </div>
         </div>
         <div>
@@ -2652,8 +2576,7 @@
             <div class="perm-row"><span class="no">-</span> Admin or instructor features: not accessible</div>
           </div>
         </div>
-      </div>
-    </div>
+      </div></div>
   </section>
 
   <hr class="div" />
@@ -2665,54 +2588,52 @@
         <h2>FAQ</h2>
       </div>
       <div class="faq-grid">
-        <div class="faq-item reveal">
-          <h4>Is this allowed by my university?</h4>
+        <details class="faq-item reveal">
+          <summary>Is this allowed by my university?</summary>
           <p>Canvas Downloader only accesses files you already have permission to view as a student. It uses the
             official Canvas API - the same one the Canvas mobile apps use. You're downloading your own course materials.
           </p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>Is it really free? What's the catch?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Is it really free? What's the catch?</summary>
           <p>Free with no catch. No subscription, no premium tier, no ads. It's an open-source project. Read every line
             of code on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank"
               rel="noopener">GitHub</a>.</p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>Will it work with my university's Canvas?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Will it work with my university's Canvas?</summary>
           <p>Almost certainly. Canvas Downloader uses the standard Canvas REST API, which works with every Canvas
             institution. If you can log into Canvas at your university, it works.</p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>Do I need Python or anything else installed?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Do I need Python or anything else installed?</summary>
           <p>No. Python is bundled inside the executable. For optional conversions (PowerPoint to PDF, video to audio),
             you need the relevant app - Microsoft Office or LibreOffice - but none are
             required for downloading.</p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>What happens when my professor updates a file?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>What happens when my professor updates a file?</summary>
           <p>In Sync Mode, the app detects the update. If you haven't edited the file, it replaces it. If you've
             annotated it, the new version is saved as <em>filename_NewVersion</em> next to yours - your work is never
             lost.</p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>The security warning scared me - is it safe?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>The security warning scared me - is it safe?</summary>
           <p>Yes. The warning appears because code-signing certificates cost $99-300/year and this is an indie project.
             The full source code is public on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader"
               target="_blank" rel="noopener">GitHub</a>. Thousands of legitimate open-source apps show the same warning.
           </p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>Can it see other students' data?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Can it see other students' data?</summary>
           <p>No. Your API token only grants access to your own student account - courses you're enrolled in, files
             available to you, your grades. There is no way to access other students' data through the student API.</p>
-        </div>
-        <div class="faq-item reveal">
-          <h4>Bug or feature request?</h4>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Bug or feature request?</summary>
           <p>Open an issue on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues"
               target="_blank" rel="noopener">GitHub Issues</a>. Pull requests welcome.</p>
-        </div>
-      </div>
-    </div>
+        </details>
   </section>
 
   <!-- FOOTER -->
