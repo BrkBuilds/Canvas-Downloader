@@ -34,8 +34,8 @@
       --border: rgba(255, 255, 255, 0.1);
       --border2: rgba(255, 255, 255, 0.16);
       --txt: #e2e8f0;
-      --txt2: #94a3b8;
-      --txt3: #7a8fa5;
+      --txt2: #cbd5e1;
+      --txt3: #94a3b8;
       --cyan: #38bdf8;
       --cyan-bg: rgba(56, 189, 248, 0.08);
       --cyan-b: rgba(56, 189, 248, 0.3);
@@ -527,14 +527,15 @@
       border: 1px solid var(--border);
       border-radius: var(--rad);
       padding: 14px 12px;
-      cursor: default;
+      cursor: pointer;
       position: relative;
       background: rgba(255, 255, 255, 0.02);
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, transform 0.15s, background-color 0.15s;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
+      user-select: none;
     }
 
     .filter-btn.active {
@@ -596,13 +597,15 @@
       border: 1px solid var(--border);
       border-radius: var(--rad);
       padding: 12px;
-      cursor: default;
+      cursor: pointer;
       position: relative;
       background: rgba(255, 255, 255, 0.02);
+      transition: border-color 0.15s, transform 0.15s, background-color 0.15s;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 6px;
+      user-select: none;
     }
 
     .struct-btn.active {
@@ -681,14 +684,16 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 10px 8px;
-      cursor: default;
+      cursor: pointer;
       position: relative;
       background: rgba(255, 255, 255, 0.02);
+      transition: border-color 0.15s, transform 0.15s, background-color 0.15s;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 5px;
       text-align: center;
+      user-select: none;
     }
 
     .cc-btn.active {
@@ -783,17 +788,42 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 10px;
-      cursor: default;
+      cursor: pointer;
       position: relative;
       background: rgba(255, 255, 255, 0.02);
+      transition: border-color 0.15s, transform 0.15s, background-color 0.15s;
       display: flex;
       align-items: center;
       gap: 10px;
+      user-select: none;
     }
 
     .pp-btn.active {
       border-color: var(--orange);
       background: var(--org-bg);
+    }
+
+    /* Hover states for interactive toggles */
+    .filter-btn:hover, .struct-btn:hover, .cc-btn:hover, .pp-btn:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-1px);
+    }
+    .filter-btn.active:hover {
+      border-color: var(--cyan);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .struct-btn.active:hover {
+      border-color: var(--cyan);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .cc-btn.active:hover {
+      border-color: var(--green);
+      background: rgba(104, 212, 163, 0.12);
+    }
+    .pp-btn.active:hover {
+      border-color: var(--orange);
+      background: rgba(249, 115, 22, 0.12);
     }
 
     .pp-btn .check {
@@ -842,81 +872,193 @@
     }
 
     /* presets strip */
-    .presets-strip {
+    .quick-presets-container {
       margin-top: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    @media(max-width:700px) {
-      .presets-strip {
-        grid-template-columns: 1fr;
+    .presets-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .presets-row-2 {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .presets-row-2 .quick-preset-card {
+      width: calc(33.333% - 10.666px);
+      flex-shrink: 0;
+    }
+
+    @media(max-width: 960px) {
+      .presets-row-3 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .presets-row-2 {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .presets-row-2 .quick-preset-card {
+        width: calc(50% - 8px);
       }
     }
 
+    @media(max-width: 640px) {
+      .presets-row-3 {
+        grid-template-columns: 1fr;
+      }
+      .presets-row-2 {
+        flex-direction: column;
+      }
+      .presets-row-2 .quick-preset-card {
+        width: 100%;
+      }
+    }
+
+    .quick-preset-card {
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      background: var(--surf) !important;
+      transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+      padding-right: 44px; /* leave room for radio button */
+    }
+
+    /* Hover effect */
+    .quick-preset-card:hover {
+      border-color: rgba(56, 189, 248, 0.35) !important;
+      background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    /* Radio button outline (inactive) */
+    .quick-preset-card::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.18) !important;
+      border-radius: 50% !important;
+      box-sizing: border-box !important;
+      background: transparent !important;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    /* Active state styling */
+    .quick-preset-card.active {
+      border: 1px solid rgba(56, 189, 248, 0.5) !important;
+      background: linear-gradient(160deg, rgba(56, 189, 248, 0.12) 0%, rgba(56, 189, 248, 0.04) 100%) !important;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.08) !important;
+    }
+
+    /* Active radio button indicator */
+    .quick-preset-card.active::before {
+      border-color: #38bdf8 !important;
+      background-image: radial-gradient(circle at center, #38bdf8 35%, transparent 45%) !important;
+      background-size: contain !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+    }
+
+    /* YouTube Local File Protocol Fallback (Error 153 bypass) */
+    .video-local-fallback:hover .play-btn-circle {
+      transform: scale(1.1) !important;
+      background-color: #ff0000 !important;
+    }
+    .video-local-fallback:hover div:first-child {
+      background-color: rgba(0, 0, 0, 0.15) !important;
+    }
+
     .preset-card {
-      background: var(--surf);
-      border: 1px solid var(--border);
+      background: var(--surf2);
+      border: none;
       border-radius: var(--rad);
-      padding: 14px 16px;
+      padding: 16px;
+      min-height: 100px;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 14px;
     }
 
     .preset-card img {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       object-fit: contain;
       flex-shrink: 0;
     }
 
+    .preset-card .pc-info {
+      flex: 1;
+      min-width: 0;
+    }
+
     .preset-card .pc-name {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--txt);
+      margin-bottom: 4px;
+      line-height: 1.3;
     }
 
     .preset-card .pc-desc {
-      font-size: 11px;
-      color: var(--txt3);
+      font-size: 11.5px;
+      color: var(--txt2);
+      line-height: 1.45;
     }
 
     .preset-label {
-      margin-left: auto;
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
       font-size: 10px;
       font-weight: 700;
       padding: 2px 8px;
       border-radius: 100px;
       white-space: nowrap;
+      align-self: flex-start;
+      margin-left: 10px;
     }
 
     .pl-builtin {
-      background: rgba(56, 189, 248, 0.1);
+      background: rgba(56, 189, 248, 0.08);
       color: var(--cyan);
-      border: 1px solid var(--cyan-b);
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
-    .pl-user {
-      background: rgba(139, 92, 246, 0.1);
-      color: #a78bfa;
-      border: 1px solid rgba(139, 92, 246, 0.3);
+    .presets-columns-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 20px;
     }
 
-    /* mode expanders */
+    @media(max-width: 768px) {
+      .presets-columns-container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+
+    /* mode expanders (Flat/Invisible theme) */
     .app-mode-expander {
-      background: var(--surf);
-      border: 1px solid var(--border);
-      border-radius: var(--rad-l);
-      margin-bottom: 24px;
-      overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      margin-bottom: 32px;
+      overflow: visible;
+      box-shadow: none;
     }
 
     .app-mode-expander summary {
-      padding: 18px 22px;
-      font-size: 15px;
+      padding: 16px 0;
+      font-size: 20px;
       font-weight: 800;
       color: var(--txt);
       cursor: pointer;
@@ -925,9 +1067,10 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255, 255, 255, 0.015);
-      border-bottom: 1px solid transparent;
+      background: transparent;
+      border-bottom: 2px solid var(--border);
       outline: none;
+      transition: color 0.15s, border-bottom-color 0.15s;
     }
 
     .app-mode-expander summary::-webkit-details-marker {
@@ -935,7 +1078,9 @@
     }
 
     .app-mode-expander summary:hover {
-      background: rgba(255, 255, 255, 0.035);
+      background: transparent;
+      color: var(--cyan);
+      border-bottom-color: var(--cyan-b);
     }
 
     .app-mode-expander summary::after {
@@ -944,14 +1089,14 @@
       display: inline-block;
       width: 14px;
       height: 14px;
-      background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-size: contain;
       transition: transform 0.2s ease;
     }
 
     .app-mode-expander[open] summary {
-      border-bottom-color: var(--border);
+      border-bottom-color: var(--border2);
     }
 
     .app-mode-expander[open] summary::after {
@@ -959,8 +1104,8 @@
     }
 
     .app-mode-expander .expander-content {
-      padding: 24px;
-      background: rgba(0, 0, 0, 0.12);
+      padding: 24px 0 0 0;
+      background: transparent;
     }
 
     /* ---- SYNC MODE SECTION ---- */
@@ -1797,30 +1942,23 @@
       border-top: 1px solid rgba(139, 92, 246, 0.15);
     }
   
-    /* Accordion styles */
-    .faq-item summary, .sec-qa-card summary {
-      cursor: pointer;
-      list-style: none;
-      outline: none;
-      display: block;
+    /* Hero Product Video and Spacing */
+    .hero-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 32px; /* Give room for active glow so it doesn't clip */
+      overflow: visible;
     }
-    .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
-      display: none;
-    }
-    .faq-item[open] summary {
-      margin-bottom: 12px;
-    }
-    .faq-item summary::after, .sec-qa-card summary::after {
-      content: '+';
-      float: right;
-      font-size: 16px;
-      color: var(--txt3);
-    }
-    .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
-      content: '-';
+    .hero-gif-wrap {
+      width: calc(100% - 40px); /* Leave 20px on each side for the active glow */
+      margin: 20px auto;
+      max-width: 600px;
+      position: relative;
+      overflow: visible;
     }
 
-    /* Layout overrides for larger GIF */
     @media (min-width: 769px) {
       .hero-inner {
         grid-template-columns: 1fr 1.3fr !important;
@@ -1831,19 +1969,54 @@
         max-width: 450px !important;
       }
     }
-    .hero-gif-wrap {
-      width: 100%;
-      max-width: 640px;
-      position: relative;
+
+    /* Student-friendly options explanation container */
+    .dl-options-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--rad-l);
+      padding: 24px;
+      margin-top: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .dl-options-box > div:last-child {
+      border-left: 1px solid var(--border);
+      padding-left: 28px;
+    }
+    @media(max-width: 768px) {
+      .dl-options-box {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .dl-options-box > div:last-child {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-left: 0;
+        padding-top: 20px;
+      }
     }
 
-
-    /* Accordion styles */
+    /* Accordion styles (Improved flex-alignment) */
     .faq-item summary, .sec-qa-card summary {
       cursor: pointer;
       list-style: none;
       outline: none;
-      display: block;
+      display: flex;
+      align-items: center;
+      color: var(--txt);
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .sec-qa-card summary {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .faq-item summary {
+      font-size: 14px;
+      font-weight: 700;
     }
     .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
       display: none;
@@ -1851,31 +2024,27 @@
     .faq-item[open] summary {
       margin-bottom: 12px;
     }
+    .sec-qa-card summary svg {
+      margin-right: 14px; /* Generous gap on the right */
+      color: var(--txt3);
+      flex-shrink: 0;
+    }
     .faq-item summary::after, .sec-qa-card summary::after {
       content: '+';
-      float: right;
-      font-size: 16px;
+      margin-left: auto; /* Pushes the toggle sign to the right */
+      font-size: 18px;
       color: var(--txt3);
+      font-weight: 400;
+      transition: color 0.15s;
     }
     .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
-      content: '-';
+      content: '−'; /* High contrast minus sign */
     }
-
-    /* Layout overrides for larger GIF */
-    @media (min-width: 769px) {
-      .hero-inner {
-        grid-template-columns: 1fr 1.3fr !important;
-        gap: 50px !important;
-        align-items: center !important;
-      }
-      .hero-text {
-        max-width: 450px !important;
-      }
+    .faq-item summary:hover, .sec-qa-card summary:hover {
+      color: var(--cyan);
     }
-    .hero-gif-wrap {
-      width: 100%;
-      max-width: 640px;
-      position: relative;
+    .faq-item summary:hover::after, .sec-qa-card summary:hover::after {
+      color: var(--cyan);
     }
 
 </style>
@@ -1915,7 +2084,12 @@
     <div class="container">
       <div class="hero-inner">
         <div class="hero-text reveal">
-          <h1>Your Canvas library.<br /><span>Downloaded.</span></h1>
+          <h1 style="font-size: clamp(30px, 4.5vw, 50px); line-height: 1.15; margin-bottom: 24px; font-weight: 950; letter-spacing: -0.03em;">
+            Your Canvas Courses:<br />
+            <span style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Downloaded &amp; organized.</span><br />
+            <span style="font-size: 0.8em; font-weight: 800; display: block; margin-top: 6px; color: var(--txt); opacity: 0.9;">Always up to date.</span>
+            <span style="font-size: 0.8em; font-weight: 800; display: block; color: var(--cyan);">AI Optimized.</span>
+          </h1>
           <p>Batch-download every file from all your courses. Smart sync keeps folders up to date throughout the
             semester. <strong style="color:var(--txt);">Export directly to NotebookLM, ChatGPT, or Claude in one click.</strong></p>
           <div class="hero-btns">
@@ -1940,10 +2114,11 @@
         </div>
         <div class="hero-visual reveal">
           <div class="hero-gif-wrap">
-            <div class="hero-icon-glow" style="inset: -45px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;"></div>
-            <div style="width: 100%; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad-l); display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; color: var(--txt3); font-weight: 600; font-style: italic; box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35);">
-              [ Placeholder: 10-15s Fast-paced Video/GIF showing Aha! moment ]
-            </div>
+            <div class="hero-icon-glow" style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;"></div>
+            <video autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
+              <source src="assets/product_demo.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
       </div>
@@ -1951,7 +2126,7 @@
       <!-- Persona Section -->
       <div class="reveal" style="margin-top: 50px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
         <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-          <img src="assets/icon_website_brk.png" alt="Birk" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0; box-shadow: 0 8px 24px rgba(59, 113, 184, 0.25);" />
+          <img src="assets/icon_website_brk.png" alt="Birk" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0;" />
           <div style="flex: 1; min-width: 240px;">
             <h4 style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">Hi, I'm Birk.</h4>
             <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business Administration and Information Systems at <strong>Copenhagen Business School</strong>. I built Canvas Downloader because I was tired of downloading 500 syllabus files manually. It's 100% free, open-source, and runs entirely on your machine.</p>
@@ -1970,77 +2145,91 @@
       <div class="sh reveal">
         <div class="label">Download Mode</div>
         <h2>Select courses. Configure. Download.</h2>
-        <p>Pick any combination of courses from your Canvas account, configure what to grab, and download in one batch.
+        <p style="margin-bottom: 16px;">Pick any combination of courses from your Canvas account, configure what to grab, and download in one batch.
           Every setting below is in the app exactly as shown.</p>
+
       </div>
-      <!-- Quick Download Expander (Open by default) -->
+      <!-- Quick Download Expander (Open by default, flat/invisible theme) -->
       <details class="app-mode-expander reveal" open>
         <summary>
-          <img src="assets/icon_quick_download.png" alt="Quick Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
-          Quick Download
+          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
+              <img src="assets/icon_quick_download.png" alt="Quick Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
+              Quick Download
+            </div>
+            <div style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
+              Quick & easy, no setup needed. Choose a preset and download with one click.
+            </div>
+          </div>
         </summary>
         <div class="expander-content">
-          <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 16px; line-height: 1.6;">
-            Pick a ready-made preset and start downloading in seconds. Each preset is a pre-configured setup tuned for a specific use case.
+          <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
+            Pick one of the 5 most common download configurations and start downloading in seconds. <br>For the people who want their course files, now.
           </p>
-          <div class="presets-strip" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 0;">
-            <div class="preset-card" style="padding: 16px; min-height: 100px; display: flex; align-items: flex-start; gap: 14px;">
-              <img src="assets/icon_quick_dl_complete.png" alt="Complete Canvas Download" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;" />
-              <div style="flex: 1; min-width: 0;">
-                <div class="pc-name" style="font-size: 14px; font-weight: 800; color: var(--txt);">Complete Canvas Download</div>
-                <div class="pc-desc" style="font-size: 11.5px; color: var(--txt2); margin-top: 4px; line-height: 1.45;">All files and Canvas content, just like you see it in Canvas.</div>
+          <div class="quick-presets-container">
+            <div class="presets-row-3">
+              <div class="preset-card quick-preset-card active">
+                <img src="assets/icon_quick_dl_complete.png" alt="Complete Canvas Download" />
+                <div class="pc-info">
+                  <div class="pc-name">Complete Canvas Download</div>
+                  <div class="pc-desc">All files and Canvas content, just like you see it in Canvas.</div>
+                </div>
               </div>
-              <span class="preset-label pl-builtin" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 1px solid var(--cyan-b); align-self: flex-start; margin-left: 10px;">Built-in</span>
+
+              <div class="preset-card quick-preset-card">
+                <img src="assets/icon_quick_dl_ai_optimized.png" alt="Daily study pack (Optimized)" />
+                <div class="pc-info">
+                  <div class="pc-name">Daily study pack (Optimized)</div>
+                  <div class="pc-desc">Full course with PPTX converted to PDF, for easy AI upload.</div>
+                </div>
+              </div>
+
+              <div class="preset-card quick-preset-card">
+                <img src="assets/icon_quick_dl_notebook.png" alt="100% AI & NotebookLM Ready" />
+                <div class="pc-info">
+                  <div class="pc-name">100% AI &amp; NotebookLM Ready</div>
+                  <div class="pc-desc">All files AI-Optimized, ready to drag &amp; drop into NotebookLM.</div>
+                </div>
+              </div>
             </div>
 
-            <div class="preset-card" style="padding: 16px; min-height: 100px; display: flex; align-items: flex-start; gap: 14px;">
-              <img src="assets/icon_quick_dl_ai_optimized.png" alt="Daily study pack (Optimized)" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;" />
-              <div style="flex: 1; min-width: 0;">
-                <div class="pc-name" style="font-size: 14px; font-weight: 800; color: var(--txt);">Daily study pack (Optimized)</div>
-                <div class="pc-desc" style="font-size: 11.5px; color: var(--txt2); margin-top: 4px; line-height: 1.45;">Full course with PPTX converted to PDF, for easy AI upload.</div>
+            <div class="presets-row-2">
+              <div class="preset-card quick-preset-card">
+                <img src="assets/icon_quick_dl_ppt_pdf.png" alt="Slides & PDFs Only" />
+                <div class="pc-info">
+                  <div class="pc-name">Slides &amp; PDFs Only</div>
+                  <div class="pc-desc">Download only slides and PDF files, nothing else.</div>
+                </div>
               </div>
-              <span class="preset-label pl-builtin" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 1px solid var(--cyan-b); align-self: flex-start; margin-left: 10px;">Built-in</span>
-            </div>
 
-            <div class="preset-card" style="padding: 16px; min-height: 100px; display: flex; align-items: flex-start; gap: 14px;">
-              <img src="assets/icon_quick_dl_notebook.png" alt="100% AI & NotebookLM Ready" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;" />
-              <div style="flex: 1; min-width: 0;">
-                <div class="pc-name" style="font-size: 14px; font-weight: 800; color: var(--txt);">100% AI &amp; NotebookLM Ready</div>
-                <div class="pc-desc" style="font-size: 11.5px; color: var(--txt2); margin-top: 4px; line-height: 1.45;">All files AI-Optimized, ready to drag &amp; drop into NotebookLM.</div>
+              <div class="preset-card quick-preset-card">
+                <img src="assets/icon_quick_dl_all_files.png" alt="Files Only" />
+                <div class="pc-info">
+                  <div class="pc-name">Files Only</div>
+                  <div class="pc-desc">Only files uploaded by your teacher, no Canvas Content or other distractions.</div>
+                </div>
               </div>
-              <span class="preset-label pl-builtin" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 1px solid var(--cyan-b); align-self: flex-start; margin-left: 10px;">Built-in</span>
-            </div>
-
-            <div class="preset-card" style="padding: 16px; min-height: 100px; display: flex; align-items: flex-start; gap: 14px;">
-              <img src="assets/icon_quick_dl_ppt_pdf.png" alt="Slides & PDFs Only" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;" />
-              <div style="flex: 1; min-width: 0;">
-                <div class="pc-name" style="font-size: 14px; font-weight: 800; color: var(--txt);">Slides &amp; PDFs Only</div>
-                <div class="pc-desc" style="font-size: 11.5px; color: var(--txt2); margin-top: 4px; line-height: 1.45;">Download only slides and PDF files, nothing else.</div>
-              </div>
-              <span class="preset-label pl-builtin" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 1px solid var(--cyan-b); align-self: flex-start; margin-left: 10px;">Built-in</span>
-            </div>
-
-            <div class="preset-card" style="padding: 16px; min-height: 100px; display: flex; align-items: flex-start; gap: 14px;">
-              <img src="assets/icon_quick_dl_all_files.png" alt="Files Only" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;" />
-              <div style="flex: 1; min-width: 0;">
-                <div class="pc-name" style="font-size: 14px; font-weight: 800; color: var(--txt);">Files Only</div>
-                <div class="pc-desc" style="font-size: 11.5px; color: var(--txt2); margin-top: 4px; line-height: 1.45;">Only files uploaded by your teacher, no Canvas Content or other distractions.</div>
-              </div>
-              <span class="preset-label pl-builtin" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 1px solid var(--cyan-b); align-self: flex-start; margin-left: 10px;">Built-in</span>
             </div>
           </div>
         </div>
       </details>
 
-      <!-- Custom Download Expander (Closed by default) -->
+      <!-- Custom Download Expander (Closed by default, flat/invisible theme) -->
       <details class="app-mode-expander reveal">
         <summary>
-          <img src="assets/icon_custom_download.png" alt="Custom Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
-          Custom Download
+          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
+              <img src="assets/icon_custom_download.png" alt="Custom Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
+              Custom Download
+            </div>
+            <div style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
+              Total personalization. Hand-pick what to download, and exactly how to optimize your files for AI.
+            </div>
+          </div>
         </summary>
         <div class="expander-content">
           <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
-            Configure every setting yourself. Pick any combination of files, web-only Canvas content, and post-processing conversions.
+            Configure every setting yourself. Pick any combination of files, Canvas content, and AI Optimizations. <br>For the people who want full control over their downloads.
           </p>
 
           <div class="dl-grid">
@@ -2186,7 +2375,6 @@
                     <img src="assets/icon_conv_zip.png" alt="Unpack Archives" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Unpack Archives</div>
-                      <div class="pp-desc">.zip / .tar.gz - extracted</div>
                     </div>
                   </div>
                   <div class="pp-btn active">
@@ -2196,7 +2384,6 @@
                     <img src="assets/icon_conv_pptx.png" alt="PowerPoint to PDF" />
                     <div class="pp-btn-text">
                       <div class="pp-title">PowerPoint to PDF</div>
-                      <div class="pp-desc">.pptx / .ppt - PDF</div>
                     </div>
                   </div>
                   <div class="pp-btn">
@@ -2206,7 +2393,6 @@
                     <img src="assets/icon_conv_word.png" alt="Word to PDF" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Legacy Word to PDF</div>
-                      <div class="pp-desc">.doc / .rtf / .odt - PDF</div>
                     </div>
                   </div>
                   <div class="pp-btn active">
@@ -2216,7 +2402,6 @@
                     <img src="assets/icon_conv_excel.png" alt="Excel" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Excel to PDF & AI Data</div>
-                      <div class="pp-desc">.xlsx/.xlsm - PDF + data file (.xls PDF only)</div>
                     </div>
                   </div>
                   <div class="pp-btn">
@@ -2226,7 +2411,6 @@
                     <img src="assets/icon_conv_html.png" alt="HTML to Markdown" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Pages to Plain Text</div>
-                      <div class="pp-desc">Canvas HTML - .md</div>
                     </div>
                   </div>
                   <div class="pp-btn">
@@ -2236,7 +2420,6 @@
                     <img src="assets/icon_conv_code.png" alt="Code to txt" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Code to .txt</div>
-                      <div class="pp-desc">.js / .py etc. - .txt</div>
                     </div>
                   </div>
                   <div class="pp-btn">
@@ -2246,7 +2429,6 @@
                     <img src="assets/icon_conv_urls.png" alt="Gather Links" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Gather Web Links</div>
-                      <div class="pp-desc">All links - one .txt file</div>
                     </div>
                   </div>
                   <div class="pp-btn active">
@@ -2256,7 +2438,6 @@
                     <img src="assets/icon_conv_video.png" alt="Video to Audio" />
                     <div class="pp-btn-text">
                       <div class="pp-title">Video to Audio</div>
-                      <div class="pp-desc">.mp4 / .mov - .mp3</div>
                     </div>
                   </div>
                 </div>
@@ -2264,47 +2445,65 @@
             </div>
           </div>
 
-          <!-- Presets -->
-          <div style="margin-top:32px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-              <div class="label" style="margin-bottom:0">Download Presets</div>
-              <span style="font-size:13px;color:var(--txt2)">Save any configuration as a preset and reload it in one click.</span>
+          <!-- Presets Section -->
+          <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 32px;">
+            <h3 style="font-size: 20px; font-weight: 800; color: var(--txt); margin-bottom: 6px;">Download Presets</h3>
+            <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 24px;">Save any configuration as a preset and reload it in one click.</p>
+            
+            <div class="presets-columns-container">
+              <!-- Left Column: Built-in -->
+              <div>
+                <h4 style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 15px;">📦</span> Built-in Presets
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div class="preset-card">
+                    <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
+                    <div class="pc-info">
+                      <div class="pc-name">AI-Ready</div>
+                      <div class="pc-desc">All Files + all conversions on - drop-and-go for ChatGPT</div>
+                    </div>
+                  </div>
+                  <div class="preset-card">
+                    <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
+                    <div class="pc-info">
+                      <div class="pc-name">Quick Backup</div>
+                      <div class="pc-desc">All Files, subfolders, no conversions</div>
+                    </div>
+                  </div>
+                </div>
+                <p style="font-size: 12px; color: var(--txt3); margin-top: 12px; line-height: 1.45;">
+                  We have built in these presets to get you started in the custom download immediately.
+                </p>
+              </div>
+              
+              <!-- Right Column: User Presets -->
+              <div>
+                <h4 style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 15px;">💾</span> Your Saved Presets
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div class="preset-card">
+                    <img src="assets/icon_preset_user.png" alt="User preset" />
+                    <div class="pc-info">
+                      <div class="pc-name">My Semester Setup</div>
+                      <div class="pc-desc">Your saved config - applies in one click</div>
+                    </div>
+                  </div>
+                  <div class="preset-card">
+                    <img src="assets/icon_preset_user.png" alt="User preset" />
+                    <div class="pc-info">
+                      <div class="pc-name">Exam Prep</div>
+                      <div class="pc-desc">Study Files + assignments + rubrics</div>
+                    </div>
+                  </div>
+                </div>
+                <p style="font-size: 12px; color: var(--txt3); margin-top: 12px; line-height: 1.45;">
+                  You can save your own custom configurations so you can always load them instantly and download the courses exactly how you want.
+                </p>
+              </div>
             </div>
-            <div class="presets-strip">
-              <div class="preset-card">
-                <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
-                <div>
-                  <div class="pc-name">AI-Ready</div>
-                  <div class="pc-desc">All Files + all conversions on - drop-and-go for ChatGPT</div>
-                </div>
-                <span class="preset-label pl-builtin">Built-in</span>
-              </div>
-              <div class="preset-card">
-                <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
-                <div>
-                  <div class="pc-name">Quick Backup</div>
-                  <div class="pc-desc">All Files, subfolders, no conversions</div>
-                </div>
-                <span class="preset-label pl-builtin">Built-in</span>
-              </div>
-              <div class="preset-card">
-                <img src="assets/icon_preset_user.png" alt="User preset" />
-                <div>
-                  <div class="pc-name">My Semester Setup</div>
-                  <div class="pc-desc">Your saved config - applies in one click</div>
-                </div>
-                <span class="preset-label pl-user">Saved</span>
-              </div>
-              <div class="preset-card">
-                <img src="assets/icon_preset_user.png" alt="User preset" />
-                <div>
-                  <div class="pc-name">Exam Prep</div>
-                  <div class="pc-desc">Study Files + assignments + rubrics</div>
-                </div>
-                <span class="preset-label pl-user">Saved</span>
-              </div>
           </div>
-        </div>
       </div>
     </details>
     </div>
@@ -2595,10 +2794,10 @@
   <!-- GET / DOWNLOAD -->
   <section class="get-section" id="get">
     <div class="container">
-      <div class="sh reveal" style="text-align:center;max-width:560px;margin:0 auto 48px;">
+      <div class="sh reveal" style="text-align:center;max-width:680px;margin:0 auto 48px;">
         <div class="label" style="margin:0 auto 16px;">Get the App</div>
-        <h2>Free. No account. No tracking.</h2>
-        <p>One download. Self-contained executable - no Python, no dependencies needed.</p>
+        <h2>Your entire semester, offline in seconds.</h2>
+        <p>The ultimate study life optimization tool. Stay up to date with Canvas at all times, download all your courses in minutes, and guarantee perfectly structured, AI-optimized files for your revision—100% locally and safely.</p>
       </div>
 
       <div class="platform-grid">
@@ -2665,10 +2864,9 @@
           <h3>Getting your Canvas API token</h3>
           <p>Canvas Downloader talks directly to your university's Canvas server using your own API token. Here's exactly how to get it.</p>
           <div class="token-steps">
-            <div style="width: 100%; height: 220px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad); display: flex; align-items: center; justify-content: center; color: var(--txt3); font-size: 13px; font-weight: 600; font-style: italic; margin-bottom: 16px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
-              [ Placeholder: 3-step graphic or screen-recording GIF ]
+            <div id="video-container" style="width: 100%; aspect-ratio: 16/9; margin-bottom: 16px; position: relative;">
+              <iframe id="video-iframe" width="100%" height="100%" src="https://www.youtube.com/embed/SO98BjeTfJU" title="Getting your Canvas API token" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); display: block;"></iframe>
             </div>
-            <p style="font-size: 13px; color: var(--txt2); margin-top: 10px;">For a more detailed walkthrough, check out our <a href="guide.html#canvas-token" style="color: var(--cyan); text-decoration: underline;">built-in tutorial</a> or watch the <a href="#" style="color: var(--cyan); text-decoration: underline;">YouTube video</a>.</p>
           </div>
         </div>
         <div>
@@ -2779,6 +2977,88 @@
       if (idx > 0) el.style.transitionDelay = (idx * 70) + 'ms';
       obs.observe(el);
     });
+
+    // Custom Download Interactivity (Toggling settings on/off)
+    
+    // Card 1: What to Download (Radio Toggles)
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Card 1: Folder Structure (Radio Toggles)
+    document.querySelectorAll('.struct-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.struct-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Card 2: Canvas Content (Checkbox Toggles with Header Counter)
+    const ccBadge = document.querySelector('.cc-card .status-badge');
+    document.querySelectorAll('.cc-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const activeCount = document.querySelectorAll('.cc-btn.active').length;
+        if (ccBadge) {
+          if (activeCount > 0) {
+            ccBadge.textContent = `ON - ${activeCount} selected`;
+            ccBadge.className = 'status-badge sb-on-green';
+          } else {
+            ccBadge.textContent = 'OFF';
+            ccBadge.className = 'status-badge sb-on-orange';
+          }
+        }
+      });
+    });
+
+    // Card 3: Post-Processing / Optimize for AI (Checkbox Toggles with Header Counter)
+    const ppBadge = document.querySelector('.pp-card .status-badge');
+    document.querySelectorAll('.pp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const activeCount = document.querySelectorAll('.pp-btn.active').length;
+        if (ppBadge) {
+          if (activeCount > 0) {
+            ppBadge.textContent = `ON - ${activeCount} selected`;
+            ppBadge.className = 'status-badge sb-on-orange';
+          } else {
+            ppBadge.textContent = 'OFF';
+            ppBadge.className = 'status-badge sb-on-orange';
+          }
+        }
+      });
+    });
+
+    // Quick Download Presets (Radio Toggles)
+    document.querySelectorAll('.quick-preset-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.quick-preset-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+      });
+    });
+
+    // YouTube Local File Protocol Fallback (Error 153 bypass)
+    if (window.location.protocol === 'file:') {
+      const container = document.getElementById('video-container');
+      if (container) {
+        container.innerHTML = `
+          <a href="https://www.youtube.com/watch?v=SO98BjeTfJU" target="_blank" rel="noopener" class="video-local-fallback" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); background: url('https://img.youtube.com/vi/SO98BjeTfJU/maxresdefault.jpg') center/cover no-repeat; text-decoration: none; position: relative; overflow: hidden; cursor: pointer;">
+            <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3); transition: background-color 0.2s;"></div>
+            <div class="play-btn-circle" style="position: relative; z-index: 2; width: 68px; height: 68px; background: rgba(229, 9, 20, 0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); transition: transform 0.2s, background-color 0.2s;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 3px;">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </div>
+            <div style="position: absolute; bottom: 12px; right: 12px; z-index: 2; background: rgba(11, 12, 20, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #e2e8f0; font-weight: 500;">
+              Local Preview Mode - Click to Watch on YouTube
+            </div>
+          </a>
+        `;
+      }
+    }
   </script>
 </body>
 
