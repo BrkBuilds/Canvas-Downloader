@@ -95,7 +95,6 @@ hiddenimports += [
     'streamlit.runtime.scriptrunner.script_runner',
     'engineio.async_drivers.threading',
     'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
-    'moviepy.audio.fx.all', 'moviepy.video.fx.all',
     # Fix 1: keyring macOS Keychain backend - needed for token persistence
     'keyring.backends', 'keyring.backends.macOS',
 ]
