@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: Build macOS (.app)
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,30 +16,50 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Extract version
+        id: version
+        run: |
+          set -euo pipefail
+          VER=$(python3 -c "exec(open('version.py').read()); print(__version__)")
+          echo "app_version=$VER" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: |
+          set -euo pipefail
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install "pyinstaller>=6.0"
+          pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir "pyinstaller>=6.0"
 
       - name: Build .app bundle
         run: |
+          set -euo pipefail
           source .venv/bin/activate
           rm -rf build/ dist/
           pyinstaller --clean Canvas_Downloader_macOS.spec
 
+      - name: Verify .app exists
+        run: |
+          set -euo pipefail
+          if [ ! -d "dist/Canvas Downloader.app" ]; then
+            echo "::error::Canvas Downloader.app was not created — PyInstaller build failed."
+            exit 1
+          fi
+          echo "✅ Canvas Downloader.app found"
+
       - name: Ad-hoc code sign & Package
         run: |
-          codesign --force --deep -s - --entitlements entitlements.mac.plist "dist/Canvas Downloader.app"
+          set -euo pipefail
+          codesign --force --deep --sign - --entitlements entitlements.mac.plist "dist/Canvas Downloader.app"
           hdiutil create -volname "Canvas Downloader" \
             -srcfolder "dist/Canvas Downloader.app" \
             -ov -format UDZO \
-            dist/Canvas_Downloader_macOS.dmg
+            "dist/Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS.dmg"
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
           name: Canvas_Downloader_macOS
-          path: dist/Canvas_Downloader_macOS.dmg
+          path: "dist/Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS.dmg"
+          retention-days: 14
