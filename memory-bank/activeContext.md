@@ -10,6 +10,13 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-05-26: Website Quick Download Preset Toggles & YouTube Local Fallback**
+    - **Expander Header Shortened Descriptions**: Surgically integrated shortened, high-fidelity descriptions for **Quick Download** and **Custom Download** directly inside their expander summary headers in `docs/index.html`. Positioned them cleanly below the main titles in a flex column layout with a smaller, elegant grey font (`var(--txt3)`) to capture the core essence of each mode at first glance.
+    - **Toggleable Quick Presets**: Added full client-side radio toggle interactivity to the 5 Quick Download preset cards using custom JavaScript, allowing students to pick exactly one preset at a time.
+    - **Centered Hybrid Preset Layout**: Re-engineered the layout of the 5 cards in `docs/index.html` to separate them into a 3-column row and a centered 2-column row. Used CSS Calc and flexbox wrap to guarantee perfect centered proportions and size parity on all viewports, dynamically transitioning to 2 columns on tablets and 1 column on mobile.
+    - **Premium Application-Accurate Styling**: Styled the Quick Download preset cards to exactly match the Streamlit application's preset buttons: configured inactive preset cards with the correct darker background (`var(--surf)`) and added explicit solid border overriding styles to guarantee the active card shows the beautiful glowing cyan border and a dynamic active radio button indicator in the top-right corner.
+    - **YouTube Local File Fallback (Error 153 Bypass)**: Implemented an intelligent JavaScript detection script that intercepts local file preview protocols (`file://`) and replaces the broken Error 153 YouTube player with a gorgeous mockup player containing the official max-resolution video thumbnail, a custom play button, and a link opening the video in a new tab. When deployed (HTTPS), the native interactive player loads perfectly inline.
+
 - **Session 2026-05-26: Website Revamp, Testimonial Purge & Expander Layout Hardening**
     - **Website Mode Expanders**: Introduced premium `<details>` expanders with a translucent dark-glass style under "Download Mode" in `docs/index.html`. Placed **Quick Download** (open by default, showing 5 presets with application icons) above **Custom Download** (closed by default, holding custom settings cards and saved user presets).
     - **Redundant macOS requirements-box Purge**: Deleted the requirements box below the macOS download button to keep the landing page clean and elegant, as the shortened information is already present under the card title.
