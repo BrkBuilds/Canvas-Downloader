@@ -324,13 +324,7 @@
     .foot-v { margin-top: 20px; font-size: 11px; color: var(--txt3); opacity: 0.45; }
 
     hr.div { border: none; border-top: 1px solid var(--border); }
-  
-    details.info-card summary::-webkit-details-marker, details.callout summary::-webkit-details-marker { display: none; }
-    details.info-card[open] summary span, details.callout[open] summary span { content: '-'; color: var(--txt); }
-
-    details.info-card summary::-webkit-details-marker, details.callout summary::-webkit-details-marker { display: none; }
-    details.info-card[open] summary span, details.callout[open] summary span { content: '-'; color: var(--txt); }
-</style>
+  </style>
 </head>
 <body>
 
@@ -603,11 +597,9 @@
           </ul>
         </div>
 
-        <details class="callout warn reveal" style="cursor:pointer;">
-          <summary style="outline: none; list-style: none;"><strong>Required software</strong> <span style="float:right; color:var(--amber); font-size:16px;">+</span></summary>
-          <div style="margin-top: 6px;"> PowerPoint, Word, and Excel conversions require Microsoft Office or the free LibreOffice app. If the required software is not installed, that conversion is silently skipped and your original file is kept.
+        <div class="callout warn reveal">
+          <strong>Required software:</strong> PowerPoint, Word, and Excel conversions require Microsoft Office or the free LibreOffice app. If the required software is not installed, that conversion is silently skipped and your original file is kept.
         </div>
-        </details>
 
         <!-- Presets -->
         <h3 class="sub-title reveal" id="presets">Download Presets</h3>
@@ -643,19 +635,19 @@
           Click <strong>Add Course</strong> on the Sync page to create a pair. Once linked, syncing will automatically process every pair on your list.
         </p>
 
-        <details class="info-card reveal" style="cursor:pointer;">
-          <summary style="font-size: 15px; font-weight: 700; outline: none; list-style: none;">The Hidden Database <span style="float:right; color:var(--txt3); font-size:16px;">+</span></summary>
-          <p style="margin-top: 10px;">Inside every synced folder, the app places a tiny, hidden database file. This acts as the folder&#8217;s memory &#8212; tracking what you&#8217;ve already downloaded, what you&#8217;ve edited, and what to skip. If you link a pre-existing folder, the app scans Canvas and builds this memory from scratch.</p>
-        </details>
+        <div class="info-card reveal">
+          <h4>The Hidden Database</h4>
+          <p>Inside every synced folder, the app places a tiny, hidden database file. This acts as the folder&#8217;s memory &#8212; tracking what you&#8217;ve already downloaded, what you&#8217;ve edited, and what to skip. If you link a pre-existing folder, the app scans Canvas and builds this memory from scratch.</p>
+        </div>
 
         <div class="callout warn reveal">
           <strong>One folder = one course.</strong> Do not mix files from multiple Canvas courses into the same local folder. For best results, link folders originally downloaded via Canvas Downloader.
         </div>
 
-        <details class="info-card reveal" style="cursor:pointer;">
-          <summary style="font-size: 15px; font-weight: 700; outline: none; list-style: none;">Syncing &amp; Download Settings <span style="float:right; color:var(--txt3); font-size:16px;">+</span></summary>
-          <p style="margin-top: 10px;"><strong>Courses inherit their original download settings.</strong> If you initially downloaded a course with AI Optimization enabled, the sync engine will automatically apply those same conversions to any new files you sync. Want to change settings? Re-download the course into a new folder with your preferred configuration.</p>
-        </details>
+        <div class="info-card reveal">
+          <h4>Syncing &amp; Download Settings</h4>
+          <p><strong>Courses inherit their original download settings.</strong> If you initially downloaded a course with AI Optimization enabled, the sync engine will automatically apply those same conversions to any new files you sync. Want to change settings? Re-download the course into a new folder with your preferred configuration.</p>
+        </div>
 
         <div class="info-card reveal">
           <h4>Managing Your Course Pairs</h4>

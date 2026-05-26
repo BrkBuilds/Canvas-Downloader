@@ -1741,6 +1741,7 @@
       cursor: pointer;
       list-style: none;
       outline: none;
+      display: block;
     }
     .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
       display: none;
@@ -1758,11 +1759,30 @@
       content: '-';
     }
 
+    /* Layout overrides for larger GIF */
+    @media (min-width: 769px) {
+      .hero-inner {
+        grid-template-columns: 1fr 1.3fr !important;
+        gap: 50px !important;
+        align-items: center !important;
+      }
+      .hero-text {
+        max-width: 450px !important;
+      }
+    }
+    .hero-gif-wrap {
+      width: 100%;
+      max-width: 640px;
+      position: relative;
+    }
+
+
     /* Accordion styles */
     .faq-item summary, .sec-qa-card summary {
       cursor: pointer;
       list-style: none;
       outline: none;
+      display: block;
     }
     .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
       display: none;
@@ -1779,6 +1799,24 @@
     .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
       content: '-';
     }
+
+    /* Layout overrides for larger GIF */
+    @media (min-width: 769px) {
+      .hero-inner {
+        grid-template-columns: 1fr 1.3fr !important;
+        gap: 50px !important;
+        align-items: center !important;
+      }
+      .hero-text {
+        max-width: 450px !important;
+      }
+    }
+    .hero-gif-wrap {
+      width: 100%;
+      max-width: 640px;
+      position: relative;
+    }
+
 </style>
 </head>
 
@@ -1829,11 +1867,11 @@
               Download for Windows
             </a>
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_macOS.dmg"
-              class="btn-dl btn-win" onclick="setTimeout(() => window.location.href='thanks-mac.html', 100);">
+              class="btn-dl btn-mac" onclick="setTimeout(() => window.location.href='thanks-mac.html', 100);">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
-              Download for Mac
+              Download for Mac - Beta
             </a>
           </div>
           <p class="hero-note">No account needed - nothing leaves your computer - <a
@@ -1856,40 +1894,49 @@
           </div>
         </div>
         <div class="hero-visual reveal">
-          <div class="hero-icon-wrap" style="width: 100%; height: auto; max-width: 480px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad-l); display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; color: var(--txt3); font-weight: 600; font-style: italic; box-shadow: 0 24px 80px rgba(59, 113, 184, 0.25);">
-            [ Placeholder: 10-15s Fast-paced Video/GIF showing Aha! moment ]
+          <div class="hero-gif-wrap">
+            <div class="hero-icon-glow" style="inset: -45px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;"></div>
+            <div style="width: 100%; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad-l); display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; color: var(--txt3); font-weight: 600; font-style: italic; box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35);">
+              [ Placeholder: 10-15s Fast-paced Video/GIF showing Aha! moment ]
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Persona & Social Proof Section -->
+      <div class="reveal" style="margin-top: 50px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
+        <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
+          <!-- Left: Birk Info -->
+          <div style="flex: 1.1; min-width: 280px; display: flex; align-items: center; gap: 20px;">
+            <img src="assets/icon_website_brk.png" alt="Birk" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0; box-shadow: 0 8px 24px rgba(59, 113, 184, 0.25);" />
+            <div>
+              <h4 style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">Hi, I'm Birk.</h4>
+              <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business Administration and Information Systems at <strong>Copenhagen Business School</strong>. I built Canvas Downloader because I was tired of downloading 500 syllabus files manually. It's 100% free, open-source, and runs entirely on your machine.</p>
+            </div>
+          </div>
+          <!-- Divider -->
+          <div style="width: 1px; height: 80px; background: var(--border); display: block;"></div>
+          <!-- Right: Testimonials -->
+          <div style="flex: 1.5; min-width: 320px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div style="font-size: 11px; color: var(--txt2); font-style: italic; margin-bottom: 8px; line-height: 1.45;">"Saved me 3 hours of downloading before finals."</div>
+              <div style="font-size: 10px; font-weight: 700; color: var(--cyan); margin: 0;">- Sarah, Bio Major</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div style="font-size: 11px; color: var(--txt2); font-style: italic; margin-bottom: 8px; line-height: 1.45;">"It took 2 clicks to backup my entire degree."</div>
+              <div style="font-size: 10px; font-weight: 700; color: var(--cyan); margin: 0;">- David, CS Student</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div style="font-size: 11px; color: var(--txt2); font-style: italic; margin-bottom: 8px; line-height: 1.45;">"NotebookLM export is a game-changer for study."</div>
+              <div style="font-size: 10px; font-weight: 700; color: var(--cyan); margin: 0;">- Mark, CBS Student</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
-
-  <section class="persona-section reveal" style="padding: 20px 0 60px;">
-    <div class="container" style="max-width: 800px; display: flex; flex-direction: column; gap: 24px;">
-      <div style="display: flex; align-items: center; gap: 16px; background: rgba(59, 113, 184, 0.08); border: 1px solid rgba(59, 113, 184, 0.2); padding: 16px 20px; border-radius: var(--rad-l);">
-        <img src="assets/icon_website_brk.png" alt="Birk" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;" />
-        <div>
-          <h4 style="font-size: 15px; font-weight: 700; color: var(--txt); margin-bottom: 4px;">Hi, I'm Birk.</summary>
-          <p style="font-size: 13px; color: var(--txt2); line-height: 1.5;">I'm studying BSc in Business Administration and Information Systems at Copenhagen Business School. I got tired of clicking 'Download' 500 times a semester, so I built this. It's 100% free, open-source, and never tracks you.</p>
-        </details>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
-          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"Saved me 3 hours of downloading before finals."</div>
-          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- Sarah, Bio Major</div>
-        </div>
-        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
-          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"It literally took 2 clicks to backup my entire degree."</div>
-          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- David, CS Student</div>
-        </div>
-        <div style="background: var(--surf); border: 1px solid var(--border); padding: 16px; border-radius: var(--rad-l);">
-          <div style="font-size: 12px; color: var(--txt2); font-style: italic; margin-bottom: 8px;">"NotebookLM conversion is a game-changer for study."</div>
-          <div style="font-size: 11px; font-weight: 700; color: var(--txt3);">- Mark, Econ Major</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  
   <hr class="div" />
 
   <!-- DOWNLOAD MODE -->
@@ -2443,7 +2490,8 @@
             Read the source on GitHub
           </a>
         </details>
-</div>
+
+      </div>
     </div>
   </section>
 
@@ -2482,9 +2530,8 @@
               </svg>
               Download Windows Installer
             </a>
-            <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings -
-              Apps.</p>
-            </div></div>
+            <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings - Apps.</p>
+          </div>
         </div>
 
         <!-- Mac -->
@@ -2512,41 +2559,17 @@
               </svg>
               Download macOS Beta (.dmg)
             </a>
-            <p class="dl-subtitle">Apple Silicon only · Intel Macs not supported.</p>
-            <div
-              style="background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.22);border-radius:var(--rad);padding:14px;margin-bottom:12px;">
-              <div
-                style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:10px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
+            <div class="requirements-box" style="margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--txt2); background: var(--surf2);">
+              <div style="font-weight: 700; color: var(--txt); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cyan);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 Requirements
               </div>
-              <div style="display:flex;flex-direction:column;gap:7px;">
-                <div
-                  style="display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--txt2);line-height:1.5;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span><strong style="color:var(--txt)">Apple Silicon Mac</strong> - M1 or later (M1, M2, M3, M4…).
-                    Intel Macs are not supported.</span>
-                </div>
-                <div
-                  style="display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--txt2);line-height:1.5;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span><strong style="color:var(--txt)">Google Chrome must be installed</strong> - The app renders its
-                    UI inside Chrome. Safari and other browsers are not supported.</span>
-                </div>
-              </div>
+              <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
+                <li><strong>Apple Silicon Mac</strong>: M1, M2, M3, M4... (Intel Macs are not supported).</li>
+                <li><strong>Google Chrome</strong> must be installed (the app renders its UI using Chrome).</li>
+              </ul>
             </div>
-            
           </div>
         </div>
       </div>
@@ -2557,10 +2580,10 @@
           <h3>Getting your Canvas API token</h3>
           <p>Canvas Downloader talks directly to your university's Canvas server using your own API token. Here's exactly how to get it.</p>
           <div class="token-steps">
-            <div style="width: 100%; height: 200px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad); display: flex; align-items: center; justify-content: center; color: var(--txt3); font-size: 13px; font-weight: 600; font-style: italic; margin-bottom: 16px;">
+            <div style="width: 100%; height: 220px; background: var(--surf2); border: 1px dashed var(--border); border-radius: var(--rad); display: flex; align-items: center; justify-content: center; color: var(--txt3); font-size: 13px; font-weight: 600; font-style: italic; margin-bottom: 16px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
               [ Placeholder: 3-step graphic or screen-recording GIF ]
             </div>
-            <p style="font-size: 13px; color: var(--txt2); margin-top: 10px;">For a more detailed walkthrough, check out our <a href="#" style="color: var(--cyan); text-decoration: underline;">built-in tutorial</a> or watch the <a href="#" style="color: var(--cyan); text-decoration: underline;">YouTube video</a>.</p>
+            <p style="font-size: 13px; color: var(--txt2); margin-top: 10px;">For a more detailed walkthrough, check out our <a href="guide.html#canvas-token" style="color: var(--cyan); text-decoration: underline;">built-in tutorial</a> or watch the <a href="#" style="color: var(--cyan); text-decoration: underline;">YouTube video</a>.</p>
           </div>
         </div>
         <div>
@@ -2576,7 +2599,8 @@
             <div class="perm-row"><span class="no">-</span> Admin or instructor features: not accessible</div>
           </div>
         </div>
-      </div></div>
+      </div>
+    </div>
   </section>
 
   <hr class="div" />
@@ -2634,6 +2658,8 @@
           <p>Open an issue on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues"
               target="_blank" rel="noopener">GitHub Issues</a>. Pull requests welcome.</p>
         </details>
+      </div>
+    </div>
   </section>
 
   <!-- FOOTER -->
