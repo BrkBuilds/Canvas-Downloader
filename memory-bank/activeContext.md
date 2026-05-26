@@ -11,10 +11,10 @@
 
 ## Recent Activity
 - **Session 2026-05-26: Website Revamp & Onboarding Overhaul**
-    - **Post-Download Redirects**: Implemented custom pages `thanks-win.html` and `thanks-mac.html` in `docs/` containing non-intimidating, step-by-step illustrations for bypassing OS warnings (SmartScreen / Gatekeeper).
-    - **Landing Page Modernization**: Revamped the hero section on `index.html` with a product visual placeholder and direct references to exporting to AI services like NotebookLM, ChatGPT, and Claude. Removed all scary security warnings from the main landing page.
-    - **Action Logic & CTAs**: Configured all home page download links with delay triggers to redirect users to post-download pages, and updated download CTAs to premium solid "Canvas Blue" button styling.
-    - **Trust Section Integration**: Embedded a personal creator section featuring Birk (BSc at Copenhagen Business School) along with responsive student feedback testimonials to build credibility.
+    - **Layout Restoration & Tag Balancing**: Resolved layout issues caused by global tag replacements. Built a precise DOM bracket-matching tag parser in Python to safely isolate block-level changes. Restored original baselines and verified that all 12 FAQ/Security accordion tags and `<div` blocks are symmetrically balanced.
+    - **Much Larger Product GIF**: Overrode legacy CSS size limits and adjusted the `.hero-inner` grid columns from `1fr 1fr` to `1fr 1.3fr` (allocating 57% of screen width to the visual area), allowing the looping product demo GIF container to scale up to `640px` wide.
+    - **Unified CBS Creator Card**: Merged the Birk (BSc at CBS) introduction block and the three student testimonial boxes side-by-side inside a single, border-matched translucent background card inside the Hero section container.
+    - **Post-Download Redirects**: Implemented `thanks-win.html` and `thanks-mac.html` in `docs/` containing non-intimidating, step-by-step instructions for bypassing OS warnings (SmartScreen / Gatekeeper). Configured delay triggers on landing page download buttons to redirect on click.
     - **Simplified Token & FAQS**: Overhauled the API token onboarding layout with visual steps, and converted security details and FAQ sections into collapsibles using native `<details>` and `<summary>` styling.
     - **Guide Clean-Up**: Streamlined the layout of `docs/guide.html` by hiding detailed technical specs (The Hidden Database, Required software, Syncing & Download Settings) under accordion-style details blocks.
 

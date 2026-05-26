@@ -1,11 +1,11 @@
 ## Latest Updates
 
 - [x] **Website Revamp & Trust Overhaul** (2026-05-26):
-    - [x] **Dedicated Post-Download Pages**: Created modern post-download redirect pages (`thanks-win.html` and `thanks-mac.html`) detailing how to bypass OS warnings (SmartScreen and Gatekeeper) step-by-step.
-    - [x] **Hero Section Revamp**: Modernized the hero section of `docs/index.html` with a demo visual placeholder, bold NotebookLM/ChatGPT conversion highlights, and Canvas Blue CTA download buttons.
-    - [x] **Onboarding Trust and Security**: Added an intuitive, CBS-themed creator persona section featuring Birk from Copenhagen Business School to build credibility. Redesigned the API token onboarding with visual guides and safety assurances.
-    - [x] **Accordion FAQs & Security Cards**: Converted massive static security boxes and FAQ lists in `index.html` into collapsible `<details>` accordion elements to drastically clean up the home page.
-    - [x] **Simplified Guide Pages**: Cleaned up the technical documentation layout in `docs/guide.html` by placing complex sections ("The Hidden Database", "Required software", and "Syncing & Download Settings") behind collapsible `<details>` toggles.
+    - [x] **Layout Restoration & Tag Balancing**: Engineered a precise DOM bracket-matching tag parser in Python to safely modify large HTML files. Re-checked out pristine baselines and surgically applied revamps, mathematically verifying all 12 FAQ/Security accordion tags and `<div` blocks are symmetrically balanced.
+    - [x] **Much Larger Demo GIF**: Modified the `.hero-inner` grid columns from `1fr 1fr` to `1fr 1.3fr` (allocating 57% of screen width to the GIF). Overrode legacy size constraints on `.hero-icon-wrap`, enabling the video/GIF placeholder container to scale dynamically up to `640px` wide on desktop.
+    - [x] **Unified Creator & Social Proof Card**: Merged the Birk (BSc at CBS) introduction block and the three student testimonial boxes side-by-side inside a single, cohesive translucent background container, maximizing onboarding visual rhythm.
+    - [x] **Dedicated Post-Download Redirects**: Implemented `thanks-win.html` and `thanks-mac.html` post-download redirect pages for bypass walkthroughs, and removed all smartscreen/gatekeeper warnings from the landing page.
+    - [x] **Simplified Guide Pages**: Cleaned up the technical documentation in `docs/guide.html` by encapsulating complex sections ("The Hidden Database", "Required software", and "Syncing & Download Settings") under collapsible `<details>` toggles.
 
 - [x] **Amber Warning Spacing Polish** (2026-05-22):
     - [x] **Notice Card Spacing**: Added 10px spacing below amber/gold notice cards by increasing bottom margin from 2px to 12px in `ui/amber_notice.py` to prevent notices from sitting directly on top of action buttons and subsequent elements.
