@@ -131,21 +131,35 @@
   <div class="hero">
     <div class="container">
       <h1>Awesome, your download has started! 🎉</h1>
-      <p class="sub">Because this is a free, indie app, macOS will show a Gatekeeper warning. Here is how to open it safely in 10 seconds.</p>
+      <p class="sub">Because Canvas Downloader is an indie app, macOS requires a specific way to open it the very first time. Here is the 10-second guide.</p>
       
       <div class="app-card">
-        <div class="placeholder-gif">
-          [ Placeholder: Looping GIF of "Right-click -> Open" ]
+        <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: left; display: flex; gap: 12px; align-items: flex-start;">
+          <div style="background: rgba(139, 92, 246, 0.15); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #a78bfa; font-weight: bold; flex-shrink: 0; font-size: 14px; margin-top: 2px;">!</div>
+          <div>
+            <strong style="color: #a78bfa; font-size: 14px; display: block; margin-bottom: 4px;">Apple Silicon Only</strong>
+            <p style="font-size: 13px; color: var(--txt2); margin: 0;">This beta is built for M1/M2/M3/M4 Macs. It will not run on older Intel Macs.</p>
+          </div>
         </div>
-        <ul class="steps">
-          <li><strong>1.</strong> Locate the downloaded App in your Downloads folder.</li>
-          <li><strong>2.</strong> Hold down the Control key and click the app icon, then choose "Open" from the shortcut menu.</li>
-          <li><strong>3.</strong> Click "Open" in the dialog box. You only have to do this once!</li>
+
+        <ul class="steps" style="margin-top: 0;">
+          <li><strong>1. Open the DMG:</strong> Double-click the downloaded <code>.dmg</code> file to mount it.</li>
+          <li><strong>2. Install:</strong> Drag the <strong>Canvas Downloader</strong> icon into the Applications folder.</li>
+          <li><strong>3. The Gatekeeper Bypass:</strong> Go to your Applications folder. <strong>Right-click</strong> (or Control-click) the app and select <strong>Open</strong>.</li>
+          <li><strong>4. Confirm:</strong> macOS will show a warning about an unidentified developer. Click <strong>Open</strong> again.</li>
         </ul>
+        <p style="font-size: 13px; color: var(--txt3); margin-top: 20px; text-align: left; padding-top: 16px; border-top: 1px solid var(--border);">You only have to do the Right-click trick once. After that, you can launch it normally from Launchpad.</p>
       </div>
       
-      <a href="Canvas_Downloader_macOS.zip" class="btn-dl">If the download didn't start automatically, click here</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_macOS.dmg" class="btn-dl">If the download didn't start automatically, click here</a>
     </div>
   </div>
+
+  <script>
+    // Auto-trigger the download shortly after page load
+    setTimeout(() => {
+      window.location.href = 'https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_macOS.dmg';
+    }, 600);
+  </script>
 </body>
 </html>
