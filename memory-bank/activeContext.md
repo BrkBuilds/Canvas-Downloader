@@ -10,6 +10,14 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-05-26: Website Revamp & Onboarding Overhaul**
+    - **Post-Download Redirects**: Implemented custom pages `thanks-win.html` and `thanks-mac.html` in `docs/` containing non-intimidating, step-by-step illustrations for bypassing OS warnings (SmartScreen / Gatekeeper).
+    - **Landing Page Modernization**: Revamped the hero section on `index.html` with a product visual placeholder and direct references to exporting to AI services like NotebookLM, ChatGPT, and Claude. Removed all scary security warnings from the main landing page.
+    - **Action Logic & CTAs**: Configured all home page download links with delay triggers to redirect users to post-download pages, and updated download CTAs to premium solid "Canvas Blue" button styling.
+    - **Trust Section Integration**: Embedded a personal creator section featuring Birk (BSc at Copenhagen Business School) along with responsive student feedback testimonials to build credibility.
+    - **Simplified Token & FAQS**: Overhauled the API token onboarding layout with visual steps, and converted security details and FAQ sections into collapsibles using native `<details>` and `<summary>` styling.
+    - **Guide Clean-Up**: Streamlined the layout of `docs/guide.html` by hiding detailed technical specs (The Hidden Database, Required software, Syncing & Download Settings) under accordion-style details blocks.
+
 - **Session 2026-05-20: Comprehensive Launch Readiness Audit**
     - **Static Systems Audit**: Conducted detailed inspections on formatting, styles, safety, and compatibility rules defined in `verify_architecture.py`.
     - **Rule Compliance Verification**: Verified that:
