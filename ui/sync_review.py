@@ -28,6 +28,19 @@ from ui_helpers import (
     get_base64_image,
     esc,
 )
+
+
+def _checkbox_default(key: str) -> bool:
+    """Return the correct unchecked/checked default for a sync checkbox key.
+
+    ``sync_locdel_`` and ``sync_updmod_`` categories start unchecked (False)
+    because the user probably doesn't want locally-deleted re-downloads or
+    modified-file overwrites by default.  All other categories (new, upd)
+    start checked (True).
+    """
+    if key.startswith('sync_locdel_') or key.startswith('sync_updmod_'):
+        return False
+    return True
 from core.state_registry import cleanup_sync_state
 from ui_shared import HELP_ICONS
 
@@ -734,14 +747,14 @@ def show_analysis_review(on_confirm_sync):
                             btn_key = f"sync_filter_btn_{safe_ext}"
 
                             if total > 0:
-                                selected = sum(1 for k in ext_files if st.session_state.get(k, True))
+                                selected = sum(1 for k in ext_files if st.session_state.get(k, _checkbox_default(k)))
                             else:
                                 selected = 0
 
                             def _on_unit_click(ext_name=ext):
                                 e_files = [k for k in files_by_ext[ext_name] if k.startswith('sync_')]
                                 tot = len(e_files)
-                                sel = sum(1 for k in e_files if st.session_state.get(k, True))
+                                sel = sum(1 for k in e_files if st.session_state.get(k, _checkbox_default(k)))
                                 new_val = False if sel == tot else True
                                 for k in e_files:
                                     st.session_state[k] = new_val
@@ -1447,7 +1460,7 @@ def show_analysis_review(on_confirm_sync):
             # Locally Deleted Files (Student deleted locally to save space)
             if result.locally_deleted_files:
                 total_locdel = len(result.locally_deleted_files)
-                selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", True))
+                selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", False))
                 
                 
 
@@ -1730,7 +1743,7 @@ def inject_dynamic_sync_review_css():
             
         if result.locally_deleted_files:
             total_locdel = len(result.locally_deleted_files)
-            selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{cid}_{f.canvas_file_id}", True))
+            selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{cid}_{f.canvas_file_id}", False))
             css_blocks.append(f"""
             div[class*="st-key-cat_deleted_local_{cid}"] div[data-testid="stExpander"] details summary p::after {{
                 content: "\\00a0\\00a0 ({selected_locdel} / {total_locdel} selected)"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;

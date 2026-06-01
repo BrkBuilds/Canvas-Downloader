@@ -261,7 +261,7 @@ def run_sync():
                     <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{esc(course_name)}</h3>
                 </div>
                 """
-                status_text.markdown(header_html, unsafe_allow_html=True)
+                status_text.html(header_html)
                 
                 # Re-hydration Injection
                 course = res_data.get('course')
