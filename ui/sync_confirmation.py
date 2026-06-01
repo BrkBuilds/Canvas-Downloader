@@ -123,7 +123,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     _css_block = (
         f'<style>'
         f'/* Override modal styles */'
-        f'div[data-testid="stDialog"] [data-testid="stVerticalBlock"] {{'
+        f'div[data-testid="stDialog"] > div[data-testid="stAppViewBlockContainer"] > div > [data-testid="stVerticalBlock"] {{'
         f'padding: 25px !important;'
         f'gap: 0 !important;'
         f'}}'
