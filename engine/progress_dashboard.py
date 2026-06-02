@@ -211,7 +211,7 @@ def render_terminal_log(placeholders: DashboardPlaceholders, log_deque) -> None:
     """Render the terminal-style log widget from a deque of HTML-safe lines."""
     log_content = "<br>".join(reversed(list(log_deque)[-_LOG_MAX_LINES:])) if log_deque else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     placeholders.log.markdown(f'''
-    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+    <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {log_content}
     </div>
     ''', unsafe_allow_html=True)
@@ -310,7 +310,7 @@ def build_terminal_html(lines) -> str:
     """Return the terminal-log HTML as a string (for sync_ui.py)."""
     joined = "<br>".join(reversed(list(lines)[-_LOG_MAX_LINES:])) if lines else f"<span style='color: {theme.TEXT_SECONDARY};'>Waiting for files...</span>"
     return f"""
-    <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.6; height: 160px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+    <div style="background: {theme.BG_TERMINAL}; border: 1px solid {theme.BORDER_TERMINAL}; border-radius: 8px; padding: 15px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 0.85em; color: {theme.TERMINAL_TEXT}; line-height: 1.6; height: 160px; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
         {joined}
     </div>
     """
