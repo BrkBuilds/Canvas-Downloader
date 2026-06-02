@@ -50,6 +50,16 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         Tuple of (course, sync_mgr, manifest, canvas_files, result, detected)
         - all data needed by the caller, with no side effects.
     """
+    from canvas_debug import log_debug, clear_debug_log
+    _dbg = st.session_state.get('debug_mode', False)
+    debug_file = str(Path(local_folder) / 'debug_log.txt') if _dbg else None
+    if debug_file:
+        clear_debug_log(debug_file)
+        _mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
+        log_debug(f"=== Sync Analysis: {course_name} (ID: {course_id}) ===", debug_file)
+        log_debug(f"Mode: {_mode_label}", debug_file)
+        log_debug(f"Local folder: {local_folder}", debug_file)
+
     progress_hook(0, 1, "Connecting to Canvas API...")
     try:
         course = cm.canvas.get_course(course_id)
@@ -57,6 +67,8 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         raise RuntimeError(
             f"Could not fetch course '{course_name}' (ID {course_id}) from Canvas: {_gc_err}"
         ) from _gc_err
+    if debug_file:
+        log_debug(f"Connected to course: {getattr(course, 'name', course_name)}", debug_file)
 
     sync_mgr = SyncManager(str(local_folder), course_id, course_name)
 
@@ -64,6 +76,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     manifest = sync_mgr.load_manifest()
 
     # Load secondary content contract so analysis includes negative-ID entities
+    _sec_contract_source = "database"
     _raw_secondary = sync_mgr._load_metadata('secondary_content_contract')
     if _raw_secondary is not None:
         try:
@@ -76,7 +89,9 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 f"({_sec_err}); falling back to current session settings."
             )
             _raw_secondary = None
+            _sec_contract_source = "session state (DB corrupt)"
     if _raw_secondary is None:
+        _sec_contract_source = "session state (first sync)"
         # H-4: First-ever analysis for this pair — no DB contract yet.
         # Fall back to session state so the user's current settings are honoured,
         # then persist to DB so future syncs don't lose these settings.
@@ -98,6 +113,18 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 f"Failed to persist initial secondary content contract for course {course_id}: {_persist_err}"
             )
     _secondary_settings = _raw_secondary  # may still be empty dict — that's fine
+    if debug_file:
+        _enabled_sec = [
+            k.replace('download_', '') for k, v in (_secondary_settings or {}).items()
+            if v and k.startswith('download_')
+        ]
+        _isolate = (_secondary_settings or {}).get('isolate_secondary_content', True)
+        log_debug(
+            f"Secondary contract: source={_sec_contract_source} | "
+            f"enabled=[{', '.join(_enabled_sec) or 'none'}] | "
+            f"isolate={'yes' if _isolate else 'no'}",
+            debug_file,
+        )
 
     progress_hook(0, 1, "Fetching files from Canvas...")
     canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(
@@ -105,12 +132,18 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         progress_callback=progress_hook,
         secondary_content_settings=_secondary_settings,
     )
+    if debug_file:
+        log_debug(f"Fetched {len(canvas_files)} files from Canvas (secondary: {sec_fetch_status})", debug_file)
 
     progress_hook(1, 1, "Healing local sync manifest...")
     manifest = sync_mgr.heal_manifest(manifest)
+    if debug_file:
+        log_debug(f"Manifest healed | DB was reset: {sync_mgr.db_was_reset}", debug_file)
 
     progress_hook(1, 1, "Comparing files...")
     detected = sync_mgr.detect_structure()
+    if debug_file:
+        log_debug(f"Detected folder structure: {detected}", debug_file)
     # Pass the pre-built module_map so analyze_course skips the redundant
     # Canvas API fetch for module structure (Fix 1).
     result = sync_mgr.analyze_course(
@@ -119,6 +152,33 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         secondary_fetch_success=sec_fetch_status,
         module_map=module_map,
     )
+    if debug_file:
+        _nc = len(getattr(result, 'new_files', []) or [])
+        _uc_clean = len(getattr(result, 'updated_clean_files', []) or [])
+        _uc_mod = len(getattr(result, 'updated_modified_files', []) or [])
+        _dc = len(getattr(result, 'deleted_on_canvas', []) or [])
+        _lc = len(getattr(result, 'locally_deleted_files', []) or [])
+        log_debug(
+            f"Analysis complete: {_nc} new | {_uc_clean} clean updates | "
+            f"{_uc_mod} locally-edited updates | {_dc} deleted on Canvas | "
+            f"{_lc} deleted locally",
+            debug_file,
+        )
+        for _f in (getattr(result, 'new_files', []) or []):
+            _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+            log_debug(f"  [NEW]          {_fn}", debug_file)
+        for _f, _ in (getattr(result, 'updated_clean_files', []) or []):
+            _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+            log_debug(f"  [UPDATE-CLEAN] {_fn}", debug_file)
+        for _f, _ in (getattr(result, 'updated_modified_files', []) or []):
+            _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+            log_debug(f"  [UPDATE-EDIT]  {_fn}", debug_file)
+        for _si in (getattr(result, 'deleted_on_canvas', []) or []):
+            _fn = getattr(_si, 'canvas_filename', str(_si))
+            log_debug(f"  [CANVAS-DEL]   {_fn}", debug_file)
+        for _si in (getattr(result, 'locally_deleted_files', []) or []):
+            _fn = getattr(_si, 'canvas_filename', str(_si))
+            log_debug(f"  [LOCAL-DEL]    {_fn}", debug_file)
 
     return course, sync_mgr, manifest, canvas_files, result, detected
 
@@ -395,6 +455,34 @@ def run_analysis(sync_pairs, main_placeholder=None):
             actionable_updated_clean = apply_file_filter(result.updated_clean_files, current_filter, is_tuple=True)
             actionable_del = apply_file_filter(result.locally_deleted_files, current_filter, is_tuple=False)
 
+            # Debug: log Quick Sync auto-selection per course
+            if st.session_state.get('debug_mode'):
+                from canvas_debug import log_debug as _qs_log
+                _qs_dbg = str(Path(res_data['pair']['local_folder']) / 'debug_log.txt')
+                _qs_log(f"--- Quick Sync Auto-Selection: {res_data['pair']['course_name']} ---", _qs_dbg)
+                _qs_log(
+                    f"File filter: {current_filter} | "
+                    f"Selected: {len(actionable_new)} new, {len(actionable_updated_clean)} clean updates, {len(actionable_del)} locally-deleted re-downloads",
+                    _qs_dbg,
+                )
+                _qs_log(
+                    f"Skipped: {len(result.updated_modified_files or [])} locally-edited updates (require Review), "
+                    f"{len(result.deleted_on_canvas or [])} Canvas deletions (no action needed)",
+                    _qs_dbg,
+                )
+                for _f in actionable_new:
+                    _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+                    _qs_log(f"  [QS-SELECT-NEW]    {_fn}", _qs_dbg)
+                for _f, _ in actionable_updated_clean:
+                    _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+                    _qs_log(f"  [QS-SELECT-UPDATE] {_fn}", _qs_dbg)
+                for _si in actionable_del:
+                    _fn = getattr(_si, 'canvas_filename', str(_si))
+                    _qs_log(f"  [QS-SELECT-LOCDEL] {_fn}", _qs_dbg)
+                for _f, _ in (result.updated_modified_files or []):
+                    _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
+                    _qs_log(f"  [QS-SKIP-EDITED]   {_fn}", _qs_dbg)
+
             # Set session state keys for UI consistency (if user goes Back)
             for f in actionable_new:
                 st.session_state[f'sync_new_{cid}_{f.id}'] = True
@@ -448,7 +536,19 @@ def run_analysis(sync_pairs, main_placeholder=None):
             'edited': total_edited,
         }
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
-        
+
+        if st.session_state.get('debug_mode'):
+            from canvas_debug import log_debug as _qs_final_log
+            _qs_route = 'sync_complete (nothing to do)' if total_count == 0 else f'pre_sync ({total_count} files queued)'
+            for _res in all_results:
+                _qs_f = str(Path(_res['pair']['local_folder']) / 'debug_log.txt')
+                _qs_final_log(
+                    f"Quick Sync summary: {total_count} files queued | "
+                    f"skipped {total_edited} edited, {total_locdel} locally-deleted, {total_canvasdel} Canvas-deleted",
+                    _qs_f,
+                )
+                _qs_final_log(f"→ Routing to: {_qs_route}", _qs_f)
+
         if total_count == 0:
             # 2. Bypass directly to completion.
             # Do NOT pop sync_quick_mode here — show_sync_complete reads it
@@ -488,6 +588,20 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
         total_updated = total_updated_clean + total_updated_modified
         total_changes = total_new + total_updated + total_local_del
+
+        if st.session_state.get('debug_mode'):
+            from canvas_debug import log_debug as _rv_log
+            _rv_route = 'sync_complete (all up to date)' if total_changes == 0 else 'review screen (user selects files)'
+            for _res_d in all_results:
+                _rv_dbg = str(Path(_res_d['pair']['local_folder']) / 'debug_log.txt')
+                _rv_log(f"--- Review Mode Tally ---", _rv_dbg)
+                _rv_log(
+                    f"New: {total_new} | Clean updates: {total_updated_clean} | "
+                    f"Locally-edited: {total_updated_modified} | Locally-deleted: {total_local_del} | "
+                    f"Total changes: {total_changes}",
+                    _rv_dbg,
+                )
+                _rv_log(f"→ Routing to: {_rv_route}", _rv_dbg)
 
         if total_changes == 0:
             # Nothing to review - skip review step, go straight to completion

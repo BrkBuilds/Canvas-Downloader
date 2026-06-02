@@ -49,6 +49,7 @@ from ui_helpers import (
 )
 from styles import inject_css
 from engine.progress_dashboard import build_metrics_html, build_terminal_html, render_active_file
+from canvas_debug import log_debug
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,8 @@ def run_sync():
         
         cm = CanvasManager(sync_api_token, sync_api_url)
         cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
+        from canvas_debug import log_debug
+        _sync_debug_mode = st.session_state.get('debug_mode', False)
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
         
         # Respect global concurrency limit from session state (with safety clamp:
@@ -254,6 +257,20 @@ def run_sync():
                     error_list.append(f"Skipping {course_name}: Database failed to initialize.")
                     failed_files_for_pair.extend(sel.get('new', []) + sel.get('updates', []))
                     continue
+
+                # Set up local_path and debug_file early so all pair-level events are logged
+                local_path = sync_mgr.local_path
+                _debug_file = str(local_path / 'debug_log.txt') if _sync_debug_mode else None
+                if _debug_file:
+                    _sync_mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
+                    log_debug(f"=== Sync Execution: {course_name} | Mode: {_sync_mode_label} ===", _debug_file)
+                    log_debug(f"Pair {pair_idx + 1}/{total_pairs} | Folder: {local_path}", _debug_file)
+                    log_debug(
+                        f"Concurrency: {concurrent_limit} | "
+                        f"Max file size: {str(max_file_size_bytes // (1024 * 1024)) + ' MB' if max_file_size_bytes else 'disabled'}",
+                        _debug_file,
+                    )
+
                 _counter_html = f"<p style='margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;'>Syncing Course {pair_idx + 1}/{total_pairs}</p>" if total_pairs > 1 else ""
                 header_html = f"""
                 <div style="margin-bottom: 0.5rem;">
@@ -276,6 +293,8 @@ def run_sync():
                         error_list.append(err_str)
                         terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Reconnection failed: {esc(course_name)} ({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                        if _debug_file:
+                            log_debug(f"✗ Reconnection failed: {course_name}: {e}", _debug_file)
                         failed_files_for_pair.extend(sel.get('new', []))
                         continue
 
@@ -370,8 +389,10 @@ def run_sync():
                             # Log error if file is truly gone
                             error_list.append(f"File removed from Canvas before download: {sync_info.canvas_filename}")
 
-                local_path = sync_mgr.local_path
                 Path(make_long_path(local_path)).mkdir(parents=True, exist_ok=True)
+                if _debug_file:
+                    _pair_mb = sum(getattr(_f, 'size', 0) or 0 for _f in all_files) / (1024 * 1024)
+                    log_debug(f"Files queued: {len(all_files)} ({_pair_mb:.1f} MB)", _debug_file)
 
                 for file in all_files:
                     if is_sync_cancelled():
@@ -403,6 +424,8 @@ def run_sync():
                             f"<span style='color:{theme.TEXT_MUTED}'>({_f_mb:.1f} MB)</span></span>"
                         )
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                        if _debug_file:
+                            log_debug(f"⏭ Skipped (too large, {_f_mb:.1f} MB): {display_file_name}", _debug_file)
                         continue
 
                     # UNCONDITIONAL status text update - fires instantly for every file (no throttle)
@@ -499,6 +522,8 @@ def run_sync():
                             # ── Secondary Content Entities (Assignment, Quiz, etc.) ──
                             from sync_manager import is_secondary_id, secondary_id_type
                             _sec_entity_type = secondary_id_type(file.id)
+                            if _debug_file:
+                                log_debug(f"  Secondary [{_sec_entity_type}]: {display_file_name}", _debug_file)
                             if _sec_entity_type != 'attachment' and _sec_entity_type not in ('module_item', 'unknown'):
                                 # Load secondary contract for this pair
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
@@ -568,6 +593,8 @@ def run_sync():
                                     synced_details[pair_idx].append(sec_filepath.name)
                                     terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ Synced: </span>{esc(sec_filepath.name)}")
                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                    if _debug_file:
+                                        log_debug(f"✓ Secondary: {sec_filepath.name}", _debug_file)
 
                                     # ── Inject attachments into the async download queue ──
                                     # Attachments have REAL positive Canvas file IDs, so they
@@ -647,7 +674,12 @@ def run_sync():
                                             total_files += 1
                                             terminal_log.append(f"<span style='color:{theme.ACCENT_BLUE}'>📎 Queued: </span>{esc(att_filename)}")
                                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
-                                            
+                                            if _debug_file:
+                                                log_debug(
+                                                    f"  Attachment queued: {att_filename} → {getattr(att_info, '_target_local_path', '?')}",
+                                                    _debug_file,
+                                                )
+
                                     # ACID Fix: Delay DB commit until attachments are safely queued
                                     if sync_mgr and sec_id and canvas_updated is not None:
                                         try:
@@ -668,6 +700,8 @@ def run_sync():
                                     terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>⚠️ Skipped: </span>{esc(display_file_name)}")
                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                     error_list.append(f"Skipped secondary entity: {display_file_name}")
+                                    if _debug_file:
+                                        log_debug(f"⚠ Skipped secondary: {display_file_name}", _debug_file)
                                 continue
 
                             # ── Legacy Synthetic Shortcuts (Pages, External URLs) ──
@@ -711,9 +745,25 @@ def run_sync():
                                 synced_details[pair_idx].append(display_file_name)
                                 terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ Recreated: </span>{esc(display_file_name)}")
                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                if _debug_file:
+                                    _sc_type = "URL shortcut" if is_url_ext else "HTML redirect"
+                                    log_debug(f"✓ Shortcut ({_sc_type}): {display_file_name}", _debug_file)
                                 continue
-                                
+
                             continue # Ensure Legacy Synthetic block definitively skips binary downloader
+
+                        if _debug_file:
+                            _rtype = (
+                                "modified update (_NewVersion)" if is_update_modified else
+                                "clean update (overwrite)" if is_update_clean else
+                                "redownload (overwrite)" if is_redownload else
+                                "new file"
+                            )
+                            try:
+                                _rel = filepath.relative_to(local_path)
+                            except ValueError:
+                                _rel = filepath
+                            log_debug(f"  → [{_rtype}] {display_file_name} → {_rel}", _debug_file)
 
                         # Refresh download URL from Canvas API (signed URLs expire quickly)
                         download_url = file.url
@@ -817,6 +867,8 @@ def run_sync():
                                                     synced_details[pair_idx].append(final_name)
                                                     terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ </span>{esc(final_name)}")
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                    if _debug_file:
+                                                        log_debug(f"✓ {final_name}", _debug_file)
                                                 finally:
                                                     # GUARD: Always clean up .part if rename didn't complete
                                                     # Catches: write errors, network drops, disk-full, any exception
@@ -838,6 +890,8 @@ def run_sync():
                                                     should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Rate limited: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry in {should_sleep_duration}s)</span>")
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                if _debug_file:
+                                                    log_debug(f"Rate limited: {display_file_name} (retry in {should_sleep_duration}s, attempt {attempt + 1}/{SYNC_MAX_RETRIES})", _debug_file)
                                             
                                             elif 500 <= response.status < 600:
                                                 # Server error - retry with exponential backoff
@@ -845,12 +899,19 @@ def run_sync():
                                                 if attempt < SYNC_MAX_RETRIES - 1:
                                                     terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Server error ({response.status}): </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                    if _debug_file:
+                                                        log_debug(
+                                                            f"  Server {response.status}: {display_file_name} (retry {attempt + 1}/{SYNC_MAX_RETRIES}, wait {should_sleep_duration}s)",
+                                                            _debug_file,
+                                                        )
                                                 else:
                                                     # Max retries exhausted for 5xx
                                                     failed_files_for_pair.append(file)
                                                     error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status} after {SYNC_MAX_RETRIES} retries")
                                                     terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                    if _debug_file:
+                                                        log_debug(f"✗ Server {response.status}: {display_file_name} (exhausted {SYNC_MAX_RETRIES} retries)", _debug_file)
                                                     break
                                             
                                             else:
@@ -859,6 +920,8 @@ def run_sync():
                                                 error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status}")
                                                 terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status})</span>")
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                if _debug_file:
+                                                    log_debug(f"✗ HTTP {response.status}: {display_file_name}", _debug_file)
                                                 break  # Don't retry client errors
                                 
                                 except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
@@ -867,11 +930,18 @@ def run_sync():
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                         terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Network error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
                                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                        if _debug_file:
+                                            log_debug(
+                                                f"  Network error: {display_file_name} (retry {attempt + 1}/{SYNC_MAX_RETRIES}): {net_err}",
+                                                _debug_file,
+                                            )
                                     else:
                                         failed_files_for_pair.append(file)
                                         error_list.append(f"Error syncing {esc(display_file_name)}: Network error: {net_err}")
                                         terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
                                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                        if _debug_file:
+                                            log_debug(f"✗ Network error: {display_file_name}: {net_err}", _debug_file)
                                         break
                                         
                                 # WE ARE NOW OUTSIDE THE SEMAPHORE LOCK
@@ -891,12 +961,16 @@ def run_sync():
                             error_list.append(f"Error syncing {esc(display_file_name)}: {esc(err_msg)}")
                             terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Skipped: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(err_msg)})</span>")
                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                            if _debug_file:
+                                log_debug(f"✗ No URL: {display_file_name} ({err_msg})", _debug_file)
 
                     except Exception as e:
                         failed_files_for_pair.append(file)
                         error_list.append(f"Error syncing {esc(display_file_name)}: {esc(str(e))}")
                         terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                        if _debug_file:
+                            log_debug(f"✗ Exception: {display_file_name}: {e}", _debug_file)
                         
 
                 
@@ -1132,6 +1206,31 @@ def run_sync():
 
     st.session_state['is_post_processing'] = True
 
+    # Log post-processing phase per pair to each course's debug file
+    if st.session_state.get('debug_mode'):
+        for _pp_sel in sync_selections:
+            _pp_sm = _pp_sel.get('res_data', {}).get('sync_manager')
+            if not _pp_sm:
+                continue
+            _pp_dbg = str(_pp_sm.local_path / 'debug_log.txt')
+            _pp_name = friendly_course_name(_pp_sel['res_data']['pair']['course_name'])
+            _pp_contract = _pp_sel.get('res_data', {}).get('contract', {})
+            log_debug(f"--- Post-Processing: {_pp_name} ---", _pp_dbg)
+            _conv_status = {
+                'ZIP extract':  _pp_contract.get('convert_zip',   st.session_state.get('persistent_convert_zip',   False)),
+                'PPTX→PDF':     _pp_contract.get('convert_pptx',  st.session_state.get('persistent_convert_pptx',  False)),
+                'HTML→Markdown':_pp_contract.get('convert_html',  st.session_state.get('persistent_convert_html',  False)),
+                'Code→TXT':     _pp_contract.get('convert_code',  st.session_state.get('persistent_convert_code',  False)),
+                'URL compile':  _pp_contract.get('convert_urls',  st.session_state.get('persistent_convert_urls',  False)),
+                'Word→PDF':     _pp_contract.get('convert_word',  st.session_state.get('persistent_convert_word',  False)),
+                'Excel→PDF+Data':_pp_contract.get('convert_excel',st.session_state.get('persistent_convert_excel', False)),
+                'Video→MP3':    _pp_contract.get('convert_video', st.session_state.get('persistent_convert_video', False)),
+            }
+            _active_convs = [k for k, v in _conv_status.items() if v]
+            log_debug(f"Active converters: {', '.join(_active_convs) if _active_convs else 'none'}", _pp_dbg)
+            _pp_idx = _pp_sel['pair_idx']
+            log_debug(f"Synced files available for conversion: {len(synced_details.get(_pp_idx, []))}", _pp_dbg)
+
     # 3. Render cancel button
     cancel_placeholder.button(
         "Cancel Post-Processing",
@@ -1262,6 +1361,30 @@ def run_sync():
     # phase detection (used by show_sync_cancelled) doesn't misreport
     # the phase if a follow-on cancel arrives before cleanup_sync_state.
     st.session_state['is_post_processing'] = False
+
+    # Write per-pair completion summary to debug log
+    if st.session_state.get('debug_mode'):
+        for _fin_sel in sync_selections:
+            _fin_sm = _fin_sel.get('res_data', {}).get('sync_manager')
+            if not _fin_sm:
+                continue
+            _fin_dbg = str(_fin_sm.local_path / 'debug_log.txt')
+            _fin_name = friendly_course_name(_fin_sel['res_data']['pair']['course_name'])
+            _fin_idx = _fin_sel['pair_idx']
+            _fin_files = synced_details.get(_fin_idx, [])
+            log_debug(f"=== Sync Complete: {_fin_name} ===", _fin_dbg)
+            log_debug(
+                f"This pair: {len(_fin_files)} files synced | "
+                f"Total across all pairs: {synced_counter[0]} | "
+                f"Errors: {len(error_list)} | PP failures: {pp_ui.pp_failure_count}",
+                _fin_dbg,
+            )
+            for _fn in _fin_files:
+                log_debug(f"  [SYNCED] {_fn}", _fin_dbg)
+            if error_list:
+                log_debug(f"Errors ({len(error_list)}):", _fin_dbg)
+                for _err in error_list:
+                    log_debug(f"  [ERROR] {_err}", _fin_dbg)
 
     st.session_state['synced_count'] = synced_counter[0]
     st.session_state['synced_bytes'] = synced_counter[1]
