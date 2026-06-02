@@ -1281,6 +1281,9 @@ class CanvasManager:
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
 
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        current_ctx = get_script_run_ctx()
+
         # Check disk space using the caller-supplied per-course estimate.
         # Fall back to the session-state aggregate only as a last resort so we
         # don't silently skip the check when no estimate was provided.
@@ -1639,7 +1642,7 @@ class CanvasManager:
                                                     t_id = getattr(topic, 'id', 0)
                                                     title = getattr(topic, 'title', 'Untitled Discussion')
                                                     message = getattr(topic, 'message', '') or ''
-                                                    message += await asyncio.to_thread(self._build_discussion_replies_html_sync, topic, debug_file)
+                                                    message += await asyncio.to_thread(safe_thread_wrapper, self._build_discussion_replies_html_sync, current_ctx, topic, debug_file)
                                                     updated_at = (getattr(topic, 'last_reply_at', '')
                                                                   or getattr(topic, 'updated_at', '') or '')
 
