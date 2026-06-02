@@ -638,32 +638,12 @@ with _main_content.container():
                         else:
                             filtered_files.append(f)
                             
-                    total_items += len(filtered_files)
-                    
-                    # Add non-file items if mode is flat and filter is not study
-                    if st.session_state['download_mode'] == 'flat' and st.session_state['file_filter'] != 'study':
-                        try:
-                            modules = course.get_modules()
-                            for module in modules:
-                                items = module.get_module_items()
-                                for item in items:
-                                    if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
-                                        total_items += 1
-                        except Exception as _mod_count_err:
-                            logger.warning(f"Analysis: module item count failed for '{course.name}': {_mod_count_err}")
+                    # Calculate accurate file count by excluding synthetic secondary items (id < 0)
+                    # from the initial total_items count. These items, along with Pages/Links, 
+                    # self-increment total_items during the download phase.
+                    initial_file_count = sum(1 for f in filtered_files if getattr(f, 'id', 1) > 0)
+                    total_items += initial_file_count
 
-                    # Add module items if mode is modules
-                    if st.session_state['download_mode'] == 'modules':
-                        try:
-                            modules = course.get_modules()
-                            for module in modules:
-                                items = module.get_module_items()
-                                for item in items:
-                                    if item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
-                                        if st.session_state['file_filter'] != 'study':
-                                            total_items += 1
-                        except Exception as _mod_count_err:
-                            logger.warning(f"Analysis: module item count failed for '{course.name}': {_mod_count_err}")
                     
                     # Guard against API returning literal None for size which breaks sum()
                     total_mb += sum((getattr(f, 'size', 0) or 0) for f in filtered_files) / (1024 * 1024)
