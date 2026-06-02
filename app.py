@@ -496,9 +496,12 @@ with _main_content.container():
         
         # Safety check: ensure download state exists
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
-            st.error('Download state not initialized. Please go back and try again.')
-            if st.button('Go Back to Settings', key="page_nav_back_to_settings"):
-                st.session_state['step'] = 2
+            _is_sync = st.session_state.get('current_mode') == 'sync'
+            _err_msg = 'Sync state not initialized.' if _is_sync else 'Download state not initialized.'
+            st.error(f'{_err_msg} Please go back and try again.')
+            _btn_label = 'Go Back to Sync Hub' if _is_sync else 'Go Back to Settings'
+            if st.button(_btn_label, key="page_nav_back_to_settings"):
+                st.session_state['step'] = 1 if _is_sync else 2
                 st.rerun()
             st.stop()
         
