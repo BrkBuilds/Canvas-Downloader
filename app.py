@@ -923,6 +923,16 @@ with _main_content.container():
                     'download_submissions': st.session_state.get('persistent_dl_submissions', False),
                     'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
                 }
+                if st.session_state.get('debug_mode', False):
+                    from canvas_debug import log_debug as _app_log
+                    _dl_dbg = str(Path(st.session_state['download_path']) / 'debug_log.txt')
+                    _pp_active = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
+                    _sec_active = [k.replace('download_', '') for k, v in _secondary_settings.items() if v and k.startswith('download_')]
+                    _app_log(f"=== Download Start: {course.name} | Course {current_idx + 1}/{total} ===", _dl_dbg)
+                    _app_log(f"Mode: {st.session_state['download_mode']} | Filter: {st.session_state.get('file_filter', 'all')}", _dl_dbg)
+                    _app_log(f"Post-processing: [{', '.join(_pp_active) or 'none'}]", _dl_dbg)
+                    _app_log(f"Secondary content: [{', '.join(_sec_active) or 'none'}]", _dl_dbg)
+
                 try:
                     asyncio.run(cm.download_course_async(
                         course,
@@ -996,6 +1006,18 @@ with _main_content.container():
                         error_log_path=Path(st.session_state['download_path']) if st.session_state.get('error_log_enabled', False) else None,
                         mode='download',
                     )
+                    if debug_file:
+                        from canvas_debug import log_debug as _pp_fin_log
+                        _pp_active_done = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
+                        _dl_count_done = len(st.session_state.get('download_file_details', {}).get(course.name, []))
+                        _err_count_done = len(st.session_state.get('download_errors_list', []))
+                        _pp_fin_log(
+                            f"=== Course Finished: {course.name} | "
+                            f"Downloaded: {_dl_count_done} items | Errors: {_err_count_done} ===",
+                            str(debug_file),
+                        )
+                        if _has_pp:
+                            _pp_fin_log(f"Post-processing ran: [{', '.join(_pp_active_done) or 'none'}]", str(debug_file))
                 # --- End Post-Download Conversion Pipeline ---
                 # Reset post-processing flag now that PP for this course is done.
                 # If we cancel during the NEXT course's download (before its PP
