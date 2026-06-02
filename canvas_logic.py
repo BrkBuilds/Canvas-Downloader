@@ -1358,7 +1358,35 @@ class CanvasManager:
                 self._max_file_size_bytes = None
         except Exception:
             self._max_file_size_bytes = None
-        
+
+        if debug_mode:
+            _sz_label = f"{self._max_file_size_bytes // (1024 * 1024)} MB" if self._max_file_size_bytes else "disabled"
+            log_debug(
+                f"Filter: {file_filter} | Concurrency: {concurrent_limit} | "
+                f"Max file size: {_sz_label} | Estimated payload: {_estimated_mb:.0f} MB",
+                debug_file,
+            )
+            if secondary_content_settings:
+                _sec_en = [
+                    k.replace('download_', '') for k, v in secondary_content_settings.items()
+                    if v and k.startswith('download_')
+                ]
+                _iso = secondary_content_settings.get('isolate_secondary_content', True)
+                log_debug(
+                    f"Secondary content: [{', '.join(_sec_en) or 'none'}] | isolate={'yes' if _iso else 'no'}",
+                    debug_file,
+                )
+            else:
+                log_debug("Secondary content: disabled", debug_file)
+            if post_processing_settings:
+                _pp_en = [
+                    k.replace('convert_', '') for k, v in post_processing_settings.items()
+                    if v and k.startswith('convert_')
+                ]
+                log_debug(f"Post-processing: [{', '.join(_pp_en) or 'none'}]", debug_file)
+            else:
+                log_debug("Post-processing: none", debug_file)
+
         tasks = []
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
         connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit)
@@ -1745,6 +1773,12 @@ class CanvasManager:
                     for k in SECONDARY_CONTENT_DEFAULTS
                     if k.startswith('download_')
                 ):
+                    if debug_mode:
+                        _sec_active = [
+                            k.replace('download_', '') for k, v in secondary_content_settings.items()
+                            if v and k.startswith('download_')
+                        ]
+                        log_debug(f"--- Secondary Content Phase: [{', '.join(_sec_active)}] ---", debug_file)
                     try:
                         await self._download_secondary_content(
                             course, base_path, sem, session,
@@ -1763,6 +1797,15 @@ class CanvasManager:
                             progress_callback(err, progress_type='error')
                         self._log_error(save_dir, err)
                 # ---- SECONDARY CONTENT DOWNLOAD ENDED ----
+
+                if debug_mode:
+                    _total_dl_count = len(downloaded_files_info)
+                    _total_mb_dl = mb_tracker.get('bytes_downloaded', 0) / (1024 * 1024)
+                    log_debug(
+                        f"--- Download Complete: {course.name} | "
+                        f"{_total_dl_count} items | {_total_mb_dl:.1f} MB downloaded ---",
+                        debug_file,
+                    )
 
             except Exception as e:
                  is_unauthorized = "unauthorized" in str(e).lower() or (hasattr(e, 'status_code') and e.status_code == 401)

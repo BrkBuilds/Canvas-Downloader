@@ -1517,6 +1517,26 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             pointer-events: none !important;
         }
 
+        /* ── Debug toggle: push to bottom of errlog card + dim ── */
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] {
+            flex: 1 !important;
+        }
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child {
+            margin-top: auto !important;
+            padding-top: 8px !important;
+            border-top: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child [data-testid="stToggle"] {
+            opacity: 0.4 !important;
+        }
+        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child [data-testid="stToggle"] label {
+            font-size: 0.58rem !important;
+        }
+
         /* ── Folder buttons ── */
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button,
         div[data-testid="stDialog"] div.st-key-stg_btn_clear button {
@@ -1573,6 +1593,33 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 with st.container(border=True, key="stg_card_errlog"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Error log file</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Create a <code style="font-size:0.72rem;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">download_errors.txt</code> summarizing any failed downloads or conversion errors in the output folder.</div></div>""")
                     temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', False), key="temp_error_log_enabled")
+                    
+                    st.html("""
+                    <div style="margin-top: 10px; margin-bottom: 2px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;"></div>
+                    <style>
+                    div.st-key-temp_debug_mode {
+                        opacity: 0.55;
+                        transition: opacity 0.2s;
+                        transform: scale(0.9);
+                        transform-origin: left center;
+                    }
+                    div.st-key-temp_debug_mode:hover,
+                    div.st-key-temp_debug_mode:has(input:checked),
+                    div.st-key-temp_debug_mode:has([aria-checked="true"]) {
+                        opacity: 1 !important;
+                    }
+                    div.st-key-temp_debug_mode p {
+                        font-size: 0.85rem !important;
+                    }
+                    </style>
+                    """)
+                    
+                    temp_debug_mode = st.toggle(
+                        "Save debug log",
+                        value=st.session_state.get('debug_mode', False),
+                        key="temp_debug_mode",
+                        help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder — not needed for normal use."
+                    )
 
             # ── SAVE FOLDER ───────────────────────────────────────────
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
@@ -1619,6 +1666,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_clock}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Time format</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Display all times in 12-hour AM/PM format instead of the default 24-hour clock.</div></div>""")
                     temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
 
+            st.html("""<div style='padding: 8px 0 0 0;'></div>""")
             # L-13: Sync history retention — exposed so power users who sync
             # multiple times daily can extend beyond the default 50 entries.
             with st.container(border=True, key="stg_card_history"):
@@ -1649,6 +1697,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
                     or temp_notifications != st.session_state.get('notifications_enabled', True)
                     or temp_error_log != st.session_state.get('error_log_enabled', False)
+                    or temp_debug_mode != st.session_state.get('debug_mode', False)
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                     or int(temp_history_retention) != int(st.session_state.get('sync_history_retention', 50))
@@ -1660,6 +1709,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['max_file_size_mb'] = int(temp_size_mb)
                 st.session_state['notifications_enabled'] = temp_notifications
                 st.session_state['error_log_enabled'] = temp_error_log
+                st.session_state['debug_mode'] = temp_debug_mode
                 st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
                 st.session_state['sync_history_retention'] = int(temp_history_retention)
@@ -1687,6 +1737,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['max_file_size_mb'] = int(temp_size_mb)
                 config_data['notifications_enabled'] = bool(temp_notifications)
                 config_data['error_log_enabled'] = bool(temp_error_log)
+                config_data['debug_mode'] = bool(temp_debug_mode)
                 config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
                 config_data['sync_history_retention'] = int(temp_history_retention)
@@ -1715,11 +1766,23 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     user_name = st.session_state.get('user_name', '')
     display_user = user_name.replace("Logged in as:", "").replace("Logged in as", "").strip()
 
+    _active_exec_statuses = {'scanning', 'running', 'isolated_retry', 'analyzing', 'syncing', 'pre_sync'}
+    _is_executing = (
+        st.session_state.get('download_status') in _active_exec_statuses
+        or bool(st.session_state.get('is_post_processing'))
+    )
+
     with st.container(border=False, key="sidebar_bottom_block"):
         # Settings button - also auto-reopens after native folder picker closes the dialog
-        if st.button("Settings", use_container_width=True, key="nav_btn_settings"):
+        if st.button(
+            "Settings",
+            use_container_width=True,
+            key="nav_btn_settings",
+            disabled=_is_executing,
+            help="Settings are unavailable while a download or sync is running" if _is_executing else None,
+        ):
             _global_settings_dialog()
-        elif st.session_state.pop('_stg_reopen_dialog', False):
+        elif not _is_executing and st.session_state.pop('_stg_reopen_dialog', False):
             _global_settings_dialog()
 
         if st.session_state.pop('_stg_saved_toast', False):
