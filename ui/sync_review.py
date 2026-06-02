@@ -455,7 +455,56 @@ def show_analysis_review(on_confirm_sync):
                 
         st.toast(f"🚫 Ignored {len(items_to_ignore)} deselected files")
 
-    
+    def handle_select_all_cat(pair_idx, source_list_name, item_key_prefix, value):
+        """Select (value=True) or deselect (value=False) every file in ONE
+        category of ONE course, without touching any other list.
+
+        Only the checkbox keys for items currently in ``source_list_name`` of the
+        given pair are mutated, so the action is scoped to that single expander.
+        """
+        pair_data = st.session_state['sync_analysis_results'][pair_idx]
+        source_list = getattr(pair_data['result'], source_list_name)
+        cid = pair_data['pair']['course_id']
+
+        def get_id(x):
+            if isinstance(x, tuple): return x[0].id
+            elif hasattr(x, 'canvas_file_id'): return x.canvas_file_id
+            return x.id
+
+        for item in source_list:
+            st.session_state[f"{item_key_prefix}_{cid}_{get_id(item)}"] = value
+
+    def render_category_action_row(pair_idx, course_id, source_list_name, item_key_prefix,
+                                   sweep_label, sweep_key, sweep_disabled, sweep_help):
+        """Top-of-expander action row.
+
+        Left quarter holds per-list "Select All here" / "Deselect All here"
+        buttons (scoped to this category + course only); the right three quarters
+        hold the existing "Move deselected files to Ignored" sweep button.
+        """
+        col_left, col_sweep = st.columns([1, 1])
+        with col_left:
+            col_sel, col_desel = st.columns([1, 1])
+            with col_sel:
+                st.button(
+                    "Select All here", key=f"selhere_{item_key_prefix}_{course_id}",
+                    use_container_width=True, on_click=handle_select_all_cat,
+                    args=(pair_idx, source_list_name, item_key_prefix, True),
+                    help="Select every file in this list.",
+                )
+            with col_desel:
+                st.button(
+                    "Deselect All here", key=f"clrhere_{item_key_prefix}_{course_id}",
+                    use_container_width=True, on_click=handle_select_all_cat,
+                    args=(pair_idx, source_list_name, item_key_prefix, False),
+                    help="Deselect every file in this list.",
+                )
+        with col_sweep:
+            st.button(
+                sweep_label, key=sweep_key, use_container_width=True,
+                disabled=sweep_disabled, on_click=handle_sweep,
+                args=(pair_idx, source_list_name, item_key_prefix), help=sweep_help,
+            )
 
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
@@ -486,6 +535,8 @@ def show_analysis_review(on_confirm_sync):
     _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
     _b64_icon_eye    = get_base64_image("assets/Icon_Eye.svg")
     _b64_icon_restore = get_base64_image("assets/icon_restore.png")
+    _b64_icon_select_here   = get_base64_image("assets/icon_select_all_here.png")
+    _b64_icon_deselect_here = get_base64_image("assets/icon_deselect_all_here.png")
 
     def _sync_icon_img(b64, size=26):
         return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
@@ -1272,6 +1323,38 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-sweep_"] button:disabled p em {{
         color: rgba(255, 255, 255, 0.3) !important;
     }}
+
+    /* ===== PER-LIST 'SELECT / DESELECT ALL HERE' BUTTONS ===== */
+    div[class*="st-key-selhere_"] button p,
+    div[class*="st-key-clrhere_"] button p {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        font-size: 0.85rem !important;
+        line-height: 1 !important;
+    }}
+    div[class*="st-key-selhere_"] button p::before,
+    div[class*="st-key-clrhere_"] button p::before {{
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        flex-shrink: 0;
+    }}
+    div[class*="st-key-selhere_"] button p::before {{
+        background-image: url('data:image/png;base64,{_b64_icon_select_here}');
+    }}
+    div[class*="st-key-clrhere_"] button p::before {{
+        background-image: url('data:image/png;base64,{_b64_icon_deselect_here}');
+    }}
     </style>""")
 
     # Per-folder results
@@ -1368,7 +1451,11 @@ def show_analysis_review(on_confirm_sync):
                 with st.container(key=f"cat_new_{pair['course_id']}"):
                     with st.expander(f"{'New Files'}"):
                         deselected_new = total_new - selected_new
-                        st.button(f"Move deselected files to Ignored *({deselected_new})*", key=f"sweep_new_{pair['course_id']}", use_container_width=True, disabled=(selected_new == total_new), on_click=handle_sweep, args=(idx, 'new_files', 'sync_new'), help="These files will be moved to the Ignored Files section and skipped during sync.")
+                        render_category_action_row(
+                            idx, pair['course_id'], 'new_files', 'sync_new',
+                            f"Move deselected files to Ignored *({deselected_new})*",
+                            f"sweep_new_{pair['course_id']}", (selected_new == total_new),
+                            "These files will be moved to the Ignored Files section and skipped during sync.")
                         st.caption("Brand new files available on Canvas that you don't have locally yet.")
                         
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
@@ -1399,7 +1486,11 @@ def show_analysis_review(on_confirm_sync):
                 with st.container(key=f"cat_update_{pair['course_id']}"):
                     with st.expander("Updates Available"):
                         deselected_upd = total_upd - selected_upd
-                        st.button(f"Move deselected files to Ignored *({deselected_upd})*", key=f"sweep_upd_{pair['course_id']}", use_container_width=True, disabled=(selected_upd == total_upd), on_click=handle_sweep, args=(idx, 'updated_clean_files', 'sync_upd'), help="These files will be moved to the Ignored Files section and skipped during sync.")
+                        render_category_action_row(
+                            idx, pair['course_id'], 'updated_clean_files', 'sync_upd',
+                            f"Move deselected files to Ignored *({deselected_upd})*",
+                            f"sweep_upd_{pair['course_id']}", (selected_upd == total_upd),
+                            "These files will be moved to the Ignored Files section and skipped during sync.")
                         st.caption("Your local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.")
 
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
@@ -1433,7 +1524,10 @@ def show_analysis_review(on_confirm_sync):
                         deselected_updmod = total_updmod - selected_updmod
                         is_disabled_updmod = (selected_updmod == total_updmod)
                         help_text_updmod = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_updmod else "All files are selected. Uncheck one or more files to enable this button."
-                        st.button(f"Move deselected files to Ignored *({deselected_updmod})*", key=f"sweep_updmod_{pair['course_id']}", use_container_width=True, disabled=is_disabled_updmod, on_click=handle_sweep, args=(idx, 'updated_modified_files', 'sync_updmod'), help=help_text_updmod)
+                        render_category_action_row(
+                            idx, pair['course_id'], 'updated_modified_files', 'sync_updmod',
+                            f"Move deselected files to Ignored *({deselected_updmod})*",
+                            f"sweep_updmod_{pair['course_id']}", is_disabled_updmod, help_text_updmod)
                         st.caption("You've modified your local copies of these files. They are **unchecked by default** to protect your edits. If you sync them, the new Canvas version will be saved alongside as `_NewVersion` \u2014 your edited copy is never touched.")
 
                         with st.container(key=f"sync_review_file_list_{idx}_updmod"):
@@ -1469,7 +1563,10 @@ def show_analysis_review(on_confirm_sync):
                         deselected_locdel = total_locdel - selected_locdel
                         is_disabled_locdel = (selected_locdel == total_locdel)
                         help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
-                        st.button(f"Move deselected files to Ignored *({deselected_locdel})*", key=f"sweep_locdel_{pair['course_id']}", use_container_width=True, disabled=is_disabled_locdel, on_click=handle_sweep, args=(idx, 'locally_deleted_files', 'sync_locdel'), help=help_text_locdel)
+                        render_category_action_row(
+                            idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
+                            f"Move deselected files to Ignored *({deselected_locdel})*",
+                            f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
                         st.caption("These files are missing from your local folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
 
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
@@ -1798,20 +1895,26 @@ def inject_dynamic_sync_review_css():
     }
     /* Sweep and Restore buttons (Neutral, no blue tint) */
     div[class*="st-key-sweep_"] button,
-    div[class*="st-key-restore_all_"] button {
+    div[class*="st-key-restore_all_"] button,
+    div[class*="st-key-selhere_"] button,
+    div[class*="st-key-clrhere_"] button {
         background-color: rgba(255, 255, 255, 0.1) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         color: #e5e7eb !important;
         transition: all 0.2s ease !important;
     }
     div[class*="st-key-sweep_"] button:hover:not(:disabled),
-    div[class*="st-key-restore_all_"] button:hover:not(:disabled) {
+    div[class*="st-key-restore_all_"] button:hover:not(:disabled),
+    div[class*="st-key-selhere_"] button:hover:not(:disabled),
+    div[class*="st-key-clrhere_"] button:hover:not(:disabled) {
         background-color: rgba(255, 255, 255, 0.15) !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
         color: #ffffff !important;
     }
     div[class*="st-key-sweep_"] button:active:not(:disabled),
-    div[class*="st-key-restore_all_"] button:active:not(:disabled) {
+    div[class*="st-key-restore_all_"] button:active:not(:disabled),
+    div[class*="st-key-selhere_"] button:active:not(:disabled),
+    div[class*="st-key-clrhere_"] button:active:not(:disabled) {
         background-color: rgba(255, 255, 255, 0.2) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
     }
