@@ -256,7 +256,7 @@ def show_sync_complete():
 
             st.session_state['sync_selections'] = retry_selections
             st.session_state['download_status'] = 'syncing'
-            st.session_state['step'] = 3
+            st.session_state['step'] = 4
             st.session_state['sync_errors'] = []
             st.session_state['sync_cancel_requested'] = False
             st.session_state['sync_cancelled'] = False

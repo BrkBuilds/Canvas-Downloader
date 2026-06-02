@@ -2907,7 +2907,16 @@ class CanvasManager:
 
         filename = self._sanitize_filename(display_name) + file_extension
         filepath = target_dir / filename
-        filepath = self._handle_conflict(filepath)
+        
+        # Secondary entities are always regenerated from the Canvas API,
+        # so overwrite in-place instead of creating (1) conflict copies.
+        # This mirrors the clean-overwrite logic for regular file redownloads.
+        if filepath.exists():
+            try:
+                filepath.unlink()
+            except OSError:
+                # File locked (e.g. open in browser) — fall back to conflict copy
+                filepath = self._handle_conflict(filepath)
 
         content = self._build_entity_html(
             entity_name, body_html, metadata_pairs=metadata_pairs,
@@ -3268,9 +3277,22 @@ class CanvasManager:
                     ('Posted', getattr(topic, 'posted_at', None)),
                     ('URL', getattr(topic, 'html_url', None)),
                 ]
+
+                # Date-prefix for chronological file ordering (parity with
+                # _fetch_and_save_announcements and get_secondary_content_metadata)
+                posted_at = getattr(topic, 'posted_at', '') or ''
+                date_prefix = ''
+                if posted_at:
+                    try:
+                        dt = datetime.fromisoformat(posted_at.replace('Z', '+00:00'))
+                        date_prefix = dt.strftime('%Y-%m-%d') + ' - '
+                    except (ValueError, TypeError):
+                        pass
+                _ann_display = f"{date_prefix}{getattr(topic, 'title', 'Announcement')}"
+
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'announcement',
-                    getattr(topic, 'title', 'Announcement'),
+                    _ann_display,
                     t_msg + self._build_discussion_replies_html_sync(topic, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
