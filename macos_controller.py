@@ -234,11 +234,19 @@ class CanvasController:
 
         # Use 'open -a' so macOS Launch Services finds Chrome regardless of
         # install location (~/Applications, non-standard paths, etc.).
-        # NOTE: 'open -a' returns 0 even if Chrome refuses to open a new window
-        # (e.g. different profile active), so we verify Chrome is actually
-        # running via pgrep after a short grace period.
+        #
+        # IMPORTANT: pass the URL as a direct operand to `open`, NOT behind
+        # `--args`. When Chrome is already running, Launch Services drops any
+        # `--args` (e.g. `--new-window <url>`), so the old invocation focused
+        # Chrome WITHOUT navigating — i.e. clicking "Open Canvas Downloader"
+        # while Chrome was already open did nothing. `open -a "Google Chrome"
+        # <url>` reliably navigates to the app whether Chrome is running or not.
+        #
+        # NOTE: 'open -a' returns 0 even if Chrome is not actually installed/
+        # launchable, so we verify Chrome is running via pgrep after a short
+        # grace period.
         subprocess.run(
-            ['open', '-a', 'Google Chrome', '--args', '--new-window', self.url],
+            ['open', '-a', 'Google Chrome', self.url],
             capture_output=True,
         )
         threading.Thread(target=self._verify_chrome_launched, daemon=True).start()

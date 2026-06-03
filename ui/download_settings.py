@@ -207,9 +207,9 @@ def render_download_settings(fetch_courses_fn):
         f"<details style='{_row}'><summary style='{_b3}'>Unpack Archives</summary>"
         f"<div style='{_ans3}'>Extracts ZIP files after downloading, so the contents are immediately accessible. Most AI tools cannot read ZIP files directly.<br><b>Note:</b> ALL files within the archive will ALSO be AI optimized according to your configuration! ZIP unpacking runs as the first converter, so any other AI optimizations toggled on will apply to the files that may be inside your archive as well. <br> - Example: You have ZIP extraction and PowerPoint to PDF toggled on, and your teacher's ZIP archive contains a PPTX file. Canvas Downloader first extracts the .zip into a regular folder, and then the PPTX file gets converted into a PDF. </div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>PowerPoint to PDF</summary>"
-        f"<div style='{_ans3}'>Converts PowerPoint files (all types) to PDF. Most AI tools handle PDF better than PowerPoint and have a smaller file size. <br>Requires Microsoft PowerPoint or the free LibreOffice app.</div></details>"
+        f"<div style='{_ans3}'>Converts PowerPoint files (all types) to PDF. Most AI tools handle PDF better than PowerPoint and have a smaller file size. <br>Requires the Microsoft PowerPoint desktop app (Windows or Mac).</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Legacy Word Docs to PDF</summary>"
-        f"<div style='{_ans3}'>Converts old Word document formats (.doc, .rtf, .odt) to PDF. Modern .docx files are not affected. <br>Requires Microsoft Word or LibreOffice.</div></details>"
+        f"<div style='{_ans3}'>Converts old Word document formats (.doc, .rtf, .odt) to PDF. Modern .docx files are not affected. <br>Requires the Microsoft Word desktop app (Windows or Mac).</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Excel to PDF &amp; AI Data</summary>"
         f"<div style='{_ans3}'>Converts Excel spreadsheets into two files: a PDF (preserves layout, charts, and formatting) and a structured plain text 'data file' optimized for AI. They inherit the name of the original spreadsheet, and the data file is suffixed with ' - Data'. <br>The data file includes a cell coordinate grid (A1, B2...) that matches the PDF, formula annotations showing the math behind calculated cells, and supports merged cell values and formulas. It is tested, and your AI loves the PDF & Data file combination. ;)<br> <b>Note:</b> The original spreadsheet is replaced by the PDF. If you want to download it, run a new download without this AI Optimization toggled.<br><b>Note:</b> The AI data file is generated only for modern Excel formats (.xlsx, .xlsm). Legacy .xls files are converted to PDF only. <br>Requires Microsoft Excel.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Canvas Pages to Plain Text</summary>"
@@ -221,7 +221,7 @@ def render_download_settings(fetch_courses_fn):
         f"<details style='{_row}'><summary style='{_b3}'>Video to Audio</summary>"
         f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3.</div></details>"
         "<div style='background-color: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
-        f"<span style='color: #fbd38d; font-weight: 600;'>{HELP_ICONS['warning']} Required software:</span> PowerPoint and Word conversions require Microsoft Office or the free LibreOffice app. <br>Excel PDF conversion requires Microsoft Excel, and the Excel AI data file extraction works for .xlsx/.xlsm only <b>(not legacy .xls)</b>. <br>If the required software is not installed, that step is silently skipped and your original file is kept."
+        f"<span style='color: #fbd38d; font-weight: 600;'>{HELP_ICONS['warning']} Required software:</span> PowerPoint and Word PDF conversions require the matching Microsoft Office desktop app (PowerPoint / Word). <br>Excel PDF conversion requires Microsoft Excel, and the Excel AI data file extraction works for .xlsx/.xlsm only <b>(not legacy .xls)</b>. <br>If the required app is not installed, that step is silently skipped and your original file is kept."
         "</div>"
         "</div></details>"
 
@@ -304,7 +304,7 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do the AI Optimization conversions work on all computers?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "It depends on the conversion. PowerPoint and Word conversions require <b>Microsoft Office</b> or the free <b>LibreOffice</b> app. Unpacking archives, converting Canvas pages, adding .txt to code files, and gathering web links all work on any computer with no extra software."
+        "It depends on the conversion. PowerPoint, Word, and Excel PDF conversions require the matching <b>Microsoft Office</b> desktop app. Unpacking archives, converting Canvas pages, adding .txt to code files, gathering web links, video-to-audio, and Excel AI data extraction all work on any computer with no extra software."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Preset and should I use one?</summary>"
@@ -1277,8 +1277,8 @@ def render_download_settings(fetch_courses_fn):
             # --- Conversion Button Data ---
             conv_button_defs = [
                 ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png', None),
-                ('convert_pptx',  'PowerPoint ⭢ PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires Microsoft PowerPoint or LibreOffice'),
-                ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires Microsoft Word or LibreOffice'),
+                ('convert_pptx',  'PowerPoint ⭢ PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires the Microsoft PowerPoint desktop app'),
+                ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires the Microsoft Word desktop app'),
                 ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export each spreadsheet as PDF + structured .txt with all cell data.',                'icon_conv_excel.png', 'Requires Microsoft Excel. AI data file only for .xlsx/.xlsm (not .xls)'),
                 ('convert_html',  'Canvas Pages ⭢ Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
                 ('convert_code',  'Code & Data ⭢ .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),

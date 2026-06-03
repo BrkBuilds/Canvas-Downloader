@@ -3029,6 +3029,102 @@
 
   <hr class="div" />
 
+  <!-- macOS Known Limitations -->
+  <section id="macos-notes" style="padding:80px 0 70px; display:none;">
+    <div class="container">
+      <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
+        <div class="label org" style="justify-content:center;">macOS — Pre-release</div>
+        <h2>Known limitations on Mac</h2>
+        <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you dive in — especially if you're on a university-managed Mac.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:860px; margin:0 auto;">
+
+        <!-- Gatekeeper -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">SETUP</span>
+            macOS blocks the app on first launch
+          </h4>
+          <p>Because Canvas Downloader is free and indie, it isn't signed with Apple's paid certificate. macOS will block it with an "unidentified developer" or "damaged" message the first time you open it. This is normal for free apps.<br><br>The <a href="thanks-mac.html" style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install guide</a> walks you through it in under a minute: approve it in <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>, or run one Terminal command if it says "damaged". After that, it opens normally forever.</p>
+        </div>
+
+        <!-- Chrome required -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">REQUIREMENT</span>
+            Google Chrome must be installed
+          </h4>
+          <p>The Mac version opens its interface in Google Chrome to keep the experience consistent and polished (the UI is built around Chrome's rendering engine and has been carefully tuned for it).<br><br>Safari, Firefox, Arc, and other browsers are not supported. If you don't have Chrome, <a href="https://www.google.com/chrome/" target="_blank" rel="noopener" style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install it first</a> — it's free.</p>
+        </div>
+
+        <!-- University-managed Macs -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">MANAGED MACS</span>
+            University-managed Macs may block installation
+          </h4>
+          <p>Some universities lock down their Macs so that students cannot install apps, unlock Privacy &amp; Security, or run Terminal commands without admin rights. If your Mac is managed by IT and the install guide doesn't work, you have two options:<br><br>• Install Canvas Downloader on your personal Mac instead.<br>• Contact your IT helpdesk and ask them to allow the app, or to temporarily grant admin rights for the installation step.</p>
+        </div>
+
+        <!-- Token re-entry after updates -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">UPDATES</span>
+            You may need to re-enter your API token after an update
+          </h4>
+          <p>macOS stores your Canvas API token in your Keychain. Because the app isn't signed with a paid Developer ID certificate, macOS may treat a new version as a different app and ask for your Keychain password again — or prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token hasn't changed — you can copy it from your Canvas account settings and paste it in again.</p>
+        </div>
+
+        <!-- Office conversions -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">CONVERSIONS</span>
+            Office → PDF needs the Microsoft desktop app
+          </h4>
+          <p>The PowerPoint → PDF, Word → PDF, and Excel → PDF conversions use AppleScript to drive the Microsoft Office desktop app. If you use Office via the web browser or don't have it installed, those conversions are silently skipped and your original files are kept unchanged.<br><br>Everything else — downloading, syncing, video-to-audio, archive unpacking, Canvas pages to text, code files, and web links — works without any extra software.</p>
+        </div>
+
+        <!-- Apple Silicon only -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">HARDWARE</span>
+            Apple Silicon only (M1, M2, M3, M4)
+          </h4>
+          <p>The macOS build is compiled for Apple Silicon only. It will not run on older Intel Macs (2020 and earlier).<br><br>Not sure which chip you have? Click the Apple menu → <strong>About This Mac</strong>. If it says "Apple M…" next to Chip, you're good. If it says "Intel Core", the Mac version won't work — use a Mac with Apple Silicon or a Windows PC instead.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" id="faq-divider" style="display:none;" />
+
+  <script>
+    // Show the macOS limitations section only when the Mac download card is visible.
+    // Runs after the existing OS-detection script has set showingMac.
+    document.addEventListener('DOMContentLoaded', () => {
+      const macSection = document.getElementById('macos-notes');
+      const faqDivider = document.getElementById('faq-divider');
+      const mainFaqDivider = macSection ? macSection.previousElementSibling : null;
+
+      function syncMacSection() {
+        const macCard = document.getElementById('get-mac');
+        const isVisible = macCard && macCard.style.display !== 'none';
+        if (macSection) macSection.style.display = isVisible ? 'block' : 'none';
+        if (faqDivider) faqDivider.style.display = isVisible ? 'block' : 'none';
+      }
+
+      // Poll briefly after DOMContentLoaded so the existing OS-detection script runs first.
+      setTimeout(syncMacSection, 50);
+
+      // Also hook the toggle buttons so it updates when user switches OS.
+      document.querySelectorAll('#toggle-os-btn, #hero-toggle-os-btn').forEach(btn => {
+        btn.addEventListener('click', () => setTimeout(syncMacSection, 10));
+      });
+    });
+  </script>
+
   <!-- FAQ -->
   <section class="faq-section" style="padding-top:90px;" id="faq">
     <div class="container">
@@ -3055,9 +3151,10 @@
         </details>
         <details class="faq-item reveal">
           <summary>Do I need Python or anything else installed?</summary>
-          <p>No. Python is bundled inside the executable. For optional conversions (PowerPoint to PDF, video to audio),
-            you need the relevant app - Microsoft Office or LibreOffice - but none are
-            required for downloading.</p>
+          <p>No. Python is bundled inside the executable. The only optional extra is the Microsoft Office desktop
+            app (PowerPoint / Word / Excel), needed solely for the Office&#8594;PDF conversions. Everything else -
+            downloading, syncing, video-to-audio, archives, Canvas pages, code and link files - works with no
+            extra software.</p>
         </details>
         <details class="faq-item reveal">
           <summary>What happens when my professor updates a file?</summary>
