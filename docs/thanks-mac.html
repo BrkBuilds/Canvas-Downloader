@@ -130,27 +130,73 @@
 
   <div class="hero">
     <div class="container">
-      <h1>Awesome, your download has started! 🎉</h1>
-      <p class="sub">Because Canvas Downloader is an indie app, macOS requires a specific way to open it the very first time. Here is the 10-second guide.</p>
-      
-      <div class="app-card">
-        <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: left; display: flex; gap: 12px; align-items: flex-start;">
-          <div style="background: rgba(139, 92, 246, 0.15); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #a78bfa; font-weight: bold; flex-shrink: 0; font-size: 14px; margin-top: 2px;">!</div>
+      <h1>Your download has started! 🎉</h1>
+      <p class="sub">Canvas Downloader is free and indie, so it isn't signed with Apple's paid certificate. That means macOS needs you to approve it once, by hand. It takes about a minute — here's exactly how.</p>
+
+      <!-- ── Before you start: requirements ───────────────────────────── -->
+      <div class="app-card" style="margin-bottom: 20px; text-align: left;">
+        <strong style="display:block; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; color:#94a3b8; margin-bottom:14px;">Before you start — two requirements</strong>
+
+        <div style="display:flex; gap:12px; align-items:flex-start; padding:14px 16px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.25); border-radius:10px; margin-bottom:10px;">
+          <div style="flex-shrink:0; font-size:18px; line-height:1.2; margin-top:1px;">🖥️</div>
           <div>
-            <strong style="color: #a78bfa; font-size: 14px; display: block; margin-bottom: 4px;">Apple Silicon Only</strong>
-            <p style="font-size: 13px; color: var(--txt2); margin: 0;">This beta is built for M1/M2/M3/M4 Macs. It will not run on older Intel Macs.</p>
+            <strong style="color:#f59e0b; font-size:14px; display:block; margin-bottom:3px;">Apple Silicon Mac (M1 or newer)</strong>
+            <p style="font-size:13px; color:var(--txt2); margin:0;">This build runs on M1, M2, M3 and M4 Macs. It does <strong>not</strong> run on older Intel Macs. Not sure? Click the Apple menu &#8594; <strong>About This Mac</strong> and look for "Apple M…" next to Chip.</p>
           </div>
         </div>
 
-        <ul class="steps" style="margin-top: 0;">
-          <li><strong>1. Open the DMG:</strong> Double-click the downloaded <code>.dmg</code> file to mount it.</li>
-          <li><strong>2. Install:</strong> Drag the <strong>Canvas Downloader</strong> icon into the Applications folder.</li>
-          <li><strong>3. The Gatekeeper Bypass:</strong> Go to your Applications folder. <strong>Right-click</strong> (or Control-click) the app and select <strong>Open</strong>.</li>
-          <li><strong>4. Confirm:</strong> macOS will show a warning about an unidentified developer. Click <strong>Open</strong> again.</li>
-        </ul>
-        <p style="font-size: 13px; color: var(--txt3); margin-top: 20px; text-align: left; padding-top: 16px; border-top: 1px solid var(--border);">You only have to do the Right-click trick once. After that, you can launch it normally from Launchpad.</p>
+        <div style="display:flex; gap:12px; align-items:flex-start; padding:14px 16px; background:rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.25); border-radius:10px;">
+          <div style="flex-shrink:0; font-size:18px; line-height:1.2; margin-top:1px;">🌐</div>
+          <div>
+            <strong style="color:var(--cyan); font-size:14px; display:block; margin-bottom:3px;">Google Chrome must be installed</strong>
+            <p style="font-size:13px; color:var(--txt2); margin:0;">Canvas Downloader opens its window in Google Chrome to keep the experience consistent. If you don't have it yet, install it first &#8594; <a href="https://www.google.com/chrome/" target="_blank" rel="noopener" style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">google.com/chrome</a>.</p>
+          </div>
+        </div>
       </div>
-      
+
+      <!-- ── Install steps ────────────────────────────────────────────── -->
+      <div class="app-card" style="text-align: left;">
+        <strong style="display:block; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; color:#94a3b8; margin-bottom:14px;">Installing</strong>
+
+        <ul class="steps" style="margin-top: 0;">
+          <li><strong>1. Open the DMG:</strong> Double-click the downloaded <code style="background:rgba(255,255,255,0.07); padding:1px 6px; border-radius:4px; font-size:13px;">.dmg</code> file to mount it.</li>
+          <li><strong>2. Install:</strong> In the window that opens, drag the <strong>Canvas Downloader</strong> icon onto the <strong>Applications</strong> folder.</li>
+          <li><strong>3. First open:</strong> Open your <strong>Applications</strong> folder and double-click <strong>Canvas Downloader</strong>. macOS will block it the first time — this is normal for free apps. Use one of the two methods below to approve it.</li>
+        </ul>
+
+        <!-- Method 1 -->
+        <div style="border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin:18px 0 12px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(104,212,163,0.15); color:#68d4a3; font-size:11px; font-weight:700; padding:3px 9px; border-radius:100px;">METHOD 1 · RECOMMENDED</span>
+            <span style="font-size:13px; color:var(--txt2);">Approve it in Settings</span>
+          </div>
+          <ul class="steps" style="margin:0;">
+            <li>Double-click the app. You'll see <em>"Apple could not verify…"</em> or <em>"unidentified developer"</em> — click <strong>Done</strong>.</li>
+            <li>Open the Apple menu &#8594; <strong>System Settings</strong> &#8594; <strong>Privacy &amp; Security</strong>.</li>
+            <li>Scroll down to the <strong>Security</strong> section. You'll see <em>"Canvas Downloader was blocked…"</em> with an <strong>Open Anyway</strong> button. Click it.</li>
+            <li>Enter your Mac password / Touch ID if asked, then click <strong>Open Anyway</strong> once more to confirm.</li>
+          </ul>
+        </div>
+
+        <!-- Method 2 -->
+        <div style="border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin:0 0 4px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="background:rgba(56,189,248,0.12); color:var(--cyan); font-size:11px; font-weight:700; padding:3px 9px; border-radius:100px;">METHOD 2 · IF IT SAYS "DAMAGED"</span>
+            <span style="font-size:13px; color:var(--txt2);">One Terminal command</span>
+          </div>
+          <p style="font-size:13px; color:var(--txt2); margin:0 0 10px;">If macOS says Canvas Downloader is <strong>"damaged and can't be opened"</strong>, or Method 1 didn't show an <em>Open Anyway</em> button, this clears the download flag. Open <strong>Terminal</strong> (Spotlight &#8594; type "Terminal"), paste the line below exactly, and press <strong>Return</strong>:</p>
+          <div style="display:flex; align-items:center; gap:10px; background:#0a0b13; border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto;">
+            <code style="font-family:'SF Mono', ui-monospace, Menlo, monospace; font-size:12.5px; color:#e2e8f0; white-space:nowrap; user-select:all;">xattr -dr com.apple.quarantine "/Applications/Canvas Downloader.app"</code>
+          </div>
+          <p style="font-size:12px; color:#64748b; margin:10px 0 0;">Nothing visible happens — that's expected. Now go back to Applications and double-click the app; it opens normally. (This only works if you put the app in your Applications folder in step 2.)</p>
+        </div>
+
+        <p style="font-size:13px; color:#64748b; margin-top:18px; padding-top:16px; border-top:1px solid var(--border);">You only do this once. After the first launch, open Canvas Downloader normally from Launchpad or Applications. A small status window appears, then the app opens in Google Chrome.</p>
+      </div>
+
+      <!-- Office note -->
+      <p style="font-size:12.5px; color:#64748b; max-width:600px; margin:22px auto 0;">Optional: the PowerPoint / Word / Excel &#8594; PDF conversions use the matching Microsoft Office app. If you don't have Office installed, those specific conversions are skipped and your original files are kept — everything else works without it.</p>
+
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_v2.0.0_macOS.dmg" class="btn-dl">If the download didn't start automatically, click here</a>
     </div>
   </div>
