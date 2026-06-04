@@ -602,6 +602,14 @@ def show_analysis_review(on_confirm_sync):
     # can restore or go back. Only auto-route when analysis genuinely found nothing.
     if total_new == 0 and total_upd == 0 and total_del == 0 and total_loc_del == 0:
         if total_ignored == 0:
+            # M-1: persist auto-discovered / healed entries before bypassing to
+            # completion, so an up-to-date folder still builds its sync memory
+            # even when the user reached Review and then ignored everything.
+            try:
+                from sync.analysis import _persist_discovered_entries
+                _persist_discovered_entries(all_results)
+            except Exception:
+                pass
             # Genuinely nothing to sync - advance to completion screen
             st.session_state['synced_count'] = 0
             st.session_state['synced_bytes'] = 0
