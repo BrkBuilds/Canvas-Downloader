@@ -501,20 +501,17 @@ def run_sync():
                             # Place _NewVersion alongside the original, not at course root
                             filepath = filepath.parent / f"{base}_NewVersion{ext}"
                             filepath = cm._handle_conflict(filepath)
-                        elif (is_update_clean or is_redownload) and filepath.exists():
-                            # Claim the exact path. Remove the stale file so the
-                            # download writes cleanly without `_handle_conflict`
-                            # adding a numeric suffix. If unlink fails (file open
-                            # in another app on Windows), fall back to _NewVersion
-                            # rather than crashing the sync.
-                            try:
-                                filepath.unlink()
-                            except OSError:
-                                base = filepath.stem
-                                ext = filepath.suffix
-                                # Place _NewVersion alongside the original, not at course root
-                                filepath = filepath.parent / f"{base}_NewVersion{ext}"
-                                filepath = cm._handle_conflict(filepath)
+                        elif is_update_clean or is_redownload:
+                            # Clean update / locally-deleted redownload → claim the
+                            # EXACT path. We deliberately do NOT pre-delete the
+                            # existing file: the atomic os.replace(.part → filepath)
+                            # below overwrites it in a single step, so there is never
+                            # a window where the file is missing if the download
+                            # fails or the app crashes mid-transfer. A locked target
+                            # is handled gracefully at the os.replace site, which
+                            # falls back to a _NewVersion sibling so the user's open
+                            # file is preserved and the new bytes still land on disk.
+                            pass
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
 
@@ -846,14 +843,31 @@ def run_sync():
                                                     try:
                                                         os.replace(make_long_path(part_path), make_long_path(filepath))
                                                     except PermissionError:
-                                                        error_msg = f"Cannot overwrite file (it may be open in another program): {filepath}"
-                                                        logger.error(error_msg)
+                                                        # Target is locked (open in another app). Don't lose the
+                                                        # freshly-downloaded bytes — deliver them alongside as a
+                                                        # _NewVersion sibling so the user's open file is untouched
+                                                        # and the new version still lands on disk. The manifest is
+                                                        # recorded against this resolved path below.
                                                         try:
-                                                            os.unlink(make_long_path(part_path))
-                                                        except OSError:
-                                                            pass
-                                                        raise RuntimeError(error_msg)
-                                                    
+                                                            _alt = filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}"
+                                                            _alt = cm._handle_conflict(_alt)
+                                                            os.replace(make_long_path(part_path), make_long_path(_alt))
+                                                            filepath = _alt
+                                                            terminal_log.append(
+                                                                f"<span style='color:{theme.WARNING}'>🔒 In use — saved new version as </span>{esc(_alt.name)}"
+                                                            )
+                                                            log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                                            if _debug_file:
+                                                                log_debug(f"  Target locked; delivered as {_alt.name}", _debug_file)
+                                                        except (PermissionError, OSError) as _alt_err:
+                                                            error_msg = f"Cannot write file (it may be open in another program): {filepath}"
+                                                            logger.error(f"{error_msg} :: {_alt_err}")
+                                                            try:
+                                                                os.unlink(make_long_path(part_path))
+                                                            except OSError:
+                                                                pass
+                                                            raise RuntimeError(error_msg)
+
                                                     atomic_rename_done = True
                                                     
                                                     # Only commit to DB AFTER file is physically complete on disk
