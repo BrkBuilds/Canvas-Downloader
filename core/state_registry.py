@@ -251,10 +251,18 @@ def cleanup_sync_state() -> None:
     # Invalidate ignored-files cache so next render re-reads from SQLite
     st.session_state.pop('_ignored_files_cache', None)
 
-    # Clean up dynamic checkbox keys from the sync review UI
+    # L-5: the review's "keep ignored expander open" latch is per-run UI state.
+    st.session_state.pop('keep_ignored_open', None)
+
+    # Clean up dynamic checkbox keys from the sync review UI, including the
+    # Smart-Select filetype toggles (sync_filter_ext_*/sync_filter_btn_*) which
+    # would otherwise carry stale selection state into an unrelated next sync.
     keys_to_remove = [
         k for k in st.session_state
-        if k.startswith(('sync_new_', 'sync_upd_', 'sync_updmod_', 'sync_locdel_', 'ignore_'))
+        if k.startswith((
+            'sync_new_', 'sync_upd_', 'sync_updmod_', 'sync_locdel_', 'ignore_',
+            'sync_filter_ext_', 'sync_filter_btn_',
+        ))
     ]
     for k in keys_to_remove:
         st.session_state.pop(k, None)

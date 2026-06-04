@@ -7,6 +7,7 @@ import os
 import json
 import hashlib
 import logging
+import re
 import sqlite3
 import time
 import uuid
@@ -21,6 +22,25 @@ import threading
 logger = logging.getLogger(__name__)
 
 _groups_lock = threading.RLock()
+
+# Characters CanvasManager._sanitize_filename strips when writing files to disk.
+# We mirror that stripping when matching Canvas-side names (which keep these
+# characters) against on-disk filenames (which had them removed), so a Canvas
+# file "My:Notes.pdf" written to disk as "MyNotes.pdf" still matches itself.
+_FS_UNSAFE_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def _match_key(name: str) -> str:
+    """Filesystem-aware normalized key for robust filename matching.
+
+    Combines ``robust_filename_normalize`` (unquote + NFC + lower) with the
+    dangerous-character stripping the downloader applies at write time, so the
+    analyzer's view and the on-disk reality always compare equal. Used by both
+    auto-discovery (``analyze_course``) and ``heal_manifest``.
+    """
+    from ui_helpers import robust_filename_normalize
+    return _FS_UNSAFE_RE.sub('', robust_filename_normalize(name))
+
 
 # --- Data Classes ---
 
@@ -80,6 +100,22 @@ DB_FILENAME = ".canvas_sync.db"
 SYNC_PAIRS_FILENAME = "canvas_sync_pairs.json"
 SYNC_HISTORY_FILENAME = "canvas_sync_history.json"
 SAVED_GROUPS_FILENAME = "saved_sync_groups.json"
+
+# App-generated bookkeeping files that live inside course folders but are NOT
+# Canvas content. Excluded from manifest healing and untracked counting so they
+# are never fuzzy-matched onto a missing Canvas file or counted as study material.
+_APP_GENERATED_FILES = {
+    'debug_log.txt',
+    'download_errors.txt',
+    '☁️ Canvas Updates & Deletions.txt',
+}
+
+# Upper bound on the file size we will hash during *interactive analysis* for
+# first-link content discovery / baseline capture. Above this we fall back to
+# size+extension heuristics and an empty md5 baseline (which safely biases the
+# next edit-classification toward preservation). Genuine updates are still
+# hashed in full by _classify_local_modification regardless of size.
+_CONTENT_MATCH_MAX_BYTES = 1024 * 1024 * 1024  # 1 GB
 
 # --- Negative ID Offset Registry for Synthetic Content ---
 # Real Canvas Files have positive IDs.  Synthetic entities (Pages saved as
@@ -445,28 +481,35 @@ class SyncManager:
         # Migrate metadata as well if needed in the future
         return manifest
             
-    def save_manifest(self, manifest: dict) -> bool:
+    def save_manifest(self, manifest: dict, update_last_synced: bool = True) -> bool:
         """Save the in-memory manifest dictionary to the SQLite DB using atomic upserts.
 
         Uses INSERT OR REPLACE per row instead of DELETE + reinsert.
         This ensures that a crash at any point leaves all previously-committed
         rows intact - no data loss scenario.
+
+        Args:
+            update_last_synced: When True (download path), stamp the ``last_synced``
+                metadata. When False, persist only the manifest rows — used by the
+                analysis phase to durably record auto-discovered/healed entries for
+                an up-to-date folder WITHOUT pretending a sync just happened.
         """
         if self._db_init_failed:
             logger.error(f"Cannot save manifest: DB initialization failed for {self.db_path}")
             return False
 
         max_retries = 3
-        
+
         for attempt in range(max_retries):
             try:
-                    
+
                 with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     cursor = conn.cursor()
                     # Use plain local-time string so format_relative_date() can parse it
                     # without special-casing UTC ISO format (C-5 fix).
                     now_plain = datetime.now().strftime('%Y-%m-%d %H:%M')
-                    cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_plain))
+                    if update_last_synced:
+                        cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('last_synced', now_plain))
                     
                     # Atomic upsert: INSERT ON CONFLICT per row (preserves is_ignored)
                     for file_id_str, info in manifest.get('files', {}).items():
@@ -558,9 +601,8 @@ class SyncManager:
         2. Exact MD5 hash match (for renamed files)
         3. Levenshtein distance on filename > 0.85
         """
-        from ui_helpers import robust_filename_normalize
         files_section = manifest.get('files', {})
-        
+
         # 1. Identify missing files
         missing_entries = {}
         for file_id, file_info in files_section.items():
@@ -588,7 +630,9 @@ class SyncManager:
         orphaned_files = []
         for root, _, files in os.walk(self.local_path):
             for filename in files:
-                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME) or filename.startswith('.canvas_sync'):
+                if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
+                        or filename in _APP_GENERATED_FILES
+                        or filename.startswith('.canvas_sync')):
                     continue
                 filepath = Path(root) / filename
                 norm_str = os.path.normpath(str(filepath))
@@ -598,7 +642,7 @@ class SyncManager:
                         orphaned_files.append({
                             'path': filepath,
                             'name': filename,
-                            'norm_name': robust_filename_normalize(filename),
+                            'norm_name': _match_key(filename),
                             'size': sz,
                             'md5': None # Lazy compute
                         })
@@ -611,7 +655,7 @@ class SyncManager:
         # 3. Resolve matches (Heuristic Engine)
         for file_id, missing_info in missing_entries.items():
             orig_name = missing_info.get('canvas_filename', '')
-            orig_norm_name = robust_filename_normalize(orig_name)
+            orig_norm_name = _match_key(orig_name)
             orig_size = missing_info.get('original_size', -1)
             orig_md5 = missing_info.get('original_md5', '')
 
@@ -636,18 +680,38 @@ class SyncManager:
                             matched_tier = 2
                             break
 
-            # TIER 3: Levenshtein Distance > 0.85
+            # TIER 3: Fuzzy filename match — multiple independent guards make this
+            # last-resort heuristic safe against binding the wrong file:
+            #   • Extension must match (a renamed PDF is still a PDF).
+            #   • Stem containment: one normalized stem must contain the other, so
+            #     a rename that ADDS/removes a segment ("Intro"→"Intro_v2") matches
+            #     but a single-character SUBSTITUTION ("Lecture1"→"Lecture2") does
+            #     NOT — substitutions are the classic mis-heal trap.
+            #   • Similarity must be >= 0.90.
+            #   • Ambiguity reject: if a second candidate is nearly as similar,
+            #     refuse rather than guess.
+            # Anything rejected here is simply left unhealed (surfaces as
+            # locally-deleted), which is always safe.
             if best_match_idx == -1:
-                best_ratio = -1.0
+                _orig_ext = Path(orig_name).suffix.lower()
+                _orig_stem = _match_key(Path(orig_name).stem)
+                scored = []
                 for idx, orphan in enumerate(orphaned_files):
+                    if Path(orphan['name']).suffix.lower() != _orig_ext:
+                        continue
+                    _orph_stem = _match_key(Path(orphan['name']).stem)
+                    if not _orig_stem or not _orph_stem:
+                        continue
+                    _short, _long = sorted((_orig_stem, _orph_stem), key=len)
+                    if _short not in _long:
+                        continue  # not a contained rename → skip
                     ratio = difflib.SequenceMatcher(None, orphan['norm_name'], orig_norm_name).ratio()
-                    if ratio > best_ratio:
-                        best_ratio = ratio
-                        best_match_idx = idx
-
-                if best_ratio <= 0.85:
-                    best_match_idx = -1
-                else:
+                    scored.append((ratio, idx))
+                scored.sort(key=lambda t: t[0], reverse=True)
+                if scored and scored[0][0] >= 0.90 and (
+                    len(scored) == 1 or (scored[0][0] - scored[1][0]) > 0.05
+                ):
+                    best_match_idx = scored[0][1]
                     matched_tier = 3
 
             # If we found a match via any tier, heal it
@@ -717,26 +781,45 @@ class SyncManager:
                 logger.warning(f"Failed to fetch module map in analyze_course: {e}")
                 result.structural_errors += 1
         
-        # Scan local files for discovery of "existing but untracked" files
-        local_files_map = {}
+        # Scan local files once for discovery of "existing but untracked" files.
+        # Build two indexes over shared candidate dicts so a claim made through
+        # one index is visible to the other:
+        #   local_by_name : filesystem-aware match key → [candidate, ...]
+        #   local_by_size : byte size → [candidate, ...]   (content-match prefilter)
+        local_by_name: dict = {}
+        local_by_size: dict = {}
         all_local_files = []  # Flat list for accurate untracked counting
-        from ui_helpers import robust_filename_normalize
+        claimed_paths: set = set()  # M-4: a local file backs at most one canvas id
 
         for root, _, files in os.walk(self.local_path):
             for filename in files:
-                if filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME) or filename.startswith('.'):
+                if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
+                        or filename in _APP_GENERATED_FILES
+                        or filename.startswith('.')):
                     continue
                 filepath = Path(root) / filename
-                norm_name = robust_filename_normalize(filename)
                 try:
                     size = filepath.stat().st_size
-                    # Store as a list to handle duplicate filenames in different folders
-                    if norm_name not in local_files_map:
-                        local_files_map[norm_name] = []
-                    local_files_map[norm_name].append((filepath, size))
-                    all_local_files.append(filepath)
                 except OSError:
-                    pass
+                    continue
+                candidate = {'path': filepath, 'size': size, 'md5': None}
+                local_by_name.setdefault(_match_key(filename), []).append(candidate)
+                local_by_size.setdefault(size, []).append(candidate)
+                all_local_files.append(filepath)
+
+        def _candidate_md5(cand: dict) -> str:
+            """Lazily compute (and cache) a local candidate's md5."""
+            if cand['md5'] is None:
+                cand['md5'] = SyncManager.compute_local_md5(cand['path']) or ''
+            return cand['md5']
+
+        def _discovery_md5(cand: dict) -> str:
+            """Baseline md5 to store for an auto-discovered file. Skips hashing
+            very large files during interactive analysis; an empty baseline
+            safely biases the next edit-classification toward preservation."""
+            if cand['size'] > _CONTENT_MATCH_MAX_BYTES:
+                return ''
+            return _candidate_md5(cand)
 
         seen_ids = set()
 
@@ -774,43 +857,77 @@ class SyncManager:
             file_id = str(c_file.id)
                 
             if file_id not in files_section:
-                # 1. Not in manifest. Checking if it already exists locally.
-                norm_name = robust_filename_normalize(c_file.filename)
-                
-                auto_discovered = False
-                if norm_name in local_files_map:
-                    # Check all files with this name
-                    for local_path, local_size in local_files_map[norm_name]:
-                        # Synthetic secondary entities are stored with size=0
-                        # but the HTML on disk has content. Skip size check
-                        # for negative IDs and rely on path matching only.
-                        if c_file.id < 0 or local_size == c_file.size:
-                            # Auto-discover the file and count it as up-to-date
-                            try:
-                                rel_path = local_path.relative_to(self.local_path)
-                                entry = {
-                                    'canvas_file_id': c_file.id,
-                                    'canvas_filename': c_file.filename,
-                                    'local_path': str(rel_path).replace('\\', '/'),
-                                    'canvas_updated_at': c_file.modified_at or datetime.now(timezone.utc).isoformat(),
-                                    'downloaded_at': datetime.now(timezone.utc).isoformat(),
-                                    'original_size': c_file.size,
-                                    'is_ignored': False,
-                                    'original_md5': SyncManager.compute_local_md5(local_path) or ''
-                                }
-                                files_section[file_id] = entry
-                                sync_info = self._dict_to_sync_info(file_id, entry, c_file)
-                                sync_info.target_local_path = calc_path
-                                result.uptodate_files.append((c_file, sync_info))
-                                auto_discovered = True
-                                break # Stop checking other files with same name
-                            except ValueError:
-                                pass
-                                
-                if auto_discovered:
-                    continue
-                
-                # Truly new file (add target path to c_file dynamically or create a proxy)
+                # Not in manifest — try to recognize a file the student already
+                # has on disk so we never re-download a duplicate. Three tiers:
+                #   (a) name match (filesystem-aware; size must match for real
+                #       files, synthetic entities match on name alone),
+                #   (b) content match by md5 when Canvas exposes a hash and the
+                #       file was renamed — the key win for student-built folders,
+                #   (c) unambiguous size+extension fallback when md5 is absent or
+                #       the file is too large to hash interactively.
+                match_key = _match_key(c_file.filename)
+                matched_cand = None
+
+                # (a) Name match
+                for cand in local_by_name.get(match_key, []):
+                    if str(cand['path']) in claimed_paths:
+                        continue
+                    # Synthetic secondary entities are stored with size=0 but the
+                    # HTML on disk has content — match negatives on name alone.
+                    if c_file.id < 0 or cand['size'] == c_file.size:
+                        matched_cand = cand
+                        break
+
+                # (b)/(c) Content / size+ext match — real files only (synthetic
+                # entities have size 0 and are handled by the name tier above).
+                if matched_cand is None and c_file.id >= 0:
+                    size_pool = [
+                        cand for cand in local_by_size.get(c_file.size, [])
+                        if str(cand['path']) not in claimed_paths
+                    ]
+                    c_md5 = getattr(c_file, 'md5', None)
+                    c_ext = Path(c_file.filename).suffix.lower()
+                    if c_md5 and c_file.size <= _CONTENT_MATCH_MAX_BYTES:
+                        for cand in size_pool:
+                            if _candidate_md5(cand) == c_md5:
+                                matched_cand = cand
+                                break
+                    if matched_cand is None and c_ext:
+                        # Exactly one same-size, same-extension orphan is almost
+                        # certainly this file under a new name. Uniqueness is
+                        # required so we never bind a coincidentally same-sized file.
+                        ext_pool = [
+                            cand for cand in size_pool
+                            if Path(cand['path']).suffix.lower() == c_ext
+                        ]
+                        if len(ext_pool) == 1:
+                            matched_cand = ext_pool[0]
+
+                if matched_cand is not None:
+                    # Auto-discover the file and count it as up-to-date.
+                    try:
+                        local_path = matched_cand['path']
+                        rel_path = local_path.relative_to(self.local_path)
+                        entry = {
+                            'canvas_file_id': c_file.id,
+                            'canvas_filename': c_file.filename,
+                            'local_path': str(rel_path).replace('\\', '/'),
+                            'canvas_updated_at': c_file.modified_at or datetime.now(timezone.utc).isoformat(),
+                            'downloaded_at': datetime.now(timezone.utc).isoformat(),
+                            'original_size': c_file.size,
+                            'is_ignored': False,
+                            'original_md5': _discovery_md5(matched_cand),
+                        }
+                        files_section[file_id] = entry
+                        claimed_paths.add(str(local_path))
+                        sync_info = self._dict_to_sync_info(file_id, entry, c_file)
+                        sync_info.target_local_path = calc_path
+                        result.uptodate_files.append((c_file, sync_info))
+                        continue
+                    except ValueError:
+                        pass
+
+                # Truly new file (stamp target path for the download router)
                 c_file._target_local_path = calc_path
                 raw_new_files.append(c_file)
             else:
@@ -943,14 +1060,14 @@ class SyncManager:
 
         _sec_name_counts: dict = {}
         for nf in secondary_new_files:
-            norm = robust_filename_normalize(nf.filename)
+            norm = _match_key(nf.filename)
             count = _sec_name_counts.get(norm, 0)
             _sec_name_counts[norm] = count + 1
             if count > 0:
                 _tp = Path(getattr(nf, '_target_local_path', nf.filename))
                 nf._target_local_path = str(_tp.with_stem(f"{_tp.stem} ({count})"))
 
-        new_name_map = {robust_filename_normalize(nf.filename): nf for nf in regular_new_files}
+        new_name_map = {_match_key(nf.filename): nf for nf in regular_new_files}
 
         # Check locally deleted files against re-uploads
         final_locally_deleted = []
@@ -972,7 +1089,7 @@ class SyncManager:
                 continue
             # ----------------------------------------
 
-            missing_norm = robust_filename_normalize(del_info.canvas_filename)
+            missing_norm = _match_key(del_info.canvas_filename)
             if missing_norm in new_name_map:
                 matching_new_cfile = new_name_map[missing_norm]
                 result.updated_clean_files.append((matching_new_cfile, del_info))
@@ -1128,10 +1245,33 @@ class SyncManager:
         try:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
-
-            return canvas_dt > manifest_dt
         except (ValueError, TypeError):
             return False
+
+        if canvas_dt <= manifest_dt:
+            return False
+
+        # Canvas timestamp is newer. When we have NO md5 on either side to confirm
+        # a real content change, teachers frequently "touch" a file (re-publish,
+        # permission/metadata edits) without altering bytes — producing phantom
+        # updates. Use file size as a cheap tie-breaker: if the byte count is
+        # unchanged, treat it as a metadata touch (not newer). A genuine content
+        # change almost always changes the size. This only applies when md5 is
+        # unavailable, so the md5 fast-paths above are never weakened.
+        if not (canvas_md5 and manifest_md5):
+            try:
+                manifest_size = int(manifest_entry.get('original_size', -1))
+            except (TypeError, ValueError):
+                manifest_size = -1
+            canvas_size = getattr(canvas_file, 'size', None)
+            if (
+                canvas_size is not None
+                and manifest_size >= 0
+                and int(canvas_size) == manifest_size
+            ):
+                return False
+
+        return True
 
     @staticmethod
     def _classify_local_modification(local_path: Path, original_md5: str) -> str:
@@ -1142,21 +1282,20 @@ class SyncManager:
             ``'modified'`` - md5 differs, missing, or unreadable → preserve via
                              ``_NewVersion`` on update.
 
-        Files larger than 50 MB skip the hash comparison (matches
-        ``heal_manifest`` Tier 2) and are treated as ``clean`` - re-hashing
-        large videos on every analysis would dominate sync latency, and
-        annotation targets in practice are small documents (PDF, DOCX, PPTX).
+        We ALWAYS hash, regardless of file size. A previous 50 MB short-circuit
+        returned ``'clean'`` for large files without verifying their content,
+        which silently overwrote student edits on big annotated PDFs/scans and
+        broke the "never overwrites your edits" guarantee. This method is only
+        reached when ``_is_canvas_newer`` already returned True and the file is
+        not ignored, so hashing runs solely for genuinely-updated files — the
+        I/O cost is bounded and correctness is paramount. If the hash cannot be
+        computed (locked/unreadable file) we bias to ``'modified'`` so the local
+        copy is always preserved.
         """
         if not local_path.exists():
             return 'clean'
         if not original_md5:
             return 'modified'
-        try:
-            size = local_path.stat().st_size
-        except OSError:
-            return 'modified'
-        if size > 50 * 1024 * 1024:
-            return 'clean'
         current_md5 = compute_local_md5(local_path)
         if not current_md5:
             return 'modified'
