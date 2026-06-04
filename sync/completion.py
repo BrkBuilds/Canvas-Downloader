@@ -157,8 +157,9 @@ def show_sync_complete():
         local_del = skipped_data.get('local_del', 0)
         canvas_del = skipped_data.get('canvas_del', 0)
         edited = skipped_data.get('edited', 0)
+        filtered = skipped_data.get('filtered', 0)
 
-        if local_del > 0 or canvas_del > 0 or edited > 0:
+        if local_del > 0 or canvas_del > 0 or edited > 0 or filtered > 0:
             parts = []
             if edited > 0:
                 parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
@@ -166,6 +167,10 @@ def show_sync_complete():
                 parts.append(f"{local_del} {'file' if local_del == 1 else 'files'} deleted locally")
             if canvas_del > 0:
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
+            if filtered > 0:
+                # M-5: files hidden by this course's saved file-type filter
+                # (e.g. "study materials only") — surfaced instead of silently dropped.
+                parts.append(f"{filtered} {'file' if filtered == 1 else 'files'} outside this course's file-type filter")
 
             joined_parts = " and ".join(parts)
             from ui.amber_notice import render_amber_notice

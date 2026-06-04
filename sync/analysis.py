@@ -33,6 +33,29 @@ from engine.notifications import play_completion_beep
 logger = logging.getLogger(__name__)
 
 
+def _persist_discovered_entries(all_results) -> None:
+    """Durably record auto-discovered / healed manifest rows for every analyzed
+    pair WITHOUT stamping ``last_synced``.
+
+    Used on the zero-change fast paths (nothing to download) so a fully
+    up-to-date folder — especially a student-built one that was just recognized
+    via content/size matching — builds its sync "memory" once, instead of
+    re-walking and re-hashing the entire tree on every future sync. Passing
+    ``update_last_synced=False`` ensures we never imply a sync actually ran.
+    """
+    for _res in all_results or []:
+        if not isinstance(_res, dict):
+            continue
+        _sm = _res.get('sync_manager')
+        _mf = _res.get('manifest')
+        if _sm is None or _mf is None:
+            continue
+        try:
+            _sm.save_manifest(_mf, update_last_synced=False)
+        except Exception as _persist_err:
+            logger.warning(f"Failed to persist discovered manifest entries: {_persist_err}")
+
+
 # ---------------------------------------------------------------------------
 # Fix 2: Background-thread helper for per-course analysis
 # ---------------------------------------------------------------------------
@@ -92,9 +115,12 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             _sec_contract_source = "session state (DB corrupt)"
     if _raw_secondary is None:
         _sec_contract_source = "session state (first sync)"
-        # H-4: First-ever analysis for this pair — no DB contract yet.
-        # Fall back to session state so the user's current settings are honoured,
-        # then persist to DB so future syncs don't lose these settings.
+        # H-4 / L-4: First-ever analysis for this pair — no DB contract yet.
+        # Fall back to session state so the user's current settings are honoured.
+        # We do NOT persist here: analysis is a read-only "verify" phase and must
+        # leave no DB side effects if the user backs out. The contract is durably
+        # written at sync execution time (sync/execution.py seeds it on first run),
+        # so future syncs still inherit these settings once a sync actually runs.
         _raw_secondary = {
             'download_assignments':   st.session_state.get('persistent_dl_assignments', False),
             'download_syllabus':      st.session_state.get('persistent_dl_syllabus', False),
@@ -105,13 +131,6 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             'download_submissions':   st.session_state.get('persistent_dl_submissions', False),
             'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
         }
-        try:
-            import json as _json
-            sync_mgr._save_metadata('secondary_content_contract', _json.dumps(_raw_secondary))
-        except Exception as _persist_err:
-            logger.warning(
-                f"Failed to persist initial secondary content contract for course {course_id}: {_persist_err}"
-            )
     _secondary_settings = _raw_secondary  # may still be empty dict — that's fine
     if debug_file:
         _enabled_sec = [
@@ -426,6 +445,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
         # Auto-select all new, updated, locally deleted, and missing files
         sync_selections = []
+        total_filter_skipped = 0  # M-5: files hidden by a non-'all' file_filter
         for idx, res_data in enumerate(all_results):
             result = res_data['result']
             cid = res_data['pair']['course_id']
@@ -455,6 +475,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
             actionable_updated_clean = apply_file_filter(result.updated_clean_files, current_filter, is_tuple=True)
             actionable_del = apply_file_filter(result.locally_deleted_files, current_filter, is_tuple=False)
 
+            # M-5: account for new/clean-update files hidden by a non-'all'
+            # file_filter so the completion screen can surface them instead of
+            # silently dropping them. (Locally-deleted/edited are skipped by
+            # design and tallied separately as qs_skipped.)
+            total_filter_skipped += (len(result.new_files) - len(actionable_new))
+            total_filter_skipped += (len(result.updated_clean_files) - len(actionable_updated_clean))
+
             # Debug: log Quick Sync auto-selection per course
             if st.session_state.get('debug_mode'):
                 from canvas_debug import log_debug as _qs_log
@@ -462,7 +489,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 _qs_log(f"--- Quick Sync Auto-Selection: {res_data['pair']['course_name']} ---", _qs_dbg)
                 _qs_log(
                     f"File filter: {current_filter} | "
-                    f"Selected: {len(actionable_new)} new, {len(actionable_updated_clean)} clean updates, {len(actionable_del)} locally-deleted re-downloads",
+                    f"Selected: {len(actionable_new)} new, {len(actionable_updated_clean)} clean updates "
+                    f"(Quick Sync always skips locally-deleted and locally-edited files)",
                     _qs_dbg,
                 )
                 _qs_log(
@@ -478,7 +506,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     _qs_log(f"  [QS-SELECT-UPDATE] {_fn}", _qs_dbg)
                 for _si in actionable_del:
                     _fn = getattr(_si, 'canvas_filename', str(_si))
-                    _qs_log(f"  [QS-SELECT-LOCDEL] {_fn}", _qs_dbg)
+                    _qs_log(f"  [QS-SKIP-LOCDEL]   {_fn}", _qs_dbg)
                 for _f, _ in (result.updated_modified_files or []):
                     _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
                     _qs_log(f"  [QS-SKIP-EDITED]   {_fn}", _qs_dbg)
@@ -492,8 +520,12 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # renders them with their default-off state.
             for f, _ in result.updated_modified_files:
                 st.session_state.setdefault(f'sync_updmod_{cid}_{f.id}', False)
+            # M-6: Quick Sync never re-downloads locally-deleted files. Leave them
+            # explicitly UNCHECKED (setdefault, not forced True) so that if the
+            # user later opens Review, they reflect Quick Sync's skip behaviour
+            # instead of appearing pre-queued for download.
             for si in actionable_del:
-                st.session_state[f'sync_locdel_{cid}_{si.canvas_file_id}'] = True
+                st.session_state.setdefault(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
 
             clean_updates = [f for f, _ in actionable_updated_clean]
             sync_selections.append({
@@ -534,6 +566,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             'local_del': total_locdel,
             'canvas_del': total_canvasdel,
             'edited': total_edited,
+            'filtered': total_filter_skipped,
         }
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
 
@@ -550,6 +583,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 _qs_final_log(f"→ Routing to: {_qs_route}", _qs_f)
 
         if total_count == 0:
+            # M-1: Persist auto-discovered / healed entries even though no
+            # download will run, so an up-to-date folder builds its sync memory.
+            _persist_discovered_entries(all_results)
             # 2. Bypass directly to completion.
             # Do NOT pop sync_quick_mode here — show_sync_complete reads it
             # to select the correct 'quick_sync_uptodate' notification tone.
@@ -604,6 +640,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 _rv_log(f"→ Routing to: {_rv_route}", _rv_dbg)
 
         if total_changes == 0:
+            # M-1: Persist auto-discovered / healed entries even though no
+            # download will run, so an up-to-date folder builds its sync memory.
+            _persist_discovered_entries(all_results)
             # Nothing to review - skip review step, go straight to completion
             st.session_state['synced_count'] = 0
             st.session_state['download_status'] = 'sync_complete'
