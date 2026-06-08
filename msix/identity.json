@@ -1,0 +1,12 @@
+{
+  "_comment": "Identity values for the Microsoft Store (MSIX) build. Get the first three from Partner Center AFTER reserving the app name: Product > Product management > Product identity. Until then the placeholders below let build_msix.py run in --test mode (self-signed, sideload only). See msix/README.md.",
+
+  "identity_name": "BrkBuilds.CanvasDownloader",
+  "publisher": "CN=BE7EDB0D-73AD-43BE-B143-F68AB08998C3",
+  "publisher_display_name": "BrkBuilds",
+
+  "_test_mode_values": "Used automatically when the three fields above still contain __REPLACE...__ placeholders. The test publisher must match the self-signed cert subject build_msix.py creates.",
+  "test_identity_name": "CanvasDownloader.Dev",
+  "test_publisher": "CN=CanvasDownloaderDev",
+  "test_publisher_display_name": "Canvas Downloader (Dev)"
+}
