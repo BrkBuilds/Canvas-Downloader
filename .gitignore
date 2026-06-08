@@ -9,6 +9,10 @@ dist/
 installer_output/
 installer_output/*.exe
 
+# MSIX / Microsoft Store track (generated; tooling + identity.json stay tracked)
+msix/build/
+msix_output/
+
 # Secrets
 canvas_downloader_settings.json
 *.env

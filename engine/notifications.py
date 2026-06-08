@@ -49,9 +49,47 @@ logger = logging.getLogger(__name__)
 
 _WINDOWS_AUMID = 'CanvasDownloader.App'
 
+# AppId portion of the MSIX package AUMID. MUST stay in sync with the
+# <Application Id="..."> value in msix/AppxManifest.template.xml.
+_MSIX_APP_ID = 'CanvasDownloader'
+
+_msix_pfn_cached = False
+_msix_pfn = None
+
 
 def _is_packaged() -> bool:
     return getattr(sys, 'frozen', False)
+
+
+def _get_package_family_name():
+    """Return this process's MSIX PackageFamilyName, or None when unpackaged.
+
+    Distinguishes the Microsoft Store (MSIX) build from the standalone Inno Setup
+    build: both are PyInstaller-frozen (so ``_is_packaged()`` is True for both),
+    but only the Store build runs inside a package. Result is cached. Always None
+    on non-Windows or on any API error, so the unpackaged code path is unaffected.
+    """
+    global _msix_pfn_cached, _msix_pfn
+    if _msix_pfn_cached:
+        return _msix_pfn
+    _msix_pfn_cached = True
+
+    if system != 'Windows' or ctypes is None:
+        return None
+    try:
+        kernel32 = ctypes.windll.kernel32
+        length = ctypes.c_uint32(0)
+        APPMODEL_ERROR_NO_PACKAGE = 15700
+        rc = kernel32.GetCurrentPackageFamilyName(ctypes.byref(length), None)
+        if rc == APPMODEL_ERROR_NO_PACKAGE:
+            return None  # standalone / CLI build
+        buf = ctypes.create_unicode_buffer(length.value)
+        if kernel32.GetCurrentPackageFamilyName(ctypes.byref(length), buf) != 0:
+            return None
+        _msix_pfn = buf.value
+        return _msix_pfn
+    except Exception:
+        return None
 
 
 def _get_streamlit_url() -> str:
@@ -119,8 +157,12 @@ def _ensure_aumid_registered(icon_path: str = ''):
 def _show_windows_toast(title: str, body: str):
     """Display a native Windows 10/11 toast notification.
 
-    Packaged build: registers the AUMID, attributes the toast to Canvas Downloader,
-    and focuses the PyWebView window on click.
+    MSIX (Store) build: attributes the toast via the package's own AUMID
+    (PackageFamilyName!AppId) so Windows shows the manifest DisplayName
+    "Canvas Downloader", and focuses the PyWebView window on click.
+
+    Standalone (Inno Setup) build: registers a custom HKCU AUMID, attributes the
+    toast to Canvas Downloader, and focuses the window on click.
 
     CLI mode: omits app_id entirely so Windows never tries to activate an
     unregistered AUMID (which was causing random apps like Notion to foreground).
@@ -144,9 +186,17 @@ def _show_windows_toast(title: str, body: str):
             'on_failed': lambda _args: None,
         }
 
-        if _is_packaged():
-            # Register AUMID so Windows attributes the click to Canvas Downloader,
-            # then focus the PyWebView window when the notification is clicked.
+        pfn = _get_package_family_name()
+        if pfn:
+            # MSIX (Store) build: use the package's own AUMID so Windows shows
+            # the manifest DisplayName "Canvas Downloader". A custom AUMID here
+            # makes Windows fall back to the raw package family name. HKCU AUMID
+            # registration is skipped — it is virtualized and ignored in-package.
+            kwargs['app_id'] = f'{pfn}!{_MSIX_APP_ID}'
+            kwargs['on_click'] = lambda _args: _focus_canvas_window()
+        elif _is_packaged():
+            # Standalone (Inno Setup) build — unchanged. Register AUMID so Windows
+            # attributes the click to Canvas Downloader, then focus the window.
             _ensure_aumid_registered(icon_path)
             kwargs['app_id'] = _WINDOWS_AUMID
             kwargs['on_click'] = lambda _args: _focus_canvas_window()
