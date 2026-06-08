@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppxManifest TEMPLATE for the Microsoft Store (MSIX) build of Canvas Downloader.
+
+  This file is NOT used directly. build_msix.py reads it, substitutes the
+  __PLACEHOLDER__ tokens from msix/identity.json + version.py, and writes the
+  final manifest to msix/build/AppxManifest.xml.
+
+  This is the SEPARATE Store packaging track. It does not touch the Inno Setup
+  installer (Canvas_Downloader_Setup.iss) or build_windows.py in any way.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <!-- Name + Publisher MUST match the values Partner Center assigns after you
+       reserve the app name (Product identity page). Version is injected from
+       version.py (4-part: x.y.z.0). ProcessorArchitecture matches the x64
+       PyInstaller build. -->
+  <Identity
+    Name="__IDENTITY_NAME__"
+    Publisher="__PUBLISHER__"
+    Version="__VERSION__"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Canvas Downloader</DisplayName>
+    <PublisherDisplayName>__PUBLISHER_DISPLAY_NAME__</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- Win10 1809+ is the floor for full-trust MSIX. Mirrors the .iss MinVersion. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <!-- EntryPoint=Windows.FullTrustApplication => runs the native PyInstaller
+         .exe as a normal Win32 process (needed for pywebview/WebView2, COM
+         Office automation, keyring, etc.). -->
+    <Application Id="CanvasDownloader"
+                 Executable="Canvas Downloader.exe"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Canvas Downloader"
+        Description="Batch-download your Canvas LMS course materials to your computer."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile
+          Wide310x150Logo="Assets\Wide310x150Logo.png"
+          Square310x310Logo="Assets\Square310x310Logo.png"
+          Square71x71Logo="Assets\Square71x71Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Full-trust desktop app: required for a Win32 EXE entry point. -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
