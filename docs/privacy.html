@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy - Canvas Downloader</title>
+  <meta name="description"
+    content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas API token never leaves your computer." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b0c14;
+      --surf: #10111e;
+      --surf2: #15172a;
+      --border: rgba(255, 255, 255, 0.1);
+      --border2: rgba(255, 255, 255, 0.16);
+      --txt: #e2e8f0;
+      --txt2: #cbd5e1;
+      --txt3: #94a3b8;
+      --cyan: #38bdf8;
+      --cyan-bg: rgba(56, 189, 248, 0.08);
+      --cyan-b: rgba(56, 189, 248, 0.3);
+      --green: #68d4a3;
+      --grn-bg: rgba(104, 212, 163, 0.08);
+      --grn-b: rgba(104, 212, 163, 0.3);
+      --red: #ef4444;
+      --rad: 10px;
+      --rad-l: 16px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      background: rgba(11, 12, 20, 0.9);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      height: 58px;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--txt);
+    }
+
+    .nav-logo img {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+    }
+
+    .nav-back {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--txt3);
+      transition: color 0.15s;
+    }
+
+    .nav-back:hover {
+      color: var(--txt);
+    }
+
+    /* ---- CONTENT ---- */
+    main {
+      flex: 1;
+      padding: 64px 0 80px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      border: 1px solid var(--cyan-b);
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+
+    .updated {
+      font-size: 13px;
+      color: var(--txt3);
+      margin-bottom: 36px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 40px 0 14px;
+      color: var(--txt);
+    }
+
+    p {
+      font-size: 15px;
+      color: var(--txt2);
+      margin-bottom: 14px;
+    }
+
+    ul {
+      margin: 0 0 14px;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: 26px;
+      font-size: 15px;
+      color: var(--txt2);
+      margin-bottom: 10px;
+    }
+
+    ul li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    code {
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+      background: var(--surf2);
+      border: 1px solid var(--border2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--txt);
+    }
+
+    a.link {
+      color: var(--cyan);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    strong {
+      color: var(--txt);
+    }
+
+    /* TL;DR box */
+    .tldr {
+      background: var(--grn-bg);
+      border: 1px solid var(--grn-b);
+      border-radius: var(--rad-l);
+      padding: 24px 26px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .tldr svg {
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: 2px;
+      filter: drop-shadow(0 0 12px rgba(104, 212, 163, 0.3));
+    }
+
+    .tldr strong {
+      color: var(--green);
+      display: block;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .tldr span {
+      font-size: 14.5px;
+      color: var(--txt2);
+      line-height: 1.6;
+    }
+
+    /* do / don't lists */
+    .check li::before,
+    .cross li::before {
+      content: none;
+    }
+
+    .check li,
+    .cross li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding-left: 0;
+    }
+
+    .check li svg {
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .cross li svg {
+      color: var(--red);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .foot-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .foot-logo img {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+    }
+
+    footer p {
+      font-size: 13px;
+      color: var(--txt3);
+      margin-bottom: 16px;
+    }
+
+    .foot-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .foot-links a {
+      font-size: 12px;
+      color: var(--txt3);
+      transition: color 0.15s;
+    }
+
+    .foot-links a:hover {
+      color: var(--txt2);
+    }
+
+    .foot-v {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--txt3);
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </a>
+      <a href="index.html" class="nav-back">&larr; Back to home</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="label">Privacy</div>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: 8 June 2026</p>
+
+      <div class="tldr">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <div>
+          <strong>The short version</strong>
+          <span>Canvas Downloader runs 100% on your own computer. It has no backend, no servers, no accounts, no
+            analytics, and no telemetry. Your Canvas API token and your files never leave your device, except when the
+            app talks directly to your own university's Canvas server to download your content. We — the developer —
+            never see, receive, or store any of your data.</span>
+        </div>
+      </div>
+
+      <h2>Who this policy applies to</h2>
+      <p>This policy covers the <strong>Canvas Downloader</strong> desktop application for Windows (including the version
+        distributed through the Microsoft Store) and macOS, and the project website. Canvas Downloader is a free,
+        open-source app built by a student. It is <strong>not affiliated with, endorsed by, or connected to Instructure,
+          Inc. or Canvas LMS.</strong></p>
+
+      <h2>Information the app accesses</h2>
+      <p>Canvas Downloader only handles the information it needs to download your own course materials. Specifically:</p>
+      <ul>
+        <li><strong>Your Canvas API token.</strong> You generate this yourself in your Canvas account settings and paste
+          it into the app. It is used solely to authenticate to your university's Canvas server on your behalf.</li>
+        <li><strong>Your own Canvas course data.</strong> When you start a download or sync, the app requests the
+          courses, files, assignments, announcements, and similar content that <em>your</em> account already has access
+          to.</li>
+        <li><strong>The files you choose to download.</strong> These are saved to the folder you select on your own
+          computer.</li>
+        <li><strong>Local app settings.</strong> Your preferences, saved sync folders, and download history are stored
+          locally so the app remembers your setup between sessions.</li>
+      </ul>
+      <p>The app does <strong>not</strong> ask for your name, email, password, payment details, location, or contacts.
+        Your Canvas login password is never entered into or seen by the app — only the API token you create.</p>
+
+      <h2>How your information is used</h2>
+      <p>Your information is used for one purpose only: to let the app authenticate to your university's Canvas server
+        and download the content you ask for, onto your computer. There is no other processing, profiling, or
+        secondary use.</p>
+
+      <h2>Where your data is stored</h2>
+      <ul>
+        <li><strong>API token:</strong> stored securely in your operating system's credential vault — Windows Credential
+          Manager on Windows, the Keychain on macOS. It is never written to a plain text file and never transmitted to
+          the developer.</li>
+        <li><strong>Downloaded files &amp; settings:</strong> stored only on your local disk, in the locations you choose
+          (for files) and in your user profile (for app settings).</li>
+      </ul>
+      <p>Because everything is local, there is no developer-controlled database or cloud account that holds your data.</p>
+
+      <h2>What we do not do</h2>
+      <ul class="cross">
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>We do not collect, receive, or store any of your data on any server. The app has no backend.</span>
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>We do not use analytics, tracking, advertising, or telemetry of any kind.</span>
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>We do not sell, rent, or share your information with anyone.</span>
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>We do not modify, submit, or upload anything to your Canvas account — the app only reads and downloads.</span>
+        </li>
+      </ul>
+
+      <h2>Third parties</h2>
+      <ul>
+        <li><strong>Your university's Canvas (Instructure).</strong> The app connects directly to the Canvas server your
+          token belongs to in order to fetch your content. Your use of Canvas is governed by your institution's and
+          Instructure's own privacy policies.</li>
+        <li><strong>Microsoft Store (Windows).</strong> If you install the app from the Microsoft Store, Microsoft
+          handles distribution and updates. Any data Microsoft collects as the store operator is governed by the
+          <a class="link" href="https://privacy.microsoft.com/privacystatement" target="_blank"
+            rel="noopener">Microsoft Privacy Statement</a>. The app itself sends Microsoft nothing.</li>
+      </ul>
+
+      <h2>Data retention and deletion</h2>
+      <p>You are always in full control of your data because it lives on your machine:</p>
+      <ul>
+        <li>Remove your saved token at any time from within the app, or by deleting the "Canvas Downloader" entry in your
+          OS credential vault.</li>
+        <li>Delete downloaded files like any other files on your computer.</li>
+        <li>Uninstalling the app removes its local settings. Files you already downloaded remain yours and are not
+          touched.</li>
+      </ul>
+
+      <h2>Children's privacy</h2>
+      <p>Canvas Downloader is intended for students using their own university Canvas accounts. It is not directed at
+        children and does not knowingly collect any information from anyone, regardless of age.</p>
+
+      <h2>Open source</h2>
+      <p>Canvas Downloader is fully open source. You don't have to take our word for any of the above — the complete
+        source code is publicly readable on
+        <a class="link" href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank"
+          rel="noopener">GitHub</a>.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes, the updated version will be posted on this page with a new "last updated" date. Material
+        changes will be noted in the project's release notes.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy? Open an issue on
+        <a class="link" href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
+          rel="noopener">GitHub</a> and we'll respond there.</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="foot-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </div>
+      <p>Built by a student, for students. Free and open source.</p>
+      <div class="foot-links">
+        <a href="index.html">Home</a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+        <a href="guide.html">How It Works</a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
+          rel="noopener">Report a Bug</a>
+      </div>
+      <div class="foot-v">v2.0.0 - Not affiliated with Instructure or Canvas LMS</div>
+    </div>
+  </footer>
+</body>
+
+</html>
