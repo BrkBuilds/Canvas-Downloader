@@ -870,13 +870,20 @@ with _main_content.container():
                     except (KeyboardInterrupt, SystemExit):
                         raise
                     except Exception as _e:
-                        # Swallow only Streamlit control-flow exceptions (StopException, RerunException)
-                        # and RuntimeError from asyncio teardown. Re-raise anything unexpected in debug mode.
+                        # Swallow rendering noise (e.g. RuntimeError from asyncio
+                        # teardown) so a UI hiccup never kills a download.
+                        # NOTE: Streamlit's RerunException/StopException inherit
+                        # from BaseException and deliberately pass THROUGH this
+                        # handler — that propagation is what makes the Cancel
+                        # button abort the running course (the rerun then fires
+                        # the on_click cancel callback and routes to the
+                        # cancelled screen; the state machine resumes any
+                        # non-cancel interruption via skip-existing downloads).
                         _ename = type(_e).__name__
-                        if _ename not in ('StopException', 'RerunException', 'RuntimeError'):
-                            logger.debug(f"update_ui swallowed unexpected exception: {type(_e).__name__}: {_e}")
+                        if _ename != 'RuntimeError':
+                            logger.debug(f"update_ui swallowed unexpected exception: {_ename}: {_e}")
                         pass
-                
+
 
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
@@ -1230,11 +1237,11 @@ with _main_content.container():
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except Exception as _e:
-                    # Match the main update_ui handler: swallow Streamlit
-                    # control-flow noise quietly but log unexpected errors
-                    # at debug level so they surface during debug runs.
+                    # Match the main update_ui handler: swallow rendering noise.
+                    # RerunException/StopException are BaseException and pass
+                    # through — that is what makes Cancel work mid-retry.
                     _ename = type(_e).__name__
-                    if _ename not in ('StopException', 'RerunException', 'RuntimeError'):
+                    if _ename != 'RuntimeError':
                         logger.debug(f"retry update_ui swallowed: {_ename}: {_e}")
 
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
@@ -1481,6 +1488,21 @@ with _main_content.container():
 
                 # 2. Post-processing warning
                 render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+                # Office watchdog broad-kill warning (parity with the sync
+                # completion screen — previously only shown there even though
+                # the same converters run in the download flow).
+                if st.session_state.pop('pp_force_kill_warning', False):
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(
+                        "An Office process was force-closed during conversion.",
+                        icon="⚠️",
+                        detail=(
+                            "A hung Office process was terminated to unblock conversion. "
+                            "If you had other unsaved Word, Excel, or PowerPoint files open, "
+                            "they may have been closed without saving."
+                        ),
+                    )
 
                 # Size-skipped files are now rendered inside render_completion_card
 

@@ -40,52 +40,75 @@ except Exception:
     CONFIG_FILE = os.path.join(tempfile.gettempdir(), 'canvas_downloader_settings.json')
 KEYRING_SERVICE = "CanvasDownloader"
 
-def _safe_keyring_get(service: str, username: str) -> str | None:
-    """Read password from keyring with a 5.0-second background thread timeout watchdog."""
-    import concurrent.futures
-    import keyring
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(keyring.get_password, service, username)
+def _run_keyring_op(fn, *args, timeout: float = 5.0):
+    """Run a keyring operation on a DAEMON thread with a hard timeout.
+
+    The previous implementation used ``with ThreadPoolExecutor(...)`` — but
+    the context manager's ``__exit__`` calls ``shutdown(wait=True)``, which
+    blocks on a truly-hung keyring backend and defeated the 5s watchdog
+    (login could freeze forever). A daemon thread + queue is genuinely
+    non-blocking: a hung backend thread is simply abandoned and can never
+    block the app (or interpreter exit).
+
+    Raises TimeoutError on timeout; re-raises the backend's own exception.
+    """
+    import queue as _queue
+    import threading as _threading
+    _result: _queue.Queue = _queue.Queue(maxsize=1)
+
+    def _worker():
         try:
-            return future.result(timeout=5.0)
-        except concurrent.futures.TimeoutError:
-            logger.warning("Keyring get_password timed out (5.0s). Environment might be headless or restricted. Falling back.")
-            return None
-        except Exception as e:
-            logger.warning(f"Keyring get_password failed: {e}")
-            return None
+            _result.put(('ok', fn(*args)))
+        except Exception as e:  # noqa: BLE001 — backend errors are surfaced to caller
+            _result.put(('err', e))
+
+    _threading.Thread(target=_worker, daemon=True, name="keyring-op").start()
+    try:
+        kind, value = _result.get(timeout=timeout)
+    except _queue.Empty:
+        raise TimeoutError(f"keyring operation timed out after {timeout:.1f}s")
+    if kind == 'err':
+        raise value
+    return value
+
+
+def _safe_keyring_get(service: str, username: str) -> str | None:
+    """Read password from keyring with a 5.0-second daemon-thread watchdog."""
+    import keyring
+    try:
+        return _run_keyring_op(keyring.get_password, service, username)
+    except TimeoutError:
+        logger.warning("Keyring get_password timed out (5.0s). Environment might be headless or restricted. Falling back.")
+        return None
+    except Exception as e:
+        logger.warning(f"Keyring get_password failed: {e}")
+        return None
 
 def _safe_keyring_set(service: str, username: str, password: str) -> bool:
-    """Write password to keyring with a 5.0-second background thread timeout watchdog."""
-    import concurrent.futures
+    """Write password to keyring with a 5.0-second daemon-thread watchdog."""
     import keyring
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(keyring.set_password, service, username, password)
-        try:
-            future.result(timeout=5.0)
-            return True
-        except concurrent.futures.TimeoutError:
-            logger.warning("Keyring set_password timed out (5.0s). Falling back.")
-            return False
-        except Exception as e:
-            logger.warning(f"Keyring set_password failed: {e}")
-            return False
+    try:
+        _run_keyring_op(keyring.set_password, service, username, password)
+        return True
+    except TimeoutError:
+        logger.warning("Keyring set_password timed out (5.0s). Falling back.")
+        return False
+    except Exception as e:
+        logger.warning(f"Keyring set_password failed: {e}")
+        return False
 
 def _safe_keyring_delete(service: str, username: str) -> bool:
-    """Delete password from keyring with a 5.0-second background thread timeout watchdog."""
-    import concurrent.futures
+    """Delete password from keyring with a 5.0-second daemon-thread watchdog."""
     import keyring
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(keyring.delete_password, service, username)
-        try:
-            future.result(timeout=5.0)
-            return True
-        except concurrent.futures.TimeoutError:
-            logger.warning("Keyring delete_password timed out (5.0s).")
-            return False
-        except Exception as e:
-            logger.warning(f"Keyring delete_password failed: {e}")
-            return False
+    try:
+        _run_keyring_op(keyring.delete_password, service, username)
+        return True
+    except TimeoutError:
+        logger.warning("Keyring delete_password timed out (5.0s).")
+        return False
+    except Exception as e:
+        logger.warning(f"Keyring delete_password failed: {e}")
+        return False
 
 def _get_fallback_path() -> Path:
     from ui_helpers import get_config_dir
@@ -1586,7 +1609,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     temp_max = st.slider("Speed", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
             with _dc2:
                 with st.container(border=True, key="stg_card_maxsize"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.</div></div>""")
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.<br><span style="color:#64748b;">Skipped files are marked as <i>ignored</i> so future syncs don't re-list them - restore them anytime from the Sync Hub's ignored-files list, even after raising this limit.</span></div></div>""")
                     temp_size_enabled = st.toggle("Enable limit", value=st.session_state.get('max_file_size_enabled', False), key="temp_max_size_enabled")
                     temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=50, value=int(st.session_state.get('max_file_size_mb', 500)), key="temp_max_size_mb", disabled=not temp_size_enabled)
             with _dc3:

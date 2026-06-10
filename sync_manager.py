@@ -1007,8 +1007,10 @@ class SyncManager:
                     int_id = int(file_id)
                     sync_info = self._dict_to_sync_info(file_id, entry)
                     
-                    # Attach target path
-                    sync_info.target_local_path = str(Path(entry.get('local_path', '')).parent).replace('\\\\', '/')
+                    # Attach target path (as_posix gives forward slashes on
+                    # all platforms — the old .replace('\\\\','/') matched two
+                    # literal backslashes and never normalized anything).
+                    sync_info.target_local_path = Path(entry.get('local_path', '')).parent.as_posix()
                     if sync_info.target_local_path == '.':
                         sync_info.target_local_path = ''
                         
@@ -1228,7 +1230,13 @@ class SyncManager:
         have it on both sides.
         """
         if canvas_file.id < 0:
-            return False
+            # Attachment-range synthetic IDs are REAL Canvas files (Mode B):
+            # let them flow through the normal md5/timestamp/size logic below
+            # so a teacher replacing an attachment's bytes is detected as an
+            # update. All OTHER synthetic entities are regenerated from the
+            # live API on every sync, so timestamp diffing stays disabled.
+            if secondary_id_type(canvas_file.id) != 'attachment':
+                return False
 
         canvas_md5 = getattr(canvas_file, 'md5', None)
         manifest_md5 = manifest_entry.get('original_md5', '')
