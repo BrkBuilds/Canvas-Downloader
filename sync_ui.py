@@ -1997,6 +1997,17 @@ def render_sync_step4( main_placeholder=None):
     elif status == 'analyzed':
         _show_analysis_review()
     elif status == 'pre_sync':
+        # Server-side fallback (parity with the analysis pass-1 fix): if the
+        # JS auto-click below never fires (CSP, iframe sandbox, screen-reader
+        # nav), force-advance to 'syncing' after 5s instead of stranding the
+        # user on this screen forever.
+        import time as _ps_time
+        if 'pre_sync_started_at' not in st.session_state:
+            st.session_state['pre_sync_started_at'] = _ps_time.time()
+        elif _ps_time.time() - st.session_state['pre_sync_started_at'] > 5:
+            st.session_state.pop('pre_sync_started_at', None)
+            st.session_state['download_status'] = 'syncing'
+            st.rerun()
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
         # We must let this render loop FINISH completely so the frontend can tear down the `st.dialog` DOM elements.
         # Otherwise, if we immediately string together long-running tasks or `st.rerun()`, the Streamlit backend
@@ -2019,6 +2030,7 @@ def render_sync_step4( main_placeholder=None):
         # Hidden button to catch the JS click
         st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
         if st.button("START_SYNC_ROUTINE_NOW", key="hidden_trigger_sync"):
+            st.session_state.pop('pre_sync_started_at', None)
             st.session_state['download_status'] = 'syncing'
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)

@@ -265,6 +265,9 @@ def show_sync_complete():
             st.session_state['sync_errors'] = []
             st.session_state['sync_cancel_requested'] = False
             st.session_state['sync_cancelled'] = False
+            # Drop any cached worker snapshot so the retry submits a fresh
+            # download batch instead of replaying the previous run's result.
+            st.session_state.pop('sync_worker_result', None)
             st.rerun()
 
         _has_sync_retry = bool(sync_errors and retry_selections)

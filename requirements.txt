@@ -1,5 +1,6 @@
 streamlit==1.51.0
 canvasapi==3.3.0
+requests==2.32.3
 aiohttp==3.11.11
 aiofiles==24.1.0
 beautifulsoup4==4.12.3

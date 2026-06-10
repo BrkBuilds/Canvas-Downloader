@@ -38,6 +38,7 @@ from canvas_logic import CanvasManager
 from core.cancellation import cancel_sync, is_sync_cancelled
 from sync_manager import (
     SyncFileInfo, SyncHistoryManager, CanvasFileInfo,
+    secondary_id_type,
 )
 from ui_helpers import (
     esc,
@@ -56,6 +57,24 @@ logger = logging.getLogger(__name__)
 # L-10: Hoist retry constants to module level for easy post-launch tuning.
 SYNC_MAX_RETRIES = 5
 SYNC_RETRY_DELAY = 2  # Base delay in seconds for exponential backoff
+
+
+def _release_sync_worker() -> None:
+    """Drop the re-attachable sync worker references from session state.
+
+    Called once the worker result has been consumed, on worker failure, and
+    from the Cancel handler. shutdown(wait=False) lets an in-flight worker
+    wind down on its own (it observes the sync-cancel Event per chunk); we
+    only need to guarantee the NEXT sync starts with a fresh pool/future.
+    """
+    st.session_state.pop('sync_worker_future', None)
+    _pool = st.session_state.pop('sync_worker_pool', None)
+    if _pool is not None:
+        try:
+            _pool.shutdown(wait=False)
+        except Exception:
+            pass
+    return None
 
 
 def run_sync():
@@ -105,6 +124,11 @@ def run_sync():
     cancel_placeholder = st.empty()
     if cancel_placeholder.button('Cancel Sync', key="cancel_sync_btn", type="secondary"):
         cancel_sync()  # sets threading.Event + sync_cancelled + sync_cancel_requested
+        # Release the background worker references. The worker itself observes
+        # the cancel Event per chunk and winds down within ~a second; per-file
+        # DB commits have already persisted everything downloaded so far.
+        _release_sync_worker()
+        st.session_state.pop('sync_worker_result', None)
 
         # Smart routing:
         if st.session_state.get('qs_cancel_route', False):
@@ -252,6 +276,11 @@ def run_sync():
                 pair = res_data['pair']
 
                 course_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
+
+                # Same-name secondary entity guard: per-pair registry so two
+                # DISTINCT entities with identical sanitized names get " (1)"
+                # suffixes instead of silently overwriting each other.
+                cm._sec_registry = {}
 
                 if sync_mgr is None:
                     error_list.append(f"Skipping {course_name}: Database failed to initialize.")
@@ -403,13 +432,15 @@ def run_sync():
 
                     # Max-file-size gate: skip oversized files silently
                     # (counts as a non-error skip, keeps progress totals honest).
-                    # Only applies to real Canvas files (positive id) - synthetic
-                    # entities like Pages or secondary content carry size=0 anyway.
+                    # Applies to real Canvas files (positive id) AND Mode B
+                    # attachments (negative attachment-range id, real bytes) -
+                    # other synthetic entities carry size=0 anyway.
                     _f_size = getattr(file, 'size', 0) or 0
+                    _gate_id = getattr(file, 'id', 0)
                     if (
                         max_file_size_bytes
                         and _f_size > max_file_size_bytes
-                        and getattr(file, 'id', 0) > 0
+                        and (_gate_id > 0 or secondary_id_type(_gate_id) == 'attachment')
                     ):
                         _f_mb = _f_size / (1024 * 1024)
                         # Track for completion screen display
@@ -515,7 +546,19 @@ def run_sync():
                         elif filepath.exists():
                             filepath = cm._handle_conflict(filepath)
 
-                        if getattr(file, 'id', 0) < 0:
+                        _file_id_val = getattr(file, 'id', 0)
+                        if _file_id_val < 0 and secondary_id_type(_file_id_val) == 'attachment':
+                            # ── Mode B Attachments → Binary Download Path ──
+                            # Attachments are REAL Canvas files tracked under synthetic
+                            # negative IDs when isolate_secondary_content is on (the
+                            # default). They must NOT enter the synthetic-entity branch
+                            # below (which only handles regenerable entities and
+                            # .url/.html shortcuts and would silently skip a PDF).
+                            # Fall through to the binary downloader — its URL-refresh
+                            # block maps the negative ID back to the raw Canvas file ID.
+                            if _debug_file:
+                                log_debug(f"  Secondary [attachment → binary downloader]: {display_file_name}", _debug_file)
+                        elif _file_id_val < 0:
                             # ── Secondary Content Entities (Assignment, Quiz, etc.) ──
                             from sync_manager import is_secondary_id, secondary_id_type
                             _sec_entity_type = secondary_id_type(file.id)
@@ -783,9 +826,13 @@ def run_sync():
                             for attempt in range(SYNC_MAX_RETRIES):
                                 if is_sync_cancelled():
                                     break
-                                
+
                                 should_sleep_duration = 0
-                                
+                                # Bytes written during THIS attempt — rolled back from the
+                                # MB counters if the attempt fails and is retried, so the
+                                # dashboard never double-counts re-downloaded chunks.
+                                _attempt_bytes = 0
+
                                 try:
                                     async with sem:
                                         async with session.get(download_url) as response:
@@ -809,6 +856,7 @@ def run_sync():
                                                                     break
                                                                 await f.write(chunk)
                                                                 chunk_size = len(chunk)
+                                                                _attempt_bytes += chunk_size
                                                                 downloaded_mb += chunk_size / (1024 * 1024)
                                                                 synced_counter[1] += chunk_size
                                                             
@@ -939,6 +987,11 @@ def run_sync():
                                                 break  # Don't retry client errors
                                 
                                 except (aiohttp.ClientError, asyncio.TimeoutError) as net_err:
+                                    # Roll back this attempt's partial bytes so the retry
+                                    # doesn't double-count them in the MB dashboard.
+                                    if _attempt_bytes:
+                                        downloaded_mb = max(0.0, downloaded_mb - _attempt_bytes / (1024 * 1024))
+                                        synced_counter[1] = max(0, synced_counter[1] - _attempt_bytes)
                                     # Network error - retry with backoff
                                     if attempt < SYNC_MAX_RETRIES - 1:
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
@@ -1133,26 +1186,75 @@ def run_sync():
     local_sync_api_token = st.session_state.get('api_token', '')
     local_sync_api_url = st.session_state.get('api_url', '')
     import concurrent.futures as _cf
-    with _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="canvas-sync-worker") as _pool:
-        _future = _pool.submit(
-            asyncio.run,
-            download_sync_files_batch(local_sync_api_token, local_sync_api_url)
-        )
+
+    # ── Re-attachable worker + script-thread heartbeat ──────────────────
+    # Streamlit only delivers pending button clicks (as a RerunException) at
+    # the next st.* call made ON THE SCRIPT THREAD. A plain blocking
+    # future.result() therefore deferred Cancel until the whole batch had
+    # finished downloading in the background. The heartbeat below yields to
+    # Streamlit every 0.5s, so a Cancel click reruns the script immediately;
+    # the rerun re-enters run_sync, the Cancel branch sets the threading
+    # Event, and the worker's per-chunk is_sync_cancelled() checks stop the
+    # batch within ~a second. Non-cancel reruns RE-ATTACH to the running
+    # worker (or reuse the cached result) instead of submitting a duplicate.
+    _cached_run = st.session_state.get('sync_worker_result')
+    if _cached_run is None:
+        if st.session_state.get('sync_worker_future') is None:
+            _pool = _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="canvas-sync-worker")
+            st.session_state['sync_worker_pool'] = _pool
+            st.session_state['sync_worker_future'] = _pool.submit(
+                asyncio.run,
+                download_sync_files_batch(local_sync_api_token, local_sync_api_url)
+            )
+        _future = st.session_state['sync_worker_future']
+        _heartbeat = st.empty()
         try:
-            synced_details, retry_selections, _download_log_history = _future.result()
+            while True:
+                try:
+                    synced_details, retry_selections, _download_log_history = _future.result(timeout=0.5)
+                    break
+                except _cf.TimeoutError:
+                    # Script-thread yield point — lets Streamlit deliver
+                    # pending clicks while the worker keeps downloading.
+                    _heartbeat.markdown("")
+                    continue
         except Exception as _worker_exc:
             # An unhandled exception in the async download worker (e.g. SQLite
             # write failure, aiohttp teardown error) propagates here. Surface it
             # as a clean sync-failed state instead of a raw Streamlit traceback.
+            # (RerunException is a BaseException and passes through untouched.)
             logging.error(f"Sync worker thread raised an unexpected exception: {_worker_exc}", exc_info=True)
+            _release_sync_worker()
             st.session_state['download_status'] = 'sync_failed'
             st.session_state['sync_worker_error'] = str(_worker_exc)
             st.rerun()
+        _heartbeat.empty()
+        _release_sync_worker()
+        # Snapshot the worker outcome so a rerun during the post-processing
+        # phase (any click) resumes HERE instead of re-downloading the batch.
+        _cached_run = {
+            'synced_details': synced_details,
+            'retry_selections': retry_selections,
+            'log': _download_log_history,
+            'synced_count': synced_counter[0],
+            'synced_bytes': synced_counter[1],
+            'errors': list(error_list),
+        }
+        st.session_state['sync_worker_result'] = _cached_run
+    else:
+        # Post-processing-phase rerun: restore the completed worker outcome.
+        synced_details = _cached_run['synced_details']
+        retry_selections = _cached_run['retry_selections']
+        _download_log_history = _cached_run['log']
+        synced_counter[0] = _cached_run['synced_count']
+        synced_counter[1] = _cached_run['synced_bytes']
+        error_list[:] = _cached_run['errors']
 
     # Deferred cancel: checked here on the script thread so RerunException
     # never escapes the background coroutine and skips post-processing.
     # L-11: Pre-set status so the rerun doesn't re-enter 'syncing' for one pass.
     if is_sync_cancelled():
+        st.session_state.pop('sync_worker_result', None)
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
@@ -1199,6 +1301,7 @@ def run_sync():
     # SECONDARY GUARD (defense-in-depth): Catch any cancel that slipped past the primary guard above save_manifest
     # ==========================================
     if is_sync_cancelled():
+        st.session_state.pop('sync_worker_result', None)
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
@@ -1325,8 +1428,11 @@ def run_sync():
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
+    # .xls (Excel 97-2003) is a binary format openpyxl cannot read — exclude it
+    # from data extraction (mirrors run_all_conversions in the download flow).
+    # ExcelToPDF via COM/AppleScript handles .xls fine in the PDF step below.
     run_excel_data_conversion(
-        get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel'), pp_ui
+        get_synced_file_paths({'.xlsx', '.xlsm'}, 'persistent_convert_excel'), pp_ui
     )
 
     # Excel → PDF
@@ -1436,8 +1542,9 @@ def run_sync():
     if updates:
         _update_last_synced_batch(updates)
 
-    # Record sync history
-    if synced_counter[0] > 0:
+    # Record sync history — also for all-failed runs (synced 0, errors > 0)
+    # so the user can see in the Hub that a sync was attempted and failed.
+    if synced_counter[0] > 0 or error_list:
         try:
             from ui_helpers import get_config_dir
             history_mgr = SyncHistoryManager(get_config_dir())
@@ -1483,11 +1590,16 @@ def run_sync():
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 
+    # Run fully consumed — drop the cached worker snapshot so the next sync
+    # (including the Retry path, which re-enters with status='syncing')
+    # starts a fresh download batch.
+    st.session_state.pop('sync_worker_result', None)
+
     if is_sync_cancelled():
         st.session_state['download_status'] = 'sync_cancelled'
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:
         st.session_state['download_status'] = 'sync_complete'
-        
+
     st.session_state['step'] = 4
     st.rerun()
