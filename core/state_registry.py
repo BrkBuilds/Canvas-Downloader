@@ -148,6 +148,10 @@ SYNC_TRANSIENT_KEYS = {
     'size_skipped_files', 'sync_has_ignored_files',
     # sync_failed recovery keys
     'sync_worker_error', 'qs_cancel_route', 'qs_skipped',
+    # Re-attachable sync worker (H-2 heartbeat pattern) — future/pool refs
+    # and the cached batch outcome must never leak into the next sync run.
+    'sync_worker_future', 'sync_worker_pool', 'sync_worker_result',
+    'pre_sync_started_at',
     'synced_details', 'pp_failure_count', 'pp_success_count',
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'completion_beep_fired',

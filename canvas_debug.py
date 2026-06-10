@@ -11,10 +11,16 @@ _KEEP_TAIL_BYTES = 2 * 1024 * 1024
 # Covers the standard header format "Bearer <token>" case-insensitively.
 _BEARER_RE = re.compile(r'(Bearer\s+)[A-Za-z0-9_\-\.~+/]+=*', re.IGNORECASE)
 
+# Signed-URL query tokens (Canvas file URLs carry a `verifier=` token that
+# grants temporary access to the file; `access_token=` may appear in some
+# API URLs). Redacted so a shared debug log can't leak live download links.
+_URL_TOKEN_RE = re.compile(r'((?:verifier|access_token)=)[^&\s"\'<>]+', re.IGNORECASE)
+
 
 def _sanitize(message: str) -> str:
-    """Strip Bearer tokens from a log message before writing to disk."""
-    return _BEARER_RE.sub(r'\1[REDACTED]', message)
+    """Strip Bearer tokens and signed-URL tokens before writing to disk."""
+    message = _BEARER_RE.sub(r'\1[REDACTED]', message)
+    return _URL_TOKEN_RE.sub(r'\1[REDACTED]', message)
 
 
 def _rotate_if_needed(debug_file: str) -> None:

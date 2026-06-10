@@ -127,12 +127,18 @@ def _wait_for_server(health_url: str, failed_event: threading.Event,
     signals failure, or the timeout expires."""
     import urllib.request
 
+    # Bypass any system/corporate proxy for the 127.0.0.1 health check.
+    # University VPN/proxy setups that lack a localhost exception would
+    # otherwise route the probe through the proxy and report a phantom
+    # "failed to start" even though the local server is healthy.
+    _opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
     for _ in range(timeout_seconds * 10):
         if failed_event.is_set():
             logger.error("Streamlit server failed to start; aborting wait.")
             return False
         try:
-            with urllib.request.urlopen(health_url, timeout=1) as resp:
+            with _opener.open(health_url, timeout=1) as resp:
                 if resp.status == 200:
                     return True
         except Exception:
@@ -213,7 +219,10 @@ def _run_macos() -> None:
 
     controller = CanvasController(
         streamlit_url=url,
-        on_quit=lambda: sys.exit(0),
+        # os._exit: same rationale as the Windows exit path — a non-daemon
+        # worker thread mid-API-call must not keep the app alive after quit.
+        # The controller destroys its Tk window before invoking on_quit.
+        on_quit=lambda: os._exit(0),
     )
 
     def _boot_sequence() -> None:
@@ -395,4 +404,9 @@ if __name__ == "__main__":
             webview.windows[0].load_html(_make_error_html(_reason))
 
         webview.start(_boot)
-        sys.exit(0)
+        # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
+        # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise
+        # keep the process alive for up to a minute after the window closes.
+        # All durable state is already committed (per-file SQLite writes,
+        # atomic .part renames), so skipping interpreter teardown is safe.
+        os._exit(0)
