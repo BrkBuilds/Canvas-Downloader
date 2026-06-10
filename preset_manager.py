@@ -304,7 +304,11 @@ class PresetManager:
         # 1. Apply each setting key with safe defaults
         for key in self.SETTINGS_KEYS:
             if key == 'download_mode':
-                session_state[key] = settings.get(key, 'modules')
+                # Coerce unknown/legacy values (e.g. 'files' from an old
+                # preset file) to 'modules' — only the two UI-reachable
+                # modes are supported by the download engine's hybrid logic.
+                _mode = settings.get(key, 'modules')
+                session_state[key] = _mode if _mode in ('modules', 'flat') else 'modules'
             elif key == 'file_filter':
                 session_state[key] = settings.get(key, 'all')
             else:

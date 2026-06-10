@@ -362,6 +362,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
             _fut = _analysis_pool.submit(asyncio.run, _run_course_analysis())
             # Poll with a short timeout so the cancel flag is honoured even
             # while the background thread is blocked on Canvas API calls.
+            # The heartbeat is a script-thread st.* yield point: Streamlit
+            # only delivers pending button clicks (incl. Cancel) at such
+            # calls, so without it a click would sit queued until ALL pairs
+            # finished analyzing. With it, Cancel takes effect within ~0.3s.
+            _analysis_heartbeat = st.empty()
             while True:
                 if is_sync_cancelled():
                     _fut.cancel()
@@ -370,7 +375,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     _analysis_result = _fut.result(timeout=0.3)
                     break
                 except __import__('concurrent.futures', fromlist=['TimeoutError']).TimeoutError:
+                    _analysis_heartbeat.markdown("")
                     continue
+            _analysis_heartbeat.empty()
             if is_sync_cancelled():
                 break
             course, sync_mgr, manifest, canvas_files, result, detected = _analysis_result
@@ -665,5 +672,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
             parts.append(f"{total_local_del} file{'s' if total_local_del != 1 else ''} deleted locally")
 
         summary = ", ".join(parts) + " found."
-        play_completion_beep(mode='sync_review', summary=summary.strip())
+        # M-7 parity: respect the notifications toggle here too (the other
+        # three play_completion_beep call sites are already gated).
+        if st.session_state.get('notifications_enabled', True):
+            play_completion_beep(mode='sync_review', summary=summary.strip())
         st.session_state['download_status'] = 'analyzed'

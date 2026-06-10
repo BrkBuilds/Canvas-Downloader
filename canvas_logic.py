@@ -220,6 +220,62 @@ def _format_canvas_date(date_str):
     except Exception:
         return date_str
 
+def _build_rubric_markdown(rubric) -> str:
+    """Serialise a Canvas rubric into a Markdown table.
+
+    Shared by the initial-download path (_fetch_and_save_rubrics) and the
+    sync path (download_secondary_entity) so both produce IDENTICAL .md
+    content. Previously the sync path wrapped its body in the full HTML
+    document template, corrupting the .md file on every rubric update.
+    """
+    r_title = getattr(rubric, 'title', 'Untitled Rubric')
+    r_description = getattr(rubric, 'description', '') or ''
+    criteria = getattr(rubric, 'data', None) or []
+
+    md_content = f"# Rubric: {r_title}\n\n"
+
+    r_html_url = getattr(rubric, 'html_url', None)
+    if r_html_url:
+        md_content += f"[View on Canvas]({r_html_url})\n\n"
+
+    if r_description:
+        md_content += f"{r_description}\n\n"
+
+    if criteria:
+        # Build table header from first criterion's ratings.
+        # `or 0` guards against points being present-but-None, which would
+        # crash sorted() with a None<int comparison and abort the rubric.
+        sample_ratings = criteria[0].get('ratings', [])
+        headers = ['Criterion'] + [
+            f"{r.get('description', '?')} ({r.get('points', '?')})"
+            for r in sorted(sample_ratings,
+                            key=lambda x: x.get('points') or 0,
+                            reverse=True)
+        ]
+        md_content += '| ' + ' | '.join(headers) + ' |\n'
+        md_content += '|' + '---|' * len(headers) + '\n'
+
+        for criterion in criteria:
+            row = [criterion.get('description', '')]
+            c_ratings = sorted(
+                criterion.get('ratings', []),
+                key=lambda x: x.get('points') or 0,
+                reverse=True,
+            )
+            for rating in c_ratings:
+                long_desc = rating.get('long_description', '')
+                short_desc = rating.get('description', '')
+                row.append(long_desc or short_desc)
+            # Pad row if ratings count differs
+            while len(row) < len(headers):
+                row.append('')
+            md_content += '| ' + ' | '.join(row) + ' |\n'
+    else:
+        md_content += '*No criteria data available.*\n'
+
+    return md_content
+
+
 class DownloadError:
     """Structured error object for UI display and logging."""
     def __init__(self, course_name, item_name, error_type, message, raw_error=None, context=None, is_app_error=False):
@@ -314,8 +370,14 @@ class CanvasManager:
                 self.user = self.canvas.get_current_user()
             courses = self.user.get_favorite_courses()
         else:
-            # Fetch active and invited courses
-            courses = self.canvas.get_courses(enrollment_state=['active', 'invited_or_pending'])
+            # Fetch ALL enrollments — deliberately unfiltered. The previous
+            # enrollment_state=['active', 'invited_or_pending'] filter hid
+            # past-semester courses on Canvas instances that conclude
+            # enrollments at term end, breaking the "archive last semester"
+            # use case. Courses the student can no longer open come back as
+            # access-restricted stubs WITHOUT a 'name' attribute and are
+            # dropped by the hasattr filter below.
+            courses = self.canvas.get_courses()
         
         # Validation/Filter loop (might raise API errors if connection drops)
         course_list = []
@@ -376,8 +438,14 @@ class CanvasManager:
             
         # --- Phase 2: Module Scan (Supplement) ---
         try:
+            # Pass the IDs already gathered by the bulk fetch so the module
+            # scan can skip its per-item course.get_file() call for files we
+            # already have metadata for — eliminating an N+1 API pattern on
+            # every sync analysis / scanning pass (the module_map entry is
+            # still recorded for path routing).
             module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
-                                                                    secondary_content_settings=secondary_content_settings)
+                                                                    secondary_content_settings=secondary_content_settings,
+                                                                    known_file_ids=set(all_files_map.keys()))
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -417,8 +485,14 @@ class CanvasManager:
             
         return list(all_files_map.values()), secondary_fetch_success, module_map
     
-    def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None):
+    def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None,
+                                known_file_ids=None):
         """Fallback: Get files by iterating through modules.
+
+        ``known_file_ids`` (set[int] | None): file IDs already fetched by the
+        bulk ``get_files()`` pass. Module items matching these IDs skip the
+        per-item ``course.get_file()`` HTTP call (their module_map entry is
+        still recorded), avoiding an N+1 request pattern on large courses.
 
         Also emits mock CanvasFileInfo for secondary entity types
         (Assignment, Quiz, Discussion, Page, ExternalUrl) when
@@ -474,6 +548,10 @@ class CanvasManager:
                     if not hasattr(item, 'content_id') or not item.content_id:
                         continue
                     module_map[item.content_id] = clean_module_name
+                    if known_file_ids and item.content_id in known_file_ids:
+                        # Already in the bulk get_files() result — the
+                        # module_map entry above is all this item needed.
+                        continue
                     try:
                         file = course.get_file(item.content_id)
                         if not getattr(file, 'url', ''):
@@ -1323,6 +1401,11 @@ class CanvasManager:
         # This creates .canvas_sync.db and the sync_manifest table so the Sync engine
         # inherits a perfect state when the user later clicks the Sync tab.
         sync_manager = SyncManager(base_path, course.id, course.name)
+
+        # Same-name secondary entity guard: fresh per-course registry so two
+        # DISTINCT entities with identical sanitized names get " (1)" suffixes
+        # instead of silently overwriting each other (see _save_secondary_entity).
+        self._sec_registry = {}
         
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         if debug_mode:
@@ -1516,7 +1599,7 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
+                                        filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_target_paths)
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -1537,7 +1620,7 @@ class CanvasManager:
                                              if progress_callback: progress_callback(err, progress_type='error')
                                              self._log_error(save_dir, err)
                                              continue
-                                        filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
+                                        filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_target_paths)
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -1699,7 +1782,17 @@ class CanvasManager:
                     log_debug("Starting Catch-All Phase for non-module files...", debug_file)
                     if progress_callback: progress_callback('Scanning remaining files...', progress_type='log')
                     
-                    all_files_paginator = course.get_files()
+                    # Modules mode only: the catch-all sweeps files NOT linked
+                    # from any module into the course root. In 'flat'/'files'
+                    # modes the primary loop already enumerated get_files()
+                    # directly — running the catch-all there would re-scan
+                    # everything and, for 'files' (folder-structure) mode,
+                    # re-download the entire course into the root because
+                    # downloaded_file_ids is only populated by the modules loop.
+                    # ('files' is not currently reachable from the UI, but a
+                    # legacy preset could still carry it — this guard makes it
+                    # safe either way.)
+                    all_files_paginator = course.get_files() if mode == 'modules' else []
                     catch_all_tasks = []
 
                     # Pre-compute ID sets once - avoids O(N×M) set
@@ -1938,11 +2031,17 @@ class CanvasManager:
                     # to prevent FileNotFoundError during aiofiles.open writes
                     Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
                     
-                    if file_obj.id < 0:
-                        # Synthetic entity - Route differently
-                        from sync_manager import secondary_id_type
-                        etype = secondary_id_type(file_obj.id)
-                        
+                    from sync_manager import secondary_id_type as _retry_sec_type
+                    _retry_etype = _retry_sec_type(file_obj.id) if file_obj.id < 0 else None
+                    if file_obj.id < 0 and _retry_etype != 'attachment':
+                        # Synthetic entity - Route differently.
+                        # NOTE: 'attachment'-range negative IDs are REAL Canvas
+                        # files (Mode B) and deliberately fall through to the
+                        # else-branch below, which refreshes the signed URL
+                        # (mapping the synthetic ID back to the raw file ID)
+                        # and downloads the actual bytes.
+                        etype = _retry_etype
+
                         if etype == 'module_item':
                             # Legacy synthetic entities (Pages or ExternalURLs)
                             # Synchronously write standard shortcuts/stubs to disk to prevent brittle API refetches.
@@ -2315,7 +2414,7 @@ class CanvasManager:
                                 if item.type == 'ExternalTool':
                                      url = getattr(item, 'html_url', None) or url
                                 if url:
-                                    filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0)
+                                    filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_flat_paths)
                                     if filepath and filepath.exists():
                                         info = CanvasFileInfo(
                                             id=-int(item.id) if hasattr(item, 'id') else 0,
@@ -2491,6 +2590,11 @@ class CanvasManager:
                     if check_cancellation and check_cancellation():
                         return
                     
+                    # Bytes written during THIS attempt — rolled back from
+                    # mb_tracker if the attempt fails and is retried, so the
+                    # MB dashboard never double-counts re-downloaded chunks.
+                    _attempt_bytes = 0
+
                     # Request block inside semaphore
                     async with sem:
                         if attempt == 0 and progress_callback:
@@ -2538,13 +2642,20 @@ class CanvasManager:
                                             if not chunk: break
                                             await f.write(chunk)
                                             total_bytes += len(chunk)
-                                            
+                                            _attempt_bytes += len(chunk)
+
                                             if mb_tracker:
                                                 mb_tracker['bytes_downloaded'] += len(chunk)
                                                 if progress_callback:
                                                     mb_down = mb_tracker['bytes_downloaded'] / (1024 * 1024)
                                                     progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
-                                except Exception as write_err:
+                                except BaseException as write_err:  # audit-ignore
+                                    # BaseException (not Exception) so that Streamlit's
+                                    # RerunException and asyncio's CancelledError — both
+                                    # BaseException subclasses that abort the download
+                                    # mid-chunk (e.g. a click during the run) — also
+                                    # trigger .part cleanup instead of leaving orphans.
+                                    # Safe: cleanup-only handler, ALWAYS re-raises below.
                                     download_interrupted = True
                                     # Clean up .part file on write error
                                     try:
@@ -2661,6 +2772,10 @@ class CanvasManager:
                     raise ve
                     
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                    # Roll back this attempt's partial bytes so the retry
+                    # doesn't double-count them in the MB dashboard.
+                    if mb_tracker and _attempt_bytes:
+                        mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
                     if attempt < MAX_RETRIES - 1:
                         # Cancel-aware backoff sleep so a hung connection
                         # can be aborted within ~1s of clicking Cancel.
@@ -2938,8 +3053,11 @@ class CanvasManager:
                                error_root_path=None, course_name="Unknown",
                                module_path=None, isolate=True,
                                has_attachments=False, metadata_pairs=None,
-                               file_extension=".html"):
+                               file_extension=".html", raw_body=False):
         """Unified save-to-disk + DB-record logic for all secondary entities.
+
+        ``raw_body=True`` writes *body_html* verbatim (used for Markdown
+        rubrics) instead of wrapping it in the HTML document template.
 
         Returns
         -------
@@ -2953,7 +3071,20 @@ class CanvasManager:
 
         filename = self._sanitize_filename(display_name) + file_extension
         filepath = target_dir / filename
-        
+
+        # Same-name collision guard: two DISTINCT entities (different Canvas
+        # IDs) can sanitize to the same filename — e.g. duplicate assignment
+        # titles. The per-run registry detects this and suffixes the later
+        # one instead of silently overwriting the first. Re-saves of the SAME
+        # entity within a run keep overwriting in place as designed.
+        _registry = getattr(self, '_sec_registry', None)
+        if _registry is not None:
+            _reg_key = str(filepath).lower()
+            _owner = _registry.get(_reg_key)
+            if _owner is not None and _owner != (entity_type, canvas_entity_id):
+                filepath = self._handle_conflict(filepath)
+            _registry[str(filepath).lower()] = (entity_type, canvas_entity_id)
+
         # Secondary entities are always regenerated from the Canvas API,
         # so overwrite in-place instead of creating (1) conflict copies.
         # This mirrors the clean-overwrite logic for regular file redownloads.
@@ -2964,7 +3095,7 @@ class CanvasManager:
                 # File locked (e.g. open in browser) — fall back to conflict copy
                 filepath = self._handle_conflict(filepath)
 
-        content = self._build_entity_html(
+        content = body_html if raw_body else self._build_entity_html(
             entity_name, body_html, metadata_pairs=metadata_pairs,
         )
 
@@ -3379,24 +3510,10 @@ class CanvasManager:
 
             elif entity_type == 'rubric':
                 rubric = course.get_rubric(raw_id)
-                criteria = getattr(rubric, 'data', []) or []
-                body_lines = []
-                for crit in criteria:
-                    desc = crit.get('description', '')
-                    pts = crit.get('points', '')
-                    body_lines.append(f"### {desc} ({pts} pts)")
-                    long_desc = crit.get('long_description', '')
-                    if long_desc:
-                        body_lines.append(long_desc)
-                    ratings = crit.get('ratings', [])
-                    for r in ratings:
-                        body_lines.append(
-                            f"- **{r.get('description', '')}** ({r.get('points', '')} pts)"
-                        )
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'rubric',
                     getattr(rubric, 'title', 'Rubric'),
-                    '\n'.join(body_lines),
+                    _build_rubric_markdown(rubric),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -3409,6 +3526,7 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=None,
                     file_extension='.md',
+                    raw_body=True,
                 )
                 return filepath, syn_id, None, canvas_updated
 
@@ -3999,7 +4117,9 @@ class CanvasManager:
                     has_attachments=False,
                     metadata_pairs=[
                         ('Points', getattr(quiz, 'points_possible', None)),
-                        ('Time Limit', f"{getattr(quiz, 'time_limit', '∞')} min"),
+                        # None when unset → the metadata builder omits the row
+                        # entirely (previously rendered as "None min").
+                        ('Time Limit', f"{getattr(quiz, 'time_limit', None)} min" if getattr(quiz, 'time_limit', None) else None),
                         ('Due', getattr(quiz, 'due_at', None)),
                         ('Allowed Attempts', getattr(quiz, 'allowed_attempts', None)),
                         ('URL', getattr(quiz, 'html_url', None)),
@@ -4046,90 +4166,26 @@ class CanvasManager:
 
                 r_id = getattr(rubric, 'id', 0)
                 r_title = getattr(rubric, 'title', 'Untitled Rubric')
-                r_description = getattr(rubric, 'description', '') or ''
                 updated_at = getattr(rubric, 'updated_at', '') or ''
 
-                # Build a structured Markdown table from criteria
-                criteria = getattr(rubric, 'data', None) or []
-                md_content = f"# Rubric: {r_title}\n\n"
-                
-                r_html_url = getattr(rubric, 'html_url', None)
-                if r_html_url:
-                    md_content += f"[View on Canvas]({r_html_url})\n\n"
-
-                if r_description:
-                    md_content += f"{r_description}\n\n"
-
-                if criteria:
-                    # Build table header from first criterion's ratings
-                    sample_ratings = criteria[0].get('ratings', [])
-                    headers = ['Criterion'] + [
-                        f"{r.get('description', '?')} ({r.get('points', '?')})"
-                        for r in sorted(sample_ratings,
-                                        key=lambda x: x.get('points', 0),
-                                        reverse=True)
-                    ]
-                    md_content += '| ' + ' | '.join(headers) + ' |\n'
-                    md_content += '|' + '---|' * len(headers) + '\n'
-
-                    for criterion in criteria:
-                        row = [criterion.get('description', '')]
-                        c_ratings = sorted(
-                            criterion.get('ratings', []),
-                            key=lambda x: x.get('points', 0),
-                            reverse=True,
-                        )
-                        for rating in c_ratings:
-                            long_desc = rating.get('long_description', '')
-                            short_desc = rating.get('description', '')
-                            row.append(long_desc or short_desc)
-                        # Pad row if ratings count differs
-                        while len(row) < len(headers):
-                            row.append('')
-                        md_content += '| ' + ' | '.join(row) + ' |\n'
-                else:
-                    md_content += '*No criteria data available.*\n'
-
-                # Save as .md instead of .html
-                target_dir, display_name = self._resolve_secondary_path(
-                    'rubric', r_title, base_path, isolate=isolate,
+                # Unified writer: shared Markdown builder + overwrite-in-place
+                # semantics + same-name registry + manifest record. Replaces
+                # the old inline writer which used _handle_conflict and thus
+                # accumulated "Rubric (1).md" duplicates on every re-download.
+                self._save_secondary_entity(
+                    'rubric', r_title, _build_rubric_markdown(rubric),
+                    base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=r_id, canvas_updated_at=updated_at,
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
                     has_attachments=False,
+                    metadata_pairs=None,
+                    file_extension='.md',
+                    raw_body=True,
                 )
-                filename = self._sanitize_filename(display_name) + '.md'
-                filepath = target_dir / filename
-                filepath = self._handle_conflict(filepath)
-
-                try:
-                    with open(make_long_path(filepath), 'w', encoding='utf-8') as f:
-                        f.write(md_content)
-                except Exception as e:
-                    err = DownloadError(
-                        course.name, r_title, "Rubric Save Error",
-                        str(e), raw_error=e,
-                    )
-                    if progress_callback:
-                        progress_callback(err, progress_type='error')
-                    self._log_error(error_root_path, err)
-                    continue
-
-                synthetic_id = make_secondary_id('rubric', r_id)
-                if sync_manager:
-                    try:
-                        rel_path = str(filepath.relative_to(base_path)).replace('\\', '/')
-                        sync_manager.record_downloaded_file(
-                            canvas_file_id=synthetic_id,
-                            canvas_filename=filepath.name,
-                            local_path=rel_path,
-                            canvas_updated_at=updated_at,
-                            original_size=0,
-                        )
-                    except Exception:
-                        pass
-
-                if progress_callback:
-                    progress_callback(
-                        f'Saving rubric: {r_title}', progress_type='page',
-                    )
 
         except (Unauthorized, ResourceDoesNotExist, CanvasException) as e:
             log_debug(f"Rubrics not accessible: {e}", debug_file)
@@ -4238,18 +4294,26 @@ class CanvasManager:
 
         log_debug("=== Secondary Content Download Complete ===", debug_file)
 
-    def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0):
+    def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0, seen_paths=None):
+        """Write a .url/.webloc shortcut for an external link.
+
+        Overwrites a same-named shortcut from a PREVIOUS run in place (links
+        are fully regenerated from Canvas, so numbered "(1)" copies would
+        just pile up on every re-download). ``seen_paths`` — the caller's
+        per-run path set — still disambiguates two DIFFERENT links that
+        sanitize to the same title within a single run.
+        """
         import plistlib
         safe_title = self._sanitize_filename(title)
-        
-        if platform.system() == 'Darwin':
-            filename = f"{safe_title}.webloc"
-            filepath = folder_path / filename
-            filepath = self._handle_conflict(filepath)
-        else:
-            filename = f"{safe_title}.url"
-            filepath = folder_path / filename
-            filepath = self._handle_conflict(filepath)
+
+        ext = ".webloc" if platform.system() == 'Darwin' else ".url"
+        filepath = folder_path / f"{safe_title}{ext}"
+
+        if seen_paths is not None:
+            if str(filepath).lower() in seen_paths:
+                # Same-run duplicate title → numbered sibling
+                filepath = self._handle_conflict(filepath)
+            seen_paths.add(str(filepath).lower())
 
         if progress_callback:
             progress_callback(f'Creating link: {title}', progress_type='link', explicit_filepath=str(filepath))

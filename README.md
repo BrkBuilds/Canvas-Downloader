@@ -41,7 +41,7 @@ Free, open source, and runs entirely on your machine.
 - **Canvas module structure preserved** - files land in the same folder hierarchy Canvas uses
 - **Async parallel downloads** - `asyncio` + `aiohttp` with configurable concurrency; Canvas rate-limit backoff built in
 - **Atomic file writes** - `.part` staging pattern; a crash mid-download never leaves corrupted files
-- **File size filters** - skip large video files you don't need right now
+- **File size filters** - skip large video files you don't need right now. Skipped files are marked as *ignored* in the sync manifest (by design, so future syncs don't keep re-listing them) - restore them anytime from the Sync Hub's ignored-files list, even after raising the limit
 - **Full Canvas content support** - module files, assignments, syllabi, announcements, discussions, quizzes, and rubrics
 
 ### Sync Mode
@@ -281,10 +281,11 @@ The macOS spec includes the `com.apple.security.automation.apple-events` entitle
 
 ## Security Notes
 
-- Your Canvas API token is stored exclusively in your OS keyring - never written to any file on disk
-- The Streamlit server binds to `127.0.0.1` only - zero network exposure
+- Your Canvas API token is stored in your OS keyring (Windows Credential Manager / macOS Keychain). On Windows, if the keyring is unavailable, an encrypted DPAPI fallback file is used - the ciphertext is bound to your Windows user account and unreadable by anyone else
+- The Streamlit server binds to `127.0.0.1` only - zero network exposure beyond your own machine. Note for **shared computers** (e.g. lab PCs with multiple users logged in at once): localhost ports are reachable by other local users on the same machine, and the app auto-signs-in from your keyring - prefer running it on your personal device
 - Archive extraction enforces a 50 GB / 100:1 ratio hard limit against zip bombs
 - All Canvas data rendered into HTML is passed through `html.escape()` before injection
+- Debug logs redact Bearer tokens and signed download-URL tokens (`verifier=`) before anything is written to disk
 
 ---
 
