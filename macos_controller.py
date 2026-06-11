@@ -44,6 +44,7 @@ class CanvasController:
         self.on_quit = on_quit
         self.state = 'starting'  # starting | ready | error
         self._quit_in_progress = False
+        self._chrome_perm_primed = False
         
         # Configure appearance
         ctk.set_appearance_mode("dark")
@@ -325,6 +326,33 @@ class CanvasController:
                 capture_output=True,
             )
         threading.Thread(target=self._verify_chrome_launched, daemon=True).start()
+        threading.Thread(target=self._prime_chrome_automation, daemon=True).start()
+
+    def _prime_chrome_automation(self):
+        """Trigger the one-time 'control Google Chrome' permission prompt NOW,
+        while the user is actively opening the app, instead of at quit time.
+
+        The quit path closes our Chrome tab via AppleScript; without priming,
+        the macOS Automation (TCC) prompt fired for the first time DURING
+        shutdown — a confusing moment, and the 3s quit timeout usually killed
+        the app before the user could even answer. Sending one harmless Apple
+        event right after launch surfaces the prompt at a moment that makes
+        sense ("the app is opening Chrome"), and the user's answer then holds
+        for every future quit. Best-effort: a denial just means the tab-close
+        nicety is skipped (the in-page watchdog screen covers it).
+        """
+        if getattr(self, '_chrome_perm_primed', False):
+            return
+        self._chrome_perm_primed = True
+        import time
+        time.sleep(2)  # let Chrome finish launching so the event has a target
+        try:
+            subprocess.run(
+                ['osascript', '-e', 'tell application "Google Chrome" to count windows'],
+                capture_output=True, timeout=120,  # generous: TCC prompt blocks until answered
+            )
+        except Exception:
+            pass
 
     def _verify_chrome_launched(self):
         """Poll for up to 3 s to confirm Google Chrome is running after open_chrome()."""

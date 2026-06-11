@@ -40,7 +40,19 @@ except Exception:
     CONFIG_FILE = os.path.join(tempfile.gettempdir(), 'canvas_downloader_settings.json')
 KEYRING_SERVICE = "CanvasDownloader"
 
-def _run_keyring_op(fn, *args, timeout: float = 5.0):
+# Watchdog timeout for keyring operations.
+# macOS: Keychain access can legitimately BLOCK on an interactive prompt
+# ("Canvas Downloader wants to use your confidential information... enter the
+# login keychain password" — shown on every rebuild of an ad-hoc-signed app
+# because the code signature changes). Users need time to read and answer it;
+# abandoning at 5s made the login render without the saved token even though
+# the user clicked Allow, which looked like saving had failed. 90s gives them
+# time while still defending against a genuinely hung backend (daemon thread,
+# never blocks app exit).
+# Windows: Credential Manager never prompts — keep the tight 5s watchdog.
+_KEYRING_TIMEOUT = 90.0 if sys.platform == 'darwin' else 5.0
+
+def _run_keyring_op(fn, *args, timeout: float = _KEYRING_TIMEOUT):
     """Run a keyring operation on a DAEMON thread with a hard timeout.
 
     The previous implementation used ``with ThreadPoolExecutor(...)`` — but
@@ -73,38 +85,38 @@ def _run_keyring_op(fn, *args, timeout: float = 5.0):
 
 
 def _safe_keyring_get(service: str, username: str) -> str | None:
-    """Read password from keyring with a 5.0-second daemon-thread watchdog."""
+    """Read password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT)."""
     import keyring
     try:
         return _run_keyring_op(keyring.get_password, service, username)
     except TimeoutError:
-        logger.warning("Keyring get_password timed out (5.0s). Environment might be headless or restricted. Falling back.")
+        logger.warning(f"Keyring get_password timed out ({_KEYRING_TIMEOUT:.0f}s). Environment might be headless or restricted. Falling back.")
         return None
     except Exception as e:
         logger.warning(f"Keyring get_password failed: {e}")
         return None
 
 def _safe_keyring_set(service: str, username: str, password: str) -> bool:
-    """Write password to keyring with a 5.0-second daemon-thread watchdog."""
+    """Write password to keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT)."""
     import keyring
     try:
         _run_keyring_op(keyring.set_password, service, username, password)
         return True
     except TimeoutError:
-        logger.warning("Keyring set_password timed out (5.0s). Falling back.")
+        logger.warning(f"Keyring set_password timed out ({_KEYRING_TIMEOUT:.0f}s). Falling back.")
         return False
     except Exception as e:
         logger.warning(f"Keyring set_password failed: {e}")
         return False
 
 def _safe_keyring_delete(service: str, username: str) -> bool:
-    """Delete password from keyring with a 5.0-second daemon-thread watchdog."""
+    """Delete password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT)."""
     import keyring
     try:
         _run_keyring_op(keyring.delete_password, service, username)
         return True
     except TimeoutError:
-        logger.warning("Keyring delete_password timed out (5.0s).")
+        logger.warning(f"Keyring delete_password timed out ({_KEYRING_TIMEOUT:.0f}s).")
         return False
     except Exception as e:
         logger.warning(f"Keyring delete_password failed: {e}")
