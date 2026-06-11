@@ -144,7 +144,9 @@ class ExcelToPDF:
             if self._convert_applescript_excel(src, dst):
                 src.unlink(missing_ok=True)
                 return str(dst), ""
-            return None, "AppleScript conversion failed (is Microsoft Excel installed?)"
+            from engine.applescript_bridge import get_last_error
+            _last = get_last_error()
+            return None, (_last[1] if _last else "AppleScript conversion failed (unknown error)")
 
         # Windows: COM automation with path shadowing
         # Proactive health check - catches the "alternating failure" pattern

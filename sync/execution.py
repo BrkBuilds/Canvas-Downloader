@@ -36,9 +36,14 @@ import streamlit as st
 import theme
 from canvas_logic import CanvasManager
 from core.cancellation import cancel_sync, is_sync_cancelled
+# NOTE: never re-import these names *locally* inside a function in this
+# module — a local `from sync_manager import secondary_id_type` makes the
+# name function-local for the ENTIRE enclosing function scope, so earlier
+# uses raise UnboundLocalError ("cannot access local variable
+# 'secondary_id_type'"). This bit the sync download loop on 2026-06-11.
 from sync_manager import (
     SyncFileInfo, SyncHistoryManager, CanvasFileInfo,
-    secondary_id_type,
+    secondary_id_type, SECONDARY_ID_OFFSETS,
 )
 from ui_helpers import (
     esc,
@@ -299,6 +304,12 @@ def run_sync():
                 local_path = sync_mgr.local_path
                 _debug_file = str(local_path / 'debug_log.txt') if _sync_debug_mode else None
                 if _debug_file:
+                    # Register for the logging bridge (mirrors all app-module
+                    # logger output, incl. post-processing, into this file).
+                    from canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
+                    _set_dbg(_debug_file)
+                    if pair_idx == 0:
+                        _dbg_header(_debug_file, context=f"Sync execution | {total_pairs} pair(s)")
                     _sync_mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
                     log_debug(f"=== Sync Execution: {course_name} | Mode: {_sync_mode_label} ===", _debug_file)
                     log_debug(f"Pair {pair_idx + 1}/{total_pairs} | Folder: {local_path}", _debug_file)
@@ -323,7 +334,11 @@ def run_sync():
                     terminal_log.append(f"<span style='color:{theme.TEXT_SECONDARY}'>ℹ️ Connecting to {esc(course_name)}...</span>")
                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                     try:
-                        course = await asyncio.to_thread(safe_thread_wrapper, cm.get_course, current_ctx, pair['course_id'])
+                        # CanvasManager has no get_course() of its own — the
+                        # method lives on the canvasapi client (cm.canvas).
+                        # Calling cm.get_course crashed every retry run with
+                        # AttributeError and produced a phantom history entry.
+                        course = await asyncio.to_thread(safe_thread_wrapper, cm.canvas.get_course, current_ctx, pair['course_id'])
                         res_data['course'] = course
                     except Exception as e:
                         err_str = f"Connection failure to {esc(course_name)}: {esc(str(e))}"
@@ -331,7 +346,8 @@ def run_sync():
                         terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Reconnection failed: {esc(course_name)} ({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
-                            log_debug(f"✗ Reconnection failed: {course_name}: {e}", _debug_file)
+                            from canvas_debug import log_debug_exc
+                            log_debug_exc(f"✗ Reconnection failed: {course_name}: {e}", _debug_file, exc=e)
                         failed_files_for_pair.extend(sel.get('new', []))
                         continue
 
@@ -568,7 +584,6 @@ def run_sync():
                                 log_debug(f"  Secondary [attachment → binary downloader]: {display_file_name}", _debug_file)
                         elif _file_id_val < 0:
                             # ── Secondary Content Entities (Assignment, Quiz, etc.) ──
-                            from sync_manager import is_secondary_id, secondary_id_type
                             _sec_entity_type = secondary_id_type(file.id)
                             if _debug_file:
                                 log_debug(f"  Secondary [{_sec_entity_type}]: {display_file_name}", _debug_file)
@@ -820,7 +835,6 @@ def run_sync():
                             
                             real_id = file.id
                             if real_id < 0:
-                                from sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
                                 if secondary_id_type(real_id) == 'attachment':
                                     real_id = abs(real_id) - SECONDARY_ID_OFFSETS['attachment']
                             fresh_file = await asyncio.to_thread(safe_thread_wrapper, course.get_file, current_ctx, real_id)
@@ -1056,7 +1070,11 @@ def run_sync():
                         terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(str(e))})</span>")
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
-                            log_debug(f"✗ Exception: {display_file_name}: {e}", _debug_file)
+                            # Full traceback: this broad handler catches genuine
+                            # code bugs (e.g. the 2026-06-11 UnboundLocalError),
+                            # and str(e) alone doesn't say WHERE they happened.
+                            from canvas_debug import log_debug_exc
+                            log_debug_exc(f"✗ Exception: {display_file_name}: {e}", _debug_file, exc=e)
                         
 
                 

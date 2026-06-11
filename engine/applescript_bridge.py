@@ -22,6 +22,59 @@ _APP_DOC_MAP = {
     "Excel":       ("Microsoft Excel",      "active workbook"),
 }
 
+# ── Last-error reporting ────────────────────────────────────────────
+# Post-processing runs conversions sequentially, so a single module-level
+# slot is sufficient. Callers read this after run_applescript() returns
+# False to show the user the REAL reason (TCC denial, app missing, timeout)
+# instead of a generic "Conversion failed".
+#
+# Categories:
+#   'permission'  - macOS Automation (TCC) denied (-1743). FATAL for the
+#                   whole phase: every subsequent file will fail identically.
+#   'app_missing' - Office app not installed / can't be launched. FATAL.
+#   'timeout'     - this file took too long (huge deck, hung app). Per-file.
+#   'other'       - anything else (corrupt file, sandbox denial, ...). Per-file.
+_last_error: tuple[str, str] | None = None
+
+# Categories that doom every remaining file in a conversion phase.
+FATAL_CATEGORIES = ('permission', 'app_missing')
+
+
+def get_last_error() -> tuple[str, str] | None:
+    """Return (category, detail) for the most recent failed run_applescript()."""
+    return _last_error
+
+
+def _classify_stderr(err_msg: str) -> str:
+    """Map an osascript stderr message to an error category."""
+    low = err_msg.lower()
+    if '-1743' in err_msg or 'not authorized to send apple events' in low:
+        return 'permission'
+    if (
+        '-600' in err_msg or '-10810' in err_msg
+        or "application can't be found" in low
+        or "can't get application" in low
+        or 'unable to find application' in low
+        or "isn't running" in low
+    ):
+        return 'app_missing'
+    return 'other'
+
+
+def _timeout_for(src: Path, base: int = 180) -> int:
+    """Size-scaled osascript timeout.
+
+    The old fixed 120s killed conversions of large lecture decks (a 50 MB
+    pptx legitimately takes minutes on first launch while Office warms up
+    and macOS shows the one-time Automation prompt). Scale with file size:
+    base + 8s per MB, capped at 10 minutes.
+    """
+    try:
+        size_mb = src.stat().st_size / (1024 * 1024)
+    except OSError:
+        size_mb = 0
+    return min(600, int(base + size_mb * 8))
+
 
 def _as_posix(path: Path) -> str:
     """Return a POSIX path string safe for embedding in an AppleScript string literal.
@@ -95,37 +148,49 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     ``_as_posix(path)`` from this module to prevent AppleScript injection
     via filenames containing double-quotes or backslashes.
     """
+    global _last_error
+    _last_error = None
+    timeout_s = _timeout_for(src)
     try:
         result = subprocess.run(
             ['osascript', '-e', script],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, timeout=timeout_s,
         )
         if result.returncode != 0:
             err_msg = result.stderr.strip()
-            if "-1743" in err_msg:
-                logger.error(
-                    f"[AppleScript Security] TCC Automation Permission Denied (error -1743). "
-                    f"Please verify that Canvas Downloader has 'Automation' permissions enabled "
-                    f"to control Microsoft {app_name} in macOS System Settings > Privacy & Security > Automation."
+            category = _classify_stderr(err_msg)
+            if category == 'permission':
+                detail = (
+                    f"macOS blocked Canvas Downloader from controlling Microsoft {app_name} "
+                    f"(Automation permission denied). Enable it in System Settings → "
+                    f"Privacy & Security → Automation → Canvas Downloader."
                 )
+            elif category == 'app_missing':
+                detail = f"Microsoft {app_name} is not installed or could not be launched."
             else:
-                logger.error(
-                    f"[AppleScript] {app_name} failed: {err_msg}"
-                )
+                detail = err_msg or f"Microsoft {app_name} returned an unknown error."
+            _last_error = (category, detail)
+            logger.error(f"[AppleScript] {app_name} failed ({category}): {err_msg}")
             return False
-        return dst.exists()
+        if dst.exists():
+            return True
+        _last_error = ('other', f"Microsoft {app_name} reported success but no output file was created.")
+        return False
 
     except FileNotFoundError:
+        _last_error = ('other', 'osascript not found (not on macOS?)')
         logger.error("[AppleScript] osascript not found (not on macOS?)")
         return False
     except subprocess.TimeoutExpired:
+        _last_error = ('timeout', f"Conversion timed out after {timeout_s}s (Microsoft {app_name} stopped responding or the file is very large).")
         logger.error(
-            f"[AppleScript] {app_name} conversion timed out after 120s - "
+            f"[AppleScript] {app_name} conversion timed out after {timeout_s}s - "
             "attempting to close the open document to recover"
         )
         posix_src = _as_posix(src)
         _try_close_document_after_timeout(app_name, posix_src)
         return False
     except Exception as e:
+        _last_error = ('other', str(e))
         logger.error(f"[AppleScript] {app_name} error: {e}")
         return False

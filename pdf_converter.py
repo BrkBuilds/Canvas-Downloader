@@ -144,9 +144,11 @@ class PowerPointToPDF:
                     logger.warning(f"Converted to PDF but could not delete original: {pptx_path} - {e}")
                 logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
                 return str(pdf_path.resolve().absolute())
+            from engine.applescript_bridge import get_last_error
+            _last = get_last_error()
             _log_conversion_error(
                 self.error_log_path, pptx_path.name,
-                "AppleScript conversion failed (is Microsoft PowerPoint installed?)"
+                _last[1] if _last else "AppleScript conversion failed (unknown error)"
             )
             return None
 
