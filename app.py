@@ -786,12 +786,12 @@ with _main_content.container():
                             st.session_state['downloaded_items'] += 1   # always count the skip
                             if msg:
                                 log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped: {msg}</span>")
-                                if kwargs.get('explicit_filepath'):
-                                    course_key = course.name
-                                    if course_key not in st.session_state['download_file_details']:
-                                        st.session_state['download_file_details'][course_key] = []
-                                    st.session_state['download_file_details'][course_key].append(kwargs['explicit_filepath'])
-                                    st.session_state['download_file_details'] = st.session_state['download_file_details']
+                            if kwargs.get('explicit_filepath'):
+                                course_key = course.name
+                                if course_key not in st.session_state['download_file_details']:
+                                    st.session_state['download_file_details'][course_key] = []
+                                st.session_state['download_file_details'][course_key].append(kwargs['explicit_filepath'])
+                                st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
 
                         elif progress_type == 'size_skipped':
@@ -834,7 +834,8 @@ with _main_content.container():
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
                                     st.session_state['download_file_details'][course_key] = []
-                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
+                                _ledger_name = kwargs.get('explicit_filepath') or _clean_display_name(msg)
+                                st.session_state['download_file_details'][course_key].append(_ledger_name)
                                 # Guardrail 2: Force state rebind for deep mutation
                                 st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
@@ -855,7 +856,8 @@ with _main_content.container():
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
                                     st.session_state['download_file_details'][course_key] = []
-                                st.session_state['download_file_details'][course_key].append(_clean_display_name(msg))
+                                _ledger_name = kwargs.get('explicit_filepath') or _clean_display_name(msg)
+                                st.session_state['download_file_details'][course_key].append(_ledger_name)
                                 # Guardrail 2: Force state rebind for deep mutation
                                 st.session_state['download_file_details'] = st.session_state['download_file_details']
                             render_dashboard()
@@ -970,6 +972,15 @@ with _main_content.container():
                     _app_log(f"Mode: {st.session_state['download_mode']} | Filter: {st.session_state.get('file_filter', 'all')}", _dl_dbg)
                     _app_log(f"Post-processing: [{', '.join(_pp_active) or 'none'}]", _dl_dbg)
                     _app_log(f"Secondary content: [{', '.join(_sec_active) or 'none'}]", _dl_dbg)
+
+                import sys
+                if sys.platform == 'darwin' and not st.session_state.get('_office_primed'):
+                    st.session_state['_office_primed'] = True
+                    try:
+                        from engine.applescript_bridge import prime_office_automation
+                        prime_office_automation(_pp_settings)
+                    except Exception as _prime_err:
+                        logger.warning(f"Failed to prime Office automation: {_prime_err}")
 
                 try:
                     asyncio.run(cm.download_course_async(

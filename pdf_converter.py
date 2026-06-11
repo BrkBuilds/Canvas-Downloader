@@ -125,7 +125,7 @@ class PowerPointToPDF:
             tell application "Microsoft PowerPoint"
                 set display alerts to false
                 set theDoc to open POSIX file "{posix_src}"
-                save as theDoc filename POSIX file "{posix_dst}" file format save as PDF
+                save theDoc in POSIX file "{posix_dst}" as save as PDF
                 close theDoc saving no
             end tell
         '''
