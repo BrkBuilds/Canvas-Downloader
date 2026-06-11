@@ -267,6 +267,21 @@ if __name__ == "__main__":
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
+    # TLS trust store for frozen builds (macOS especially): OpenSSL's default
+    # cert paths inside a PyInstaller bundle point at the build machine and do
+    # not exist on the user's machine, breaking every HTTPS client that relies
+    # on ssl defaults. Point the standard env vars at certifi's bundled CA file
+    # so ssl.create_default_context() (aiohttp, urllib, etc.) can verify peers.
+    # canvas_logic.get_ssl_context() does the same explicitly for aiohttp.
+    try:
+        import certifi
+        _ca = certifi.where()
+        if os.path.isfile(_ca):
+            os.environ.setdefault("SSL_CERT_FILE", _ca)
+            os.environ.setdefault("REQUESTS_CA_BUNDLE", _ca)
+    except Exception:
+        pass  # certifi missing — fall back to whatever the system provides
+
     import platform as _platform
 
     if _platform.system() == 'Darwin':

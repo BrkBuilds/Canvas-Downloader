@@ -1,6 +1,7 @@
 import os
 import platform
 import re
+import ssl
 import uuid
 import shutil
 import html
@@ -40,6 +41,29 @@ class _CanvasTimeoutAdapter(HTTPAdapter):
         # exceed this; expose CANVAS_TIMEOUT env var if a user needs more time.
         kwargs.setdefault('timeout', (15, int(os.environ.get('CANVAS_TIMEOUT', 60))))
         return super().send(request, **kwargs)
+
+
+# --- TLS trust store (critical on frozen macOS builds) ---
+# canvasapi/requests verify TLS against certifi's bundled CA file, but aiohttp
+# uses Python's default ssl context, which reads the OpenSSL default cert paths.
+# Inside a PyInstaller .app on macOS those paths point at the *build* machine's
+# Python install and don't exist on the user's machine, so every aiohttp file
+# download fails with SSLCertVerificationError ("unable to get local issuer
+# certificate") while API calls keep working. Build one shared context from
+# certifi so both stacks trust the same CAs.
+_ssl_context_cache: ssl.SSLContext | None = None
+
+def get_ssl_context() -> ssl.SSLContext:
+    """Return a cached SSLContext that verifies against certifi's CA bundle."""
+    global _ssl_context_cache
+    if _ssl_context_cache is None:
+        try:
+            import certifi
+            _ssl_context_cache = ssl.create_default_context(cafile=certifi.where())
+        except Exception as e:  # certifi missing/unreadable — system trust store fallback
+            logger.warning(f"certifi unavailable ({e}); falling back to system SSL defaults")
+            _ssl_context_cache = ssl.create_default_context()
+    return _ssl_context_cache
 
 
 # --- Global Async Locks ---
@@ -1475,7 +1499,7 @@ class CanvasManager:
 
         tasks = []
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
-        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit)
+        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context())
 
         async with aiohttp.ClientSession(
             headers={'Authorization': f'Bearer {self.api_key}'},
@@ -1996,7 +2020,7 @@ class CanvasManager:
         if debug_mode:
             log_debug(f"\n{'='*50}\n--- Isolated Retry Mode for {course.name} ---\n{'='*50}", debug_file)
 
-        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit)
+        connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context())
         async with aiohttp.ClientSession(
             headers={'Authorization': f'Bearer {self.api_key}'},
             timeout=timeout,
@@ -2748,6 +2772,29 @@ class CanvasManager:
                                 self._log_error(error_root_path, err)
                                 return
 
+                except aiohttp.ClientConnectorCertificateError as e:
+                    # MUST precede the ValueError clause: this exception also
+                    # inherits ssl.CertificateError -> ValueError, so the
+                    # generic ValueError handler below would otherwise catch
+                    # and re-raise it out of the task (seen on macOS frozen
+                    # builds: every file surfaced as one opaque "Async Error"
+                    # with no retry accounting). TLS verification failures are
+                    # permanent for this run — the trust store won't change
+                    # between retries — so fail fast with an actionable,
+                    # per-file error instead.
+                    if mb_tracker and _attempt_bytes:
+                        mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
+                    log_debug(f"SSL ERROR (permanent, no retry): {filename}: {e}", debug_file)
+                    err = DownloadError(
+                        course_name, filename, "SSL Certificate Error",
+                        f"Secure connection to Canvas could not be verified: {e}",
+                        raw_error=e,
+                        context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter}
+                    )
+                    if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                    self._log_error(error_root_path, err)
+                    return
+
                 except ValueError as ve:
                     msg = str(ve)
                     if msg.startswith("RATE_LIMIT:"):
@@ -2776,6 +2823,21 @@ class CanvasManager:
                     # doesn't double-count them in the MB dashboard.
                     if mb_tracker and _attempt_bytes:
                         mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
+                    # TLS verification failures are permanent for this run —
+                    # the trust store won't change between retries, so fail
+                    # fast with an actionable message instead of burning the
+                    # full retry/backoff budget on every single file.
+                    if isinstance(e, aiohttp.ClientConnectorCertificateError) or 'CERTIFICATE_VERIFY_FAILED' in str(e):
+                        log_debug(f"SSL ERROR (permanent, no retry): {filename}: {e}", debug_file)
+                        err = DownloadError(
+                            course_name, filename, "SSL Certificate Error",
+                            f"Secure connection to Canvas could not be verified: {e}",
+                            raw_error=e,
+                            context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter}
+                        )
+                        if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                        self._log_error(error_root_path, err)
+                        return
                     if attempt < MAX_RETRIES - 1:
                         # Cancel-aware backoff sleep so a hung connection
                         # can be aborted within ~1s of clicking Cancel.
