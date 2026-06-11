@@ -125,7 +125,7 @@ class ExcelToPDF:
                         set (fit to pages tall) to false
                     end tell
                 end try
-                save as theBook filename POSIX file "{posix_dst}" file format PDF
+                save workbook as theBook filename POSIX file "{posix_dst}" file format PDF file format
                 close theBook saving no
             end tell
         '''
