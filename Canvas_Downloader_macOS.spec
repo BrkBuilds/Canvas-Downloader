@@ -79,7 +79,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'bs4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'customtkinter', 'pillow', 'openpyxl',
+    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'webview', 'pillow', 'openpyxl',
 ]
 
 for package in packages_to_collect:
@@ -103,13 +103,13 @@ a = Analysis(
     ['start.py'],
     pathex=[], binaries=binaries, datas=datas, hiddenimports=hiddenimports,
     hookspath=[], hooksconfig={}, runtime_hooks=[],
-    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 'PySide6', 'webview',
+    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 'PySide6',
               'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses', 'sqlalchemy',
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
               'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
               'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
               'win32com', 'win32com.client', 'pythoncom', 'pywintypes',
-              'webview.platforms.winforms', 'webview.platforms.edgechromium',
+              'webview.platforms.winforms', 'webview.platforms.edgechromium', 'webview.platforms.qt', 'webview.platforms.gtk',
               'win11toast', 'winsound', 'streamlit.external.langchain'],
     noarchive=False, optimize=0,
 )
@@ -137,12 +137,10 @@ app = BUNDLE(
         'NSRequiresAquaSystemAppearance': False,
         # Minimum macOS version (CustomTkinter requires 11.0+)
         'LSMinimumSystemVersion': '11.0',
-        # Required on macOS 10.14+ for AppleScript automation (Chrome + Office).
+        # Required on macOS 10.14+ for AppleScript automation (Office).
         # Without this key the TCC permission dialog shows no description.
-        # Shown for ALL automation targets, so it must cover both use cases.
         'NSAppleEventsUsageDescription': (
-            'Canvas Downloader controls Google Chrome to open and close its '
-            'own app window, and Microsoft Office to convert PowerPoint, '
+            'Canvas Downloader controls Microsoft Office to convert PowerPoint, '
             'Word, and Excel files to PDF.'
         ),
         # TCC usage strings shown when the OS prompts for folder/file access.
