@@ -43,6 +43,7 @@ class CanvasController:
         self.url = streamlit_url
         self.on_quit = on_quit
         self.state = 'starting'  # starting | ready | error
+        self._quit_in_progress = False
         
         # Configure appearance
         ctk.set_appearance_mode("dark")
@@ -203,7 +204,7 @@ class CanvasController:
         elif state == 'ready':
             self.status_canvas.itemconfig(self.circle_id, fill=SUCCESS_GREEN)
             self.status_title.configure(text="Canvas Downloader is running", text_color=TEXT_PRIMARY)
-            self.status_sub.configure(text="Your app is open in Google Chrome.\nCan't find it? Press the button below to reopen it.")
+            self.status_sub.configure(text="Your app is open in its own window.\nCan't find it? Press the button below to reopen it.")
             self.btn_primary.configure(state="normal", fg_color=ACCENT_BLUE, text_color=TEXT_PRIMARY, text="Open Canvas Downloader")
             self.btn_secondary.configure(state="normal", text_color=TEXT_SECONDARY, border_color=BTN_SUBTLE)
             
@@ -219,9 +220,73 @@ class CanvasController:
         self._on_quit_click()
 
     def _on_quit_click(self):
-        """Handle application exit."""
-        self.app.destroy()
+        """Handle application exit.
+
+        Order matters here:
+          1. Give instant visual feedback (the AppleScript step below can take
+             up to ~3 s if macOS shows a TCC automation prompt).
+          2. Close the app's own Chrome tab/window so the user is not left
+             staring at a dead "connection lost" page.
+          3. Hard-exit via on_quit (os._exit).
+
+        We deliberately do NOT call self.app.destroy(): CustomTkinter's Tk
+        teardown (DPI-scaling tracker + pending `after` callbacks) can block
+        for minutes on macOS — this was the "spinning cursor on quit" hang.
+        os._exit() tears the window down with the process, instantly.
+        """
+        self._quit_in_progress = True
+        try:
+            self.status_canvas.itemconfig(self.circle_id, fill=WARNING_AMBER)
+            self.status_title.configure(text="Shutting down...", text_color=TEXT_PRIMARY)
+            self.status_sub.configure(text="Closing Canvas Downloader")
+            self.btn_primary.configure(state="disabled")
+            self.btn_secondary.configure(state="disabled")
+            self.app.update_idletasks()
+        except Exception:
+            pass  # cosmetic only — never let UI feedback block shutdown
+        try:
+            self._close_chrome_tabs()
+        except Exception:
+            pass
         self.on_quit()
+
+    def _close_chrome_tabs(self):
+        """Close only this app's tab(s)/window(s) in Google Chrome via AppleScript.
+
+        Scoped to tabs whose URL starts with our exact localhost URL (incl.
+        port), so the user's other tabs are untouched. Covers both regular
+        tabs and `--app` mode windows (which Chrome exposes as one-tab
+        windows). Best-effort: if Chrome isn't running, the user declined the
+        Apple Events automation permission, or osascript stalls on the TCC
+        prompt, we time out after 3 s and exit anyway — the in-page JS
+        watchdog then shows the branded "app closed" screen instead of
+        Streamlit's raw connection error.
+        """
+        # Don't let AppleScript LAUNCH Chrome just to ask it about windows.
+        if subprocess.run(['pgrep', '-x', 'Google Chrome'], capture_output=True).returncode != 0:
+            return
+        script = (
+            'on run argv\n'
+            '  set targetPrefix to item 1 of argv\n'
+            '  tell application "Google Chrome"\n'
+            '    repeat with w in windows\n'
+            '      set tabCount to count of tabs of w\n'
+            '      repeat with i from tabCount to 1 by -1\n'
+            '        try\n'
+            '          if URL of tab i of w starts with targetPrefix then close tab i of w\n'
+            '        end try\n'
+            '      end repeat\n'
+            '    end repeat\n'
+            '  end tell\n'
+            'end run'
+        )
+        try:
+            subprocess.run(
+                ['osascript', '-e', script, self.url],
+                capture_output=True, timeout=3,
+            )
+        except subprocess.TimeoutExpired:
+            pass  # TCC prompt unanswered or Chrome unresponsive — exit anyway
 
     def open_chrome(self):
         """Open/reopen the Streamlit URL in Chrome."""
@@ -232,23 +297,33 @@ class CanvasController:
                 threading.Thread(target=self.retry_callback, daemon=True).start()
             return
 
-        # Use 'open -a' so macOS Launch Services finds Chrome regardless of
-        # install location (~/Applications, non-standard paths, etc.).
+        # Preferred: Chrome "app mode" (`--app=<url>`) — a chromeless
+        # standalone window with no tabs or URL bar, so Canvas Downloader
+        # looks like a real desktop app instead of a localhost browser tab.
+        # The UI stays rendered by Blink/Chrome, which all the Streamlit CSS
+        # is tuned for (WebKit/pywebview is NOT a safe rendering target).
         #
-        # IMPORTANT: pass the URL as a direct operand to `open`, NOT behind
-        # `--args`. When Chrome is already running, Launch Services drops any
-        # `--args` (e.g. `--new-window <url>`), so the old invocation focused
-        # Chrome WITHOUT navigating — i.e. clicking "Open Canvas Downloader"
-        # while Chrome was already open did nothing. `open -a "Google Chrome"
-        # <url>` reliably navigates to the app whether Chrome is running or not.
+        # `open -na` forces a new Chrome process launch so Launch Services
+        # actually passes `--args` through; Chrome's singleton then forwards
+        # the --app flag to the running instance, which opens the app window.
+        # (Plain `open -a "Google Chrome" --args ...` silently DROPS --args
+        # when Chrome is already running.)
         #
-        # NOTE: 'open -a' returns 0 even if Chrome is not actually installed/
+        # Fallback: if `open -na` fails, open as a regular tab — same comment
+        # as before: pass the URL as a direct operand, never behind --args.
+        #
+        # NOTE: 'open' can return 0 even if Chrome is not actually installed/
         # launchable, so we verify Chrome is running via pgrep after a short
         # grace period.
-        subprocess.run(
-            ['open', '-a', 'Google Chrome', self.url],
+        result = subprocess.run(
+            ['open', '-na', 'Google Chrome', '--args', f'--app={self.url}'],
             capture_output=True,
         )
+        if result.returncode != 0:
+            subprocess.run(
+                ['open', '-a', 'Google Chrome', self.url],
+                capture_output=True,
+            )
         threading.Thread(target=self._verify_chrome_launched, daemon=True).start()
 
     def _verify_chrome_launched(self):

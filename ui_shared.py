@@ -545,6 +545,7 @@ _ERROR_TRANSLATIONS = {
     'LTI/Media Stream': 'This is a streamed video that cannot be downloaded directly',
     'URL Expiration': 'The download link expired and could not be refreshed',
     'Network Error': 'Network connection failed after multiple retries',
+    'SSL Certificate Error': 'Your computer could not verify the secure connection to Canvas - check for a VPN, proxy or firewall intercepting traffic, or update Canvas Downloader',
     'Write Error': 'Could not save the file to disk - check available storage',
     '401 Unauthorized': 'Access denied - you may not have permission to download this file',
     'Missing Content ID': 'Canvas did not provide a file reference for this item',
