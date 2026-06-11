@@ -194,3 +194,44 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         _last_error = ('other', str(e))
         logger.error(f"[AppleScript] {app_name} error: {e}")
         return False
+
+def prime_office_automation(contract: dict) -> None:
+    """Trigger macOS TCC permission prompts for Office apps upfront.
+    
+    macOS displays a blocking "Canvas Downloader wants to control X" prompt 
+    the first time an Apple Event is sent. By firing a harmless event in a 
+    background thread during the download phase, we batch the prompts upfront 
+    and warm up the heavy Office processes before post-processing begins.
+    """
+    import sys
+    import threading
+    if sys.platform != 'darwin':
+        return
+        
+    apps_to_prime = []
+    if contract.get('convert_pptx', False):
+        apps_to_prime.append("Microsoft PowerPoint")
+    if contract.get('convert_word', False):
+        apps_to_prime.append("Microsoft Word")
+    if contract.get('convert_excel', False):
+        apps_to_prime.append("Microsoft Excel")
+        
+    if not apps_to_prime:
+        return
+        
+    def _warmup():
+        for app in apps_to_prime:
+            # Check for default installation path to prevent "Where is X?" dialogs
+            if not Path(f"/Applications/{app}.app").exists():
+                continue
+            try:
+                # This harmless command launches the app (if closed) and triggers TCC
+                subprocess.run(
+                    ['osascript', '-e', f'tell application "{app}" to count windows'],
+                    capture_output=True, timeout=120
+                )
+            except Exception:
+                pass
+
+    threading.Thread(target=_warmup, daemon=True).start()
+

@@ -499,7 +499,7 @@ def _build_filetype_pills_html(files: list) -> str:
     import os
     from collections import Counter
 
-    WHITELIST = {'pdf', 'docx', 'pptx', 'xlsx', 'zip', 'mp4', 'js', 'html', 'css', 'txt', 'sql', 'jpg', 'png', 'doc', 'ppt', 'xls', 'md', 'csv', 'json', 'py', 'java', 'c', 'cpp'}
+    WHITELIST = {'pdf', 'docx', 'pptx', 'xlsx', 'zip', 'mp4', 'mp3', 'js', 'html', 'css', 'txt', 'sql', 'jpg', 'png', 'doc', 'ppt', 'xls', 'md', 'csv', 'json', 'py', 'java', 'c', 'cpp', 'webloc', 'url'}
 
     ext_counts = Counter()
     for f in files:
