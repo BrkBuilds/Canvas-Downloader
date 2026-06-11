@@ -230,8 +230,16 @@ def run_sync():
         synced_details = defaultdict(list)
         retry_selections = []
         
+        # certifi-backed SSL context: frozen macOS builds have no OpenSSL default
+        # CA paths, so aiohttp must be pointed at certifi explicitly (see
+        # canvas_logic.get_ssl_context).
+        from canvas_logic import get_ssl_context
+        _sync_connector = aiohttp.TCPConnector(
+            limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context()
+        )
         async with aiohttp.ClientSession(
-            headers={'Authorization': f'Bearer {cm.api_key}'}, timeout=timeout
+            headers={'Authorization': f'Bearer {cm.api_key}'}, timeout=timeout,
+            connector=_sync_connector
         ) as session:
             total_files = sum(
                 len(sel['new']) + len(sel['updates']) + len(sel['redownload'])
@@ -992,6 +1000,17 @@ def run_sync():
                                     if _attempt_bytes:
                                         downloaded_mb = max(0.0, downloaded_mb - _attempt_bytes / (1024 * 1024))
                                         synced_counter[1] = max(0, synced_counter[1] - _attempt_bytes)
+                                    # TLS verification failures are permanent for this run —
+                                    # the trust store won't change between retries, so fail
+                                    # fast instead of burning the backoff budget per file.
+                                    if isinstance(net_err, aiohttp.ClientConnectorCertificateError) or 'CERTIFICATE_VERIFY_FAILED' in str(net_err):
+                                        failed_files_for_pair.append(file)
+                                        error_list.append(f"Error syncing {esc(display_file_name)}: Secure connection to Canvas could not be verified (SSL certificate error)")
+                                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(SSL certificate error)</span>")
+                                        log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+                                        if _debug_file:
+                                            log_debug(f"✗ SSL certificate error (permanent, no retry): {display_file_name}: {net_err}", _debug_file)
+                                        break
                                     # Network error - retry with backoff
                                     if attempt < SYNC_MAX_RETRIES - 1:
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
