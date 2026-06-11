@@ -73,11 +73,15 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         Tuple of (course, sync_mgr, manifest, canvas_files, result, detected)
         - all data needed by the caller, with no side effects.
     """
-    from canvas_debug import log_debug, clear_debug_log
+    from canvas_debug import log_debug, clear_debug_log, set_active_debug_file, log_session_header
     _dbg = st.session_state.get('debug_mode', False)
     debug_file = str(Path(local_folder) / 'debug_log.txt') if _dbg else None
     if debug_file:
         clear_debug_log(debug_file)
+        # Register for the logging bridge so warnings/errors logged via the
+        # `logging` module anywhere in the app land in this file too.
+        set_active_debug_file(debug_file)
+        log_session_header(debug_file, context="Sync analysis")
         _mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
         log_debug(f"=== Sync Analysis: {course_name} (ID: {course_id}) ===", debug_file)
         log_debug(f"Mode: {_mode_label}", debug_file)
@@ -403,7 +407,10 @@ def run_analysis(sync_pairs, main_placeholder=None):
             })
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"Sync Analysis Error: {str(e)}")
+            # exc_info=True: the canvas_debug logging bridge formats the full
+            # traceback into the active debug log (print_exc goes to a console
+            # that doesn't exist in frozen builds).
+            logger.error(f"Sync Analysis Error: {str(e)}", exc_info=True)
             from ui.amber_notice import render_amber_notice
             render_amber_notice(
                 f"Could not analyse \"{display_name}\"",

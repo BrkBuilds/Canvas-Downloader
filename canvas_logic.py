@@ -3940,6 +3940,37 @@ class CanvasManager:
                 except Exception:
                     pass
 
+                # ── Inline-link extraction (HTML body) ──
+                # Mirrors the assignments saver AND the sync-analysis
+                # enumerator (get_course_files_metadata): files linked in the
+                # announcement body are real Canvas files that sync analysis
+                # counts as attachment entities. Without downloading them here,
+                # every fresh download was immediately followed by a sync that
+                # reported them as phantom "new" files (seen 2026-06-11:
+                # 'G7-Assignment-1.pdf', 'Late Lecture with DHH Slide.pdf').
+                existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                for link_info in _extract_canvas_file_links(message):
+                    fid = link_info['file_id']
+                    if fid in existing_att_ids:
+                        continue
+                    log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                    try:
+                        canvas_file = course.get_file(fid)
+                        attachments.append({
+                            'id': canvas_file.id,
+                            'url': canvas_file.url,
+                            'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                            'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                            'size': getattr(canvas_file, 'size', 0),
+                            'modified_at': getattr(canvas_file, 'modified_at', ''),
+                            'content-type': getattr(canvas_file, 'content_type', ''),
+                        })
+                        existing_att_ids.add(canvas_file.id)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
+                    except Exception as e:
+                        log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
                 has_attachments = bool(attachments)
                 display_name = f"{date_prefix}{title}"
 
@@ -4511,6 +4542,31 @@ class CanvasManager:
         if error_sig in self._logged_error_sigs:
             return  # Already logged this exact error in this run
         self._logged_error_sigs.add(error_sig)
+
+        # Mirror EVERY structured error into the active debug log — with the
+        # full traceback when the error wraps a real exception. Deduplicated
+        # by the signature gate above, and independent of error_log_enabled
+        # (debug mode opts into maximal forensics). Without this, unexpected
+        # exceptions surfaced as bare one-liners in the UI and the debug log
+        # had no record of WHERE they came from.
+        try:
+            from canvas_debug import log_debug_exc, get_active_debug_file
+            _dbg_file = get_active_debug_file()
+            if _dbg_file:
+                if isinstance(error, DownloadError):
+                    _summary = (
+                        f"ERROR [{error.error_type}] {error.course_name} :: "
+                        f"{error.item_name} :: {error.message}"
+                    )
+                    _raw = getattr(error, 'raw_error', None)
+                else:
+                    _summary, _raw = f"ERROR {error}", None
+                if isinstance(_raw, BaseException):
+                    log_debug_exc(_summary, _dbg_file, exc=_raw)
+                else:
+                    log_debug(_summary, _dbg_file)
+        except Exception:
+            pass  # diagnostics must never break the download
 
         # 'error' can be a DownloadError object or a string (legacy support)
         if not self.error_log_enabled:

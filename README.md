@@ -116,9 +116,29 @@ No Python installation required. Grab the latest release for your platform:
 
 1. Open `Canvas Downloader.dmg`
 2. Drag `Canvas Downloader.app` to your `/Applications` folder
-3. Right-click → **Open** the first time (Gatekeeper bypass for unsigned apps)
+3. **First launch:**
+   - macOS 13/14: Right-click the app → **Open** → **Open** (Gatekeeper bypass for unsigned apps)
+   - macOS 15 (Sequoia) or newer: double-click (it gets blocked), then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**
 
-> For automated Office conversions (PowerPoint → PDF, etc.) macOS will prompt for Automation permissions for Word/Excel/PowerPoint - grant them when asked.
+#### What macOS will ask you on first run (this is normal!)
+
+Because the app is unsigned (an Apple Developer certificate costs $99/year — [support the project](https://ko-fi.com/brkbuilds) to help us get one), macOS is extra careful and asks for each permission individually. **Every prompt appears only once.** Here is each one, in order, and what to click:
+
+| Prompt | Why it appears | What to click |
+|---|---|---|
+| *"Canvas Downloader" was blocked...* | The app is not signed with a paid Apple certificate | **Open Anyway** (in Privacy & Security settings) |
+| *...wants to access key "CanvasDownloader" in your keychain* | Loads/saves your Canvas token securely in the macOS Keychain | **Always Allow** (enter your **Mac login password**, not your Canvas token) |
+| *...wants access to control "Google Chrome"* | Opens the app in its own window and closes it again when you quit | **OK** |
+| *...wants access to files in your Downloads/Documents folder* | Saves your course files where you chose | **OK** / **Allow** |
+| *...wants access to control "Microsoft PowerPoint" (or Word / Excel)* | Converts slides and documents to PDF for you | **OK** |
+
+> ⚠️ Heads up: after **updating** to a new version of Canvas Downloader, macOS treats it as a new app and the Keychain prompt will appear once again. Click **Always Allow** — your saved login is intact.
+
+#### Uninstalling (macOS)
+
+1. Log out inside the app (removes your Canvas token from the Keychain)
+2. Drag `Canvas Downloader.app` from Applications to the Trash
+3. Optional: delete `~/Library/Application Support/CanvasDownloader` (settings & sync pairs)
 
 ---
 

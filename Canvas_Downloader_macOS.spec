@@ -137,10 +137,12 @@ app = BUNDLE(
         'NSRequiresAquaSystemAppearance': False,
         # Minimum macOS version (CustomTkinter requires 11.0+)
         'LSMinimumSystemVersion': '11.0',
-        # Required on macOS 10.14+ for AppleScript automation of Office apps.
+        # Required on macOS 10.14+ for AppleScript automation (Chrome + Office).
         # Without this key the TCC permission dialog shows no description.
+        # Shown for ALL automation targets, so it must cover both use cases.
         'NSAppleEventsUsageDescription': (
-            'Canvas Downloader uses Microsoft Office to convert PowerPoint, '
+            'Canvas Downloader controls Google Chrome to open and close its '
+            'own app window, and Microsoft Office to convert PowerPoint, '
             'Word, and Excel files to PDF.'
         ),
         # TCC usage strings shown when the OS prompts for folder/file access.
