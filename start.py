@@ -284,17 +284,12 @@ if __name__ == "__main__":
 
     import platform as _platform
 
-    if _platform.system() == 'Darwin':
-        _run_macos()
-        sys.exit(0)
+    # Force pywebview flow for macOS testing
+    import webview
 
-    else:
-        # ── Windows: pywebview flow with splash screen + auto-retry ──
-        import webview
-
-        # Loading splash — shown immediately so the user never sees a raw
-        # white screen while the Streamlit server is starting up.
-        _LOADING_HTML = """<!DOCTYPE html>
+    # Loading splash — shown immediately so the user never sees a raw
+    # white screen while the Streamlit server is starting up.
+    _LOADING_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -343,8 +338,8 @@ if __name__ == "__main__":
 </body>
 </html>"""
 
-        def _make_error_html(reason: str) -> str:
-            return f"""<!DOCTYPE html>
+    def _make_error_html(reason: str) -> str:
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -380,48 +375,63 @@ if __name__ == "__main__":
 </body>
 </html>"""
 
-        # Show the loading splash immediately — no white screen on launch.
-        webview.create_window(
-            'Canvas Downloader', html=_LOADING_HTML,
-            maximized=True, min_size=(1024, 700),
+    # Show the loading splash immediately — no white screen on launch.
+    webview.create_window(
+        'Canvas Downloader', html=_LOADING_HTML,
+        maximized=True, min_size=(1024, 700),
+        text_select=True,
+    )
+
+    def _boot() -> None:
+        """Start the Streamlit server and navigate the window once ready.
+
+        Called by pywebview in a background thread after the GUI starts,
+        so blocking here does not freeze the window.
+        """
+        for _attempt in range(1, _MAX_LAUNCH_ATTEMPTS + 1):
+            logger.info(f"Streamlit launch attempt {_attempt}/{_MAX_LAUNCH_ATTEMPTS}...")
+            ok, url, failed = _launch_streamlit()
+
+            if ok:
+                webview.windows[0].load_url(url)
+                return
+
+            if failed.is_set():
+                logger.warning(
+                    f"Attempt {_attempt} failed (server error). "
+                    f"{'Retrying...' if _attempt < _MAX_LAUNCH_ATTEMPTS else 'Giving up.'}"
+                )
+            else:
+                logger.warning(
+                    f"Attempt {_attempt} timed out. "
+                    f"{'Retrying with a new port...' if _attempt < _MAX_LAUNCH_ATTEMPTS else 'Giving up.'}"
+                )
+
+        _reason = (
+            f'The application server did not respond after {_MAX_LAUNCH_ATTEMPTS} attempts. '
+            'This can happen if another application is using the required network port.'
         )
+        logger.error(f"Startup failed after {_MAX_LAUNCH_ATTEMPTS} attempts.")
+        webview.windows[0].load_html(_make_error_html(_reason))
 
-        def _boot() -> None:
-            """Start the Streamlit server and navigate the window once ready.
-
-            Called by pywebview in a background thread after the GUI starts,
-            so blocking here does not freeze the window.
-            """
-            for _attempt in range(1, _MAX_LAUNCH_ATTEMPTS + 1):
-                logger.info(f"Streamlit launch attempt {_attempt}/{_MAX_LAUNCH_ATTEMPTS}...")
-                ok, url, failed = _launch_streamlit()
-
-                if ok:
-                    webview.windows[0].load_url(url)
-                    return
-
-                if failed.is_set():
-                    logger.warning(
-                        f"Attempt {_attempt} failed (server error). "
-                        f"{'Retrying...' if _attempt < _MAX_LAUNCH_ATTEMPTS else 'Giving up.'}"
-                    )
-                else:
-                    logger.warning(
-                        f"Attempt {_attempt} timed out. "
-                        f"{'Retrying with a new port...' if _attempt < _MAX_LAUNCH_ATTEMPTS else 'Giving up.'}"
-                    )
-
-            _reason = (
-                f'The application server did not respond after {_MAX_LAUNCH_ATTEMPTS} attempts. '
-                'This can happen if another application is using the required network port.'
-            )
-            logger.error(f"Startup failed after {_MAX_LAUNCH_ATTEMPTS} attempts.")
-            webview.windows[0].load_html(_make_error_html(_reason))
-
+    if sys.platform == 'darwin':
+        from webview.menu import Menu, MenuAction
+        def _noop(): pass
+        mac_menu = [
+            Menu('Edit', [
+                MenuAction('Cut', _noop),
+                MenuAction('Copy', _noop),
+                MenuAction('Paste', _noop),
+                MenuAction('Select All', _noop),
+            ])
+        ]
+        webview.start(_boot, menu=mac_menu)
+    else:
         webview.start(_boot)
-        # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
-        # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise
-        # keep the process alive for up to a minute after the window closes.
-        # All durable state is already committed (per-file SQLite writes,
-        # atomic .part renames), so skipping interpreter teardown is safe.
-        os._exit(0)
+        
+    # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
+    # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise
+    # keep the process alive for up to a minute after the window closes.
+    # All durable state is already committed (per-file SQLite writes,
+    # atomic .part renames), so skipping interpreter teardown is safe.
+    os._exit(0)

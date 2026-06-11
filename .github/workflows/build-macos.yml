@@ -1,4 +1,4 @@
-name: Build macOS Release
+name: Build macOS PyWebView Test
 
 on:
   workflow_dispatch:
@@ -31,13 +31,14 @@ jobs:
           pip install --upgrade pip
           pip install --no-cache-dir -r requirements.txt
           pip install --no-cache-dir "pyinstaller>=6.0"
+          pip install pywebview
 
       - name: Build .app bundle
         run: |
           set -euo pipefail
           source .venv/bin/activate
           rm -rf build/ dist/
-          pyinstaller --clean Canvas_Downloader_macOS.spec
+          pyinstaller --clean Canvas_Downloader_macOS_Test.spec
 
       - name: Verify .app exists
         run: |
@@ -59,11 +60,11 @@ jobs:
           
           # create-dmg names the file automatically (e.g. "Canvas Downloader <version>.dmg" or "Canvas Downloader.dmg")
           # We rename it to the expected artifact format
-          mv "Canvas Downloader"*.dmg "Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS.dmg"
+          mv "Canvas Downloader"*.dmg "Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS_PYWEBVIEW_Test.dmg"
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: Canvas_Downloader_macOS
-          path: "dist/Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS.dmg"
+          name: Canvas_Downloader_macOS_PYWEBVIEW_Test
+          path: "dist/Canvas_Downloader_v${{ steps.version.outputs.app_version }}_macOS_PYWEBVIEW_Test.dmg"
           retention-days: 14
