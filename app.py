@@ -299,6 +299,49 @@ components.html("""<script>
     });
     p.obs.observe(doc.querySelector('[data-testid="stMain"]')||doc.body,
         {childList:true,subtree:true,attributes:false,characterData:false});
+
+    // --- Server-shutdown watchdog (branded "app closed" screen) ---
+    // When the user quits the controller/app the Streamlit server dies but the
+    // browser tab survives, and Streamlit's own handling shows a gray overlay
+    // with a confusing "Streamlit/connection error" message. We poll the
+    // health endpoint and, after 3 consecutive failures (~7.5 s), cover the
+    // page with a branded full-screen notice instead.
+    // Lifetime note: this interval lives in THIS iframe's JS context. On every
+    // rerun the iframe is recreated (old timer is GC'd with it, failure count
+    // resets), but once the server dies no further reruns can occur — so the
+    // last iframe and its timer survive exactly as long as we need them.
+    var hFails=0;
+    function hDead(){
+        if(doc.getElementById('_cdClosed'))return;
+        try{if(p.safeT){clearTimeout(p.safeT);}p.el.style.display='none';p.vis=false;}catch(_){}
+        var ov=doc.createElement('div');
+        ov.id='_cdClosed';
+        ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#0e1117;'
+            +'z-index:2147483647;display:flex;flex-direction:column;align-items:center;'
+            +'justify-content:center;gap:18px;font-family:-apple-system,BlinkMacSystemFont,'
+            +'"Segoe UI",sans-serif;text-align:center;padding:24px';
+        ov.innerHTML=
+            '<div style="width:64px;height:64px;background:rgba(77,168,218,.12);border-radius:16px;'
+            +'display:flex;align-items:center;justify-content:center">'
+            +'<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4DA8DA" '
+            +'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            +'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+            +'<polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>'
+            +'<div style="color:#fafafa;font-size:1.25rem;font-weight:600">Canvas Downloader has been closed</div>'
+            +'<div style="color:rgba(255,255,255,.45);font-size:.95rem;line-height:1.6;max-width:420px">'
+            +'The app was shut down, so this window is no longer connected.<br>'
+            +'You can safely close it. To start again, open the Canvas Downloader app.</div>';
+        doc.body.appendChild(ov);
+        try{doc.title='Canvas Downloader';}catch(_){}
+    }
+    setInterval(function(){
+        if(doc.getElementById('_cdClosed'))return;
+        fetch(win.location.origin+'/_stcore/health',{cache:'no-store'})
+            .then(function(r){
+                if(r.ok){hFails=0;}else{hFails++;if(hFails>=3)hDead();}
+            })
+            .catch(function(){hFails++;if(hFails>=3)hDead();});
+    },2500);
 })();
 </script>""", height=0)
 
