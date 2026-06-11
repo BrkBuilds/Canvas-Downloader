@@ -40,7 +40,6 @@ datas = [
     ('sync', 'sync'),
     ('ui', 'ui'),
     ('styles', 'styles'),
-    ('macos_controller.py', '.'),
     ('LICENSE', '.'),
 ]
 
@@ -94,7 +93,7 @@ hiddenimports += [
     'streamlit.runtime.scriptrunner.magic_funcs',
     'streamlit.runtime.scriptrunner.script_runner',
     'engineio.async_drivers.threading',
-    'tkinter', 'tkinter.filedialog', '_tkinter', 'plistlib',
+    'plistlib',
     # Fix 1: keyring macOS Keychain backend - needed for token persistence
     'keyring.backends', 'keyring.backends.macOS',
 ]
