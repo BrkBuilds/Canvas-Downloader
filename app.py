@@ -955,7 +955,15 @@ with _main_content.container():
                 }
                 if st.session_state.get('debug_mode', False):
                     from canvas_debug import log_debug as _app_log
+                    from canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
                     _dl_dbg = str(Path(st.session_state['download_path']) / 'debug_log.txt')
+                    # Register for the logging bridge: from here on, every
+                    # logger.info/error from any app module (converters,
+                    # post-processing, applescript bridge...) is mirrored
+                    # into this file automatically.
+                    _set_dbg(_dl_dbg)
+                    if current_idx == 0:
+                        _dbg_header(_dl_dbg, context=f"Download mode | {total} course(s)")
                     _pp_active = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
                     _sec_active = [k.replace('download_', '') for k, v in _secondary_settings.items() if v and k.startswith('download_')]
                     _app_log(f"=== Download Start: {course.name} | Course {current_idx + 1}/{total} ===", _dl_dbg)

@@ -186,6 +186,42 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
         pass
 
 
+def _applescript_last_error() -> tuple[str, str | None]:
+    """Describe the most recent macOS AppleScript conversion failure.
+
+    Returns (per_file_suffix, fatal_phase_message). per_file_suffix is
+    appended to the generic "Conversion failed" line so the user sees the
+    real reason (timeout, permission, ...). fatal_phase_message is non-None
+    for failures that will identically doom every remaining file in the
+    phase (Automation/TCC permission denied, Office app missing) — callers
+    abort early with one actionable message instead of spamming dozens of
+    generic errors.
+    """
+    if sys.platform != 'darwin':
+        return '', None
+    try:
+        from engine.applescript_bridge import get_last_error, FATAL_CATEGORIES
+    except ImportError:
+        return '', None
+    last = get_last_error()
+    if not last:
+        return '', None
+    category, detail = last
+    short = detail if len(detail) <= 160 else detail[:157] + '…'
+    return f" — {short}", (detail if category in FATAL_CATEGORIES else None)
+
+
+def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase_label: str) -> None:
+    """Log a single actionable message and mark the remaining files as skipped."""
+    if remaining > 0:
+        ui.pp_failure_count += remaining
+    _log_msg(
+        ui,
+        f"<span style='color: {theme.ERROR_LIGHT};'>🛑 {esc(fatal_msg)} "
+        f"Skipping the remaining {remaining} {phase_label} file(s).</span>"
+    )
+
+
 # ─────────────────────────────────────────────────────
 # Individual Converter Runners
 #
@@ -279,9 +315,14 @@ def run_pptx_conversion(files, ui: UIBridge):
                     _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
                     ui.pp_success_count += 1
                 else:
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
-                    _log_error_to_file(ui.error_log_path, old_name, "PDF conversion failed")
+                    _reason, _fatal = _applescript_last_error()
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed{esc(_reason)})</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, f"PDF conversion failed{_reason}")
                     ui.pp_failure_count += 1
+                    if _fatal:
+                        _abort_applescript_phase(ui, _fatal, total - i, "PowerPoint")
+                        _render_dashboard(ui, i, total, "PowerPoint files")
+                        break
                 _render_dashboard(ui, i, total, "PowerPoint files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ PDF conversion complete!</span>")
@@ -453,9 +494,14 @@ def run_word_conversion(files, ui: UIBridge):
                     _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
                     ui.pp_success_count += 1
                 else:
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
-                    _log_error_to_file(ui.error_log_path, old_name, "Word to PDF conversion failed")
+                    _reason, _fatal = _applescript_last_error()
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed{esc(_reason)})</span>")
+                    _log_error_to_file(ui.error_log_path, old_name, f"Word to PDF conversion failed{_reason}")
                     ui.pp_failure_count += 1
+                    if _fatal:
+                        _abort_applescript_phase(ui, _fatal, total - i, "Word")
+                        _render_dashboard(ui, i, total, "Legacy Word files")
+                        break
                 _render_dashboard(ui, i, total, "Legacy Word files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Legacy Word to PDF conversion complete!</span>")
@@ -559,10 +605,15 @@ def run_excel_conversion(files, ui: UIBridge):
                     _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
                     ui.pp_success_count += 1
                 else:
-                    err_detail = excel_error_msg if excel_error_msg else "Excel to PDF conversion failed"
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({err_detail})</span>")
+                    _reason, _fatal = _applescript_last_error()
+                    err_detail = excel_error_msg if excel_error_msg else f"Excel to PDF conversion failed{_reason}"
+                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({esc(err_detail)})</span>")
                     _log_error_to_file(ui.error_log_path, old_name, err_detail)
                     ui.pp_failure_count += 1
+                    if _fatal:
+                        _abort_applescript_phase(ui, _fatal, total - i, "Excel")
+                        _render_dashboard(ui, i, total, "Excel files")
+                        break
                 _render_dashboard(ui, i, total, "Excel files")
 
     _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Excel to PDF conversion complete!</span>")
