@@ -814,6 +814,19 @@ div.st-key-btn_convert_video button::after {
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
     }
 
-    /* Ignored Files button: match standard action button border style */
+    /* 14. Fix summary marker (chevron) size and spacing in WebKit (Safari/macOS) */
+    summary::-webkit-details-marker {
+        margin-right: 8px;
+        font-size: 115%;
+    }
+
+    /* 15. Scale down Apple Emojis (~15-20%) globally without breaking layout */
+    @font-face {
+        font-family: "Source Sans Pro";
+        src: local("Apple Color Emoji");
+        size-adjust: 85%;
+        /* Target all standard emoji blocks */
+        unicode-range: U+200D, U+2600-26FF, U+2700-27BF, U+1F000-1F02F, U+1F0A0-1F0FF, U+1F1E6-1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F700-1F77F, U+1F780-1F7FF, U+1F800-1F8FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF;
+    }
 
     </style>
