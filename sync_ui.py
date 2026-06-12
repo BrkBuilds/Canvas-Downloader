@@ -1399,14 +1399,19 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
 def _render_sync_history():
     """Render sync history in an expander at the bottom of step 1."""
+    history_mgr = None
     try:
         from ui_helpers import get_config_dir
         from sync_manager import SyncHistoryManager, get_file_icon
+        # Always construct the manager (cheap) so it's available to the
+        # "Clear History" handler below. Binding it only inside the cache-miss
+        # branch caused an UnboundLocalError on the clear-history rerun, because
+        # by then the cache already exists and the branch is skipped.
+        history_mgr = SyncHistoryManager(get_config_dir())
         # M-1: Cache history in session state — avoids a disk read on every
         # Streamlit rerun (checkbox clicks, etc.). Invalidated by execution.py
         # after a new entry is written via st.session_state.pop('_sync_history_cache').
         if '_sync_history_cache' not in st.session_state:
-            history_mgr = SyncHistoryManager(get_config_dir())
             st.session_state['_sync_history_cache'] = history_mgr.load_history()
         history = st.session_state['_sync_history_cache']
     except Exception:
@@ -1647,8 +1652,12 @@ def _render_sync_history():
                     cc1, cc2 = st.columns(2)
                     with cc1:
                         if st.button("✓ Yes", type="primary", use_container_width=True):
-                            history_mgr.clear_history()
-                            del st.session_state['confirm_clear_history']
+                            if history_mgr is not None:
+                                history_mgr.clear_history()
+                            # Invalidate the cached history so the now-empty
+                            # state is re-read from disk on the next render.
+                            st.session_state.pop('_sync_history_cache', None)
+                            st.session_state.pop('confirm_clear_history', None)
                             st.rerun()
                     with cc2:
                         if st.button("✗ No", use_container_width=True):

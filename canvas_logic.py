@@ -3684,7 +3684,14 @@ class CanvasManager:
         log_debug("Secondary: Fetching assignments...", debug_file)
 
         try:
-            assignments = course.get_assignments()
+            # List API with a module-item fallback so a restricted assignment
+            # list doesn't silently drop module-embedded assignments (same sync
+            # asymmetry as quizzes — see _enumerate_module_backed).
+            assignments = self._enumerate_module_backed(
+                course, debug_file, label='Assignment',
+                list_getter=course.get_assignments, item_type='Assignment',
+                individual_getter=course.get_assignment,
+            )
             for assignment in assignments:
                 if check_cancellation and check_cancellation():
                     break
@@ -4069,7 +4076,14 @@ class CanvasManager:
         log_debug("Secondary: Fetching discussions...", debug_file)
 
         try:
-            topics = course.get_discussion_topics()
+            # List API with a module-item fallback so a restricted discussion
+            # list doesn't silently drop module-embedded discussions (same sync
+            # asymmetry as quizzes — see _enumerate_module_backed).
+            topics = self._enumerate_module_backed(
+                course, debug_file, label='Discussion',
+                list_getter=course.get_discussion_topics, item_type='Discussion',
+                individual_getter=course.get_discussion_topic,
+            )
             for topic in topics:
                 if check_cancellation and check_cancellation():
                     break
@@ -4130,6 +4144,65 @@ class CanvasManager:
                 progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
 
+    def _enumerate_module_backed(self, course, debug_file, *, label,
+                                 list_getter, item_type, individual_getter):
+        """List-API-first enumeration with a module-item fallback.
+
+        Used for the secondary entities (Assignment / Quiz / Discussion) that
+        the sync analyzer reads DIRECTLY from module items
+        (``_get_files_from_modules``) but a flat-mode download fetches via a
+        per-type LIST endpoint. On locked-down institutional Canvas those LIST
+        endpoints frequently 403/404 while the *individual* GET stays
+        accessible — so a flat download would silently drop the module-embedded
+        entity, and the next sync would then flag it as a phantom "N new files"
+        immediately after a fresh download.
+
+        Preferred path: ``list_getter()`` (e.g. ``course.get_quizzes``).
+        Fallback (only when that raises): walk modules, and for every item of
+        ``item_type`` fetch it individually via ``individual_getter(content_id)``
+        (e.g. ``course.get_quiz``). The IDs line up because a module item's
+        ``content_id`` equals the entity's ``id``, so the synthetic manifest ID
+        (``make_secondary_id(type, id)``) matches on both the download and sync
+        sides and the entry is recognised rather than re-flagged as new.
+
+        This only changes the SOURCE of the objects; the caller's existing
+        per-entity processing, ``module_handled_ids`` dedup (which prevents
+        double-handling in modules mode), and ID generation are untouched.
+        """
+        try:
+            return list(list_getter())
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(
+                f"{label} list endpoint restricted ({e}); falling back to "
+                f"module-embedded {label.lower()}s.", debug_file
+            )
+
+        out = []
+        seen = set()
+        try:
+            for module in course.get_modules():
+                try:
+                    items = module.get_module_items()
+                except Exception:
+                    continue
+                for item in items:
+                    if getattr(item, 'type', '') != item_type:
+                        continue
+                    cid = getattr(item, 'content_id', 0) or 0
+                    if not cid or cid in seen:
+                        continue
+                    seen.add(cid)
+                    try:
+                        out.append(individual_getter(cid))
+                    except Exception as ie:
+                        log_debug(
+                            f"Module-embedded {label.lower()} {cid} not "
+                            f"individually fetchable: {ie}", debug_file
+                        )
+        except Exception as me:
+            log_debug(f"Module-{label.lower()} fallback enumeration failed: {me}", debug_file)
+        return out
+
     def _fetch_and_save_quizzes(self, course, base_path,
                                 progress_callback, check_cancellation,
                                 settings, error_root_path, debug_file,
@@ -4139,7 +4212,15 @@ class CanvasManager:
         log_debug("Secondary: Fetching quizzes...", debug_file)
 
         try:
-            quizzes = course.get_quizzes()
+            # List API with a module-item fallback so a restricted quiz list
+            # doesn't silently drop module-embedded quizzes (see
+            # _enumerate_module_backed — fixes the "1 new file after a fresh
+            # download" sync asymmetry for locked-down courses).
+            quizzes = self._enumerate_module_backed(
+                course, debug_file, label='Quiz',
+                list_getter=course.get_quizzes, item_type='Quiz',
+                individual_getter=course.get_quiz,
+            )
             for quiz in quizzes:
                 if check_cancellation and check_cancellation():
                     break

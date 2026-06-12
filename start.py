@@ -1,24 +1,21 @@
 """
 start.py - Unified application launcher for Canvas Downloader.
 
-Architecture - platform split:
-  Windows: pywebview wraps the Streamlit server in a native EdgeChromium
-           desktop window.  The main thread runs ``webview.start()``.
-  macOS:   CustomTkinter (macos_controller.CanvasController) shows a small
-           native status window.  Chrome opens the Streamlit UI as a
-           dedicated browser window.  tkinter's mainloop runs on the main
-           thread (required by Cocoa).
+Architecture (both platforms, post-pivot):
+  pywebview wraps the Streamlit server in a native desktop window — an
+  EdgeChromium WebView2 window on Windows, a Cocoa/WebKit window on macOS.
+  The main thread runs ``webview.start()`` (required by macOS Cocoa); the
+  Streamlit server runs in a daemonised background thread.
 
-Threading model (both platforms):
+Threading model:
   1. Streamlit server starts in a daemonised background thread.
      ``signal.signal`` is monkeypatched for the duration because Streamlit
      tries to register signal handlers, which raises ``ValueError`` from a
      non-main thread.
-  2. A second daemon thread polls the health endpoint.
-  3. Once healthy, the appropriate UI is opened (pywebview window on
-     Windows; Chrome + status controller on macOS).
-  4. When the user closes the controller/window the process exits and the
-     daemon thread is killed automatically.
+  2. A loading splash is shown immediately; ``_boot`` (run by pywebview on a
+     background thread) polls the health endpoint and navigates the window
+     to the Streamlit URL once it is ready.
+  3. When the user closes the window the process hard-exits via ``os._exit``.
 
 Port-race handling (M-4):
   _find_free_port() probes a port and immediately releases the socket, so
@@ -170,95 +167,6 @@ def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Eve
 
     ok = _wait_for_server(health_url, failed_event)
     return ok, url, failed_event
-
-
-# ── Platform launch helpers ───────────────────────────────────────
-
-def _run_macos() -> None:
-    """macOS launch: CustomTkinter controller + Chrome browser window.
-
-    All mutable boot-state lives in local variables so that the nested
-    _retry_boot_sequence can rebind them via ``nonlocal`` (which requires
-    an enclosing *function* scope — an ``if`` block is not sufficient).
-    """
-    try:
-        from macos_controller import CanvasController
-    except ImportError as _import_err:
-        # CustomTkinter or the controller module is missing — show a native
-        # Tkinter error dialog so the user gets a readable message rather than
-        # a raw traceback in the console.
-        logger.error(f"Failed to import macos_controller: {_import_err}")
-        try:
-            import tkinter as _tk
-            import tkinter.messagebox as _mb
-            _root = _tk.Tk()
-            _root.withdraw()
-            _mb.showerror(
-                "Canvas Downloader — Startup Error",
-                f"A required UI component could not be loaded:\n\n{_import_err}\n\n"
-                "Please reinstall Canvas Downloader or contact support.",
-            )
-            _root.destroy()
-        except Exception:
-            pass  # If tkinter itself is missing, nothing we can do
-        sys.exit(1)
-
-    # Probe a port; the controller's "Try Again" path re-probes with a fresh
-    # port via _retry_boot_sequence if the first attempt fails.
-    port       = _find_free_port()
-    url        = f"http://127.0.0.1:{port}"
-    health_url = f"{url}/_stcore/health"
-    failed_ev  = threading.Event()
-
-    os.environ["STREAMLIT_SERVER_PORT"] = str(port)
-    threading.Thread(
-        target=_start_streamlit_server,
-        args=(str(port), failed_ev),
-        daemon=True,
-    ).start()
-
-    controller = CanvasController(
-        streamlit_url=url,
-        # os._exit: same rationale as the Windows exit path — a non-daemon
-        # worker thread mid-API-call must not keep the app alive after quit.
-        # The controller destroys its Tk window before invoking on_quit.
-        on_quit=lambda: os._exit(0),
-    )
-
-    def _boot_sequence() -> None:
-        """Health-check the current server attempt and open Chrome when ready."""
-        if _wait_for_server(health_url, failed_ev):
-            controller.set_state('ready')
-            # open_chrome() touches Tkinter internals — must run on main thread.
-            controller.app.after(0, controller.open_chrome)
-        else:
-            controller.set_state(
-                'error',
-                'Server failed to start',
-                'Please try closing and reopening the app.',
-            )
-
-    def _retry_boot_sequence() -> None:
-        """Re-probe a free port and restart Streamlit for the 'Try Again' button."""
-        nonlocal port, url, health_url, failed_ev
-        port       = _find_free_port()
-        url        = f"http://127.0.0.1:{port}"
-        health_url = f"{url}/_stcore/health"
-        failed_ev  = threading.Event()
-        controller.url = url
-        os.environ["STREAMLIT_SERVER_PORT"] = str(port)
-        threading.Thread(
-            target=_start_streamlit_server,
-            args=(str(port), failed_ev),
-            daemon=True,
-        ).start()
-        _boot_sequence()
-
-    controller.retry_callback = _retry_boot_sequence
-    threading.Thread(target=_boot_sequence, daemon=True).start()
-
-    # tkinter mainloop must run on the main thread (macOS Cocoa requirement).
-    controller.run()
 
 
 # ── Entry Point ───────────────────────────────────────────────────
@@ -414,20 +322,15 @@ if __name__ == "__main__":
         logger.error(f"Startup failed after {_MAX_LAUNCH_ATTEMPTS} attempts.")
         webview.windows[0].load_html(_make_error_html(_reason))
 
-    if sys.platform == 'darwin':
-        from webview.menu import Menu, MenuAction
-        def _noop(): pass
-        mac_menu = [
-            Menu('Edit', [
-                MenuAction('Cut', _noop),
-                MenuAction('Copy', _noop),
-                MenuAction('Paste', _noop),
-                MenuAction('Select All', _noop),
-            ])
-        ]
-        webview.start(_boot, menu=mac_menu)
-    else:
-        webview.start(_boot)
+    # NOTE (macOS): do NOT pass a custom `menu=[Menu('Edit', ...)]`. pywebview's
+    # Cocoa backend already installs a default menu bar — "Canvas Downloader",
+    # "Edit", "View" — whose Edit menu has Cut/Copy/Paste/Select All wired to the
+    # standard first-responder selectors (with working ⌘X/⌘C/⌘V/⌘A) plus the
+    # macOS-injected AutoFill/Dictation/Emoji items. Adding our own "Edit" menu
+    # produced a SECOND, duplicate Edit title in the menu bar whose actions were
+    # no-ops (they did nothing on click and broke ⌘-shortcut routing). Relying on
+    # the built-in menu gives one Edit menu that actually copies and pastes.
+    webview.start(_boot)
         
     # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
     # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise
