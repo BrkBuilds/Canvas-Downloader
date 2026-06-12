@@ -321,6 +321,51 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         logger.error(f"[AppleScript] {app_name} error: {e}")
         return False
 
+def quit_idle_office_apps() -> None:
+    """Quit the Office apps we launched — but ONLY if they have no open documents.
+
+    Post-processing leaves PowerPoint/Word/Excel running (we deliberately never
+    quit them mid-batch, to avoid relaunch churn between courses). This tidies
+    them away once everything is done so they don't linger in the user's dock.
+
+    Safety: we check via System Events that the process is actually RUNNING
+    before addressing the app (so we never auto-launch a quit target), and only
+    quit when its document count is 0. A user who has their own
+    workbook/presentation open is therefore never disturbed. Best-effort, on a
+    daemon thread, macOS only.
+    """
+    if sys.platform != 'darwin':
+        return
+    import threading
+
+    # (AppleScript app name, its document collection term)
+    targets = [
+        ("Microsoft PowerPoint", "presentations"),
+        ("Microsoft Word", "documents"),
+        ("Microsoft Excel", "workbooks"),
+    ]
+
+    def _worker():
+        for app, collection in targets:
+            script = (
+                f'tell application "System Events"\n'
+                f'    if exists (process "{app}") then\n'
+                f'        try\n'
+                f'            tell application "{app}"\n'
+                f'                if (count of {collection}) is 0 then quit\n'
+                f'            end tell\n'
+                f'        end try\n'
+                f'    end if\n'
+                f'end tell'
+            )
+            try:
+                subprocess.run(['osascript', '-e', script], capture_output=True, timeout=20)
+            except Exception:
+                pass
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+
 def prime_office_automation(contract: dict) -> None:
     """Launch + permission-prime the Office apps upfront, hidden, during download.
 
@@ -392,6 +437,22 @@ def prime_office_automation(contract: dict) -> None:
                 )
             except Exception:
                 pass
+            if app == "Microsoft Excel":
+                # Best-effort suppression of the "this workbook contains links to
+                # external sources" dialog. Done HERE, in its own isolated
+                # osascript, NOT inline in the conversion script: if this Excel
+                # build doesn't expose the property the statement is a COMPILE
+                # error (-2741) that `try` can't catch — inline it would kill
+                # every conversion. Isolated, a bad property name just no-ops.
+                for _prop in ('ask to update links', 'ask to update automatic links'):
+                    try:
+                        subprocess.run(
+                            ['osascript', '-e',
+                             f'tell application "{app}" to set {_prop} to false'],
+                            capture_output=True, timeout=15,
+                        )
+                    except Exception:
+                        pass
 
     threading.Thread(target=_warmup, daemon=True).start()
 

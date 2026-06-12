@@ -284,10 +284,14 @@ if __name__ == "__main__":
 </html>"""
 
     # Show the loading splash immediately — no white screen on launch.
+    # NOTE: no text_select=True. Enabling it let the user rubber-band-select the
+    # ENTIRE UI (labels, padding, the black gaps) — which looks broken, and is
+    # easy to trigger by accident over VNC. Text selection of page chrome is
+    # instead disabled in CSS (styles/global.css), while inputs/textareas stay
+    # fully selectable + editable so pasting the Canvas API token/URL still works.
     webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
-        text_select=True,
     )
 
     def _boot() -> None:
