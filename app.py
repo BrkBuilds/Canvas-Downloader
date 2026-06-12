@@ -717,6 +717,14 @@ with _main_content.container():
             st.session_state['completion_beep_fired'] = False
             # Re-arm the "quit Office apps on completion" one-shot for this run.
             st.session_state['_office_quit_fired'] = False
+            # macOS: forget any Office apps primed by a previous run (they were quit
+            # at that run's completion) so this run launches them fresh + scoped.
+            if sys.platform == 'darwin':
+                try:
+                    from engine.applescript_bridge import reset_office_priming
+                    reset_office_priming()
+                except Exception:
+                    pass
 
             st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
             
@@ -987,15 +995,6 @@ with _main_content.container():
                     _app_log(f"Post-processing: [{', '.join(_pp_active) or 'none'}]", _dl_dbg)
                     _app_log(f"Secondary content: [{', '.join(_sec_active) or 'none'}]", _dl_dbg)
 
-                import sys
-                if sys.platform == 'darwin' and not st.session_state.get('_office_primed'):
-                    st.session_state['_office_primed'] = True
-                    try:
-                        from engine.applescript_bridge import prime_office_automation
-                        prime_office_automation(_pp_settings)
-                    except Exception as _prime_err:
-                        logger.warning(f"Failed to prime Office automation: {_prime_err}")
-
                 try:
                     asyncio.run(cm.download_course_async(
                         course,
@@ -1060,6 +1059,20 @@ with _main_content.container():
                             type="secondary",
                             on_click=cancel_download_callback,
                         )
+                    # macOS: launch (hidden) ONLY the Office apps this course will
+                    # actually use — scoped to the file types present in the folder,
+                    # so a course with just .pptx never opens Word or Excel. Cheap and
+                    # idempotent per app across the multi-course run.
+                    if sys.platform == 'darwin':
+                        try:
+                            from engine.applescript_bridge import (
+                                prime_office_automation, office_contract_from_folder,
+                            )
+                            prime_office_automation(
+                                office_contract_from_folder(course_folder, _pp_settings)
+                            )
+                        except Exception as _prime_err:
+                            logger.warning(f"Failed to prime Office automation: {_prime_err}")
                     invoke_post_processing(
                         course_folder=course_folder,
                         course_id=course.id,

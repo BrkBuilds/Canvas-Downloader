@@ -502,6 +502,66 @@ def quit_idle_office_apps() -> None:
     threading.Thread(target=_worker, daemon=True).start()
 
 
+# ── Office priming state ────────────────────────────────────────────
+# Which Office apps have already been launched/primed this run, and whether the
+# macro-security pref has been written. Module-level (not session state) and
+# reset by reset_office_priming() at the start of each download/sync run — the
+# apps are quit at the previous run's completion screen, so a fresh run re-primes.
+_primed_apps: set = set()
+_macro_pref_written = False
+
+# Converter key → the Office file extensions it handles. Used to scope priming to
+# only the apps a run will ACTUALLY use.
+_OFFICE_EXTS = {
+    'convert_pptx': {'.ppt', '.pptx', '.pptm', '.pot', '.potx'},
+    'convert_word': {'.doc', '.rtf', '.odt'},
+    'convert_excel': {'.xlsx', '.xls', '.xlsm'},
+}
+
+
+def reset_office_priming() -> None:
+    """Forget which Office apps were primed, so the next run launches them fresh.
+
+    Call at the start of each download/sync run. The apps are quit at the previous
+    run's completion screen, so their primed-state must be cleared or the next run
+    would wrongly skip (re-)launching them.
+    """
+    global _macro_pref_written
+    _primed_apps.clear()
+    _macro_pref_written = False
+
+
+def office_contract_from_folder(folder, base_contract: dict) -> dict:
+    """Scope *base_contract* to the Office file types ACTUALLY present in *folder*.
+
+    Returns a contract that enables an app only when its converter is on in
+    *base_contract* AND at least one matching file exists anywhere under *folder* —
+    so a course containing only .pptx never launches Word or Excel. Off macOS it
+    returns the contract unchanged; on a scan error it falls back to the unscoped
+    contract (so we never suppress an app that's actually needed).
+    """
+    import os
+    if sys.platform != 'darwin':
+        return dict(base_contract)
+    remaining = {k for k in _OFFICE_EXTS if base_contract.get(k, False)}
+    if not remaining:
+        return {k: False for k in _OFFICE_EXTS}
+    present = {k: False for k in _OFFICE_EXTS}
+    try:
+        for _root, _dirs, files in os.walk(str(folder)):
+            for f in files:
+                ext = os.path.splitext(f)[1].lower()
+                for key in list(remaining):
+                    if ext in _OFFICE_EXTS[key]:
+                        present[key] = True
+                        remaining.discard(key)
+            if not remaining:
+                break
+    except Exception:
+        return dict(base_contract)
+    return {k: bool(base_contract.get(k, False) and present[k]) for k in _OFFICE_EXTS}
+
+
 def prime_office_automation(contract: dict) -> None:
     """Launch + permission-prime the Office apps upfront, hidden, during download.
 
@@ -516,42 +576,52 @@ def prime_office_automation(contract: dict) -> None:
     if sys.platform != 'darwin':
         return
 
-    # (human app name, AppleScript app name, preferences/bundle domain)
+    # Converter key → AppleScript app name. Launch an app ONLY when its converter
+    # is enabled in *contract* AND it hasn't already been primed this run. Pass a
+    # contract SCOPED to the files actually present (office_contract_from_folder /
+    # get_synced_file_paths) so a run that only converts PowerPoint never opens
+    # Word or Excel. Apps are marked immediately (main thread) so a concurrent call
+    # can't double-launch the same app.
     _ALL = [
-        ('convert_pptx', "PowerPoint", "Microsoft PowerPoint", _CONTAINER_IDS["PowerPoint"]),
-        ('convert_word', "Word",       "Microsoft Word",       _CONTAINER_IDS["Word"]),
-        ('convert_excel', "Excel",     "Microsoft Excel",      _CONTAINER_IDS["Excel"]),
+        ('convert_pptx', "Microsoft PowerPoint"),
+        ('convert_word', "Microsoft Word"),
+        ('convert_excel', "Microsoft Excel"),
     ]
-    # Only the AppleScript app name is needed now — the macro pref is written once
-    # to the shared com.microsoft.office domain below, not per-app.
-    apps_to_prime = [ms for key, _short, ms, _dom in _ALL if contract.get(key, False)]
-
-    if not apps_to_prime:
+    to_launch = []
+    for key, ms in _ALL:
+        if contract.get(key, False) and ms not in _primed_apps:
+            _primed_apps.add(ms)
+            to_launch.append(ms)
+    if not to_launch:
         return
 
-    def _warmup():
-        # Kill the "this workbook contains macros" dialog suite-wide BEFORE any
-        # Office app launches. The CORRECT macOS key is VisualBasicMacroExecutionState
-        # (a String) on the SHARED `com.microsoft.office` domain — NOT the Windows-only
-        # `VBAWarnings`, and NOT a per-app domain. (Confirmed by Microsoft's "Set
-        # preferences for macro security in Office for Mac" doc; the round-4 VBAWarnings
-        # write was wrong on both the key AND the domain, which is why the dialog kept
-        # appearing.) "DisabledWithoutWarnings" = macros never run and never prompt.
-        # IMPORTANT for the user's "data exactly as the teacher made it" requirement:
-        # disabling macro EXECUTION does NOT blank any cells — a workbook's last-saved
-        # values are what render to PDF; VBA only matters if code RUNS, which we never
-        # need (and never want, as a stray Workbook_Open could itself hang/prompt).
-        # Written before launch because cfprefsd caches prefs for a running process.
-        try:
-            subprocess.run(
-                ['defaults', 'write', 'com.microsoft.office',
-                 'VisualBasicMacroExecutionState', '-string', 'DisabledWithoutWarnings'],
-                capture_output=True, timeout=15,
-            )
-        except Exception:
-            pass
+    global _macro_pref_written
+    write_macro_pref = not _macro_pref_written
+    if write_macro_pref:
+        _macro_pref_written = True
 
-        for app in apps_to_prime:
+    def _warmup():
+        if write_macro_pref:
+            # Kill the "this workbook contains macros" dialog suite-wide BEFORE any
+            # Office app launches. The CORRECT macOS key is VisualBasicMacroExecutionState
+            # (a String) on the SHARED `com.microsoft.office` domain — NOT the Windows-only
+            # `VBAWarnings`, and NOT a per-app domain. (Confirmed by Microsoft's "Set
+            # preferences for macro security in Office for Mac" doc.) "DisabledWithoutWarnings"
+            # = macros never run and never prompt. IMPORTANT for the user's "data exactly as
+            # the teacher made it" requirement: disabling macro EXECUTION does NOT blank any
+            # cells — a workbook's last-saved values are what render to PDF; VBA only matters
+            # if code RUNS, which we never need (a stray Workbook_Open could itself hang/prompt).
+            # Written before launch because cfprefsd caches prefs for a running process.
+            try:
+                subprocess.run(
+                    ['defaults', 'write', 'com.microsoft.office',
+                     'VisualBasicMacroExecutionState', '-string', 'DisabledWithoutWarnings'],
+                    capture_output=True, timeout=15,
+                )
+            except Exception:
+                pass
+
+        for app in to_launch:
             # Check for default installation path to prevent "Where is X?" dialogs
             if not Path(f"/Applications/{app}.app").exists():
                 continue
