@@ -130,8 +130,15 @@ def invoke_post_processing(
         ledger = st.session_state.get('download_file_details', {})
         course_files = ledger.get(ctx, [])
         for i, fname in enumerate(course_files):
-            if fname == old_name:
-                course_files[i] = new_name
+            # The download ledger stores FULL PATHS (explicit_filepath), but
+            # post_processing reports old_name/new_name as BASE NAMES. A naive
+            # `fname == old_name` therefore never matched, so the original
+            # (e.g. .xlsx) was never replaced by the converted .pdf — making the
+            # completion-screen filetype pills count files that no longer exist.
+            # Match on the base name and rewrite only the filename component,
+            # preserving the original directory (the "full-path data layer").
+            if Path(fname).name == old_name:
+                course_files[i] = str(Path(fname).with_name(new_name))
                 break
         st.session_state['download_file_details'] = ledger
 

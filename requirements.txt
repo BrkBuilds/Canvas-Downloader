@@ -15,4 +15,11 @@ openpyxl==3.1.5
 pywebview==6.1
 win11toast==0.36.3; sys_platform == 'win32'
 pync==2.0.3; sys_platform == 'darwin'
+# Modern macOS notifications (UNUserNotificationCenter). Unpinned so pip resolves
+# it to match the pyobjc-core that pywebview pulls — pyobjc-framework-* packages
+# must share one version. If pip tries to bump pyobjc-core and breaks pywebview,
+# install it pinned to your installed pyobjc version instead, e.g.
+#   pip install "pyobjc-framework-UserNotifications==$(python -c 'import objc;print(objc.__version__)')"
+# The app degrades gracefully to NSUserNotification if this isn't present.
+pyobjc-framework-UserNotifications; sys_platform == 'darwin'
 
