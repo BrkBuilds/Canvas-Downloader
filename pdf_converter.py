@@ -117,19 +117,26 @@ class PowerPointToPDF:
         return run_applescript(src, dst, app_name, script)
 
     def _convert_applescript_pptx(self, src: Path, dst: Path) -> bool:
-        """Convert a PowerPoint file to PDF via AppleScript on macOS."""
-        from engine.applescript_bridge import _as_posix
-        posix_src = _as_posix(src)
-        posix_dst = _as_posix(dst)
-        script = f'''
-            tell application "Microsoft PowerPoint"
-                set display alerts to false
-                set theDoc to open POSIX file "{posix_src}"
-                save theDoc in POSIX file "{posix_dst}" as save as PDF
-                close theDoc saving no
-            end tell
-        '''
-        return self._convert_applescript(src, dst, "PowerPoint", script)
+        """Convert a PowerPoint file to PDF via AppleScript on macOS.
+
+        NOTE: PowerPoint's AppleScript dictionary has NO ``display alerts``
+        property (unlike Word/Excel). Including ``set display alerts to false``
+        makes the whole script fail to COMPILE (osascript error -2740,
+        "A identifier can't go after this identifier"), which silently broke
+        every PPTX→PDF conversion on macOS. It must not be re-added here.
+        """
+        from engine.applescript_bridge import _as_posix, office_container_stage
+        with office_container_stage(src, dst, "PowerPoint") as (s_src, s_dst):
+            posix_src = _as_posix(s_src)
+            posix_dst = _as_posix(s_dst)
+            script = f'''
+                tell application "Microsoft PowerPoint"
+                    set theDoc to open POSIX file "{posix_src}"
+                    save theDoc in POSIX file "{posix_dst}" as save as PDF
+                    close theDoc saving no
+                end tell
+            '''
+            return self._convert_applescript(s_src, s_dst, "PowerPoint", script)
 
     def convert(self, pptx_path: str | Path) -> str | None:
         pptx_path = Path(pptx_path)
