@@ -10,13 +10,18 @@
    the black gaps looks broken (especially over VNC where the cursor is hard
    to control). Disable text selection on chrome, but KEEP inputs/textareas
    fully selectable + editable so pasting the Canvas API token/URL works. */
-html, body,
-[data-testid="stAppViewContainer"],
-[data-testid="stSidebar"],
-[data-testid="stHeader"] {
+/* Universal, not container-scoped: a container rule relies on `user-select`
+   inheriting down to every leaf, but Streamlit/Emotion sets `user-select` on
+   individual widget elements which then win the cascade and re-enable drag-
+   select. Targeting every element (+ ::before/::after) with !important is the
+   only WKWebView-proof way to kill it. WebKit needs the -webkit- prefix. */
+*, *::before, *::after {
     -webkit-user-select: none !important;
     user-select: none !important;
+    -webkit-user-drag: none;
 }
+/* Re-enable selection + editing ONLY for real text entry fields (the Canvas
+   API token/URL on the auth page). Higher specificity than `*` so it wins. */
 input, textarea,
 [contenteditable="true"], [contenteditable=""],
 [data-testid="stTextInput"] input,

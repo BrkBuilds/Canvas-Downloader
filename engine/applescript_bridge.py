@@ -36,6 +36,11 @@ _CONTAINER_IDS = {
     "Excel":      "com.microsoft.Excel",
 }
 
+# Unique sentinel baked into every staged-conversion path. It is what lets us
+# later identify (and surgically purge) the Recent-files entries Office records
+# for our temp files, without ever touching a real user document.
+_CANVAS_TMP_MARKER = "CanvasDownloaderTmp"
+
 
 def _office_container_tmp(app_name: str) -> Path | None:
     """Return a writable staging dir inside the Office app's sandbox container.
@@ -56,7 +61,7 @@ def _office_container_tmp(app_name: str) -> Path | None:
     # Under Data/tmp so it can never be caught by iCloud Drive sync (which only
     # touches the container's Documents folder). The Office app has full
     # sandbox access to everything under its own Data dir.
-    tmp = base / "tmp" / "CanvasDownloaderTmp"
+    tmp = base / "tmp" / _CANVAS_TMP_MARKER
     try:
         tmp.mkdir(parents=True, exist_ok=True)
         return tmp
@@ -321,18 +326,140 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         logger.error(f"[AppleScript] {app_name} error: {e}")
         return False
 
+def _marker_in_value(value) -> bool:
+    """True if *value* (a SQLite cell: str, bytes/UTF-16, or None) holds our marker.
+
+    Office stores recent-file paths in the registry DB either as TEXT or as a
+    UTF-16/UTF-8 BLOB depending on version, so we decode defensively rather than
+    rely on a SQL ``LIKE`` (which would silently miss UTF-16-encoded paths).
+    """
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return _CANVAS_TMP_MARKER in value
+    if isinstance(value, (bytes, bytearray)):
+        for enc in ('utf-16-le', 'utf-8', 'latin-1'):
+            try:
+                if _CANVAS_TMP_MARKER in bytes(value).decode(enc, errors='ignore'):
+                    return True
+            except Exception:
+                continue
+    return False
+
+
+def _purge_recents_sqlite() -> None:
+    """Delete our staged-temp files from Office's Recent-files registry DB.
+
+    Modern Office for Mac shows the start-screen "Recent" list from a shared
+    SQLite registry (``MicrosoftRegistrationDB.reg`` under the Office group
+    container), NOT from securebookmarks.plist (the old delete-the-plist trick
+    stopped working). Each recent file is one ``node_id`` in
+    ``HKEY_CURRENT_USER_values`` with a ``name='path'`` row holding the path.
+
+    We find only the nodes whose path contains ``CanvasDownloaderTmp`` and delete
+    exactly those nodes' rows. The marker is unique to our container staging, so a
+    user's genuine recent documents can never match. Schema-introspected and fully
+    best-effort: any deviation just no-ops, never corrupts the DB.
+    """
+    import sqlite3
+    group = Path.home() / "Library" / "Group Containers" / "UBF8T346G9.Office"
+    db_paths = []
+    # Apple Silicon: single file at the group-container root.
+    asi = group / "MicrosoftRegistrationDB.reg"
+    if asi.is_file():
+        db_paths.append(asi)
+    # Intel: hashed filename inside a sub-folder.
+    nested = group / "MicrosoftRegistrationDB"
+    if nested.is_dir():
+        db_paths.extend(p for p in nested.glob("MicrosoftRegistrationDB*.reg") if p.is_file())
+
+    for db in db_paths:
+        try:
+            con = sqlite3.connect(str(db), timeout=2.0)
+            try:
+                cur = con.cursor()
+                cur.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' "
+                    "AND name='HKEY_CURRENT_USER_values'"
+                )
+                if cur.fetchone() is None:
+                    continue
+                cur.execute(
+                    "SELECT node_id, value FROM HKEY_CURRENT_USER_values WHERE name='path'"
+                )
+                victims = {node_id for node_id, value in cur.fetchall()
+                           if _marker_in_value(value)}
+                if not victims:
+                    continue
+                cur.executemany(
+                    "DELETE FROM HKEY_CURRENT_USER_values WHERE node_id=?",
+                    [(nid,) for nid in victims],
+                )
+                con.commit()
+                logger.debug(f"[AppleScript] purged {len(victims)} Canvas temp entries from Office Recents")
+            finally:
+                con.close()
+        except Exception as e:
+            logger.debug(f"[AppleScript] Recents SQLite purge skipped for {db.name}: {e}")
+
+
+def _purge_securebookmarks() -> None:
+    """Drop our staged-temp keys from each Office app's securebookmarks.plist.
+
+    This is the per-app access-bookmark layer (separate from the SQLite display
+    list). Removing our dead entries here keeps the bookmark store tidy. Format-
+    preserving (binary stays binary) and marker-filtered, so it only ever removes
+    Canvas Downloader temp paths and never the user's own bookmarks.
+    """
+    import plistlib
+    for cid in _CONTAINER_IDS.values():
+        plist = (Path.home() / "Library" / "Containers" / cid / "Data"
+                 / "Library" / "Preferences" / f"{cid}.securebookmarks.plist")
+        if not plist.is_file():
+            continue
+        try:
+            raw = plist.read_bytes()
+            is_binary = raw[:8] == b'bplist00'
+            data = plistlib.loads(raw)
+            if not isinstance(data, dict):
+                continue
+            victims = [k for k in list(data.keys()) if _CANVAS_TMP_MARKER in str(k)]
+            if not victims:
+                continue
+            for k in victims:
+                data.pop(k, None)
+            fmt = plistlib.FMT_BINARY if is_binary else plistlib.FMT_XML
+            with open(plist, 'wb') as fh:
+                plistlib.dump(data, fh, fmt=fmt)
+            logger.debug(f"[AppleScript] purged {len(victims)} temp bookmarks from {plist.name}")
+        except Exception as e:
+            logger.debug(f"[AppleScript] securebookmarks purge skipped for {cid}: {e}")
+
+
+def _purge_canvas_recents() -> None:
+    """Remove all traces of our container-staged temp files from Office Recents."""
+    _purge_recents_sqlite()
+    _purge_securebookmarks()
+
+
 def quit_idle_office_apps() -> None:
-    """Quit the Office apps we launched — but ONLY if they have no open documents.
+    """Tidy up Office after a run: quit the apps we launched, then purge Recents.
 
-    Post-processing leaves PowerPoint/Word/Excel running (we deliberately never
-    quit them mid-batch, to avoid relaunch churn between courses). This tidies
-    them away once everything is done so they don't linger in the user's dock.
+    Two steps, on a single daemon thread (macOS only):
 
-    Safety: we check via System Events that the process is actually RUNNING
-    before addressing the app (so we never auto-launch a quit target), and only
-    quit when its document count is 0. A user who has their own
-    workbook/presentation open is therefore never disturbed. Best-effort, on a
-    daemon thread, macOS only.
+    1. Quit PowerPoint/Word/Excel — but ONLY if they have no open documents.
+       Post-processing leaves them running (we deliberately never quit them
+       mid-batch, to avoid relaunch churn between courses); this clears them from
+       the dock once everything is done. We check via System Events that the
+       process is actually RUNNING before addressing it (so we never auto-launch
+       a quit target) and only quit when its document count is 0, so a user who
+       has their own workbook/presentation open is never disturbed.
+    2. Purge our container-staged temp files from Office's Recent-files lists
+       (see ``_purge_canvas_recents``) so the conversion scratch files don't
+       crowd out the user's real recent documents. Marker-filtered — only
+       Canvas Downloader temp paths are ever removed.
+
+    Best-effort throughout; any failure is swallowed.
     """
     if sys.platform != 'darwin':
         return
@@ -363,6 +490,15 @@ def quit_idle_office_apps() -> None:
             except Exception:
                 pass
 
+        # Idle apps have now been asked to quit. Give them a beat to terminate and
+        # release the shared Recent-files registry DB, then surgically purge our
+        # container-staged temp files from Office's Recent lists (marker-filtered,
+        # so a user's real recent documents are never affected). Best-effort and
+        # independent of whether anything was actually quit.
+        import time as _time
+        _time.sleep(1.0)
+        _purge_canvas_recents()
+
     threading.Thread(target=_worker, daemon=True).start()
 
 
@@ -386,29 +522,39 @@ def prime_office_automation(contract: dict) -> None:
         ('convert_word', "Word",       "Microsoft Word",       _CONTAINER_IDS["Word"]),
         ('convert_excel', "Excel",     "Microsoft Excel",      _CONTAINER_IDS["Excel"]),
     ]
-    apps_to_prime = [(ms, dom) for key, _short, ms, dom in _ALL if contract.get(key, False)]
+    # Only the AppleScript app name is needed now — the macro pref is written once
+    # to the shared com.microsoft.office domain below, not per-app.
+    apps_to_prime = [ms for key, _short, ms, _dom in _ALL if contract.get(key, False)]
 
     if not apps_to_prime:
         return
 
     def _warmup():
-        for app, domain in apps_to_prime:
+        # Kill the "this workbook contains macros" dialog suite-wide BEFORE any
+        # Office app launches. The CORRECT macOS key is VisualBasicMacroExecutionState
+        # (a String) on the SHARED `com.microsoft.office` domain — NOT the Windows-only
+        # `VBAWarnings`, and NOT a per-app domain. (Confirmed by Microsoft's "Set
+        # preferences for macro security in Office for Mac" doc; the round-4 VBAWarnings
+        # write was wrong on both the key AND the domain, which is why the dialog kept
+        # appearing.) "DisabledWithoutWarnings" = macros never run and never prompt.
+        # IMPORTANT for the user's "data exactly as the teacher made it" requirement:
+        # disabling macro EXECUTION does NOT blank any cells — a workbook's last-saved
+        # values are what render to PDF; VBA only matters if code RUNS, which we never
+        # need (and never want, as a stray Workbook_Open could itself hang/prompt).
+        # Written before launch because cfprefsd caches prefs for a running process.
+        try:
+            subprocess.run(
+                ['defaults', 'write', 'com.microsoft.office',
+                 'VisualBasicMacroExecutionState', '-string', 'DisabledWithoutWarnings'],
+                capture_output=True, timeout=15,
+            )
+        except Exception:
+            pass
+
+        for app in apps_to_prime:
             # Check for default installation path to prevent "Where is X?" dialogs
             if not Path(f"/Applications/{app}.app").exists():
                 continue
-            try:
-                # Kill the macro-security dialog at the source: VBAWarnings=4 =
-                # "Disable all macros without notification". Written BEFORE launch
-                # so the fresh process reads it (a running app caches prefs via
-                # cfprefsd and wouldn't pick it up). Static content still renders
-                # for PDF export — the macros never need to run. Best-effort: if
-                # the file already has Excel open, the prompt may still appear.
-                subprocess.run(
-                    ['defaults', 'write', domain, 'VBAWarnings', '-int', '4'],
-                    capture_output=True, timeout=15,
-                )
-            except Exception:
-                pass
             try:
                 # Launch hidden (-j) and without foregrounding (-g) so the app is
                 # already running, off-screen, by the time conversions start.

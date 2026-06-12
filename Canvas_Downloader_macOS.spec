@@ -79,6 +79,10 @@ packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'bs4', 'markdownify', 'moviepy', 'keyring', 'psutil',
     'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'webview', 'pillow', 'openpyxl',
+    # Modern macOS notifications via UNUserNotificationCenter. collect_all is a
+    # no-op on a non-mac build host (wrapped in try/except below); on macOS it
+    # pulls the PyObjC framework bindings. Falls back to NSUserNotification if absent.
+    'UserNotifications',
 ]
 
 for package in packages_to_collect:
@@ -96,6 +100,9 @@ hiddenimports += [
     'plistlib',
     # Fix 1: keyring macOS Keychain backend - needed for token persistence
     'keyring.backends', 'keyring.backends.macOS',
+    # Modern macOS notification framework (UNUserNotificationCenter). PyInstaller's
+    # PyObjC hook bundles the binding when it's listed here; harmless if absent.
+    'UserNotifications',
 ]
 
 a = Analysis(
