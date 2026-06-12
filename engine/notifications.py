@@ -92,11 +92,6 @@ def _get_package_family_name():
         return None
 
 
-def _get_streamlit_url() -> str:
-    port = os.environ.get('STREAMLIT_SERVER_PORT', '8501')
-    return f'http://127.0.0.1:{port}'
-
-
 # ── Windows ───────────────────────────────────────────────────────────
 
 def _play_windows_sound():
@@ -238,29 +233,28 @@ def _play_macos_sound():
 def _show_macos_notification(title: str, body: str):
     """Display a native macOS Notification Center notification.
 
-    Packaged .app build: clicking the notification opens/focuses Chrome at
-    the Streamlit URL via terminal-notifier's -open flag. This is better than
-    activate='com.canvasdownloader.app', which would bring the CustomTkinter
-    controller to front rather than the actual Chrome app window.
+    Each call posts an independent banner. We deliberately do NOT set a constant
+    terminal-notifier ``group``: a fixed group ID makes every notification after
+    the first one *replace* the previous one in-place (updating it silently in
+    Notification Center) instead of alerting a fresh banner — which is exactly
+    why only the very first notification was ever visible. Omitting the group
+    lets "Download Complete", "Sync Review Ready", etc. each pop their own banner.
 
-    CLI mode: no click action — notification appears and clicking dismisses it.
+    No click action is attached: the app is now a single PyWebView window (the
+    old Chrome-tab flow is gone), and opening the Streamlit URL on click would
+    spawn a confusing second copy of the UI in the default browser.
 
-    Fallback: osascript display notification (no click handler in either mode,
-    as the osascript API doesn't support it).
+    Fallback: osascript display notification (no click handler, as the osascript
+    API doesn't support one).
     """
     if _PyncNotifier is not None:
         try:
+            # No 'sound' here on purpose: _play_macos_sound() already afplays a
+            # chime alongside this, so adding -sound would double up.
             kwargs = {
                 'title': 'Canvas Downloader',
                 'subtitle': title,
-                'group': 'com.canvasdownloader.app',
             }
-            if _is_packaged():
-                # Open Chrome at the app URL when the notification is clicked.
-                # Using 'open' rather than 'activate' so the browser window comes
-                # to front instead of the CustomTkinter server controller.
-                kwargs['open'] = _get_streamlit_url()
-
             _PyncNotifier.notify(body, **kwargs)
             return
         except Exception as e:
