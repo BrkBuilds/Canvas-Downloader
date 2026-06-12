@@ -275,15 +275,50 @@ def _show_macos_notification_native(title: str, body: str) -> bool:
             # Returns nil when the process is not a proper app bundle (e.g. a
             # bare `python` dev run). The frozen .app always has a bundle id.
             return False
+        # Foreground suppression also applies here: NSUserNotificationCenter
+        # hides a banner while the app is active unless its delegate returns YES
+        # from shouldPresentNotification. Install one (idempotent, retained).
+        _ensure_nsun_delegate(center)
         note = NSUserNotification.alloc().init()
         note.setTitle_('Canvas Downloader')
         note.setSubtitle_(title)
         note.setInformativeText_(body)
         center.deliverNotification_(note)
+        logger.info("NSUserNotification delivered (fallback path)")
         return True
     except Exception as e:
-        logger.debug(f"Native NSUserNotification failed: {e}")
+        logger.info(f"Native NSUserNotification failed: {e}")
         return False
+
+
+# Strong reference to the NSUserNotificationCenter delegate (fallback path).
+_nsun_delegate = None
+
+
+def _ensure_nsun_delegate(center) -> None:
+    """Force NSUserNotificationCenter to present banners while app is frontmost.
+
+    Mirrors the UN delegate, for the deprecated fallback path: the delegate's
+    ``userNotificationCenter:shouldPresentNotification:`` returns YES (BOOL) so
+    macOS shows the banner even when Canvas Downloader is the active app.
+    """
+    global _nsun_delegate
+    if _nsun_delegate is not None:
+        return
+    try:
+        from Foundation import NSObject
+
+        def _should_present(self, center, notification):
+            return True
+
+        _D = type('_CanvasNSUNDelegate', (NSObject,), {
+            'userNotificationCenter_shouldPresentNotification_': _should_present,
+        })
+        _nsun_delegate = _D.alloc().init()
+        center.setDelegate_(_nsun_delegate)
+        logger.info("NSUserNotification delegate installed (shouldPresent=YES)")
+    except Exception as e:
+        logger.info(f"Failed to install NSUserNotification delegate: {e}")
 
 
 def _get_un_center():
@@ -301,16 +336,32 @@ def _get_un_center():
         return None
 
 
+# UNNotificationPresentationOptions (macOS 11+): Banner=1<<4, List=1<<3.
+# We omit Sound here — _play_macos_sound() already afplays a chime, and adding
+# the system sound would double it up.
+_UN_PRESENT_OPTS = (1 << 4) | (1 << 3)  # Banner | List = 24
+
+
 def _ensure_un_delegate(center) -> None:
     """Install a UNUserNotificationCenterDelegate so banners appear even when the
     app is FRONTMOST.
 
-    THIS is why notifications were silent despite permission being granted: macOS
-    suppresses a UN notification while the app that posts it is the focused app,
-    UNLESS the app's notification-center delegate implements
+    macOS suppresses a UN notification while the app that posts it is the focused
+    app, UNLESS the app's notification-center delegate implements
     ``willPresentNotification`` and returns presentation options. The user is
     typically watching the window when a download/sync finishes (app frontmost),
-    so without this delegate every banner was dropped on the floor.
+    so without this delegate every banner is dropped on the floor.
+
+    ROUND 7 hardening — why the first delegate attempt still showed nothing:
+    the completion handler is an ObjC block whose single argument is a raw
+    ``NSUInteger`` (the presentation options). When PyObjC has no type metadata
+    for the delegate selector, it bridges that argument as an *object* and
+    ``completionHandler(24)`` hands the block a bogus pointer instead of the
+    integer 24 → macOS receives garbage options → suppresses the banner (and our
+    blanket ``except`` hid it). The fix is to declare conformance to the
+    ``UNUserNotificationCenterDelegate`` protocol, which gives PyObjC the correct
+    block signature (``v@?Q``) so ``completionHandler(24)`` marshals as an
+    integer. We fall back to a plain subclass if the protocol can't be resolved.
 
     Idempotent; retains a strong module-level reference to the delegate. Defined
     lazily (PyObjC's NSObject base is macOS-only and unavailable on the dev box).
@@ -319,27 +370,38 @@ def _ensure_un_delegate(center) -> None:
     if _un_delegate is not None:
         return
     try:
+        import objc
         from Foundation import NSObject
-
-        # UNNotificationPresentationOptions (macOS 11+): Banner=1<<4, List=1<<3.
-        # We omit Sound here — _play_macos_sound() already afplays a chime, and
-        # adding the system sound would double it up.
-        _PRESENT_OPTS = (1 << 4) | (1 << 3)  # Banner | List = 24
 
         class _CanvasUNDelegate(NSObject):
             def userNotificationCenter_willPresentNotification_withCompletionHandler_(
                 self, center, notification, completionHandler
             ):
                 # Present the banner + add to Notification Center even in-focus.
+                logger.info(
+                    "UN willPresentNotification fired (app frontmost) → presenting banner"
+                )
                 try:
-                    completionHandler(_PRESENT_OPTS)
-                except Exception:
-                    pass
+                    completionHandler(_UN_PRESENT_OPTS)
+                except Exception as e:
+                    logger.info(f"UN completionHandler call failed: {e}")
+
+            # CRITICAL: declare the explicit ObjC signature so PyObjC treats arg 3
+            # as a BLOCK (@?) rather than a plain object (@). With the default
+            # inferred signature (v@:@@@) the completion handler arrives as a
+            # non-callable ObjC object, completionHandler(24) raises, the banner
+            # is suppressed, and our except hides it — exactly the symptom we saw.
+            # 'v@:@@@?' = void; self, _cmd, center, notification, block.
+            userNotificationCenter_willPresentNotification_withCompletionHandler_ = objc.selector(
+                userNotificationCenter_willPresentNotification_withCompletionHandler_,
+                signature=b'v@:@@@?',
+            )
 
         _un_delegate = _CanvasUNDelegate.alloc().init()
         center.setDelegate_(_un_delegate)
+        logger.info("UN delegate installed (explicit block signature)")
     except Exception as e:
-        logger.debug(f"Failed to install UN notification delegate: {e}")
+        logger.info(f"Failed to install UN notification delegate: {e}")
 
 
 def request_macos_notification_permission() -> None:
@@ -358,19 +420,47 @@ def request_macos_notification_permission() -> None:
     _un_auth_requested = True
     center = _get_un_center()
     if center is None:
+        logger.info("UN center unavailable at startup (not a bundle / framework missing)")
         return
     # Delegate first, so it's in place before the first notification is delivered.
     _ensure_un_delegate(center)
     try:
         # UNAuthorizationOptions bitmask: badge(1) | sound(2) | alert(4) = 7.
-        # (Stable, documented Apple constants.) Completion handler is required;
-        # we don't act on the result — delivery is attempted regardless and the
-        # OS drops it silently if denied.
-        center.requestAuthorizationWithOptions_completionHandler_(
-            7, lambda granted, error: None
-        )
+        # (Stable, documented Apple constants.) Completion handler logs the
+        # outcome; delivery is attempted regardless and the OS drops it silently
+        # if denied.
+        def _auth_cb(granted, error):
+            logger.info(
+                f"UN authorization result: granted={bool(granted)} "
+                f"error={error if error else 'none'}"
+            )
+        center.requestAuthorizationWithOptions_completionHandler_(7, _auth_cb)
+        logger.info("UN authorization requested (badge|sound|alert)")
     except Exception as e:
-        logger.debug(f"UN authorization request failed: {e}")
+        logger.info(f"UN authorization request failed: {e}")
+
+
+def _log_un_settings(center) -> None:
+    """Asynchronously log the app's current UN authorization + alert settings.
+
+    ``authorizationStatus``: 0=notDetermined 1=denied 2=authorized
+    3=provisional 4=ephemeral. ``alertSetting``: 0=notSupported 1=disabled
+    2=enabled. This is the single most diagnostic line — if status != 2 the OS
+    will never show a banner no matter what we post.
+    """
+    try:
+        def _cb(settings):
+            try:
+                logger.info(
+                    f"UN settings: authorizationStatus={settings.authorizationStatus()} "
+                    f"alertSetting={settings.alertSetting()} "
+                    f"notificationCenterSetting={settings.notificationCenterSetting()}"
+                )
+            except Exception as e:
+                logger.info(f"UN settings read failed: {e}")
+        center.getNotificationSettingsWithCompletionHandler_(_cb)
+    except Exception as e:
+        logger.info(f"UN getNotificationSettings failed: {e}")
 
 
 def _show_macos_notification_un(title: str, body: str) -> bool:
@@ -383,10 +473,9 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
     worse than before even if the framework is missing or a future macOS changes
     the API. Attributed to Canvas Downloader.app and uses its own permission.
 
-    Note: while the app is frontmost, macOS suppresses UN banners unless a
-    presentation delegate is installed — which is fine here, since the target case
-    is "user tabbed away" (app backgrounded → banner shows), and a foregrounded
-    user already sees the completion screen + hears the chime.
+    Foreground banners are handled by the presentation delegate installed in
+    ``_ensure_un_delegate`` (which returns Banner|List from willPresentNotification);
+    without it macOS silently suppresses banners while the app is the active app.
     """
     try:
         from UserNotifications import (
@@ -400,6 +489,8 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
         return False
     try:
         request_macos_notification_permission()  # ensure we've asked at least once
+        _ensure_un_delegate(center)              # belt-and-suspenders: delegate present
+        _log_un_settings(center)                 # diagnostic: actual auth status
         content = UNMutableNotificationContent.alloc().init()
         content.setTitle_('Canvas Downloader')
         content.setSubtitle_(title)
@@ -409,10 +500,17 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
         req = UNNotificationRequest.requestWithIdentifier_content_trigger_(
             _uuid.uuid4().hex, content, None
         )
-        center.addNotificationRequest_withCompletionHandler_(req, None)
+
+        def _add_cb(error):
+            if error:
+                logger.info(f"UN addNotificationRequest error: {error}")
+            else:
+                logger.info("UN addNotificationRequest accepted (no error)")
+        center.addNotificationRequest_withCompletionHandler_(req, _add_cb)
+        logger.info("UN notification posted via UNUserNotificationCenter")
         return True
     except Exception as e:
-        logger.debug(f"UNUserNotificationCenter delivery failed: {e}")
+        logger.info(f"UNUserNotificationCenter delivery failed: {e}")
         return False
 
 
@@ -438,13 +536,19 @@ def _show_macos_notification(title: str, body: str):
     opening the Streamlit URL on click would spawn a confusing second copy of the
     UI in the default browser.
     """
+    logger.info(f"Dispatching macOS notification: {title!r}")
+
     # 1. Modern UserNotifications framework — the right, future-proof path.
     if _show_macos_notification_un(title, body):
         return
 
+    logger.info("UN path did not deliver — falling back to NSUserNotification")
+
     # 2. NSUserNotification (deprecated, but works today and always importable).
     if _show_macos_notification_native(title, body):
         return
+
+    logger.info("NSUserNotification path failed — falling back to pync/osascript")
 
     # 3. pync fallback (best-effort; the vendored binary often no-ops on arm64).
     if _PyncNotifier is not None:
