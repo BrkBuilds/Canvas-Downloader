@@ -110,6 +110,19 @@ def show_sync_complete():
             play_completion_beep(mode='sync', summary=_sync_summary)
         st.session_state['completion_beep_fired'] = True
 
+    # macOS: sync + post-processing are done and we're on the completion screen
+    # — quit the Office apps launched for conversion now (only those with zero
+    # open documents). Separate one-shot sentinel so it fires regardless of the
+    # notifications toggle, and is re-armed at the top of run_sync.
+    import sys as _sys_q
+    if _sys_q.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
+        st.session_state['_office_quit_fired'] = True
+        try:
+            from engine.applescript_bridge import quit_idle_office_apps
+            quit_idle_office_apps()
+        except Exception:
+            pass
+
     # Step wizard
     render_sync_wizard(st, 4)
     st.markdown('<h2 class="step-header">Sync Complete!</h2>', unsafe_allow_html=True)

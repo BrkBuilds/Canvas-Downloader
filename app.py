@@ -29,13 +29,18 @@ from core.state_registry import (
 from core.cancellation import cancel_download, is_download_cancelled, reset_download_cancel
 from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard, render_active_file
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
-from engine.notifications import play_completion_beep
+from engine.notifications import play_completion_beep, request_macos_notification_permission
 
 # Page Config
 st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", layout="wide")
 
 # Custom CSS (extracted to styles/)
 inject_css('global.css')
+
+# macOS: ask for notification permission once, early — so the first "Download
+# Complete" / "Sync Complete" banner isn't dropped while a fresh install's
+# permission is still pending. Idempotent per process; no-op off macOS.
+request_macos_notification_permission()
 
 # Cancel button hover CSS (dynamic - requires theme variables)
 st.html(f"""
@@ -710,6 +715,8 @@ with _main_content.container():
             # the user navigated away without going through cleanup) would
             # silently swallow this run's "Download Complete" notification.
             st.session_state['completion_beep_fired'] = False
+            # Re-arm the "quit Office apps on completion" one-shot for this run.
+            st.session_state['_office_quit_fired'] = False
 
             st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
             
@@ -1517,6 +1524,21 @@ with _main_content.container():
                 _dl_summary = f"Downloaded {success_count} file{'s' if success_count != 1 else ''} across {_dl_courses} course{'s' if _dl_courses != 1 else ''}."
                 play_completion_beep(mode='download', summary=_dl_summary)
                 st.session_state['completion_beep_fired'] = True
+
+            # macOS: post-processing is finished and we're on the completion
+            # screen — tidy away the Office apps we launched for conversion
+            # NOW (the user expects them gone here, not only after clicking
+            # "Go to front page"). Quits only apps with zero open documents, so
+            # a user's own workbook/deck is never touched. Separate one-shot
+            # sentinel so it fires regardless of the notifications toggle.
+            import sys as _sys_q
+            if _sys_q.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
+                st.session_state['_office_quit_fired'] = True
+                try:
+                    from engine.applescript_bridge import quit_idle_office_apps
+                    quit_idle_office_apps()
+                except Exception:
+                    pass
 
             # 1. Summary card (absorbs retry feedback + discovery warnings)
             size_skipped = st.session_state.get('size_skipped_files', [])

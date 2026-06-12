@@ -111,6 +111,8 @@ def run_sync():
         # "Sync Complete" notification. Safe to reset on every execution-phase
         # rerun: the notification fires from the separate completion screen.
         st.session_state['completion_beep_fired'] = False
+        # Re-arm the "quit Office apps on completion" one-shot for this sync.
+        st.session_state['_office_quit_fired'] = False
 
     # Step wizard
     render_sync_wizard(st, 3)
@@ -1425,6 +1427,26 @@ def run_sync():
         on_detail_update=_on_detail_update,
         error_log_path=_sync_error_log_path,
     )
+
+    # macOS: prime Office automation before the converters run. The download
+    # flow primes at download-start; a sync that was NOT preceded by a download
+    # would otherwise launch Office cold here — re-introducing the "contains
+    # macros" dialog and the per-file dock-bounce. Priming writes the suite-wide
+    # macro-security pref (DisabledWithoutWarnings) and launches the needed apps
+    # hidden, well before run_excel_conversion (the last converter) opens a file.
+    # Once per run via the shared sentinel (reset on cleanup).
+    import sys as _sys_prime
+    if _sys_prime.platform == 'darwin' and not st.session_state.get('_office_primed'):
+        st.session_state['_office_primed'] = True
+        try:
+            from engine.applescript_bridge import prime_office_automation
+            prime_office_automation({
+                'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
+                'convert_word': st.session_state.get('persistent_convert_word', False),
+                'convert_excel': st.session_state.get('persistent_convert_excel', False),
+            })
+        except Exception as _sync_prime_err:
+            logger.warning(f"Failed to prime Office automation for sync: {_sync_prime_err}")
 
     # 6. Run each converter with per-course contract evaluation via get_synced_file_paths
 
