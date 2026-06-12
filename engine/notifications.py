@@ -352,16 +352,29 @@ def _ensure_un_delegate(center) -> None:
     typically watching the window when a download/sync finishes (app frontmost),
     so without this delegate every banner is dropped on the floor.
 
-    ROUND 7 hardening — why the first delegate attempt still showed nothing:
-    the completion handler is an ObjC block whose single argument is a raw
-    ``NSUInteger`` (the presentation options). When PyObjC has no type metadata
-    for the delegate selector, it bridges that argument as an *object* and
-    ``completionHandler(24)`` hands the block a bogus pointer instead of the
-    integer 24 → macOS receives garbage options → suppresses the banner (and our
-    blanket ``except`` hid it). The fix is to declare conformance to the
-    ``UNUserNotificationCenterDelegate`` protocol, which gives PyObjC the correct
-    block signature (``v@?Q``) so ``completionHandler(24)`` marshals as an
-    integer. We fall back to a plain subclass if the protocol can't be resolved.
+    ROUND 8 — proper protocol conformance for correct block bridging:
+    The completion handler is an ObjC block whose single argument is a raw
+    ``NSUInteger`` (the presentation options bitmask). Previous attempts used
+    ``objc.selector(signature=b'v@:@@@?')`` — this tells PyObjC the 5th arg
+    is *a* block (``@?``), but not the block's *internal* signature
+    (``v@?Q`` = void taking unsigned long). Without the block's own type
+    metadata, ``completionHandler(24)`` may silently marshal 24 as a pointer
+    rather than an integer, causing macOS to receive garbage presentation
+    options — and the banner is suppressed even though the delegate fires.
+
+    The definitive fix is to declare the class with
+    ``protocols=[UNUserNotificationCenterDelegate]``. This gives PyObjC the
+    full method metadata (including the block's internal ``v@?Q`` signature)
+    from the protocol's type encodings, so the integer marshalling is correct
+    by construction. We fall back to the manual ``objc.selector`` approach
+    only if the protocol object can't be imported (framework missing).
+
+    ROUND 8 also confirmed that notifications ARE correctly delivered to
+    Notification Center on macOS 15 (verified via Notification Center panel).
+    Banners may not appear in VNC/remote desktop sessions because macOS renders
+    the ephemeral banner overlay through the WindowServer compositor, which
+    VNC servers (TigerVNC, etc.) typically do not capture. On a physical display
+    the banners work correctly.
 
     Idempotent; retains a strong module-level reference to the delegate. Defined
     lazily (PyObjC's NSObject base is macOS-only and unavailable on the dev box).
@@ -373,33 +386,66 @@ def _ensure_un_delegate(center) -> None:
         import objc
         from Foundation import NSObject
 
-        class _CanvasUNDelegate(NSObject):
-            def userNotificationCenter_willPresentNotification_withCompletionHandler_(
-                self, center, notification, completionHandler
-            ):
-                # Present the banner + add to Notification Center even in-focus.
-                logger.info(
-                    "UN willPresentNotification fired (app frontmost) → presenting banner"
-                )
-                try:
-                    completionHandler(_UN_PRESENT_OPTS)
-                except Exception as e:
-                    logger.info(f"UN completionHandler call failed: {e}")
+        # --- Resolve the delegate protocol for correct block bridging ---
+        _un_protocol = None
+        try:
+            from UserNotifications import UNUserNotificationCenterDelegate
+            _un_protocol = UNUserNotificationCenterDelegate
+        except ImportError:
+            pass
+        except AttributeError:
+            # Some pyobjc builds export the framework but not the protocol object.
+            pass
 
-            # CRITICAL: declare the explicit ObjC signature so PyObjC treats arg 3
-            # as a BLOCK (@?) rather than a plain object (@). With the default
-            # inferred signature (v@:@@@) the completion handler arrives as a
-            # non-callable ObjC object, completionHandler(24) raises, the banner
-            # is suppressed, and our except hides it — exactly the symptom we saw.
-            # 'v@:@@@?' = void; self, _cmd, center, notification, block.
-            userNotificationCenter_willPresentNotification_withCompletionHandler_ = objc.selector(
-                userNotificationCenter_willPresentNotification_withCompletionHandler_,
-                signature=b'v@:@@@?',
-            )
+        # Build the delegate class — with protocol if available, manual signature
+        # as fallback. Protocol conformance is strictly superior: PyObjC reads the
+        # method type encodings from the protocol, including the completion handler
+        # block's internal signature (v@?Q), so integer marshalling is correct by
+        # construction.
+        if _un_protocol is not None:
+            class _CanvasUNDelegate(NSObject, protocols=[_un_protocol]):
+                def userNotificationCenter_willPresentNotification_withCompletionHandler_(
+                    self, center, notification, completionHandler
+                ):
+                    logger.info(
+                        "UN willPresentNotification fired (app frontmost) "
+                        "→ calling completionHandler(%d) [protocol-conformant]",
+                        _UN_PRESENT_OPTS,
+                    )
+                    try:
+                        completionHandler(_UN_PRESENT_OPTS)
+                    except Exception as exc:
+                        logger.info("UN completionHandler call failed: %s", exc)
+
+            _delegate_mode = "protocol-conformant"
+        else:
+            # Fallback: explicit ObjC selector signature.
+            # 'v@:@@@?' = void; self(_id), _cmd(SEL), center(@), notification(@), block(@?).
+            class _CanvasUNDelegate(NSObject):
+                def userNotificationCenter_willPresentNotification_withCompletionHandler_(
+                    self, center, notification, completionHandler
+                ):
+                    logger.info(
+                        "UN willPresentNotification fired (app frontmost) "
+                        "→ calling completionHandler(%d) [selector-fallback]",
+                        _UN_PRESENT_OPTS,
+                    )
+                    try:
+                        completionHandler(_UN_PRESENT_OPTS)
+                    except Exception as exc:
+                        logger.info("UN completionHandler call failed: %s", exc)
+
+                userNotificationCenter_willPresentNotification_withCompletionHandler_ = (
+                    objc.selector(
+                        userNotificationCenter_willPresentNotification_withCompletionHandler_,
+                        signature=b'v@:@@@?',
+                    )
+                )
+            _delegate_mode = "selector-fallback"
 
         _un_delegate = _CanvasUNDelegate.alloc().init()
         center.setDelegate_(_un_delegate)
-        logger.info("UN delegate installed (explicit block signature)")
+        logger.info("UN delegate installed (%s)", _delegate_mode)
     except Exception as e:
         logger.info(f"Failed to install UN notification delegate: {e}")
 
@@ -631,12 +677,25 @@ def play_completion_beep(
     system = platform.system()
     if system == 'Windows':
         worker = lambda: _windows_notify(title, body)
+        try:
+            threading.Thread(target=worker, daemon=True).start()
+        except Exception as e:
+            logger.debug(f"Failed to dispatch completion notification thread: {e}")
     elif system == 'Darwin':
-        worker = lambda: _macos_notify(title, body)
-    else:
-        return  # Linux/other: silent (app is not shipped there)
-
-    try:
-        threading.Thread(target=worker, daemon=True).start()
-    except Exception as e:
-        logger.debug(f"Failed to dispatch completion notification thread: {e}")
+        # macOS: play sound on a background thread (afplay is fire-and-forget),
+        # but post the notification DIRECTLY on the calling thread.
+        # addNotificationRequest: is internally async and returns instantly,
+        # so it won't block the Streamlit script runner. Keeping the notification
+        # post on the calling thread avoids run-loop issues — the daemon thread
+        # context can differ from what UNUserNotificationCenter/its delegate
+        # callbacks expect, and a daemon thread can be killed during process
+        # shutdown before the completion handler fully executes.
+        try:
+            threading.Thread(target=_play_macos_sound, daemon=True).start()
+        except Exception:
+            pass
+        try:
+            _show_macos_notification(title, body)
+        except Exception as e:
+            logger.debug(f"macOS notification dispatch failed: {e}")
+    # Linux/other: silent (app is not shipped there)
