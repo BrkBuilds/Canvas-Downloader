@@ -214,6 +214,14 @@ def cleanup_download_state() -> None:
     # Re-arm the completion-sound sentinel for the next run.
     st.session_state['completion_beep_fired'] = False
 
+    # macOS: tidy away any Office apps we launched for post-processing (only if
+    # they have no documents open — never disturbs the user's own work).
+    try:
+        from engine.applescript_bridge import quit_idle_office_apps
+        quit_idle_office_apps()
+    except Exception:
+        pass
+
     # Clear the course list cache so a re-login or re-run fetches fresh data.
     st.cache_resource.clear()
     st.session_state.pop('sync_manager', None)
@@ -246,6 +254,14 @@ def cleanup_sync_state() -> None:
     st.session_state['download_cancelled'] = False
     # Re-arm the completion-sound sentinel for the next sync run.
     st.session_state['completion_beep_fired'] = False
+
+    # macOS: tidy away any Office apps we launched for post-processing (only if
+    # they have no documents open — never disturbs the user's own work).
+    try:
+        from engine.applescript_bridge import quit_idle_office_apps
+        quit_idle_office_apps()
+    except Exception:
+        pass
 
     # Clear the course list cache so a re-login or re-run fetches fresh data.
     st.cache_resource.clear()

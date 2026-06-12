@@ -703,7 +703,14 @@ with _main_content.container():
             st.session_state['total_items'] = total_items
             st.session_state['total_mb'] = total_mb
             st.session_state['download_status'] = 'running'
-            
+
+            # Re-arm the completion notification for THIS run. The sentinel is a
+            # single flag shared with sync and is otherwise only reset by the
+            # cleanup handlers — so a prior download/sync that left it True (e.g.
+            # the user navigated away without going through cleanup) would
+            # silently swallow this run's "Download Complete" notification.
+            st.session_state['completion_beep_fired'] = False
+
             st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
             
             st.rerun()

@@ -105,6 +105,12 @@ def run_sync():
     # so that _show_sync_cancelled can read it for the correct status message.
     if not is_sync_cancelled():
         st.session_state['is_post_processing'] = False
+        # Re-arm the completion notification for THIS sync. The sentinel is
+        # shared with the download flow and only otherwise reset on cleanup, so
+        # a preceding download that left it True would swallow this sync's
+        # "Sync Complete" notification. Safe to reset on every execution-phase
+        # rerun: the notification fires from the separate completion screen.
+        st.session_state['completion_beep_fired'] = False
 
     # Step wizard
     render_sync_wizard(st, 3)

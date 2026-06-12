@@ -119,11 +119,22 @@ class PowerPointToPDF:
     def _convert_applescript_pptx(self, src: Path, dst: Path) -> bool:
         """Convert a PowerPoint file to PDF via AppleScript on macOS.
 
-        NOTE: PowerPoint's AppleScript dictionary has NO ``display alerts``
-        property (unlike Word/Excel). Including ``set display alerts to false``
-        makes the whole script fail to COMPILE (osascript error -2740,
-        "A identifier can't go after this identifier"), which silently broke
-        every PPTX→PDF conversion on macOS. It must not be re-added here.
+        Two hard-won correctness rules baked into this script:
+
+        1. PowerPoint's ``open`` does NOT return a usable reference, so
+           ``set theDoc to open ...`` leaves theDoc undefined and the later
+           ``save theDoc`` dies with -2753 ("variable theDoc is not defined").
+           We must ``open`` and then grab ``active presentation`` — the same
+           pattern Excel uses with ``active workbook``.
+        2. The whole open→save→close runs inside ``try``; on ANY error we
+           ``close active presentation saving no`` and re-raise. Without this,
+           a failed conversion left every presentation OPEN, so a batch of N
+           failures stacked N presentations on top of each other in PowerPoint
+           (which could exhaust memory / crash the machine).
+
+        PowerPoint's dictionary also has NO ``display alerts`` property (unlike
+        Word/Excel) — adding ``set display alerts to false`` is a -2740 COMPILE
+        error. Do not re-add it.
         """
         from engine.applescript_bridge import _as_posix, office_container_stage
         with office_container_stage(src, dst, "PowerPoint") as (s_src, s_dst):
@@ -131,9 +142,17 @@ class PowerPointToPDF:
             posix_dst = _as_posix(s_dst)
             script = f'''
                 tell application "Microsoft PowerPoint"
-                    set theDoc to open POSIX file "{posix_src}"
-                    save theDoc in POSIX file "{posix_dst}" as save as PDF
-                    close theDoc saving no
+                    try
+                        open POSIX file "{posix_src}"
+                        set theDoc to active presentation
+                        save theDoc in POSIX file "{posix_dst}" as save as PDF
+                        close theDoc saving no
+                    on error errMsg number errNum
+                        try
+                            close active presentation saving no
+                        end try
+                        error errMsg number errNum
+                    end try
                 end tell
             '''
             return self._convert_applescript(s_src, s_dst, "PowerPoint", script)

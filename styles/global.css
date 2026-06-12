@@ -4,6 +4,31 @@
    ═══════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════
+   Native desktop feel: no rubber-band selection of UI chrome
+   ───────────────────────────────────────────────
+   In the PyWebView window, letting the user drag-select labels, padding and
+   the black gaps looks broken (especially over VNC where the cursor is hard
+   to control). Disable text selection on chrome, but KEEP inputs/textareas
+   fully selectable + editable so pasting the Canvas API token/URL works. */
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stSidebar"],
+[data-testid="stHeader"] {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+input, textarea,
+[contenteditable="true"], [contenteditable=""],
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-baseweb="input"] input,
+[data-baseweb="textarea"] textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    cursor: text;
+}
+
+/* ═══════════════════════════════════════════════
    The Nuclear Ghost Box Purge & Padding Clamp
    ═══════════════════════════════════════════════ */
 /* 0. Remove the native Header clutter without breaking the sidebar toggle */
