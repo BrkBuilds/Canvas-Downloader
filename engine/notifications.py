@@ -47,6 +47,11 @@ if system == 'Darwin':
 
 logger = logging.getLogger(__name__)
 
+# Whether we've already asked the user for notification permission this process
+# (UNUserNotificationCenter). Requested once, early, so the first completion
+# banner isn't silently dropped while a fresh install's permission is pending.
+_un_auth_requested = False
+
 _WINDOWS_AUMID = 'CanvasDownloader.App'
 
 # AppId portion of the MSIX package AUMID. MUST stay in sync with the
@@ -230,23 +235,169 @@ def _play_macos_sound():
         logger.debug(f"macOS completion sound failed: {e}")
 
 
+def _show_macos_notification_native(title: str, body: str) -> bool:
+    """Post a Notification Center banner from INSIDE this app process via PyObjC.
+
+    This is the robust primary path. The Streamlit script runner shares the
+    process with the PyWebView Cocoa ``NSApplication`` (see start.py), so a
+    notification posted here is attributed to **Canvas Downloader.app itself**
+    and uses the app's own notification permission — no external helper, no
+    separate "terminal-notifier" entry in System Settings → Notifications.
+
+    Why not pync/terminal-notifier: pync bundles an old, unsigned x86_64
+    ``terminal-notifier`` (~2017) that fails silently on Apple-Silicon macOS 15
+    (the afplay chime still works, which is why only the *sound* survived). The
+    native ``NSUserNotification`` API ships with Foundation — which PyObjC always
+    bundles for the Cocoa WebView — so it is arm64-native and always importable
+    in the frozen app.
+
+    ``NSUserNotification`` is formally deprecated but remains functional through
+    macOS 15. Returns True only if the banner was actually delivered, so the
+    caller can fall through to osascript otherwise.
+    """
+    try:
+        from Foundation import (
+            NSUserNotification,
+            NSUserNotificationCenter,
+        )
+    except Exception as e:
+        logger.debug(f"Foundation (PyObjC) unavailable for native notification: {e}")
+        return False
+
+    try:
+        center = NSUserNotificationCenter.defaultUserNotificationCenter()
+        if center is None:
+            # Returns nil when the process is not a proper app bundle (e.g. a
+            # bare `python` dev run). The frozen .app always has a bundle id.
+            return False
+        note = NSUserNotification.alloc().init()
+        note.setTitle_('Canvas Downloader')
+        note.setSubtitle_(title)
+        note.setInformativeText_(body)
+        center.deliverNotification_(note)
+        return True
+    except Exception as e:
+        logger.debug(f"Native NSUserNotification failed: {e}")
+        return False
+
+
+def _get_un_center():
+    """Return the UNUserNotificationCenter, or None if unusable.
+
+    ``currentNotificationCenter()`` raises (→ Python exception → None here) when
+    the process has no valid app bundle (e.g. an unfrozen ``python`` dev run);
+    the frozen .app has CFBundleIdentifier set in the spec, so it returns a real
+    center. Also None when pyobjc-framework-UserNotifications isn't bundled.
+    """
+    try:
+        from UserNotifications import UNUserNotificationCenter
+        return UNUserNotificationCenter.currentNotificationCenter()
+    except Exception:
+        return None
+
+
+def request_macos_notification_permission() -> None:
+    """Ask the user once for notification permission via the modern UN framework.
+
+    Called early (app startup) so the FIRST completion banner isn't dropped while
+    a fresh install's permission is still pending. Idempotent per process and a
+    safe no-op off macOS / when UserNotifications isn't available. Authorization,
+    once granted, persists across launches — so on every later run notifications
+    work from the very first one.
+    """
+    global _un_auth_requested
+    if system != 'Darwin' or _un_auth_requested:
+        return
+    _un_auth_requested = True
+    center = _get_un_center()
+    if center is None:
+        return
+    try:
+        # UNAuthorizationOptions bitmask: badge(1) | sound(2) | alert(4) = 7.
+        # (Stable, documented Apple constants.) Completion handler is required;
+        # we don't act on the result — delivery is attempted regardless and the
+        # OS drops it silently if denied.
+        center.requestAuthorizationWithOptions_completionHandler_(
+            7, lambda granted, error: None
+        )
+    except Exception as e:
+        logger.debug(f"UN authorization request failed: {e}")
+
+
+def _show_macos_notification_un(title: str, body: str) -> bool:
+    """Post a banner via the modern UserNotifications framework (the right way).
+
+    Preferred over the deprecated ``NSUserNotification``. Requires (a) the .app to
+    carry a bundle identifier — set in the PyInstaller spec — and (b) pyobjc-
+    framework-UserNotifications to be importable/bundled. Returns False on ANY
+    failure so the caller falls back to NSUserNotification, keeping us strictly no
+    worse than before even if the framework is missing or a future macOS changes
+    the API. Attributed to Canvas Downloader.app and uses its own permission.
+
+    Note: while the app is frontmost, macOS suppresses UN banners unless a
+    presentation delegate is installed — which is fine here, since the target case
+    is "user tabbed away" (app backgrounded → banner shows), and a foregrounded
+    user already sees the completion screen + hears the chime.
+    """
+    try:
+        from UserNotifications import (
+            UNMutableNotificationContent,
+            UNNotificationRequest,
+        )
+    except Exception:
+        return False
+    center = _get_un_center()
+    if center is None:
+        return False
+    try:
+        request_macos_notification_permission()  # ensure we've asked at least once
+        content = UNMutableNotificationContent.alloc().init()
+        content.setTitle_('Canvas Downloader')
+        content.setSubtitle_(title)
+        content.setBody_(body)
+        import uuid as _uuid
+        # nil trigger = deliver immediately.
+        req = UNNotificationRequest.requestWithIdentifier_content_trigger_(
+            _uuid.uuid4().hex, content, None
+        )
+        center.addNotificationRequest_withCompletionHandler_(req, None)
+        return True
+    except Exception as e:
+        logger.debug(f"UNUserNotificationCenter delivery failed: {e}")
+        return False
+
+
 def _show_macos_notification(title: str, body: str):
     """Display a native macOS Notification Center notification.
 
+    Order of attempts (most correct/reliable first):
+      1. Modern ``UNUserNotificationCenter`` (UserNotifications framework) via
+         PyObjC — the only API Apple still supports. See
+         ``_show_macos_notification_un``. Requires the bundle id (set in the spec)
+         + pyobjc-framework-UserNotifications bundled.
+      2. ``NSUserNotification`` via Foundation — deprecated but functional through
+         macOS 15; always available (Foundation ships with the Cocoa WebView).
+      3. pync / terminal-notifier — vendored binary, unreliable on arm64 Sequoia.
+      4. ``osascript display notification`` — last resort.
+
     Each call posts an independent banner. We deliberately do NOT set a constant
     terminal-notifier ``group``: a fixed group ID makes every notification after
-    the first one *replace* the previous one in-place (updating it silently in
-    Notification Center) instead of alerting a fresh banner — which is exactly
-    why only the very first notification was ever visible. Omitting the group
-    lets "Download Complete", "Sync Review Ready", etc. each pop their own banner.
+    the first one *replace* the previous one in-place instead of alerting a fresh
+    banner — which is exactly why only the very first one was ever visible.
 
-    No click action is attached: the app is now a single PyWebView window (the
-    old Chrome-tab flow is gone), and opening the Streamlit URL on click would
-    spawn a confusing second copy of the UI in the default browser.
-
-    Fallback: osascript display notification (no click handler, as the osascript
-    API doesn't support one).
+    No click action is attached: the app is a single PyWebView window, and
+    opening the Streamlit URL on click would spawn a confusing second copy of the
+    UI in the default browser.
     """
+    # 1. Modern UserNotifications framework — the right, future-proof path.
+    if _show_macos_notification_un(title, body):
+        return
+
+    # 2. NSUserNotification (deprecated, but works today and always importable).
+    if _show_macos_notification_native(title, body):
+        return
+
+    # 3. pync fallback (best-effort; the vendored binary often no-ops on arm64).
     if _PyncNotifier is not None:
         try:
             # No 'sound' here on purpose: _play_macos_sound() already afplays a
@@ -260,7 +411,7 @@ def _show_macos_notification(title: str, body: str):
         except Exception as e:
             logger.debug(f"pync notification failed: {e}")
 
-    # Fallback: osascript (notification appears from 'Script Editor', no click handler)
+    # 4. Fallback: osascript (notification appears from 'Script Editor', no click handler)
     try:
         safe_title = title.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
         safe_body = body.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')

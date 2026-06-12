@@ -32,6 +32,15 @@ jobs:
           pip install --no-cache-dir -r requirements.txt
           pip install --no-cache-dir "pyinstaller>=6.0"
           pip install pywebview
+          # Modern macOS notifications (UNUserNotificationCenter). Installed LAST and
+          # pinned to the FINAL resolved pyobjc-core version, because every
+          # pyobjc-framework-* package must share one version — and the pywebview
+          # line above can bump pyobjc-core. Guarantees no version skew so the
+          # UserNotifications binding imports cleanly at runtime (otherwise the app
+          # silently falls back to the deprecated NSUserNotification path).
+          PYOBJC_VER=$(python -c 'import objc; print(objc.__version__)')
+          echo "Pinning pyobjc-framework-UserNotifications to ${PYOBJC_VER}"
+          pip install --no-cache-dir "pyobjc-framework-UserNotifications==${PYOBJC_VER}"
 
       - name: Build .app bundle
         run: |
