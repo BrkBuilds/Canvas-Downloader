@@ -113,6 +113,15 @@ def run_sync():
         st.session_state['completion_beep_fired'] = False
         # Re-arm the "quit Office apps on completion" one-shot for this sync.
         st.session_state['_office_quit_fired'] = False
+        # macOS: forget Office apps primed by a previous run (quit at its completion)
+        # so this sync launches them fresh + scoped to the files it actually converts.
+        import sys as _sys_reset
+        if _sys_reset.platform == 'darwin':
+            try:
+                from engine.applescript_bridge import reset_office_priming
+                reset_office_priming()
+            except Exception:
+                pass
 
     # Step wizard
     render_sync_wizard(st, 3)
@@ -1436,14 +1445,16 @@ def run_sync():
     # hidden, well before run_excel_conversion (the last converter) opens a file.
     # Once per run via the shared sentinel (reset on cleanup).
     import sys as _sys_prime
-    if _sys_prime.platform == 'darwin' and not st.session_state.get('_office_primed'):
-        st.session_state['_office_primed'] = True
+    if _sys_prime.platform == 'darwin':
         try:
             from engine.applescript_bridge import prime_office_automation
+            # Scope to the file types ACTUALLY queued for conversion this sync, so a
+            # sync that only converts PowerPoint never opens Word or Excel. Each app
+            # is launched at most once per run (idempotent inside prime_office_automation).
             prime_office_automation({
-                'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
-                'convert_word': st.session_state.get('persistent_convert_word', False),
-                'convert_excel': st.session_state.get('persistent_convert_excel', False),
+                'convert_pptx': bool(get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx')),
+                'convert_word': bool(get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word')),
+                'convert_excel': bool(get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel')),
             })
         except Exception as _sync_prime_err:
             logger.warning(f"Failed to prime Office automation for sync: {_sync_prime_err}")

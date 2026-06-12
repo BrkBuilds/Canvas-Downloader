@@ -52,6 +52,11 @@ logger = logging.getLogger(__name__)
 # banner isn't silently dropped while a fresh install's permission is pending.
 _un_auth_requested = False
 
+# Strong reference to the UNUserNotificationCenter delegate. MUST be kept alive
+# for the lifetime of the process (PyObjC won't retain it for us) or the OS drops
+# the delegate and foreground notifications go silent again.
+_un_delegate = None
+
 _WINDOWS_AUMID = 'CanvasDownloader.App'
 
 # AppId portion of the MSIX package AUMID. MUST stay in sync with the
@@ -296,6 +301,47 @@ def _get_un_center():
         return None
 
 
+def _ensure_un_delegate(center) -> None:
+    """Install a UNUserNotificationCenterDelegate so banners appear even when the
+    app is FRONTMOST.
+
+    THIS is why notifications were silent despite permission being granted: macOS
+    suppresses a UN notification while the app that posts it is the focused app,
+    UNLESS the app's notification-center delegate implements
+    ``willPresentNotification`` and returns presentation options. The user is
+    typically watching the window when a download/sync finishes (app frontmost),
+    so without this delegate every banner was dropped on the floor.
+
+    Idempotent; retains a strong module-level reference to the delegate. Defined
+    lazily (PyObjC's NSObject base is macOS-only and unavailable on the dev box).
+    """
+    global _un_delegate
+    if _un_delegate is not None:
+        return
+    try:
+        from Foundation import NSObject
+
+        # UNNotificationPresentationOptions (macOS 11+): Banner=1<<4, List=1<<3.
+        # We omit Sound here — _play_macos_sound() already afplays a chime, and
+        # adding the system sound would double it up.
+        _PRESENT_OPTS = (1 << 4) | (1 << 3)  # Banner | List = 24
+
+        class _CanvasUNDelegate(NSObject):
+            def userNotificationCenter_willPresentNotification_withCompletionHandler_(
+                self, center, notification, completionHandler
+            ):
+                # Present the banner + add to Notification Center even in-focus.
+                try:
+                    completionHandler(_PRESENT_OPTS)
+                except Exception:
+                    pass
+
+        _un_delegate = _CanvasUNDelegate.alloc().init()
+        center.setDelegate_(_un_delegate)
+    except Exception as e:
+        logger.debug(f"Failed to install UN notification delegate: {e}")
+
+
 def request_macos_notification_permission() -> None:
     """Ask the user once for notification permission via the modern UN framework.
 
@@ -303,7 +349,8 @@ def request_macos_notification_permission() -> None:
     a fresh install's permission is still pending. Idempotent per process and a
     safe no-op off macOS / when UserNotifications isn't available. Authorization,
     once granted, persists across launches — so on every later run notifications
-    work from the very first one.
+    work from the very first one. Also installs the presentation delegate so
+    foreground banners aren't suppressed.
     """
     global _un_auth_requested
     if system != 'Darwin' or _un_auth_requested:
@@ -312,6 +359,8 @@ def request_macos_notification_permission() -> None:
     center = _get_un_center()
     if center is None:
         return
+    # Delegate first, so it's in place before the first notification is delivered.
+    _ensure_un_delegate(center)
     try:
         # UNAuthorizationOptions bitmask: badge(1) | sound(2) | alert(4) = 7.
         # (Stable, documented Apple constants.) Completion handler is required;
