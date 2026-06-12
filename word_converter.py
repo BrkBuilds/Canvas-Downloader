@@ -94,11 +94,18 @@ class WordToPDF:
     def _convert_applescript_word(self, src: Path, dst: Path) -> bool:
         """Convert a Word document to PDF via AppleScript on macOS.
 
-        NOTE: Word's ``display alerts`` is an ENUM (none/all/messages), not a
-        boolean — ``set display alerts to false`` is a runtime coercion error.
-        It is wrapped in ``try`` so that mistake (or a dictionary change) can
-        never abort the conversion; ``close ... saving no`` already prevents the
-        only alert that matters (the save-changes prompt).
+        Mirrors the PowerPoint converter's two correctness rules:
+
+        1. Grab ``active document`` after ``open`` rather than relying on
+           ``open``'s return value (avoids the -2753 "variable not defined"
+           failure mode).
+        2. The whole open→save→close runs inside ``try``; on ANY error we
+           ``close active document saving no`` and re-raise, so a failed
+           conversion can never leave documents stacking up open in Word.
+
+        Word's ``display alerts`` is an ENUM (none/all/messages), not a boolean,
+        so ``set display alerts to false`` is wrapped in its own ``try`` — a
+        coercion error there must never abort the conversion.
         """
         from engine.applescript_bridge import _as_posix, office_container_stage
         with office_container_stage(src, dst, "Word") as (s_src, s_dst):
@@ -109,9 +116,17 @@ class WordToPDF:
                     try
                         set display alerts to false
                     end try
-                    set theDoc to open POSIX file "{posix_src}"
-                    save as theDoc file name POSIX file "{posix_dst}" file format format PDF
-                    close theDoc saving no
+                    try
+                        open POSIX file "{posix_src}"
+                        set theDoc to active document
+                        save as theDoc file name POSIX file "{posix_dst}" file format format PDF
+                        close theDoc saving no
+                    on error errMsg number errNum
+                        try
+                            close active document saving no
+                        end try
+                        error errMsg number errNum
+                    end try
                 end tell
             '''
             return self._convert_applescript(s_src, s_dst, "Word", script)

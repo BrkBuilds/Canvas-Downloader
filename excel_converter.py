@@ -109,70 +109,51 @@ class ExcelToPDF:
         return run_applescript(src, dst, app_name, script)
 
     def _convert_applescript_excel(self, src: Path, dst: Path) -> bool:
-        """Convert an Excel file to PDF via AppleScript on macOS — hands-free.
+        """Convert an Excel file to PDF via AppleScript on macOS.
 
-        The external-links dialog ("This workbook contains links to one or more
-        external sources...") is suppressed at the SOURCE by opening with
-        ``update links do not update links``: the per-open parameter is
-        authoritative, whereas the app-level ``ask to update automatic links``
-        property can be overridden by a flag baked into the file itself.
-        ``read only true`` + ``ignore read only recommended true`` likewise kill
-        the read-only-recommendation prompt and any "file is locked" dialog.
+        Uses the proven ``open POSIX file`` + ``active workbook`` sequence (this
+        is the exact form that has reliably converted Excel→PDF on macOS).
 
-        Two-tier so the currently-working path can never regress: if this Excel
-        build's AppleScript dialect rejects the ``open workbook`` parameters
-        (compile or runtime), we fall back to the proven ``open POSIX file``.
-        (Macro-enabled .xlsm/.xls are handled separately via the VBAWarnings
-        preference set in prime_office_automation — Excel exposes no AppleScript
-        hook for macro security.)
+        Robustness rule shared with the PowerPoint/Word converters: the whole
+        open→export→close runs inside ``try``; on ANY error we
+        ``close active workbook saving no`` and re-raise, so a failed conversion
+        can never leave workbooks stacking up open in Excel.
+
+        Prompt handling lives OUTSIDE this script on purpose — putting an
+        unverified property like ``set ask to update ... links`` inline is a
+        *compile* error (-2741) that ``try`` cannot catch and that takes the
+        whole script (and the conversion) down with it. The external-link
+        prompt is instead suppressed best-effort, in an isolated osascript, by
+        ``prime_office_automation``; macros are handled there via VBAWarnings.
         """
-        from engine.applescript_bridge import _as_posix, office_container_stage, get_last_error
+        from engine.applescript_bridge import _as_posix, office_container_stage
         with office_container_stage(src, dst, "Excel") as (s_src, s_dst):
             posix_src = _as_posix(s_src)
             posix_dst = _as_posix(s_dst)
-
-            # Shared tail: grab the open workbook, best-effort page setup, export
-            # to PDF, close without saving. Indented to sit inside the tell block.
-            tail = f'''
-                    set theBook to active workbook
+            script = f'''
+                tell application "Microsoft Excel"
+                    set display alerts to false
                     try
-                        tell page setup of active sheet
-                            set orientation to landscape
-                            set (fit to pages wide) to 1
-                            set (fit to pages tall) to false
-                        end tell
+                        open POSIX file "{posix_src}"
+                        set theBook to active workbook
+                        try
+                            tell page setup of active sheet
+                                set orientation to landscape
+                                set (fit to pages wide) to 1
+                                set (fit to pages tall) to false
+                            end tell
+                        end try
+                        save workbook as theBook filename POSIX file "{posix_dst}" file format PDF file format
+                        close theBook saving no
+                    on error errMsg number errNum
+                        try
+                            close active workbook saving no
+                        end try
+                        error errMsg number errNum
                     end try
-                    save workbook as theBook filename POSIX file "{posix_dst}" file format PDF file format
-                    close theBook saving no
                 end tell
             '''
-
-            primary = f'''
-                tell application "Microsoft Excel"
-                    set display alerts to false
-                    try
-                        set ask to update automatic links to false
-                    end try
-                    open workbook workbook file name "{posix_src}" update links do not update links read only true ignore read only recommended true
-{tail}'''
-            if self._convert_applescript(s_src, s_dst, "Excel", primary):
-                return True
-
-            # A TCC/Automation denial will just deny again — don't fire a second
-            # (equally blocked, equally prompt-y) attempt.
-            last = get_last_error()
-            if last and last[0] == 'permission':
-                return False
-
-            fallback = f'''
-                tell application "Microsoft Excel"
-                    set display alerts to false
-                    try
-                        set ask to update automatic links to false
-                    end try
-                    open POSIX file "{posix_src}"
-{tail}'''
-            return self._convert_applescript(s_src, s_dst, "Excel", fallback)
+            return self._convert_applescript(s_src, s_dst, "Excel", script)
 
     # ── conversion ─────────────────────────────────────────────────
     def convert(self, excel_path: str | Path) -> tuple[str | None, str]:
