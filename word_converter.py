@@ -92,19 +92,29 @@ class WordToPDF:
         return run_applescript(src, dst, app_name, script)
 
     def _convert_applescript_word(self, src: Path, dst: Path) -> bool:
-        """Convert a Word document to PDF via AppleScript on macOS."""
-        from engine.applescript_bridge import _as_posix
-        posix_src = _as_posix(src)
-        posix_dst = _as_posix(dst)
-        script = f'''
-            tell application "Microsoft Word"
-                set display alerts to false
-                set theDoc to open POSIX file "{posix_src}"
-                save as theDoc file name POSIX file "{posix_dst}" file format format PDF
-                close theDoc saving no
-            end tell
-        '''
-        return self._convert_applescript(src, dst, "Word", script)
+        """Convert a Word document to PDF via AppleScript on macOS.
+
+        NOTE: Word's ``display alerts`` is an ENUM (none/all/messages), not a
+        boolean — ``set display alerts to false`` is a runtime coercion error.
+        It is wrapped in ``try`` so that mistake (or a dictionary change) can
+        never abort the conversion; ``close ... saving no`` already prevents the
+        only alert that matters (the save-changes prompt).
+        """
+        from engine.applescript_bridge import _as_posix, office_container_stage
+        with office_container_stage(src, dst, "Word") as (s_src, s_dst):
+            posix_src = _as_posix(s_src)
+            posix_dst = _as_posix(s_dst)
+            script = f'''
+                tell application "Microsoft Word"
+                    try
+                        set display alerts to false
+                    end try
+                    set theDoc to open POSIX file "{posix_src}"
+                    save as theDoc file name POSIX file "{posix_dst}" file format format PDF
+                    close theDoc saving no
+                end tell
+            '''
+            return self._convert_applescript(s_src, s_dst, "Word", script)
 
     # ── conversion ─────────────────────────────────────────────────
     def convert(self, doc_path: str | Path) -> str | None:

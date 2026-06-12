@@ -9,7 +9,11 @@ converters delegate to for macOS AppleScript-based file conversion.
 """
 
 import logging
+import shutil
 import subprocess
+import sys
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -21,6 +25,125 @@ _APP_DOC_MAP = {
     "Word":        ("Microsoft Word",       "active document"),
     "Excel":       ("Microsoft Excel",      "active workbook"),
 }
+
+# Sandbox container bundle identifiers for the Office apps. A sandboxed app
+# always has unrestricted read/write access to its OWN container's Data dir,
+# so staging conversion inputs/outputs there sidesteps the macOS "Grant File
+# Access" powerbox prompt that otherwise fires for every file in ~/Downloads.
+_CONTAINER_IDS = {
+    "PowerPoint": "com.microsoft.Powerpoint",
+    "Word":       "com.microsoft.Word",
+    "Excel":      "com.microsoft.Excel",
+}
+
+
+def _office_container_tmp(app_name: str) -> Path | None:
+    """Return a writable staging dir inside the Office app's sandbox container.
+
+    Returns ``None`` (caller falls back to direct paths) when not on macOS, the
+    app is unknown, or the container does not exist (app never launched / not
+    installed). The directory is the app's own sandbox container, so both the
+    Office app AND our (non-sandboxed) process can read/write it freely.
+    """
+    if sys.platform != 'darwin':
+        return None
+    cid = _CONTAINER_IDS.get(app_name)
+    if not cid:
+        return None
+    base = Path.home() / "Library" / "Containers" / cid / "Data"
+    if not base.is_dir():
+        return None
+    # Under Data/tmp so it can never be caught by iCloud Drive sync (which only
+    # touches the container's Documents folder). The Office app has full
+    # sandbox access to everything under its own Data dir.
+    tmp = base / "tmp" / "CanvasDownloaderTmp"
+    try:
+        tmp.mkdir(parents=True, exist_ok=True)
+        return tmp
+    except Exception:
+        return None
+
+
+@contextmanager
+def office_container_stage(src: Path, dst: Path, app_name: str):
+    """macOS: stage *src*/*dst* inside the Office app's sandbox container.
+
+    Yields ``(staged_src, staged_dst)``. The Office app opens *staged_src* and
+    writes *staged_dst* entirely inside its own container, so macOS never shows
+    the per-folder "Grant File Access" / "Additional permissions required"
+    powerbox prompt. On a clean exit the produced *staged_dst* is moved back to
+    the real *dst*; the staging dir is always cleaned up.
+
+    Degrades safely: on any platform other than macOS, when the container is
+    unavailable, or if the staging copy fails, it yields the original
+    ``(src, dst)`` unchanged — behaviour is then identical to no staging
+    (i.e. never worse than before, only ever better).
+    """
+    src = Path(src)
+    dst = Path(dst)
+
+    stage_root = _office_container_tmp(app_name)
+    if stage_root is None:
+        yield src, dst
+        return
+
+    work = stage_root / ("cd_" + uuid.uuid4().hex[:10])
+    staged_src = work / src.name
+    staged_dst = work / dst.name
+    try:
+        work.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, staged_src)
+    except Exception as e:
+        logger.debug(f"[AppleScript] container staging unavailable ({e}); using direct path")
+        shutil.rmtree(work, ignore_errors=True)
+        yield src, dst
+        return
+
+    try:
+        yield staged_src, staged_dst
+        # Success path: relocate the produced PDF back to its real destination.
+        if staged_dst.exists():
+            try:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if dst.exists():
+                    dst.unlink()
+                shutil.move(str(staged_dst), str(dst))
+            except Exception as e:
+                # Last-ditch copy so a same-volume move quirk can't lose output.
+                try:
+                    shutil.copy2(staged_dst, dst)
+                except Exception:
+                    logger.warning(
+                        f"[AppleScript] converted file produced in container but could "
+                        f"not be moved back to {dst}: {e}"
+                    )
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _visibility_prefix(app_name: str) -> str:
+    """AppleScript snippet that hides the Office app before the conversion runs.
+
+    Hiding the process (rather than just not activating it) is what stops the
+    relentless dock-bounce + window-flashing the user sees on macOS: a hidden
+    app stays hidden when a document is opened via automation, as long as we
+    never ``activate`` it. Wrapped in ``try`` so a missing process or a denied
+    System Events Automation grant degrades to "app stays visible" instead of
+    failing the conversion. Returns ``""`` off macOS / for unknown apps.
+    """
+    if sys.platform != 'darwin':
+        return ""
+    mapping = _APP_DOC_MAP.get(app_name)
+    if not mapping:
+        return ""
+    ms_name = mapping[0]
+    return (
+        'tell application "System Events"\n'
+        '    try\n'
+        f'        set visible of (first process whose name is "{ms_name}") to false\n'
+        '    end try\n'
+        'end tell\n'
+    )
 
 # ── Last-error reporting ────────────────────────────────────────────
 # Post-processing runs conversions sequentially, so a single module-level
@@ -151,6 +274,9 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     global _last_error
     _last_error = None
     timeout_s = _timeout_for(src)
+    # Hide the Office app first so opening the document doesn't flash a window /
+    # bounce the dock (macOS only; no-op elsewhere). Best-effort, self-trying.
+    script = _visibility_prefix(app_name) + script
     try:
         result = subprocess.run(
             ['osascript', '-e', script],
@@ -196,39 +322,73 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         return False
 
 def prime_office_automation(contract: dict) -> None:
-    """Trigger macOS TCC permission prompts for Office apps upfront.
-    
-    macOS displays a blocking "Canvas Downloader wants to control X" prompt 
-    the first time an Apple Event is sent. By firing a harmless event in a 
-    background thread during the download phase, we batch the prompts upfront 
-    and warm up the heavy Office processes before post-processing begins.
+    """Launch + permission-prime the Office apps upfront, hidden, during download.
+
+    macOS shows a blocking "Canvas Downloader wants to control X" prompt the
+    first time an Apple Event is sent to each app (and, separately, to System
+    Events). Firing those harmless events in a background thread during the
+    download phase batches ALL of the prompts before post-processing begins,
+    warms up the heavy Office processes, and crucially launches them *hidden*
+    so they never bounce the dock into the foreground.
     """
-    import sys
     import threading
     if sys.platform != 'darwin':
         return
-        
-    apps_to_prime = []
-    if contract.get('convert_pptx', False):
-        apps_to_prime.append("Microsoft PowerPoint")
-    if contract.get('convert_word', False):
-        apps_to_prime.append("Microsoft Word")
-    if contract.get('convert_excel', False):
-        apps_to_prime.append("Microsoft Excel")
-        
+
+    # (human app name, AppleScript app name, preferences/bundle domain)
+    _ALL = [
+        ('convert_pptx', "PowerPoint", "Microsoft PowerPoint", _CONTAINER_IDS["PowerPoint"]),
+        ('convert_word', "Word",       "Microsoft Word",       _CONTAINER_IDS["Word"]),
+        ('convert_excel', "Excel",     "Microsoft Excel",      _CONTAINER_IDS["Excel"]),
+    ]
+    apps_to_prime = [(ms, dom) for key, _short, ms, dom in _ALL if contract.get(key, False)]
+
     if not apps_to_prime:
         return
-        
+
     def _warmup():
-        for app in apps_to_prime:
+        for app, domain in apps_to_prime:
             # Check for default installation path to prevent "Where is X?" dialogs
             if not Path(f"/Applications/{app}.app").exists():
                 continue
             try:
-                # This harmless command launches the app (if closed) and triggers TCC
+                # Kill the macro-security dialog at the source: VBAWarnings=4 =
+                # "Disable all macros without notification". Written BEFORE launch
+                # so the fresh process reads it (a running app caches prefs via
+                # cfprefsd and wouldn't pick it up). Static content still renders
+                # for PDF export — the macros never need to run. Best-effort: if
+                # the file already has Excel open, the prompt may still appear.
+                subprocess.run(
+                    ['defaults', 'write', domain, 'VBAWarnings', '-int', '4'],
+                    capture_output=True, timeout=15,
+                )
+            except Exception:
+                pass
+            try:
+                # Launch hidden (-j) and without foregrounding (-g) so the app is
+                # already running, off-screen, by the time conversions start.
+                subprocess.run(
+                    ['open', '-g', '-j', '-a', app],
+                    capture_output=True, timeout=60,
+                )
+            except Exception:
+                pass
+            try:
+                # Harmless Apple Event → triggers the per-app Automation TCC prompt.
                 subprocess.run(
                     ['osascript', '-e', f'tell application "{app}" to count windows'],
-                    capture_output=True, timeout=120
+                    capture_output=True, timeout=120,
+                )
+            except Exception:
+                pass
+            try:
+                # Hide it now AND trigger the one-time System Events Automation
+                # prompt, so the per-file hide in run_applescript is silent later.
+                subprocess.run(
+                    ['osascript', '-e',
+                     f'tell application "System Events" to set visible of '
+                     f'(first process whose name is "{app}") to false'],
+                    capture_output=True, timeout=60,
                 )
             except Exception:
                 pass
