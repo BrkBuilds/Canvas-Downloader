@@ -37,7 +37,7 @@ def show_sync_cancelled():
     # macOS: tidy Office the moment the user lands on the cancelled screen,
     # mirroring the completion screen. quit_idle_office_apps() first force-
     # closes any staged document the cancelled conversion left open in a hidden
-    # Office process (marker-matched — user docs untouchable), then quits the
+    # Office process (marker-matched - user docs untouchable), then quits the
     # now-idle apps and purges our Recents entries. One-shot per run.
     import sys as _sys_qc
     if _sys_qc.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
@@ -125,7 +125,7 @@ def show_sync_complete():
         st.session_state['completion_beep_fired'] = True
 
     # macOS: sync + post-processing are done and we're on the completion screen
-    # — quit the Office apps launched for conversion now (only those with zero
+    # - quit the Office apps launched for conversion now (only those with zero
     # open documents). Separate one-shot sentinel so it fires regardless of the
     # notifications toggle, and is re-armed at the top of run_sync.
     import sys as _sys_q
@@ -154,7 +154,7 @@ def show_sync_complete():
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
     with st.container(border=True, key='completion_dashboard'):
-        # L-3: sync_errors is consistently list[str] — all entries are retriable.
+        # L-3: sync_errors is consistently list[str] - all entries are retriable.
         # The hasattr/isinstance chain that tried to classify error objects was dead
         # code; simplify to a direct count.
         _sync_retriable = len(sync_errors) if sync_errors else 0
@@ -196,7 +196,7 @@ def show_sync_complete():
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
             if filtered > 0:
                 # M-5: files hidden by this course's saved file-type filter
-                # (e.g. "study materials only") — surfaced instead of silently dropped.
+                # (e.g. "study materials only") - surfaced instead of silently dropped.
                 parts.append(f"{filtered} {'file' if filtered == 1 else 'files'} outside this course's file-type filter")
 
             joined_parts = " and ".join(parts)
@@ -274,7 +274,7 @@ def show_sync_complete():
                         course_name=pair_info['course_name']
                     )
                     # M-9: A SyncManager with _db_init_failed=True is non-None but
-                    # unusable — all DB writes silently fail. Treat it as None so
+                    # unusable - all DB writes silently fail. Treat it as None so
                     # execution.py's `if sync_mgr is None: continue` guard fires.
                     r_sel['res_data']['sync_manager'] = (
                         None if getattr(new_sm, '_db_init_failed', False) else new_sm

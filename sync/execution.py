@@ -37,7 +37,7 @@ import theme
 from canvas_logic import CanvasManager
 from core.cancellation import cancel_sync, is_sync_cancelled
 # NOTE: never re-import these names *locally* inside a function in this
-# module — a local `from sync_manager import secondary_id_type` makes the
+# module - a local `from sync_manager import secondary_id_type` makes the
 # name function-local for the ENTIRE enclosing function scope, so earlier
 # uses raise UnboundLocalError ("cannot access local variable
 # 'secondary_id_type'"). This bit the sync download loop on 2026-06-11.
@@ -124,7 +124,7 @@ def run_sync():
                 reset_office_priming()
                 # One-time per machine: fire ALL outstanding Office permission
                 # prompts NOW, while the user is at the screen (they just started
-                # the sync) — instead of letting each app's prompt ambush a later
+                # the sync) - instead of letting each app's prompt ambush a later
                 # run mid-conversion. Unscoped toggles on purpose; the in-run
                 # prime stays file-scoped. Idempotent across reruns (module flag
                 # + persisted record inside first_run_permission_setup).
@@ -148,7 +148,7 @@ def run_sync():
         st.info(
             "**First-time macOS setup:** macOS will show a few one-time permission "
             "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
-            "and folder access). Click **Allow / OK** on each — Canvas Downloader uses them "
+            "and folder access). Click **Allow / OK** on each - Canvas Downloader uses them "
             "only to convert Office files to PDF on your own Mac.",
             icon="🔐",
         )
@@ -376,7 +376,7 @@ def run_sync():
                     terminal_log.append(f"<span style='color:{theme.TEXT_SECONDARY}'>ℹ️ Connecting to {esc(course_name)}...</span>")
                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                     try:
-                        # CanvasManager has no get_course() of its own — the
+                        # CanvasManager has no get_course() of its own - the
                         # method lives on the canvasapi client (cm.canvas).
                         # Calling cm.get_course crashed every retry run with
                         # AttributeError and produced a phantom history entry.
@@ -620,7 +620,7 @@ def run_sync():
                             # default). They must NOT enter the synthetic-entity branch
                             # below (which only handles regenerable entities and
                             # .url/.html shortcuts and would silently skip a PDF).
-                            # Fall through to the binary downloader — its URL-refresh
+                            # Fall through to the binary downloader - its URL-refresh
                             # block maps the negative ID back to the raw Canvas file ID.
                             if _debug_file:
                                 log_debug(f"  Secondary [attachment → binary downloader]: {display_file_name}", _debug_file)
@@ -633,7 +633,7 @@ def run_sync():
                                 # Load secondary contract for this pair
                                 _raw_sec = sync_mgr._load_metadata('secondary_content_contract')
                                 if _raw_sec is None:
-                                    # H-3: First-ever sync for this pair — seed the secondary
+                                    # H-3: First-ever sync for this pair - seed the secondary
                                     # contract from session state so future syncs don't use
                                     # an empty contract and silently skip secondary content.
                                     _fallback_sec = {
@@ -892,7 +892,7 @@ def run_sync():
                                     break
 
                                 should_sleep_duration = 0
-                                # Bytes written during THIS attempt — rolled back from the
+                                # Bytes written during THIS attempt - rolled back from the
                                 # MB counters if the attempt fails and is retried, so the
                                 # dashboard never double-counts re-downloaded chunks.
                                 _attempt_bytes = 0
@@ -948,15 +948,15 @@ def run_sync():
                                                     # Handle interrupted download: clean up and stop retrying
                                                     if download_interrupted:
                                                         if is_sync_cancelled():
-                                                            break  # Cancel confirmed — exit retry loop immediately
-                                                        continue  # Non-cancel interrupt — retry
+                                                            break  # Cancel confirmed - exit retry loop immediately
+                                                        continue  # Non-cancel interrupt - retry
                                                     
                                                     # 100% success: atomic rename .part → final path
                                                     try:
                                                         os.replace(make_long_path(part_path), make_long_path(filepath))
                                                     except PermissionError:
                                                         # Target is locked (open in another app). Don't lose the
-                                                        # freshly-downloaded bytes — deliver them alongside as a
+                                                        # freshly-downloaded bytes - deliver them alongside as a
                                                         # _NewVersion sibling so the user's open file is untouched
                                                         # and the new version still lands on disk. The manifest is
                                                         # recorded against this resolved path below.
@@ -966,7 +966,7 @@ def run_sync():
                                                             os.replace(make_long_path(part_path), make_long_path(_alt))
                                                             filepath = _alt
                                                             terminal_log.append(
-                                                                f"<span style='color:{theme.WARNING}'>🔒 In use — saved new version as </span>{esc(_alt.name)}"
+                                                                f"<span style='color:{theme.WARNING}'>🔒 In use - saved new version as </span>{esc(_alt.name)}"
                                                             )
                                                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                             if _debug_file:
@@ -1056,7 +1056,7 @@ def run_sync():
                                     if _attempt_bytes:
                                         downloaded_mb = max(0.0, downloaded_mb - _attempt_bytes / (1024 * 1024))
                                         synced_counter[1] = max(0, synced_counter[1] - _attempt_bytes)
-                                    # TLS verification failures are permanent for this run —
+                                    # TLS verification failures are permanent for this run -
                                     # the trust store won't change between retries, so fail
                                     # fast instead of burning the backoff budget per file.
                                     if isinstance(net_err, aiohttp.ClientConnectorCertificateError) or 'CERTIFICATE_VERIFY_FAILED' in str(net_err):
@@ -1131,7 +1131,7 @@ def run_sync():
                     # same overwrite-vs-`_NewVersion` routing as the initial run.
                     modified_ids = {getattr(f, 'id', None) for f in sel.get('updates_modified', [])}
                     update_map: Dict[int, CanvasFileInfo] = {getattr(f, 'id', None): f for f in sel['updates']}
-                    # M-12: Skip entries with None/zero ID — a corrupt manifest entry
+                    # M-12: Skip entries with None/zero ID - a corrupt manifest entry
                     # with canvas_file_id=None would key the dict as None, then match
                     # every failed file that also has id=None, causing infinite retries.
                     redownload_map: Dict[int, SyncFileInfo] = {}
@@ -1180,7 +1180,7 @@ def run_sync():
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
             # CANCEL GUARD: Skip all post-download state mutations if cancelled.
-            # Do NOT call st.rerun() here — this coroutine runs in a background
+            # Do NOT call st.rerun() here - this coroutine runs in a background
             # ThreadPoolExecutor thread. RerunException escaping the thread would
             # bypass the post-processing pipeline. Signal cancellation via early
             # return and let the script thread handle the rerun after .result().
@@ -1293,7 +1293,7 @@ def run_sync():
                     synced_details, retry_selections, _download_log_history = _future.result(timeout=0.5)
                     break
                 except _cf.TimeoutError:
-                    # Script-thread yield point — lets Streamlit deliver
+                    # Script-thread yield point - lets Streamlit deliver
                     # pending clicks while the worker keeps downloading.
                     _heartbeat.markdown("")
                     continue
@@ -1464,7 +1464,7 @@ def run_sync():
 
     # macOS: prime Office automation before the converters run. The download
     # flow primes at download-start; a sync that was NOT preceded by a download
-    # would otherwise launch Office cold here — re-introducing the "contains
+    # would otherwise launch Office cold here - re-introducing the "contains
     # macros" dialog and the per-file dock-bounce. Priming writes the suite-wide
     # macro-security pref (DisabledWithoutWarnings) and launches the needed apps
     # hidden, well before run_excel_conversion (the last converter) opens a file.
@@ -1507,7 +1507,7 @@ def run_sync():
         get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code'), pp_ui
     )
 
-    # M-13: URL Compilation operates on the whole course folder by design —
+    # M-13: URL Compilation operates on the whole course folder by design -
     # new and existing .url shortcuts both need to land in the compiled
     # Compiled_External_Links.txt. Do NOT scope this to synced files only.
     _url_folders = []
@@ -1529,7 +1529,7 @@ def run_sync():
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
-    # .xls (Excel 97-2003) is a binary format openpyxl cannot read — exclude it
+    # .xls (Excel 97-2003) is a binary format openpyxl cannot read - exclude it
     # from data extraction (mirrors run_all_conversions in the download flow).
     # ExcelToPDF via COM/AppleScript handles .xls fine in the PDF step below.
     run_excel_data_conversion(
@@ -1570,7 +1570,7 @@ def run_sync():
                 existing = synced_details.setdefault(matched_pair_idx, [])
                 if sidecar_name not in existing:
                     existing.append(sidecar_name)
-                    # M-2: Do NOT bump synced_counter for sidecars — they are bonus
+                    # M-2: Do NOT bump synced_counter for sidecars - they are bonus
                     # artifacts tied to a parent file already counted. Bumping here
                     # would show "3 files synced" for 1 Excel → 1 PDF + 1 .txt sidecar.
 
@@ -1643,7 +1643,7 @@ def run_sync():
     if updates:
         _update_last_synced_batch(updates)
 
-    # Record sync history — also for all-failed runs (synced 0, errors > 0)
+    # Record sync history - also for all-failed runs (synced 0, errors > 0)
     # so the user can see in the Hub that a sync was attempted and failed.
     if synced_counter[0] > 0 or error_list:
         try:
@@ -1691,7 +1691,7 @@ def run_sync():
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 
-    # Run fully consumed — drop the cached worker snapshot so the next sync
+    # Run fully consumed - drop the cached worker snapshot so the next sync
     # (including the Retry path, which re-enters with status='syncing')
     # starts a fresh download batch.
     st.session_state.pop('sync_worker_result', None)

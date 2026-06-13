@@ -60,7 +60,7 @@ def get_ssl_context() -> ssl.SSLContext:
         try:
             import certifi
             _ssl_context_cache = ssl.create_default_context(cafile=certifi.where())
-        except Exception as e:  # certifi missing/unreadable — system trust store fallback
+        except Exception as e:  # certifi missing/unreadable - system trust store fallback
             logger.warning(f"certifi unavailable ({e}); falling back to system SSL defaults")
             _ssl_context_cache = ssl.create_default_context()
     return _ssl_context_cache
@@ -100,7 +100,7 @@ async def manage_download_lock(filepath):
         with _lock_mutex_local:
             entry = _download_locks.get(filepath)
             if entry is None or entry.get("loop_id") != current_loop_id:
-                # Fresh entry or stale lock from a dead event loop — new Lock.
+                # Fresh entry or stale lock from a dead event loop - new Lock.
                 _download_locks[filepath] = {"lock": asyncio.Lock(), "count": 0, "loop_id": current_loop_id}
             _download_locks[filepath]["count"] += 1
             return _download_locks[filepath]["lock"]
@@ -394,7 +394,7 @@ class CanvasManager:
                 self.user = self.canvas.get_current_user()
             courses = self.user.get_favorite_courses()
         else:
-            # Fetch ALL enrollments — deliberately unfiltered. The previous
+            # Fetch ALL enrollments - deliberately unfiltered. The previous
             # enrollment_state=['active', 'invited_or_pending'] filter hid
             # past-semester courses on Canvas instances that conclude
             # enrollments at term end, breaking the "archive last semester"
@@ -464,7 +464,7 @@ class CanvasManager:
         try:
             # Pass the IDs already gathered by the bulk fetch so the module
             # scan can skip its per-item course.get_file() call for files we
-            # already have metadata for — eliminating an N+1 API pattern on
+            # already have metadata for - eliminating an N+1 API pattern on
             # every sync analysis / scanning pass (the module_map entry is
             # still recorded for path routing).
             module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
@@ -486,7 +486,7 @@ class CanvasManager:
         except Exception as e:
             logger.error(f"Error during module scan fallback: {e}")
             if progress_callback:
-                progress_callback(f"Module scan failed — some files may be missing: {e}", progress_type='log')
+                progress_callback(f"Module scan failed - some files may be missing: {e}", progress_type='log')
 
         # --- Phase 3: Secondary Content Metadata ---
         # Pass the module map so attachments of module-linked entities can
@@ -505,7 +505,7 @@ class CanvasManager:
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
                 if progress_callback:
-                    progress_callback(f"Secondary content scan failed — some items may be missing: {e}", progress_type='log')
+                    progress_callback(f"Secondary content scan failed - some items may be missing: {e}", progress_type='log')
             
         return list(all_files_map.values()), secondary_fetch_success, module_map
     
@@ -573,7 +573,7 @@ class CanvasManager:
                         continue
                     module_map[item.content_id] = clean_module_name
                     if known_file_ids and item.content_id in known_file_ids:
-                        # Already in the bulk get_files() result — the
+                        # Already in the bulk get_files() result - the
                         # module_map entry above is all this item needed.
                         continue
                     try:
@@ -1809,12 +1809,12 @@ class CanvasManager:
                     # Modules mode only: the catch-all sweeps files NOT linked
                     # from any module into the course root. In 'flat'/'files'
                     # modes the primary loop already enumerated get_files()
-                    # directly — running the catch-all there would re-scan
+                    # directly - running the catch-all there would re-scan
                     # everything and, for 'files' (folder-structure) mode,
                     # re-download the entire course into the root because
                     # downloaded_file_ids is only populated by the modules loop.
                     # ('files' is not currently reachable from the UI, but a
-                    # legacy preset could still carry it — this guard makes it
+                    # legacy preset could still carry it - this guard makes it
                     # safe either way.)
                     all_files_paginator = course.get_files() if mode == 'modules' else []
                     catch_all_tasks = []
@@ -1877,7 +1877,7 @@ class CanvasManager:
                     error_msg = str(e).lower()
                     if "unauthorized" in error_msg or "401" in error_msg or "user not authorised" in error_msg:
                         # Just log it, DO NOT add to user's download_errors.txt
-                        _msg = f"Files tab restricted for '{course.name}' — skipping catch-all phase."
+                        _msg = f"Files tab restricted for '{course.name}' - skipping catch-all phase."
                         logger.warning(_msg)
                         if progress_callback:
                             progress_callback(_msg, progress_type='log')
@@ -2614,7 +2614,7 @@ class CanvasManager:
                     if check_cancellation and check_cancellation():
                         return
                     
-                    # Bytes written during THIS attempt — rolled back from
+                    # Bytes written during THIS attempt - rolled back from
                     # mb_tracker if the attempt fails and is retried, so the
                     # MB dashboard never double-counts re-downloaded chunks.
                     _attempt_bytes = 0
@@ -2675,9 +2675,9 @@ class CanvasManager:
                                                     progress_callback("", progress_type='mb_progress', mb_downloaded=mb_down)
                                 except BaseException as write_err:  # audit-ignore
                                     # BaseException (not Exception) so that Streamlit's
-                                    # RerunException and asyncio's CancelledError — both
+                                    # RerunException and asyncio's CancelledError - both
                                     # BaseException subclasses that abort the download
-                                    # mid-chunk (e.g. a click during the run) — also
+                                    # mid-chunk (e.g. a click during the run) - also
                                     # trigger .part cleanup instead of leaving orphans.
                                     # Safe: cleanup-only handler, ALWAYS re-raises below.
                                     download_interrupted = True
@@ -2779,8 +2779,8 @@ class CanvasManager:
                     # and re-raise it out of the task (seen on macOS frozen
                     # builds: every file surfaced as one opaque "Async Error"
                     # with no retry accounting). TLS verification failures are
-                    # permanent for this run — the trust store won't change
-                    # between retries — so fail fast with an actionable,
+                    # permanent for this run - the trust store won't change
+                    # between retries - so fail fast with an actionable,
                     # per-file error instead.
                     if mb_tracker and _attempt_bytes:
                         mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
@@ -2823,7 +2823,7 @@ class CanvasManager:
                     # doesn't double-count them in the MB dashboard.
                     if mb_tracker and _attempt_bytes:
                         mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
-                    # TLS verification failures are permanent for this run —
+                    # TLS verification failures are permanent for this run -
                     # the trust store won't change between retries, so fail
                     # fast with an actionable message instead of burning the
                     # full retry/backoff budget on every single file.
@@ -3135,7 +3135,7 @@ class CanvasManager:
         filepath = target_dir / filename
 
         # Same-name collision guard: two DISTINCT entities (different Canvas
-        # IDs) can sanitize to the same filename — e.g. duplicate assignment
+        # IDs) can sanitize to the same filename - e.g. duplicate assignment
         # titles. The per-run registry detects this and suffixes the later
         # one instead of silently overwriting the first. Re-saves of the SAME
         # entity within a run keep overwriting in place as designed.
@@ -3154,7 +3154,7 @@ class CanvasManager:
             try:
                 filepath.unlink()
             except OSError:
-                # File locked (e.g. open in browser) — fall back to conflict copy
+                # File locked (e.g. open in browser) - fall back to conflict copy
                 filepath = self._handle_conflict(filepath)
 
         content = body_html if raw_body else self._build_entity_html(
@@ -3192,7 +3192,7 @@ class CanvasManager:
 
         # Record in the sync manifest so subsequent syncs don't re-download this
         # entity. This is centralised here so every call-site is automatically
-        # correct — including the module-dispatch loop which only calls
+        # correct - including the module-dispatch loop which only calls
         # _save_secondary_entity and discards the return value.
         if sync_manager and filepath:
             try:
@@ -3686,7 +3686,7 @@ class CanvasManager:
         try:
             # List API with a module-item fallback so a restricted assignment
             # list doesn't silently drop module-embedded assignments (same sync
-            # asymmetry as quizzes — see _enumerate_module_backed).
+            # asymmetry as quizzes - see _enumerate_module_backed).
             assignments = self._enumerate_module_backed(
                 course, debug_file, label='Assignment',
                 list_getter=course.get_assignments, item_type='Assignment',
@@ -4078,7 +4078,7 @@ class CanvasManager:
         try:
             # List API with a module-item fallback so a restricted discussion
             # list doesn't silently drop module-embedded discussions (same sync
-            # asymmetry as quizzes — see _enumerate_module_backed).
+            # asymmetry as quizzes - see _enumerate_module_backed).
             topics = self._enumerate_module_backed(
                 course, debug_file, label='Discussion',
                 list_getter=course.get_discussion_topics, item_type='Discussion',
@@ -4153,7 +4153,7 @@ class CanvasManager:
         (``_get_files_from_modules``) but a flat-mode download fetches via a
         per-type LIST endpoint. On locked-down institutional Canvas those LIST
         endpoints frequently 403/404 while the *individual* GET stays
-        accessible — so a flat download would silently drop the module-embedded
+        accessible - so a flat download would silently drop the module-embedded
         entity, and the next sync would then flag it as a phantom "N new files"
         immediately after a fresh download.
 
@@ -4214,7 +4214,7 @@ class CanvasManager:
         try:
             # List API with a module-item fallback so a restricted quiz list
             # doesn't silently drop module-embedded quizzes (see
-            # _enumerate_module_backed — fixes the "1 new file after a fresh
+            # _enumerate_module_backed - fixes the "1 new file after a fresh
             # download" sync asymmetry for locked-down courses).
             quizzes = self._enumerate_module_backed(
                 course, debug_file, label='Quiz',
@@ -4473,8 +4473,8 @@ class CanvasManager:
 
         Overwrites a same-named shortcut from a PREVIOUS run in place (links
         are fully regenerated from Canvas, so numbered "(1)" copies would
-        just pile up on every re-download). ``seen_paths`` — the caller's
-        per-run path set — still disambiguates two DIFFERENT links that
+        just pile up on every re-download). ``seen_paths`` - the caller's
+        per-run path set - still disambiguates two DIFFERENT links that
         sanitize to the same title within a single run.
         """
         import plistlib
@@ -4580,7 +4580,7 @@ class CanvasManager:
         try: filename = urllib.parse.unquote_plus(filename)
         except Exception: pass
         # Stripping path separators (/ and \) is what prevents directory traversal
-        # — a Canvas filename like "../../evil" becomes "....evil" then gets
+        # - a Canvas filename like "../../evil" becomes "....evil" then gets
         # lstripped below. Do not remove these characters from the pattern.
         sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
         if replace_spaces: sanitized = sanitized.replace(' ', '_')
@@ -4624,7 +4624,7 @@ class CanvasManager:
             return  # Already logged this exact error in this run
         self._logged_error_sigs.add(error_sig)
 
-        # Mirror EVERY structured error into the active debug log — with the
+        # Mirror EVERY structured error into the active debug log - with the
         # full traceback when the error wraps a real exception. Deduplicated
         # by the signature gate above, and independent of error_log_enabled
         # (debug mode opts into maximal forensics). Without this, unexpected

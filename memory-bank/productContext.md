@@ -12,7 +12,7 @@ Desktop application for university students to batch download and synchronize co
 - **Smart Sync**:
     - **Saved Sync Groups**: Create, edit, and manage reusable multi-course sync profiles ("Groups") via a 3-layered interactive Hub dialog. Easily swap between full semesters of configured folders.
     - **Pop-up Course Selector**: Powerful dialog for selecting courses to sync, with search and filtering (Favorites, CBS filters) matching the main download page.
-    - **Persistent Pairs**: Local folder ↔ Canvas course mapping saved to JSON, survives app restarts.
+    - **Persistent Pairs**: Course Folder ↔ Canvas course mapping saved to JSON, survives app restarts.
     - **Friendly Course Names**: Intelligently prioritizes "Friendly Names" (e.g., "Macroeconomics") over raw Canvas names to reduce clutter.
     - **Intelligent Updates**: Only downloads new or modified files; skips up-to-date ones.
     - **Quick Sync**: One-click sync for all configured pairs.

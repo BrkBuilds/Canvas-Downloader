@@ -193,7 +193,7 @@ def _applescript_last_error() -> tuple[str, str | None]:
     appended to the generic "Conversion failed" line so the user sees the
     real reason (timeout, permission, ...). fatal_phase_message is non-None
     for failures that will identically doom every remaining file in the
-    phase (Automation/TCC permission denied, Office app missing) — callers
+    phase (Automation/TCC permission denied, Office app missing) - callers
     abort early with one actionable message instead of spamming dozens of
     generic errors.
     """
@@ -208,7 +208,7 @@ def _applescript_last_error() -> tuple[str, str | None]:
         return '', None
     category, detail = last
     short = detail if len(detail) <= 160 else detail[:157] + '…'
-    return f" — {short}", (detail if category in FATAL_CATEGORIES else None)
+    return f" - {short}", (detail if category in FATAL_CATEGORIES else None)
 
 
 def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase_label: str) -> None:
@@ -291,11 +291,11 @@ def run_pptx_conversion(files, ui: UIBridge):
     time.sleep(0.2)
 
     with PowerPointToPDF(error_log_path=pptx_error_log) as converter:
-        # L-6: Guard COM init failure — self.app is None when CoInitialize or
+        # L-6: Guard COM init failure - self.app is None when CoInitialize or
         # DispatchEx failed. Without this check the loop runs silently with no
         # conversions and no error visible to the user.
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint COM init failed — conversions skipped.</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint COM init failed - conversions skipped.</span>")
             ui.pp_failure_count += total
         else:
             for i, (pptx_file, sm, ctx) in enumerate(files, 1):
@@ -474,7 +474,7 @@ def run_word_conversion(files, ui: UIBridge):
 
     with WordToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word COM init failed — conversions skipped.</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word COM init failed - conversions skipped.</span>")
             ui.pp_failure_count += total
         else:
             for i, (word_file, sm, ctx) in enumerate(files, 1):
@@ -584,7 +584,7 @@ def run_excel_conversion(files, ui: UIBridge):
 
     with ExcelToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel COM init failed — conversions skipped.</span>")
+            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel COM init failed - conversions skipped.</span>")
             ui.pp_failure_count += total
         else:
             for i, (excel_file, sm, ctx) in enumerate(files, 1):

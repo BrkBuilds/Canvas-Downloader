@@ -92,7 +92,7 @@
 19:     - **Archived Course Support**: Refactored the sync confirmation flow to handle "course no longer available" scenarios gracefully.
 20:     - **XSS Hardening**: Implemented mandatory escaping (`esc()`) for all course and file names rendered in HTML sync history reports.
 21:     - **Visual Feedback**: Added distinctive red-border styling for "missing folder" sync pair cards to improve user visibility of broken paths.
-22:     - **Overlap Warnings**: Integrated informational toasts when adding the same course under multiple local folders.
+22:     - **Overlap Warnings**: Integrated informational toasts when adding the same course under multiple Course Folders.
 23: - **Session 2026-04-30: Loading Screen & Transition Stabilization**
 24:     - **Intelligent Overlay Control**: Refactored `ui_helpers.py` to include a centralized `hide_loading_overlay()` function with settlement logic.
 25:     - **Streamlit Status Integration**: Integrated monitoring of Streamlit's `stStatusWidget` to synchronize overlay hiding with script completion.
@@ -774,7 +774,7 @@
 
 ## Recent Changes (Session 2026-03-10 - V3.0 Architecture Audit Fixes)
 - **Resolved "Modules Mode" Silent Data Loss (`canvas_logic.py`)**: Deleted the `downloaded_file_ids` ID-based deduplication tracker that was incorrectly skipping files present in multiple Canvas modules. Replaced it with a system that only tracks module files for Catch-All exclusion, ensuring every module link is processed.
-- **Synchronous Path Conflict Resolution (`canvas_logic.py`)**: Fixed a concurrency bug where exact duplicate filenames crashing into the same local folder were being quietly discarded by the `seen_target_paths` and `seen_flat_paths` sets. Implemented synchronous `(1)`, `(2)` suffix generation before dispatching the `asyncio` file download task, guaranteeing 100% data preservation and zero `[WinError 32]` collisions.
+- **Synchronous Path Conflict Resolution (`canvas_logic.py`)**: Fixed a concurrency bug where exact duplicate filenames crashing into the same Course Folder were being quietly discarded by the `seen_target_paths` and `seen_flat_paths` sets. Implemented synchronous `(1)`, `(2)` suffix generation before dispatching the `asyncio` file download task, guaranteeing 100% data preservation and zero `[WinError 32]` collisions.
 - **Prevented Global Timeout Starvation (`canvas_logic.py` & `sync_ui.py`)**: Replaced the rigid `aiohttp.ClientTimeout(total=300)` with an adaptive timeout structure (`total=None, sock_read=60, sock_connect=15`). This ensures massive video files downloading over slow connections are no longer killed unconditionally at the 5-minute mark.
 - **Eliminated Semaphore Freezing (`sync_ui.py`)**: Restructured the HTTP `429 Too Many Requests` rate limit handler. The `asyncio.sleep(wait)` backoff penalty is now mathematically pushed completely *outside* of the active `async with sem:` block. This immediately releases the slot back to the concurrency pool, allowing other files to download while the rate-limited task awaits its timeout.
 - **Fortified SQLite Volatility (`sync_manager.py`)**: Injected `timeout=30.0` into the `sqlite3.connect` call within `_save_single_file_to_db` to gracefully handle extreme parallel insert flooding at the end of high-concurrency download batches, eliminating fatal `database is locked` crashes.

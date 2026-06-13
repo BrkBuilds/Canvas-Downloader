@@ -305,7 +305,7 @@ class PresetManager:
         for key in self.SETTINGS_KEYS:
             if key == 'download_mode':
                 # Coerce unknown/legacy values (e.g. 'files' from an old
-                # preset file) to 'modules' — only the two UI-reachable
+                # preset file) to 'modules' - only the two UI-reachable
                 # modes are supported by the download engine's hybrid logic.
                 _mode = settings.get(key, 'modules')
                 session_state[key] = _mode if _mode in ('modules', 'flat') else 'modules'
