@@ -724,11 +724,13 @@ def show_analysis_review(on_confirm_sync):
                 border: none !important;
                 border-radius: 8px !important;
                 color: #ffffff !important;
-                height: 33px !important;
+                height: auto !important;
                 min-height: 33px !important;
+                padding-top: 6px !important;
+                padding-bottom: 6px !important;
                 padding-left: 12px !important;
                 padding-right: 14px !important;
-                white-space: nowrap !important;
+                white-space: normal !important;
                 width: 100% !important;
                 transition: background-color 0.15s ease !important;
             }}
@@ -1374,6 +1376,13 @@ def show_analysis_review(on_confirm_sync):
             display_name = friendly_course_name(pair['course_name'])
             folder_display = short_path(pair['local_folder'])
             
+            has_new = bool(result.new_files)
+            has_updated_clean = bool(result.updated_clean_files)
+            has_updated_modified = bool(result.updated_modified_files)
+            has_locally_deleted = bool(result.locally_deleted_files)
+            has_ignored = hasattr(result, 'ignored_files') and bool(result.ignored_files)
+            is_fully_up_to_date = not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted]) and not has_ignored
+
             # Build status pill - pending takes priority over up-to-date
             # Strictly use uptodate_files only - do NOT add untracked_shortcuts
             # as those are already counted in new_files or other actionable categories
@@ -1400,24 +1409,58 @@ def show_analysis_review(on_confirm_sync):
 
             pending_pill = ""
             uptodate_pill = ""
-            if pending_count:
-                pending_word = "file" if pending_count == 1 else "files"
-                pending_pill = f'<span style="{_tag_style}">{_sync_icon_html}{pending_count} {pending_word} pending sync</span>'
-            if uptodate_count:
+            right_side_html = ""
+
+            if is_fully_up_to_date:
+                # Custom large success label instead of the small pills
                 uptodate_word = "file" if uptodate_count == 1 else "files"
-                uptodate_pill = f'<span style="{_tag_style}">{_checkmark_svg}{uptodate_count} {uptodate_word} up to date</span>'
+                _text_color = "rgba(209, 250, 229, 0.85)"  # Lighter and slightly saturated (pale green)
+                
+                _check_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{_text_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
+                _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:16px; height:16px; flex-shrink:0; vertical-align:middle; margin-top:-1px;" />'
+                
+                _file_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="{_text_color}" stroke="none"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>'
+                _file_b64 = _b64.b64encode(_file_svg_raw.encode()).decode()
+                _file_svg_html = f'<img src="data:image/svg+xml;base64,{_file_b64}" style="width:13px; height:13px; vertical-align:middle; margin-right:5px; margin-top:-1px;" />'
+
+                right_side_html = (
+                    '<div style="display: flex; align-items: center; justify-content: flex-end; gap: 16px;">'
+                    f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500; gap: 6px;">'
+                    f'{_checkmark_svg}<span>100% Up-to-date with Canvas</span></div>'
+                    f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500;">{_file_svg_html}{uptodate_count} {uptodate_word} checked</div>'
+                    '</div>'
+                )
+                
+                # Green gradient (lighter, slightly more saturated)
+                bg_gradient = "linear-gradient(180deg, #2a3d31 0%, #344c3d 100%)"
+                border_bottom = "1px solid rgba(74, 222, 128, 0.15)"
+                margin_bottom = "-16px"
+                border_radius = "8px"
+            else:
+                if pending_count:
+                    pending_word = "file" if pending_count == 1 else "files"
+                    pending_pill = f'<span style="{_tag_style}">{_sync_icon_html}{pending_count} {pending_word} pending sync</span>'
+                if uptodate_count:
+                    uptodate_word = "file" if uptodate_count == 1 else "files"
+                    uptodate_pill = f'<span style="{_tag_style}">{_checkmark_svg}{uptodate_count} {uptodate_word} up to date</span>'
+                
+                right_side_html = f'<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">{pending_pill}{uptodate_pill}</div>'
+                
+                bg_gradient = "linear-gradient(180deg, #252830 0%, #32363f 100%)"
+                border_bottom = "1px solid rgba(255,255,255,0.06)"
+                margin_bottom = "16px"
+                border_radius = "8px 8px 0 0"
 
             # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
-            # Light-to-dark grey gradient (dark at top, lighter grey at bottom near expanders).
-            # Tags stacked vertically on the far right with no background.
             header_html = f"""
             <div style="
-                margin: -16px -16px 16px -16px;
+                margin: -16px -16px {margin_bottom} -16px;
                 padding: 16px 16px;
-                background: linear-gradient(180deg, #252830 0%, #32363f 100%);
+                background: {bg_gradient};
                 border: 1px solid rgba(255,255,255,0.1);
-                border-bottom: 1px solid rgba(255,255,255,0.06);
-                border-radius: 8px 8px 0 0;
+                border-bottom: {border_bottom};
+                border-radius: {border_radius};
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -1433,18 +1476,11 @@ def show_analysis_review(on_confirm_sync):
                         <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
                     </div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">{pending_pill}{uptodate_pill}</div>
+                {right_side_html}
             </div>"""
             st.markdown(header_html, unsafe_allow_html=True)
 
-            has_new = bool(result.new_files)
-            has_updated_clean = bool(result.updated_clean_files)
-            has_updated_modified = bool(result.updated_modified_files)
-            has_locally_deleted = bool(result.locally_deleted_files)
-            has_ignored = hasattr(result, 'ignored_files') and bool(result.ignored_files)
-
-            if not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted]) and not has_ignored:
-                st.success('All files up-to-date')
+            if is_fully_up_to_date:
                 continue
 
 
@@ -1675,7 +1711,7 @@ def show_analysis_review(on_confirm_sync):
     }
     </style>""")
 
-    col_back, col_sync, _ = st.columns([1, 1.2, 5])
+    col_back, _, col_sync = st.columns([1, 5, 1.5])
     with col_sync:
         with st.container(key="btn_sync_selected"):
             sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'

@@ -164,14 +164,29 @@ def hub_cancel_edit():
     st.session_state.pop('hub_edit_temp_course_id', None)
     st.session_state.pop('hub_edit_temp_course_name', None)
     st.session_state.pop('hub_is_adding_new_pair', None)
+    st.session_state.pop('hub_auto_detected_course', None)
 
 
 def hub_pick_folder_cb():
-    """Callback to open native folder picker and store result directly in edit temp state."""
+    """Callback to open native folder picker and store result directly in edit temp state.
+
+    Also auto-detects the bound course from the .canvas_sync.db manifest
+    in the selected folder, pre-populating the course fields.
+    """
     from ui_helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_edit_temp_folder') or None)
     if folder_path:
         st.session_state['hub_edit_temp_folder'] = folder_path
+        # --- Auto-detect course from manifest ---
+        try:
+            bound_id = SyncManager.peek_bound_course_id(folder_path)
+            if bound_id is not None:
+                bound_name = SyncManager.peek_bound_course_name(folder_path)
+                st.session_state['hub_edit_temp_course_id'] = bound_id
+                st.session_state['hub_edit_temp_course_name'] = bound_name or ''
+                st.session_state['hub_auto_detected_course'] = True
+        except Exception:
+            pass  # Silently ignore - manifest might be locked or corrupt.
 
 
 def save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
@@ -222,6 +237,8 @@ def confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
     for k in list(st.session_state.keys()):
         if k.startswith('hub_cs_'):
             st.session_state.pop(k, None)
+    # User manually chose a course - clear auto-detect flag
+    st.session_state.pop('hub_auto_detected_course', None)
     # Navigate back to Layer 2
     st.session_state['hub_layer'] = 'layer_2'
 
@@ -499,6 +516,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         if not filtered_groups:
             st.info(f"No {'pairs' if _vm == 'Pairs' else 'groups'} saved yet.")
 
+        # Hoist missing folder CSS
+        pass
+
         # NEW: Scrollable fixed-height container for the groups
         with st.container(height=560, border=False):
             for g_idx, group in enumerate(filtered_groups):
@@ -509,13 +529,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with st.container(border=True, key=f"hub_pair_item_{g_idx}"):
                         pair = group.get('pairs', [{}])[0] if group.get('pairs') else {}
                         display_name = friendly_course_name(pair.get('course_name', group['group_name']))
+                        folder_missing = not Path(pair.get('local_folder', '')).exists() if pair.get('local_folder') else True
 
                         # Title: Base64 Pairs icon with same font size/weight as group expander summaries
+                        top_right_html = "Pair"
+                        title_html = f"<img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}"
+
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
                                 <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;'>
-                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}</div>
-                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Pair</div>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>{title_html}</div>
+                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>{top_right_html}</div>
                                 </div>
                                 <div class='pair-course-subtitle'>Course: {esc(display_name)}</div>
                             </div>
@@ -528,14 +552,25 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             and sp.get('local_folder') == pair.get('local_folder')
                             for sp in _current_sync
                         )
-                        _add_help_sp = "This pair is already on the sync list." if _pair_on_list else None
+                        _disable_add = False
+                        _add_help_sp = None
+                        if folder_missing:
+                            _disable_add = True
+                            _add_help_sp = "Folder missing or moved. Please edit the pair to link a new folder."
+                        elif _pair_on_list:
+                            _disable_add = True
+                            _add_help_sp = "This pair is already on the sync list."
+
+                        if folder_missing:
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice("Folder missing or moved. Please edit the pair to link a new folder.", margin="-5px 0px 15px 0px")
 
                         # Pair action buttons (same as groups)
                         c1, c2, c3 = st.columns([1, 1, 1], gap="small")
                         with c1:
                             if st.button("Add to Sync List", key=f"hub_add_{g_idx}",
                                          use_container_width=True,
-                                         disabled=_pair_on_list, help=_add_help_sp):
+                                         disabled=_disable_add, help=_add_help_sp):
                                 # --- Single Pair Append Logic (Step 5) ---
                                 incoming_pair = pair
                                 current_list = _current_sync
@@ -577,13 +612,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with st.container(border=True, key=f"hub_group_item_{g_idx}"):
                         pair_count = len(group.get('pairs', []))
                         course_word = 'course' if pair_count == 1 else 'courses'
+                        has_missing_folders = any(not Path(p.get('local_folder', '')).exists() for p in group.get('pairs', []))
+                        
+                        top_right_html = "Group"
+                        title_html = f"<img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}"
                         
                         # 1. Custom Title HTML (Fixed top margin to align centrally, Base64 Group icon)
                         st.markdown(f"""
                             <div style='margin-top: 0px; margin-bottom: 10px;'>
                                 <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'><img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}</div>
-                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>Group</div>
+                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>{title_html}</div>
+                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>{top_right_html}</div>
                                 </div>
                             </div>
                         """, unsafe_allow_html=True)
@@ -610,14 +649,25 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             (gp.get('course_id'), gp.get('local_folder')) in _current_sigs
                             for gp in group.get('pairs', [])
                         ) if group.get('pairs') else False
-                        _add_help_g = "All pairs in this group are already on the sync list." if _group_on_list else None
+                        _disable_add = False
+                        _add_help_g = None
+                        if has_missing_folders:
+                            _disable_add = True
+                            _add_help_g = "One or more folders are missing or moved. Please edit the group to fix the errors."
+                        elif _group_on_list:
+                            _disable_add = True
+                            _add_help_g = "All pairs in this group are already on the sync list."
+
+                        if has_missing_folders:
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice("One or more folders are missing or moved. Please edit the group to fix the errors.", margin="-5px 0px 15px 0px")
 
                         # Spacer removed to make buttons compact against the expander
                         c1, c2, c3 = st.columns([1, 1, 1], gap="small")
                         with c1:
                             if st.button("Add to Sync List", key=f"hub_add_{g_idx}",
                                          use_container_width=True,
-                                         disabled=_group_on_list, help=_add_help_g):
+                                         disabled=_disable_add, help=_add_help_g):
                                 # --- Phase 3: Pre-Flight Engine ---
                                 incoming = group.get('pairs', [])
                                 existing_sigs = {
@@ -824,6 +874,72 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
                                           on_click=hub_pick_folder_cb)
 
+                        # --- Auto-detection info notice ---
+                        if st.session_state.get('hub_auto_detected_course') and temp_course_id:
+                            from ui.amber_notice import render_info_notice
+                            render_info_notice(
+                                f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(course_disp)}</span>",
+                                detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
+                                margin="4px 0 4px 0",
+                                allow_html=True,
+                                tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
+                            )
+
+                        # --- Warnings ---
+                        if temp_course_name and temp_folder:
+                            folder_lower = Path(temp_folder).name.lower()
+                            course_lower = temp_course_name.lower()
+                            course_words = [w for w in course_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
+                            folder_words = [w for w in folder_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
+                            has_match = (
+                                any(cw in folder_lower for cw in course_words)
+                                or any(fw in course_lower for fw in folder_words)
+                            )
+                            is_same_as_original = (pair.get('course_id') == temp_course_id and pair.get('local_folder') == temp_folder)
+
+                            if not has_match and not is_same_as_original:
+                                from ui.amber_notice import render_amber_notice
+                                render_amber_notice(
+                                    "The folder name doesn't seem to match the selected course.",
+                                    detail="Are you sure this is the correct folder for this course?",
+                                )
+
+                            # Duplicate pair detection
+                            candidates = [p for i, p in enumerate(pairs) if i != p_idx]
+                            if any(p.get('local_folder') == temp_folder and p.get('course_id') == temp_course_id for p in candidates):
+                                st.warning('⚠️ This folder is already paired with this course in this group.')
+
+                            # Manifest binding notice
+                            _bound_id = SyncManager.peek_bound_course_id(temp_folder)
+                            if _bound_id is not None and _bound_id != temp_course_id:
+                                _bound_name = friendly_course_name(
+                                    SyncManager.peek_bound_course_name(temp_folder) or f"course #{_bound_id}"
+                                )
+                                _new_name = friendly_course_name(temp_course_name or f"course #{temp_course_id}")
+                                st.html(f"""
+                                <div style="
+                                    background: rgba(234, 179, 8, 0.12);
+                                    border: 1px solid rgba(234, 179, 8, 0.55);
+                                    border-radius: 6px;
+                                    padding: 10px 14px;
+                                    margin: 4px 0 20px 0;
+                                    font-size: 0.9rem;
+                                    line-height: 1.5;
+                                ">
+                                    <div style="color:#fbbf24; font-weight:700; margin-bottom:3px;">
+                                        🔗 This folder is already linked to a different course
+                                    </div>
+                                    <div style="color:#fde68a;">
+                                        <b>Currently linked to:</b> <span style="color:white;">{esc(_bound_name)}</span><br>
+                                        <b>You've selected:</b> <span style="color:white;">{esc(_new_name)}</span>
+                                    </div>
+                                    <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
+                                        Clicking <b>Save Changes</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
+                                        If you meant to sync to a different course, change the course with the <b>Change Course</b> button above.
+                                    </div>
+                                </div>
+                                """)
+
                         # --- Save / Cancel ---
                         col_cancel, col_save, _ = st.columns([1, 1, 3])
                         with col_cancel:
@@ -855,11 +971,19 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             </div>
                         """, unsafe_allow_html=True)
 
+                        if not folder_exists:
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice(
+                                "Folder missing or moved",
+                                detail="This folder could not be found. Please click 'Edit Pair' to link a new folder.",
+                                margin="0 0 10px 0"
+                            )
+
                         if is_sp:
                             # Single pair: 2 columns (no Remove button)
                             c1, c2 = st.columns([0.5, 0.5])
                             with c1:
-                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
+                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
                                     open_folder(pair['local_folder'])
                             with c2:
                                 st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
@@ -867,7 +991,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         else:
                             c1, c2, c3 = st.columns(3)
                             with c1:
-                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, use_container_width=True):
+                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
                                     open_folder(pair['local_folder'])
                             with c2:
                                 st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
@@ -883,7 +1007,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             # === INLINE ADD NEW PAIR (Hidden for single pairs) ===
             if not is_sp and is_adding:
                 with st.container(border=True, key="hub_compact_add_form"):
-                    st.markdown("<h3 style='margin-top: -25px; margin-bottom: 10px !important;'>✨ Add a New Course/Folder Pair</h3>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='margin-top: -25px; margin-bottom: 10px !important;'>Add a New Course/Folder Pair</h3>", unsafe_allow_html=True)
 
                     # --- Folder row ---
                     add_folder = st.session_state.get('hub_edit_temp_folder', '')
@@ -918,9 +1042,74 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 unsafe_allow_html=True,
                             )
                         with col_ac_btn:
-                            st.button("Select Course", key="btn_hub_compact_change_course_add",
+                            _course_btn_label = "Change Course" if add_course_id else "Select Course"
+                            st.button(_course_btn_label, key="btn_hub_compact_change_course_add",
                                       on_click=change_hub_layer,
                                       kwargs={'target_layer': 'layer_course_selector'})
+
+                    # --- Auto-detection info notice ---
+                    if st.session_state.get('hub_auto_detected_course') and add_course_id:
+                        from ui.amber_notice import render_info_notice
+                        render_info_notice(
+                            f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(add_course_disp)}</span>",
+                            detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
+                            margin="4px 0 4px 0",
+                            allow_html=True,
+                            tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
+                        )
+
+                    # --- Warnings ---
+                    if add_course_name and add_folder:
+                        folder_lower = Path(add_folder).name.lower()
+                        course_lower = add_course_name.lower()
+                        course_words = [w for w in course_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
+                        folder_words = [w for w in folder_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
+                        has_match = (
+                            any(cw in folder_lower for cw in course_words)
+                            or any(fw in course_lower for fw in folder_words)
+                        )
+
+                        if not has_match:
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice(
+                                "The folder name doesn't seem to match the selected course.",
+                                detail="Are you sure this is the correct folder for this course?",
+                            )
+
+                        # Duplicate pair detection
+                        if any(p.get('local_folder') == add_folder and p.get('course_id') == add_course_id for p in pairs):
+                            st.warning('⚠️ This folder is already paired with this course in this group.')
+
+                        # Manifest binding notice
+                        _bound_id = SyncManager.peek_bound_course_id(add_folder)
+                        if _bound_id is not None and _bound_id != add_course_id:
+                            _bound_name = friendly_course_name(
+                                SyncManager.peek_bound_course_name(add_folder) or f"course #{_bound_id}"
+                            )
+                            _new_name = friendly_course_name(add_course_name or f"course #{add_course_id}")
+                            st.html(f"""
+                            <div style="
+                                background: rgba(234, 179, 8, 0.12);
+                                border: 1px solid rgba(234, 179, 8, 0.55);
+                                border-radius: 6px;
+                                padding: 10px 14px;
+                                margin: 4px 0 20px 0;
+                                font-size: 0.9rem;
+                                line-height: 1.5;
+                            ">
+                                <div style="color:#fbbf24; font-weight:700; margin-bottom:3px;">
+                                    🔗 This folder is already linked to a different course
+                                </div>
+                                <div style="color:#fde68a;">
+                                    <b>Currently linked to:</b> <span style="color:white;">{esc(_bound_name)}</span><br>
+                                    <b>You've selected:</b> <span style="color:white;">{esc(_new_name)}</span>
+                                </div>
+                                <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
+                                    Clicking <b>Add to Group</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
+                                    If you meant to sync to a different course, change the course with the <b>Select Course</b> button above.
+                                </div>
+                            </div>
+                            """)
 
                     # --- Add / Cancel ---
                     can_add = bool(add_folder) and bool(add_course_id)
@@ -1042,7 +1231,10 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         filtered_courses = render_cbs_filters(visible_courses, "hub_cs")
 
         # --- Initialize single-select state ---
-        if 'hub_cs_selected_id' not in st.session_state or st.session_state.get('hub_cs_selected_id') is None:
+        # NOTE: Only check key *existence*, not value.  When the user deselects
+        # a course inside the selector, _on_toggle sets the value to None;
+        # re-initialising on None would snap it back, making deselection impossible.
+        if 'hub_cs_selected_id' not in st.session_state:
             st.session_state['hub_cs_selected_id'] = current_selected_id
 
         st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
@@ -1181,7 +1373,8 @@ def render_hub_config(pair: dict):
     db_path = Path(local_folder) / '.canvas_sync.db'
 
     if not db_path.exists():
-        st.warning("⚠️ Not synced yet / No configuration found.")
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice("Not synced yet / No configuration found.", margin="0")
         return
 
     try:
@@ -1191,12 +1384,14 @@ def render_hub_config(pair: dict):
         raw_secondary = sm._load_metadata('secondary_content_contract')
         
         if not raw_contract:
-            st.warning("⚠️ No configuration was found. Run a sync to restore it.")
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice("No configuration was found. Run a sync to restore it.", margin="0")
             return
         contract = _json.loads(raw_contract)
         secondary = _json.loads(raw_secondary) if raw_secondary else {}
     except Exception:
-        st.warning("⚠️ Could not read configuration.")
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice("Could not read configuration.", margin="0")
         return
 
     from ui_shared import render_config_summary_badges
@@ -1233,6 +1428,7 @@ def hub_cleanup():
               'hub_edit_temp_course_id', 'hub_edit_temp_course_name',
               'hub_is_adding_new_pair',
               'hub_edit_group_name_active',  # Prevent stale edit-name form on re-entry
+              'hub_auto_detected_course',    # Clear auto-detect flag on cleanup
               'hub_rescue_group_id', 'hub_rescue_pairs', 'hub_rescue_missing',
               'hub_rescue_skipped', 'rescue_paths']:
         st.session_state.pop(k, None)

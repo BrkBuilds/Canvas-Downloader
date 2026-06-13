@@ -205,6 +205,7 @@ def show_sync_complete():
                 f"Quick Sync skipped {joined_parts}.",
                 icon="⚠️",
                 detail="To download them, run a normal 'Analyze, Review & Sync' and select them manually.",
+                margin="12px 0 2px 0",
             )
 
             # Cleanup
@@ -226,6 +227,7 @@ def show_sync_complete():
                     "If you had other unsaved Word, Excel, or PowerPoint files open, "
                     "they may have been closed without saving."
                 ),
+                margin="12px 0 2px 0",
             )
 
         # Surface Structural Discovery Errors gracefully
@@ -248,6 +250,7 @@ def show_sync_complete():
             render_amber_notice(
                 "Some files were ignored and not synced.",
                 detail="You can manage ignored files from the Sync Hub.",
+                margin="12px 0 2px 0",
             )
 
         # Build error log paths for the error section
@@ -315,6 +318,7 @@ def show_sync_complete():
             render_amber_notice(
                 "Retry didn't work - these files may be temporarily unavailable.",
                 detail="Check your internet connection and try again later, or download them directly from Canvas.",
+                margin="12px 0 2px 0",
             )
 
     # Folders updated - card style with filetype summary
