@@ -118,8 +118,22 @@ def run_sync():
         import sys as _sys_reset
         if _sys_reset.platform == 'darwin':
             try:
-                from engine.applescript_bridge import reset_office_priming
+                from engine.applescript_bridge import (
+                    reset_office_priming, first_run_permission_setup,
+                )
                 reset_office_priming()
+                # One-time per machine: fire ALL outstanding Office permission
+                # prompts NOW, while the user is at the screen (they just started
+                # the sync) — instead of letting each app's prompt ambush a later
+                # run mid-conversion. Unscoped toggles on purpose; the in-run
+                # prime stays file-scoped. Idempotent across reruns (module flag
+                # + persisted record inside first_run_permission_setup).
+                if first_run_permission_setup({
+                    'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
+                    'convert_word': st.session_state.get('persistent_convert_word', False),
+                    'convert_excel': st.session_state.get('persistent_convert_excel', False),
+                }):
+                    st.session_state['_tcc_batch_active'] = True
             except Exception:
                 pass
 
@@ -127,6 +141,17 @@ def run_sync():
     render_sync_wizard(st, 3)
 
     st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
+
+    # First-run macOS permission batch is in flight: tell the user the upcoming
+    # system dialogs are expected and one-time (mirrors the download flow).
+    if st.session_state.get('_tcc_batch_active'):
+        st.info(
+            "**First-time macOS setup:** macOS will show a few one-time permission "
+            "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
+            "and folder access). Click **Allow / OK** on each — Canvas Downloader uses them "
+            "only to convert Office files to PDF on your own Mac.",
+            icon="🔐",
+        )
 
     sync_selections = st.session_state.get('sync_selections') or []
     if not isinstance(sync_selections, list):

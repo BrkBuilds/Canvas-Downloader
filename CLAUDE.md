@@ -160,7 +160,7 @@ To build an interactive expand/collapse inline with HTML content (no JS, no Stre
 ## Platform Notes
 - **Windows**: `win32com.client` COM automation for Office → PDF conversions. `ctypes` to hide `.canvas_sync.db`.
 - **macOS**: `osascript` (AppleScript) via `engine/applescript_bridge.py` for Office conversions. Requires `com.apple.security.automation.apple-events` entitlement in `.spec`.
-- **Keyring**: Lazy-loaded on Windows only - prevents macOS import/permission cascades.
+- **Keyring**: Lazy-imported inside functions on all platforms (`ui/auth.py`). macOS = Keychain with a 90s watchdog: a CLEAN install never prompts (creating/reading your own item is silent); only a REBUILD with a new ad-hoc signature reading the previous build's item triggers the one-time "enter login keychain password" prompt. Windows = Credential Manager (5s watchdog) + DPAPI-encrypted `.token_fallback` file; macOS deliberately has NO disk fallback.
 - **File I/O**: Always specify `encoding='utf-8'` explicitly - Windows defaults to CP1252, causing Mojibake in emoji-heavy UI files.
 
 ## Build

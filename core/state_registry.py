@@ -136,7 +136,7 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'persistent_dl_isolate_secondary',
     'log_content',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
-    '_office_primed', '_office_quit_fired',
+    '_office_primed', '_office_quit_fired', '_tcc_batch_active',
 }
 
 # Keys created transiently during sync execution
@@ -160,7 +160,7 @@ SYNC_TRANSIENT_KEYS = {
     # M-8: reset per-run warning sentinels so they re-arm on the next sync
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
-    '_office_primed', '_office_quit_fired',
+    '_office_primed', '_office_quit_fired', '_tcc_batch_active',
 }
 
 
