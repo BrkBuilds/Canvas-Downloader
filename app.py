@@ -37,7 +37,7 @@ st.set_page_config(page_title="Canvas Downloader", page_icon="assets/icon.png", 
 # Custom CSS (extracted to styles/)
 inject_css('global.css')
 
-# macOS: ask for notification permission once, early — so the first "Download
+# macOS: ask for notification permission once, early - so the first "Download
 # Complete" / "Sync Complete" banner isn't dropped while a fresh install's
 # permission is still pending. Idempotent per process; no-op off macOS.
 request_macos_notification_permission()
@@ -60,7 +60,7 @@ st.html(f"""
 # Preset & Dialog CSS (extracted to styles/)
 inject_css('preset_dialogs.css')
 
-# Google Material Symbols font — injected once here (M-24: was duplicated in every _mat() call).
+# Google Material Symbols font - injected once here (M-24: was duplicated in every _mat() call).
 inject_material_icons_font()
 
 # Loading overlay - hides the raw intermediate DOM during Streamlit page-navigation reruns.
@@ -238,7 +238,7 @@ components.html("""<script>
     var NAV_SEL=[
         'div[class*="st-key-page_nav_"]',         // Continue, Back, Yes Start Sync, Go to front page (all variants)
         'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
-        'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Local Folders
+        'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Course Folders
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
         'div[class*="st-key-login_submit_btn"]',  // login submission button
         'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
@@ -313,7 +313,7 @@ components.html("""<script>
     // page with a branded full-screen notice instead.
     // Lifetime note: this interval lives in THIS iframe's JS context. On every
     // rerun the iframe is recreated (old timer is GC'd with it, failure count
-    // resets), but once the server dies no further reruns can occur — so the
+    // resets), but once the server dies no further reruns can occur - so the
     // last iframe and its timer survive exactly as long as we need them.
     var hFails=0;
     function hDead(){
@@ -359,7 +359,7 @@ def _restore_nav_from_query_params() -> None:
     cannot be meaningfully restored and are capped to the nearest safe step.
     """
     if '_session_alive' in st.session_state:
-        return  # not a fresh session — don't override in-session navigation
+        return  # not a fresh session - don't override in-session navigation
     try:
         raw_mode = st.query_params.get('mode', '')
         raw_step = st.query_params.get('step', '')
@@ -420,7 +420,7 @@ _write_nav_to_query_params()
 
 # C-3: Guard against stale cancel events left by a prior run that bypassed
 # cleanup_download_state(). Safe to reset whenever no background download
-# thread is running — i.e. when not in any of the active download phases
+# thread is running - i.e. when not in any of the active download phases
 # (scanning, running, isolated_retry). Note: the earlier value `'downloading'`
 # was a typo that never matched the real download_status values and caused
 # this branch to fire on every rerun, defeating the guard.
@@ -565,7 +565,7 @@ with _main_content.container():
                 st.info(
                     "**First-time macOS setup:** macOS will show a few one-time permission "
                     "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
-                    "and folder access). Click **Allow / OK** on each — Canvas Downloader uses them "
+                    "and folder access). Click **Allow / OK** on each - Canvas Downloader uses them "
                     "only to convert Office files to PDF on your own Mac.",
                     icon="🔐",
                 )
@@ -722,7 +722,7 @@ with _main_content.container():
 
             # Re-arm the completion notification for THIS run. The sentinel is a
             # single flag shared with sync and is otherwise only reset by the
-            # cleanup handlers — so a prior download/sync that left it True (e.g.
+            # cleanup handlers - so a prior download/sync that left it True (e.g.
             # the user navigated away without going through cleanup) would
             # silently swallow this run's "Download Complete" notification.
             st.session_state['completion_beep_fired'] = False
@@ -739,7 +739,7 @@ with _main_content.container():
                     reset_office_priming()
                     # One-time per machine: fire ALL outstanding Office permission
                     # prompts NOW, while the user is at the screen (they just
-                    # clicked Start) — instead of letting each app's prompt ambush
+                    # clicked Start) - instead of letting each app's prompt ambush
                     # a later run mid-conversion. Uses the UNscoped toggles on
                     # purpose; the per-course prime stays file-scoped.
                     if first_run_permission_setup({
@@ -966,7 +966,7 @@ with _main_content.container():
                         # teardown) so a UI hiccup never kills a download.
                         # NOTE: Streamlit's RerunException/StopException inherit
                         # from BaseException and deliberately pass THROUGH this
-                        # handler — that propagation is what makes the Cancel
+                        # handler - that propagation is what makes the Cancel
                         # button abort the running course (the rerun then fires
                         # the on_click cancel callback and routes to the
                         # cancelled screen; the state machine resumes any
@@ -1085,7 +1085,7 @@ with _main_content.container():
                             on_click=cancel_download_callback,
                         )
                     # macOS: launch (hidden) ONLY the Office apps this course will
-                    # actually use — scoped to the file types present in the folder,
+                    # actually use - scoped to the file types present in the folder,
                     # so a course with just .pptx never opens Word or Excel. Cheap and
                     # idempotent per app across the multi-course run.
                     if sys.platform == 'darwin':
@@ -1353,7 +1353,7 @@ with _main_content.container():
                 except Exception as _e:
                     # Match the main update_ui handler: swallow rendering noise.
                     # RerunException/StopException are BaseException and pass
-                    # through — that is what makes Cancel work mid-retry.
+                    # through - that is what makes Cancel work mid-retry.
                     _ename = type(_e).__name__
                     if _ename != 'RuntimeError':
                         logger.debug(f"retry update_ui swallowed: {_ename}: {_e}")
@@ -1393,7 +1393,7 @@ with _main_content.container():
                 if not st.session_state.get('_sync_cancel_warning_shown', False):
                     from ui.amber_notice import render_amber_notice
                     render_amber_notice(
-                        "Retry cancelled — post-processing skipped.",
+                        "Retry cancelled - post-processing skipped.",
                         detail="Any files that downloaded successfully before cancellation are available in your folder.",
                     )
                     st.session_state['_sync_cancel_warning_shown'] = True
@@ -1432,7 +1432,7 @@ with _main_content.container():
                                 contract=contract,
                                 explicit_files=success_paths,
                             )
-                            # PP done — clear the flag so subsequent cancel
+                            # PP done - clear the flag so subsequent cancel
                             # messages don't misreport the phase (see same
                             # rationale in the normal download path).
                             st.session_state['is_post_processing'] = False
@@ -1564,7 +1564,7 @@ with _main_content.container():
                 st.session_state['completion_beep_fired'] = True
 
             # macOS: post-processing is finished and we're on the completion
-            # screen — tidy away the Office apps we launched for conversion
+            # screen - tidy away the Office apps we launched for conversion
             # NOW (the user expects them gone here, not only after clicking
             # "Go to front page"). Quits only apps with zero open documents, so
             # a user's own workbook/deck is never touched. Separate one-shot
@@ -1619,7 +1619,7 @@ with _main_content.container():
                 render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
                 # Office watchdog broad-kill warning (parity with the sync
-                # completion screen — previously only shown there even though
+                # completion screen - previously only shown there even though
                 # the same converters run in the download flow).
                 if st.session_state.pop('pp_force_kill_warning', False):
                     from ui.amber_notice import render_amber_notice
@@ -1717,7 +1717,7 @@ with _main_content.container():
             # macOS: the user expects Office gone the moment they land here, same
             # as on the completion screen. quit_idle_office_apps() first force-
             # closes any staged document a cancelled conversion left open in a
-            # hidden Office process (marker-matched — user docs untouchable),
+            # hidden Office process (marker-matched - user docs untouchable),
             # then quits the now-idle apps and purges our Recents entries.
             import sys as _sys_qx
             if _sys_qx.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):

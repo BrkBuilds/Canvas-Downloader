@@ -13,7 +13,7 @@ Recently, the application has evolved beyond simple downloading to include a **N
    - Pulls all modules, sub-modules, and files, directly replicating the Canvas structure locally.
    - Offers robust options for organized folder hierarchies or flattened directories ("Flat" mode).
 2. **Smart Synchronization Engine**:
-   - Matches local folders with Canvas courses and tracks them via a hidden SQLite manifest (`.canvas_sync.db`).
+   - Matches Course Folders with Canvas courses and tracks them via a hidden SQLite manifest (`.canvas_sync.db`).
    - Intelligently downloads only new or altered files, skipping unchanged content (utilizing `sync_manager.py`).
    - **Unified Default Sync Engine**: Manual Sync and Quick Sync now share a single, robust architecture that strictly adheres to the "Default Sync" contract saved in the course's SQLite manifest (`.canvas_sync.db`). This eliminates on-the-fly UI overrides in favor of a persistent, predictable configuration source of truth.
    - Safely renames local edits (e.g., `_NewVersion.pdf`) to avoid overwriting user notes.

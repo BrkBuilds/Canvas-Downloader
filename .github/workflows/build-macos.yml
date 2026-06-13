@@ -34,7 +34,7 @@ jobs:
           pip install pywebview
           # Modern macOS notifications (UNUserNotificationCenter). Installed LAST and
           # pinned to the FINAL resolved pyobjc-core version, because every
-          # pyobjc-framework-* package must share one version — and the pywebview
+          # pyobjc-framework-* package must share one version - and the pywebview
           # line above can bump pyobjc-core. Guarantees no version skew so the
           # UserNotifications binding imports cleanly at runtime (otherwise the app
           # silently falls back to the deprecated NSUserNotification path).
@@ -53,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ ! -d "dist/Canvas Downloader.app" ]; then
-            echo "::error::Canvas Downloader.app was not created — PyInstaller build failed."
+            echo "::error::Canvas Downloader.app was not created - PyInstaller build failed."
             exit 1
           fi
           echo "✅ Canvas Downloader.app found"

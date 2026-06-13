@@ -111,7 +111,7 @@ Modular design centered around Streamlit for UI and CanvasAPI for backend commun
     - *Problem*: In complex Streamlit UIs with multiple nested modals (like the Sync Hub), closing a modal without explicitly popping its session-state keys can lead to "Ghost States" where a previously entered value (like a group name) reappears unexpectedly.
     - *Implementation*: Implement a centralized `hub_cleanup()` (or equivalent) function that is invoked natively when a modal is closed or a process is cancelled. This function must explicitly `pop()` all relevant UI-bound keys from `st.session_state` to guarantee a clean slate for the next interaction.
 - **Tuple-Based Composite Identity**:
-    - *Pattern*: When deduplicating items that can exist in multiple contexts (e.g., a course synced to two different local folders), never rely on a single ID.
+    - *Pattern*: When deduplicating items that can exist in multiple contexts (e.g., a course synced to two different Course Folders), never rely on a single ID.
     - *Implementation*: Use composite tuples `(course_id, local_folder)` as the primary identity key for deduplication and persistence. This ensures that the system correctly distinguishes between valid overlaps and true duplicates, aligning the UI layer with the backend database constraints.
 - **Broken State Visual Affordance**:
     - *Pattern*: Use distinct CSS classes (e.g., `_missing_`) and high-contrast visual cues (red borders, tinted shadows) to immediately signal broken filesystem paths or missing resources to the user.

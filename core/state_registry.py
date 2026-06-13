@@ -50,7 +50,7 @@ DOWNLOAD_DEFAULTS = {
     'user_name': '',
     'course_mb_downloaded': {},
     'file_filter': 'all',
-    # Settings keys (missing from earlier versions — M-15)
+    # Settings keys (missing from earlier versions - M-15)
     'debug_mode': False,
     'error_log_enabled': False,
     'concurrent_downloads': 5,
@@ -96,7 +96,7 @@ DOWNLOAD_DEFAULTS = {
     'quick_download_mode': False,
     'quick_preset_id': 'quick_full',
     'quick_org_mode': 'modules',
-    # L-13: Sync history retention — number of past operations to keep.
+    # L-13: Sync history retention - number of past operations to keep.
     'sync_history_retention': 50,
 }
 
@@ -150,7 +150,7 @@ SYNC_TRANSIENT_KEYS = {
     'size_skipped_files', 'sync_has_ignored_files',
     # sync_failed recovery keys
     'sync_worker_error', 'qs_cancel_route', 'qs_skipped',
-    # Re-attachable sync worker (H-2 heartbeat pattern) — future/pool refs
+    # Re-attachable sync worker (H-2 heartbeat pattern) - future/pool refs
     # and the cached batch outcome must never leak into the next sync run.
     'sync_worker_future', 'sync_worker_pool', 'sync_worker_result',
     'pre_sync_started_at',
@@ -219,7 +219,7 @@ def cleanup_download_state() -> None:
     st.session_state['completion_beep_fired'] = False
 
     # macOS: tidy away any Office apps we launched for post-processing (only if
-    # they have no documents open — never disturbs the user's own work).
+    # they have no documents open - never disturbs the user's own work).
     try:
         from engine.applescript_bridge import quit_idle_office_apps
         quit_idle_office_apps()
@@ -231,7 +231,7 @@ def cleanup_download_state() -> None:
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
-    # Clear course selection — download is done, start fresh for next run.
+    # Clear course selection - download is done, start fresh for next run.
     # Course-selection checkboxes: clear both the logical ID list and the
     # per-course widget state keys (Streamlit re-binds widget keys on re-render).
     st.session_state['selected_course_ids'] = []
@@ -252,7 +252,7 @@ def cleanup_sync_state() -> None:
 
     # Nuclear reset: clear threading.Event + session_state sync cancel flags.
     # sync_cancel_requested is already removed by SYNC_TRANSIENT_KEYS pop above.
-    # cancel_requested / download_cancelled are download-specific — do not reset here.
+    # cancel_requested / download_cancelled are download-specific - do not reset here.
     from core.cancellation import reset_sync_cancel
     reset_sync_cancel()
     st.session_state['download_cancelled'] = False
@@ -260,7 +260,7 @@ def cleanup_sync_state() -> None:
     st.session_state['completion_beep_fired'] = False
 
     # macOS: tidy away any Office apps we launched for post-processing (only if
-    # they have no documents open — never disturbs the user's own work).
+    # they have no documents open - never disturbs the user's own work).
     try:
         from engine.applescript_bridge import quit_idle_office_apps
         quit_idle_office_apps()

@@ -46,7 +46,7 @@ Free, open source, and runs entirely on your machine.
 
 ### Sync Mode
 
-Keep any local folder **permanently in sync** with its Canvas course - one click to pull every new lecture, updated slide deck, and freshly posted file since your last run. The sync engine tracks seven distinct file states:
+Keep any Course Folder **permanently in sync** with its Canvas course - one click to pull every new lecture, updated slide deck, and freshly posted file since your last run. The sync engine tracks seven distinct file states:
 
 | State | Description | Default Action |
 |---|---|---|
@@ -122,7 +122,7 @@ No Python installation required. Grab the latest release for your platform:
 
 #### What macOS will ask you on first run (this is normal!)
 
-Because the app is unsigned (an Apple Developer certificate costs $99/year — [support the project](https://ko-fi.com/brkbuilds) to help us get one), macOS is extra careful and asks for each permission individually. **Every prompt appears only once.** Here is each one, in order, and what to click:
+Because the app is unsigned (an Apple Developer certificate costs $99/year - [support the project](https://ko-fi.com/brkbuilds) to help us get one), macOS is extra careful and asks for each permission individually. **Every prompt appears only once.** Here is each one, in order, and what to click:
 
 | Prompt | Why it appears | What to click |
 |---|---|---|
@@ -132,7 +132,7 @@ Because the app is unsigned (an Apple Developer certificate costs $99/year — [
 | *...wants access to files in your Downloads/Documents folder* | Saves your course files where you chose | **OK** / **Allow** |
 | *...wants access to control "Microsoft PowerPoint" (or Word / Excel)* | Converts slides and documents to PDF for you | **OK** |
 
-> ⚠️ Heads up: after **updating** to a new version of Canvas Downloader, macOS treats it as a new app and the Keychain prompt will appear once again. Click **Always Allow** — your saved login is intact.
+> ⚠️ Heads up: after **updating** to a new version of Canvas Downloader, macOS treats it as a new app and the Keychain prompt will appear once again. Click **Always Allow** - your saved login is intact.
 
 #### Uninstalling (macOS)
 
@@ -170,7 +170,7 @@ There are two paths depending on whether you've been here before:
 
 **First time - Analyze, Review & Sync:**
 1. Switch to **Sync Mode** from the sidebar
-2. Create a sync pair: pick a local folder and link it to a Canvas course
+2. Create a sync pair: pick a Course Folder and link it to a Canvas course
 3. Hit **Analyze** - the engine diffs your folder against Canvas and categorises every file (new, updated, modified, deleted, etc.)
 4. Review the diff per course, adjust per-file actions if needed, confirm, and execute
 

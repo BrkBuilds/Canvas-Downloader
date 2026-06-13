@@ -104,7 +104,7 @@ class WordToPDF:
            conversion can never leave documents stacking up open in Word.
 
         Word's ``display alerts`` is an ENUM (none/all/messages), not a boolean,
-        so ``set display alerts to false`` is wrapped in its own ``try`` — a
+        so ``set display alerts to false`` is wrapped in its own ``try`` - a
         coercion error there must never abort the conversion.
         """
         from engine.applescript_bridge import _as_posix, office_container_stage

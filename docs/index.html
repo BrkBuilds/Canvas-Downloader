@@ -226,6 +226,7 @@
       .btn-nav-ghost span {
         display: none;
       }
+
       .btn-nav-ghost {
         padding: 8px 10px;
       }
@@ -834,23 +835,30 @@
     }
 
     /* Hover states for interactive toggles */
-    .filter-btn:hover, .struct-btn:hover, .cc-btn:hover, .pp-btn:hover {
+    .filter-btn:hover,
+    .struct-btn:hover,
+    .cc-btn:hover,
+    .pp-btn:hover {
       border-color: rgba(255, 255, 255, 0.25);
       background: rgba(255, 255, 255, 0.04);
       transform: translateY(-1px);
     }
+
     .filter-btn.active:hover {
       border-color: var(--cyan);
       background: rgba(56, 189, 248, 0.12);
     }
+
     .struct-btn.active:hover {
       border-color: var(--cyan);
       background: rgba(56, 189, 248, 0.12);
     }
+
     .cc-btn.active:hover {
       border-color: var(--green);
       background: rgba(104, 212, 163, 0.12);
     }
+
     .pp-btn.active:hover {
       border-color: var(--orange);
       background: rgba(249, 115, 22, 0.12);
@@ -930,10 +938,12 @@
       .presets-row-3 {
         grid-template-columns: repeat(2, 1fr);
       }
+
       .presets-row-2 {
         flex-direction: row;
         flex-wrap: wrap;
       }
+
       .presets-row-2 .quick-preset-card {
         width: calc(50% - 8px);
       }
@@ -943,9 +953,11 @@
       .presets-row-3 {
         grid-template-columns: 1fr;
       }
+
       .presets-row-2 {
         flex-direction: column;
       }
+
       .presets-row-2 .quick-preset-card {
         width: 100%;
       }
@@ -957,7 +969,8 @@
       border: 1px solid rgba(255, 255, 255, 0.08) !important;
       background: var(--surf) !important;
       transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
-      padding-right: 44px; /* leave room for radio button */
+      padding-right: 44px;
+      /* leave room for radio button */
     }
 
     /* Hover effect */
@@ -985,7 +998,7 @@
     .quick-preset-card.active {
       border: 1px solid rgba(56, 189, 248, 0.5) !important;
       background: linear-gradient(160deg, rgba(56, 189, 248, 0.12) 0%, rgba(56, 189, 248, 0.04) 100%) !important;
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.08) !important;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
     }
 
     /* Active radio button indicator */
@@ -1002,6 +1015,7 @@
       transform: scale(1.1) !important;
       background-color: #ff0000 !important;
     }
+
     .video-local-fallback:hover div:first-child {
       background-color: rgba(0, 0, 0, 0.15) !important;
     }
@@ -1632,6 +1646,7 @@
       .token-card {
         padding: 24px;
       }
+
       .token-bottom-grid {
         grid-template-columns: 1fr;
       }
@@ -1983,18 +1998,21 @@
       padding: 12px 15px 14px;
       border-top: 1px solid rgba(139, 92, 246, 0.15);
     }
-  
+
     /* Hero Product Video and Spacing */
     .hero-visual {
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 32px; /* Give room for active glow so it doesn't clip */
+      padding: 32px;
+      /* Give room for active glow so it doesn't clip */
       overflow: visible;
     }
+
     .hero-gif-wrap {
-      width: calc(100% - 40px); /* Leave 20px on each side for the active glow */
+      width: calc(100% - 40px);
+      /* Leave 20px on each side for the active glow */
       margin: 20px auto;
       max-width: 600px;
       position: relative;
@@ -2007,6 +2025,7 @@
         gap: 50px !important;
         align-items: center !important;
       }
+
       .hero-text {
         max-width: 450px !important;
       }
@@ -2022,18 +2041,21 @@
       border-radius: var(--rad-l);
       padding: 24px;
       margin-top: 16px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
-    .dl-options-box > div:last-child {
+
+    .dl-options-box>div:last-child {
       border-left: 1px solid var(--border);
       padding-left: 28px;
     }
+
     @media(max-width: 768px) {
       .dl-options-box {
         grid-template-columns: 1fr;
         gap: 20px;
       }
-      .dl-options-box > div:last-child {
+
+      .dl-options-box>div:last-child {
         border-left: none;
         border-top: 1px solid var(--border);
         padding-left: 0;
@@ -2042,7 +2064,8 @@
     }
 
     /* Accordion styles (Improved flex-alignment) */
-    .faq-item summary, .sec-qa-card summary {
+    .faq-item summary,
+    .sec-qa-card summary {
       cursor: pointer;
       list-style: none;
       outline: none;
@@ -2052,44 +2075,60 @@
       user-select: none;
       transition: color 0.15s;
     }
+
     .sec-qa-card summary {
       font-size: 15px;
       font-weight: 700;
     }
+
     .faq-item summary {
       font-size: 14px;
       font-weight: 700;
     }
-    .faq-item summary::-webkit-details-marker, .sec-qa-card summary::-webkit-details-marker {
+
+    .faq-item summary::-webkit-details-marker,
+    .sec-qa-card summary::-webkit-details-marker {
       display: none;
     }
+
     .faq-item[open] summary {
       margin-bottom: 12px;
     }
+
     .sec-qa-card summary svg {
-      margin-right: 14px; /* Generous gap on the right */
+      margin-right: 14px;
+      /* Generous gap on the right */
       color: var(--txt3);
       flex-shrink: 0;
     }
-    .faq-item summary::after, .sec-qa-card summary::after {
+
+    .faq-item summary::after,
+    .sec-qa-card summary::after {
       content: '+';
-      margin-left: auto; /* Pushes the toggle sign to the right */
+      margin-left: auto;
+      /* Pushes the toggle sign to the right */
       font-size: 18px;
       color: var(--txt3);
       font-weight: 400;
       transition: color 0.15s;
     }
-    .faq-item[open] summary::after, .sec-qa-card[open] summary::after {
-      content: '−'; /* High contrast minus sign */
+
+    .faq-item[open] summary::after,
+    .sec-qa-card[open] summary::after {
+      content: '−';
+      /* High contrast minus sign */
     }
-    .faq-item summary:hover, .sec-qa-card summary:hover {
-      color: var(--cyan);
-    }
-    .faq-item summary:hover::after, .sec-qa-card summary:hover::after {
+
+    .faq-item summary:hover,
+    .sec-qa-card summary:hover {
       color: var(--cyan);
     }
 
-</style>
+    .faq-item summary:hover::after,
+    .sec-qa-card summary:hover::after {
+      color: var(--cyan);
+    }
+  </style>
 </head>
 
 <body>
@@ -2116,8 +2155,12 @@
             </svg>
             Download
           </a>
-          <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener" class="btn-nav-ghost">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
+          <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+            class="btn-nav-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            </svg>
             <span>100% Open Source</span>
           </a>
         </div>
@@ -2125,38 +2168,48 @@
     </div>
   </nav>
 
-      <!-- HERO -->
+  <!-- HERO -->
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="container">
       <div class="hero-inner">
         <div class="hero-text reveal">
-          <h1 style="font-size: clamp(30px, 4.5vw, 50px); line-height: 1.15; margin-bottom: 24px; font-weight: 950; letter-spacing: -0.03em;">
+          <h1
+            style="font-size: clamp(30px, 4.5vw, 50px); line-height: 1.15; margin-bottom: 24px; font-weight: 950; letter-spacing: -0.03em;">
             Your Canvas Courses:<br />
-            <span style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Downloaded &amp; organized.</span><br />
-            <span style="font-size: 0.8em; font-weight: 800; display: block; margin-top: 6px; color: var(--txt); opacity: 0.9;">Always up to date.</span>
+            <span
+              style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Downloaded
+              &amp; organized.</span><br />
+            <span
+              style="font-size: 0.8em; font-weight: 800; display: block; margin-top: 6px; color: var(--txt); opacity: 0.9;">Always
+              up to date.</span>
             <span style="font-size: 0.8em; font-weight: 800; display: block; color: var(--cyan);">AI Optimized.</span>
           </h1>
           <p>Batch-download every file from all your courses. Smart sync keeps folders up to date throughout the
-            semester. <strong style="color:var(--txt);">Export directly to NotebookLM, ChatGPT, or Claude in one click.</strong></p>
+            semester. <strong style="color:var(--txt);">Export directly to NotebookLM, ChatGPT, or Claude in one
+              click.</strong></p>
           <div class="hero-btns" id="hero-download-area" style="margin-bottom: 10px;">
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-dl btn-win" id="hero-get-win" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);" style="display: none;">
+              class="btn-dl btn-win" id="hero-get-win"
+              onclick="setTimeout(() => window.location.href='thanks-win.html', 100);" style="display: none;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
               </svg>
               Download for Windows
             </a>
-            <a href="thanks-mac.html"
-              class="btn-dl btn-win" id="hero-get-mac" style="display: none;">
+            <a href="thanks-mac.html" class="btn-dl btn-win" id="hero-get-mac" style="display: none;">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                <path
+                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
               Download for Mac - Beta
             </a>
           </div>
           <div id="hero-os-toggle" style="margin-bottom: 34px; display: none;">
-            <a href="#" id="hero-toggle-os-btn" style="display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';" onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
+            <a href="#" id="hero-toggle-os-btn"
+              style="display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;"
+              onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
               Need the Mac version?
             </a>
           </div>
@@ -2165,8 +2218,11 @@
         </div>
         <div class="hero-visual reveal">
           <div class="hero-gif-wrap">
-            <div class="hero-icon-glow" style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;"></div>
-            <video autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
+            <div class="hero-icon-glow"
+              style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
+            </div>
+            <video autoplay loop muted playsinline
+              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
               <source src="assets/product_demo.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
@@ -2175,19 +2231,26 @@
       </div>
 
       <!-- Persona Section -->
-      <div class="reveal" style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
+      <div class="reveal"
+        style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
         <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-          <img src="assets/icon_website_brk.png" alt="Birk" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0;" />
+          <img src="assets/icon_website_brk.png" alt="Birk"
+            style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0;" />
           <div style="flex: 1; min-width: 240px;">
-            <h4 style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">Hi, I'm Birk.</h4>
-            <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business Administration and Information Systems at <strong>Copenhagen Business School</strong>. <br>I built Canvas Downloader because I was tired of downloading files and converting to AI-ready formats manually every day. It's 100% free, open-source, and runs entirely on your machine.</p>
+            <h4
+              style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">
+              Hi, I'm Birk.</h4>
+            <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business
+              Administration and Information Systems at <strong>Copenhagen Business School</strong>. <br>I built Canvas
+              Downloader because I was tired of downloading files and converting to AI-ready formats manually every day.
+              It's 100% free, open-source, and runs entirely on your machine.</p>
           </div>
         </div>
       </div>
 
     </div>
   </section>
-  
+
   <hr class="div" />
 
   <!-- DOWNLOAD MODE -->
@@ -2196,26 +2259,31 @@
       <div class="sh reveal">
         <div class="label">Download Mode</div>
         <h2>Select courses. Configure. Download.</h2>
-        <p style="margin-bottom: 16px;">Pick any combination of courses from your Canvas account, configure what to grab, and download in one batch.
+        <p style="margin-bottom: 16px;">Pick any combination of courses from your Canvas account, configure what to
+          grab, and download in one batch.
           Every setting below is in the app exactly as shown.</p>
 
       </div>
       <!-- Quick Download Expander (Open by default, flat/invisible theme) -->
       <details class="app-mode-expander reveal" open>
         <summary>
-          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
+          <div
+            style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
             <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
-              <img src="assets/icon_quick_download.png" alt="Quick Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
+              <img src="assets/icon_quick_download.png" alt="Quick Download"
+                style="width: 20px; height: 20px; flex-shrink: 0;" />
               Quick Download
             </div>
-            <div style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
+            <div
+              style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
               Quick & easy, no setup needed. Choose a preset and download with one click.
             </div>
           </div>
         </summary>
         <div class="expander-content">
           <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
-            Pick one of the 5 most common download configurations and start downloading in seconds. <br>For the people who want their course files, now.
+            Pick one of the 5 most common download configurations and start downloading in seconds. <br>For the people
+            who want their course files, now.
           </p>
           <div class="quick-presets-container">
             <div class="presets-row-3">
@@ -2257,7 +2325,8 @@
                 <img src="assets/icon_quick_dl_all_files.png" alt="Files Only" />
                 <div class="pc-info">
                   <div class="pc-name">Files Only</div>
-                  <div class="pc-desc">Only files uploaded by your teacher, no Canvas Content or other distractions.</div>
+                  <div class="pc-desc">Only files uploaded by your teacher, no Canvas Content or other distractions.
+                  </div>
                 </div>
               </div>
             </div>
@@ -2268,19 +2337,23 @@
       <!-- Custom Download Expander (Closed by default, flat/invisible theme) -->
       <details class="app-mode-expander reveal">
         <summary>
-          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
+          <div
+            style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
             <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
-              <img src="assets/icon_custom_download.png" alt="Custom Download" style="width: 20px; height: 20px; flex-shrink: 0;" />
+              <img src="assets/icon_custom_download.png" alt="Custom Download"
+                style="width: 20px; height: 20px; flex-shrink: 0;" />
               Custom Download
             </div>
-            <div style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
+            <div
+              style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
               Total personalization. Hand-pick what to download, and exactly how to optimize your files for AI.
             </div>
           </div>
         </summary>
         <div class="expander-content">
           <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
-            Configure every setting yourself. Pick any combination of files, Canvas content, and AI Optimizations. <br>For the people who want full control over their downloads.
+            Configure every setting yourself. Pick any combination of files, Canvas content, and AI Optimizations.
+            <br>For the people who want full control over their downloads.
           </p>
 
           <div class="dl-grid">
@@ -2348,7 +2421,8 @@
                 <span class="status-badge sb-on-green">ON - 5 selected</span>
               </div>
               <div class="app-card-body">
-                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Web-only content that isn't in your Files
+                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Web-only content that isn't in your
+                  Files
                   tab - saved as downloadable files.</p>
                 <div class="cc-grid">
                   <div class="cc-btn active">
@@ -2416,7 +2490,8 @@
                 <span class="status-badge sb-on-orange">ON - 4 selected</span>
               </div>
               <div class="app-card-body">
-                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Run after download. Converts files so you
+                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Run after download. Converts files so
+                  you
                   can drag them straight into ChatGPT, NotebookLM, Claude, etc.</p>
                 <div class="pp-grid">
                   <div class="pp-btn active">
@@ -2499,12 +2574,14 @@
           <!-- Presets Section -->
           <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 32px;">
             <h3 style="font-size: 20px; font-weight: 800; color: var(--txt); margin-bottom: 6px;">Download Presets</h3>
-            <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 24px;">Save any configuration as a preset and reload it in one click.</p>
-            
+            <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 24px;">Save any configuration as a preset
+              and reload it in one click.</p>
+
             <div class="presets-columns-container">
               <!-- Left Column: Built-in -->
               <div>
-                <h4 style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <h4
+                  style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 15px;">📦</span> Built-in Presets
                 </h4>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -2527,10 +2604,11 @@
                   We have built in these presets to get you started in the custom download immediately.
                 </p>
               </div>
-              
+
               <!-- Right Column: User Presets -->
               <div>
-                <h4 style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <h4
+                  style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 15px;">💾</span> Your Saved Presets
                 </h4>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -2550,13 +2628,14 @@
                   </div>
                 </div>
                 <p style="font-size: 12px; color: var(--txt3); margin-top: 12px; line-height: 1.45;">
-                  You can save your own custom configurations so you can always load them instantly and download the courses exactly how you want.
+                  You can save your own custom configurations so you can always load them instantly and download the
+                  courses exactly how you want.
                 </p>
               </div>
             </div>
           </div>
-      </div>
-    </details>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -2848,7 +2927,9 @@
       <div class="sh reveal" style="text-align:center;max-width:680px;margin:0 auto 48px;">
         <div class="label" style="margin:0 auto 16px;">Optimize your study life today</div>
         <h2>Download Canvas Downloader</h2>
-        <p>The ultimate study life optimization tool. Sync your course folders to always stay up to date with Canvas, download all your courses in minutes, and guarantee perfectly structured, AI-optimized files for your studies, 100% locally and safely.</p>
+        <p>The ultimate study life optimization tool. Sync your course folders to always stay up to date with Canvas,
+          download all your courses in minutes, and guarantee perfectly structured, AI-optimized files for your studies,
+          100% locally and safely.</p>
       </div>
 
       <div class="platform-grid reveal" id="main-download-area">
@@ -2865,7 +2946,8 @@
           </div>
           <div class="plat-body">
             <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-download btn-dl-primary" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);">
+              class="btn-download btn-dl-primary"
+              onclick="setTimeout(() => window.location.href='thanks-win.html', 100);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -2874,7 +2956,8 @@
               </svg>
               Download Windows Installer
             </a>
-            <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings - Apps.</p>
+            <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings -
+              Apps.</p>
           </div>
         </div>
 
@@ -2893,8 +2976,7 @@
             </div>
           </div>
           <div class="plat-body">
-            <a href="thanks-mac.html"
-              class="btn-download btn-dl-primary">
+            <a href="thanks-mac.html" class="btn-download btn-dl-primary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -2906,9 +2988,12 @@
             <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
           </div>
         </div>
-        
+
         <div id="os-toggle" style="margin-top: 8px;">
-          <a href="#" id="toggle-os-btn" style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';" onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</a>
+          <a href="#" id="toggle-os-btn"
+            style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
+            onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
+            onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</a>
         </div>
       </div>
 
@@ -2918,23 +3003,23 @@
           const winCard = document.getElementById('get-win');
           const macCard = document.getElementById('get-mac');
           const toggleBtn = document.getElementById('toggle-os-btn');
-          
+
           // Hero Download Area
           const heroWinBtn = document.getElementById('hero-get-win');
           const heroMacBtn = document.getElementById('hero-get-mac');
           const heroToggleBtn = document.getElementById('hero-toggle-os-btn');
           const heroToggleContainer = document.getElementById('hero-os-toggle');
-          
+
           let isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
           let showingMac = isMac;
-          
+
           function updateOSUI() {
             // Main Section
             if (showingMac) {
               winCard.style.display = 'none';
               macCard.style.display = 'block';
               toggleBtn.textContent = 'Need the Windows version? Click here.';
-              
+
               // Hero Section
               heroWinBtn.style.display = 'none';
               heroMacBtn.style.display = 'inline-flex';
@@ -2944,7 +3029,7 @@
               macCard.style.display = 'none';
               winCard.style.display = 'block';
               toggleBtn.textContent = 'Need the Mac version? Click here.';
-              
+
               // Hero Section
               heroMacBtn.style.display = 'none';
               heroWinBtn.style.display = 'inline-flex';
@@ -2952,15 +3037,15 @@
               heroToggleContainer.style.display = 'block';
             }
           }
-          
+
           updateOSUI();
-          
+
           toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             showingMac = !showingMac;
             updateOSUI();
           });
-          
+
           heroToggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             showingMac = !showingMac;
@@ -2973,65 +3058,114 @@
       <div class="token-card reveal">
         <div style="text-align: center; max-width: 600px;">
           <h3>Getting your Canvas API token</h3>
-          <p style="margin-bottom: 0;">Canvas Downloader talks directly to your university's Canvas server using your own API token. Here's exactly how to get it.</p>
-        </div>
-        
-        <div id="video-container" style="width: 100%; max-width: 860px; aspect-ratio: 16/9; position: relative;">
-          <iframe id="video-iframe" width="100%" height="100%" src="https://www.youtube.com/embed/SO98BjeTfJU?vq=hd1080&modestbranding=1&rel=0&showinfo=0" title="Getting your Canvas API token" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); display: block; background: #000;"></iframe>
+          <p style="margin-bottom: 0;">Canvas Downloader talks directly to your university's Canvas server using your
+            own API token. Here's exactly how to get it.</p>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; text-align: left;">
-          <div style="background: var(--grn-bg); border: 1px solid var(--grn-b); border-radius: var(--rad); padding: 24px; display: flex; align-items: flex-start; gap: 20px; color: var(--txt2);">
+        <div id="video-container" style="width: 100%; max-width: 860px; aspect-ratio: 16/9; position: relative;">
+          <iframe id="video-iframe" width="100%" height="100%"
+            src="https://www.youtube.com/embed/VadvcIvrrhU?vq=hd1080&modestbranding=1&rel=0&showinfo=0"
+            title="Getting your Canvas API token" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
+            style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); display: block; background: #000;"></iframe>
+        </div>
+
+        <div
+          style="display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; text-align: left;">
+          <div
+            style="background: var(--grn-bg); border: 1px solid var(--grn-b); border-radius: var(--rad); padding: 24px; display: flex; align-items: flex-start; gap: 20px; color: var(--txt2);">
             <div style="flex-shrink: 0; margin-top: 2px;">
-              <svg style="color: var(--green); filter: drop-shadow(0 0 12px rgba(104,212,163,0.3));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg style="color: var(--green); filter: drop-shadow(0 0 12px rgba(104,212,163,0.3));" width="32"
+                height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
             <div>
-              <strong style="color: var(--green); font-size: 16px; margin-bottom: 6px; display: block;">Your token is safe.</strong>
-              <span style="font-size: 14px; line-height: 1.6; display: block;">It's stored securely in your operating system and used exclusively to call your university's Canvas API. The app has no backend, no analytics, no telemetry, it runs 100% locally on your computer.</span>
+              <strong style="color: var(--green); font-size: 16px; margin-bottom: 6px; display: block;">Your token is
+                safe.</strong>
+              <span style="font-size: 14px; line-height: 1.6; display: block;">It's stored securely in your operating
+                system and used exclusively to call your university's Canvas API. The app has no backend, no analytics,
+                no telemetry, it runs 100% locally on your computer.</span>
             </div>
           </div>
-          
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--rad); padding: 24px;">
+
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--rad); padding: 24px;">
             <div class="token-bottom-grid" style="gap: 32px;">
-              
+
               <div>
-                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The application:</strong>
+                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The
+                  application:</strong>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Downloads your enrolled course files and content</span>
+                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Downloads your enrolled
+                      course files and content</span>
                   </div>
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Locates your assignments, syllabus, and grades</span>
+                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Locates your assignments,
+                      syllabus, and grades</span>
                   </div>
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Organizes everything into neat, offline folders</span>
+                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Organizes everything into
+                      neat, offline folders</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The application doesn't:</strong>
+                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The application
+                  doesn't:</strong>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Submit, upload, or modify anything</span>
+                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Submit, upload, or modify
+                      anything</span>
                   </div>
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access other students' data or submissions</span>
+                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access other students' data
+                      or submissions</span>
                   </div>
                   <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access instructor or admin features</span>
+                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access instructor or admin
+                      features</span>
                   </div>
                 </div>
               </div>
-              
+
             </div>
           </div>
         </div>
@@ -3045,9 +3179,10 @@
   <section id="macos-notes" style="padding:80px 0 70px; display:none;">
     <div class="container">
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
-        <div class="label org" style="justify-content:center;">macOS — Pre-release</div>
+        <div class="label org" style="justify-content:center;">macOS - Pre-release</div>
         <h2>Known limitations on Mac</h2>
-        <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you dive in — especially if you're on a university-managed Mac.</p>
+        <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you
+          dive in - especially if you're on a university-managed Mac.</p>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:860px; margin:0 auto;">
@@ -3055,47 +3190,73 @@
         <!-- Gatekeeper -->
         <div class="faq-item reveal" style="cursor:default;">
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">SETUP</span>
+            <span
+              style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">SETUP</span>
             macOS blocks the app on first launch
           </h4>
-          <p>Because Canvas Downloader is free and indie, it isn't signed with Apple's paid certificate. macOS will block it with an "unidentified developer" or "damaged" message the first time you open it. This is normal for free apps.<br><br>The <a href="thanks-mac.html" style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install guide</a> walks you through it in under a minute: approve it in <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>, or run one Terminal command if it says "damaged". After that, it opens normally forever.</p>
+          <p>Because Canvas Downloader is free and indie, it isn't signed with Apple's paid certificate. macOS will
+            block it with an "unidentified developer" or "damaged" message the first time you open it. This is normal
+            for free apps.<br><br>The <a href="thanks-mac.html"
+              style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install guide</a> walks
+            you through it in under a minute: approve it in <strong>System Settings → Privacy &amp; Security → Open
+              Anyway</strong>, or run one Terminal command if it says "damaged". After that, it opens normally forever.
+          </p>
         </div>
 
 
         <!-- University-managed Macs -->
         <div class="faq-item reveal" style="cursor:default;">
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">MANAGED MACS</span>
+            <span
+              style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">MANAGED
+              MACS</span>
             University-managed Macs may block installation
           </h4>
-          <p>Some universities lock down their Macs so that students cannot install apps, unlock Privacy &amp; Security, or run Terminal commands without admin rights. If your Mac is managed by IT and the install guide doesn't work, you have two options:<br><br>• Install Canvas Downloader on your personal Mac instead.<br>• Contact your IT helpdesk and ask them to allow the app, or to temporarily grant admin rights for the installation step.</p>
+          <p>Some universities lock down their Macs so that students cannot install apps, unlock Privacy &amp; Security,
+            or run Terminal commands without admin rights. If your Mac is managed by IT and the install guide doesn't
+            work, you have two options:<br><br>• Install Canvas Downloader on your personal Mac instead.<br>• Contact
+            your IT helpdesk and ask them to allow the app, or to temporarily grant admin rights for the installation
+            step.</p>
         </div>
 
         <!-- Token re-entry after updates -->
         <div class="faq-item reveal" style="cursor:default;">
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">UPDATES</span>
+            <span
+              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">UPDATES</span>
             You may need to re-enter your API token after an update
           </h4>
-          <p>macOS stores your Canvas API token in your Keychain. Because the app isn't signed with a paid Developer ID certificate, macOS may treat a new version as a different app and ask for your Keychain password again — or prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token hasn't changed — you can copy it from your Canvas account settings and paste it in again.</p>
+          <p>macOS stores your Canvas API token in your Keychain. Because the app isn't signed with a paid Developer ID
+            certificate, macOS may treat a new version as a different app and ask for your Keychain password again - or
+            prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token
+            hasn't changed - you can copy it from your Canvas account settings and paste it in again.</p>
         </div>
 
         <!-- Office conversions -->
         <div class="faq-item reveal" style="cursor:default;">
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">CONVERSIONS</span>
+            <span
+              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">CONVERSIONS</span>
             Office → PDF needs the Microsoft desktop app
           </h4>
-          <p>The PowerPoint → PDF, Word → PDF, and Excel → PDF conversions use AppleScript to drive the Microsoft Office desktop app. If you use Office via the web browser or don't have it installed, those conversions are silently skipped and your original files are kept unchanged.<br><br>Everything else — downloading, syncing, video-to-audio, archive unpacking, Canvas pages to text, code files, and web links — works without any extra software.</p>
+          <p>The PowerPoint → PDF, Word → PDF, and Excel → PDF conversions use AppleScript to drive the Microsoft Office
+            desktop app. If you use Office via the web browser or don't have it installed, those conversions are
+            silently skipped and your original files are kept unchanged.<br><br>Everything else - downloading, syncing,
+            video-to-audio, archive unpacking, Canvas pages to text, code files, and web links - works without any extra
+            software.</p>
         </div>
 
         <!-- Apple Silicon only -->
         <div class="faq-item reveal" style="cursor:default;">
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">HARDWARE</span>
+            <span
+              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">HARDWARE</span>
             Apple Silicon only (M1, M2, M3, M4)
           </h4>
-          <p>The macOS build is compiled for Apple Silicon only. It will not run on older Intel Macs (2020 and earlier).<br><br>Not sure which chip you have? Click the Apple menu → <strong>About This Mac</strong>. If it says "Apple M…" next to Chip, you're good. If it says "Intel Core", the Mac version won't work — use a Mac with Apple Silicon or a Windows PC instead.</p>
+          <p>The macOS build is compiled for Apple Silicon only. It will not run on older Intel Macs (2020 and
+            earlier).<br><br>Not sure which chip you have? Click the Apple menu → <strong>About This Mac</strong>. If it
+            says "Apple M…" next to Chip, you're good. If it says "Intel Core", the Mac version won't work - use a Mac
+            with Apple Silicon or a Windows PC instead.</p>
         </div>
 
       </div>
@@ -3222,7 +3383,7 @@
     });
 
     // Custom Download Interactivity (Toggling settings on/off)
-    
+
     // Card 1: What to Download (Radio Toggles)
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3288,7 +3449,7 @@
       const container = document.getElementById('video-container');
       if (container) {
         container.innerHTML = `
-          <a href="https://www.youtube.com/watch?v=SO98BjeTfJU" target="_blank" rel="noopener" class="video-local-fallback" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); background: url('https://img.youtube.com/vi/SO98BjeTfJU/maxresdefault.jpg') center/cover no-repeat; text-decoration: none; position: relative; overflow: hidden; cursor: pointer;">
+          <a href="https://www.youtube.com/watch?v=VadvcIvrrhU" target="_blank" rel="noopener" class="video-local-fallback" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); background: url('https://img.youtube.com/vi/VadvcIvrrhU/maxresdefault.jpg') center/cover no-repeat; text-decoration: none; position: relative; overflow: hidden; cursor: pointer;">
             <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3); transition: background-color 0.2s;"></div>
             <div class="play-btn-circle" style="position: relative; z-index: 2; width: 68px; height: 68px; background: rgba(229, 9, 20, 0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); transition: transform 0.2s, background-color 0.2s;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 3px;">

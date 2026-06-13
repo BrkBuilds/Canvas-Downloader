@@ -119,7 +119,7 @@ class ExcelToPDF:
         ``close active workbook saving no`` and re-raise, so a failed conversion
         can never leave workbooks stacking up open in Excel.
 
-        Prompt handling lives OUTSIDE this script on purpose — putting an
+        Prompt handling lives OUTSIDE this script on purpose - putting an
         unverified property like ``set ask to update ... links`` inline is a
         *compile* error (-2741) that ``try`` cannot catch and that takes the
         whole script (and the conversion) down with it. The external-link

@@ -43,19 +43,19 @@ KEYRING_SERVICE = "CanvasDownloader"
 # Watchdog timeout for keyring operations.
 # macOS: Keychain access can legitimately BLOCK on an interactive prompt
 # ("Canvas Downloader wants to use your confidential information... enter the
-# login keychain password" — shown on every rebuild of an ad-hoc-signed app
+# login keychain password" - shown on every rebuild of an ad-hoc-signed app
 # because the code signature changes). Users need time to read and answer it;
 # abandoning at 5s made the login render without the saved token even though
 # the user clicked Allow, which looked like saving had failed. 90s gives them
 # time while still defending against a genuinely hung backend (daemon thread,
 # never blocks app exit).
-# Windows: Credential Manager never prompts — keep the tight 5s watchdog.
+# Windows: Credential Manager never prompts - keep the tight 5s watchdog.
 _KEYRING_TIMEOUT = 90.0 if sys.platform == 'darwin' else 5.0
 
 def _run_keyring_op(fn, *args, timeout: float = _KEYRING_TIMEOUT):
     """Run a keyring operation on a DAEMON thread with a hard timeout.
 
-    The previous implementation used ``with ThreadPoolExecutor(...)`` — but
+    The previous implementation used ``with ThreadPoolExecutor(...)`` - but
     the context manager's ``__exit__`` calls ``shutdown(wait=True)``, which
     blocks on a truly-hung keyring backend and defeated the 5s watchdog
     (login could freeze forever). A daemon thread + queue is genuinely
@@ -71,7 +71,7 @@ def _run_keyring_op(fn, *args, timeout: float = _KEYRING_TIMEOUT):
     def _worker():
         try:
             _result.put(('ok', fn(*args)))
-        except Exception as e:  # noqa: BLE001 — backend errors are surfaced to caller
+        except Exception as e:  # noqa: BLE001 - backend errors are surfaced to caller
             _result.put(('err', e))
 
     _threading.Thread(target=_worker, daemon=True, name="keyring-op").start()
@@ -393,15 +393,17 @@ div.st-key-nav_btn_logout button:hover::after {{
     with st.container(border=False, key="sidebar_top"):
         # ── Header: icon + title + separator (single HTML block) ─────────
         st.html(f"""
-<div style="display: flex; align-items: center; gap: 12px; padding: 25px 1rem 25px 20px;">
-    <img src="data:image/png;base64,{icon_b64}"
-         style="width: 42px; height: 42px; border-radius: 8px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block;" />
-    <div style="display: flex; flex-direction: column; justify-content: center; height: 42px;">
-        <span style="font-weight: 700; font-size: 1.25rem; color: #f3f4f6; line-height: 1; margin: 0;">
-            Canvas Downloader
-        </span>
-    </div>
+<div style="padding: 25px 1rem 25px 20px;">
+    <a href="https://birkls.github.io/Canvas_LMS_batch_file_downloader/" target="_blank" title="Go to website" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
+        <img src="data:image/png;base64,{icon_b64}"
+             style="width: 42px; height: 42px; border-radius: 8px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block;" />
+        <div style="display: flex; flex-direction: column; justify-content: center; height: 42px;">
+            <span style="font-weight: 700; font-size: 1.25rem; color: #f3f4f6; line-height: 1; margin: 0;">
+                Canvas Downloader
+            </span>
+        </div>
+    </a>
 </div>
 <hr style="margin: 0 0 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);" />
 """)
@@ -1229,10 +1231,10 @@ def render_login_page(fetch_courses_fn):
                         token_to_save = st.session_state['api_token']
                         kr_success = _safe_keyring_set(KEYRING_SERVICE, keyring_user, token_to_save)
                         if kr_success:
-                            # Keyring succeeded — remove any leftover fallback file entry
+                            # Keyring succeeded - remove any leftover fallback file entry
                             _delete_fallback_token(keyring_user)
                         else:
-                            # Keyring unavailable — persist via DPAPI-encrypted fallback (Windows only)
+                            # Keyring unavailable - persist via DPAPI-encrypted fallback (Windows only)
                             _save_fallback_token(keyring_user, token_to_save)
                             logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.")
 
@@ -1332,7 +1334,7 @@ def render_login_page(fetch_courses_fn):
                 )
 
         st.markdown(
-            '<a href="https://youtu.be/SO98BjeTfJU" target="_blank" class="youtube-link">'
+            '<a href="https://youtu.be/VadvcIvrrhU" target="_blank" class="youtube-link">'
             '<svg class="youtube-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
             'Watch tutorial: How to get your Canvas API Access Token'
             '</a>',
@@ -1427,7 +1429,7 @@ def _render_authenticated_nav_top():
         section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
         </style>""")
 
-    # Download mode button — always navigates to download step 1.
+    # Download mode button - always navigates to download step 1.
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
         if mode != 'download' or step != 1:
             from core.state_registry import cleanup_download_state
@@ -1438,8 +1440,8 @@ def _render_authenticated_nav_top():
             st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
 
-    # Sync mode button — always navigates to sync step 1.
-    if st.button('Sync Local Folders', use_container_width=True, key="nav_btn_sync"):
+    # Sync mode button - always navigates to sync step 1.
+    if st.button('Sync Course Folders', use_container_width=True, key="nav_btn_sync"):
         if mode != 'sync' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
@@ -1653,7 +1655,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                         "Save debug log",
                         value=st.session_state.get('debug_mode', False),
                         key="temp_debug_mode",
-                        help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder — not needed for normal use."
+                        help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder - not needed for normal use."
                     )
 
             # ── SAVE FOLDER ───────────────────────────────────────────
@@ -1702,7 +1704,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
 
             st.html("""<div style='padding: 8px 0 0 0;'></div>""")
-            # L-13: Sync history retention — exposed so power users who sync
+            # L-13: Sync history retention - exposed so power users who sync
             # multiple times daily can extend beyond the default 50 entries.
             with st.container(border=True, key="stg_card_history"):
                 st.html("""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")

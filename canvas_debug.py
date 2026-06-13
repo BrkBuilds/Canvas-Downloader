@@ -85,14 +85,14 @@ def clear_debug_log(debug_file=None):
 # parts of the app report problems via the Python `logging` module
 # (converters, applescript_bridge, post_processing's _log_msg mirror...).
 # In a frozen build there is no console, so all of that evidence
-# evaporated — the debug log ended at "Post-Processing:" and 27
+# evaporated - the debug log ended at "Post-Processing:" and 27
 # conversion failures left no trace.
 #
 # Fix: a per-run "active debug file" registry plus a logging.Handler
 # that mirrors app log records into it. Registering happens at
 # download/sync/analysis start (where the debug file path is known);
 # everything any app module logs from then on lands in debug_log.txt
-# with a [LEVEL] [module] prefix — no plumbing through call stacks.
+# with a [LEVEL] [module] prefix - no plumbing through call stacks.
 # ═══════════════════════════════════════════════════════════════════
 
 _active_lock = threading.Lock()
@@ -165,7 +165,7 @@ def log_debug_exc(message, debug_file=None, exc: BaseException | None = None):
     """log_debug + the full traceback of the given (or current) exception.
 
     Use for every unexpected-exception handler: `str(e)` alone identifies
-    WHAT failed but not WHERE — the 'secondary_id_type' UnboundLocalError
+    WHAT failed but not WHERE - the 'secondary_id_type' UnboundLocalError
     took a code-dive to localize because no traceback was logged.
     Falls back to the active debug file when *debug_file* is None.
     """
@@ -186,7 +186,7 @@ def log_debug_exc(message, debug_file=None, exc: BaseException | None = None):
 def log_session_header(debug_file, context: str = '') -> None:
     """Write an environment header so a shared log identifies the setup.
 
-    Version, OS/arch, frozen state, Python, and CA-bundle health — the
+    Version, OS/arch, frozen state, Python, and CA-bundle health - the
     macOS SSL failure would have been diagnosable from this header alone.
     """
     if not debug_file:

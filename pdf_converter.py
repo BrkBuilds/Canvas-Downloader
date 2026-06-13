@@ -124,7 +124,7 @@ class PowerPointToPDF:
         1. PowerPoint's ``open`` does NOT return a usable reference, so
            ``set theDoc to open ...`` leaves theDoc undefined and the later
            ``save theDoc`` dies with -2753 ("variable theDoc is not defined").
-           We must ``open`` and then grab ``active presentation`` — the same
+           We must ``open`` and then grab ``active presentation`` - the same
            pattern Excel uses with ``active workbook``.
         2. The whole open→save→close runs inside ``try``; on ANY error we
            ``close active presentation saving no`` and re-raise. Without this,
@@ -133,7 +133,7 @@ class PowerPointToPDF:
            (which could exhaust memory / crash the machine).
 
         PowerPoint's dictionary also has NO ``display alerts`` property (unlike
-        Word/Excel) — adding ``set display alerts to false`` is a -2740 COMPILE
+        Word/Excel) - adding ``set display alerts to false`` is a -2740 COMPILE
         error. Do not re-add it.
         """
         from engine.applescript_bridge import _as_posix, office_container_stage
