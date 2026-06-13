@@ -1651,7 +1651,11 @@ def _render_sync_history():
                 if st.session_state.get('confirm_clear_history'):
                     cc1, cc2 = st.columns(2)
                     with cc1:
-                        if st.button("✓ Yes", type="primary", use_container_width=True):
+                        if st.button("No", use_container_width=True):
+                            st.session_state.confirm_clear_history = False
+                            st.rerun()
+                    with cc2:
+                        if st.button("Yes", type="primary", use_container_width=True):
                             if history_mgr is not None:
                                 history_mgr.clear_history()
                             # Invalidate the cached history so the now-empty
@@ -1659,11 +1663,8 @@ def _render_sync_history():
                             st.session_state.pop('_sync_history_cache', None)
                             st.session_state.pop('confirm_clear_history', None)
                             st.rerun()
-                    with cc2:
-                        if st.button("✗ No", use_container_width=True):
-                            st.session_state.confirm_clear_history = False
-                            st.rerun()
-                    st.warning("Are you sure you want to delete all sync history? This cannot be undone.")
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice("Are you sure you want to delete all sync history?", detail="This cannot be undone.")
                 else:
                     if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
                         st.session_state.confirm_clear_history = True

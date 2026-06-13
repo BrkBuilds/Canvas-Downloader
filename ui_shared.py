@@ -861,6 +861,7 @@ def render_pp_warning(pp_failure_count: int):
         render_amber_notice(
             f"{pp_failure_count} {word} failed during post-processing (conversion/extraction).",
             detail=detail_hint,
+            margin="12px 0 2px 0",
         )
 
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:

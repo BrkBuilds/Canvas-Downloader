@@ -30,12 +30,39 @@ from ui_helpers import (
 
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _select_sync_folder_lazy():
-    """Open native folder picker and store result in pending_sync_folder."""
+    """Open native folder picker, store result, and auto-detect bound course."""
     from ui_helpers import native_folder_picker
     import streamlit as st
     folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
+        # --- Auto-detect course from manifest ---
+        _auto_detect_course_from_manifest(folder_path)
+
+def _auto_detect_course_from_manifest(folder_path: str):
+    """Read .canvas_sync.db in *folder_path* and auto-select the bound course.
+
+    Sets ``sync_selected_course_id`` and ``sync_auto_detected_course`` flag
+    when a valid match is found among the currently available Canvas courses.
+    """
+    import streamlit as st
+    try:
+        bound_id = SyncManager.peek_bound_course_id(folder_path)
+        if bound_id is None:
+            return
+        # Verify the bound course exists in the current Canvas session.
+        # sync_pairs section builds course_names *after* this callback, but
+        # the courses list is fetched before step-1 renders, so we check
+        # the sync_pairs or any existing course_names map.
+        # Simplest: just set it; render_pending_folder_ui will validate via
+        # course_names and show "Course not found" if it no longer exists.
+        bound_name = SyncManager.peek_bound_course_name(folder_path)
+        st.session_state['sync_selected_course_id'] = bound_id
+        st.session_state['sync_auto_detected_course'] = True
+    except Exception:
+        # Silently ignore - manifest might be locked or corrupt.
+        pass
+
 
 def _update_pair_by_signature_lazy(old_sig, new_pair):
     from sync.persistence import update_pair_by_signature
@@ -631,8 +658,12 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     # 2. CBS Filters (centralized)
     filtered_courses = render_cbs_filters(visible_courses, "sync_d")
 
-    # Initialize single-select state
-    if "sync_d_selected_id" not in st.session_state or st.session_state.get("sync_d_selected_id") is None:
+    # Initialize single-select state.
+    # NOTE: Only check key *existence*, not value.  When the user deselects
+    # a course inside the dialog, _on_toggle sets the value to None; if we
+    # also guarded on "is None" here, every rerun would snap it back to
+    # current_selected_id, making deselection impossible.
+    if "sync_d_selected_id" not in st.session_state:
         st.session_state["sync_d_selected_id"] = current_selected_id
 
     st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
@@ -646,8 +677,13 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 
     # 4. Confirm
     st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
-    if st.button("Confirm Selection", key="sync_confirm_btn", type="primary", use_container_width=True):
-        st.session_state["sync_selected_return_id"] = st.session_state["sync_d_selected_id"]
+    _sel_id = st.session_state.get("sync_d_selected_id")
+    _confirm_disabled = not bool(_sel_id)
+    _confirm_help = "Select a course to continue." if _confirm_disabled else None
+    if st.button("Confirm Selection", key="sync_confirm_btn", type="primary",
+                 use_container_width=True, disabled=_confirm_disabled,
+                 help=_confirm_help):
+        st.session_state["sync_selected_return_id"] = _sel_id
         st.rerun(scope="app")
 
 
@@ -689,7 +725,8 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
              current_disp = f"ID: {selected_course_id} (Course not found)"
 
         # Determine button label based on mode
-        if editing_idx is not None:
+        # Show "Change Course" when editing OR when auto-detected a match
+        if editing_idx is not None or selected_course_id:
              btn_label = 'Change Course'
         else:
              btn_label = 'Select Course'
@@ -734,12 +771,26 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_spacer:
             st.empty()
 
+        # --- Auto-detection info notice ---
+        if st.session_state.get('sync_auto_detected_course') and selected_course_id:
+            from ui.amber_notice import render_info_notice
+            render_info_notice(
+                f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(selected_course_name or 'its corresponding course')}</span>",
+                detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
+                margin="4px 0 10px 0",
+                allow_html=True,
+                tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
+            )
+
         # Check for return value from dialog
         if "sync_selected_return_id" in st.session_state:
             ret_id = st.session_state["sync_selected_return_id"]
             # Consume it
             del st.session_state["sync_selected_return_id"]
             
+            # User manually confirmed a course - clear auto-detect flag
+            st.session_state.pop('sync_auto_detected_course', None)
+
             # Update session state for the sync pair
             selected_course_id = ret_id
             
@@ -832,8 +883,8 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         🔗 This folder is already linked to a different course
                     </div>
                     <div style="color:#fde68a;">
-                        <b>Currently linked to:</b> {esc(_bound_name)}<br>
-                        <b>You've selected:</b> {esc(_new_name)}
+                        <b>Currently linked to:</b> <span style="color:white;">{esc(_bound_name)}</span><br>
+                        <b>You've selected:</b> <span style="color:white;">{esc(_new_name)}</span>
                     </div>
                     <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
                         Clicking <b>Confirm and Add</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
@@ -856,6 +907,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.session_state.pop('editing_pair_idx', None)
                 st.session_state.pop('_prev_course_search', None)
                 st.session_state.pop('sync_selected_course_id', None)  # Prevent stale pre-selection on re-open
+                st.session_state.pop('sync_auto_detected_course', None)
                 st.rerun()
 
         with col_add:
@@ -933,6 +985,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                     st.session_state['pending_sync_folder'] = None
                     st.session_state.pop('editing_pair_idx', None)
                     st.session_state.pop('_prev_course_search', None)
+                    st.session_state.pop('sync_auto_detected_course', None)
                     st.rerun(scope="app")
                 elif selected_course_id and selected_course_id not in course_names:
                     # Course exists in saved pair but was archived/removed from Canvas
