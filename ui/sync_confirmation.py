@@ -33,6 +33,9 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     folder_set = set()
     modified_update_count = sum(len(s.get('updates_modified', [])) for s in sync_selections)
     for s in sync_selections:
+        if not (s['new'] or s['updates'] or s['redownload']):
+            continue
+            
         # Get the friendly course name for the folder
         pair = s['res_data']['pair']
         course_display = friendly_course_name(pair.get('course_name', 'Unknown'))
@@ -231,7 +234,10 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'}}'
         f'div[data-testid="stDialog"] .stButton > button {{'
         f'border-radius: 8px !important;'
-        f'height: 44px !important;'
+        f'height: auto !important;'
+        f'min-height: 44px !important;'
+        f'padding-top: 8px !important;'
+        f'padding-bottom: 8px !important;'
         f'font-weight: 600 !important;'
         f'font-size: 0.95rem !important;'
         f'}}'
