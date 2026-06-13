@@ -1,5 +1,12 @@
 ## Latest Updates
 
+- [x] **Unified Website Navigation Header and Footer Standardisation** (2026-06-13):
+    - [x] **Navigation Header Standardization**: Standardized the header navigation markup and styles across all website pages (`index.html`, `guide.html`, `mac-setup.html`, `privacy.html`, `thanks-mac.html`, and `thanks-win.html`) for a unified user experience.
+    - [x] **Header Link Renames**: Renamed the "Mac Setup" link to "Setup" to support future platform-specific client-side routing.
+    - [x] **Metadata/Badge Cleanups**: Removed the non-functional security badge links and the hardcoded version tags (`v2.0.0`) from the header navigation bar to reduce visual noise and emphasize direct action buttons.
+    - [x] **Intact Action Path Toggles**: Preserved the "Download" button and the "100% Open Source" GitHub badge pills with correct relative links across pages.
+    - [x] **Footer Privacy Policy Links**: Added a standard, visible Privacy Policy link (`privacy.html`) in all footers and aligned all footer navigation structures to guarantee uniform layout and parity.
+
 - [x] **Website Quick Download Preset Toggles & YouTube Local Fallback** (2026-05-26):
     - [x] **Expander Header Shortened Descriptions**: Surgically integrated shortened, high-fidelity descriptions for **Quick Download** and **Custom Download** directly inside their expander summary headers in `docs/index.html`. Positioned them cleanly below the main titles in a flex column layout with a smaller, elegant grey font (`var(--txt3)`) to capture the core essence of each mode at first glance.
     - [x] **Toggleable Quick Presets**: Added full client-side radio toggle interactivity to the 5 Quick Download preset cards using custom JavaScript, allowing students to pick exactly one preset at a time.

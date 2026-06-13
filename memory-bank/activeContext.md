@@ -1,6 +1,7 @@
 # Active Context: Canvas Downloader
 
 ## Current Focus
+    - Done: **Website Header & Footer Standardisation**: Standardized and unified navigation headers and footers across all user-facing documentation files.
     - Done: **Production Launch-Readiness Audit**: Conducted an exhaustive static systems audit evaluating coding rules, style, encoding compliance, security safeguards, exception safety, platform parity, and packaging configurations. Confirmed 100% readiness with 0 blockers.
     - Done: **Pass 3 Launch-Readiness Fixes**: Converted settings/database locks to recursive `RLock`, protected loading functions, standardized `IOError` vs `JSONDecodeError` separation on Windows configuration corruption checks, unified cross-thread logging locks, resolved isolated retry cancellation metrics rehydration, handled TOCTOU file collisions under standard locks, and configured macOS entitlements for office-to-PDF conversion.
     - Done: **macOS BYOB Refactoring**: Migrated macOS architecture from heavy PySide6/QtWebEngine binaries to a "Bring Your Own Browser" (BYOB) model using a lightweight `customtkinter` Controller Window (`macos_controller.py`).
@@ -10,6 +11,13 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-06-13: Website Navigation Header and Footer Standardisation**
+    - **Navigation Header Standardization**: Standardized the header navigation markup and styles across all website pages (`index.html`, `guide.html`, `mac-setup.html`, `privacy.html`, `thanks-mac.html`, and `thanks-win.html`) for a unified user experience.
+    - **Header Link Renames**: Renamed the "Mac Setup" link to "Setup" to support future platform-specific client-side routing.
+    - **Metadata/Badge Cleanups**: Removed the non-functional security badge links and the hardcoded version tags (`v2.0.0`) from the header navigation bar to reduce visual noise and emphasize direct action buttons.
+    - **Intact Action Path Toggles**: Preserved the "Download" button and the "100% Open Source" GitHub badge pills with correct relative links across pages.
+    - **Footer Privacy Policy Links**: Added a standard, visible Privacy Policy link (`privacy.html`) in all footers and aligned all footer navigation structures to guarantee uniform layout and parity.
+
 - **Session 2026-05-26: Website Quick Download Preset Toggles & YouTube Local Fallback**
     - **Expander Header Shortened Descriptions**: Surgically integrated shortened, high-fidelity descriptions for **Quick Download** and **Custom Download** directly inside their expander summary headers in `docs/index.html`. Positioned them cleanly below the main titles in a flex column layout with a smaller, elegant grey font (`var(--txt3)`) to capture the core essence of each mode at first glance.
     - **Toggleable Quick Presets**: Added full client-side radio toggle interactivity to the 5 Quick Download preset cards using custom JavaScript, allowing students to pick exactly one preset at a time.
