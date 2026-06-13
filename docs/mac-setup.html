@@ -16,13 +16,16 @@
       --surf: #10111e;
       --surf2: #15172a;
       --border: rgba(255, 255, 255, 0.09);
+      --border2: rgba(255, 255, 255, 0.16);
       --border-sub: rgba(255, 255, 255, 0.05);
       --txt: #e2e8f0;
-      --txt2: #94a3b8;
-      --txt3: #64748b;
+      --txt2: #b8cad8;
+      --txt3: #8899a8;
       --cyan: #38bdf8;
       --green: #34d399;
       --amber: #fbbf24;
+      --blue: #3b71b8;
+      --rad: 10px;
     }
 
     *,
@@ -45,22 +48,21 @@
       padding: 0;
     }
 
-    /* ── NAV ── */
+    /* ---- NAV ---- */
     nav {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(11, 12, 20, 0.95);
+      background: rgba(11, 12, 20, 0.9);
+      backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
 
     .nav-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 56px;
+      height: 58px;
       max-width: 1060px;
       margin: 0 auto;
       padding: 0 24px;
@@ -77,29 +79,92 @@
     }
 
     .nav-logo img {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: block;
     }
 
-    .nav-links {
+    .nav-right {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 10px;
     }
 
     .nav-link {
       font-size: 13px;
       font-weight: 500;
       color: var(--txt2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
       text-decoration: none;
-      padding: 5px 10px;
-      border-radius: 6px;
     }
 
     .nav-link:hover {
       color: var(--txt);
       background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+    }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: filter 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-nav:hover {
+      filter: brightness(1.15);
+    }
+
+    .btn-nav-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border2);
+      color: var(--txt);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-nav-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    @media(max-width:760px) {
+      .btn-nav-ghost span {
+        display: none;
+      }
+
+      .btn-nav-ghost {
+        padding: 8px 10px;
+      }
+    }
+
+    @media(max-width:520px) {
+      .nav-link {
+        display: none;
+      }
     }
 
     /* ── HERO ── */
@@ -123,25 +188,7 @@
       line-height: 1.6;
     }
 
-    .bookmark-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--txt2);
-      background: var(--surf);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: border-color 0.15s, color 0.15s;
-    }
 
-    .bookmark-hint:hover {
-      border-color: rgba(255, 255, 255, 0.22);
-      color: var(--txt);
-    }
 
     /* ── LAYOUT ── */
     .container {
@@ -198,20 +245,20 @@
     }
 
     .step-label {
-      font-size: 11px;
+      font-size: 13.5px;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: var(--txt3);
-      margin-bottom: 5px;
+      color: var(--cyan);
+      margin-bottom: 6px;
     }
 
     .step-title {
-      font-size: clamp(19px, 2.5vw, 24px);
+      font-size: clamp(23px, 3.2vw, 28px);
       font-weight: 800;
       letter-spacing: -0.025em;
       color: var(--txt);
-      margin: 0 0 16px;
+      margin: 0 0 18px;
     }
 
     /* ── CONTENT CARD ── */
@@ -247,12 +294,12 @@
 
     ol.steps li {
       counter-increment: step;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
+      position: relative;
+      padding-left: 38px;
       font-size: 14.5px;
       color: var(--txt2);
-      margin-bottom: 14px;
+      margin-bottom: 15px;
+      line-height: 1.6;
     }
 
     ol.steps li:last-child {
@@ -261,7 +308,9 @@
 
     ol.steps li::before {
       content: counter(step);
-      flex-shrink: 0;
+      position: absolute;
+      left: 0;
+      top: 1px;
       width: 24px;
       height: 24px;
       background: var(--surf2);
@@ -272,8 +321,7 @@
       justify-content: center;
       font-size: 11px;
       font-weight: 700;
-      color: var(--txt3);
-      margin-top: 2px;
+      color: var(--cyan);
     }
 
     ol.steps li strong {
@@ -382,45 +430,6 @@
       border: 0;
     }
 
-    .guide-embed .yt-fallback {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-size: cover;
-      background-position: center;
-      text-decoration: none;
-    }
-
-    .guide-embed .yt-fallback::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-    }
-
-    .guide-embed .yt-play {
-      position: relative;
-      z-index: 2;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: rgba(229, 9, 20, 0.95);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    }
-
-    .guide-embed .yt-play::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 54%;
-      transform: translate(-50%, -50%);
-      border-style: solid;
-      border-width: 11px 0 11px 18px;
-      border-color: transparent transparent transparent #fff;
-    }
-
     .media-cap {
       font-size: 12px;
       color: var(--txt3);
@@ -514,14 +523,7 @@
     }
 
     /* ── FULL GUIDE (revealable scroll guide) ── */
-    .wizard-intro {
-      text-align: center;
-      margin-bottom: 22px;
-    }
 
-    .wizard-intro .step-label {
-      color: var(--cyan);
-    }
 
     .full-guide {
       margin-top: 40px;
@@ -595,16 +597,16 @@
     }
 
     .perm-num {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       flex-shrink: 0;
-      background: var(--surf2);
+      background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--border);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: 14.5px;
       font-weight: 700;
       color: var(--txt2);
       margin-top: 1px;
@@ -616,7 +618,7 @@
     }
 
     .perm-title {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--txt);
       margin: 0 0 8px;
@@ -733,15 +735,33 @@
 
 <body>
 
+  <!-- NAV -->
   <nav>
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">
-        <img src="icon.png" alt="" />
+        <img src="icon.png" alt="Canvas Downloader" />
         Canvas Downloader
       </a>
-      <div class="nav-links">
+      <div class="nav-right">
         <a href="guide.html" class="nav-link">How It Works</a>
-        <a href="index.html" class="nav-link">← Homepage</a>
+        <a href="mac-setup.html" class="nav-link active">Setup</a>
+        <a href="index.html#get" class="btn-nav">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download
+        </a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+          class="btn-nav-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          <span>100% Open Source</span>
+        </a>
       </div>
     </div>
   </nav>
@@ -751,22 +771,19 @@
       <h1>macOS Setup Guide</h1>
       <p>Canvas Downloader is a free, indie app, so macOS asks you to approve it with a few one-time dialogs.
         The assistant below guides you through every step, tailored to your macOS version. It takes about two minutes.</p>
-      <a href="#" class="bookmark-hint">🔖 Bookmark this page - you can return any time</a>
+
     </div>
   </div>
 
   <div class="container" style="padding-bottom: 40px;">
 
-    <!-- ═══════════════ INTERACTIVE WIZARD ═══════════════ -->
-    <div class="wizard-intro">
-      <div class="step-label">Interactive Setup</div>
-    </div>
+
     <div id="mac-wizard" data-guide-href="#full-guide" data-guide-label="Jump to the full written guide"></div>
 
     <!-- ═══════════════ FULL WRITTEN GUIDE (revealable) ═══════════════ -->
     <details id="full-guide" class="full-guide">
       <summary>
-        <span><span class="lead">Prefer reading?</span> Show the full step-by-step guide, with screenshots</span>
+        <span><span class="lead">Prefer reading?</span> See the full step-by-step guide, with screenshots</span>
         <span class="arr">▶</span>
       </summary>
       <div class="full-guide-body">
@@ -775,7 +792,7 @@
         <div class="requirements">
           <div class="req-title">Before you start</div>
           <ul>
-            <li><strong>Apple Silicon Mac</strong> - M1, M2, M3 or M4 chip (not Intel)</li>
+            <li><strong>Apple Silicon Mac</strong> - M1, M2, M3, M4 or M5 chip (not Intel)</li>
             <li><strong>macOS 11 Big Sur or later</strong> - Monterey, Ventura, Sonoma, Sequoia, Tahoe all work</li>
             <li><strong>Microsoft Office</strong> - optional. Only needed for PDF conversions (PowerPoint / Word / Excel →
               PDF). Everything else works without it and original files are always kept.</li>
@@ -806,12 +823,7 @@
           <h2 class="step-title">Open for the first time</h2>
 
           <div class="card">
-            <div class="guide-embed" data-yt="0_NuZndZvi8">
-              <iframe src="https://www.youtube.com/embed/0_NuZndZvi8?modestbranding=1&rel=0&showinfo=0"
-                title="Opening Canvas Downloader on macOS"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-            </div>
+            <div class="guide-embed" data-yt="0_NuZndZvi8"></div>
             <p class="media-cap">The full first-open process, start to finish (shown on macOS Sequoia).</p>
 
             <p class="card-p">Open your <strong>Applications</strong> folder and double-click <strong>Canvas
@@ -898,12 +910,7 @@
           <h2 class="step-title">Log in to Canvas</h2>
 
           <div class="card">
-            <div class="guide-embed" data-yt="VadvcIvrrhU">
-              <iframe src="https://www.youtube.com/embed/VadvcIvrrhU?modestbranding=1&rel=0&showinfo=0"
-                title="How to get your Canvas API token"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-            </div>
+            <div class="guide-embed" data-yt="VadvcIvrrhU"></div>
             <p class="media-cap">Creating a Canvas API token takes about 30 seconds - the clip shows exactly how.</p>
 
             <p class="card-p">Enter your institution's Canvas URL (e.g. <code
@@ -920,7 +927,7 @@
           <h2 class="step-title">First download - one-time permissions</h2>
 
           <div class="action warn" style="border-radius: 8px; margin-bottom:16px;">
-            ⏱ &nbsp;Stay at your Mac for the first minute of your first download and click <strong>Allow</strong> on each
+            Stay at your Mac for the first minute of your first download and click <strong>Allow</strong> on each
             dialog. They appear once, and never again.
           </div>
 
@@ -1092,6 +1099,7 @@
     <div class="container">
       <a href="index.html">Homepage</a>
       <a href="guide.html">How It Works</a>
+      <a href="privacy.html">Privacy Policy</a>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
       <div class="meta">v2.0.0 &middot; Not affiliated with Instructure or Canvas LMS</div>
     </div>
@@ -1112,15 +1120,20 @@
       if (d) d.open = true;
     }
 
-    // YouTube fallback for local file:// preview (Error 153 bypass)
-    if (location.protocol === 'file:') {
-      document.querySelectorAll('.guide-embed[data-yt]').forEach(function (box) {
-        var id = box.getAttribute('data-yt');
-        box.innerHTML = '<a class="yt-fallback" href="https://www.youtube.com/watch?v=' + id +
-          '" target="_blank" rel="noopener" style="background-image:url(\'https://img.youtube.com/vi/' + id +
-          '/hqdefault.jpg\')"><span class="yt-play"></span></a>';
-      });
-    }
+    // Populate guide-embed YouTube players (plain iframes; file:// gets a link fallback)
+    document.querySelectorAll('.guide-embed[data-yt]').forEach(function (box) {
+      var id = box.getAttribute('data-yt');
+      if (location.protocol === 'file:') {
+        box.innerHTML = '<a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener"' +
+          ' style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+          'background:#0c1424;text-decoration:none;color:#b8cad8;font-size:13px;font-weight:600;">Watch on YouTube ↗</a>';
+      } else {
+        box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
+          '?modestbranding=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+          ' allowfullscreen referrerpolicy="strict-origin-when-cross-origin"' +
+          ' style="position:absolute;inset:0;width:100%;height:100%;border:0;"></iframe>';
+      }
+    });
   </script>
 
 </body>
