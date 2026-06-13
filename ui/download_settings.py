@@ -1710,26 +1710,11 @@ div.st-key-review_browse_folder button:hover {
 
     <style>
     /* Custom Confirm and Download Colors - Solid Physical Volume */
-    div.st-key-action_dl_confirm button {{
-        background-color: #1f77b4 !important;
-        border: none !important;
-        color: #ffffff !important;
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
-    }}
-
-    /* Confirm and Download Hover - Glow + Lighter Shift */
-    div.st-key-action_dl_confirm button:hover {{
-        background-color: #2b8cbe !important;
-        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2), 
-                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
-        color: #ffffff !important;
-    }}
     </style>
     """
 
         st.markdown(_dl_details_html, unsafe_allow_html=True)
-        col_back, col_conf, _ = st.columns([0.66, 1.2, 5])
+        col_back, _, col_conf = st.columns([1, 5, 1.5])
         with col_conf:
             # Button label changes based on mode
             button_label = 'Sync (Download) Selected Files' if st.session_state['current_mode'] == 'sync' else 'Confirm and Download'

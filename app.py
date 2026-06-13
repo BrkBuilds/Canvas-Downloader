@@ -81,6 +81,15 @@ inject_material_icons_font()
 #            layout stability). Directly detects old-element cleanup regardless
 #            of whether mutations fire.
 #   An 8 s safety valve force-hides if a rerun hangs.
+import base64
+import os
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'assets', 'icon.png'), 'rb') as _f:
+        _app_icon_b64 = base64.b64encode(_f.read()).decode()
+        _app_logo_html = '<div style="width:64px;height:64px;background:rgba(0,114,206,0.18);border-radius:16px;display:flex;align-items:center;justify-content:center"><img src="data:image/png;base64,' + _app_icon_b64 + '" style="width:36px;height:36px;" /></div>'
+except Exception:
+    _app_logo_html = '<div style="width:64px;height:64px;background:rgba(77,168,218,.12);border-radius:16px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4DA8DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>'
+
 components.html("""<script>
 (function(){
     // All state lives on window.parent._cdp so it survives iframe reloads.
@@ -247,7 +256,6 @@ components.html("""<script>
         'div[class*="st-key-btn_quick_download"]', // Course Selector: Quick Download
         'div[class*="st-key-sync_back"]',         // Back in sync review (container-keyed)
         'div[class*="st-key-action_dl_back"]',    // Back in download settings
-        'div[class*="st-key-cancel_sync_dialog"]',// No, Go back in sync confirmation
         'div[class*="st-key-qd_goto_advanced"]'   // Customize configuration in Quick Download
     ].join(',');
     if(!p.clickAdded){
@@ -326,12 +334,7 @@ components.html("""<script>
             +'justify-content:center;gap:18px;font-family:-apple-system,BlinkMacSystemFont,'
             +'"Segoe UI",sans-serif;text-align:center;padding:24px';
         ov.innerHTML=
-            '<div style="width:64px;height:64px;background:rgba(77,168,218,.12);border-radius:16px;'
-            +'display:flex;align-items:center;justify-content:center">'
-            +'<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4DA8DA" '
-            +'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-            +'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
-            +'<polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>'
+            '""" + _app_logo_html + """'
             +'<div style="color:#fafafa;font-size:1.25rem;font-weight:600">Canvas Downloader has been closed</div>'
             +'<div style="color:rgba(255,255,255,.45);font-size:.95rem;line-height:1.6;max-width:420px">'
             +'The app was shut down, so this window is no longer connected.<br>'
@@ -1395,6 +1398,7 @@ with _main_content.container():
                     render_amber_notice(
                         "Retry cancelled - post-processing skipped.",
                         detail="Any files that downloaded successfully before cancellation are available in your folder.",
+                        margin="12px 0 2px 0",
                     )
                     st.session_state['_sync_cancel_warning_shown'] = True
             else:
@@ -1631,6 +1635,7 @@ with _main_content.container():
                             "If you had other unsaved Word, Excel, or PowerPoint files open, "
                             "they may have been closed without saving."
                         ),
+                        margin="12px 0 2px 0",
                     )
 
                 # Size-skipped files are now rendered inside render_completion_card
