@@ -558,6 +558,17 @@ with _main_content.container():
         
         # UI elements in correct order
         if st.session_state.get('download_status') == 'running':
+            # First-run macOS permission batch is in flight: tell the user the
+            # upcoming system dialogs are expected and one-time. Rendered for the
+            # whole first run; the flag is re-armed False at every run start.
+            if st.session_state.get('_tcc_batch_active'):
+                st.info(
+                    "**First-time macOS setup:** macOS will show a few one-time permission "
+                    "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
+                    "and folder access). Click **Allow / OK** on each — Canvas Downloader uses them "
+                    "only to convert Office files to PDF on your own Mac.",
+                    icon="🔐",
+                )
             if 'start_time' not in st.session_state:
                 st.session_state['start_time'] = time.time()
             if 'log_deque' not in st.session_state:
@@ -719,10 +730,24 @@ with _main_content.container():
             st.session_state['_office_quit_fired'] = False
             # macOS: forget any Office apps primed by a previous run (they were quit
             # at that run's completion) so this run launches them fresh + scoped.
+            st.session_state['_tcc_batch_active'] = False
             if sys.platform == 'darwin':
                 try:
-                    from engine.applescript_bridge import reset_office_priming
+                    from engine.applescript_bridge import (
+                        reset_office_priming, first_run_permission_setup,
+                    )
                     reset_office_priming()
+                    # One-time per machine: fire ALL outstanding Office permission
+                    # prompts NOW, while the user is at the screen (they just
+                    # clicked Start) — instead of letting each app's prompt ambush
+                    # a later run mid-conversion. Uses the UNscoped toggles on
+                    # purpose; the per-course prime stays file-scoped.
+                    if first_run_permission_setup({
+                        'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
+                        'convert_word': st.session_state.get('persistent_convert_word', False),
+                        'convert_excel': st.session_state.get('persistent_convert_excel', False),
+                    }):
+                        st.session_state['_tcc_batch_active'] = True
                 except Exception:
                     pass
 
@@ -1689,6 +1714,20 @@ with _main_content.container():
             render_folder_cards(file_details, folder_paths, key_prefix='dl')
         
         elif st.session_state.get('download_status') == 'cancelled':
+            # macOS: the user expects Office gone the moment they land here, same
+            # as on the completion screen. quit_idle_office_apps() first force-
+            # closes any staged document a cancelled conversion left open in a
+            # hidden Office process (marker-matched — user docs untouchable),
+            # then quits the now-idle apps and purges our Recents entries.
+            import sys as _sys_qx
+            if _sys_qx.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
+                st.session_state['_office_quit_fired'] = True
+                try:
+                    from engine.applescript_bridge import quit_idle_office_apps
+                    quit_idle_office_apps()
+                except Exception:
+                    pass
+
             # Premium styled cancellation card (matches sync_ui.py design)
             downloaded_count = st.session_state.get('downloaded_items', 0)
             total_items_count = st.session_state.get('total_items', 0)

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macOS Setup Guide — Canvas Downloader</title>
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0c14;
+      --surf: #10111e;
+      --surf2: #15172a;
+      --border: rgba(255,255,255,0.09);
+      --border-sub: rgba(255,255,255,0.05);
+      --txt: #e2e8f0;
+      --txt2: #94a3b8;
+      --txt3: #64748b;
+      --cyan: #38bdf8;
+      --green: #34d399;
+      --amber: #fbbf24;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      margin: 0; padding: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,12,20,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px; max-width: 1060px; margin: 0 auto; padding: 0 24px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; color: var(--txt); text-decoration: none; }
+    .nav-logo img { width: 26px; height: 26px; border-radius: 6px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link { font-size: 13px; font-weight: 500; color: var(--txt2); text-decoration: none; padding: 5px 10px; border-radius: 6px; }
+    .nav-link:hover { color: var(--txt); background: rgba(255,255,255,0.05); }
+
+    /* ── HERO ── */
+    .hero { padding: 60px 0 44px; }
+    .hero h1 {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 900; letter-spacing: -0.03em;
+      margin: 0 0 12px;
+    }
+    .hero p {
+      font-size: 16px; color: var(--txt2);
+      max-width: 580px; margin: 0 0 22px; line-height: 1.6;
+    }
+    .bookmark-hint {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; color: var(--txt2);
+      background: var(--surf); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 8px; text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .bookmark-hint:hover { border-color: rgba(255,255,255,0.22); color: var(--txt); }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── REQUIREMENTS BOX ── */
+    .requirements {
+      background: rgba(251,191,36,0.04);
+      border: 1px solid rgba(251,191,36,0.18);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 48px;
+    }
+    .requirements .req-title { font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 10px; }
+    .requirements ul { margin: 0; padding-left: 0; list-style: none; }
+    .requirements li {
+      font-size: 13.5px; color: var(--txt2);
+      padding: 4px 0 4px 20px;
+      position: relative;
+    }
+    .requirements li::before {
+      content: '✓';
+      position: absolute; left: 0;
+      color: var(--green); font-weight: 700; font-size: 12px;
+    }
+    .requirements li strong { color: var(--txt); }
+
+    /* ── STEP SECTION ── */
+    .step-section { margin-bottom: 56px; }
+    .step-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--txt3); margin-bottom: 5px;
+    }
+    .step-title {
+      font-size: clamp(19px, 2.5vw, 24px);
+      font-weight: 800; letter-spacing: -0.025em;
+      color: var(--txt); margin: 0 0 16px;
+    }
+
+    /* ── CONTENT CARD ── */
+    .card {
+      background: var(--surf);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 14px;
+    }
+    .card-p { font-size: 14.5px; color: var(--txt2); margin: 0 0 16px; }
+    .card-p strong { color: var(--txt); }
+    .card-p:last-child { margin-bottom: 0; }
+
+    /* ── NUMBERED STEPS ── */
+    ol.steps {
+      margin: 0; padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+    ol.steps li {
+      counter-increment: step;
+      display: flex; gap: 14px; align-items: flex-start;
+      font-size: 14.5px; color: var(--txt2);
+      margin-bottom: 14px;
+    }
+    ol.steps li:last-child { margin-bottom: 0; }
+    ol.steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--txt3);
+      margin-top: 2px;
+    }
+    ol.steps li strong { color: var(--txt); }
+
+    /* ── ACTION CALLOUT ── */
+    .action {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 11px 16px;
+      background: rgba(52,211,153,0.06);
+      border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 14px; font-weight: 600; color: var(--green);
+      line-height: 1.5;
+    }
+    .action.warn {
+      background: rgba(251,191,36,0.06);
+      border-left-color: var(--amber);
+      color: var(--amber);
+    }
+
+    /* ── DIALOG QUOTE ── */
+    .dialog-quote {
+      background: var(--surf2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+      font-size: 13.5px; color: var(--txt2);
+      line-height: 1.55; margin: 12px 0;
+      font-style: italic;
+    }
+    .dialog-quote strong { color: var(--txt); font-style: normal; }
+
+    /* ── SCREENSHOTS ── */
+    .screenshot {
+      display: block;
+      width: 100%; height: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.4);
+      margin: 16px auto;
+    }
+    .sc-sm  { max-width: 360px; }
+    .sc-md  { max-width: 460px; }
+    .sc-lg  { max-width: 600px; }
+    .sc-center { display: block; }
+
+    /* ── WHY NOTE ── */
+    .why {
+      font-size: 12.5px; color: var(--txt3);
+      margin: 8px 0 0; line-height: 1.55;
+    }
+    .why strong { color: var(--txt2); }
+
+    /* ── VERSION NOTE ── */
+    .version-note {
+      font-size: 13px; color: var(--txt3);
+      background: var(--surf2);
+      border-left: 2px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+    }
+    .version-note strong { color: var(--txt2); }
+
+    /* ── COLLAPSIBLE ── */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      margin-top: 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 14px; font-weight: 600;
+      color: var(--txt2);
+      padding: 14px 18px;
+      background: var(--surf2);
+      list-style: none;
+      display: flex; align-items: center; gap: 8px;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    summary:hover { color: var(--txt); }
+    summary::-webkit-details-marker { display: none; }
+    .arr { display: inline-block; font-size: 10px; transition: transform 0.2s; }
+    details[open] .arr { transform: rotate(90deg); }
+    .details-body {
+      padding: 18px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surf);
+    }
+    .details-body p { font-size: 14px; color: var(--txt2); margin: 0 0 12px; }
+    .details-body p:last-child { margin-bottom: 0; }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: #070810;
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 16px;
+      overflow-x: auto; margin: 10px 0;
+    }
+    .code-block code {
+      font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+      font-size: 12.5px; color: #e2e8f0;
+      white-space: nowrap; user-select: all;
+    }
+
+    /* ── PERMISSION LIST (Step 5) ── */
+    .perm-list { margin: 0; }
+    .perm-item {
+      display: flex; gap: 18px; align-items: flex-start;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border-sub);
+    }
+    .perm-item:first-child { padding-top: 0; }
+    .perm-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .perm-num {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--txt2);
+      margin-top: 1px;
+    }
+    .perm-body { flex: 1; min-width: 0; }
+    .perm-title {
+      font-size: 15px; font-weight: 700;
+      color: var(--txt); margin: 0 0 8px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .badge-15 {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--cyan); background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 4px; padding: 2px 7px;
+    }
+
+    /* ── INLINE CODE ── */
+    code.ic {
+      background: rgba(255,255,255,0.07);
+      padding: 1px 6px; border-radius: 4px;
+      font-size: 13px; font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+    }
+
+    /* ── TROUBLESHOOTING ── */
+    .trouble-item {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border-sub);
+    }
+    .trouble-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .trouble-item:first-child { padding-top: 0; }
+    .trouble-q { font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 6px; }
+    .trouble-a { font-size: 13.5px; color: var(--txt2); margin: 0; line-height: 1.6; }
+    .trouble-a strong { color: var(--txt); }
+    .trouble-a code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: 'SF Mono', ui-monospace, Menlo, monospace; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 64px; padding: 32px 0;
+      text-align: center; color: var(--txt3); font-size: 13px;
+    }
+    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px; }
+    footer a:hover { color: var(--txt); }
+    footer .meta { margin-top: 10px; }
+
+    @media (max-width: 560px) {
+      .hero { padding: 40px 0 32px; }
+      .perm-item { flex-direction: column; gap: 10px; }
+      .perm-num { width: 26px; height: 26px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="icon.png" alt="" />
+      Canvas Downloader
+    </a>
+    <div class="nav-links">
+      <a href="guide.html" class="nav-link">How It Works</a>
+      <a href="index.html" class="nav-link">← Homepage</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="container">
+    <h1>macOS Setup Guide</h1>
+    <p>Canvas Downloader is a free, indie app — macOS runs through a handful of one-time dialogs before it lets the app run freely. This guide walks you through every single one, from install to your first download.</p>
+    <a href="#" class="bookmark-hint">🔖 Bookmark this page — you can return any time</a>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 40px;">
+
+  <!-- Requirements -->
+  <div class="requirements">
+    <div class="req-title">Before you start</div>
+    <ul>
+      <li><strong>Apple Silicon Mac</strong> — M1, M2, M3 or M4 chip (not Intel)</li>
+      <li><strong>macOS 11 Big Sur or later</strong> — Monterey, Ventura, Sonoma, Sequoia, Tahoe all work</li>
+      <li><strong>Microsoft Office</strong> — optional. Only needed for PDF conversions (PowerPoint / Word / Excel → PDF). Everything else works without it and original files are always kept.</li>
+    </ul>
+  </div>
+
+  <!-- ─────────────────── STEP 1 ─────────────────── -->
+  <section class="step-section" id="install">
+    <div class="step-label">Step 1</div>
+    <h2 class="step-title">Install</h2>
+
+    <div class="card">
+      <ol class="steps">
+        <li>Double-click the downloaded <code class="ic">.dmg</code> file to mount it.</li>
+        <li>In the window that opens, drag <strong>Canvas Downloader</strong> onto the <strong>Applications</strong> folder.</li>
+        <li>Eject the DMG — the app now lives in your Applications folder and is ready to open.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ─────────────────── STEP 2 ─────────────────── -->
+  <section class="step-section" id="gatekeeper">
+    <div class="step-label">Step 2</div>
+    <h2 class="step-title">Open for the first time</h2>
+
+    <div class="card">
+      <p class="card-p">Open your <strong>Applications</strong> folder and double-click <strong>Canvas Downloader</strong>. Because the app doesn't have Apple's paid developer certificate, macOS blocks it on the first attempt — this is normal for every free and open-source app.</p>
+
+      <p class="card-p"><strong>First, you'll see this:</strong></p>
+      <img class="screenshot sc-md sc-center" src="assets/mac-perm-gatekeeper1.png" alt="macOS Gatekeeper block dialog" onerror="this.style.display='none'" />
+
+      <p class="card-p">Click <strong>Done</strong> (not "Move to Trash"). Then open <strong>Apple menu → System Settings → Privacy &amp; Security</strong> and scroll to the Security section. You'll see <em>"Canvas Downloader was blocked…"</em> — click <strong>Open Anyway</strong>.</p>
+
+      <p class="card-p">macOS then asks you to confirm your identity:</p>
+      <img class="screenshot sc-lg sc-center" src="assets/mac-perm-gatekeeper2.png" alt="macOS Open Anyway confirmation" onerror="this.style.display='none'" />
+
+      <div class="action">→ Enter your Mac login password and click <strong>Open Anyway</strong> to confirm.</div>
+
+      <p class="why">Canvas Downloader is open-source — you can read every line of what it does on GitHub. The password step is macOS's standard safety gate for all unsigned apps, regardless of what they do.</p>
+
+      <div class="version-note">
+        <strong>macOS 14 Sonoma or earlier:</strong> you can skip the Settings detour entirely — just <strong>right-click the app → Open → Open</strong>. &nbsp;·&nbsp;
+        <strong>macOS 12 or earlier:</strong> the settings path is called <em>System Preferences → Security &amp; Privacy → General</em>.
+      </div>
+    </div>
+
+    <details>
+      <summary><span class="arr">▶</span> The app says "damaged and can't be opened"?</summary>
+      <div class="details-body">
+        <p>Open <strong>Terminal</strong> (Spotlight → type "Terminal" → press Return), paste the line below exactly, and press Return. Nothing visible happens — that's expected. Then go back to Applications and double-click the app normally.</p>
+        <div class="code-block">
+          <code>xattr -dr com.apple.quarantine "/Applications/Canvas Downloader.app"</code>
+        </div>
+        <p style="font-size:12.5px; color:var(--txt3); margin:6px 0 0;">This removes macOS's quarantine flag. It only works if the app is in your Applications folder (step 1).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─────────────────── STEP 3 ─────────────────── -->
+  <section class="step-section" id="notifications">
+    <div class="step-label">Step 3</div>
+    <h2 class="step-title">Allow notifications</h2>
+
+    <div class="card">
+      <p class="card-p">When the app opens, macOS shows a notification permission prompt in the top-right corner of your screen. Click it to open the permission dialog:</p>
+
+      <img class="screenshot sc-md sc-center" src="assets/mac-perm-notifications1.png" alt="Canvas Downloader notification permission prompt" onerror="this.style.display='none'" />
+
+      <div class="action">→ Click <strong>Allow</strong> to enable notifications.</div>
+
+      <p class="card-p" style="margin-top:16px;">Once allowed, the toggle in Notification Settings looks like this:</p>
+
+      <img class="screenshot sc-md sc-center" src="assets/mac-perm-notifications2.png" alt="Notifications enabled in macOS Settings" onerror="this.style.display='none'" />
+
+      <p class="why">Canvas Downloader sends one "Download Complete" or "Sync Complete" banner when a long run finishes — so you can step away and get notified when it's done. No other notifications are ever sent.</p>
+    </div>
+
+    <details>
+      <summary><span class="arr">▶</span> Missed the prompt? Enable notifications manually.</summary>
+      <div class="details-body">
+        <p>Go to <strong>System Settings → Notifications → Canvas Downloader</strong>. Turn on <strong>Allow Notifications</strong> and set the style to <strong>Banners</strong> or <strong>Alerts</strong> — the "None" style suppresses all banners even when notifications are technically allowed.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─────────────────── STEP 4 ─────────────────── -->
+  <section class="step-section" id="login">
+    <div class="step-label">Step 4</div>
+    <h2 class="step-title">Log in to Canvas</h2>
+
+    <div class="card">
+      <p class="card-p">Enter your institution's Canvas URL (e.g. <code class="ic">https://school.instructure.com</code>) and a personal API token in the sidebar.</p>
+      <p class="card-p">Tap the <strong>?</strong> button next to the API token field for a step-by-step guide to generating one from your Canvas account settings — it takes about 30 seconds and requires no special permissions.</p>
+    </div>
+  </section>
+
+  <!-- ─────────────────── STEP 5 ─────────────────── -->
+  <section class="step-section" id="permissions">
+    <div class="step-label">Step 5</div>
+    <h2 class="step-title">First download — one-time permissions</h2>
+
+    <div class="action warn" style="border-radius: 8px; margin-bottom:16px;">
+      ⏱ &nbsp;Stay at your Mac for the first minute of your first download and click <strong>Allow</strong> on each dialog. They appear once, and never again.
+    </div>
+
+    <div class="card">
+      <p class="card-p">When you start your first download or sync, Canvas Downloader asks macOS for all remaining permissions up front — so they never interrupt a run later. Up to six dialogs appear in sequence, depending on which Microsoft Office apps you have installed.</p>
+
+      <div class="perm-list">
+
+        <!-- 1 · App Data -->
+        <div class="perm-item">
+          <div class="perm-num">1</div>
+          <div class="perm-body">
+            <div class="perm-title">App Data Access <span class="badge-15">macOS 15 + only</span></div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" would like to access data from other apps.</strong><br>
+              "Keeping app data separate makes it easier to manage your privacy and security."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-appdata.png" alt="Access data from other apps dialog" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+            <p class="why">PDF conversions use a private scratch folder inside Microsoft Office's own app container — macOS 15 Sequoia flags that as "another app's data." On macOS 14 and earlier this dialog simply never appears.</p>
+          </div>
+        </div>
+
+        <!-- 2 · Downloads -->
+        <div class="perm-item">
+          <div class="perm-num">2</div>
+          <div class="perm-body">
+            <div class="perm-title">Downloads Folder</div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" would like to access files in your Downloads folder.</strong><br>
+              "Canvas Downloader may save downloaded course files to your Downloads folder."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-downloads.png" alt="Downloads folder permission" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+            <p class="why">macOS asks once per protected folder. If you save files to a custom folder (Documents, Desktop, or elsewhere) you'll see this dialog for that folder instead.</p>
+          </div>
+        </div>
+
+        <!-- 3 · System Events -->
+        <div class="perm-item">
+          <div class="perm-num">3</div>
+          <div class="perm-body">
+            <div class="perm-title">System Events</div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" wants access to control "System Events".</strong><br>
+              "Allowing control will provide access to documents and data in "System Events", and to perform actions within that app."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-systemevents.png" alt="Control System Events dialog" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+            <p class="why">System Events is the macOS automation layer that keeps Office windows hidden during conversions — nothing flashes or bounces in the Dock while files are being processed.</p>
+          </div>
+        </div>
+
+        <!-- 4 · PowerPoint -->
+        <div class="perm-item">
+          <div class="perm-num">4</div>
+          <div class="perm-body">
+            <div class="perm-title">Microsoft PowerPoint</div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" wants access to control "Microsoft PowerPoint".</strong><br>
+              "Allowing control will provide access to documents and data in "Microsoft PowerPoint", and to perform actions within that app."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-powerpoint.png" alt="Control Microsoft PowerPoint dialog" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+            <p class="why">This is the PDF-conversion permission. Canvas Downloader opens each .pptx file in PowerPoint, exports a PDF locally, and closes it again — nothing is uploaded anywhere.</p>
+          </div>
+        </div>
+
+        <!-- 5 · Word -->
+        <div class="perm-item">
+          <div class="perm-num">5</div>
+          <div class="perm-body">
+            <div class="perm-title">Microsoft Word</div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" wants access to control "Microsoft Word".</strong><br>
+              "Allowing control will provide access to documents and data in "Microsoft Word", and to perform actions within that app."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-word.png" alt="Control Microsoft Word dialog" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+          </div>
+        </div>
+
+        <!-- 6 · Excel -->
+        <div class="perm-item">
+          <div class="perm-num">6</div>
+          <div class="perm-body">
+            <div class="perm-title">Microsoft Excel</div>
+            <div class="dialog-quote">
+              <strong>"Canvas Downloader" wants access to control "Microsoft Excel".</strong><br>
+              "Allowing control will provide access to documents and data in "Microsoft Excel", and to perform actions within that app."
+            </div>
+            <img class="screenshot sc-sm sc-center" src="assets/mac-perm-excel.png" alt="Control Microsoft Excel dialog" onerror="this.style.display='none'" />
+            <div class="action">→ Click Allow.</div>
+            <p class="why">Dialogs 4–6 only appear for Office apps you have installed. If you don't have Office, none of them appear and original files are always kept as-is.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <p style="font-size:13px; color:var(--txt3); margin:16px 0 0; padding-top:16px; border-top:1px solid var(--border-sub);">
+        That's everything. Every later download and sync runs completely hands-free.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────────── TROUBLESHOOTING ─────────────────── -->
+  <section class="step-section" id="troubleshooting">
+    <div class="step-label">Troubleshooting</div>
+    <h2 class="step-title">Something went wrong?</h2>
+
+    <div class="card">
+      <div class="trouble-item">
+        <div class="trouble-q">I clicked "Don't Allow" on an automation dialog.</div>
+        <p class="trouble-a">Go to <strong>System Settings → Privacy &amp; Security → Automation → Canvas Downloader</strong> and switch on the entry you denied (Microsoft PowerPoint, Word, Excel, or System Events). Then run the download again.</p>
+      </div>
+      <div class="trouble-item">
+        <div class="trouble-q">Some files say "timed out" or were skipped during conversion.</div>
+        <p class="trouble-a">A permission dialog was probably waiting unanswered while you were away — this can only happen on the very first run. Once all dialogs have been answered, run a <strong>Sync</strong> on the same folder and it will pick up any skipped files.</p>
+      </div>
+      <div class="trouble-item">
+        <div class="trouble-q">I denied access to my Downloads, Documents or Desktop folder.</div>
+        <p class="trouble-a">Go to <strong>System Settings → Privacy &amp; Security → Files and Folders → Canvas Downloader</strong> and enable the folder you want to save into.</p>
+      </div>
+      <div class="trouble-item">
+        <div class="trouble-q">No "Download Complete" notifications are appearing.</div>
+        <p class="trouble-a">Go to <strong>System Settings → Notifications → Canvas Downloader</strong>. Turn on <strong>Allow Notifications</strong> and set the alert style to <strong>Banners</strong> or <strong>Alerts</strong> — the default "None" blocks all banners.</p>
+      </div>
+      <div class="trouble-item">
+        <div class="trouble-q">The app won't open or says "damaged".</div>
+        <p class="trouble-a">See Step 2 above — the Terminal <code>xattr -dr</code> command clears macOS's quarantine flag from the app.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <a href="index.html">Homepage</a>
+    <a href="guide.html">How It Works</a>
+    <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+    <div class="meta">v2.0.0 &middot; Not affiliated with Instructure or Canvas LMS</div>
+  </div>
+</footer>
+
+</body>
+</html>
