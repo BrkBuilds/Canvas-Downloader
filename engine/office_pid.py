@@ -27,7 +27,7 @@ def find_new_office_pid(exe_name: str, pre_pids: set) -> int | None:
 
     Polls for up to ~1 second in 50 ms increments so the process has time to
     appear in the process table after ``DispatchEx`` returns.  Returns ``None``
-    if no new process is found — callers must fall back to ``/IM`` kill in that
+    if no new process is found - callers must fall back to ``/IM`` kill in that
     case.
     """
     import time as _t
@@ -51,7 +51,7 @@ def kill_office_pid(pid: int, exe_name_fallback: str) -> None:
     """Kill the Office process with *pid*.
 
     If *pid* is 0 / None, falls back to ``taskkill /F /IM exe_name_fallback``
-    (which kills all instances — acceptable as a last resort when PID tracking
+    (which kills all instances - acceptable as a last resort when PID tracking
     failed, but avoids it when we have a precise target).
     """
     if pid:

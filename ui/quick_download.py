@@ -137,7 +137,7 @@ def render_quick_download(fetch_courses_fn) -> None:
     render_download_wizard(st, 2)
 
     # ── Session-state defaults ───────────────────────────────────────────
-    # No preset selected on fresh entry — user must actively choose one.
+    # No preset selected on fresh entry - user must actively choose one.
     st.session_state.setdefault('quick_preset_id', None)
     st.session_state.setdefault('quick_org_mode', 'modules')
 

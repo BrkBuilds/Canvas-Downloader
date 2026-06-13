@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
-# PyInstaller FFmpeg fix — wrapped in try/except: get_ffmpeg_exe() raises if the
+# PyInstaller FFmpeg fix - wrapped in try/except: get_ffmpeg_exe() raises if the
 # binary is missing from the bundle, and we don't want a module-level crash.
 if getattr(sys, 'frozen', False):
     try:

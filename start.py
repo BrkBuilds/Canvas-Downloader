@@ -2,7 +2,7 @@
 start.py - Unified application launcher for Canvas Downloader.
 
 Architecture (both platforms, post-pivot):
-  pywebview wraps the Streamlit server in a native desktop window — an
+  pywebview wraps the Streamlit server in a native desktop window - an
   EdgeChromium WebView2 window on Windows, a Cocoa/WebKit window on macOS.
   The main thread runs ``webview.start()`` (required by macOS Cocoa); the
   Streamlit server runs in a daemonised background thread.
@@ -147,7 +147,7 @@ def _wait_for_server(health_url: str, failed_event: threading.Event,
 def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Event]:
     """Probe a free port, start Streamlit, and return (ok, base_url, failed_event).
 
-    Does NOT retry — callers handle retry policy.  ``failed_event`` remains
+    Does NOT retry - callers handle retry policy.  ``failed_event`` remains
     accessible so callers can distinguish a port-race timeout from a true crash.
     """
     if port is None:
@@ -188,14 +188,14 @@ if __name__ == "__main__":
             os.environ.setdefault("SSL_CERT_FILE", _ca)
             os.environ.setdefault("REQUESTS_CA_BUNDLE", _ca)
     except Exception:
-        pass  # certifi missing — fall back to whatever the system provides
+        pass  # certifi missing - fall back to whatever the system provides
 
     import platform as _platform
 
     # Force pywebview flow for macOS testing
     import webview
 
-    # Loading splash — shown immediately so the user never sees a raw
+    # Loading splash - shown immediately so the user never sees a raw
     # white screen while the Streamlit server is starting up.
     _LOADING_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Canvas Downloader — Startup Error</title>
+  <title>Canvas Downloader - Startup Error</title>
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{
@@ -283,9 +283,9 @@ if __name__ == "__main__":
 </body>
 </html>"""
 
-    # Show the loading splash immediately — no white screen on launch.
+    # Show the loading splash immediately - no white screen on launch.
     # NOTE: no text_select=True. Enabling it let the user rubber-band-select the
-    # ENTIRE UI (labels, padding, the black gaps) — which looks broken, and is
+    # ENTIRE UI (labels, padding, the black gaps) - which looks broken, and is
     # easy to trigger by accident over VNC. Text selection of page chrome is
     # instead disabled in CSS (styles/global.css), while inputs/textareas stay
     # fully selectable + editable so pasting the Canvas API token/URL still works.
@@ -327,8 +327,8 @@ if __name__ == "__main__":
         webview.windows[0].load_html(_make_error_html(_reason))
 
     # NOTE (macOS): do NOT pass a custom `menu=[Menu('Edit', ...)]`. pywebview's
-    # Cocoa backend already installs a default menu bar — "Canvas Downloader",
-    # "Edit", "View" — whose Edit menu has Cut/Copy/Paste/Select All wired to the
+    # Cocoa backend already installs a default menu bar - "Canvas Downloader",
+    # "Edit", "View" - whose Edit menu has Cut/Copy/Paste/Select All wired to the
     # standard first-responder selectors (with working ⌘X/⌘C/⌘V/⌘A) plus the
     # macOS-injected AutoFill/Dictation/Emoji items. Adding our own "Edit" menu
     # produced a SECOND, duplicate Edit title in the menu bar whose actions were

@@ -1575,7 +1575,7 @@ def show_analysis_review(on_confirm_sync):
                             idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
                             f"Move deselected files to Ignored *({deselected_locdel})*",
                             f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
-                        st.caption("These files are missing from your local folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
+                        st.caption("These files are missing from your Course Folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
 
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                             for sync_info in result.locally_deleted_files:
@@ -1744,7 +1744,7 @@ def show_analysis_review(on_confirm_sync):
                         st.info('Nothing to sync - all files are up to date!')
                         st.stop()
 
-                    # Disk space check — partition bytes by target drive so
+                    # Disk space check - partition bytes by target drive so
                     # multi-drive sync groups are each validated independently.
                     import os as _os
                     _drive_bytes: dict = {}

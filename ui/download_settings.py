@@ -294,7 +294,7 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do I have to re-download everything every time, or can I just get new files?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "Use <b>Sync Mode</b> (available from the navigation sidebar: 'Sync Local Folders') for that. Download Mode always downloads a fresh copy of everything. Sync Mode tracks what is already on your computer and only fetches files that are new or updated since your last sync. <br>Sync Mode allows you to organize your course folder &amp; files exactly how you want them, and <b>sync</b> anytime you want to download only the new files added to the course on Canvas."
+        "Use <b>Sync Mode</b> (available from the navigation sidebar: 'Sync Course Folders') for that. Download Mode always downloads a fresh copy of everything. Sync Mode tracks what is already on your computer and only fetches files that are new or updated since your last sync. <br>Sync Mode allows you to organize your course folder &amp; files exactly how you want them, and <b>sync</b> anytime you want to download only the new files added to the course on Canvas."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why would I use Video to Audio instead of keeping the full video file?</summary>"
@@ -607,7 +607,7 @@ def render_download_settings(fetch_courses_fn):
     /* Vertical alignment shim - Card 2's trojan div has a more aggressive
        negative margin-top (-25px) than Card 1's (-10px), which makes its
        outer container collapse 15px higher up. Use padding-top (not margin-top)
-       so Card 2's flex box still fills the full column height — margin would
+       so Card 2's flex box still fills the full column height - margin would
        shrink the box and leave Card 2's bottom edge 15px short of Card 1's. */
     div[class*="st-key-card_native_content"] {
         margin-top: 15px !important;

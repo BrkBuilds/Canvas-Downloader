@@ -38,8 +38,8 @@ def _persist_discovered_entries(all_results) -> None:
     pair WITHOUT stamping ``last_synced``.
 
     Used on the zero-change fast paths (nothing to download) so a fully
-    up-to-date folder — especially a student-built one that was just recognized
-    via content/size matching — builds its sync "memory" once, instead of
+    up-to-date folder - especially a student-built one that was just recognized
+    via content/size matching - builds its sync "memory" once, instead of
     re-walking and re-hashing the entire tree on every future sync. Passing
     ``update_last_synced=False`` ensures we never imply a sync actually ran.
     """
@@ -85,7 +85,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         _mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
         log_debug(f"=== Sync Analysis: {course_name} (ID: {course_id}) ===", debug_file)
         log_debug(f"Mode: {_mode_label}", debug_file)
-        log_debug(f"Local folder: {local_folder}", debug_file)
+        log_debug(f"Course Folder: {local_folder}", debug_file)
 
     progress_hook(0, 1, "Connecting to Canvas API...")
     try:
@@ -109,7 +109,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         try:
             _raw_secondary = json.loads(_raw_secondary)
         except (json.JSONDecodeError, TypeError, ValueError) as _sec_err:
-            # Truncated or corrupt stored JSON — log a warning and fall through
+            # Truncated or corrupt stored JSON - log a warning and fall through
             # to the session-state fallback so the user's current settings are used.
             logger.warning(
                 f"Secondary content contract for course {course_id} is corrupt "
@@ -119,7 +119,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             _sec_contract_source = "session state (DB corrupt)"
     if _raw_secondary is None:
         _sec_contract_source = "session state (first sync)"
-        # H-4 / L-4: First-ever analysis for this pair — no DB contract yet.
+        # H-4 / L-4: First-ever analysis for this pair - no DB contract yet.
         # Fall back to session state so the user's current settings are honoured.
         # We do NOT persist here: analysis is a read-only "verify" phase and must
         # leave no DB side effects if the user backs out. The contract is durably
@@ -135,7 +135,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             'download_submissions':   st.session_state.get('persistent_dl_submissions', False),
             'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
         }
-    _secondary_settings = _raw_secondary  # may still be empty dict — that's fine
+    _secondary_settings = _raw_secondary  # may still be empty dict - that's fine
     if debug_file:
         _enabled_sec = [
             k.replace('download_', '') for k, v in (_secondary_settings or {}).items()
@@ -250,7 +250,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 continue  # downstream loop handles missing folder
             bound_id = SyncManager.peek_bound_course_id(local_folder)
             if bound_id == 'unreadable':
-                # M-6: DB exists but couldn't be read — treat as a mismatch so
+                # M-6: DB exists but couldn't be read - treat as a mismatch so
                 # the user is warned rather than silently syncing against a corrupt DB.
                 mismatched.append({
                     'pair_idx': pair_idx,
@@ -299,7 +299,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
-    # Single pool reused across all pairs — avoids per-iteration thread
+    # Single pool reused across all pairs - avoids per-iteration thread
     # spawn/teardown overhead (~50 ms each on Windows) for large sync groups.
     import concurrent.futures as _cf
     from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
@@ -392,7 +392,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 from ui.amber_notice import render_amber_notice
                 render_amber_notice(
                     f"Sync database for \"{display_name}\" was corrupted and has been reset.",
-                    detail="Previous sync history for this folder has been cleared — all files will appear as new on the next sync.",
+                    detail="Previous sync history for this folder has been cleared - all files will appear as new on the next sync.",
                 )
                 logger.warning(f"Sync DB was reset for '{display_name}' ({pair.get('local_folder')})")
 
@@ -419,7 +419,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             continue
 
     finally:
-        # Don't wait for in-flight work if cancelled — let thread finish in bg
+        # Don't wait for in-flight work if cancelled - let thread finish in bg
         _analysis_pool.shutdown(wait=False)
 
     # Clean up the UI when all courses are done analyzing
@@ -601,7 +601,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # download will run, so an up-to-date folder builds its sync memory.
             _persist_discovered_entries(all_results)
             # 2. Bypass directly to completion.
-            # Do NOT pop sync_quick_mode here — show_sync_complete reads it
+            # Do NOT pop sync_quick_mode here - show_sync_complete reads it
             # to select the correct 'quick_sync_uptodate' notification tone.
             # cleanup_sync_state() removes it at the end of the flow.
             st.session_state['synced_count'] = 0

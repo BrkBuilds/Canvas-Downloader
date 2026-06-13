@@ -111,7 +111,7 @@ _SYNC_HELP_TEXT = (
     "Inside every synced folder, the app places a tiny, hidden database file. This acts as the folder's memory, tracking what you've already downloaded, what you've edited, and what to skip.<br>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.6; margin-bottom: 12px;'>If you link a pre-existing folder, the app will scan Canvas to look for file matches and build this memory from scratch. <br><b style='color: #ffffff;'>For best results, we recommend linking folders originally downloaded via Canvas Downloader</b>.<br>"
     "<div style='display: inline-block; margin-top: 6px; padding: 4px 8px; background: rgba(147, 90, 0, 0.4); border-radius: 4px; color: rgba(255,255,255,0.9); font-size: 0.75rem; line-height: 1.4;'>"
-    "<b style='color: #ffffff;'>Notice:</b> One folder = one course. Sync won't work as intended if you mix files from multiple Canvas courses into the same local folder."
+    "<b style='color: #ffffff;'>Notice:</b> One folder = one course. Sync won't work as intended if you mix files from multiple Canvas courses into the same Course Folder."
     "</div>"
     "</div>"
     "</div>"
@@ -344,7 +344,7 @@ _SYNC_HELP_TEXT = (
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65; margin-bottom: 14px;'>"
     "The <b style='color: #ffffff;'>Sync History</b> expander at the bottom of the page keeps a rolling log of your 15 most recent sync runs. "
-    "It acts as your sync journal, making it easy to track exactly when and how your local folders were modified, or to see which files failed to download."
+    "It acts as your sync journal, making it easy to track exactly when and how your Course Folders were modified, or to see which files failed to download."
     "</div>"
     "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
@@ -409,7 +409,7 @@ _SYNC_HELP_TEXT = (
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is the difference between Sync Mode and Download Mode?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "Download Mode fetches a complete fresh copy of everything - it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your local folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance."
+    "Download Mode fetches a complete fresh copy of everything - it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your Course Folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>How many courses can I sync at once?</summary>"
@@ -722,7 +722,7 @@ def _sync_pairs_section(courses, course_names, course_options):
     # L-8: Acknowledged race: cleanup_sync_state() pops this cache while a
     # bulk_ignore_files write could be mid-flight on the sync background thread.
     # Worst case: cache rebuilds on the next rerun with stale data for one frame.
-    # Acceptable — bulk_ignore writes are fast and idempotent.
+    # Acceptable - bulk_ignore writes are fast and idempotent.
     _cache_key = '_ignored_files_cache'
     ignored_by_course = st.session_state.get(_cache_key)
 
@@ -981,7 +981,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                 f'<div style="padding: 20px 10px 40px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;">'
                 f'{logo_html}'
                 f'<div style="color: #bbb; font-size: 1.1rem; text-align: center; max-width: 400px; line-height: 1.5;">'
-                f'Ready to sync? Add a local folder and map it to a Canvas course to get started!'
+                f'Ready to sync? Add a Course Folder and map it to a Canvas course to get started!'
                 f'</div></div>', 
                 unsafe_allow_html=True
             )
@@ -1275,7 +1275,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             detail="The folder may have been moved, renamed, or the drive is disconnected. Edit or remove the pair to continue.",
         )
 
-    # H-3: Aggregate mismatch notice — show ALL binding mismatches at once.
+    # H-3: Aggregate mismatch notice - show ALL binding mismatches at once.
     _mismatches = st.session_state.pop('sync_mismatched_pairs', [])
     if _mismatches:
         from ui.amber_notice import render_amber_notice
@@ -1408,7 +1408,7 @@ def _render_sync_history():
         # branch caused an UnboundLocalError on the clear-history rerun, because
         # by then the cache already exists and the branch is skipped.
         history_mgr = SyncHistoryManager(get_config_dir())
-        # M-1: Cache history in session state — avoids a disk read on every
+        # M-1: Cache history in session state - avoids a disk read on every
         # Streamlit rerun (checkbox clicks, etc.). Invalidated by execution.py
         # after a new entry is written via st.session_state.pop('_sync_history_cache').
         if '_sync_history_cache' not in st.session_state:
@@ -1949,7 +1949,7 @@ def render_sync_step4( main_placeholder=None):
         current_pass = st.session_state.get('analysis_pass', 1)
 
         if current_pass == 1:
-            # M-7: Server-side fallback — if JS click never fires (CSP, iframe
+            # M-7: Server-side fallback - if JS click never fires (CSP, iframe
             # sandbox, screen-reader nav), force-advance to pass 2 after 5s.
             import time as _time
             if 'analysis_pass1_started_at' not in st.session_state:

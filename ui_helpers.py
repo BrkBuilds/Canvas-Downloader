@@ -39,7 +39,7 @@ def resolve_path(path):
 
 @functools.lru_cache(maxsize=128)
 def _get_base64_image_cached(image_path: str) -> str:
-    """Cached disk read — only called on success; exceptions propagate uncached."""
+    """Cached disk read - only called on success; exceptions propagate uncached."""
     with open(resolve_path(image_path), "rb") as f:
         return base64.b64encode(f.read()).decode()
 
