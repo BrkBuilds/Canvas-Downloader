@@ -34,6 +34,20 @@ def show_sync_cancelled():
     """Render the sync-cancelled screen with error details."""
     render_sync_wizard(st, 3)
 
+    # macOS: tidy Office the moment the user lands on the cancelled screen,
+    # mirroring the completion screen. quit_idle_office_apps() first force-
+    # closes any staged document the cancelled conversion left open in a hidden
+    # Office process (marker-matched — user docs untouchable), then quits the
+    # now-idle apps and purges our Recents entries. One-shot per run.
+    import sys as _sys_qc
+    if _sys_qc.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
+        st.session_state['_office_quit_fired'] = True
+        try:
+            from engine.applescript_bridge import quit_idle_office_apps
+            quit_idle_office_apps()
+        except Exception:
+            pass
+
     cancelled_count = st.session_state.get('sync_cancelled_file_count', 0)
     total_files = sum(
         len(sel['new']) + len(sel['updates']) + len(sel['redownload'])
