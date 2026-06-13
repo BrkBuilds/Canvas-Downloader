@@ -57,7 +57,7 @@ def add_pair(new_pair: dict) -> None:
     """Add a single sync pair (deduplicates by course_id + local_folder)."""
     target_folder = new_pair.get('local_folder', '')
     if not _validate_pair_folder(target_folder):
-        st.toast(f"Folder rejected — system directories cannot be used as sync folders: {target_folder}", icon="⚠️")
+        st.toast(f"Folder rejected - system directories cannot be used as sync folders: {target_folder}", icon="⚠️")
         return
     def modifier(fresh_pairs):
         target_cid = new_pair.get('course_id')
@@ -90,7 +90,7 @@ def add_pairs_batch(new_pairs_list: list[dict]) -> None:
         return fresh_pairs
     st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
     if rejected:
-        st.toast(f"{len(rejected)} folder(s) rejected — system directories cannot be used as sync folders.", icon="⚠️")
+        st.toast(f"{len(rejected)} folder(s) rejected - system directories cannot be used as sync folders.", icon="⚠️")
 
 
 def update_pair_by_signature(old_signature: dict, new_pair_data: dict) -> None:

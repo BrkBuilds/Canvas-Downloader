@@ -25,7 +25,7 @@ SECONDARY_ENTITY_ICONS = {
 # Sized at 18×18 with themed stroke colors for consistency.
 _ICON_STYLE = 'display:inline-block;vertical-align:middle;position:relative;top:-1px;margin:0 4px;flex-shrink:0;'
 
-# Inline SVG paths for each icon — keyed by Material icon name.
+# Inline SVG paths for each icon - keyed by Material icon name.
 # Eliminates the Google Fonts dependency so icons work in the packaged app
 # regardless of network access or font-load timing.
 _MAT_SVG_INNER: dict[str, str] = {
@@ -47,7 +47,7 @@ _MAT_SVG_INNER: dict[str, str] = {
 }
 
 def inject_material_icons_font() -> None:
-    """No-op — Material Symbols font replaced by inline SVGs (issue 2 fix)."""
+    """No-op - Material Symbols font replaced by inline SVGs (issue 2 fix)."""
     pass
 
 def _mat(icon_name: str, color: str = '#38BDF8', size: int = 18) -> str:
@@ -111,7 +111,7 @@ def _build_help_icons() -> dict:
         'cat_uptodate': _mat('check_circle', color='#10B981', size=16),
     }
 
-# Lazy singleton — computed on first access so missing assets at import time
+# Lazy singleton - computed on first access so missing assets at import time
 # don't permanently bake broken icons into the cache (M-23).
 _HELP_ICONS_CACHE: dict | None = None
 

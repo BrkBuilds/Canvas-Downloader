@@ -21,7 +21,7 @@ def _filter_zip_members(members):
     ]
 
 def extract_archive(archive_path: str | Path) -> bool | None:
-    # Do NOT apply \\?\ to abs_archive — tarfile.open() rejects it on Python < 3.12.
+    # Do NOT apply \\?\ to abs_archive - tarfile.open() rejects it on Python < 3.12.
     # The archive file itself won't hit MAX_PATH; only extracted contents can.
     abs_archive = Path(archive_path).resolve().absolute()
 
@@ -86,7 +86,7 @@ def extract_archive(archive_path: str | Path) -> bool | None:
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
             mode = 'r:gz' if abs_archive.name.lower().endswith('.gz') else 'r:'
             with tarfile.open(abs_archive, mode) as tar_ref:
-                # Cache members once — streaming .tar.gz archives cannot rewind,
+                # Cache members once - streaming .tar.gz archives cannot rewind,
                 # so a second getmembers() call would return an empty list.
                 tar_members = tar_ref.getmembers()
                 uncompressed_size = sum(info.size for info in tar_members if info.isfile())

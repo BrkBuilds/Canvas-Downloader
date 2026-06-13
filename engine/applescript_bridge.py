@@ -81,7 +81,7 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
 
     Degrades safely: on any platform other than macOS, when the container is
     unavailable, or if the staging copy fails, it yields the original
-    ``(src, dst)`` unchanged — behaviour is then identical to no staging
+    ``(src, dst)`` unchanged - behaviour is then identical to no staging
     (i.e. never worse than before, only ever better).
     """
     src = Path(src)
@@ -448,7 +448,7 @@ def _purge_canvas_recents() -> None:
     _purge_securebookmarks()
 
 
-# (AppleScript app name, its document collection term) — shared by the idle-quit
+# (AppleScript app name, its document collection term) - shared by the idle-quit
 # and the staged-document force-close helpers below.
 _QUIT_TARGETS = [
     ("Microsoft PowerPoint", "presentations"),
@@ -504,10 +504,10 @@ def _force_close_canvas_docs_sync(only_app: str | None = None) -> None:
     A conversion can leave its staged document open in a hidden Office process
     when the run is cancelled mid-file or when an AppleEvent times out (pending
     TCC prompt, hung app). Those zombie documents then (a) keep the app's
-    document count non-zero so the idle-quit refuses to quit it — which is why
-    Excel lingered in the dock after a run with timeouts — and (b) confuse users
+    document count non-zero so the idle-quit refuses to quit it - which is why
+    Excel lingered in the dock after a run with timeouts - and (b) confuse users
     who later unhide the app. Marker-matched, so only Canvas Downloader staging
-    files are ever closed; user documents are untouchable. Synchronous —
+    files are ever closed; user documents are untouchable. Synchronous -
     callers wrap in a thread when needed. Never launches an app (System Events
     running check inside the script).
     """
@@ -541,11 +541,11 @@ def quit_idle_office_apps() -> None:
     Three steps, on a single daemon thread (macOS only):
 
     1. Force-close any documents still open from OUR container staging dir
-       (marker-matched — see ``_force_close_canvas_docs_sync``). Cancelled or
+       (marker-matched - see ``_force_close_canvas_docs_sync``). Cancelled or
        timed-out conversions leave their staged document open in the hidden
        Office process; closing them first is also what lets step 2 actually
        quit the app (its document count drops to 0).
-    2. Quit PowerPoint/Word/Excel — but ONLY if they have no open documents.
+    2. Quit PowerPoint/Word/Excel - but ONLY if they have no open documents.
        Post-processing leaves them running (we deliberately never quit them
        mid-batch, to avoid relaunch churn between courses); this clears them from
        the dock once everything is done. We check via System Events that the
@@ -554,7 +554,7 @@ def quit_idle_office_apps() -> None:
        has their own workbook/presentation open is never disturbed.
     3. Purge our container-staged temp files from Office's Recent-files lists
        (see ``_purge_canvas_recents``) so the conversion scratch files don't
-       crowd out the user's real recent documents. Marker-filtered — only
+       crowd out the user's real recent documents. Marker-filtered - only
        Canvas Downloader temp paths are ever removed.
 
     Called from BOTH the completion screens and the cancelled screens (one-shot
@@ -602,7 +602,7 @@ def quit_idle_office_apps() -> None:
 # ── Office priming state ────────────────────────────────────────────
 # Which Office apps have already been launched/primed this run, and whether the
 # macro-security pref has been written. Module-level (not session state) and
-# reset by reset_office_priming() at the start of each download/sync run — the
+# reset by reset_office_priming() at the start of each download/sync run - the
 # apps are quit at the previous run's completion screen, so a fresh run re-primes.
 _primed_apps: set = set()
 _macro_pref_written = False
@@ -632,7 +632,7 @@ def office_contract_from_folder(folder, base_contract: dict) -> dict:
     """Scope *base_contract* to the Office file types ACTUALLY present in *folder*.
 
     Returns a contract that enables an app only when its converter is on in
-    *base_contract* AND at least one matching file exists anywhere under *folder* —
+    *base_contract* AND at least one matching file exists anywhere under *folder* -
     so a course containing only .pptx never launches Word or Excel. Off macOS it
     returns the contract unchanged; on a scan error it falls back to the unscoped
     contract (so we never suppress an app that's actually needed).
@@ -684,19 +684,19 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
     conversion.
 
     ``on_app_answered(app)`` fires only when the TCC-triggering event completed
-    (Allow → rc 0, or explicit Deny → -1743) — NOT when it timed out unanswered,
+    (Allow → rc 0, or explicit Deny → -1743) - NOT when it timed out unanswered,
     so an ignored prompt is retried on the next run. Callers run this on a
     worker thread; everything is best-effort.
     """
     if write_macro_pref:
         # Kill the "this workbook contains macros" dialog suite-wide BEFORE any
         # Office app launches. The CORRECT macOS key is VisualBasicMacroExecutionState
-        # (a String) on the SHARED `com.microsoft.office` domain — NOT the Windows-only
+        # (a String) on the SHARED `com.microsoft.office` domain - NOT the Windows-only
         # `VBAWarnings`, and NOT a per-app domain. (Confirmed by Microsoft's "Set
         # preferences for macro security in Office for Mac" doc.) "DisabledWithoutWarnings"
         # = macros never run and never prompt. IMPORTANT for the user's "data exactly as
         # the teacher made it" requirement: disabling macro EXECUTION does NOT blank any
-        # cells — a workbook's last-saved values are what render to PDF; VBA only matters
+        # cells - a workbook's last-saved values are what render to PDF; VBA only matters
         # if code RUNS, which we never need (a stray Workbook_Open could itself hang/prompt).
         # Written before launch because cfprefsd caches prefs for a running process.
         try:
@@ -736,7 +736,7 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
         try:
             # Harmless Apple Event → triggers the per-app Automation TCC prompt.
             # Returns rc 0 on Allow, -1743 on Deny; raises TimeoutExpired when
-            # the prompt sat unanswered — only then is the app NOT recorded as
+            # the prompt sat unanswered - only then is the app NOT recorded as
             # answered, so the next run re-batches it.
             subprocess.run(
                 ['osascript', '-e', f'tell application "{app}" to count windows'],
@@ -761,7 +761,7 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
             # external sources" dialog. Done HERE, in its own isolated
             # osascript, NOT inline in the conversion script: if this Excel
             # build doesn't expose the property the statement is a COMPILE
-            # error (-2741) that `try` can't catch — inline it would kill
+            # error (-2741) that `try` can't catch - inline it would kill
             # every conversion. Isolated, a bad property name just no-ops.
             for _prop in ('ask to update links', 'ask to update automatic links'):
                 try:
@@ -819,13 +819,13 @@ def prime_office_automation(contract: dict) -> None:
 
 # ── First-run batched permission setup ──────────────────────────────
 # macOS asks for each Automation (TCC) consent the FIRST time the matching
-# Apple event is actually sent. Left to chance — with priming scoped to the
-# files each run happens to contain — those prompts surface mid-run, one app
+# Apple event is actually sent. Left to chance - with priming scoped to the
+# files each run happens to contain - those prompts surface mid-run, one app
 # at a time, possibly across different days. Worse, an UNANSWERED prompt makes
 # every conversion for that app hang until AppleScript's AppleEvent timeout
 # (-1712), which is exactly how a user who stepped away lost 3 Excel files.
 # This batch fires every outstanding prompt ONCE, at the start of the user's
-# first conversion-enabled run — the one moment they are guaranteed to be at
+# first conversion-enabled run - the one moment they are guaranteed to be at
 # the screen, because they just clicked Start.
 _first_run_batch_started = False  # at most one batch per process
 _PERMISSION_RECORD_FILE = 'macos_permission_setup.json'
@@ -851,7 +851,7 @@ def _record_permission_answered(ms_name: str) -> None:
     """Persist that *ms_name*'s Automation prompt was answered (atomic write).
 
     A Deny is recorded too: macOS will not re-prompt a denied pair anyway, so
-    re-batching would only churn app launches — the docs point denied users to
+    re-batching would only churn app launches - the docs point denied users to
     System Settings → Privacy & Security → Automation instead.
     """
     import json
@@ -872,7 +872,7 @@ def first_run_permission_setup(contract: dict) -> bool:
     """Batch ALL outstanding macOS Office permission prompts at run start.
 
     *contract* is the UNscoped converter settings (the persistent_convert_*
-    toggles) — deliberately not file-scoped: the whole point is to collect the
+    toggles) - deliberately not file-scoped: the whole point is to collect the
     prompts for every app the user will EVER need in one predictable moment,
     rather than letting each app's prompt ambush a later run (where an absent
     user means -1712 timeouts and skipped files).
@@ -882,7 +882,7 @@ def first_run_permission_setup(contract: dict) -> bool:
     TCC-triggering events (plus the container-staging touch that hoists the
     macOS 15 "access data from other apps" prompt into the same batch).
     Answered apps are recorded in the config dir, so this is one-time per
-    machine — NOT per run. Returns True when a batch was actually started, so
+    machine - NOT per run. Returns True when a batch was actually started, so
     the caller can show a heads-up banner; False otherwise (not macOS, nothing
     outstanding, already ran this process).
     """

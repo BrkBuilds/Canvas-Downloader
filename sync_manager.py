@@ -74,7 +74,7 @@ class SyncFileInfo:
 
 @dataclass
 class AnalysisResult:
-    """Result of analyzing local folder vs Canvas course."""
+    """Result of analyzing Course Folder vs Canvas course."""
     new_files: list[CanvasFileInfo] = field(default_factory=list)
     updated_clean_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
     updated_modified_files: list[tuple[CanvasFileInfo, SyncFileInfo]] = field(default_factory=list)
@@ -342,7 +342,7 @@ class SyncManager:
             self._init_db_locked(attempt)
 
     def _init_db_locked(self, attempt=0):
-        """Internal _init_db body — must only be called while holding self._db_lock."""
+        """Internal _init_db body - must only be called while holding self._db_lock."""
         self.local_path.mkdir(parents=True, exist_ok=True)
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
@@ -438,7 +438,7 @@ class SyncManager:
             logger.error(f"Cannot load manifest: DB initialization failed for {self.db_path}")
             raise RuntimeError(
                 f"Sync database could not be initialized for '{self.course_name}'. "
-                "Cannot load manifest — the sync database may be locked by another process."
+                "Cannot load manifest - the sync database may be locked by another process."
             )
 
         manifest = {
@@ -490,7 +490,7 @@ class SyncManager:
 
         Args:
             update_last_synced: When True (download path), stamp the ``last_synced``
-                metadata. When False, persist only the manifest rows — used by the
+                metadata. When False, persist only the manifest rows - used by the
                 analysis phase to durably record auto-discovered/healed entries for
                 an up-to-date folder WITHOUT pretending a sync just happened.
         """
@@ -595,7 +595,7 @@ class SyncManager:
     
     def heal_manifest(self, manifest: dict, progress_callback: Optional[Callable] = None) -> dict:
         """
-        Find moved/renamed/edited files by scanning the local folder.
+        Find moved/renamed/edited files by scanning the Course Folder.
         Uses a 3-tier heuristic:
         1. Exact filename match
         2. Exact MD5 hash match (for renamed files)
@@ -680,13 +680,13 @@ class SyncManager:
                             matched_tier = 2
                             break
 
-            # TIER 3: Fuzzy filename match — multiple independent guards make this
+            # TIER 3: Fuzzy filename match - multiple independent guards make this
             # last-resort heuristic safe against binding the wrong file:
             #   • Extension must match (a renamed PDF is still a PDF).
             #   • Stem containment: one normalized stem must contain the other, so
             #     a rename that ADDS/removes a segment ("Intro"→"Intro_v2") matches
             #     but a single-character SUBSTITUTION ("Lecture1"→"Lecture2") does
-            #     NOT — substitutions are the classic mis-heal trap.
+            #     NOT - substitutions are the classic mis-heal trap.
             #   • Similarity must be >= 0.90.
             #   • Ambiguity reject: if a second candidate is nearly as similar,
             #     refuse rather than guess.
@@ -857,12 +857,12 @@ class SyncManager:
             file_id = str(c_file.id)
                 
             if file_id not in files_section:
-                # Not in manifest — try to recognize a file the student already
+                # Not in manifest - try to recognize a file the student already
                 # has on disk so we never re-download a duplicate. Three tiers:
                 #   (a) name match (filesystem-aware; size must match for real
                 #       files, synthetic entities match on name alone),
                 #   (b) content match by md5 when Canvas exposes a hash and the
-                #       file was renamed — the key win for student-built folders,
+                #       file was renamed - the key win for student-built folders,
                 #   (c) unambiguous size+extension fallback when md5 is absent or
                 #       the file is too large to hash interactively.
                 match_key = _match_key(c_file.filename)
@@ -873,12 +873,12 @@ class SyncManager:
                     if str(cand['path']) in claimed_paths:
                         continue
                     # Synthetic secondary entities are stored with size=0 but the
-                    # HTML on disk has content — match negatives on name alone.
+                    # HTML on disk has content - match negatives on name alone.
                     if c_file.id < 0 or cand['size'] == c_file.size:
                         matched_cand = cand
                         break
 
-                # (b)/(c) Content / size+ext match — real files only (synthetic
+                # (b)/(c) Content / size+ext match - real files only (synthetic
                 # entities have size 0 and are handled by the name tier above).
                 if matched_cand is None and c_file.id >= 0:
                     size_pool = [
@@ -1008,7 +1008,7 @@ class SyncManager:
                     sync_info = self._dict_to_sync_info(file_id, entry)
                     
                     # Attach target path (as_posix gives forward slashes on
-                    # all platforms — the old .replace('\\\\','/') matched two
+                    # all platforms - the old .replace('\\\\','/') matched two
                     # literal backslashes and never normalized anything).
                     sync_info.target_local_path = Path(entry.get('local_path', '')).parent.as_posix()
                     if sync_info.target_local_path == '.':
@@ -1051,7 +1051,7 @@ class SyncManager:
         # model. The old local file does not exist (locally_deleted branch),
         # so the update is always 'clean' - no risk of overwriting edits.
         #
-        # Secondary content (negative IDs — assignments, quizzes, pages, etc.)
+        # Secondary content (negative IDs - assignments, quizzes, pages, etc.)
         # is excluded from the name-based dedup because:
         #   (a) The teacher re-upload loop already skips negative IDs (line below).
         #   (b) Two assignments with the same sanitized name are distinct entities
@@ -1104,7 +1104,7 @@ class SyncManager:
         result.locally_deleted_files = final_locally_deleted
         
         # Count ALL untracked local files so they reflect in the "up to date" UI
-        # This ensures the student's local folder count matches what the app reports
+        # This ensures the student's Course Folder count matches what the app reports
         tracked_local_paths = {
             os.path.normpath(str(self.local_path / entry.get('local_path', '')))
             for entry in files_section.values()
@@ -1261,7 +1261,7 @@ class SyncManager:
 
         # Canvas timestamp is newer. When we have NO md5 on either side to confirm
         # a real content change, teachers frequently "touch" a file (re-publish,
-        # permission/metadata edits) without altering bytes — producing phantom
+        # permission/metadata edits) without altering bytes - producing phantom
         # updates. Use file size as a cheap tie-breaker: if the byte count is
         # unchanged, treat it as a metadata touch (not newer). A genuine content
         # change almost always changes the size. This only applies when md5 is
@@ -1295,7 +1295,7 @@ class SyncManager:
         which silently overwrote student edits on big annotated PDFs/scans and
         broke the "never overwrites your edits" guarantee. This method is only
         reached when ``_is_canvas_newer`` already returned True and the file is
-        not ignored, so hashing runs solely for genuinely-updated files — the
+        not ignored, so hashing runs solely for genuinely-updated files - the
         I/O cost is bounded and correctness is paramount. If the hash cannot be
         computed (locked/unreadable file) we bias to ``'modified'`` so the local
         copy is always preserved.
@@ -1331,7 +1331,7 @@ class SyncManager:
         file_id = str(canvas_file.id)
         
         # If no MD5 is provided but file exists, compute it.
-        # compute_local_md5 returns None on PermissionError — coerce to "" so
+        # compute_local_md5 returns None on PermissionError - coerce to "" so
         # the DB always gets a string (NULL causes type ambiguity on read-back).
         if not local_md5:
             full_path = self.local_path / local_path
@@ -1868,9 +1868,9 @@ def compute_local_md5(filepath: Path) -> str | None:
     """Compute MD5 hash of a file efficiently by reading in 1 MB chunks.
 
     Returns:
-        hex digest string — file was readable and hashed successfully.
-        ""  (empty string) — file does not exist (no hash available).
-        None — file exists but could not be read (PermissionError / locked).
+        hex digest string - file was readable and hashed successfully.
+        ""  (empty string) - file does not exist (no hash available).
+        None - file exists but could not be read (PermissionError / locked).
 
     Callers that only care about availability can treat both falsy values the
     same way (``if not result``).  Callers that need to distinguish a missing

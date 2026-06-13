@@ -600,7 +600,7 @@ def select_course_dialog_inner(courses, current_selected_id, ):
             div[role="dialog"] [data-testid="stDialogScrollableBody"] {
                 padding-top: 0.25rem !important;
             }
-            /* Hide native X close button — closing without selecting would
+            /* Hide native X close button - closing without selecting would
                leave pending_sync_folder in a stale state. */
             div[data-testid="stDialog"] button[aria-label="Close"] {
                 display: none !important;
