@@ -88,34 +88,124 @@
     }
 
     /* section label */
-    .label {
+    .section-kicker {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--cyan);
-      background: var(--cyan-bg);
-      border: 1px solid var(--cyan-b);
-      padding: 4px 12px;
-      border-radius: 100px;
       margin-bottom: 16px;
     }
 
-    .label.grn {
-      color: var(--green);
-      background: var(--grn-bg);
-      border-color: var(--grn-b);
+    /* Pain Point */
+    .pain-point {
+      padding: 100px 0;
+      text-align: center;
+    }
+    .pain-point h2 {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 900;
+      margin-bottom: 24px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .pain-point p {
+      font-size: 18px;
+      color: var(--txt2);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.6;
     }
 
-    .label.org {
-      color: var(--orange);
-      background: var(--org-bg);
-      border-color: var(--org-b);
+    /* Three Pillars (Zig-Zag) */
+    .pillars {
+      padding: 60px 0;
+    }
+    .pillar-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-bottom: 120px;
+    }
+    .pillar-row:last-child {
+      margin-bottom: 60px;
+    }
+    .pillar-row.rev .pillar-text {
+      order: 2;
+    }
+    .pillar-row.rev .pillar-vis {
+      order: 1;
+    }
+    @media(max-width: 860px) {
+      .pillar-row {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        margin-bottom: 80px;
+        text-align: center;
+      }
+      .pillar-row.rev .pillar-text {
+        order: 1;
+      }
+      .pillar-row.rev .pillar-vis {
+        order: 2;
+      }
+    }
+    .pillar-text h3 {
+      font-size: clamp(28px, 3.5vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .pillar-text p {
+      font-size: 16px;
+      color: var(--txt2);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .pillar-text ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .pillar-text li {
+      position: relative;
+      padding-left: 24px;
+      font-size: 14px;
+      color: var(--txt2);
+      margin-bottom: 8px;
+    }
+    .pillar-text li::before {
+      content: "•";
+      color: var(--cyan);
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+    .pillar-vis {
+      background: var(--surf);
+      border: 1px solid var(--border);
+      border-radius: var(--rad-l);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      aspect-ratio: 4/3;
     }
 
+    /* Final CTA */
+    .final-cta {
+      padding: 100px 0;
+      text-align: center;
+      background: radial-gradient(ellipse at center, rgba(59, 113, 184, 0.15) 0%, transparent 70%);
+    }
     /* ---- NAV ---- */
     nav {
       position: sticky;
@@ -239,6 +329,17 @@
     }
 
     /* ---- HERO ---- */
+    .hero-cursor {
+      color: #38bdf8;
+      font-weight: 400;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
     .hero {
       padding: 90px 0 80px;
       position: relative;
@@ -258,7 +359,7 @@
 
     .hero-inner {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1.35fr;
       gap: 60px;
       align-items: center;
       position: relative;
@@ -1526,7 +1627,7 @@
     }
 
     .dl-subtitle {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--txt3);
       text-align: center;
       margin-bottom: 18px;
@@ -2128,12 +2229,73 @@
     .sec-qa-card summary:hover::after {
       color: var(--cyan);
     }
+
+    /* Video Modal */
+    .video-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(11, 12, 20, 0.9);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .video-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+    .video-modal-content {
+      position: relative;
+      width: 90%;
+      max-width: 1200px;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+    .video-modal.show .video-modal-content {
+      transform: scale(1);
+    }
+    .video-modal-content video {
+      width: 100%;
+      border-radius: var(--rad-l);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+      display: block;
+      border: 1px solid var(--border);
+    }
+    .close-video-modal {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: var(--txt3);
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .close-video-modal:hover {
+      color: #fff;
+    }
+    .expandable-video {
+      cursor: pointer;
+      transition: filter 0.2s, transform 0.2s;
+    }
+    .expandable-video:hover {
+      filter: brightness(1.1);
+      transform: scale(1.01);
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- NAV -->
+  
+<!-- NAV -->
   <nav>
     <div class="container">
       <div class="nav-inner">
@@ -2166,68 +2328,59 @@
     </div>
   </nav>
 
-  <!-- HERO -->
+  
+
+  <!-- Section 1: HERO -->
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="container">
       <div class="hero-inner">
         <div class="hero-text reveal">
-          <h1
-            style="font-size: clamp(30px, 4.5vw, 50px); line-height: 1.15; margin-bottom: 24px; font-weight: 950; letter-spacing: -0.03em;">
-            Your Canvas Courses:<br />
-            <span
-              style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Downloaded
-              &amp; organized.</span><br />
-            <span
-              style="font-size: 0.8em; font-weight: 800; display: block; margin-top: 6px; color: var(--txt); opacity: 0.9;">Always
-              up to date.</span>
-            <span style="font-size: 0.8em; font-weight: 800; display: block; color: var(--cyan);">AI Optimized.</span>
+          <h1 style="font-size: clamp(34px, 5vw, 58px); line-height: 1.07; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.04em;">
+            Canvas is outdated, you deserve better.<br>
+            <span style="display: grid; grid-template-columns: 1fr;">
+              <!-- Invisible placeholders to lock the max height at any screen width -->
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Download all your courses in minutes|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Sync new files to your PC in one click|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Auto-optimize all your files for AI|</span>
+              <!-- Actual visible text -->
+              <span style="grid-area: 1 / 1;">
+                <span style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><span id="hero-dynamic-text">Download all your courses in minutes</span></span><span class="hero-cursor">|</span>
+              </span>
+            </span>
           </h1>
-          <p>Batch-download every file from all your courses. Smart sync keeps folders up to date throughout the
-            semester. <strong style="color:var(--txt);">Export directly to NotebookLM, ChatGPT, or Claude in one
-              click.</strong></p>
+          <p>The ultimate tool for university students. Batch-download courses and canvas content. Sync & download the newest course files in one click.<br> 100% free and AI-ready.</p>
           <div class="hero-btns" id="hero-download-area" style="margin-bottom: 10px;">
-            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-dl btn-win" id="hero-get-win"
-              onclick="setTimeout(() => window.location.href='thanks-win.html', 100);" style="display: none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
-              </svg>
-              Download for Windows
-            </a>
+            <div id="hero-windows-group" style="display: none; flex-direction: column; gap: 12px; align-items: stretch; width: 100%; max-width: 240px;">
+              <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank" rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;" onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
+                <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" style="display: block; width: 100%;" />
+              </a>
+              <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe" class="btn-dl btn-dl-ghost" id="hero-get-win" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);" style="padding: 10px 16px; font-size: 13px; width: 100%; justify-content: center; box-shadow: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" /></svg>
+                Download direct (.exe)
+              </a>
+            </div>
             <a href="thanks-mac.html" class="btn-dl btn-win" id="hero-get-mac" style="display: none;">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-              </svg>
-              Download for Mac - Beta
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              Download for Mac
             </a>
           </div>
-          <div id="hero-os-toggle" style="margin-bottom: 34px; display: none;">
-            <a href="#" id="hero-toggle-os-btn"
-              style="display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;"
-              onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
-              onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
+          <div id="hero-os-toggle" style="margin-bottom: 24px; margin-top: -6px; display: none;">
+            <a href="#" id="hero-toggle-os-btn" style="display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';" onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
               Need the Mac version?
             </a>
           </div>
-
-
         </div>
         <div class="hero-visual reveal">
           <div class="hero-gif-wrap">
-            <div class="hero-icon-glow"
-              style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
-            </div>
-            <video autoplay loop muted playsinline
-              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
+            <div class="hero-icon-glow" style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;"></div>
+            <video autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
               <source src="assets/product_demo.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
           </div>
         </div>
       </div>
-
+      
       <!-- Persona Section -->
       <div class="reveal"
         style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
@@ -2239,581 +2392,89 @@
               style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">
               Hi, I'm Birk.</h4>
             <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business
-              Administration and Information Systems at <strong>Copenhagen Business School</strong>. <br>I got tired of manually downloading my course files from Canvas and converting them to AI-ready formats, so i decided to make this app!
+              Administration and Information Systems at <strong>Copenhagen Business School</strong>. <br>I got tired of
+              manually downloading my course files from Canvas and converting them to AI-ready formats, so i decided to
+              make this app!
               It's 100% free and open-source - for all students to use! Happy downloading!</p>
           </div>
         </div>
       </div>
 
+    
     </div>
   </section>
 
   <hr class="div" />
 
-  <!-- DOWNLOAD MODE -->
-  <section class="dl-section" id="download-mode">
+  <!-- Section 2: Pain Point -->
+  <section class="pain-point reveal">
     <div class="container">
-      <div class="sh reveal">
-        <div class="label">Download Mode</div>
-        <h2>Select courses. Configure. Download.</h2>
-        <p style="margin-bottom: 16px;">Pick any combination of courses from your Canvas account, configure what to
-          grab, and download in one batch.
-          Every setting below is in the app exactly as shown.</p>
-
-      </div>
-      <!-- Quick Download Expander (Open by default, flat/invisible theme) -->
-      <details class="app-mode-expander reveal" open>
-        <summary>
-          <div
-            style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
-              <img src="assets/icon_quick_download.png" alt="Quick Download"
-                style="width: 20px; height: 20px; flex-shrink: 0;" />
-              Quick Download
-            </div>
-            <div
-              style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
-              Quick & easy, no setup needed. Choose a preset and download with one click.
-            </div>
-          </div>
-        </summary>
-        <div class="expander-content">
-          <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
-            Pick one of the 5 most common download configurations and start downloading in seconds. <br>For the people
-            who want their course files, now.
-          </p>
-          <div class="quick-presets-container">
-            <div class="presets-row-3">
-              <div class="preset-card quick-preset-card active">
-                <img src="assets/icon_quick_dl_complete.png" alt="Complete Canvas Download" />
-                <div class="pc-info">
-                  <div class="pc-name">Complete Canvas Download</div>
-                  <div class="pc-desc">All files and Canvas content, just like you see it in Canvas.</div>
-                </div>
-              </div>
-
-              <div class="preset-card quick-preset-card">
-                <img src="assets/icon_quick_dl_ai_optimized.png" alt="Daily study pack (Optimized)" />
-                <div class="pc-info">
-                  <div class="pc-name">Daily study pack (Optimized)</div>
-                  <div class="pc-desc">Full course with PPTX converted to PDF, for easy AI upload.</div>
-                </div>
-              </div>
-
-              <div class="preset-card quick-preset-card">
-                <img src="assets/icon_quick_dl_notebook.png" alt="100% AI & NotebookLM Ready" />
-                <div class="pc-info">
-                  <div class="pc-name">100% AI &amp; NotebookLM Ready</div>
-                  <div class="pc-desc">All files AI-Optimized, ready to drag &amp; drop into NotebookLM.</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="presets-row-2">
-              <div class="preset-card quick-preset-card">
-                <img src="assets/icon_quick_dl_ppt_pdf.png" alt="Slides & PDFs Only" />
-                <div class="pc-info">
-                  <div class="pc-name">Slides &amp; PDFs Only</div>
-                  <div class="pc-desc">Download only slides and PDF files, nothing else.</div>
-                </div>
-              </div>
-
-              <div class="preset-card quick-preset-card">
-                <img src="assets/icon_quick_dl_all_files.png" alt="Files Only" />
-                <div class="pc-info">
-                  <div class="pc-name">Files Only</div>
-                  <div class="pc-desc">Only files uploaded by your teacher, no Canvas Content or other distractions.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <!-- Custom Download Expander (Closed by default, flat/invisible theme) -->
-      <details class="app-mode-expander reveal">
-        <summary>
-          <div
-            style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 12px; line-height: 1.2;">
-              <img src="assets/icon_custom_download.png" alt="Custom Download"
-                style="width: 20px; height: 20px; flex-shrink: 0;" />
-              Custom Download
-            </div>
-            <div
-              style="font-size: 13px; color: var(--txt3); font-weight: 400; padding-left: 32px; line-height: 1.4; white-space: normal;">
-              Total personalization. Hand-pick what to download, and exactly how to optimize your files for AI.
-            </div>
-          </div>
-        </summary>
-        <div class="expander-content">
-          <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 20px; line-height: 1.6;">
-            Configure every setting yourself. Pick any combination of files, Canvas content, and AI Optimizations.
-            <br>For the people who want full control over their downloads.
-          </p>
-
-          <div class="dl-grid">
-
-            <!-- Card 1: File Filter + Structure -->
-            <div class="app-card filter-card">
-              <div class="app-card-header">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-                </svg>
-                Card 1 - Core Files &amp; Structure
-              </div>
-              <div class="app-card-body">
-                <div class="card-sub-label">What to download</div>
-                <div class="filter-btns">
-                  <div class="filter-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_all_files.png" alt="All Files" />
-                    <div class="fb-title">All Files</div>
-                    <div class="fb-desc">PDFs, slides, videos, ZIP, code - everything uploaded</div>
-                  </div>
-                  <div class="filter-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_study_files.png" alt="Study Files" />
-                    <div class="fb-title">Study Files</div>
-                    <div class="fb-desc">Slides and PDFs only - skips all other files</div>
-                  </div>
-                </div>
-                <div class="card-sub-label">Folder structure</div>
-                <div class="struct-btns">
-                  <div class="struct-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_subfolders.png" alt="With Subfolders" />
-                    <div class="sb-title">With Subfolders</div>
-                    <div class="sb-desc">Mirrors Canvas module structure</div>
-                  </div>
-                  <div class="struct-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_flat.png" alt="All in One Folder" />
-                    <div class="sb-title">All in One Folder</div>
-                    <div class="sb-desc">Flat - all files in one place</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Card 2: Canvas Content -->
-            <div class="app-card cc-card">
-              <div class="app-card-header">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-                Card 2 - Canvas Content
-                <span class="status-badge sb-on-green">ON - 5 selected</span>
-              </div>
-              <div class="app-card-body">
-                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Web-only content that isn't in your
-                  Files
-                  tab - saved as downloadable files.</p>
-                <div class="cc-grid">
-                  <div class="cc-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_assignments.png" alt="Assignments" />
-                    <div class="cc-title">Assignments</div>
-                  </div>
-                  <div class="cc-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_syllabus.png" alt="Syllabus" />
-                    <div class="cc-title">Syllabus</div>
-                  </div>
-                  <div class="cc-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_announcements.png" alt="Announcements" />
-                    <div class="cc-title">Announcements</div>
-                  </div>
-                  <div class="cc-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_discussions.png" alt="Discussions" />
-                    <div class="cc-title">Discussions</div>
-                  </div>
-                  <div class="cc-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_quizzes.png" alt="Quizzes" />
-                    <div class="cc-title">Quizzes</div>
-                  </div>
-                  <div class="cc-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_rubrics.png" alt="Rubrics" />
-                    <div class="cc-title">Rubrics</div>
-                  </div>
-                  <div class="cc-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_submissions.png" alt="Submissions" />
-                    <div class="cc-title">Submissions</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Card 3: Post-Processing (full width) -->
-            <div class="app-card pp-card">
-              <div class="app-card-header">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" />
-                </svg>
-                Card 3 - Optimize for AI Tools
-                <span class="status-badge sb-on-orange">ON - 4 selected</span>
-              </div>
-              <div class="app-card-body">
-                <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;">Runs after download. Converts files so
-                  you can drag them straight into <b>NotebookLM</b>, ChatGPT, Claude, etc.</p>
-                <div class="pp-grid">
-                  <div class="pp-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_zip.png" alt="Unpack Archives" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Unpack Archives</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_pptx.png" alt="PowerPoint to PDF" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">PowerPoint to PDF</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_word.png" alt="Word to PDF" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Legacy Word to PDF</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_excel.png" alt="Excel" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Excel to PDF & AI Data</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_html.png" alt="HTML to Markdown" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Pages to Plain Text</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_code.png" alt="Code to txt" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Code to .txt</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_urls.png" alt="Gather Links" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Gather Web Links</div>
-                    </div>
-                  </div>
-                  <div class="pp-btn active">
-                    <div class="check"><svg viewBox="0 0 10 8">
-                        <polyline points="1,4 3.5,6.5 9,1" />
-                      </svg></div>
-                    <img src="assets/icon_conv_video.png" alt="Video to Audio" />
-                    <div class="pp-btn-text">
-                      <div class="pp-title">Video to Audio</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Presets Section -->
-          <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 32px;">
-            <h3 style="font-size: 20px; font-weight: 800; color: var(--txt); margin-bottom: 6px;">Download Presets</h3>
-            <p style="font-size: 13.5px; color: var(--txt2); margin-bottom: 24px;">Save any configuration as a preset
-              and reload it in one click.</p>
-
-            <div class="presets-columns-container">
-              <!-- Left Column: Built-in -->
-              <div>
-                <h4
-                  style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 15px;">📦</span> Built-in Presets
-                </h4>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                  <div class="preset-card">
-                    <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
-                    <div class="pc-info">
-                      <div class="pc-name">AI-Ready</div>
-                      <div class="pc-desc">All Files + all conversions on - drop-and-go for ChatGPT</div>
-                    </div>
-                  </div>
-                  <div class="preset-card">
-                    <img src="assets/icon_preset_builtin.png" alt="Built-in preset" />
-                    <div class="pc-info">
-                      <div class="pc-name">Quick Backup</div>
-                      <div class="pc-desc">All Files, subfolders, no conversions</div>
-                    </div>
-                  </div>
-                </div>
-                <p style="font-size: 12px; color: var(--txt3); margin-top: 12px; line-height: 1.45;">
-                  We have built in these presets to get you started in the custom download immediately.
-                </p>
-              </div>
-
-              <!-- Right Column: User Presets -->
-              <div>
-                <h4
-                  style="font-size: 14.5px; font-weight: 700; color: var(--txt); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 15px;">💾</span> Your Saved Presets
-                </h4>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                  <div class="preset-card">
-                    <img src="assets/icon_preset_user.png" alt="User preset" />
-                    <div class="pc-info">
-                      <div class="pc-name">My Semester Setup</div>
-                      <div class="pc-desc">Your saved config - applies in one click</div>
-                    </div>
-                  </div>
-                  <div class="preset-card">
-                    <img src="assets/icon_preset_user.png" alt="User preset" />
-                    <div class="pc-info">
-                      <div class="pc-name">Exam Prep</div>
-                      <div class="pc-desc">Study Files + assignments + rubrics</div>
-                    </div>
-                  </div>
-                </div>
-                <p style="font-size: 12px; color: var(--txt3); margin-top: 12px; line-height: 1.45;">
-                  You can save your own custom configurations so you can always load them instantly and download the
-                  courses exactly how you want.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </details>
+      <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 24px;">The Problem</div>
+      <h2>You’re wasting hours managing files.</h2>
+      <p>Downloading files one by one takes forever, yet you do it every day.<br>Just to end up in exam season with multiple massive, unorganized folders, unsure if you even have all the course materials. <br> You spend hours manually converting your course files to AI-ready formats.</p>
     </div>
   </section>
 
   <hr class="div" />
 
-  <!-- SYNC MODE -->
-  <section class="sync-section" id="sync-mode">
+  <!-- Section 3: Three Pillars -->
+  <section class="pillars">
     <div class="container">
-      <div class="sh reveal">
-        <div class="label grn">Sync Mode</div>
-        <h2>Link folders to courses. Sync only what's new.</h2>
-        <p>Set up a course pair once. Every sync after that downloads only new or changed files. Your edits and
-          deletions are tracked and respected.</p>
+      <div class="reveal" style="text-align: center; margin-bottom: 80px;">
+        <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin: 0;">Canvas Downloader puts an end to that.</h2>
       </div>
-
-      <div class="two-col">
-        <!-- Left: actions + pairs -->
-        <div class="gap-16 reveal">
-          <div>
-            <div class="card-sub-label" style="margin-bottom:10px;">Two sync modes</div>
-            <div class="sync-actions">
-              <div class="sync-btn sync-btn-analyze">
-                <img src="assets/icon_sync.png" alt="Analyze" />
-                <div>
-                  <div class="sync-btn-title">Analyze, Review &amp; Sync</div>
-                  <div class="sync-btn-desc">See exactly what changed before applying anything</div>
-                </div>
-              </div>
-              <div class="sync-btn sync-btn-quick">
-                <img src="assets/icon_sync.png" alt="Quick Sync" />
-                <div>
-                  <div class="sync-btn-title">Quick Sync All</div>
-                  <div class="sync-btn-desc">Download new + clean updates instantly</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div class="card-sub-label" style="margin-bottom:8px;">Active course pairs</div>
-            <div class="pair-list">
-              <div class="pair-card">
-                <img src="assets/icon_sync_pair.png" style="width:28px;height:28px;object-fit:contain;" alt="pair" />
-                <div style="flex:1;min-width:0">
-                  <div class="pair-course">CHEM 201 - Organic Chemistry</div>
-                  <div class="pair-path">Documents/University/CHEM201</div>
-                </div>
-                <span class="pair-status ps-ok">Synced</span>
-              </div>
-              <div class="pair-card">
-                <img src="assets/icon_sync_pair.png" style="width:28px;height:28px;object-fit:contain;" alt="pair" />
-                <div style="flex:1;min-width:0">
-                  <div class="pair-course">ECON 310 - Microeconomics</div>
-                  <div class="pair-path">Documents/University/ECON310</div>
-                </div>
-                <span class="pair-status ps-ok">2 new files</span>
-              </div>
-              <div class="pair-card warn">
-                <img src="assets/icon_sync_pair.png" style="width:28px;height:28px;object-fit:contain;opacity:0.4;"
-                  alt="pair" />
-                <div style="flex:1;min-width:0">
-                  <div class="pair-course">MKTG 415 - Marketing</div>
-                  <div class="pair-path" style="color:#f87171">Folder not found - moved?</div>
-                </div>
-                <span class="pair-status ps-warn">Missing</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sync Hub -->
-          <div class="sync-hub-card">
-            <img src="assets/icon_sync_hub.png" alt="Sync Hub" />
-            <div>
-              <div class="shc-title">Sync Hub - Saved Pairs &amp; Groups</div>
-              <div class="shc-desc">Save individual pairs or bundle multiple courses into a Group (e.g. "Fall 2025").
-                Reload an entire semester's setup in one click.</div>
-            </div>
-          </div>
-
-          <!-- Sync history -->
-          <div>
-            <div class="card-sub-label" style="margin-bottom:8px;">Sync history</div>
-            <div class="history-list">
-              <div class="history-row">
-                <div class="h-dot" style="background:var(--green)"></div>
-                <div class="h-course">CHEM 201</div>
-                <div class="h-files">14 new, 2 updated</div>
-                <div class="h-date">Today, 09:41</div>
-              </div>
-              <div class="history-row">
-                <div class="h-dot" style="background:var(--green)"></div>
-                <div class="h-course">ECON 310</div>
-                <div class="h-files">3 new</div>
-                <div class="h-date">Yesterday, 18:22</div>
-              </div>
-              <div class="history-row">
-                <div class="h-dot" style="background:var(--txt3)"></div>
-                <div class="h-course">HIST 120</div>
-                <div class="h-files">Nothing new</div>
-                <div class="h-date">Mon, 14:05</div>
-              </div>
-            </div>
-          </div>
+      
+      <!-- Pillar 1 -->
+      <div class="pillar-row reveal">
+        <div class="pillar-text">
+          <div class="section-kicker">1. Download</div>
+          <h3>Download years of courses in minutes.</h3>
+          <p>Downloading files one-by-one is a thing of the past. <br>Select your courses, choose a download configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so your pc has a 1:1 copy of each course.</p>
         </div>
-
-        <!-- Right: sync review panel -->
-        <div class="gap-16 reveal">
-          <div class="card-sub-label">Review screen - shown before applying sync</div>
-          <div class="sync-review-panel">
-            <div class="srp-header">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              Sync Analysis - CHEM 201 (12 changes)
-            </div>
-            <div class="srp-body">
-              <div class="sr-row">
-                <img src="assets/Icon_Sync_Review_New_File.png" alt="New" />
-                <span class="sr-cat">New Files</span>
-                <span class="sr-file">lecture_week8.pdf, assignment3_rubric.pdf ...</span>
-                <span class="sr-count src-new">5</span>
-              </div>
-              <div class="sr-row">
-                <img src="assets/Icon_Sync_Review_Update.png" alt="Updated" />
-                <span class="sr-cat">Updated</span>
-                <span class="sr-file">syllabus.pdf - clean update (not edited locally)</span>
-                <span class="sr-count src-upd">3</span>
-              </div>
-              <div class="sr-row">
-                <img src="assets/Icon_Sync_Review_Update.png" alt="Conflict" />
-                <span class="sr-cat" style="color:var(--orange)">You Edited</span>
-                <span class="sr-file">lecture_week5.pdf - you annotated it. New version saved as _NewVersion</span>
-                <span class="sr-count src-del">1</span>
-              </div>
-              <div class="sr-row">
-                <img src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" alt="Deleted on Canvas" />
-                <span class="sr-cat">Deleted on Canvas</span>
-                <span class="sr-file">old_reading.pdf - professor removed it</span>
-                <span class="sr-count src-del">1</span>
-              </div>
-              <div class="sr-row">
-                <img src="assets/Icon_Sync_Review_Locally_Deleted.png" alt="Deleted locally" />
-                <span class="sr-cat">You Deleted</span>
-                <span class="sr-file">intro_slides.pdf - you removed it locally</span>
-                <span class="sr-count src-local">1</span>
-              </div>
-              <div class="sr-row" style="opacity:0.5">
-                <img src="assets/Icon_Sync_Review_New_File.png" alt="Up to date" style="opacity:0.3" />
-                <span class="sr-cat" style="color:var(--txt3)">Up to Date</span>
-                <span class="sr-file">lab_protocol.docx, reading_ch3.pdf ...</span>
-                <span class="sr-count"
-                  style="background:rgba(71,85,105,0.2);color:var(--txt3);border:1px solid var(--border)">8</span>
-              </div>
-            </div>
-          </div>
-          <div
-            style="font-size:12px;color:var(--txt3);line-height:1.6;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rad);padding:14px;">
-            <strong style="color:var(--txt2);">How edits are handled:</strong> If you annotated a file and Canvas has a
-            newer version, the app saves the new version alongside yours as <span
-              style="font-family:monospace;font-size:11px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">filename_NewVersion.pdf</span>.
-            Your file is untouched. Deletions you made locally are respected and not re-downloaded.
-          </div>
+        <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+          <video class="expandable-video" src="assets/DownloadAllCourses_Folders.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
         </div>
       </div>
+
+      <!-- Pillar 2 -->
+      <div class="pillar-row rev reveal">
+        <div class="pillar-text">
+          <div class="section-kicker">2. Sync Mode</div>
+          <h3>Never miss a new file again.</h3>
+          <p>Imagine this - It’s Monday morning. Instead of digging through Canvas to find the files for your first class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads only the newest files your professors added to canvas. Stay up to date with ease.</p>
+
+        </div>
+        <div class="pillar-vis">
+          <img src="assets/icon_sync.png" style="width:120px; opacity:0.8; filter:drop-shadow(0 0 20px rgba(104,212,163,0.3));" alt="Quick Sync" />
+        </div>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="pillar-row reveal">
+        <div class="pillar-text">
+          <div class="section-kicker">3. AI Optimization</div>
+          <h3>Supercharge your exam prep</h3>
+          <p>Canvas Downloader is built for the modern studying workflow, where <b>AI-assisted learning</b> is at the core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to <b>AI-Ready file formats</b>, whenever you Sync or Download. No more timely manual conversions on sketchy websites. <br><br><b>Purpose-built for NotebookLM (100% compatibility): </b>Enable AI Optimizations → Download → Drag & Drop into NotebookLM and start studying.</p>
+        </div>
+        <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+          <video class="expandable-video" src="assets/AI-Optimization.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
+        </div>
+      </div>
+
     </div>
   </section>
 
   <hr class="div" />
 
-  <!-- SECURITY -->
+  <!-- Section 5: Technical Trust -->
+  <section class="security-section" id="security" style="padding-top: 90px; padding-bottom: 90px;">
+    <div class="container">
+      <!-- Security Accordions -->
+<!-- SECURITY -->
   <section class="security-section" id="security">
     <div class="container">
       <div class="sh reveal">
-        <div class="sec-label">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
-          Security
-        </div>
+        <div class="section-kicker">Security</div>
         <h2>Fair questions, straight answers.</h2>
         <p>Downloading an unsigned app that has "Canvas" in its name - around the time of a Canvas security incident -
           is a completely reasonable thing to be cautious about. Here's what's actually going on.</p>
@@ -2853,7 +2514,7 @@
             What does it actually connect to?
           </summary>
           <p class="qa-body">Only your university's Canvas server - the same URL you log into in your browser. There's
-            no backend, no analytics server, no developer receiving anything from your machine. Your API token is stored
+            no backend, no analytics server, no developer receiving anything from your machine. Your Canvas Access Token is stored
             in your OS's password vault (Windows Credential Manager or macOS Keychain), not in a file on disk, and is
             only sent to your university's Canvas when downloading.</p>
           <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
@@ -2877,7 +2538,7 @@
             affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't
             change your exposure to that incident in either direction.</p>
           <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in
-            Canvas → Account Settings → Approved Integrations, remove any API tokens you don't recognize.</p>
+            Canvas → Account Settings → Approved Integrations, remove any Canvas Access Tokens you don't recognize.</p>
         </details>
 
         <!-- Card 4: Verify yourself -->
@@ -2917,68 +2578,52 @@
 
   <hr class="div" />
 
-  <!-- GET / DOWNLOAD -->
-  <section class="get-section" id="get">
-    <div class="container">
-      <div class="sh reveal" style="text-align:center;max-width:680px;margin:0 auto 48px;">
-        <div class="label" style="margin:0 auto 16px;">Optimize your study life today</div>
-        <h2>Download Canvas Downloader</h2>
-        <p>The ultimate study life optimization tool. Sync your course folders to always stay up to date with Canvas,
-          download all your courses in minutes, and guarantee perfectly structured, AI-optimized files for your studies,
-          100% locally and safely.</p>
-      </div>
+  
+  
+  <hr class="div" />
 
-      <div class="platform-grid reveal" id="main-download-area">
+  <!-- Section 6: Final CTA -->
+  <section class="final-cta reveal" id="get">
+    <div class="container" style="max-width: 600px;">
+      <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 900; margin-bottom: 16px; letter-spacing: -0.03em;">Ready to take control of your courses?</h2>
+      <p style="font-size: 18px; color: var(--txt2); margin-bottom: 40px;">Join the students saving hours of busywork every semester.</p>
+      
+      <div class="platform-grid" id="main-download-area">
         <!-- Windows -->
-        <div class="plat-card featured" id="get-win" style="display: none;">
+        <div class="plat-card featured" id="get-win" style="display: none; text-align: left;">
           <div class="plat-head">
-            <svg viewBox="0 0 24 24" fill="var(--cyan)">
-              <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
-            </svg>
+            <svg viewBox="0 0 24 24" fill="var(--cyan)"><path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" /></svg>
             <div>
               <div class="plat-name">Windows</div>
               <div class="plat-req">Windows 10/11 - 64-bit</div>
             </div>
           </div>
           <div class="plat-body">
-            <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-              class="btn-download btn-dl-primary"
-              onclick="setTimeout(() => window.location.href='thanks-win.html', 100);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download Windows Installer
-            </a>
-            <p class="dl-subtitle">Installer wizard - adds Start Menu + Desktop shortcuts. Uninstall via Settings -
-              Apps.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; align-items: stretch; width: 100%;">
+              <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank" rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;" onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
+                <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" style="display: block; width: 100%; max-width: 260px;"/>
+              </a>
+              <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe" class="btn-download btn-dl-ghost" onclick="setTimeout(() => window.location.href='thanks-win.html', 100);" style="width: 100%; padding: 10px 14px; font-size: 13px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                Download direct (.exe)
+              </a>
+            </div>
+            <p class="dl-subtitle" style="text-align: left; margin-top: 16px;">Both methods add a Start Menu icon and uninstall cleanly via Settings - Apps. <br>The <b>Microsoft Store version is easier to install</b>: Has no Smartscreen warning.</p>
           </div>
         </div>
 
         <!-- Mac -->
-        <div class="plat-card featured" id="get-mac" style="display: none;">
+        <div class="plat-card featured" id="get-mac" style="display: none; text-align: left;">
           <div class="plat-head">
-            <svg viewBox="0 0 24 24" fill="var(--txt2)">
-              <path
-                d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-            </svg>
+            <svg viewBox="0 0 24 24" fill="var(--txt2)"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
             <div>
-              <div class="plat-name">macOS <span
-                  style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.3);vertical-align:middle;margin-left:6px;">Pre-release</span>
-              </div>
+              <div class="plat-name">macOS <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.3);vertical-align:middle;margin-left:6px;">Pre-release</span></div>
               <div class="plat-req">Apple Silicon (M1 or later)</div>
             </div>
           </div>
           <div class="plat-body">
             <a href="thanks-mac.html" class="btn-download btn-dl-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
               Download macOS Beta (.dmg)
             </a>
             <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
@@ -2986,22 +2631,18 @@
         </div>
 
         <div id="os-toggle" style="margin-top: 8px;">
-          <a href="#" id="toggle-os-btn"
-            style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
-            onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
-            onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</a>
+          <a href="#" id="toggle-os-btn" style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';" onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</a>
         </div>
       </div>
-
+      
+      <!-- Script for OS detection -->
       <script>
         document.addEventListener('DOMContentLoaded', () => {
-          // Main Download Area
           const winCard = document.getElementById('get-win');
           const macCard = document.getElementById('get-mac');
           const toggleBtn = document.getElementById('toggle-os-btn');
 
-          // Hero Download Area
-          const heroWinBtn = document.getElementById('hero-get-win');
+          const heroWindowsGroup = document.getElementById('hero-windows-group');
           const heroMacBtn = document.getElementById('hero-get-mac');
           const heroToggleBtn = document.getElementById('hero-toggle-os-btn');
           const heroToggleContainer = document.getElementById('hero-os-toggle');
@@ -3010,14 +2651,12 @@
           let showingMac = isMac;
 
           function updateOSUI() {
-            // Main Section
             if (showingMac) {
               winCard.style.display = 'none';
               macCard.style.display = 'block';
               toggleBtn.textContent = 'Need the Windows version? Click here.';
-
-              // Hero Section
-              heroWinBtn.style.display = 'none';
+              
+              if (heroWindowsGroup) heroWindowsGroup.style.display = 'none';
               heroMacBtn.style.display = 'inline-flex';
               heroToggleBtn.textContent = 'Need the Windows version?';
               heroToggleContainer.style.display = 'block';
@@ -3025,10 +2664,9 @@
               macCard.style.display = 'none';
               winCard.style.display = 'block';
               toggleBtn.textContent = 'Need the Mac version? Click here.';
-
-              // Hero Section
+              
               heroMacBtn.style.display = 'none';
-              heroWinBtn.style.display = 'inline-flex';
+              if (heroWindowsGroup) heroWindowsGroup.style.display = 'flex';
               heroToggleBtn.textContent = 'Need the Mac version?';
               heroToggleContainer.style.display = 'block';
             }
@@ -3050,18 +2688,25 @@
         });
       </script>
 
-      <!-- Canvas Token -->
+    </div>
+  </section>
+
+    <section class="security-section" style="padding-bottom: 90px;">
+    <div class="container">
+      <!-- Token Video Content -->
+      <div class="reveal" style="margin-bottom: 60px;">
+        <!-- Canvas Token -->
       <div class="token-card reveal">
         <div style="text-align: center; max-width: 600px;">
-          <h3>Getting your Canvas API token</h3>
+          <h3>Getting your Canvas Access Token</h3>
           <p style="margin-bottom: 0;">Canvas Downloader talks directly to your university's Canvas server using your
-            own API token. Here's exactly how to get it.</p>
+            own Canvas Access Token. Here's exactly how to get it.</p>
         </div>
 
         <div id="video-container" style="width: 100%; max-width: 860px; aspect-ratio: 16/9; position: relative;">
           <iframe id="video-iframe" width="100%" height="100%"
             src="https://www.youtube-nocookie.com/embed/VadvcIvrrhU?vq=hd1080&modestbranding=1&rel=0"
-            title="Getting your Canvas API token" frameborder="0"
+            title="Getting your Canvas Access Token" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
             style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); display: block; background: #000;"></iframe>
@@ -3165,13 +2810,15 @@
             </div>
           </div>
         </div>
+      
       </div>
+      
     </div>
   </section>
 
   <hr class="div" />
 
-  <!-- macOS Known Limitations -->
+<!-- macOS Known Limitations -->
   <section id="macos-notes" style="padding:80px 0 70px; display:none;">
     <div class="container">
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
@@ -3220,9 +2867,9 @@
           <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
             <span
               style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">UPDATES</span>
-            You may need to re-enter your API token after an update
+            You may need to re-enter your Canvas Access Token after an update
           </h4>
-          <p>macOS stores your Canvas API token in your Keychain. Because the app isn't signed with a paid Developer ID
+          <p>macOS stores your Canvas Access Token in your Keychain. Because the app isn't signed with a paid Developer ID
             certificate, macOS may treat a new version as a different app and ask for your Keychain password again - or
             prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token
             hasn't changed - you can copy it from your Canvas account settings and paste it in again.</p>
@@ -3286,7 +2933,8 @@
     });
   </script>
 
-  <!-- FAQ -->
+  
+<!-- FAQ -->
   <section class="faq-section" style="padding-top:90px;" id="faq">
     <div class="container">
       <div class="sh reveal" style="text-align:center;max-width:480px;margin:0 auto 40px;">
@@ -3332,7 +2980,7 @@
         </details>
         <details class="faq-item reveal">
           <summary>Can it see other students' data?</summary>
-          <p>No. Your API token only grants access to your own student account - courses you're enrolled in, files
+          <p>No. Your Canvas Access Token only grants access to your own student account - courses you're enrolled in, files
             available to you, your grades. There is no way to access other students' data through the student API.</p>
         </details>
         <details class="faq-item reveal">
@@ -3344,7 +2992,8 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
+  
+<!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="foot-logo">
@@ -3461,6 +3110,91 @@
       }
     }
   </script>
-</body>
 
+  <!-- Typewriter Effect Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const phrases = [
+        "Download all your courses in minutes",
+        "Sync new files to your PC in one click",
+        "Auto-optimize all your files for AI"
+      ];
+      const dynamicText = document.getElementById('hero-dynamic-text');
+      if (!dynamicText) return;
+      
+      let phraseIndex = 0;
+      let charIndex = phrases[0].length;
+      let isDeleting = true;
+      let typingDelay = 40;
+      let erasingDelay = 20;
+      let newTextDelay = 3000;
+
+      function type() {
+        const currentPhrase = phrases[phraseIndex];
+        
+        if (isDeleting) {
+          charIndex--;
+          dynamicText.textContent = currentPhrase.substring(0, charIndex);
+        } else {
+          charIndex++;
+          dynamicText.textContent = currentPhrase.substring(0, charIndex);
+        }
+
+        let typeSpeed = isDeleting ? erasingDelay : typingDelay;
+
+        if (!isDeleting && charIndex === currentPhrase.length) {
+          typeSpeed = newTextDelay;
+          isDeleting = true;
+        } else if (isDeleting && charIndex === 0) {
+          isDeleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          typeSpeed = 500;
+        }
+
+        setTimeout(type, typeSpeed);
+      }
+
+      // Start the typing effect after initial delay
+      setTimeout(type, newTextDelay);
+    });
+  </script>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="videoModal">
+    <div class="video-modal-content">
+      <span class="close-video-modal" id="closeVideoModal">&times;</span>
+      <video id="modalVideo" autoplay loop muted playsinline></video>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('videoModal');
+      const modalVideo = document.getElementById('modalVideo');
+      const closeBtn = document.getElementById('closeVideoModal');
+      
+      document.querySelectorAll('.expandable-video').forEach(vid => {
+        vid.addEventListener('click', () => {
+          modalVideo.src = vid.src;
+          modal.classList.add('show');
+          modalVideo.play();
+        });
+      });
+
+      const closeModal = () => {
+        modal.classList.remove('show');
+        modalVideo.pause();
+        setTimeout(() => modalVideo.src = '', 300);
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if(e.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+      });
+    });
+  </script>
+</body>
 </html>

@@ -144,7 +144,7 @@ Because the app is unsigned (an Apple Developer certificate costs $99/year - [su
 
 ## Quick Start
 
-### 1. Get Your Canvas API Token
+### 1. Get Your Canvas Access Token
 
 1. Log in to your institution's Canvas → **Account → Settings**
 2. Scroll to **Approved Integrations** → **+ New Access Token**
@@ -301,7 +301,7 @@ The macOS spec includes the `com.apple.security.automation.apple-events` entitle
 
 ## Security Notes
 
-- Your Canvas API token is stored in your OS keyring (Windows Credential Manager / macOS Keychain). On Windows, if the keyring is unavailable, an encrypted DPAPI fallback file is used - the ciphertext is bound to your Windows user account and unreadable by anyone else
+- Your Canvas Access Token is stored in your OS keyring (Windows Credential Manager / macOS Keychain). On Windows, if the keyring is unavailable, an encrypted DPAPI fallback file is used - the ciphertext is bound to your Windows user account and unreadable by anyone else
 - The Streamlit server binds to `127.0.0.1` only - zero network exposure beyond your own machine. Note for **shared computers** (e.g. lab PCs with multiple users logged in at once): localhost ports are reachable by other local users on the same machine, and the app auto-signs-in from your keyring - prefer running it on your personal device
 - Archive extraction enforces a 50 GB / 100:1 ratio hard limit against zip bombs
 - All Canvas data rendered into HTML is passed through `html.escape()` before injection

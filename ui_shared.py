@@ -215,7 +215,7 @@ def render_completion_card(synced_count: int, error_count: int,
                 "</div>"
                 "<p style='color:#d1d5db;font-size:0.82em;margin:0;line-height:1.5;'>"
                 "Your Canvas account connected successfully, but no files or modules were returned. "
-                "This can happen when your API token is geo-restricted (accessing from a different country than usual), "
+                "This can happen when your Canvas Access Token is geo-restricted (accessing from a different country than usual), "
                 "when a firewall or VPN is affecting the connection to your university's server, "
                 "or during a temporary Canvas outage. "
                 "Try again on your usual network."
