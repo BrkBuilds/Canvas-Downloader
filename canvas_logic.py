@@ -363,13 +363,13 @@ class CanvasManager:
         self.error_log_enabled = False    # Toggled via Settings; when False, download_errors.txt is not created
 
     def __repr__(self):
-        """Redacted repr - never expose the API token in tracebacks or log output."""
+        """Redacted repr - never expose the Canvas Access Token in tracebacks or log output."""
         return f"CanvasManager(api_url={self.api_url!r}, api_key='****')"
 
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
         if not self.api_url or not self.canvas:
-            return False, 'Login failed. Please check that your Canvas URL and API Token are correct.'
+            return False, 'Login failed. Please check that your Canvas URL and Canvas Access Token are correct.'
 
         try:
             # We attempt to fetch the user. This validates both the URL and Token.
@@ -377,7 +377,7 @@ class CanvasManager:
             return True, f'Logged in as: {self.user.name}'
         except Exception as e:
             # Return specific message if possible, else generic
-            msg = str(e) if str(e) else 'Login failed. Please check that your Canvas URL and API Token are correct.'
+            msg = str(e) if str(e) else 'Login failed. Please check that your Canvas URL and Canvas Access Token are correct.'
             return False, msg
 
     def get_courses(self, favorites_only=True):

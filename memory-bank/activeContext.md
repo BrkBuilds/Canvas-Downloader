@@ -11,6 +11,9 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-06-14: Security Terminology Update**
+    - **Replaced "API Token" with "Canvas Access Token"**: Systematically purged all user-facing references to "API Token" across the frontend (`ui/auth.py`, `ui_shared.py`) and website (`index.html`, `guide.html`, `privacy.html`, `mac-setup.html`) to reduce user intimidation and align with Canvas's official terminology.
+
 - **Session 2026-06-13: Website Navigation Header and Footer Standardisation**
     - **Navigation Header Standardization**: Standardized the header navigation markup and styles across all website pages (`index.html`, `guide.html`, `mac-setup.html`, `privacy.html`, `thanks-mac.html`, and `thanks-win.html`) for a unified user experience.
     - **Header Link Renames**: Renamed the "Mac Setup" link to "How to set up" and moved it to the left of "How It Works" across all website headers to prioritize and guide first-time users cleanly.

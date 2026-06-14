@@ -10,7 +10,7 @@ Desktop app for batch-downloading Canvas LMS course materials. Built with Python
 app.py                      # Main download mode and app orchestrator - routing, session init
 sync_ui.py                  # Sync mode orchestrator
 ui/
-  auth.py                   # Sidebar: API token, debug mode, nav
+  auth.py                   # Sidebar: Canvas Access Token, debug mode, nav
   course_selector.py        # Step 1: course checklist, CBS filters, segmented toggle
   download_settings.py      # Step 2: Card 1/2/3 config UI (~1,400 lines)
   hub_dialog.py             # Sync Hub modal (saved groups)
