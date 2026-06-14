@@ -1181,7 +1181,7 @@ def render_login_page(fetch_courses_fn):
                 )
 
                 st.text_input(
-                    'Your Canvas API Token',
+                    'Your Canvas Access Token',
                     type="password",
                     key="token_input",
                     help=(
@@ -1281,7 +1281,7 @@ def render_login_page(fetch_courses_fn):
                     elif any(kw in err_text_lower for kw in ["revoked", "invalid token", "unauthorized", "401"]):
                         render_amber_notice(
                             "Authentication Failed",
-                            detail="Your Canvas API token is invalid, expired, or has been revoked. Please expand the 'How to get an API Access Token?' section below to generate a new one."
+                            detail="Your Canvas Access Token is invalid, expired, or has been revoked. Please expand the 'How to get a Canvas Access Token?' section below to generate a new one."
                         )
                     elif "403" in err_text_lower or "forbidden" in err_text_lower:
                         render_amber_notice(
@@ -1323,7 +1323,7 @@ def render_login_page(fetch_courses_fn):
                     "**Important:** You must input the **actual** Canvas URL, not your university's login portal.\n"
                 )
 
-            with st.expander('How to get an API Access Token?'):
+            with st.expander('How to get a Canvas Access Token?'):
                 st.markdown(
                     "1. Log into Canvas and click on your **Account** in the left navigation.\n"
                     "2. Select **Settings** from the account menu.\n"
@@ -1336,7 +1336,7 @@ def render_login_page(fetch_courses_fn):
         st.markdown(
             '<a href="https://youtu.be/VadvcIvrrhU" target="_blank" class="youtube-link">'
             '<svg class="youtube-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
-            'Watch tutorial: How to get your Canvas API Access Token'
+            'Watch tutorial: How to get your Canvas Access Token'
             '</a>',
             unsafe_allow_html=True
         )
@@ -1355,7 +1355,7 @@ def render_login_page(fetch_courses_fn):
                         "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/></svg>"
                         "<div class='privacy-list-content'>"
                         "<div class='privacy-list-title'>Native Encryption</div>"
-                        "<div class='privacy-list-desc'>Your API token is securely stored in your operating system's native keychain (Windows Credential Manager / macOS Keychain), never in plain text.</div>"
+                        "<div class='privacy-list-desc'>Your Canvas Access Token is securely stored in your operating system's native keychain (Windows Credential Manager / macOS Keychain), never in plain text.</div>"
                         "</div>"
                         "</div>"
                         "<div class='privacy-list-item'>"

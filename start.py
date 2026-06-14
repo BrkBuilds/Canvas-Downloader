@@ -214,7 +214,7 @@ if __name__ == "__main__":
     # ENTIRE UI (labels, padding, the black gaps) - which looks broken, and is
     # easy to trigger by accident over VNC. Text selection of page chrome is
     # instead disabled in CSS (styles/global.css), while inputs/textareas stay
-    # fully selectable + editable so pasting the Canvas API token/URL still works.
+    # fully selectable + editable so pasting the Canvas Access Token/URL still works.
     _LOADING_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -301,7 +301,7 @@ if __name__ == "__main__":
     # ENTIRE UI (labels, padding, the black gaps) - which looks broken, and is
     # easy to trigger by accident over VNC. Text selection of page chrome is
     # instead disabled in CSS (styles/global.css), while inputs/textareas stay
-    # fully selectable + editable so pasting the Canvas API token/URL still works.
+    # fully selectable + editable so pasting the Canvas Access Token/URL still works.
     webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
