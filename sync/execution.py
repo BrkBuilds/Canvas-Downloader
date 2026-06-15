@@ -82,6 +82,110 @@ def _release_sync_worker() -> None:
     return None
 
 
+def _build_synced_groups(sync_selections, synced_details):
+    """Build a per-course breakdown of the files synced this run.
+
+    Resolves every synced file to its on-disk location (relative to the course
+    folder) so the completion screen and the landing-page "New files since last
+    sync" panel can offer Open / Reveal actions per file. Runs once at finalize
+    on the script thread - AFTER post-processing - so converted names (e.g.
+    .pptx → .pdf) and sidecar artifacts are already reflected in synced_details.
+
+    Returns ``list[dict]`` - one entry per course that received files::
+
+        {'course_name', 'course_id', 'local_folder',
+         'files': [{'name', 'rel', 'category'}]}
+
+    ``rel`` is POSIX-style and relative to ``local_folder``; ``category`` is one
+    of ``'new' | 'updated' | 'protected'``. Best-effort and total: any failure
+    degrades to ``rel == name`` rather than raising into the sync finalizer.
+    """
+    import urllib.parse as _urlparse
+    groups = []
+    for sel in sync_selections:
+        pair_idx = sel.get('pair_idx')
+        names = synced_details.get(pair_idx, [])
+        if not names:
+            continue
+        res_data = sel.get('res_data', {})
+        pair = res_data.get('pair', {})
+
+        # Resolve the course root: prefer the live SyncManager, fall back to the
+        # pair's configured folder.
+        course_root = None
+        sm = res_data.get('sync_manager')
+        if sm is not None:
+            try:
+                course_root = sm.local_path
+            except Exception:
+                course_root = None
+        if course_root is None:
+            _lf = pair.get('local_folder')
+            course_root = Path(_lf) if _lf else None
+
+        # Pre-conversion names of files Canvas updated - drives 'updated' category.
+        updates_for_pair = set()
+        result = res_data.get('result')
+        if result is not None and hasattr(result, 'updated_files'):
+            try:
+                updates_for_pair = {
+                    _urlparse.unquote(f.filename) for f, _ in result.updated_files
+                }
+            except Exception:
+                updates_for_pair = set()
+
+        # Walk the folder ONCE to build basename -> [rel paths]; resolving each
+        # name against this index is O(1) and tolerates module subfolders.
+        name_index = {}
+        if course_root is not None:
+            try:
+                root_str = str(course_root)
+                for dirpath, _dirnames, filenames in os.walk(root_str):
+                    for fn in filenames:
+                        if fn.startswith('._') or fn == '.canvas_sync.db':
+                            continue
+                        rel = os.path.relpath(os.path.join(dirpath, fn), root_str).replace('\\', '/')
+                        name_index.setdefault(fn, []).append(rel)
+            except Exception:
+                name_index = {}
+
+        files = []
+        for nm in names:
+            if "_NewVersion" in nm:
+                category = 'protected'
+            elif nm in updates_for_pair:
+                category = 'updated'
+            else:
+                category = 'new'
+
+            rel = nm
+            candidates = name_index.get(nm)
+            if candidates:
+                if len(candidates) == 1:
+                    rel = candidates[0]
+                else:
+                    # Same basename in multiple subfolders - prefer the freshest,
+                    # which is the copy this run just wrote.
+                    try:
+                        rel = max(
+                            candidates,
+                            key=lambda r: os.path.getmtime(os.path.join(str(course_root), r)),
+                        )
+                    except Exception:
+                        rel = candidates[0]
+
+            files.append({'name': nm, 'rel': rel, 'category': category})
+
+        groups.append({
+            'pair_idx': pair_idx,
+            'course_name': pair.get('course_name', ''),
+            'course_id': pair.get('course_id'),
+            'local_folder': str(course_root) if course_root is not None else '',
+            'files': files,
+        })
+    return groups
+
+
 def run_sync():
     """Execute the full sync pipeline: download files, post-process, record history.
 
@@ -1623,6 +1727,16 @@ def run_sync():
     st.session_state['synced_details'] = dict(synced_details)
     st.session_state['retry_selections'] = retry_selections
 
+    # Per-course breakdown with resolved file paths - powers the per-file
+    # Open / Reveal actions on the completion screen and the landing-page
+    # "New files since last sync" panel. Built once here, after post-processing.
+    try:
+        synced_groups = _build_synced_groups(sync_selections, synced_details)
+    except Exception as e:
+        logger.warning(f"Failed to build synced file groups: {e}")
+        synced_groups = []
+    st.session_state['synced_groups'] = synced_groups
+
     # Update last_synced timestamps atomically
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     updates = []
@@ -1683,6 +1797,9 @@ def run_sync():
                 'error_details': error_list,
                 'synced_files': [fname for pair_files in synced_details.values() for fname in pair_files],
                 'categorized_files': categorized_files,
+                # Per-course breakdown (course + rel path + category) so the
+                # "New files since last sync" panel can group, sort, Open & Reveal.
+                'synced_groups': synced_groups,
                 'sync_mode': st.session_state.get('sync_mode', 'normal')
             })
             # M-1: Invalidate the step-1 history cache so the next render
