@@ -163,6 +163,23 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     if debug_file:
         log_debug(f"Manifest healed | DB was reset: {sync_mgr.db_was_reset}", debug_file)
 
+    # One-time repair: manifests written before MD5-on-download existed have no
+    # original_md5 baseline, which forces every genuine update onto the
+    # "locally edited" path (_NewVersion forks) and disables content-based
+    # rename matching. Backfill from the pristine bytes on disk. Gated by a DB
+    # flag so the disk hashing runs at most once per folder.
+    if sync_mgr._load_metadata('baseline_md5_backfilled') != '1':
+        try:
+            _filled = sync_mgr.backfill_baseline_md5(manifest)
+            sync_mgr._save_metadata('baseline_md5_backfilled', '1')
+            if debug_file:
+                log_debug(f"MD5 baseline backfill: repaired {_filled} entrie(s)", debug_file)
+        except Exception as _bf_err:
+            # Non-fatal: an empty baseline is safe (engine preserves local copy),
+            # so a failed repair must never block the analysis.
+            if debug_file:
+                log_debug(f"MD5 baseline backfill skipped (error): {_bf_err}", debug_file)
+
     progress_hook(1, 1, "Comparing files...")
     detected = sync_mgr.detect_structure()
     if debug_file:

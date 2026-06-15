@@ -54,7 +54,10 @@ from ui_helpers import (
     make_long_path,
 )
 from styles import inject_css
-from engine.progress_dashboard import build_metrics_html, build_terminal_html, render_active_file
+from engine.progress_dashboard import (
+    build_metrics_html, build_terminal_html, render_active_file,
+    log_line, log_meta, file_icon_svg,
+)
 from canvas_debug import log_debug
 
 logger = logging.getLogger(__name__)
@@ -477,7 +480,7 @@ def run_sync():
                 # Re-hydration Injection
                 course = res_data.get('course')
                 if course is None:
-                    terminal_log.append(f"<span style='color:{theme.TEXT_SECONDARY}'>ℹ️ Connecting to {esc(course_name)}...</span>")
+                    terminal_log.append(log_meta(f"Connecting to {course_name}…"))
                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                     try:
                         # CanvasManager has no get_course() of its own - the
@@ -489,7 +492,7 @@ def run_sync():
                     except Exception as e:
                         err_str = f"Connection failure to {esc(course_name)}: {esc(str(e))}"
                         error_list.append(err_str)
-                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Reconnection failed: {esc(course_name)} ({esc(str(e))})</span>")
+                        terminal_log.append(log_line('error', f"Reconnection failed: {course_name}", detail=str(e)))
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
                             from canvas_debug import log_debug_exc
@@ -619,14 +622,31 @@ def run_sync():
                         st.session_state['size_skipped_files'].append(f"{display_file_name} ({_f_mb:.1f} MB)")
                         total_files = max(0, total_files - 1)  # keep denominator accurate
                         current_file -= 1  # undo the increment - this file never ran
-                        terminal_log.append(
-                            f"<span style='color:{theme.TEXT_SECONDARY}'>⏭️ Skipped (too large): "
-                            f"{esc(display_file_name)} "
-                            f"<span style='color:{theme.TEXT_MUTED}'>({_f_mb:.1f} MB)</span></span>"
-                        )
+                        terminal_log.append(log_line('skip', display_file_name, icon=file_icon_svg(display_file_name), detail=f'too large · {_f_mb:.1f} MB'))
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
                             log_debug(f"⏭ Skipped (too large, {_f_mb:.1f} MB): {display_file_name}", _debug_file)
+                            
+                        # Register as ignored in the sync DB so future syncs
+                        # don't surface these files as "new".
+                        if sync_mgr:
+                            try:
+                                await asyncio.to_thread(
+                                    sync_mgr.ignore_file,
+                                    _gate_id,
+                                    getattr(file, 'filename', '')
+                                )
+                            except Exception as e:
+                                if _debug_file: log_debug(f"Warning: Failed to ignore large file in DB: {e}", _debug_file)
+                                
+                        if manifest and 'files' in manifest:
+                            _manifest_fid = str(_gate_id)
+                            if _manifest_fid in manifest['files']:
+                                manifest['files'][_manifest_fid]['is_ignored'] = True
+                            else:
+                                manifest['files'][_manifest_fid] = {'is_ignored': True, 'local_path': '', 'canvas_filename': getattr(file, 'filename', '')}
+                            res_data['manifest'] = manifest
+                            
                         continue
 
                     # UNCONDITIONAL status text update - fires instantly for every file (no throttle)
@@ -800,7 +820,7 @@ def run_sync():
                                     synced_counter[0] += 1
                                     st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                     synced_details[pair_idx].append(sec_filepath.name)
-                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ Synced: </span>{esc(sec_filepath.name)}")
+                                    terminal_log.append(log_line('success', sec_filepath.name, icon=file_icon_svg(sec_filepath.name)))
                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                     if _debug_file:
                                         log_debug(f"✓ Secondary: {sec_filepath.name}", _debug_file)
@@ -881,7 +901,7 @@ def run_sync():
                                                 att_info._target_local_path = cm._sanitize_filename(att_filename)
                                             all_files.append(att_info)
                                             total_files += 1
-                                            terminal_log.append(f"<span style='color:{theme.ACCENT_BLUE}'>📎 Queued: </span>{esc(att_filename)}")
+                                            terminal_log.append(log_line('queued', att_filename, icon=file_icon_svg(att_filename)))
                                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                             if _debug_file:
                                                 log_debug(
@@ -906,7 +926,7 @@ def run_sync():
                                     # L-7: Count unknown/failed secondary entities in the error
                                     # list so the completion screen shows a non-zero error count
                                     # rather than silently dropping them.
-                                    terminal_log.append(f"<span style='color:{theme.ERROR_LIGHT}'>⚠️ Skipped: </span>{esc(display_file_name)}")
+                                    terminal_log.append(log_line('skip', display_file_name, icon=file_icon_svg(display_file_name)))
                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                     error_list.append(f"Skipped secondary entity: {display_file_name}")
                                     if _debug_file:
@@ -923,9 +943,7 @@ def run_sync():
                             # An ExternalUrl module item with a stale or empty URL would
                             # produce a broken [InternetShortcut]\nURL=\n file.
                             if (is_url_ext or is_html_ext) and not getattr(file, 'url', ''):
-                                terminal_log.append(
-                                    f"<span style='color:{theme.TEXT_SECONDARY}'>⚠️ Skipped (no URL): </span>{esc(display_file_name)}"
-                                )
+                                terminal_log.append(log_line('skip', display_file_name, icon=file_icon_svg(display_file_name), detail='no URL'))
                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                 error_list.append(f"Skipped {display_file_name}: no URL for shortcut")
                                 continue
@@ -952,7 +970,7 @@ def run_sync():
                                 synced_counter[0] += 1
                                 st.session_state['sync_cancelled_file_count'] = synced_counter[0]
                                 synced_details[pair_idx].append(display_file_name)
-                                terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ Recreated: </span>{esc(display_file_name)}")
+                                terminal_log.append(log_line('success', display_file_name, icon=file_icon_svg(display_file_name)))
                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                 if _debug_file:
                                     _sc_type = "URL shortcut" if is_url_ext else "HTML redirect"
@@ -1069,9 +1087,7 @@ def run_sync():
                                                             _alt = cm._handle_conflict(_alt)
                                                             os.replace(make_long_path(part_path), make_long_path(_alt))
                                                             filepath = _alt
-                                                            terminal_log.append(
-                                                                f"<span style='color:{theme.WARNING}'>🔒 In use - saved new version as </span>{esc(_alt.name)}"
-                                                            )
+                                                            terminal_log.append(log_line('attention', _alt.name, icon=file_icon_svg(_alt.name), detail='original in use'))
                                                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                             if _debug_file:
                                                                 log_debug(f"  Target locked; delivered as {_alt.name}", _debug_file)
@@ -1095,7 +1111,7 @@ def run_sync():
                                                     # Track success for UI dropdown
                                                     final_name = filepath.name
                                                     synced_details[pair_idx].append(final_name)
-                                                    terminal_log.append(f"<span style='color:{theme.SUCCESS_ALT}'>✅ </span>{esc(final_name)}")
+                                                    terminal_log.append(log_line('success', final_name, icon=file_icon_svg(final_name)))
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                     if _debug_file:
                                                         log_debug(f"✓ {final_name}", _debug_file)
@@ -1118,7 +1134,7 @@ def run_sync():
                                                     should_sleep_duration = int(_retry_after_raw)
                                                 except (ValueError, TypeError):
                                                     should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
-                                                terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Rate limited: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry in {should_sleep_duration}s)</span>")
+                                                terminal_log.append(log_line('attention', display_file_name, icon=file_icon_svg(display_file_name), detail=f'rate limited · retry in {should_sleep_duration}s'))
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                 if _debug_file:
                                                     log_debug(f"Rate limited: {display_file_name} (retry in {should_sleep_duration}s, attempt {attempt + 1}/{SYNC_MAX_RETRIES})", _debug_file)
@@ -1127,7 +1143,7 @@ def run_sync():
                                                 # Server error - retry with exponential backoff
                                                 should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
                                                 if attempt < SYNC_MAX_RETRIES - 1:
-                                                    terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Server error ({response.status}): </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                                    terminal_log.append(log_line('attention', display_file_name, icon=file_icon_svg(display_file_name), detail=f'server {response.status} · retry {attempt + 1}/{SYNC_MAX_RETRIES}'))
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                     if _debug_file:
                                                         log_debug(
@@ -1138,7 +1154,7 @@ def run_sync():
                                                     # Max retries exhausted for 5xx
                                                     failed_files_for_pair.append(file)
                                                     error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status} after {SYNC_MAX_RETRIES} retries")
-                                                    terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status} after {SYNC_MAX_RETRIES} retries)</span>")
+                                                    terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=f'HTTP {response.status} after {SYNC_MAX_RETRIES} retries'))
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                     if _debug_file:
                                                         log_debug(f"✗ Server {response.status}: {display_file_name} (exhausted {SYNC_MAX_RETRIES} retries)", _debug_file)
@@ -1148,7 +1164,7 @@ def run_sync():
                                                 # Non-retryable HTTP error (4xx except 429)
                                                 failed_files_for_pair.append(file)
                                                 error_list.append(f"Error syncing {esc(display_file_name)}: HTTP {response.status}")
-                                                terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(HTTP {response.status})</span>")
+                                                terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=f'HTTP {response.status}'))
                                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                 if _debug_file:
                                                     log_debug(f"✗ HTTP {response.status}: {display_file_name}", _debug_file)
@@ -1166,7 +1182,7 @@ def run_sync():
                                     if isinstance(net_err, aiohttp.ClientConnectorCertificateError) or 'CERTIFICATE_VERIFY_FAILED' in str(net_err):
                                         failed_files_for_pair.append(file)
                                         error_list.append(f"Error syncing {esc(display_file_name)}: Secure connection to Canvas could not be verified (SSL certificate error)")
-                                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(SSL certificate error)</span>")
+                                        terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail='SSL certificate error'))
                                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                         if _debug_file:
                                             log_debug(f"✗ SSL certificate error (permanent, no retry): {display_file_name}: {net_err}", _debug_file)
@@ -1174,7 +1190,7 @@ def run_sync():
                                     # Network error - retry with backoff
                                     if attempt < SYNC_MAX_RETRIES - 1:
                                         should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
-                                        terminal_log.append(f"<span style='color:{theme.WARNING}'>⏳ Network error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(retry {attempt + 1}/{SYNC_MAX_RETRIES})</span>")
+                                        terminal_log.append(log_line('attention', display_file_name, icon=file_icon_svg(display_file_name), detail=f'network error · retry {attempt + 1}/{SYNC_MAX_RETRIES}'))
                                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                         if _debug_file:
                                             log_debug(
@@ -1184,7 +1200,7 @@ def run_sync():
                                     else:
                                         failed_files_for_pair.append(file)
                                         error_list.append(f"Error syncing {esc(display_file_name)}: Network error: {net_err}")
-                                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>(Network error after {SYNC_MAX_RETRIES} retries)</span>")
+                                        terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=f'network error after {SYNC_MAX_RETRIES} retries'))
                                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                         if _debug_file:
                                             log_debug(f"✗ Network error: {display_file_name}: {net_err}", _debug_file)
@@ -1205,7 +1221,7 @@ def run_sync():
                             
                             failed_files_for_pair.append(file)
                             error_list.append(f"Error syncing {esc(display_file_name)}: {esc(err_msg)}")
-                            terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Skipped: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(err_msg)})</span>")
+                            terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=err_msg))
                             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                             if _debug_file:
                                 log_debug(f"✗ No URL: {display_file_name} ({err_msg})", _debug_file)
@@ -1213,7 +1229,7 @@ def run_sync():
                     except Exception as e:
                         failed_files_for_pair.append(file)
                         error_list.append(f"Error syncing {esc(display_file_name)}: {esc(str(e))}")
-                        terminal_log.append(f"<span style='color:{theme.ERROR_ALT}'>❌ Error: </span>{esc(display_file_name)} <span style='color:{theme.TEXT_MUTED}'>({esc(str(e))})</span>")
+                        terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=str(e)))
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
                             # Full traceback: this broad handler catches genuine
@@ -1280,7 +1296,7 @@ def run_sync():
             speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
             render_progress_bar(progress_container, total_files, total_files)
             metrics_dashboard.markdown(render_metrics_html_compat(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
-            active_file_placeholder.markdown(f"<p style='color: {theme.TERMINAL_TEXT}; font-size: 0.9rem;'>✨ Sync Finalizing...</p>", unsafe_allow_html=True)
+            active_file_placeholder.markdown(f"<p style='color: {theme.TEXT_SECONDARY}; font-size: 0.9rem; font-style: italic;'>Finalizing sync…</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
             # CANCEL GUARD: Skip all post-download state mutations if cancelled.

@@ -208,7 +208,7 @@
         title: 'Open the app for the first time',
         sub: 'Good news - on Ventura and Sonoma it’s just two clicks.',
         body:
-          note('cyan', ICO.shield(18), 'Apple blocks unsigned apps on first launch. This does <strong>not</strong> mean anything is wrong - it’s normal for every free app. The quickest way around it:') +
+          note('cyan', ICO.shield(18), 'Apple blocks unsigned apps from independent developers. To keep this app completely free for students, I don\'t pay Apple the $99/year developer fee required to sign it. This is completely normal for free, independent apps. The quickest way around it:') +
           '<ul class="mw-steps">' +
             '<li>In your <strong>Applications</strong> folder, <strong>right-click</strong> (or Control-click) Canvas Downloader and choose <strong>Open</strong>.</li>' +
             '<li>A warning appears - click <strong>Open</strong>. The app launches and is trusted from now on.</li>' +
@@ -222,7 +222,7 @@
       title: 'Open the app for the first time',
       sub: 'On your macOS version it’s just a couple of clicks.',
       body:
-        note('cyan', ICO.shield(18), 'Apple blocks unsigned apps on first launch. This is normal for every free app and doesn’t mean anything is wrong:') +
+        note('cyan', ICO.shield(18), 'Apple blocks unsigned apps from independent developers. To keep this app completely free for students, I don\'t pay Apple the $99/year developer fee required to sign it. This is completely normal for free, independent apps. The quickest way around it:') +
         '<ul class="mw-steps">' +
           '<li>In <strong>Applications</strong>, <strong>right-click</strong> Canvas Downloader and choose <strong>Open</strong>, then click <strong>Open</strong> in the dialog.</li>' +
           '<li>Still blocked? Open <strong>System Preferences</strong> → <strong>Security &amp; Privacy</strong> → <strong>General</strong> tab → click <strong>Open Anyway</strong>.</li>' +

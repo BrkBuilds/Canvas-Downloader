@@ -22,7 +22,7 @@ from pathlib import Path
 import streamlit as st
 
 import theme
-from sync_manager import SyncHistoryManager, SyncManager, get_file_icon
+from sync_manager import SyncHistoryManager, SyncManager
 from ui_helpers import (
     esc,
     friendly_course_name,
@@ -526,7 +526,8 @@ def show_course_ignored_files(course_name, course_id, course_data):
         checked_count = sum(1 for k in all_keys if st.session_state.get(k, False))
 
         if st.session_state.get(f"{prefix}_success"):
-            st.success(st.session_state.pop(f"{prefix}_success"))
+            from ui.amber_notice import render_success_notice
+            render_success_notice(st.session_state.pop(f"{prefix}_success"), margin="10px 0 10px 0")
 
         # ── 6. Dynamic button text ────────────────────────────────────
         if checked_count == 0:

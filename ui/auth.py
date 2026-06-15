@@ -1288,6 +1288,11 @@ def render_login_page(fetch_courses_fn):
                             "Access Denied",
                             detail="Your token does not have the required permissions. Please generate a new token without restrictions."
                         )
+                    elif any(kw in err_text_lower for kw in ["expecting value", "jsondecodeerror", "json decoder"]):
+                        render_amber_notice(
+                            "Invalid Canvas URL",
+                            detail="Your Canvas URL points to a login portal instead of the actual Canvas server. Please ensure you are using the true base Canvas URL (typically ending in .instructure.com). Follow the 'How to find your Canvas URL' guide below."
+                        )
                     elif any(kw in err_text_lower for kw in ["500", "502", "503", "504", "server error"]):
                         render_amber_notice(
                             "Canvas Server Down",
@@ -1320,7 +1325,7 @@ def render_login_page(fetch_courses_fn):
                     "2. Examine the address bar **after** logging in.\n"
                     "3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n"
                     "4. Copy the base portion of the URL (`https://schoolname.instructure.com`) and paste it here.\n\n"
-                    "**Important:** You must input the **actual** Canvas URL, not your university's login portal.\n"
+                    "**Important:** While your university's URL (like `canvas.school.edu`) may be accepted, pasting the **real Canvas URL** (ending in `.instructure.com`) is always the best and most reliable option to prevent login issues.\n"
                 )
 
             with st.expander('How to get a Canvas Access Token?'):
