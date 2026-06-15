@@ -50,7 +50,7 @@
       --rad-l:   16px;
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
@@ -246,8 +246,9 @@
     .guide-section {
       padding: 48px 0 24px;
       border-top: 1px solid var(--border);
+      scroll-margin-top: -48px;
     }
-    .guide-section:first-of-type { border-top: none; padding-top: 32px; }
+    .guide-section:first-of-type { border-top: none; padding-top: 32px; scroll-margin-top: -32px; }
     .sh { margin-bottom: 28px; }
     .sh h2 {
       font-size: clamp(22px, 3vw, 32px); font-weight: 800;
@@ -483,6 +484,7 @@
     <aside class="toc">
       <div class="toc-title">On this page</div>
       <a href="#getting-started">Getting Started</a>
+      <a href="#canvas-url" class="sub">Your Canvas URL</a>
       <a href="#api-token" class="sub">Your Canvas Access Token</a>
       <a href="#selecting-courses" class="sub">Selecting Courses</a>
       <a href="#quick-download">Quick Download</a>
@@ -515,6 +517,22 @@
           <div class="label">Step 1</div>
           <h2>Getting Started</h2>
           <p>Connect to your Canvas account, pick the courses you need, and you're ready to download.</p>
+        </div>
+
+        <h3 class="sub-title reveal" id="canvas-url">Your Canvas URL</h3>
+        <p class="body-text reveal">
+          To connect Canvas Downloader to your courses, you must provide your school's specific Canvas URL. 
+        </p>
+
+        <div class="info-card reveal">
+          <h4>How to find your Canvas URL</h4>
+          <p>
+            <strong>1.</strong> Log in to Canvas in your web browser.<br/>
+            <strong>2.</strong> Examine the address bar <strong>after</strong> logging in.<br/>
+            <strong>3.</strong> It often looks like <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">https://schoolname.instructure.com</code> (even if you typed <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">canvas.school.edu</code> to get there).<br/>
+            <strong>4.</strong> Copy the base portion of the URL (<code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">https://schoolname.instructure.com</code>) and paste it into the app.<br/><br/>
+            <strong>Important:</strong> While your university's URL (e.g., <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">canvas.school.edu</code>) may be accepted by our auto-resolver, pasting the <strong>real Canvas URL</strong> (ending in <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">.instructure.com</code>) is always the best and most reliable option.
+          </p>
         </div>
 
         <h3 class="sub-title reveal" id="api-token">Your Canvas Access Token</h3>
@@ -703,7 +721,7 @@
             <li><img src="assets/icon_conv_zip.png" alt="" class="li-icon" /><span><strong>Unpack Archives</strong> - Extracts .zip files so contents are immediately accessible. Most AI tools cannot read zips directly.</span></li>
             <li><img src="assets/icon_conv_pptx.png" alt="" class="li-icon" /><span><strong>PowerPoint &#8594; PDF</strong> - Converts slide decks to PDF. Original is replaced. Requires the Microsoft PowerPoint desktop app.</span></li>
             <li><img src="assets/icon_conv_word.png" alt="" class="li-icon" /><span><strong>Legacy Word &#8594; PDF</strong> - Converts old .doc / .rtf / .odt formats to PDF. Modern .docx files are not affected.</span></li>
-            <li><img src="assets/icon_conv_excel.png" alt="" class="li-icon" /><span><strong>Excel &#8594; PDF &amp; Data</strong> - Creates a visual PDF and a plain text data file. The original spreadsheet is kept.</span></li>
+            <li><img src="assets/icon_conv_excel.png" alt="" class="li-icon" /><span><strong>Excel &#8594; PDF &amp; Data</strong> - Creates a visual PDF and a plain text data file. The original spreadsheet is replaced.</span></li>
             <li><img src="assets/icon_conv_html.png" alt="" class="li-icon" /><span><strong>Canvas Pages &#8594; Plain Text</strong> - Strips web formatting from Canvas pages, making them easy for AI tools.</span></li>
             <li><img src="assets/icon_conv_code.png" alt="" class="li-icon" /><span><strong>Code &#8594; .txt</strong> - Adds a .txt extension to programming files for AI tools that only accept plain text.</span></li>
             <li><img src="assets/icon_conv_urls.png" alt="" class="li-icon" /><span><strong>Gather Web Links</strong> - Collects all website shortcuts into a single text file per course.</span></li>
@@ -1064,7 +1082,7 @@
           </div>
           <div class="faq-item reveal">
             <h4>If I enable PowerPoint to PDF, does the original get deleted?</h4>
-            <p>Yes - the original is replaced by the PDF. Same for Legacy Word to PDF and Video to Audio. <strong>Exception:</strong> Excel keeps the original alongside the new PDF and data file.</p>
+            <p>Yes - the original is replaced by the PDF. Same for Legacy Word to PDF, Excel to PDF, and Video to Audio.</p>
           </div>
           <div class="faq-item reveal">
             <h4>What does Submissions (Results) save, and will my professor know?</h4>

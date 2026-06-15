@@ -19,7 +19,10 @@ from typing import Any, Callable, Optional
 
 import theme
 from ui_helpers import esc
-from engine.progress_dashboard import render_active_file
+from engine.progress_dashboard import (
+    render_active_file, build_terminal_html,
+    log_line, log_divider, log_meta, file_icon_svg,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,12 +103,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         ''', unsafe_allow_html=True)
 
         # Re-render log so it stays in sync with progress/metrics
-        log_content = "<br>".join(reversed(list(ui.log_lines)[-200:]))
-        ui.log_placeholder.markdown(f'''
-        <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-            {log_content}
-        </div>
-        ''', unsafe_allow_html=True)
+        ui.log_placeholder.markdown(build_terminal_html(ui.log_lines), unsafe_allow_html=True)
 
         time.sleep(0.05)
     except (KeyboardInterrupt, SystemExit):
@@ -114,27 +112,40 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         logger.debug(f"_render_dashboard swallowed: {type(e).__name__}: {e}")
 
 
-def _log_msg(ui: UIBridge, msg: str):
-    """Append an HTML log message, log to Python logger, and re-render the terminal."""
+def _log_msg(ui: UIBridge, msg: str, *, is_error: bool = False):
+    """Append a pre-built log-line HTML string, mirror to the Python logger, and re-render."""
     try:
         if ui.is_cancelled():
             return
-        plain = re.sub(r'<[^>]+>', '', msg)
-        if '❌' in plain:
+        plain = re.sub(r'<[^>]+>', ' ', msg).strip()
+        if is_error:
             logger.error(plain)
         else:
             logger.info(plain)
 
         ui.log_lines.append(msg)
-
-        log_content = "<br>".join(reversed(list(ui.log_lines)[-200:]))
-        ui.log_placeholder.markdown(f'''
-        <div style="background-color: {theme.BG_TERMINAL}; color: {theme.TERMINAL_TEXT}; padding: 15px; border-radius: 8px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 0.85rem; height: 160px; border: 1px solid {theme.BORDER_TERMINAL}; line-height: 1.6; overflow-y: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
-            {log_content}
-        </div>
-        ''', unsafe_allow_html=True)
+        ui.log_placeholder.markdown(build_terminal_html(ui.log_lines), unsafe_allow_html=True)
     except Exception as e:
         logger.debug(f"_log_msg swallowed: {type(e).__name__}: {e}")
+
+
+def _emit(ui: UIBridge, status: str, text: str, *, filename: str | None = None,
+          detail: str | None = None):
+    """Build and append one unified post-processing log line.
+
+    status: 'success' | 'error' | 'attention' | 'skip'  -> a normal log row
+            'divider'                                    -> a centered phase break
+            'meta'                                       -> a quiet centered note
+    filename (optional) selects the content-type icon for normal rows.
+    """
+    if status == 'divider':
+        line = log_divider(text)
+    elif status == 'meta':
+        line = log_meta(text)
+    else:
+        icon = file_icon_svg(filename) if filename else None
+        line = log_line(status, text, icon=icon, detail=detail)
+    _log_msg(ui, line, is_error=(status == 'error'))
 
 
 def _show_active_file(ui: UIBridge, filename: str):
@@ -215,11 +226,7 @@ def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase
     """Log a single actionable message and mark the remaining files as skipped."""
     if remaining > 0:
         ui.pp_failure_count += remaining
-    _log_msg(
-        ui,
-        f"<span style='color: {theme.ERROR_LIGHT};'>🛑 {esc(fatal_msg)} "
-        f"Skipping the remaining {remaining} {phase_label} file(s).</span>"
-    )
+    _emit(ui, 'error', fatal_msg, detail=f"skipping remaining {remaining} {phase_label} file(s)")
 
 
 # ─────────────────────────────────────────────────────
@@ -240,17 +247,17 @@ def run_archive_extraction(files, ui: UIBridge):
         from archive_extractor import extract_archive
     except ImportError as _imp_err:
         logger.error(f"archive_extractor unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Archive extraction unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Archive extraction unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Archive files for extraction...</span>")
+    _emit(ui, 'divider', f"Extracting {total} archive files")
     _render_dashboard(ui, 0, total, "Archives")
     time.sleep(0.2)
 
     for i, (archive_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+            _emit(ui, 'divider', "Process cancelled by user")
             break
         old_name = archive_file.name
         _show_active_file(ui, old_name)
@@ -260,15 +267,15 @@ def run_archive_extraction(files, ui: UIBridge):
         if success:
             # No manifest update needed - the Sync Engine bypass will
             # silently ignore the missing archive on future sync runs.
-            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Extracted: {esc(old_name)}</span>")
+            _emit(ui, 'success', old_name, filename=old_name)
             ui.pp_success_count += 1
         else:
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Extraction failed)</span>")
+            _emit(ui, 'error', old_name, filename=old_name, detail='Extraction failed')
             _log_error_to_file(ui.error_log_path, old_name, "Archive extraction failed")
             ui.pp_failure_count += 1
         _render_dashboard(ui, i, total, "Archives")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Archive extraction complete!</span>")
+    _emit(ui, 'meta', "Archive extraction complete")
     ui.active_file_placeholder.empty()
 
 
@@ -280,13 +287,13 @@ def run_pptx_conversion(files, ui: UIBridge):
         from pdf_converter import PowerPointToPDF
     except ImportError as _imp_err:
         logger.error(f"pdf_converter unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "PowerPoint conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
     pptx_error_log = ui.error_log_path
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Converting {total} PowerPoint files to PDF...</span>")
+    _emit(ui, 'divider', f"Converting {total} PowerPoint files to PDF")
     _render_dashboard(ui, 0, total, "PowerPoint files")
     time.sleep(0.2)
 
@@ -295,12 +302,12 @@ def run_pptx_conversion(files, ui: UIBridge):
         # DispatchEx failed. Without this check the loop runs silently with no
         # conversions and no error visible to the user.
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ PowerPoint COM init failed - conversions skipped.</span>")
+            _emit(ui, 'error', "PowerPoint COM init failed — conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (pptx_file, sm, ctx) in enumerate(files, 1):
                 if ui.is_cancelled():
-                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    _emit(ui, 'divider', "Process cancelled by user")
                     break
                 old_name = pptx_file.name
                 _show_active_file(ui, old_name)
@@ -312,11 +319,11 @@ def run_pptx_conversion(files, ui: UIBridge):
                     _update_manifest_path(sm, pptx_file, pdf_path)
                     if ui.on_detail_update:
                         ui.on_detail_update(ctx, old_name, pdf_path.name)
-                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    _emit(ui, 'success', old_name, filename=old_name, detail='→ PDF')
                     ui.pp_success_count += 1
                 else:
                     _reason, _fatal = _applescript_last_error()
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed{esc(_reason)})</span>")
+                    _emit(ui, 'error', old_name, filename=old_name, detail=f'Conversion failed{_reason}')
                     _log_error_to_file(ui.error_log_path, old_name, f"PDF conversion failed{_reason}")
                     ui.pp_failure_count += 1
                     if _fatal:
@@ -325,7 +332,7 @@ def run_pptx_conversion(files, ui: UIBridge):
                         break
                 _render_dashboard(ui, i, total, "PowerPoint files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ PDF conversion complete!</span>")
+    _emit(ui, 'meta', "PDF conversion complete")
     ui.active_file_placeholder.empty()
 
 
@@ -337,17 +344,17 @@ def run_html_conversion(files, ui: UIBridge):
         from md_converter import convert_html_to_md
     except ImportError as _imp_err:
         logger.error(f"md_converter unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ HTML→Markdown conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "HTML→Markdown conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} HTML files for Markdown conversion...</span>")
+    _emit(ui, 'divider', f"Converting {total} HTML files to Markdown")
     _render_dashboard(ui, 0, total, "HTML files")
     time.sleep(0.2)
 
     for i, (html_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+            _emit(ui, 'divider', "Process cancelled by user")
             break
         old_name = html_file.name
         _show_active_file(ui, old_name)
@@ -358,15 +365,15 @@ def run_html_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, html_file, md_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, md_path.name)
-            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {md_path.name}</span>")
+            _emit(ui, 'success', md_path.name, filename=md_path.name)
             ui.pp_success_count += 1
         else:
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
+            _emit(ui, 'error', old_name, filename=old_name, detail='Conversion failed')
             _log_error_to_file(ui.error_log_path, old_name, "Markdown conversion failed")
             ui.pp_failure_count += 1
         _render_dashboard(ui, i, total, "HTML files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Markdown conversion complete!</span>")
+    _emit(ui, 'meta', "Markdown conversion complete")
     ui.active_file_placeholder.empty()
 
 
@@ -378,17 +385,17 @@ def run_code_conversion(files, ui: UIBridge):
         from code_converter import convert_code_to_txt
     except ImportError as _imp_err:
         logger.error(f"code_converter unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Code→TXT conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Code→TXT conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Code & Data files for TXT conversion...</span>")
+    _emit(ui, 'divider', f"Converting {total} code & data files to TXT")
     _render_dashboard(ui, 0, total, "Code files")
     time.sleep(0.2)
 
     for i, (code_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+            _emit(ui, 'divider', "Process cancelled by user")
             break
         old_name = code_file.name
         _show_active_file(ui, old_name)
@@ -400,15 +407,15 @@ def run_code_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, code_file, txt_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, txt_path.name)
-            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> TXT</span>")
+            _emit(ui, 'success', old_name, filename=old_name, detail='→ TXT')
             ui.pp_success_count += 1
         else:
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed)</span>")
+            _emit(ui, 'error', old_name, filename=old_name, detail='Conversion failed')
             _log_error_to_file(ui.error_log_path, old_name, "Code to TXT conversion failed")
             ui.pp_failure_count += 1
         _render_dashboard(ui, i, total, "Code files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Code to TXT conversion complete!</span>")
+    _emit(ui, 'meta', "Code to TXT conversion complete")
     ui.active_file_placeholder.empty()
 
 
@@ -423,26 +430,26 @@ def run_url_compilation(folders, ui: UIBridge, sm=None):
         from url_compiler import compile_urls_to_txt
     except ImportError as _imp_err:
         logger.error(f"url_compiler unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ URL compilation unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "URL compilation unavailable: module not found", detail=str(_imp_err))
         return
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Scanning downloaded modules for .url shortcuts...</span>")
+    _emit(ui, 'divider', "Compiling external links")
 
     for course_folder, course_name in folders:
         if ui.is_cancelled():
-            _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+            _emit(ui, 'divider', "Process cancelled by user")
             break
 
         if course_folder.exists():
             try:
                 compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
             except Exception as e:
-                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ URL compilation failed for '{esc(course_name)}': {esc(str(e))}</span>")
+                _emit(ui, 'error', f"URL compilation failed: {course_name}", detail=str(e))
                 _log_error_to_file(ui.error_log_path, course_name, f"URL compilation error: {e}")
                 ui.pp_failure_count += 1
                 continue
             if compiled_path:
-                _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Compiled links for '{esc(course_name)}' into: Compiled_External_Links.txt</span>")
+                _emit(ui, 'success', "Compiled_External_Links.txt", filename="Compiled_External_Links.txt", detail=course_name)
                 ui.pp_success_count += 1
 
             # Delete processed shortcuts whether new links were compiled or they were
@@ -464,22 +471,22 @@ def run_word_conversion(files, ui: UIBridge):
         from word_converter import WordToPDF
     except ImportError as _imp_err:
         logger.error(f"word_converter unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word→PDF conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Word→PDF conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Legacy Word files for PDF conversion...</span>")
+    _emit(ui, 'divider', f"Converting {total} legacy Word files to PDF")
     _render_dashboard(ui, 0, total, "Legacy Word files")
     time.sleep(0.2)
 
     with WordToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Word COM init failed - conversions skipped.</span>")
+            _emit(ui, 'error', "Word COM init failed — conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (word_file, sm, ctx) in enumerate(files, 1):
                 if ui.is_cancelled():
-                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    _emit(ui, 'divider', "Process cancelled by user")
                     break
                 old_name = word_file.name
                 _show_active_file(ui, old_name)
@@ -491,11 +498,11 @@ def run_word_conversion(files, ui: UIBridge):
                     _update_manifest_path(sm, word_file, pdf_path)
                     if ui.on_detail_update:
                         ui.on_detail_update(ctx, old_name, pdf_path.name)
-                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    _emit(ui, 'success', old_name, filename=old_name, detail='→ PDF')
                     ui.pp_success_count += 1
                 else:
                     _reason, _fatal = _applescript_last_error()
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Conversion failed{esc(_reason)})</span>")
+                    _emit(ui, 'error', old_name, filename=old_name, detail=f'Conversion failed{_reason}')
                     _log_error_to_file(ui.error_log_path, old_name, f"Word to PDF conversion failed{_reason}")
                     ui.pp_failure_count += 1
                     if _fatal:
@@ -504,7 +511,7 @@ def run_word_conversion(files, ui: UIBridge):
                         break
                 _render_dashboard(ui, i, total, "Legacy Word files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Legacy Word to PDF conversion complete!</span>")
+    _emit(ui, 'meta', "Legacy Word to PDF conversion complete")
     ui.active_file_placeholder.empty()
 
 
@@ -523,18 +530,18 @@ def run_excel_data_conversion(files, ui: UIBridge):
         from excel_converter import ExcelToData
     except ImportError as _imp_err:
         logger.error(f"excel_converter (ExcelToData) unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel data extraction unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Excel data extraction unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Excel files for AI data extraction...</span>")
+    _emit(ui, 'divider', f"Extracting data from {total} Excel files")
     _render_dashboard(ui, 0, total, "Excel data files")
     time.sleep(0.2)
 
     with ExcelToData() as extractor:
         for i, (excel_file, sm, ctx) in enumerate(files, 1):
             if ui.is_cancelled():
-                _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                _emit(ui, 'divider', "Process cancelled by user")
                 break
             old_name = excel_file.name
             _show_active_file(ui, old_name)
@@ -546,20 +553,20 @@ def run_excel_data_conversion(files, ui: UIBridge):
                 if data_path:
                     data_name = Path(data_path).name
                     # Do NOT update manifest - _Data.txt is an untracked sidecar
-                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Extracted: {esc(old_name)} → {esc(data_name)}</span>")
+                    _emit(ui, 'success', old_name, filename=old_name, detail=f'→ {data_name}')
                     ui.pp_success_count += 1
                     ui.generated_sidecar_paths.append(str(data_path))
                 else:
                     err_detail = data_error_msg if data_error_msg else "Excel data extraction failed"
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({err_detail})</span>")
+                    _emit(ui, 'error', old_name, filename=old_name, detail=err_detail)
                     _log_error_to_file(ui.error_log_path, old_name, err_detail)
                     ui.pp_failure_count += 1
             except Exception as e:
-                _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (System Error)</span>")
+                _emit(ui, 'error', old_name, filename=old_name, detail='System Error')
                 _log_error_to_file(ui.error_log_path, old_name, f"System Error: {e}")
                 ui.pp_failure_count += 1
             _render_dashboard(ui, i, total, "Excel data files")
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Excel AI data extraction complete!</span>")
+    _emit(ui, 'meta', "Excel AI data extraction complete")
     ui.active_file_placeholder.empty()
 
 
@@ -574,22 +581,22 @@ def run_excel_conversion(files, ui: UIBridge):
         from excel_converter import ExcelToPDF
     except ImportError as _imp_err:
         logger.error(f"excel_converter (ExcelToPDF) unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel→PDF conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Excel→PDF conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Excel files for PDF conversion...</span>")
+    _emit(ui, 'divider', f"Converting {total} Excel files to PDF")
     _render_dashboard(ui, 0, total, "Excel files")
     time.sleep(0.2)
 
     with ExcelToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Excel COM init failed - conversions skipped.</span>")
+            _emit(ui, 'error', "Excel COM init failed — conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (excel_file, sm, ctx) in enumerate(files, 1):
                 if ui.is_cancelled():
-                    _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+                    _emit(ui, 'divider', "Process cancelled by user")
                     break
                 old_name = excel_file.name
                 _show_active_file(ui, old_name)
@@ -602,12 +609,12 @@ def run_excel_conversion(files, ui: UIBridge):
                     _update_manifest_path(sm, excel_file, pdf_path)
                     if ui.on_detail_update:
                         ui.on_detail_update(ctx, old_name, pdf_path.name)
-                    _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Converted: {esc(old_name)} -> PDF</span>")
+                    _emit(ui, 'success', old_name, filename=old_name, detail='→ PDF')
                     ui.pp_success_count += 1
                 else:
                     _reason, _fatal = _applescript_last_error()
                     err_detail = excel_error_msg if excel_error_msg else f"Excel to PDF conversion failed{_reason}"
-                    _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} ({esc(err_detail)})</span>")
+                    _emit(ui, 'error', old_name, filename=old_name, detail=err_detail)
                     _log_error_to_file(ui.error_log_path, old_name, err_detail)
                     ui.pp_failure_count += 1
                     if _fatal:
@@ -616,7 +623,7 @@ def run_excel_conversion(files, ui: UIBridge):
                         break
                 _render_dashboard(ui, i, total, "Excel files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Excel to PDF conversion complete!</span>")
+    _emit(ui, 'meta', "Excel to PDF conversion complete")
     ui.active_file_placeholder.empty()
 
 
@@ -628,17 +635,17 @@ def run_video_conversion(files, ui: UIBridge):
         from video_converter import convert_video_to_mp3
     except ImportError as _imp_err:
         logger.error(f"video_converter unavailable: {_imp_err}")
-        _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Video→MP3 conversion unavailable: module not found ({_imp_err})</span>")
+        _emit(ui, 'error', "Video→MP3 conversion unavailable: module not found", detail=str(_imp_err))
         return
 
     total = len(files)
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>🪄 Queueing {total} Video files for audio extraction...</span>")
+    _emit(ui, 'divider', f"Extracting audio from {total} video files")
     _render_dashboard(ui, 0, total, "Video files")
     time.sleep(0.2)
 
     for i, (video_file, sm, ctx) in enumerate(files, 1):
         if ui.is_cancelled():
-            _log_msg(ui, f"<span style='color: {theme.ERROR};'>🛑 Process cancelled by user.</span>")
+            _emit(ui, 'divider', "Process cancelled by user")
             break
         old_name = video_file.name
         _show_active_file(ui, old_name)
@@ -650,15 +657,15 @@ def run_video_conversion(files, ui: UIBridge):
             _update_manifest_path(sm, video_file, mp3_path)
             if ui.on_detail_update:
                 ui.on_detail_update(ctx, old_name, mp3_path.name)
-            _log_msg(ui, f"<span style='color: {theme.SUCCESS};'>✅ Extracted Audio: {esc(old_name)} -> MP3</span>")
+            _emit(ui, 'success', old_name, filename=old_name, detail='→ MP3')
             ui.pp_success_count += 1
         else:
-            _log_msg(ui, f"<span style='color: {theme.ERROR_LIGHT};'>❌ Skipped: {esc(old_name)} (Audio extraction failed)</span>")
+            _emit(ui, 'error', old_name, filename=old_name, detail='Audio extraction failed')
             _log_error_to_file(ui.error_log_path, old_name, "Video to MP3 extraction failed")
             ui.pp_failure_count += 1
         _render_dashboard(ui, i, total, "Video files")
 
-    _log_msg(ui, f"<span style='color: {theme.TEXT_SECONDARY};'>✨ Video to MP3 conversion complete!</span>")
+    _emit(ui, 'meta', "Video to MP3 conversion complete")
     ui.active_file_placeholder.empty()
 
 

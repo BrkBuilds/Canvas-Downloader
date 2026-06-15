@@ -1393,8 +1393,8 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 main_placeholder.empty()
             st.rerun()
 
-    # --- (6) New files since last sync + Sync History (bottom of page) ---
-    _render_new_files_panel()
+    # --- (6) Sync History (bottom of page) - the single collection point;
+    # every resolvable file carries inline Open / Reveal actions + its path. ---
     _render_sync_history()
 
     # Breathing room so the final expander/accordion is never flush against the
@@ -1402,149 +1402,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     st.markdown("<div style='height: 64px;'></div>", unsafe_allow_html=True)
 
 
-def _render_new_files_panel():
-    """Landing-page panel surfacing the files downloaded in the most recent sync
-    that actually fetched something - grouped by course, with per-file Open /
-    Reveal actions so students can jump straight to today's materials.
-
-    Reads the same ``canvas_sync_history.json`` the Sync History uses (sharing
-    the session cache). Hidden entirely when there is nothing new to show.
-    """
-    try:
-        from ui_helpers import get_config_dir
-        from sync_manager import SyncHistoryManager
-        # Populate the shared cache here (panel renders before the history
-        # expander) so neither does a redundant disk read.
-        if '_sync_history_cache' not in st.session_state:
-            st.session_state['_sync_history_cache'] = SyncHistoryManager(get_config_dir()).load_history()
-        history = st.session_state['_sync_history_cache']
-    except Exception:
-        return
-
-    if not history:
-        return
-
-    # Most recent entry that downloaded files AND carries the structured
-    # per-course breakdown (older entries predate this feature).
-    entry = None
-    for e in reversed(history):
-        if any(g.get('files') for g in (e.get('synced_groups') or [])):
-            entry = e
-            break
-    if entry is None:
-        return
-
-    groups = [g for g in (entry.get('synced_groups') or []) if g.get('files')]
-    total_files = sum(len(g['files']) for g in groups)
-
-    # Resolve the CURRENT folder per course_id so a moved course folder still
-    # resolves (falls back to the folder recorded at sync time).
-    current_folders = {}
-    for p in st.session_state.get('sync_pairs', []):
-        cid = p.get('course_id')
-        if cid is not None:
-            current_folders[cid] = p.get('local_folder')
-
-    from ui_shared import inject_file_action_css, render_synced_file_rows
-    from ui_helpers import friendly_course_name, format_relative_date
-
-    # Hoist all panel CSS to the top (before the keyed container / widgets) so
-    # Streamlit never drops the payload (per the CSS-hoisting rule).
-    inject_file_action_css()
-    st.markdown(
-        """<style>
-        div.st-key-newfiles_panel_body {
-            border: 1px solid rgba(63,217,255,0.28) !important;
-            border-radius: 10px !important;
-            background: #0d1622 !important;
-            padding: 16px 20px 16px 20px !important;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.25) !important;
-        }
-        div[class*="st-key-newfiles_sort_select"] div[data-baseweb="select"] > div {
-            background-color: #1a2330 !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            min-height: 0 !important;
-        }
-        </style>""",
-        unsafe_allow_html=True,
-    )
-
-    # Header: sparkle icon + title + "<mode> · <relative time>"
-    mode_str = entry.get('sync_mode', 'normal')
-    mode_label = (f"{HELP_ICONS['bolt_small']} Quick Sync" if mode_str == 'quick'
-                  else f"{HELP_ICONS['search_small']} Analyze, Review &amp; Sync")
-    try:
-        when = format_relative_date(entry.get('timestamp', ''), include_time=True, include_emoji=False)
-    except Exception:
-        when = entry.get('timestamp', '')
-
-    file_word = 'file' if total_files == 1 else 'files'
-    course_word = 'course' if len(groups) == 1 else 'courses'
-
-    _sparkle = (
-        "<svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#3fd9ff' "
-        "stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'>"
-        "<path d='M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z'/>"
-        "<path d='M19 14l.7 1.9L21.6 16.6 19.7 17.3 19 19.2 18.3 17.3 16.4 16.6 18.3 15.9 19 14z'/></svg>"
-    )
-
-    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-
-    with st.container(border=True, key="newfiles_panel_body"):
-        # Header row (first element inside the card - no inter-element seam).
-        st.markdown(
-            "<div style='display:flex; align-items:center; gap:12px;'>"
-            f"{_sparkle}"
-            "<div style='display:flex; flex-direction:column; gap:2px; min-width:0;'>"
-            "<div style='color:#ffffff; font-size:1.12rem; font-weight:700;'>New files since last sync</div>"
-            f"<div style='color:#9fb4c4; font-size:0.8rem;'>{total_files} {file_word} across "
-            f"{len(groups)} {course_word} <span style='margin:0 7px; color:#46606f;'>&bull;</span> "
-            f"{mode_label} <span style='margin:0 7px; color:#46606f;'>&bull;</span> {esc(str(when))}</div>"
-            "</div></div>",
-            unsafe_allow_html=True,
-        )
-
-        # Sort control (right-aligned), only meaningful with >1 file.
-        st.session_state.setdefault('newfiles_sort', 'folder')
-        _sort_opts = {'Folder': 'folder', 'Name': 'name', 'File type': 'type'}
-        if total_files > 1:
-            _spacer_col, _sel_col = st.columns([0.62, 0.38])
-            with _sel_col:
-                _labels = list(_sort_opts.keys())
-                _cur = next((k for k, v in _sort_opts.items()
-                             if v == st.session_state['newfiles_sort']), 'Folder')
-                _picked = st.selectbox(
-                    "Sort", _labels, index=_labels.index(_cur),
-                    key="newfiles_sort_select", label_visibility="collapsed",
-                )
-                st.session_state['newfiles_sort'] = _sort_opts[_picked]
-        else:
-            st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
-        sort_mode = st.session_state['newfiles_sort']
-
-        multi = len(groups) > 1
-        for gi, g in enumerate(groups):
-            files = g.get('files', [])
-            course_root = g.get('local_folder', '')
-            if course_root and not Path(course_root).exists():
-                _alt = current_folders.get(g.get('course_id'))
-                if _alt and Path(_alt).exists():
-                    course_root = _alt
-
-            if multi:
-                _cname = esc(friendly_course_name(g.get('course_name', '') or 'Course'))
-                _n = len(files)
-                st.markdown(
-                    f"<div style='display:flex; align-items:center; gap:8px; margin:14px 0 6px 0;'>"
-                    f"<span style='color:#cdd9e5; font-size:0.92rem; font-weight:600;'>{HELP_ICONS['folder']} {_cname}</span>"
-                    f"<span style='color:#7d8da0; font-size:0.78rem;'>{_n} {'file' if _n == 1 else 'files'}</span>"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
-
-            render_synced_file_rows(
-                files, course_root, key_scope=f"newfiles_{gi}", sort_mode=sort_mode,
-            )
+# Order + labels + icons for the per-run file-category sections in Sync History.
+_SYNC_HISTORY_CATEGORIES = [
+    ('new',       'New Files Added',          'cat_new'),
+    ('updated',   'Updates Overwritten',      'cat_update'),
+    ('protected', 'Modified Files Protected', 'cat_miss'),
+]
 
 
 def _render_sync_history():
@@ -1552,7 +1415,7 @@ def _render_sync_history():
     history_mgr = None
     try:
         from ui_helpers import get_config_dir
-        from sync_manager import SyncHistoryManager, get_file_icon
+        from sync_manager import SyncHistoryManager
         # Always construct the manager (cheap) so it's available to the
         # "Clear History" handler below. Binding it only inside the cache-miss
         # branch caused an UnboundLocalError on the clear-history rerun, because
@@ -1568,11 +1431,19 @@ def _render_sync_history():
         history = []
 
     if history:
-        st.html("""
+        # Key-scoped CSS is injected via st.markdown (stable across reruns).
+        # st.html() <style> blocks get silently unmounted by Streamlit's React
+        # reconciliation on a rerun (see CLAUDE.md) - that is what made the tab
+        # buttons "lose" their styling after clicking a tab. The st.html() block
+        # further down is reserved ONLY for the #sync-history-marker div, whose
+        # sibling selectors need the un-wrapped DOM that st.html() provides.
+        st.markdown("""
         <style>
         div[class*="st-key-sync_hist_tab_"] button {
             border-radius: 6px !important;
-            border: 1px solid rgba(255,255,255,0.05) !important;
+            /* No visible outline by default - it appears only on hover. The
+               1px transparent border reserves the space so nothing shifts. */
+            border: 1px solid transparent !important;
             background-color: #21262d !important;
             color: #e6edf3 !important;
             box-shadow: none !important;
@@ -1580,21 +1451,72 @@ def _render_sync_history():
             min-height: 0 !important;
             height: 38px !important;
             padding: 4px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
+        /* Hover (either state): reveal the full outside border. */
         div[class*="st-key-sync_hist_tab_"] button:hover {
             background-color: rgba(88, 166, 255, 0.1) !important;
             color: #58a6ff !important;
             border-color: rgba(88, 166, 255, 0.4) !important;
         }
+        /* Active (primary): ONLY a bottom accent border, no full outline. */
         div[class*="st-key-sync_hist_tab_"] button[kind="primary"] {
             background-color: rgba(88, 166, 255, 0.15) !important;
-            border-color: rgba(88, 166, 255, 0.6) !important;
-            color: #ffffff !important;
+            border: 1px solid transparent !important;
             border-bottom: 2px solid #58a6ff !important;
+            color: #ffffff !important;
         }
-        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:hover {
-            background-color: rgba(88, 166, 255, 0.2) !important;
-            border-color: rgba(88, 166, 255, 0.8) !important;
+        /* The active tab is NOT interactive (you're already on it) - it must
+           NOT react to hover/focus/click at all. Restate its resting look
+           verbatim across EVERY interactive state and kill Streamlit's default
+           focus/hover box-shadow + outline (that stray shadow was the "top glow"
+           - my :hover rule reset the border but not the shadow). */
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:hover,
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:focus,
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:focus-visible,
+        div[class*="st-key-sync_hist_tab_"] button[kind="primary"]:active {
+            background-color: rgba(88, 166, 255, 0.15) !important;
+            border: 1px solid transparent !important;
+            border-bottom: 2px solid #58a6ff !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            outline: none !important;
+            cursor: default !important;
+        }
+        /* Grid SVG icon before each tab label (drawn as a ::before so the
+           button-hover restyle never wipes it; inherits no colour - the icon
+           colour is baked into the data-URI fill). */
+        /* Centre the label box itself, then centre icon+text inside it. The
+           default <p> line-height + margins were leaving the content sitting
+           slightly high in the 38px button - reset them so it sits dead-centre. */
+        div[class*="st-key-sync_hist_tab_"] button > div {
+            display: flex !important; align-items: center !important; justify-content: center !important;
+            height: 100% !important;
+        }
+        div[class*="st-key-sync_hist_tab_"] button p {
+            display: inline-flex !important; align-items: center !important; gap: 8px !important;
+            margin: 0 !important; line-height: 1 !important;
+        }
+        div[class*="st-key-sync_hist_tab_"] button p::before {
+            content: ""; display: inline-block; width: 17px; height: 17px;
+            background-repeat: no-repeat; background-position: center; background-size: contain;
+        }
+        /* View All = a list icon: 3 rows, each a bullet + a dash. */
+        div.st-key-sync_hist_tab_all button p::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c9d1d9'%3E%3Ccircle cx='4' cy='6' r='1.7'/%3E%3Crect x='8' y='4.8' width='13' height='2.4' rx='1.2'/%3E%3Ccircle cx='4' cy='12' r='1.7'/%3E%3Crect x='8' y='10.8' width='13' height='2.4' rx='1.2'/%3E%3Ccircle cx='4' cy='18' r='1.7'/%3E%3Crect x='8' y='16.8' width='13' height='2.4' rx='1.2'/%3E%3C/svg%3E");
+        }
+        /* By Course = a filled folder. */
+        div.st-key-sync_hist_tab_course button p::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c9d1d9'%3E%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E");
+        }
+        /* Brighten the icon on the active (primary) tab to match its white text. */
+        div.st-key-sync_hist_tab_all button[kind="primary"] p::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Ccircle cx='4' cy='6' r='1.7'/%3E%3Crect x='8' y='4.8' width='13' height='2.4' rx='1.2'/%3E%3Ccircle cx='4' cy='12' r='1.7'/%3E%3Crect x='8' y='10.8' width='13' height='2.4' rx='1.2'/%3E%3Ccircle cx='4' cy='18' r='1.7'/%3E%3Crect x='8' y='16.8' width='13' height='2.4' rx='1.2'/%3E%3C/svg%3E");
+        }
+        div.st-key-sync_hist_tab_course button[kind="primary"] p::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E");
         }
         /* Clean up the selectbox input */
         div.st-key-sync_hist_course_select div[data-baseweb="select"],
@@ -1652,7 +1574,13 @@ def _render_sync_history():
         .sync-history-details[open] .sync-history-chevron {
             transform: rotate(90deg) !important;
         }
+        </style>
+        """, unsafe_allow_html=True)
 
+        # st.html() ONLY for the marker div + its sibling selectors (these need
+        # the real, un-wrapped DOM that st.markdown's <p> wrapping would break).
+        st.html("""
+        <style>
         /* --- SEXY SYNC HISTORY EXPANDER STYLING --- */
         /* Target the expander immediately following our hidden marker */
         div:has(> div > #sync-history-marker) + div[data-testid="stLayoutWrapper"] [data-testid="stExpander"] {
@@ -1750,292 +1678,528 @@ def _render_sync_history():
         </style>
         <div id="sync-history-marker" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>
         """)
-        
-        with st.expander('Sync History', expanded=False):
+
+        # Fake-expander toggle: a manual show/hide. The outer 'Sync History'
+        # cannot be a real st.expander, because each individual sync below IS a
+        # real st.expander and Streamlit forbids nesting expanders. The toggle
+        # keeps the section collapsible while letting every run collapse too.
+        _hist_open = st.session_state.get('sync_history_open', False)
+        st.markdown(
+            f"""<style>
+            div.st-key-sync_history_toggle button {{
+                background: #1a1e24 !important;
+                border: 1px solid rgba(255,255,255,0.08) !important;
+                border-top-left-radius: 8px !important;
+                border-top-right-radius: 8px !important;
+                /* When open, square the bottom corners + keep the bottom border
+                   as a divider so the panel below reads as this button's body. */
+                border-bottom-left-radius: {'0' if _hist_open else '8px'} !important;
+                border-bottom-right-radius: {'0' if _hist_open else '8px'} !important;
+                justify-content: flex-start !important;
+                padding: 16px 20px !important;
+                height: auto !important;
+                margin-top: 32px !important;
+            }}
+            div.st-key-sync_history_toggle button:hover {{
+                background: #1e2330 !important;
+                border-color: rgba(255,255,255,0.14) !important;
+            }}
+            div.st-key-sync_history_toggle button p {{
+                font-size: 1.15rem !important; font-weight: 600 !important;
+                color: #ffffff !important; display: flex !important; align-items: center !important;
+            }}
+            div.st-key-sync_history_toggle button p::before {{
+                content: ""; display: inline-block; width: 22px; height: 22px; margin-right: 11px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
+                background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.9;
+            }}
+            div.st-key-sync_history_toggle button::after {{
+                content: ""; margin-left: auto; width: 15px; height: 15px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+                background-size: contain; background-repeat: no-repeat; background-position: center;
+                transform: rotate({90 if _hist_open else 0}deg); transition: transform 0.2s ease;
+            }}
+            </style>""",
+            unsafe_allow_html=True,
+        )
+        if st.button("Sync History", key="sync_history_toggle", use_container_width=True):
+            st.session_state['sync_history_open'] = not _hist_open
+            st.rerun()
+
+        if _hist_open:
             if not history:
                 st.write('No sync history yet.')
                 return
-            
-            from collections import defaultdict
-            from datetime import datetime
-            from ui_helpers import friendly_course_name
-            import theme
-            
-            # Action line at top of expander
-            st.session_state.setdefault('sync_history_filter', 'all')
-            st.session_state.setdefault('sync_history_course', None)
 
-            st.html('<div id="sync-history-toolbar" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>')
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                # View all / By course
-                c1, c2, c3 = st.columns([1, 1, 2])
-                with c1:
-                    st.button("View All", key="sync_hist_tab_all", use_container_width=True,
-                              type="primary" if st.session_state.sync_history_filter == 'all' else "secondary",
-                              on_click=lambda: st.session_state.update({'sync_history_filter': 'all'}))
-                with c2:
-                    st.button("By Course", key="sync_hist_tab_course", use_container_width=True,
-                              type="primary" if st.session_state.sync_history_filter == 'course' else "secondary",
-                              on_click=lambda: st.session_state.update({'sync_history_filter': 'course'}))
-                with c3:
+            with st.container(border=True, key="synchist_box"):
+                from collections import defaultdict
+                from datetime import datetime
+                from ui_helpers import friendly_course_name
+                import theme
+            
+                # Action line at top of expander
+                st.session_state.setdefault('sync_history_filter', 'all')
+                st.session_state.setdefault('sync_history_course', None)
+
+                st.html('<div id="sync-history-toolbar" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>')
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    # View all / By course
+                    c1, c2, c3 = st.columns([1, 1, 2])
+                    with c1:
+                        st.button("View All", key="sync_hist_tab_all", use_container_width=True,
+                                  type="primary" if st.session_state.sync_history_filter == 'all' else "secondary",
+                                  on_click=lambda: st.session_state.update({'sync_history_filter': 'all'}))
+                    with c2:
+                        st.button("By Course", key="sync_hist_tab_course", use_container_width=True,
+                                  type="primary" if st.session_state.sync_history_filter == 'course' else "secondary",
+                                  on_click=lambda: st.session_state.update({'sync_history_filter': 'course'}))
+                    with c3:
+                        if st.session_state.sync_history_filter == 'course':
+                            # Get all unique courses. Defensive: a corrupted /
+                            # hand-edited history.json could carry a non-dict entry
+                            # or a None/blank course name - either of which would
+                            # otherwise blow up sorted() with a None-vs-str compare.
+                            all_courses = set()
+                            for entry in history:
+                                if not isinstance(entry, dict):
+                                    continue
+                                for c in (entry.get('course_names') or []):
+                                    fc = friendly_course_name(c) if c else None
+                                    if isinstance(fc, str) and fc:
+                                        all_courses.add(fc)
+                            courses_list = sorted(all_courses, key=lambda s: s.lower())
+                            if courses_list:
+                                # Pre-select if previously selected
+                                idx = 0
+                                if st.session_state.sync_history_course in courses_list:
+                                    idx = courses_list.index(st.session_state.sync_history_course)
+                            
+                                def on_course_change():
+                                    st.session_state.sync_history_course = st.session_state.sync_hist_course_select
+                            
+                                st.selectbox("Select Course", courses_list, index=idx, label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
+            
+                with col2:
+                    if st.session_state.get('confirm_clear_history'):
+                        cc1, cc2 = st.columns(2)
+                        with cc1:
+                            if st.button("No", use_container_width=True):
+                                st.session_state.confirm_clear_history = False
+                                st.rerun()
+                        with cc2:
+                            if st.button("Yes", type="primary", use_container_width=True):
+                                if history_mgr is not None:
+                                    history_mgr.clear_history()
+                                # Invalidate the cached history so the now-empty
+                                # state is re-read from disk on the next render.
+                                st.session_state.pop('_sync_history_cache', None)
+                                st.session_state.pop('confirm_clear_history', None)
+                                st.rerun()
+                        from ui.amber_notice import render_amber_notice
+                        render_amber_notice("Are you sure you want to delete all sync history?", detail="This cannot be undone.")
+                    else:
+                        if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
+                            st.session_state.confirm_clear_history = True
+                            st.rerun()
+
+                # Divider between action toolbar and list - extend to the box's
+                # inner edges (-20px == the box's horizontal padding).
+                st.html("""
+                    <div style="
+                        border-top: 1px solid rgba(255,255,255,0.08);
+                        margin: 0px -20px 16px -20px;
+                        background: rgba(255,255,255,0.02);
+                        height: 1px;
+                        margin-bottom: -20px;
+                    "></div>
+                """)
+
+                # Filter history. Skip any non-dict entry up front so the whole
+                # downstream pipeline (grouping + rendering) can assume dicts.
+                filtered_history = []
+                for entry in history:
+                    if not isinstance(entry, dict):
+                        continue
                     if st.session_state.sync_history_filter == 'course':
-                        # Get all unique courses
-                        all_courses = set()
-                        for entry in history:
-                            for c in entry.get('course_names', []):
-                                all_courses.add(friendly_course_name(c))
-                        courses_list = sorted(list(all_courses))
-                        if courses_list:
-                            # Pre-select if previously selected
-                            idx = 0
-                            if st.session_state.sync_history_course in courses_list:
-                                idx = courses_list.index(st.session_state.sync_history_course)
-                            
-                            def on_course_change():
-                                st.session_state.sync_history_course = st.session_state.sync_hist_course_select
-                            
-                            st.selectbox("Select Course", courses_list, index=idx, label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
-            
-            with col2:
-                if st.session_state.get('confirm_clear_history'):
-                    cc1, cc2 = st.columns(2)
-                    with cc1:
-                        if st.button("No", use_container_width=True):
-                            st.session_state.confirm_clear_history = False
-                            st.rerun()
-                    with cc2:
-                        if st.button("Yes", type="primary", use_container_width=True):
-                            if history_mgr is not None:
-                                history_mgr.clear_history()
-                            # Invalidate the cached history so the now-empty
-                            # state is re-read from disk on the next render.
-                            st.session_state.pop('_sync_history_cache', None)
-                            st.session_state.pop('confirm_clear_history', None)
-                            st.rerun()
-                    from ui.amber_notice import render_amber_notice
-                    render_amber_notice("Are you sure you want to delete all sync history?", detail="This cannot be undone.")
-                else:
-                    if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
-                        st.session_state.confirm_clear_history = True
-                        st.rerun()
-
-            # Divider between action toolbar and list
-            st.html("""
-                <div style="
-                    border-top: 1px solid rgba(255,255,255,0.08);
-                    margin: 0px -24px 16px -24px;
-                    background: rgba(255,255,255,0.02);
-                    height: 1px;
-                    margin-bottom: -20px;
-                "></div>
-            """)
-
-            # Filter history
-            filtered_history = []
-            for entry in history:
-                if st.session_state.sync_history_filter == 'course':
-                    c_filter = st.session_state.get('sync_history_course')
-                    if c_filter:
-                        # friendly names in entry
-                        entry_friendly_courses = [friendly_course_name(c) for c in entry.get('course_names', [])]
-                        if c_filter not in entry_friendly_courses:
-                            continue
-                filtered_history.append(entry)
+                        c_filter = st.session_state.get('sync_history_course')
+                        if c_filter:
+                            # friendly names in entry
+                            entry_friendly_courses = [friendly_course_name(c) for c in (entry.get('course_names') or []) if c]
+                            if c_filter not in entry_friendly_courses:
+                                continue
+                    filtered_history.append(entry)
                 
-            if not filtered_history:
-                st.info("No history matches your filter.")
-                return
+                if not filtered_history:
+                    st.info("No history matches your filter.")
+                    return
 
-            # Group by date
-            grouped_history = defaultdict(list)
+                # Group by date
+                grouped_history = defaultdict(list)
             
-            def get_ordinal(n):
-                return str(n) + ("th" if 11 <= n <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
+                def get_ordinal(n):
+                    return str(n) + ("th" if 11 <= n <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
 
-            for entry in reversed(filtered_history[-15:]):  # Show up to 15 recent syncs
-                raw_time = entry.get('timestamp', '')
-                try:
-                    dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
-                    time_str = format_time_display(dt.strftime('%H:%M'))
-                except Exception:
-                    time_str = raw_time
-                    dt = None
+                for entry in reversed(filtered_history[-15:]):  # Show up to 15 recent syncs
+                    raw_time = entry.get('timestamp', '')
+                    try:
+                        dt = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
+                        time_str = format_time_display(dt.strftime('%H:%M'))
+                    except Exception:
+                        time_str = raw_time
+                        dt = None
                     
-                date_key = format_relative_date(raw_time, include_time=False, include_emoji=False)
+                    date_key = format_relative_date(raw_time, include_time=False, include_emoji=False)
                     
-                grouped_history[date_key].append({
-                    'entry': entry,
-                    'time_str': time_str,
-                    'dt': dt
-                })
+                    grouped_history[date_key].append({
+                        'entry': entry,
+                        'time_str': time_str,
+                        'dt': dt
+                    })
             
-            # Inject CSS for details marker & animation
-            st.markdown("""
-            <style>
-                .sync-history-details summary::-webkit-details-marker { display: none; }
-                .sync-history-details summary { list-style: none; }
-                .sync-history-details summary:hover { background: rgba(255,255,255,0.02); }
-                .sync-history-details[open] .sync-history-chevron { transform: rotate(90deg); }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            import os
-            from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT
-            def render_file_li(fname):
-                ext = os.path.splitext(fname)[1].lower().lstrip('.')
-                _icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
-                safe_fname = esc(fname)
-                safe_ext = esc(ext)
-                icon_img = f'<img src="{_icon_url}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{safe_ext}"/>'
-                return f'<li style="margin-bottom: 4px; list-style-type: none; margin-left: -12px;">{icon_img}{safe_fname}</li>'
+                # Per-run cards with native, per-file Open / Reveal action rows.
+                # (Native widgets are required for working buttons, so each run is a
+                # styled st.container - NOT a nested st.expander, which Streamlit
+                # forbids inside the outer 'Sync History' expander.)
+                from ui_shared import (
+                    _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT,
+                    inject_file_action_css, render_synced_file_rows,
+                )
+                import os as _os
+                from collections import defaultdict as _dd
 
-            html_out = ['<div style="margin-top: -12px;">']
-            
-            for date_key, items in grouped_history.items():
-                # Sticky Header
-                html_out.append(f"""<div style="position: sticky; top: 0; background: #0e1117; z-index: 10; padding: 12px 0 8px 0; margin-top: 0px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <div style="color: #bac2cc; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{HELP_ICONS['calendar']} {date_key}</div>
-                                    </div>""")
-                
-                # Container for the day's cards
-                html_out.append('<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px; margin-bottom: 16px;">')
-                
-                for item in items:
-                    entry = item['entry']
-                    count = entry.get('files_synced', 0)
-                    courses_count = entry.get('courses', 0)
-                    course_names = entry.get('course_names', [])
-                    errors = entry.get('errors', 0)
-                    
-                    synced_files = entry.get('synced_files', [])
-                    error_details = entry.get('error_details', [])
-                    
-                    # Course names display - escaped for XSS safety
-                    courses_text = ""
-                    if course_names:
-                        formatted_names = [esc(friendly_course_name(name)) for name in course_names if name]
-                        if formatted_names:
-                            courses_text = f"{', '.join(formatted_names)}"
-                    elif courses_count > 0:
-                        courses_text = f"Across {courses_count} course{'s' if courses_count != 1 else ''}"
-                    
-                    # Status logic
-                    if errors > 0:
-                        status_bg = "rgba(235, 168, 52, 0.1)"
-                        status_color = "#eba834"
-                        status_border = "rgba(235, 168, 52, 0.2)"
-                        status_text = f"{errors} error{'s' if errors != 1 else ''}"
-                    elif count > 0:
-                        status_bg = "rgba(52, 211, 153, 0.1)"
-                        status_color = "#34d399"
-                        status_border = "rgba(52, 211, 153, 0.2)"
-                        status_text = "Success"
-                    else:
-                        status_bg = "rgba(255, 255, 255, 0.03)"
-                        status_color = "#8b949e"
-                        status_border = "rgba(255, 255, 255, 0.05)"
-                        status_text = "No changes"
-                        
-                    # File categories
-                    categorized_files = entry.get('categorized_files', {})
-                    if not categorized_files and synced_files:
-                        categorized_files = {'new': [], 'updated': synced_files, 'protected': []}
-                        
-                    sync_mode_str = entry.get('sync_mode', 'normal')
-                    sync_mode_text = f"{HELP_ICONS['bolt_small']} Quick Sync" if sync_mode_str == 'quick' else f"{HELP_ICONS['search_small']} Analyze, Review & Sync"
+                inject_file_action_css()
+                # Style the dropdown panel + the per-run "fake expander" cards.
+                st.markdown(
+                    """<style>
+                    /* The panel hangs directly off the bottom of the toggle
+                       button (no top border/radius, pulled up to be flush) so
+                       it reads as that button's body / dropdown content. */
+                    div.st-key-synchist_box {
+                        border: 1px solid rgba(255,255,255,0.08) !important;
+                        border-top: none !important;
+                        border-top-left-radius: 0 !important;
+                        border-top-right-radius: 0 !important;
+                        border-bottom-left-radius: 8px !important;
+                        border-bottom-right-radius: 8px !important;
+                        background: #0f1318 !important;
+                        padding: 16px 20px 18px 20px !important;
+                        margin-top: -16px !important;
+                    }
+                    div.st-key-synchist_runs { border: none !important; padding: 0 !important; background: transparent !important; }
 
-                    accordion_content = ""
-                    if count > 0 or errors > 0:
-                        accordion_content += '<div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.05); background: #17191f; display: flex; flex-direction: column; gap: 12px;">'
-                        
-                        # New Files
-                        if categorized_files.get('new'):
-                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_new"]} New Files Added <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["new"])})</span></div>'
-                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
-                            for f in categorized_files['new']:
-                                accordion_content += render_file_li(f)
-                            accordion_content += '</ul></div>'
-                        
-                        # Updated Files
-                        if categorized_files.get('updated'):
-                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_update"]} Updates Overwritten <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["updated"])})</span></div>'
-                            accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Your local files were untouched, so they were replaced with the updated files</div>'
-                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
-                            for f in categorized_files['updated']:
-                                accordion_content += render_file_li(f)
-                            accordion_content += '</ul></div>'
+                    /* ---- Per-run "fake expander" --------------------------- *
+                     * A real st.expander can't show this rich two-line header
+                     * while COLLAPSED (Streamlit strips HTML from labels), yet we
+                     * still need native Open/Reveal buttons in the body. So each
+                     * run is a card whose header is a full-width invisible button
+                     * (the click target) with the rich HTML painted on top via a
+                     * pointer-events:none overlay. The body renders below it.
+                     *
+                     * The CARD background is the DARK body/content colour; the
+                     * lighter HEADER colour lives on the button, so (a) the body
+                     * is visibly darker than the title, and (b) hover lightens
+                     * ONLY the header (the button), never the content. */
+                    div[class*="st-key-shist_run_"] {
+                        position: relative !important;
+                        border: 1px solid rgba(255,255,255,0.08) !important;
+                        border-radius: 8px !important;
+                        background: #15181e !important;            /* dark CONTENT bg */
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+                        padding: 0 !important;
+                        margin-bottom: 7px !important;
+                        overflow: hidden !important;
+                    }
+                    /* Flush header(button) <-> body. Collapse EVERY vertical-block
+                       gap inside the run to 0 (descendant selector - this is the
+                       form that reliably matches Streamlit 1.51's wrapper depth),
+                       then re-expand the body's section spacing and the file-row
+                       spacing further below. At equal specificity later source
+                       order wins, so each block ends up with the gap we want:
+                         - run's own block (button|overlay|body) -> 0  (flush)
+                         - body content sections                 -> 9px
+                         - file rows                             -> 4px  */
+                    div[class*="st-key-shist_run_"] [data-testid="stVerticalBlock"] { gap: 0 !important; }
+                    /* The full-width click target = the header bar (carries the
+                       lighter header colour + the ONLY hover state on the card). */
+                    div[class*="st-key-shist_run_"] [data-testid="stButton"] { margin: 0 !important; }
+                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button {
+                        height: 60px !important; min-height: 60px !important; width: 100% !important;
+                        background: #21252e !important; border: none !important;
+                        box-shadow: none !important; padding: 0 !important;
+                        transition: background 0.15s ease !important;
+                    }
+                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:hover {
+                        background: #272c37 !important;
+                    }
+                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:focus,
+                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:active {
+                        box-shadow: none !important; color: inherit !important;
+                    }
+                    /* The rich header painted on top of the button. */
+                    div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-card) {
+                        position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
+                        height: 60px !important; margin: 0 !important;
+                        pointer-events: none !important; z-index: 3 !important;
+                    }
+                    .shist-card { display: flex; align-items: center; gap: 13px; height: 60px; padding: 0 18px; }
+                    .shist-chev { display: flex; align-items: center; flex-shrink: 0; transition: transform 0.2s ease; }
+                    .shist-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+                    .shist-l1 { display: flex; align-items: center; gap: 9px; min-width: 0; }
+                    .shist-l1 .shist-title { font-weight: 700; font-size: 0.97rem; color: #fff;
+                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    /* Smaller status pill - same text size, tighter padding. */
+                    .shist-badge { font-size: 0.7rem; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+                        line-height: 1.35; border: 1px solid; white-space: nowrap; flex-shrink: 0; }
+                    .shist-l2 { display: flex; align-items: center; gap: 8px; color: #c9d1d9; font-size: 0.82rem; }
+                    .shist-l2 .shist-dot { color: #5c6269; }
+                    .shist-l2 .shist-mode { display: inline-flex; align-items: center; gap: 5px; }
+                    .shist-time { display: flex; align-items: center; gap: 5px; color: #8b949e;
+                        font-size: 0.82rem; flex-shrink: 0; margin-left: 12px; }
+                    /* Kill the hollow bordered box entirely. Streamlit wraps a
+                       border=True container in a stVerticalBlockBorderWrapper that
+                       carries a stock 1px border + ~1rem padding; THAT is the
+                       "empty box that boxes in emptiness". We don't rely on knowing
+                       whether the key lands on the wrapper or the inner block - we
+                       strip border / shadow / radius / padding / bg from BOTH, then
+                       re-apply the indent + bottom padding once on the keyed block.
+                       NO divider - the darker body bg already separates it from the
+                       (lighter) header, and the content sits flush under it. */
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_),
+                    div[class*="st-key-shist_body_"] {
+                        border: none !important; box-shadow: none !important;
+                        border-radius: 0 !important; background: transparent !important;
+                        margin: 0 !important;
+                    }
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_) {
+                        padding: 0 !important;
+                    }
+                    div[class*="st-key-shist_body_"] {
+                        /* flush top (content pulled up under header), comfy bottom
+                           (+5px breathing room from the card border), left indent
+                           lines the content up with the header title. */
+                        padding: 6px 18px 23px 44px !important;
+                    }
+                    /* Comfortable spacing between the body's content SECTIONS
+                       (category headers + their file lists). The tight file rows
+                       keep their own small gap - re-asserted LAST so it wins at
+                       equal specificity. */
+                    div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"] { gap: 9px !important; }
+                    div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] { gap: 4px !important; }
+                    </style>""",
+                    unsafe_allow_html=True,
+                )
 
-                        # Protected Files
-                        if categorized_files.get('protected'):
-                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["cat_miss"]} Modified Files Protected <span style="color: #b1bac4; font-weight: 500;">({len(categorized_files["protected"])})</span></div>'
-                            accordion_content += '<div style="color: #8b949e; font-size: 0.75rem; margin-top: -4px;">Saved alongside your edited files</div>'
-                            accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
-                            for f in categorized_files['protected']:
-                                accordion_content += render_file_li(f)
-                            accordion_content += '</ul></div>'
+                # Resolve each course's CURRENT folder so a moved folder still opens.
+                current_folders = {}
+                for _p in st.session_state.get('sync_pairs', []):
+                    _cid = _p.get('course_id')
+                    if _cid is not None:
+                        current_folders[_cid] = _p.get('local_folder')
 
-                        # Errors
-                        if errors > 0 and error_details:
-                            accordion_content += f'<div style="display: flex; flex-direction: column; gap: 6px;">'
-                            accordion_content += f'<div style="color: #ffffff; font-size: 0.85rem; font-weight: 600;">{HELP_ICONS["error"]} Skipped / Failed <span style="color: #ff7b72; font-weight: 500;">({errors})</span></div>'
-                            
-                            error_dict = defaultdict(list)
-                            for err in error_details:
-                                if ": " in err:
-                                    prefix, reason = err.split(": ", 1)
-                                    fname = prefix.replace("Error syncing ", "")
-                                    error_dict[reason].append(fname)
-                                else:
-                                    error_dict["Unknown error"].append(err)
-                            
-                            for reason, fnames in error_dict.items():
-                                accordion_content += f'<div style="color: #8b949e; font-size: 0.75rem; margin-top: 2px;">({reason})</div>'
-                                accordion_content += '<ul style="margin: 0; padding-left: 32px; color: #c9d1d9; font-size: 0.85rem;">'
-                                for fname in fnames:
-                                    accordion_content += render_file_li(fname)
-                                accordion_content += '</ul>'
-                            accordion_content += '</div>'
-                            
-                        accordion_content += '</div>'
-                    else:
-                        # Fallback for "no changes"
-                        accordion_content += '<div style="padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.05); background: #17191f; color: #8b949e; font-size: 0.85rem;">Everything was up to date.</div>'
+                def _as_int(v):
+                    """Coerce a possibly-malformed history field to int (0 on failure)."""
+                    try:
+                        return int(v)
+                    except (TypeError, ValueError):
+                        return 0
 
-                    # Center rotating SVG chevron
-                    chevron_svg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="sync-history-chevron" style="color: #8b949e; flex-shrink: 0; transition: transform 0.2s; transform-origin: center;"><polyline points="9 18 15 12 9 6"></polyline></svg>'
-                    
-                    # Clock Base64
-                    clock_svg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM4Yjk0OWUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIj48L2NpcmNsZT48cG9seWxpbmUgcG9pbnRzPSIxMiA2IDEyIDEyIDE2IDE0Ij48L3BvbHlsaW5lPjwvc3ZnPg=="
-                    clock_img = f'<img src="{clock_svg}" style="width:12px;height:12px;vertical-align:middle;margin-right:4px;margin-top:-2px;" alt="time"/>'
+                def _read_only_list(fnames):
+                    """Read-only <ul> for legacy entries with no resolvable paths."""
+                    _rows = []
+                    for _fn in (fnames or []):
+                        _fn = str(_fn)
+                        _ext = _os.path.splitext(_fn)[1].lower().lstrip('.')
+                        _icon = _FILETYPE_SVGS.get(_ext, _FILETYPE_SVG_DEFAULT)
+                        _rows.append(
+                            '<li style="margin-bottom:3px;list-style:none;margin-left:-28px;">'
+                            f'<img src="{_icon}" style="width:14px;height:14px;vertical-align:middle;margin-top:-2px;margin-right:8px;" alt="{esc(_ext)}"/>'
+                            f'{esc(_fn)}</li>'
+                        )
+                    return ('<ul style="margin:2px 0 0 0;padding-left:30px;color:#c9d1d9;font-size:0.84rem;">'
+                            + "".join(_rows) + '</ul>')
 
-                    # Add row
-                    html_out.append(f"""<details class="sync-history-details" style="background: #20232b; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-<summary style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; gap: 12px; transition: background 0.2s;">
-<div style="display: flex; align-items: center; justify-content: center; width: 14px; height: 14px;">{chevron_svg}</div>
-<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
-<div style="color: #ffffff; font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px;">
-{courses_text}
-<span style="color: {status_color}; font-size: 0.75rem; font-weight: 600; padding: 0px 6px; background: {status_bg}; border-radius: 4px; border: 1px solid {status_border}; display: inline-flex; align-items: center; height: 20px;">{status_text}</span>
-</div>
-<div style="color: #c9d1d9; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-Synced {count} file{'s' if count != 1 else ''} <span style="margin: 0 8px; color: #5c6269;">&bull;</span> {sync_mode_text}
-</div>
-</div>
-<div style="color: #8b949e; font-size: 0.85rem; font-weight: 500; flex-shrink: 0; padding-left: 8px; display: flex; align-items: center;">
-{clock_img}{item['time_str']}
-</div>
-</summary>
-{accordion_content}
-</details>""")
-                    
-                html_out.append('</div>')
-                
-            html_out.append('</div>')  # close margin-top wrapper
-            st.markdown("".join(html_out), unsafe_allow_html=True)
+                with st.container(border=True, key="synchist_runs"):
+                    run_seq = 0
+                    for date_key, items in grouped_history.items():
+                        st.markdown(
+                            f"<div style='color:#bac2cc;font-size:0.8rem;font-weight:600;text-transform:uppercase;"
+                            f"letter-spacing:0.5px;margin:14px 2px 6px 2px;'>{HELP_ICONS['calendar']} {esc(date_key)}</div>",
+                            unsafe_allow_html=True,
+                        )
+
+                        def _render_item(item, run_seq):
+                            entry = item['entry']
+                            # Coerce numeric/list fields defensively: a legacy or
+                            # corrupt entry could carry wrong types, and a str>int
+                            # compare or a None course list would crash the whole
+                            # history page. (entry is guaranteed a dict by the filter.)
+                            count = _as_int(entry.get('files_synced', 0))
+                            courses_count = _as_int(entry.get('courses', 0))
+                            course_names = entry.get('course_names') or []
+                            if not isinstance(course_names, (list, tuple)):
+                                course_names = [course_names]
+                            errors = _as_int(entry.get('errors', 0))
+                            error_details = entry.get('error_details') or []
+                            synced_groups = [g for g in (entry.get('synced_groups') or [])
+                                             if isinstance(g, dict) and g.get('files')]
+
+                            if errors > 0:
+                                status_bg, status_color, status_border = "rgba(235,168,52,0.1)", "#eba834", "rgba(235,168,52,0.2)"
+                                status_text = f"{errors} error{'s' if errors != 1 else ''}"
+                            elif count > 0:
+                                status_bg, status_color, status_border = "rgba(52,211,153,0.1)", "#34d399", "rgba(52,211,153,0.2)"
+                                status_text = "Success"
+                            else:
+                                status_bg, status_color, status_border = "rgba(255,255,255,0.03)", "#8b949e", "rgba(255,255,255,0.05)"
+                                status_text = "No changes"
+
+                            sync_mode_str = entry.get('sync_mode', 'normal')
+                            sync_mode_text = (f"{HELP_ICONS['bolt_small']} Quick Sync" if sync_mode_str == 'quick'
+                                              else f"{HELP_ICONS['search_small']} Analyze, Review & Sync")
+
+                            # "Fake expander": Streamlit strips HTML from expander
+                            # labels AND a real expander can't show a rich header
+                            # while collapsed - so the header is a full-width
+                            # invisible button (the click target) with the rich
+                            # two-line HTML painted on top (pointer-events:none),
+                            # and the body renders below only when open.
+                            _names = [friendly_course_name(str(n)) for n in course_names if n]
+                            _names = [nm for nm in _names if isinstance(nm, str) and nm]
+                            _courses_plain = (", ".join(_names) if _names
+                                              else (f"Across {courses_count} courses" if courses_count > 0 else "Sync"))
+
+                            open_key = f"shist_open_{run_seq}"
+                            is_open = st.session_state.get(open_key, False)
+
+                            _clock = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+                                      "fill='none' stroke='%238b949e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E"
+                                      "%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E")
+                            _chevron = ("<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' "
+                                        "fill='none' stroke='#8b949e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>"
+                                        "<polyline points='9 6 15 12 9 18'/></svg>")
+                            header_html = (
+                                "<div class='shist-card'>"
+                                f"<div class='shist-chev' style='transform:rotate({90 if is_open else 0}deg);'>{_chevron}</div>"
+                                "<div class='shist-info'>"
+                                "<div class='shist-l1'>"
+                                f"<span class='shist-title'>{esc(_courses_plain)}</span>"
+                                f"<span class='shist-badge' style='color:{status_color};background:{status_bg};"
+                                f"border-color:{status_border};'>{status_text}</span>"
+                                "</div>"
+                                "<div class='shist-l2'>"
+                                f"<span>Synced {count} file{'s' if count != 1 else ''}</span>"
+                                "<span class='shist-dot'>&bull;</span>"
+                                f"<span class='shist-mode'>{sync_mode_text}</span>"
+                                "</div>"
+                                "</div>"
+                                "<div class='shist-time'>"
+                                f"<img src=\"{_clock}\" style='width:13px;height:13px;' alt='time'/>{esc(item['time_str'])}"
+                                "</div>"
+                                "</div>"
+                            )
+
+                            with st.container(border=True, key=f"shist_run_{run_seq}"):
+                                if st.button("​", key=f"shist_btn_{run_seq}", use_container_width=True):
+                                    st.session_state[open_key] = not is_open
+                                    st.rerun()
+                                st.markdown(header_html, unsafe_allow_html=True)
+
+                                if is_open:
+                                    with st.container(border=True, key=f"shist_body_{run_seq}"):
+                                        if synced_groups:
+                                            multi = len(synced_groups) > 1
+                                            for gi, g in enumerate(synced_groups):
+                                                files = g.get('files') or []
+                                                course_root = g.get('local_folder') or ''
+                                                if course_root and not Path(course_root).exists():
+                                                    _alt = current_folders.get(g.get('course_id'))
+                                                    if _alt and Path(_alt).exists():
+                                                        course_root = _alt
+                                                if multi:
+                                                    _cname = esc(friendly_course_name(g.get('course_name', '') or 'Course'))
+                                                    st.markdown(
+                                                        f"<div style='margin:10px 0 2px 0;color:#cdd9e5;font-size:0.9rem;font-weight:700;'>"
+                                                        f"{HELP_ICONS['folder']} {_cname}</div>",
+                                                        unsafe_allow_html=True,
+                                                    )
+                                                by_cat = {}
+                                                for f in files:
+                                                    if isinstance(f, dict):
+                                                        by_cat.setdefault(f.get('category', 'new'), []).append(f)
+                                                for cat_key, cat_title, cat_icon in _SYNC_HISTORY_CATEGORIES:
+                                                    cfiles = by_cat.get(cat_key)
+                                                    if not cfiles:
+                                                        continue
+                                                    _desc = ('Your unedited local copies were replaced with the newer versions'
+                                                             if cat_key == 'updated' else
+                                                             'Saved alongside the files you had edited'
+                                                             if cat_key == 'protected' else '')
+                                                    _desc_html = (f"<div style='margin-left:-26px;color:#8b949e;font-size:0.75rem;'>{_desc}</div>"
+                                                                  if _desc else "")
+                                                    _hdr = (f"<div style='margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;'>"
+                                                            f"{HELP_ICONS[cat_icon]} {cat_title} "
+                                                            f"<span style='color:#b1bac4;font-weight:500;'>({len(cfiles)})</span></div>"
+                                                            + _desc_html)
+                                                    render_synced_file_rows(
+                                                        cfiles, course_root,
+                                                        key_scope=f"synchist_{run_seq}_{gi}_{cat_key}",
+                                                        sort_mode='folder', header_html=_hdr,
+                                                    )
+                                        elif count > 0:
+                                            categorized_files = entry.get('categorized_files') or {}
+                                            if not isinstance(categorized_files, dict):
+                                                categorized_files = {}
+                                            if not categorized_files and entry.get('synced_files'):
+                                                categorized_files = {'new': [], 'updated': entry.get('synced_files') or [], 'protected': []}
+                                            for cat_key, cat_title, cat_icon in _SYNC_HISTORY_CATEGORIES:
+                                                cf = categorized_files.get(cat_key)
+                                                if not cf:
+                                                    continue
+                                                st.markdown(
+                                                    f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin:10px 0 0 0;'>"
+                                                    f"{HELP_ICONS[cat_icon]} {cat_title} "
+                                                    f"<span style='color:#b1bac4;font-weight:500;'>({len(cf)})</span></div>"
+                                                    + _read_only_list(cf),
+                                                    unsafe_allow_html=True,
+                                                )
+                                        elif errors == 0:
+                                            st.markdown(
+                                                "<div style='color:#8b949e;font-size:0.84rem;margin-top:6px;'>Everything was up to date.</div>",
+                                                unsafe_allow_html=True,
+                                            )
+
+                                        if errors > 0 and error_details:
+                                            err_dict = _dd(list)
+                                            for err in error_details:
+                                                err = err if isinstance(err, str) else str(err)
+                                                if ": " in err:
+                                                    prefix, reason = err.split(": ", 1)
+                                                    fname = prefix.replace("Error syncing ", "")
+                                                    err_dict[reason].append(fname)
+                                                else:
+                                                    err_dict["Unknown error"].append(err)
+                                            _eh = [f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin:10px 0 0 0;'>"
+                                                   f"{HELP_ICONS['error']} Skipped / Failed "
+                                                   f"<span style='color:#ff7b72;font-weight:500;'>({errors})</span></div>"]
+                                            for reason, fnames in err_dict.items():
+                                                _eh.append(f"<div style='color:#8b949e;font-size:0.75rem;margin-top:2px;'>({esc(reason)})</div>")
+                                                _eh.append(_read_only_list(fnames))
+                                            st.markdown("".join(_eh), unsafe_allow_html=True)
+
+                        # Backstop: render each entry behind a try/except so a
+                        # single malformed/corrupt history entry can never crash
+                        # the whole Sync page. run_seq still advances in every
+                        # case to keep the per-run widget keys unique.
+                        for item in items:
+                            try:
+                                _render_item(item, run_seq)
+                            except Exception as _entry_exc:
+                                logger.warning(
+                                    "Sync history: skipped an unrenderable entry (%s)",
+                                    _entry_exc, exc_info=True,
+                                )
+                            run_seq += 1
 
 
 

@@ -110,7 +110,7 @@ No Python installation required. Grab the latest release for your platform:
 2. Follow the installer - it places a shortcut on your Desktop
 3. Launch **Canvas Downloader**
 
-> **Windows SmartScreen warning?** Click "More info" → "Run anyway". The app is unsigned (code-signing certificates cost ~$500/year). The source is fully open above.
+> **Windows SmartScreen warning?** Click "More info" → "Run anyway". Since I am an independent student developer keeping this app 100% free, I cannot afford the $500/year code-signing certificates required to prevent these warnings. I hope to sign it in the future, but for now, the source is fully open above and I've done my absolute best to build it securely.
 
 ### macOS
 
@@ -122,7 +122,7 @@ No Python installation required. Grab the latest release for your platform:
 
 #### What macOS will ask you on first run (this is normal!)
 
-Because the app is unsigned (an Apple Developer certificate costs $99/year - [support the project](https://ko-fi.com/brkbuilds) to help us get one), macOS is extra careful and asks for each permission individually. **Every prompt appears only once.** Here is each one, in order, and what to click:
+Because I am an independent student developer and want to keep this app free, I do not pay the $99/year Apple Developer fee required to sign the app. As a result, macOS is extra careful and asks for each permission individually. **Every prompt appears only once.** Here is each one, in order, and what to click:
 
 | Prompt | Why it appears | What to click |
 |---|---|---|
