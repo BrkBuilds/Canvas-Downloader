@@ -324,6 +324,12 @@ def show_sync_complete():
     # Folders updated - card style with filetype summary
     file_dropdown_details = {}
     folder_paths_map = {}
+    file_records_map = {}
+
+    # Per-course breakdown (resolved rel paths + categories) built at finalize -
+    # powers the per-file Open / Reveal actions on each folder card.
+    synced_groups = st.session_state.get('synced_groups', [])
+    groups_by_pair = {g.get('pair_idx'): g for g in synced_groups}
 
     if sync_selections:
         for sel in sync_selections:
@@ -336,8 +342,13 @@ def show_sync_complete():
             f_key = f"{display_name} ({pair_idx})"
             file_dropdown_details[f_key] = synced_details.get(pair_idx, [])
             folder_paths_map[f_key] = pair['local_folder']
+            file_records_map[f_key] = groups_by_pair.get(pair_idx, {}).get('files', [])
 
-    render_folder_cards(file_dropdown_details, folder_paths_map, key_prefix='sync_complete', show_files_expander=True)
+    render_folder_cards(
+        file_dropdown_details, folder_paths_map,
+        key_prefix='sync_complete', show_files_expander=True,
+        file_records=file_records_map,
+    )
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])
