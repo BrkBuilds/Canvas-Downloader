@@ -18,7 +18,6 @@ from urllib.parse import unquote_plus
 import streamlit as st
 
 import theme
-from sync_manager import get_file_icon
 from ui_helpers import (
     render_sync_wizard,
     friendly_course_name,
@@ -1505,7 +1504,6 @@ def show_analysis_review(on_confirm_sync):
                         with st.container(key=f"sync_review_file_list_{idx}_new"):
                             for file in result.new_files:
                                 ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
-                                icon = get_file_icon(file.filename)
                                 size = format_file_size(file.size) if file.size else ""
                                 key = f"sync_new_{pair['course_id']}_{file.id}"
                                 st.session_state.setdefault(key, True)
@@ -1540,7 +1538,6 @@ def show_analysis_review(on_confirm_sync):
                         with st.container(key=f"sync_review_file_list_{idx}_upd"):
                             for canvas_file, sync_info in result.updated_clean_files:
                                 ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
-                                icon = get_file_icon(canvas_file.filename)
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                 key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
                                 st.session_state.setdefault(key, True)
@@ -1577,7 +1574,6 @@ def show_analysis_review(on_confirm_sync):
                         with st.container(key=f"sync_review_file_list_{idx}_updmod"):
                             for canvas_file, sync_info in result.updated_modified_files:
                                 ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
-                                icon = get_file_icon(canvas_file.filename)
                                 size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                 key = f"sync_updmod_{pair['course_id']}_{canvas_file.id}"
                                 st.session_state.setdefault(key, False)
@@ -1616,7 +1612,6 @@ def show_analysis_review(on_confirm_sync):
                         with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                             for sync_info in result.locally_deleted_files:
                                 ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                                icon = get_file_icon(sync_info.canvas_filename)
                                 key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                                 st.session_state.setdefault(key, False)
                                 with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
@@ -1639,7 +1634,6 @@ def show_analysis_review(on_confirm_sync):
                     with st.expander(f"{lbl_del}"):
                         st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
                         for sync_info in result.deleted_on_canvas:
-                            icon = get_file_icon(sync_info.canvas_filename)
                             _disp_raw = unquote_plus(sync_info.canvas_filename)
                             _name, _ext = os.path.splitext(_disp_raw)
                             _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
@@ -1655,7 +1649,6 @@ def show_analysis_review(on_confirm_sync):
                         st.caption("These files are safely ignored and will not be synced.")
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
                             for sync_info in result.ignored_files:
-                                icon = get_file_icon(sync_info.canvas_filename)
                                 with st.container(key=f"ign_restore_row_{pair['course_id']}_{sync_info.canvas_file_id}"):
                                     col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                     with col1:

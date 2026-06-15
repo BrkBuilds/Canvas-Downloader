@@ -622,9 +622,13 @@ def reveal_in_folder(path: str) -> bool:
     sys_platform = platform.system()
     try:
         if sys_platform == "Windows":
-            # explorer.exe returns exit code 1 even on success, so Popen (not
-            # check_call). The comma after /select is required syntax.
-            subprocess.Popen(["explorer", f"/select,{path}"])
+            # explorer.exe has non-standard command-line parsing: the list-arg
+            # form (subprocess auto-quotes) makes it ignore the path and fall
+            # back to opening Documents whenever the path contains spaces. Pass
+            # a single command STRING so CreateProcess hands explorer exactly
+            # `/select,"<path>"` - the form it actually honours. (Returns exit
+            # code 1 even on success, so Popen, not check_call.)
+            subprocess.Popen(f'explorer /select,"{path}"')
             _windows_foreground_nudge()
         elif sys_platform == "Darwin":
             subprocess.Popen(["open", "-R", path])
