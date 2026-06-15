@@ -560,6 +560,82 @@ def open_folder(path: str):
         subprocess.Popen(["xdg-open", path])
 
 
+def _windows_foreground_nudge():
+    """Trick Windows out of focus-stealing prevention so a freshly launched
+    Explorer / default-app window comes to the foreground. Simulates a tap of
+    the Alt key (the same hack used by open_folder)."""
+    try:
+        import ctypes
+        time.sleep(0.15)  # let the new window initialize
+        ctypes.windll.user32.keybd_event(0x12, 0, 0, 0)  # Alt down
+        ctypes.windll.user32.keybd_event(0x12, 0, 2, 0)  # Alt up
+    except Exception:
+        pass
+
+
+def open_file(path: str) -> bool:
+    """Open a single file in the OS default application and foreground it.
+
+    Returns True if the open was dispatched, False if the file is missing or
+    the OS call failed. Never raises - callers render UI from the bool.
+    """
+    if not path:
+        return False
+    path = os.path.normpath(path)
+    if not os.path.isfile(path):
+        return False
+
+    sys_platform = platform.system()
+    try:
+        if sys_platform == "Windows":
+            os.startfile(path)  # type: ignore[attr-defined]
+            _windows_foreground_nudge()
+        elif sys_platform == "Darwin":
+            subprocess.Popen(["open", path])
+        else:  # Linux
+            subprocess.Popen(["xdg-open", path])
+    except Exception as e:
+        logger.warning(f"Could not open file {path!r}: {e}")
+        return False
+    return True
+
+
+def reveal_in_folder(path: str) -> bool:
+    """Reveal a file in the native file manager with the file itself selected
+    (Explorer /select, Finder reveal). On Linux - which has no portable
+    'select' verb - falls back to opening the containing folder.
+
+    Returns True if dispatched, False if the file is missing or the call
+    failed. Never raises.
+    """
+    if not path:
+        return False
+    path = os.path.normpath(path)
+    if not os.path.exists(path):
+        # File moved/deleted - degrade gracefully to its parent folder.
+        parent = os.path.dirname(path)
+        if parent and os.path.isdir(parent):
+            open_folder(parent)
+            return True
+        return False
+
+    sys_platform = platform.system()
+    try:
+        if sys_platform == "Windows":
+            # explorer.exe returns exit code 1 even on success, so Popen (not
+            # check_call). The comma after /select is required syntax.
+            subprocess.Popen(["explorer", f"/select,{path}"])
+            _windows_foreground_nudge()
+        elif sys_platform == "Darwin":
+            subprocess.Popen(["open", "-R", path])
+        else:  # Linux - no universal 'select'; open the parent folder instead.
+            open_folder(os.path.dirname(path))
+    except Exception as e:
+        logger.warning(f"Could not reveal file {path!r}: {e}")
+        return False
+    return True
+
+
 # --- Friendly Course Name ---
 
 def friendly_course_name(raw_name: str) -> str:

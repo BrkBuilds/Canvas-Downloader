@@ -1393,8 +1393,158 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                 main_placeholder.empty()
             st.rerun()
 
-    # --- (6) Tutorial + Sync History - grouped at bottom below separator ---
+    # --- (6) New files since last sync + Sync History (bottom of page) ---
+    _render_new_files_panel()
     _render_sync_history()
+
+    # Breathing room so the final expander/accordion is never flush against the
+    # viewport bottom - this is what made history rows feel "jumpy" on expand.
+    st.markdown("<div style='height: 64px;'></div>", unsafe_allow_html=True)
+
+
+def _render_new_files_panel():
+    """Landing-page panel surfacing the files downloaded in the most recent sync
+    that actually fetched something - grouped by course, with per-file Open /
+    Reveal actions so students can jump straight to today's materials.
+
+    Reads the same ``canvas_sync_history.json`` the Sync History uses (sharing
+    the session cache). Hidden entirely when there is nothing new to show.
+    """
+    try:
+        from ui_helpers import get_config_dir
+        from sync_manager import SyncHistoryManager
+        # Populate the shared cache here (panel renders before the history
+        # expander) so neither does a redundant disk read.
+        if '_sync_history_cache' not in st.session_state:
+            st.session_state['_sync_history_cache'] = SyncHistoryManager(get_config_dir()).load_history()
+        history = st.session_state['_sync_history_cache']
+    except Exception:
+        return
+
+    if not history:
+        return
+
+    # Most recent entry that downloaded files AND carries the structured
+    # per-course breakdown (older entries predate this feature).
+    entry = None
+    for e in reversed(history):
+        if any(g.get('files') for g in (e.get('synced_groups') or [])):
+            entry = e
+            break
+    if entry is None:
+        return
+
+    groups = [g for g in (entry.get('synced_groups') or []) if g.get('files')]
+    total_files = sum(len(g['files']) for g in groups)
+
+    # Resolve the CURRENT folder per course_id so a moved course folder still
+    # resolves (falls back to the folder recorded at sync time).
+    current_folders = {}
+    for p in st.session_state.get('sync_pairs', []):
+        cid = p.get('course_id')
+        if cid is not None:
+            current_folders[cid] = p.get('local_folder')
+
+    from ui_shared import inject_file_action_css, render_synced_file_rows
+    from ui_helpers import friendly_course_name, format_relative_date
+
+    # Hoist all panel CSS to the top (before the keyed container / widgets) so
+    # Streamlit never drops the payload (per the CSS-hoisting rule).
+    inject_file_action_css()
+    st.markdown(
+        """<style>
+        div.st-key-newfiles_panel_body {
+            border: 1px solid rgba(63,217,255,0.28) !important;
+            border-radius: 10px !important;
+            background: #0d1622 !important;
+            padding: 16px 20px 16px 20px !important;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.25) !important;
+        }
+        div[class*="st-key-newfiles_sort_select"] div[data-baseweb="select"] > div {
+            background-color: #1a2330 !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            min-height: 0 !important;
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
+
+    # Header: sparkle icon + title + "<mode> · <relative time>"
+    mode_str = entry.get('sync_mode', 'normal')
+    mode_label = (f"{HELP_ICONS['bolt_small']} Quick Sync" if mode_str == 'quick'
+                  else f"{HELP_ICONS['search_small']} Analyze, Review &amp; Sync")
+    try:
+        when = format_relative_date(entry.get('timestamp', ''), include_time=True, include_emoji=False)
+    except Exception:
+        when = entry.get('timestamp', '')
+
+    file_word = 'file' if total_files == 1 else 'files'
+    course_word = 'course' if len(groups) == 1 else 'courses'
+
+    _sparkle = (
+        "<svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#3fd9ff' "
+        "stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'>"
+        "<path d='M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z'/>"
+        "<path d='M19 14l.7 1.9L21.6 16.6 19.7 17.3 19 19.2 18.3 17.3 16.4 16.6 18.3 15.9 19 14z'/></svg>"
+    )
+
+    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+
+    with st.container(border=True, key="newfiles_panel_body"):
+        # Header row (first element inside the card - no inter-element seam).
+        st.markdown(
+            "<div style='display:flex; align-items:center; gap:12px;'>"
+            f"{_sparkle}"
+            "<div style='display:flex; flex-direction:column; gap:2px; min-width:0;'>"
+            "<div style='color:#ffffff; font-size:1.12rem; font-weight:700;'>New files since last sync</div>"
+            f"<div style='color:#9fb4c4; font-size:0.8rem;'>{total_files} {file_word} across "
+            f"{len(groups)} {course_word} <span style='margin:0 7px; color:#46606f;'>&bull;</span> "
+            f"{mode_label} <span style='margin:0 7px; color:#46606f;'>&bull;</span> {esc(str(when))}</div>"
+            "</div></div>",
+            unsafe_allow_html=True,
+        )
+
+        # Sort control (right-aligned), only meaningful with >1 file.
+        st.session_state.setdefault('newfiles_sort', 'folder')
+        _sort_opts = {'Folder': 'folder', 'Name': 'name', 'File type': 'type'}
+        if total_files > 1:
+            _spacer_col, _sel_col = st.columns([0.62, 0.38])
+            with _sel_col:
+                _labels = list(_sort_opts.keys())
+                _cur = next((k for k, v in _sort_opts.items()
+                             if v == st.session_state['newfiles_sort']), 'Folder')
+                _picked = st.selectbox(
+                    "Sort", _labels, index=_labels.index(_cur),
+                    key="newfiles_sort_select", label_visibility="collapsed",
+                )
+                st.session_state['newfiles_sort'] = _sort_opts[_picked]
+        else:
+            st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
+        sort_mode = st.session_state['newfiles_sort']
+
+        multi = len(groups) > 1
+        for gi, g in enumerate(groups):
+            files = g.get('files', [])
+            course_root = g.get('local_folder', '')
+            if course_root and not Path(course_root).exists():
+                _alt = current_folders.get(g.get('course_id'))
+                if _alt and Path(_alt).exists():
+                    course_root = _alt
+
+            if multi:
+                _cname = esc(friendly_course_name(g.get('course_name', '') or 'Course'))
+                _n = len(files)
+                st.markdown(
+                    f"<div style='display:flex; align-items:center; gap:8px; margin:14px 0 6px 0;'>"
+                    f"<span style='color:#cdd9e5; font-size:0.92rem; font-weight:600;'>{HELP_ICONS['folder']} {_cname}</span>"
+                    f"<span style='color:#7d8da0; font-size:0.78rem;'>{_n} {'file' if _n == 1 else 'files'}</span>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+            render_synced_file_rows(
+                files, course_root, key_scope=f"newfiles_{gi}", sort_mode=sort_mode,
+            )
 
 
 def _render_sync_history():

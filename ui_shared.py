@@ -4,7 +4,7 @@ Extracted to ensure perfect visual parity between both modes.
 """
 import streamlit as st
 from pathlib import Path
-from ui_helpers import open_folder, esc, short_path
+from ui_helpers import open_folder, open_file, reveal_in_folder, esc, short_path
 from sync_manager import format_file_size
 from preset_manager import PresetManager
 
@@ -404,11 +404,22 @@ _FC_CHEVRON_SVG = (
 
 
 def render_folder_cards(file_details: dict, folder_paths: dict,
-                        key_prefix: str = 'dl', show_files_expander: bool = False):
-    """Render per-folder cards with filetype summary and Open Folder buttons."""
+                        key_prefix: str = 'dl', show_files_expander: bool = False,
+                        file_records: dict | None = None):
+    """Render per-folder cards with filetype summary and Open Folder buttons.
+
+    When ``file_records`` is provided (keyed identically to ``file_details``),
+    the "Files added" list becomes interactive: each file gets Open / Reveal
+    actions and a destination-subfolder chip. Each value is a list of
+    ``{'name', 'rel', 'category'}`` records; the abs path is resolved as
+    ``folder_path / rel``. Falls back to the static read-only list otherwise.
+    """
     has_files = any(len(files) > 0 for files in file_details.values())
     if not has_files:
         return
+
+    if file_records:
+        inject_file_action_css()
 
     st.markdown('<div class="completion-section-header">Folders Updated</div>', unsafe_allow_html=True)
 
@@ -438,9 +449,21 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
             f'</div>'
         )
 
+        records = (file_records or {}).get(folder_key) or []
+
         with st.container(border=True, key=f"{key_prefix}_fc_{idx}"):
             st.markdown(header_html, unsafe_allow_html=True)
-            if show_files_expander and files:
+            if records:
+                # Interactive list: per-file Open / Reveal + subfolder chip.
+                # Open by default for small batches (the common Quick Sync case
+                # where the student wants the files immediately); keep big syncs
+                # collapsed so the completion screen stays tidy.
+                with st.expander("Files added", expanded=len(records) <= 12):
+                    render_synced_file_rows(
+                        records, folder_path, key_scope=f"{key_prefix}_{idx}",
+                        sort_mode='folder',
+                    )
+            elif show_files_expander and files:
                 with st.expander("Files added"):
                     import os as _os
                     rows = []
@@ -468,6 +491,146 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
                 if st.button('Open Folder', key=f"{key_prefix}_open_{idx}", use_container_width=False):
                     open_folder(folder_path)
 
+
+# ===================================================================
+# Per-file Open / Reveal action rows (shared by the sync completion
+# screen and the landing-page "New files since last sync" panel).
+# ===================================================================
+
+# URL-encoded inline SVGs (Lucide-style). Single quotes inside the SVG keep the
+# outer CSS string intact; '#' is encoded as %23 per the SVG-data-URI rules.
+_ACTION_ICON_OPEN = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+    "fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E"
+    "%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E"
+)
+_ACTION_ICON_REVEAL = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+    "fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E"
+)
+
+# category -> (label, text color, background)
+_CATEGORY_BADGE = {
+    'new':       ('NEW', '#58a6ff', 'rgba(88,166,255,0.13)'),
+    'updated':   ('UPDATED', '#34d399', 'rgba(52,211,153,0.13)'),
+    'protected': ('NEW VERSION', '#eba834', 'rgba(235,168,52,0.13)'),
+}
+
+
+def inject_file_action_css():
+    """Inject the scoped CSS for the per-file Open / Reveal icon buttons.
+
+    Idempotent - safe to call once per render before any action rows. The
+    selectors match every button whose key starts with ``fileact_open_`` /
+    ``fileact_reveal_`` so a single injection styles all rows on the page.
+    """
+    st.markdown(f"""<style>
+    div[class*="st-key-fileact_open_"] button,
+    div[class*="st-key-fileact_reveal_"] button {{
+        min-height: 0 !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border-radius: 7px !important;
+        background-color: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: 17px 17px !important;
+        color: transparent !important;
+        font-size: 0 !important;
+        transition: background-color 0.15s ease, border-color 0.15s ease !important;
+    }}
+    div[class*="st-key-fileact_open_"] button {{ background-image: url("{_ACTION_ICON_OPEN}") !important; }}
+    div[class*="st-key-fileact_reveal_"] button {{ background-image: url("{_ACTION_ICON_REVEAL}") !important; }}
+    div[class*="st-key-fileact_open_"] button:hover:not(:disabled),
+    div[class*="st-key-fileact_reveal_"] button:hover:not(:disabled) {{
+        background-color: rgba(88,166,255,0.14) !important;
+        border-color: rgba(88,166,255,0.5) !important;
+    }}
+    div[class*="st-key-fileact_open_"] button:disabled,
+    div[class*="st-key-fileact_reveal_"] button:disabled {{
+        opacity: 0.3 !important;
+    }}
+    </style>""", unsafe_allow_html=True)
+
+
+def _sort_file_records(files: list, mode: str) -> list:
+    """Return a sorted copy of file records. mode: 'folder' | 'name' | 'type'."""
+    import os as _os
+    if mode == 'name':
+        return sorted(files, key=lambda f: f.get('name', '').lower())
+    if mode == 'type':
+        return sorted(files, key=lambda f: (
+            _os.path.splitext(f.get('name', ''))[1].lower(), f.get('name', '').lower()))
+    # 'folder' (default): group by subfolder, then by name within each
+    return sorted(files, key=lambda f: (
+        _os.path.dirname(f.get('rel', f.get('name', '')) or '').lower(),
+        f.get('name', '').lower()))
+
+
+def render_synced_file_rows(files: list, course_root: str, key_scope: str,
+                            sort_mode: str = 'folder', show_subfolder: bool = True):
+    """Render one Open / Reveal action row per synced file.
+
+    Args:
+        files: list of {'name', 'rel', 'category'} records.
+        course_root: absolute course folder; abs path = course_root / rel.
+        key_scope: unique-per-course string; button keys append the row index.
+        sort_mode: 'folder' | 'name' | 'type'.
+        show_subfolder: show the destination-subfolder chip (helps locate the
+            file inside module folders).
+
+    Call ``inject_file_action_css()`` once before using this.
+    """
+    import os as _os
+
+    for i, fi in enumerate(_sort_file_records(files, sort_mode)):
+        name = fi.get('name', '')
+        rel = fi.get('rel', name) or name
+        category = fi.get('category', 'new')
+        abs_path = _os.path.normpath(_os.path.join(course_root, rel)) if course_root else ''
+        exists = bool(abs_path) and _os.path.isfile(abs_path)
+
+        ext = _os.path.splitext(name)[1].lower().lstrip('.')
+        icon = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+        subdir = _os.path.dirname(rel).replace('\\', '/')
+        b_label, b_color, b_bg = _CATEGORY_BADGE.get(category, _CATEGORY_BADGE['new'])
+
+        subdir_html = ''
+        if show_subfolder and subdir:
+            subdir_html = (
+                f"<span style='font-size:0.7rem;color:#8b949e;background:rgba(255,255,255,0.05);"
+                f"border-radius:4px;padding:1px 7px;margin-left:8px;white-space:nowrap;flex-shrink:0;'>"
+                f"📁 {esc(subdir)}</span>"
+            )
+
+        name_html = (
+            "<div style='display:flex;align-items:center;gap:8px;min-width:0;'>"
+            f"<img src='{icon}' style='width:16px;height:16px;flex-shrink:0;' alt='{esc(ext)}'/>"
+            f"<span style='font-size:0.88rem;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;"
+            f"white-space:nowrap;' title='{esc(name)}'>{esc(name)}</span>"
+            f"<span style='font-size:0.6rem;font-weight:700;letter-spacing:0.4px;color:{b_color};"
+            f"background:{b_bg};border-radius:4px;padding:1px 6px;margin-left:2px;flex-shrink:0;'>{b_label}</span>"
+            f"{subdir_html}"
+            "</div>"
+        )
+
+        cols = st.columns([0.76, 0.12, 0.12], vertical_alignment="center")
+        with cols[0]:
+            st.markdown(name_html, unsafe_allow_html=True)
+        _help_missing = "File not found at its last known location"
+        with cols[1]:
+            if st.button("​", key=f"fileact_open_{key_scope}_{i}",
+                         help="Open file" if exists else _help_missing,
+                         disabled=not exists, use_container_width=True):
+                open_file(abs_path)
+        with cols[2]:
+            if st.button("​", key=f"fileact_reveal_{key_scope}_{i}",
+                         help="Show in folder" if exists else _help_missing,
+                         disabled=not exists, use_container_width=True):
+                reveal_in_folder(abs_path)
 
 
 # --- Base64 SVG icons for filetype pills ---
