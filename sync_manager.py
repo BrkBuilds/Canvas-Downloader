@@ -1187,6 +1187,97 @@ class SyncManager:
         except sqlite3.Error:
             return None
 
+    def backfill_baseline_md5(self, manifest: dict,
+                              progress_callback: Optional[Callable] = None) -> int:
+        """One-time repair for manifests written before MD5-on-download existed.
+
+        Older download runs (and any path that recorded a file without a hash)
+        left ``original_md5`` empty. The sync engine keys three behaviours off
+        that baseline: never-overwrite-your-edits classification, clean-vs-edited
+        update routing, and content-based rename matching. Empty baselines are
+        SAFE (the engine biases to "preserve the local copy") but imprecise -
+        every genuine update is treated as a local edit and forked to a
+        ``_NewVersion`` copy instead of a clean in-place overwrite.
+
+        This walks the manifest and fills the missing baselines from the bytes
+        currently on disk. SAFETY GUARD: for real files we only backfill when
+        the on-disk size still matches the recorded ``original_size``. A size
+        match means the bytes are almost certainly the untouched original
+        download, so adopting today's hash as the baseline is correct. If the
+        user has edited a file its size has (nearly always) changed, so we skip
+        it and leave the conservative empty-md5 behaviour intact - we never want
+        to capture an edited file as its own "original" (that would green-light
+        overwriting the user's work on the next Canvas update). Synthetic
+        HTML/URL entities store ``original_size == 0`` and are regenerated every
+        sync, so any current bytes are a valid baseline.
+
+        Mutates the in-memory ``manifest`` dict in place (so the caller's
+        analysis sees the fresh baselines) and persists in one transaction.
+        Returns the number of entries updated.
+        """
+        files_section = manifest.get('files', {})
+        if not files_section:
+            return 0
+
+        pending = []  # (md5, canvas_file_id) for the UPDATE
+        for file_id, info in files_section.items():
+            if info.get('original_md5'):
+                continue
+            rel = info.get('local_path', '')
+            if not rel:
+                continue
+            full = self.local_path / rel
+            if not full.exists():
+                continue
+            try:
+                actual_size = full.stat().st_size
+            except OSError:
+                continue
+            try:
+                recorded_size = int(info.get('original_size', 0) or 0)
+            except (TypeError, ValueError):
+                recorded_size = 0
+            # Real files: require an exact size match (pristine heuristic).
+            # Synthetic entities (size 0) are always safe to (re)baseline.
+            if recorded_size and actual_size != recorded_size:
+                continue
+            md5 = self.compute_local_md5(full)
+            if not md5:
+                continue
+            info['original_md5'] = md5  # keep the in-memory manifest in sync
+            try:
+                pending.append((md5, int(file_id)))
+            except (TypeError, ValueError):
+                continue
+
+        if not pending:
+            return 0
+
+        if progress_callback:
+            progress_callback(f'Repairing {len(pending)} MD5 baseline(s)...')
+
+        # UPDATE (not UPSERT) so we touch only original_md5 and never disturb
+        # is_ignored / timestamps / other columns.
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.executemany(
+                        'UPDATE sync_manifest SET original_md5 = ? WHERE canvas_file_id = ?',
+                        pending,
+                    )
+                    conn.commit()
+                return len(pending)
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"backfill_baseline_md5 DB write failed: {e}")
+                return 0
+            except sqlite3.Error as e:
+                logger.warning(f"backfill_baseline_md5 DB write failed: {e}")
+                return 0
+        return 0
+
     def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
                                 local_path: str, canvas_updated_at: str,
                                 original_size: int, local_md5: str = "") -> bool:
@@ -1199,7 +1290,20 @@ class SyncManager:
         Uses INSERT OR REPLACE so re-downloads of the same file_id are idempotent.
         The is_ignored flag is preserved via a sub-query to avoid overwriting
         user ignore decisions from a prior partial download.
+
+        MD5 baseline: the sync engine's modification detection ("never overwrite
+        your edits"), clean-vs-edited update routing, and content-based rename
+        matching all key off original_md5. Canvas's API does not expose a usable
+        file hash, so the fresh-download path hashes bytes inline and passes
+        local_md5. Callers that can't (skip-existing files, secondary HTML/URL
+        entities) leave it empty - compute it from the on-disk file here so the
+        baseline is never silently dropped. compute_local_md5 returns None on a
+        locked/unreadable file; coerce to "" so the DB always stores a string.
         """
+        if not local_md5:
+            full_path = self.local_path / local_path
+            if full_path.exists():
+                local_md5 = SyncManager.compute_local_md5(full_path) or ""
         info = {
             'canvas_file_id': canvas_file_id,
             'canvas_filename': canvas_filename,
@@ -1619,13 +1723,20 @@ class SyncHistoryManager:
         self._lock = threading.Lock()
     
     def load_history(self) -> list[dict]:
-        """Load sync history from disk."""
+        """Load sync history from disk. Always returns a list, never raises.
+
+        Guards against a corrupt/hand-edited file: bad JSON, invalid encoding
+        (UnicodeDecodeError - a ValueError that the old narrow except missed),
+        or a non-list top-level value all degrade to an empty history rather
+        than propagating up and breaking the whole Sync page / add_entry().
+        """
         if not self.history_path.exists():
             return []
         try:
             with open(self.history_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
+                data = json.load(f)
+            return data if isinstance(data, list) else []
+        except Exception:
             return []
     
     def add_entry(self, entry: dict):
@@ -1840,29 +1951,6 @@ class SavedGroupsManager:
 
 
 # --- Utility Functions ---
-
-def get_file_icon(filename: str) -> str:
-    """Get an emoji icon based on file extension."""
-    ext = Path(filename).suffix.lower()
-    
-    icon_map = {
-        # Documents
-        '.pdf': '📄',
-        '.doc': '📝', '.docx': '📝',
-        '.ppt': '📊', '.pptx': '📊', '.pptm': '📊',
-        '.xls': '📈', '.xlsx': '📈',
-        '.txt': '📃',
-        # Media
-        '.mp4': '🎬', '.mov': '🎬', '.avi': '🎬', '.mkv': '🎬',
-        '.mp3': '🎵', '.wav': '🎵', '.m4a': '🎵',
-        '.jpg': '🖼️', '.jpeg': '🖼️', '.png': '🖼️', '.gif': '🖼️',
-        # Code/Data
-        '.zip': '📦', '.rar': '📦', '.7z': '📦',
-        '.html': '🌐', '.htm': '🌐',
-        '.py': '🐍', '.js': '📜', '.css': '🎨',
-    }
-    
-    return icon_map.get(ext, '📁')
 
 def compute_local_md5(filepath: Path) -> str | None:
     """Compute MD5 hash of a file efficiently by reading in 1 MB chunks.

@@ -54,6 +54,7 @@
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 100px;
     }
 
     body {
@@ -103,7 +104,7 @@
 
     /* Pain Point */
     .pain-point {
-      padding: 100px 0;
+      padding: 50px 0;
       text-align: center;
     }
     .pain-point h2 {
@@ -197,6 +198,12 @@
       justify-content: center;
       box-shadow: 0 16px 40px rgba(0,0,0,0.2);
       aspect-ratio: 4/3;
+    }
+
+    @media(min-width: 861px) {
+      .pillar-vis.aligned-to-title {
+        margin-top: 45px;
+      }
     }
 
     /* Final CTA */
@@ -311,17 +318,30 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span {
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost {
+      white-space: nowrap;
+    }
+
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span {
         display: none;
       }
 
-      .btn-nav-ghost {
+      .btn-nav-ghost, .btn-nav {
         padding: 8px 10px;
       }
     }
 
-    @media(max-width:520px) {
+    .setup-short {
+      display: none;
+    }
+    @media(max-width:540px) {
+      .setup-full {
+        display: none;
+      }
+      .setup-short {
+        display: inline;
+      }
       .nav-v {
         display: none;
       }
@@ -358,18 +378,44 @@
 
     .hero-inner {
       display: grid;
+      grid-template-areas: 
+        "heading visual"
+        "actions visual";
       grid-template-columns: 1fr 1.35fr;
-      gap: 60px;
+      column-gap: 60px;
+      row-gap: 20px;
       align-items: center;
       position: relative;
       z-index: 1;
     }
+    .hero-heading { grid-area: heading; align-self: end; }
+    .hero-actions { grid-area: actions; align-self: start; }
+    .hero-visual { grid-area: visual; }
 
     @media(max-width:760px) {
       .hero-inner {
+        grid-template-areas: 
+          "heading"
+          "visual"
+          "actions";
         grid-template-columns: 1fr;
-        gap: 48px;
+        row-gap: 40px;
         text-align: center;
+      }
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    .sync-cats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media(max-width: 860px) {
+      .sync-cats-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -2122,11 +2168,12 @@
     @media (min-width: 769px) {
       .hero-inner {
         grid-template-columns: 1fr 1.3fr !important;
-        gap: 50px !important;
+        column-gap: 50px !important;
+        row-gap: 20px !important;
         align-items: center !important;
       }
 
-      .hero-text {
+      .hero-heading, .hero-actions {
         max-width: 450px !important;
       }
     }
@@ -2413,6 +2460,13 @@
       margin-bottom: 60px;
     }
 
+    @media(min-width: 861px) {
+      .mobile-only { display: none !important; }
+    }
+    @media(max-width: 860px) {
+      .desktop-only { display: none !important; }
+    }
+
     .pillar-toggle { display: none; }
 
     .pillar-expander-label {
@@ -2448,11 +2502,13 @@
       border-bottom-color: var(--cyan);
     }
 
-    .pillar-toggle:checked ~ .pillar-row .pillar-expander-label {
+    .pillar-toggle:checked ~ .pillar-row .pillar-expander-label,
+    .pillar-toggle:checked ~ .pillar-expander-label {
       color: var(--txt2);
     }
 
-    .pillar-toggle:checked ~ .pillar-row .pex-arrow {
+    .pillar-toggle:checked ~ .pillar-row .pex-arrow,
+    .pillar-toggle:checked ~ .pillar-expander-label .pex-arrow {
       transform: rotate(-135deg);
       margin-top: 4px;
     }
@@ -2501,7 +2557,7 @@
           Canvas Downloader
         </a>
         <div class="nav-right">
-          <a href="mac-setup.html" class="nav-link">How to set up</a>
+          <a href="mac-setup.html" class="nav-link"><span class="setup-full">How to set up</span><span class="setup-short">Setup</span></a>
           <a href="guide.html" class="nav-link">How It Works</a>
           <a href="#get" class="btn-nav">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -2510,7 +2566,7 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Download
+            <span style="margin-left: 6px;">Download</span>
           </a>
           <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
             class="btn-nav-ghost">
@@ -2531,8 +2587,8 @@
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="container">
-      <div class="hero-inner">
-        <div class="hero-text reveal">
+      <div class="hero-inner" id="hero-grid">
+        <div class="hero-heading reveal">
           <h1 style="font-size: clamp(34px, 5vw, 58px); line-height: 1.07; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.04em;">
             Canvas is outdated, you deserve better.<br>
             <span style="display: grid; grid-template-columns: 1fr;">
@@ -2547,6 +2603,8 @@
             </span>
           </h1>
           <p>The ultimate tool for university students. Batch-download courses and canvas content. Sync & download the newest course files in one click.<br> 100% free and AI-ready.</p>
+        </div>
+        <div class="hero-actions reveal" id="hero-actions-container">
           <div class="hero-btns" id="hero-download-area" style="margin-bottom: 10px;">
             <div id="hero-windows-group" style="display: none; flex-direction: column; gap: 12px; align-items: stretch; width: 100%; max-width: 240px;">
               <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank" rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;" onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
@@ -2601,25 +2659,55 @@
     </div>
   </section>
 
-  <hr class="div" />
-
   <!-- Section 2: Pain Point -->
   <section class="pain-point reveal">
     <div class="container">
-      <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 24px;">The Problem</div>
-      <h2>You’re wasting hours managing files.</h2>
-      <p>Downloading files one by one takes forever, yet you do it every day.<br>Just to end up in exam season with multiple massive, unorganized folders, unsure if you even have all the course materials. <br> You spend hours manually converting your course files to AI-ready formats.</p>
+      <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 24px; color: var(--red);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        The Problem
+      </div>
+      <h2>You're wasting hours managing files.</h2>
+      <ul style="max-width: 640px; margin: 40px auto 0; text-align: left; font-size: 19px; line-height: 1.6; color: var(--txt2); list-style-type: none; padding: 0; display: flex; flex-direction: column; gap: 24px;">
+        <li style="display: flex; align-items: flex-start; gap: 16px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <span>Downloading files one-by-one wastes hours you could've spent living life.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 16px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <span>By exam season, you end up with massive, unorganized course folders, unsure if you're missing critical materials.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 16px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <span>After manually downloading, you spend more hours manually converting course files into AI-ready formats.</span>
+        </li>
+      </ul>
+
+      <div class="solution-transition reveal" style="margin-top: 60px; padding-top: 50px; border-top: 1px dashed var(--border2); position: relative;">
+        <div class="transition-icon" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--bg); padding: 0 16px; color: var(--green);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
+        </div>
+        <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 16px; color: var(--green);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          The Solution
+        </div>
+        <h3 style="font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 0;">Canvas Downloader puts an end to that.</h3>
+      </div>
     </div>
   </section>
-
-  <hr class="div" />
 
   <!-- Section 3: Four Pillars -->
   <section class="pillars" id="features">
     <div class="container">
-      <div class="reveal" style="text-align: center; margin-bottom: 80px;">
-        <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin: 0;">Canvas Downloader puts an end to that.</h2>
-      </div>
       
       <!-- Pillar 1 -->
       <div class="pillar-section">
@@ -2629,16 +2717,17 @@
           <div class="section-kicker">1. Download</div>
           <h3>Download years of courses in minutes.</h3>
           <p>Downloading files one-by-one is a thing of the past. <br>Select your courses, choose a download configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so your pc has a 1:1 copy of each course.</p>
-          <label for="p1-open" class="pillar-expander-label">See exactly what you can download, and how <span class="pex-arrow"></span></label>
+          <label for="p1-open" class="pillar-expander-label desktop-only">See exactly what you can download, and how <span class="pex-arrow"></span></label>
         </div>
         <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
           <video class="expandable-video" src="assets/DownloadAllCourses_Folders.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
         </div>
       </div>
+      <label for="p1-open" class="pillar-expander-label mobile-only" style="display: flex; width: fit-content; margin: 24px auto 0;">See exactly what you can download, and how <span class="pex-arrow"></span></label>
       <div class="pillar-expand-content">
         <div class="expand-section-label">Download Settings</div>
-        <p class="expand-intro">Configure exactly what to download and how to organise it on disk — choose between all files or study files only, and mirror Canvas's module structure or keep everything flat. See the <a href="guide.html#download-settings" style="color:var(--cyan);text-decoration:none;">Custom Download guide</a> for a full walkthrough.</p>
-             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <p class="expand-intro">Configure exactly what to download and how to organise it on disk - choose between all files or study files only, and mirror Canvas's module structure or keep everything flat. Download Canvas Content and file attachments (e.g. assignment pdf's). See the <a href="guide.html#download-settings" style="color:var(--cyan);text-decoration:none;">Custom Download guide</a> for a full walkthrough.</p>
+             <div class="dl-grid">
                <!-- Card 1: File Filter + Structure -->
                <div class="app-card filter-card">
                  <div class="app-card-header">
@@ -2742,15 +2831,16 @@
           <div class="section-kicker">2. Quick Sync</div>
           <h3>Get new files from canvas with one click</h3>
           <p>Imagine this - It’s Monday morning. Instead of digging through Canvas to find the files for your first class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads only the newest files your professors added to canvas.<br><br><b>Pro-tip:</b> Save your courses as a group, and add them to the Sync List. Simply hit <b>Quick Sync All</b> every morning to get all the new files your teacher added to the course, straight to your pc. Doesn’t get much easier.</p>
-          <label for="p2-open" class="pillar-expander-label">What is downloaded and how does it work? <span class="pex-arrow"></span></label>
+          <label for="p2-open" class="pillar-expander-label desktop-only">What is downloaded and how does it work? <span class="pex-arrow"></span></label>
         </div>
-        <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+        <div class="pillar-vis aligned-to-title" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
           <video class="expandable-video" src="assets/Quick_Sync_Demo.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
         </div>
       </div>
+      <label for="p2-open" class="pillar-expander-label mobile-only" style="display: flex; width: fit-content; margin: 24px auto 0;">What is downloaded and how does it work? <span class="pex-arrow"></span></label>
       <div class="pillar-expand-content">
-        <div class="expand-section-label">Sync Rules</div>
-        <p class="expand-intro">Quick Sync is 100% non-destructive — it only pulls down new and clean-updated files. Your annotations, your deleted files, and any file the teacher removed from Canvas are all left exactly as they are. Read more in the <a href="guide.html#sync-mode" style="color:var(--cyan);text-decoration:none;">How it works</a> guide.</p>
+        <div class="expand-section-label">Quick Sync Rules</div>
+        <p class="expand-intro">Quick Sync is 100% non-destructive - it only pulls down new and clean-updated files. Your own files, your edited files, your deleted files, and any file the teacher removed from Canvas are all left exactly as they are. Read more in the <a href="guide.html#sync-mode" style="color:var(--cyan);text-decoration:none;">How it works</a> guide.</p>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:16px;">
                <div class="app-card">
                  <div class="app-card-header" style="color: var(--green);">Downloads automatically</div>
@@ -2783,16 +2873,17 @@
           <div class="section-kicker">3. Sync Review</div>
           <h3>Full control over your files.</h3>
           <p>Get the full status overview of your local course folders. <b>Sync Review mode</b> compares your local files directly against your Canvas courses and runs advanced algorithms to show you exactly what's different.<br><br>The app categorizes the results so you can select and download exactly what you need: New files, deleted files, updates or changes, giving you <b>full control</b> and confidence that your materials are always 100% up-to-date.</p>
-          <label for="p3-open" class="pillar-expander-label">The 5 categories, and how Sync Review works <span class="pex-arrow"></span></label>
+          <label for="p3-open" class="pillar-expander-label desktop-only">The 5 categories, and how Sync Review works <span class="pex-arrow"></span></label>
         </div>
-        <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+        <div class="pillar-vis aligned-to-title" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
           <video class="expandable-video" src="assets/Sync_Review_Demo.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
         </div>
       </div>
+      <label for="p3-open" class="pillar-expander-label mobile-only" style="display: flex; width: fit-content; margin: 24px auto 0;">The 5 categories, and how Sync Review works <span class="pex-arrow"></span></label>
       <div class="pillar-expand-content">
         <div class="expand-section-label">5 Sync Categories</div>
-        <p class="expand-intro">Every file in a sync comparison is placed into one of these 5 categories — each with its own action and default state. You can check or uncheck individual items before syncing. See the <a href="guide.html#sync-review" style="color:var(--cyan);text-decoration:none;">Sync Review guide</a> for the full breakdown.</p>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <p class="expand-intro">Every file in a sync Review is placed into one of these 5 categories - each with its own action and default state. You can check or uncheck individual files to download, or use the built-in tools to bulk-select. See the <a href="guide.html#sync-review" style="color:var(--cyan);text-decoration:none;">Sync Review guide</a> for the full breakdown.</p>
+        <div class="sync-cats-grid">
 
           <div class="app-card" style="border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(30, 60, 90, 0.2);">
             <div class="app-card-header" style="color: #60a5fa; display:flex; gap:8px; padding: 10px 14px;"><img src="assets/Icon_Sync_Review_New_File.png" style="width:14px;" /> New Files</div>
@@ -2805,7 +2896,7 @@
           <div class="app-card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(20, 70, 40, 0.2);">
             <div class="app-card-header" style="color: #4ade80; display:flex; gap:8px; padding: 10px 14px;"><img src="assets/Icon_Sync_Review_Update.png" style="width:14px;" /> Updates (Clean)</div>
             <div class="app-card-body" style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-              <div>Canvas has a newer version, your local copy is untouched.<br><span style="color:#4ade80;">→ Replaced in place — same name, same location.</span></div>
+              <div>Canvas has a newer version, your local copy is untouched.<br><span style="color:#4ade80;">→ Replaced in place - same name, same location.</span></div>
               <div style="font-weight: 600; color: #fff; background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">&#10003; Checked by default</div>
             </div>
           </div>
@@ -2830,7 +2921,7 @@
             <div class="app-card-header" style="color: #f87171; display:flex; gap:8px; padding: 10px 14px;"><img src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" style="width:14px;" /> Deleted on Canvas</div>
             <div class="app-card-body" style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
               <div>Teacher removed it from Canvas, it's still in your folder.<br><span style="color:#f87171;">→ Your local copy stays exactly where it is. The app never deletes files.</span></div>
-              <div style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">Info only — no action</div>
+              <div style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">Info only - no action</div>
             </div>
           </div>
 
@@ -2846,12 +2937,13 @@
           <div class="section-kicker">4. AI Optimization</div>
           <h3>Supercharge your exam prep</h3>
           <p>Canvas Downloader is built for the modern studying workflow, where <b>AI-assisted learning</b> is at the core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to <b>AI-Ready file formats</b>, whenever you Sync or Download. No more timely manual conversions on sketchy websites. <br><br><b>Purpose-built for NotebookLM (100% compatibility): </b>Enable AI Optimizations → Download → Drag & Drop into NotebookLM and start studying.</p>
-          <label for="p4-open" class="pillar-expander-label">See the conversions available <span class="pex-arrow"></span></label>
+          <label for="p4-open" class="pillar-expander-label desktop-only">See the conversions available <span class="pex-arrow"></span></label>
         </div>
-        <div class="pillar-vis" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+        <div class="pillar-vis aligned-to-title" style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
           <video class="expandable-video" src="assets/AI-Optimization.mp4" autoplay loop muted playsinline style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
         </div>
       </div>
+      <label for="p4-open" class="pillar-expander-label mobile-only" style="display: flex; width: fit-content; margin: 24px auto 0;">See the conversions available <span class="pex-arrow"></span></label>
       <div class="pillar-expand-content">
         <div class="expand-section-label">Available Conversions</div>
         <p class="expand-intro">Toggle these on and the engine automatically converts complex files into AI-readable formats on every download or sync. Office conversions require Microsoft Office installed. When fully enabled, your entire course is 100% ready for tools like NotebookLM. See the <a href="guide.html#ai-optimizations" style="color:var(--cyan);text-decoration:none;">AI Optimization guide</a> for details.</p>
@@ -2906,17 +2998,17 @@
   <hr class="div" />
 
   <!-- Section 5: Technical Trust -->
-  <section class="security-section" id="security" style="padding-top: 90px; padding-bottom: 90px;">
-    <div class="container">
-      <!-- Security Accordions -->
-<!-- SECURITY -->
   <section class="security-section" id="security">
     <div class="container">
       <div class="sh reveal">
-        <div class="section-kicker">Security</div>
+        <div class="section-kicker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Security
+        </div>
         <h2>Fair questions, straight answers.</h2>
-        <p>Downloading an unsigned app that has "Canvas" in its name - around the time of a Canvas security incident -
-          is a completely reasonable thing to be cautious about. Here's what's actually going on.</p>
+        <p>Downloading an "unsigned" app can feel sketchy, and it's a completely reasonable thing to be cautious about. Here is the transparent truth:</p>
       </div>
 
       <div class="sec-qa-grid reveal">
@@ -2932,10 +3024,7 @@
             </svg>
             Why is Windows / Mac warning me?
           </summary>
-          <p class="qa-body">Code-signing certificates - the thing that makes these warnings go away - cost $99-$300 per
-            year, paid to Apple or Microsoft. This is a free project built by a student. The same popup appears for VLC,
-            Blender, and most other open-source software that doesn't pay for the certificate. The warning means
-            "unrecognized publisher," not "dangerous."</p>
+          <p class="qa-body">Code-signing certificates—the thing that makes these warnings go away—cost $99 to $300 a year, paid to Apple or Microsoft. Since this is a free project built by a student, for students, and makes absolutely no money, paying for these certificates is unfortunately out of the question right now. To keep the app completely free, it remains unsigned. I hope to sign it in the future, but for now, the warning simply means the app is from an independent developer, not that it's dangerous. I've done the absolute best job I can to build it securely and transparently.</p>
           <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
             including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
             the code.</p>
@@ -3132,17 +3221,59 @@
 
     <section class="security-section" style="padding-bottom: 90px;">
     <div class="container">
-      <!-- Token Video Content -->
-      <div class="reveal" style="margin-bottom: 60px;">
-        <!-- Canvas Token -->
-      <div class="token-card reveal">
-        <div style="text-align: center; max-width: 600px;">
-          <h3>Getting your Canvas Access Token</h3>
-          <p style="margin-bottom: 0;">Canvas Downloader talks directly to your university's Canvas server using your
-            own Canvas Access Token. Here's exactly how to get it.</p>
+      <!-- Login Content -->
+      <div style="max-width: 860px; margin: 0 auto; width: 100%;">
+        <div class="sh reveal">
+          <div class="section-kicker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"></path>
+          </svg>
+          Authentication
         </div>
+        <h2>How to login</h2>
+        <p>Canvas Downloader talks directly to your university's Canvas server. To connect, you just need two things from your browser.</p>
+      </div>
 
-        <div id="video-container" style="width: 100%; max-width: 860px; aspect-ratio: 16/9; position: relative;">
+      <!-- URL Guide -->
+      <div class="reveal" style="width: 100%; max-width: 860px; margin: 0 auto 24px; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
+        <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--txt);">
+          <span style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">1</span>
+          Your Canvas URL
+        </h4>
+        <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">To connect the app, you need your school's direct Canvas URL.</p>
+        
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px;">
+            <span style="color: #64748b;">https://</span><span style="color: var(--cyan); font-weight: 500;">schoolname.instructure.com</span><span style="color: #64748b;">/courses/1234</span>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
+            <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">How to find it</strong>
+            <ol style="margin: 0; padding-left: 18px; color: var(--txt2); font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <li>Log in to Canvas in your browser.</li>
+              <li>Look at the address bar <strong>after</strong> logging in.</li>
+              <li>Copy the base URL (usually ends in <code style="background:var(--surf2);padding:2px 4px;border-radius:4px;color:var(--txt);">.instructure.com</code>).</li>
+            </ol>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
+            <strong style="color: var(--orange); display: block; margin-bottom: 12px; font-size: 14px;">Important</strong>
+            <p style="margin: 0; color: var(--txt2); font-size: 14px; line-height: 1.6;">While your university's URL (e.g. <code style="color:var(--txt);font-family:monospace;background:transparent;padding:0;">canvas.school.edu</code>) might be accepted by our algorithms, finding and using the <strong>actual base Canvas URL</strong> (ending in <code style="color:var(--txt);font-family:monospace;background:transparent;padding:0;">.instructure.com</code>) is the best and most reliable option.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Token Guide -->
+      <div class="reveal" style="width: 100%; max-width: 860px; margin: 0 auto 24px; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
+        <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--txt);">
+          <span style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">2</span>
+          Your Canvas Access Token
+        </h4>
+        <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">This is a secure key you generate yourself that lets the app access your courses. Here is exactly how to get it.</p>
+
+        <div id="video-container" style="width: 100%; aspect-ratio: 16/9; position: relative;">
           <iframe id="video-iframe" width="100%" height="100%"
             src="https://www.youtube-nocookie.com/embed/VadvcIvrrhU?vq=hd1080&modestbranding=1&rel=0"
             title="Getting your Canvas Access Token" frameborder="0"
@@ -3150,10 +3281,11 @@
             allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
             style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); display: block; background: #000;"></iframe>
         </div>
+      </div>
 
+      <div class="reveal"
+        style="display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
         <div
-          style="display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; text-align: left;">
-          <div
             style="background: var(--grn-bg); border: 1px solid var(--grn-b); border-radius: var(--rad); padding: 24px; display: flex; align-items: flex-start; gap: 20px; color: var(--txt2);">
             <div style="flex-shrink: 0; margin-top: 2px;">
               <svg style="color: var(--green); filter: drop-shadow(0 0 12px rgba(104,212,163,0.3));" width="32"
@@ -3249,8 +3381,21 @@
             </div>
           </div>
         </div>
+
+        <!-- Setup Guide Link -->
+        <div style="margin-top: 40px; text-align: center; padding: 20px 0;">
+          <h4 style="margin-bottom: 12px; font-size: 16px; color: var(--txt);">Already installed the app?</h4>
+          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 20px; max-width: 540px; margin-left: auto; margin-right: auto;">
+            Make sure Canvas Downloader has the right permissions to save files, especially on macOS. Check out our step-by-step setup guide for detailed instructions.
+          </p>
+          <a href="guide.html" style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 24px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--txt); font-weight: 500; font-size: 14px; border-radius: var(--rad); text-decoration: none; transition: background 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+            Read the Setup Guide
+            <svg style="margin-left: 8px; color: var(--txt3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+        </div>
       
       </div>
+      </div> <!-- end max-width 860px -->
       
     </div>
   </section>

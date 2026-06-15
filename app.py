@@ -18,7 +18,7 @@ from sync_ui import render_sync_step1, render_sync_step4
 from ui_helpers import esc, render_download_wizard
 from ui_shared import (
     render_completion_card, render_folder_cards,
-    render_error_section, render_pp_warning, SECONDARY_ENTITY_ICONS,
+    render_error_section, render_pp_warning,
     error_log_dialog,
 )
 from styles import inject_css
@@ -27,7 +27,10 @@ from core.state_registry import (
     ensure_download_state,
 )
 from core.cancellation import cancel_download, is_download_cancelled, reset_download_cancel
-from engine.progress_dashboard import DashboardPlaceholders, render_full_dashboard, render_active_file
+from engine.progress_dashboard import (
+    DashboardPlaceholders, render_full_dashboard, render_active_file,
+    log_line, log_divider, log_meta, file_icon_svg, entity_icon_svg,
+)
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 from engine.notifications import play_completion_beep, request_macos_notification_permission
 
@@ -835,7 +838,8 @@ with _main_content.container():
                         if progress_type == 'skipped':
                             st.session_state['downloaded_items'] += 1   # always count the skip
                             if msg:
-                                log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped: {msg}</span>")
+                                _name = _clean_display_name(str(msg))
+                                log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name)))
                             if kwargs.get('explicit_filepath'):
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
@@ -857,7 +861,8 @@ with _main_content.container():
                             st.session_state['total_items'] = max(0, st.session_state.get('total_items', total_items) - 1)
                             st.session_state['total_mb'] = max(0.0, st.session_state.get('total_mb', total_mb) - (sz / (1024 * 1024)))
                             if msg:
-                                log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped (too large): {msg}</span>")
+                                _name = _clean_display_name(str(msg))
+                                log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='too large'))
                             render_dashboard()
 
                         elif progress_type == 'attachment_discovered':
@@ -871,15 +876,14 @@ with _main_content.container():
                             st.session_state['downloaded_items'] += 1
                             st.session_state['total_items'] = st.session_state.get('total_items', total_items) + 1
                             if msg:
+                                _name = _clean_display_name(str(msg))
+                                render_active_file(active_file_placeholder, str(msg))
                                 if progress_type == 'secondary':
                                     entity_type = kwargs.get('entity_type', '')
-                                    icon = SECONDARY_ENTITY_ICONS.get(entity_type, '📄')
-                                    render_active_file(active_file_placeholder, str(msg))
-                                    log_deque.append(f"✅ {icon} {_clean_display_name(str(msg))}")
+                                    log_deque.append(log_line('success', _name, icon=entity_icon_svg(entity_type)))
                                 else:
-                                    render_active_file(active_file_placeholder, str(msg))
-                                    log_deque.append(f"✅ {_clean_display_name(str(msg))}")
-                                    
+                                    log_deque.append(log_line('success', _name, icon=file_icon_svg(_name)))
+
                                 # Track filename for completion screen
                                 course_key = course.name
                                 if course_key not in st.session_state['download_file_details']:
@@ -897,10 +901,8 @@ with _main_content.container():
                         elif progress_type in ('download', 'attachment'):
                             st.session_state['downloaded_items'] += 1
                             if msg:
-                                if progress_type == 'attachment':
-                                    log_deque.append(f"<span style='color: {theme.ACCENT_BLUE};'>📎 {msg}</span>")
-                                else:
-                                    log_deque.append(f"✅ {_clean_display_name(str(msg))}")
+                                _name = _clean_display_name(str(msg))
+                                log_deque.append(log_line('success', _name, icon=file_icon_svg(_name)))
 
                                 # Track filename for completion screen
                                 course_key = course.name
@@ -918,10 +920,7 @@ with _main_content.container():
                             new_total = kwargs.get('new_total', 0)
                             if new_total > 0:
                                 st.session_state['total_items'] += new_total
-                            log_deque.append(
-                                f"<span style='color: {theme.ACCENT_BLUE};'>"
-                                f"Phase: {phase_name}</span>"
-                            )
+                            log_deque.append(log_divider(phase_name))
                             render_dashboard()
 
                             
@@ -945,10 +944,9 @@ with _main_content.container():
                                         st.session_state['download_errors_list'] = []
                                     st.session_state['download_errors_list'].append(error_obj)
                                     
-                                    _msg_text = esc(error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                    error_text = f"[{esc(course.name)}] {_msg_text}"
-                                    log_deque.append(f"<span style='color: #FF7B72;'>❌ {error_text}</span>")
-                                    
+                                    _msg_text = error_obj.message if hasattr(error_obj, 'message') else str(msg)
+                                    log_deque.append(log_line('error', f"[{course.name}] {_msg_text}"))
+
                             render_dashboard()
 
                         elif progress_type == 'mb_progress':
@@ -959,8 +957,7 @@ with _main_content.container():
                             render_dashboard()
                         
                         elif msg and progress_type == 'log':
-                            new_line = f"[{esc(course.name)}] {msg}"
-                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>ℹ️ {new_line}</span>")
+                            log_deque.append(log_meta(f"[{course.name}] {msg}"))
                             render_dashboard()
                     except (KeyboardInterrupt, SystemExit):
                         raise
@@ -1043,10 +1040,7 @@ with _main_content.container():
                         raw_error=_dl_crash, is_app_error=True,
                     )
                     st.session_state.setdefault('download_errors_list', []).append(_crash_err)
-                    log_deque.append(
-                        f"<span style='color: #FF7B72;'>❌ Fatal: download engine crashed for "
-                        f"{esc(course.name)}: {esc(str(_dl_crash))}</span>"
-                    )
+                    log_deque.append(log_line('error', f"Download engine crashed for {course.name}: {_dl_crash}"))
                     render_dashboard()
                 
                 # --- Post-Processing: Setup ---
@@ -1259,7 +1253,8 @@ with _main_content.container():
                                 st.session_state['retry_downloaded_items'] = st.session_state.get('retry_downloaded_items', 0) + 1
                             else:
                                 st.session_state['downloaded_items'] += 1
-                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped: {msg}</span>")
+                            _name = _clean_display_name(str(msg))
+                            log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name)))
                             if kwargs.get('explicit_filepath'):
                                 if is_retry:
                                     if course_name_ref not in st.session_state['retry_isolated_details']:
@@ -1279,7 +1274,8 @@ with _main_content.container():
                             st.session_state['size_skipped_files'] = []
                         if msg:
                             st.session_state['size_skipped_files'].append(msg)
-                            log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>⏭️ Skipped (too large): {msg}</span>")
+                            _name = _clean_display_name(str(msg))
+                            log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='too large'))
                         # In the retry path the total_items denominator is the length
                         # of the retry queue, not the global total, so we leave it alone.
                         render_dashboard(course_name_ref)
@@ -1298,8 +1294,9 @@ with _main_content.container():
                         else:
                             st.session_state['downloaded_items'] += 1
                         if msg:
-                            log_deque.append(f"✅ {_clean_display_name(str(msg))}")
-                            
+                            _name = _clean_display_name(str(msg))
+                            log_deque.append(log_line('success', _name, icon=file_icon_svg(_name)))
+
                             if kwargs.get('explicit_filepath'):
                                 if is_retry:
                                     if course_name_ref not in st.session_state['retry_isolated_details']:
@@ -1342,14 +1339,12 @@ with _main_content.container():
                                 if 'download_errors_list' not in st.session_state: st.session_state['download_errors_list'] = []
                                 st.session_state['download_errors_list'].append(error_obj)
                                 
-                                _msg_text = esc(error_obj.message if hasattr(error_obj, 'message') else str(msg))
-                                error_text = f"[{esc(course_name_ref)}] {_msg_text}"
-                                log_deque.append(f"<span style='color: #FF7B72;'>❌ {error_text}</span>")
+                                _msg_text = error_obj.message if hasattr(error_obj, 'message') else str(msg)
+                                log_deque.append(log_line('error', f"[{course_name_ref}] {_msg_text}"))
                         render_dashboard(course_name_ref)
 
                     elif msg and progress_type == 'log':
-                        new_line = f"[{esc(course_name_ref)}] {msg}"
-                        log_deque.append(f"<span style='color: {theme.TEXT_SECONDARY};'>ℹ️ {new_line}</span>")
+                        log_deque.append(log_meta(f"[{course_name_ref}] {msg}"))
                         render_dashboard(course_name_ref)
                 except (KeyboardInterrupt, SystemExit):
                     raise

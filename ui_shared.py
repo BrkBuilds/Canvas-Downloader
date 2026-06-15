@@ -9,17 +9,6 @@ from sync_manager import format_file_size
 from preset_manager import PresetManager
 
 
-# --- Entity Icons for secondary content logging ---
-SECONDARY_ENTITY_ICONS = {
-    'assignment':   '📝',
-    'quiz':         '❓',
-    'discussion':   '💬',
-    'announcement': '📢',
-    'syllabus':     '📋',
-    'rubric':       '📊',
-    'page':         '📄',
-}
-
 # --- Professional inline SVG icons for help card section headers ---
 # Feather-style stroke icons. Use inside help card text_html to replace emojis.
 # Sized at 18×18 with themed stroke colors for consistency.
@@ -367,6 +356,9 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         padding: 20px 20px 35px 20px !important;
         margin-bottom: 12px;
     }}
+    div[class*="st-key-completion_dashboard"] [data-testid="stExpanderDetails"] {{
+        background-color: var(--secondary-background-color, #161b22) !important;
+    }}
     </style>
     """)
 
@@ -379,10 +371,54 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
     """, unsafe_allow_html=True)
 
     if size_skipped_count > 0:
-        with st.expander(f"See {size_skipped_count} skipped {'file' if size_skipped_count == 1 else 'files'}"):
-            st.markdown("<p style='font-size:0.8rem; color:#aaa; margin-top:-10px; margin-bottom:5px;'>These files are marked as ignored and won't appear as new during sync. You can manage them in the Sync Hub.</p>", unsafe_allow_html=True)
-            for _sf in size_skipped_files:
-                st.markdown(f"- {_sf}")
+        import os as _os, re as _re
+        _SKIP_CHEVRON = (
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+            " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+            "%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
+        )
+        _skip_word = 'file' if size_skipped_count == 1 else 'files'
+        _rows_html = ''
+        for _sf in size_skipped_files:
+            _m = _re.match(r'^(.+?) \(([^)]+)\)$', _sf)
+            if _m:
+                _fname_full = _m.group(1)
+                _size_str = _m.group(2)
+            else:
+                _fname_full = _sf
+                _size_str = ''
+            _ext = _os.path.splitext(_fname_full)[1].lower().lstrip('.')
+            _fname_noext = _os.path.splitext(_fname_full)[0] if _ext else _fname_full
+            _icon_url = _FILETYPE_SVGS.get(_ext, _FILETYPE_SVG_DEFAULT)
+            _ext_badge = (
+                f'<span class="skip-ext-badge">{esc(_ext.upper())}</span>'
+            ) if _ext else ''
+            _size_badge = (
+                f'<span class="skip-file-size">{esc(_size_str)}</span>'
+            ) if _size_str else ''
+            _rows_html += (
+                f'<div class="skip-file-row">'
+                f'<img class="skip-file-icon" src="{_icon_url}" alt="{esc(_ext)}"/>'
+                f'<span class="skip-file-name">{esc(_fname_noext)}</span>'
+                f'{_ext_badge}'
+                f'{_size_badge}'
+                f'</div>'
+            )
+        st.markdown(
+            f'<details class="skip-panel">'
+            f'<summary class="skip-panel-header">'
+            f'<div class="sp-header-row">'
+            f'<img class="sp-chevron" src="{_SKIP_CHEVRON}" alt="toggle"/>'
+            f'<span class="sp-title">See {size_skipped_count} skipped {_skip_word}</span>'
+            f'</div>'
+            f'</summary>'
+            f'<div class="skip-panel-body">'
+            f'<div class="sp-subtitle">These files are marked as ignored and won\'t appear as new during sync. You can manage them in the Sync Hub.</div>'
+            f'<div class="skip-file-list">{_rows_html}</div>'
+            f'</div>'
+            f'</details>',
+            unsafe_allow_html=True,
+        )
 
 
 
@@ -510,44 +546,107 @@ _ACTION_ICON_REVEAL = (
     "fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
     "%3Cpath d='m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E"
 )
-
-# category -> (label, text color, background)
-_CATEGORY_BADGE = {
-    'new':       ('NEW', '#58a6ff', 'rgba(88,166,255,0.13)'),
-    'updated':   ('UPDATED', '#34d399', 'rgba(52,211,153,0.13)'),
-    'protected': ('NEW VERSION', '#eba834', 'rgba(235,168,52,0.13)'),
-}
+# Filled folder glyph for the destination-path chip (SVG, not an emoji).
+_FOLDER_ICON_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0a836'%3E"
+    "%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E"
+)
 
 
 def inject_file_action_css():
     """Inject the scoped CSS for the per-file Open / Reveal icon buttons.
 
-    Idempotent - safe to call once per render before any action rows. The
-    selectors match every button whose key starts with ``fileact_open_`` /
-    ``fileact_reveal_`` so a single injection styles all rows on the page.
+    The icon is drawn with a ``::before`` pseudo-element (not the button's own
+    ``background-image``) so Streamlit's hover restyle - which resets the
+    button background - can never wipe the glyph. Buttons are fixed 1:1 squares.
+    Idempotent; call once per render before any action rows. Selectors match
+    every key starting ``fileact_open_`` / ``fileact_reveal_``.
     """
     st.markdown(f"""<style>
+    /* Action-list container: strip chrome, indent the files under their
+       category header (the header cancels it with a negative margin). */
+    div[class*="st-key-fileactlist_"] {{
+        border: none !important; background: transparent !important;
+        padding: 0 0 0 26px !important; margin: 0 !important;
+    }}
+    /* Pack rows close, but with a little breathing room between them. */
+    div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] {{ gap: 4px !important; }}
+
+    /* --- BULLETPROOF ROW LAYOUT ---------------------------------------- *
+     * Each file row is ONE horizontal block of 4 columns:
+     *   [filename] [Open] [Reveal] [path-chip]
+     * The trick: the column flex weights Streamlit emits are overridden so
+     * (1) the NAME column shrinks to its content, (2) the two BUTTON columns
+     * shrink to content, (3) the PATH column absorbs the rest. The buttons
+     * therefore ALWAYS sit exactly one flex-gap (6px) after the end of the
+     * filename - never a fraction of the row width. align-items:center keeps
+     * the buttons vertically centred on the filename; margin:0 kills the 5px
+     * Streamlit injects, which is what made rows feel loose/unaligned. */
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] {{
+        gap: 6px !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+    }}
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+        padding: 0 !important; min-width: 0 !important; width: auto !important;
+    }}
+    /* (1) filename - shrink to content, capped so long names ellipsis instead
+       of shoving the buttons off-screen. */
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(1) {{
+        flex: 0 1 auto !important; max-width: 60% !important;
+    }}
+    /* (2,3) the two icon buttons - shrink to content, hug the filename. */
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2),
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) {{
+        flex: 0 0 auto !important;
+    }}
+    /* (4) path chip - absorbs remaining width (left-aligned, right after btns). */
+    div[class*="st-key-fileactlist_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(4) {{
+        flex: 1 1 auto !important;
+    }}
+
+    /* Compact 22px square icon buttons, vertically centred on the filename.
+       The button sits high (the stButton wrapper reserves Streamlit's default
+       button height and top-pins the square); the `top` nudge drops it onto the
+       SAME centre line as the path chip - the reference element. */
     div[class*="st-key-fileact_open_"] button,
     div[class*="st-key-fileact_reveal_"] button {{
-        min-height: 0 !important;
-        height: 34px !important;
-        padding: 0 !important;
-        border-radius: 7px !important;
+        height: 22px !important; min-height: 22px !important;
+        width: 22px !important; min-width: 22px !important; max-width: 22px !important;
+        padding: 0 !important; margin: 0 !important;
+        position: relative !important; top: 8px !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        border-radius: 5px !important;
         background-color: rgba(255,255,255,0.04) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        background-size: 17px 17px !important;
-        color: transparent !important;
-        font-size: 0 !important;
+        box-shadow: none !important;
         transition: background-color 0.15s ease, border-color 0.15s ease !important;
     }}
-    div[class*="st-key-fileact_open_"] button {{ background-image: url("{_ACTION_ICON_OPEN}") !important; }}
-    div[class*="st-key-fileact_reveal_"] button {{ background-image: url("{_ACTION_ICON_REVEAL}") !important; }}
+    div[class*="st-key-fileact_open_"] button p,
+    div[class*="st-key-fileact_reveal_"] button p {{
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        line-height: 0 !important; margin: 0 !important;
+    }}
+    /* Icon as a hover-proof pseudo-element on the label's <p> (Streamlit's
+       hover restyle resets the button background but never the pseudo-element). */
+    div[class*="st-key-fileact_open_"] button p::before,
+    div[class*="st-key-fileact_reveal_"] button p::before {{
+        content: "";
+        display: inline-block;
+        width: 13px;
+        height: 13px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+    }}
+    div[class*="st-key-fileact_open_"] button p::before {{ background-image: url("{_ACTION_ICON_OPEN}"); }}
+    div[class*="st-key-fileact_reveal_"] button p::before {{ background-image: url("{_ACTION_ICON_REVEAL}"); }}
     div[class*="st-key-fileact_open_"] button:hover:not(:disabled),
     div[class*="st-key-fileact_reveal_"] button:hover:not(:disabled) {{
-        background-color: rgba(88,166,255,0.14) !important;
-        border-color: rgba(88,166,255,0.5) !important;
+        background-color: rgba(88,166,255,0.15) !important;
+        border-color: rgba(88,166,255,0.55) !important;
     }}
     div[class*="st-key-fileact_open_"] button:disabled,
     div[class*="st-key-fileact_reveal_"] button:disabled {{
@@ -571,66 +670,100 @@ def _sort_file_records(files: list, mode: str) -> list:
 
 
 def render_synced_file_rows(files: list, course_root: str, key_scope: str,
-                            sort_mode: str = 'folder', show_subfolder: bool = True):
-    """Render one Open / Reveal action row per synced file.
+                            sort_mode: str = 'folder', show_subfolder: bool = True,
+                            header_html: str | None = None):
+    """Render a tight, interactive file list:
+
+        [filetype icon] filename   [Open][Reveal]   📁 destination subfolder
+
+    The two icon buttons sit right after the filename (≈5px apart) with the
+    destination path immediately to their right. Rows are packed close together
+    vertically. No per-file category badge - the caller labels sections by
+    category. Rows are wrapped in a keyed ``fileactlist_`` container that the
+    scoped CSS in :func:`inject_file_action_css` strips and tightens.
 
     Args:
         files: list of {'name', 'rel', 'category'} records.
         course_root: absolute course folder; abs path = course_root / rel.
-        key_scope: unique-per-course string; button keys append the row index.
+        key_scope: globally-unique string; button keys append the row index.
         sort_mode: 'folder' | 'name' | 'type'.
-        show_subfolder: show the destination-subfolder chip (helps locate the
-            file inside module folders).
+        show_subfolder: show the destination-subfolder path.
+        header_html: optional HTML rendered tight above the rows (e.g. a
+            category heading) so it hugs the list instead of floating above it.
 
     Call ``inject_file_action_css()`` once before using this.
     """
     import os as _os
 
-    for i, fi in enumerate(_sort_file_records(files, sort_mode)):
-        name = fi.get('name', '')
-        rel = fi.get('rel', name) or name
-        category = fi.get('category', 'new')
-        abs_path = _os.path.normpath(_os.path.join(course_root, rel)) if course_root else ''
-        exists = bool(abs_path) and _os.path.isfile(abs_path)
+    # Defensive: only dict records survive. A non-dict (legacy/corrupt data)
+    # would otherwise crash inside _sort_file_records' .get() sort key - and
+    # this function is shared with the completion screen, which doesn't wrap it.
+    files = [fi for fi in (files or []) if isinstance(fi, dict)]
+    if not files:
+        return
 
-        ext = _os.path.splitext(name)[1].lower().lstrip('.')
-        icon = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
-        subdir = _os.path.dirname(rel).replace('\\', '/')
-        b_label, b_color, b_bg = _CATEGORY_BADGE.get(category, _CATEGORY_BADGE['new'])
+    with st.container(border=True, key=f"fileactlist_{key_scope}"):
+        if header_html:
+            st.markdown(header_html, unsafe_allow_html=True)
 
-        subdir_html = ''
-        if show_subfolder and subdir:
-            subdir_html = (
-                f"<span style='font-size:0.7rem;color:#8b949e;background:rgba(255,255,255,0.05);"
-                f"border-radius:4px;padding:1px 7px;margin-left:8px;white-space:nowrap;flex-shrink:0;'>"
-                f"📁 {esc(subdir)}</span>"
+        for i, fi in enumerate(_sort_file_records(files, sort_mode)):
+            name = fi.get('name', '')
+            rel = fi.get('rel', name) or name
+            abs_path = _os.path.normpath(_os.path.join(course_root, rel)) if course_root else ''
+            exists = bool(abs_path) and _os.path.isfile(abs_path)
+
+            ext = _os.path.splitext(name)[1].lower().lstrip('.')
+            icon = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
+            subdir = _os.path.dirname(rel).replace('\\', '/')
+
+            # NB: data-URIs use single quotes internally, so the src attribute
+            # MUST be double-quoted or the first inner quote closes it.
+            name_html = (
+                "<div style='display:flex;align-items:center;gap:8px;min-width:0;'>"
+                f'<img src="{icon}" style="width:16px;height:16px;flex-shrink:0;" alt="{esc(ext)}"/>'
+                f"<span style='font-size:0.86rem;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;"
+                f"white-space:nowrap;' title=\"{esc(name)}\">{esc(name)}</span>"
+                "</div>"
             )
+            folder_html = ''
+            if show_subfolder and subdir:
+                # Path rendered as a dark, rounded chip so it reads as a distinct
+                # "destination" token. inline-flex → the chip hugs its text.
+                folder_html = (
+                    "<div style='display:flex;align-items:center;min-width:0;'>"
+                    "<span style='display:inline-flex;align-items:center;gap:6px;max-width:100%;"
+                    "background:#161b22;border:1px solid rgba(255,255,255,0.06);"
+                    "border-radius:6px;box-sizing:border-box;height:22px;padding:0 9px;'>"
+                    f'<img src="{_FOLDER_ICON_SVG}" style="width:13px;height:13px;flex-shrink:0;" alt="folder"/>'
+                    "<span style='font-size:0.75rem;color:#9aa4af;white-space:nowrap;"
+                    f"overflow:hidden;text-overflow:ellipsis;'>{esc(subdir)}</span></span></div>"
+                )
 
-        name_html = (
-            "<div style='display:flex;align-items:center;gap:8px;min-width:0;'>"
-            f"<img src='{icon}' style='width:16px;height:16px;flex-shrink:0;' alt='{esc(ext)}'/>"
-            f"<span style='font-size:0.88rem;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;"
-            f"white-space:nowrap;' title='{esc(name)}'>{esc(name)}</span>"
-            f"<span style='font-size:0.6rem;font-weight:700;letter-spacing:0.4px;color:{b_color};"
-            f"background:{b_bg};border-radius:4px;padding:1px 6px;margin-left:2px;flex-shrink:0;'>{b_label}</span>"
-            f"{subdir_html}"
-            "</div>"
-        )
-
-        cols = st.columns([0.76, 0.12, 0.12], vertical_alignment="center")
-        with cols[0]:
-            st.markdown(name_html, unsafe_allow_html=True)
-        _help_missing = "File not found at its last known location"
-        with cols[1]:
-            if st.button("​", key=f"fileact_open_{key_scope}_{i}",
-                         help="Open file" if exists else _help_missing,
-                         disabled=not exists, use_container_width=True):
-                open_file(abs_path)
-        with cols[2]:
-            if st.button("​", key=f"fileact_reveal_{key_scope}_{i}",
-                         help="Show in folder" if exists else _help_missing,
-                         disabled=not exists, use_container_width=True):
-                reveal_in_folder(abs_path)
+            # Column weights are placeholders only - the scoped CSS in
+            # inject_file_action_css() overrides the flex so the name + button
+            # columns shrink to content and the buttons hug the filename. (The
+            # old approach sized the name column by len(name) heuristics, which
+            # left an inconsistent, always-wrong gap before the first button.)
+            # vertical_alignment="center" is Streamlit's native row centering
+            # (CSS align-items overrides don't take); the 5px it injects is
+            # killed by the margin:0 rule in inject_file_action_css().
+            cols = st.columns([3, 1, 1, 4], vertical_alignment="center")
+            with cols[0]:
+                st.markdown(name_html, unsafe_allow_html=True)
+            _help_missing = "File not found at its last known location"
+            with cols[1]:
+                if st.button("​", key=f"fileact_open_{key_scope}_{i}",
+                             help="Open file" if exists else _help_missing,
+                             disabled=not exists, use_container_width=True):
+                    open_file(abs_path)
+            with cols[2]:
+                if st.button("​", key=f"fileact_reveal_{key_scope}_{i}",
+                             help="Show in folder" if exists else _help_missing,
+                             disabled=not exists, use_container_width=True):
+                    reveal_in_folder(abs_path)
+            with cols[3]:
+                if folder_html:
+                    st.markdown(folder_html, unsafe_allow_html=True)
 
 
 # --- Base64 SVG icons for filetype pills ---
@@ -966,7 +1099,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
     st.markdown(
-        f'<details class="error-panel" open>'
+        f'<details class="error-panel">'
         f'<summary class="error-panel-header">'
         f'<div class="ep-header-row">'
         f'<img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>'

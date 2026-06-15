@@ -4,6 +4,7 @@ import re
 import ssl
 import uuid
 import shutil
+import hashlib
 import html
 import urllib.parse
 import traceback
@@ -330,6 +331,21 @@ class CanvasManager:
         else:
             if not api_url.startswith("http"):
                 api_url = "https://" + api_url
+            
+            # --- Auto-Resolve Vanity URLs ---
+            try:
+                import requests
+                # Attempt to follow redirects to find the true Canvas domain (e.g. .instructure.com)
+                res = requests.get(api_url, timeout=5)
+                for r in res.history:
+                    if 'instructure.com' in r.url:
+                        api_url = r.url
+                        break
+                if 'instructure.com' in res.url:
+                    api_url = res.url
+            except Exception:
+                pass
+
             from urllib.parse import urlparse
             try:
                 parsed = urlparse(api_url)
@@ -2656,15 +2672,22 @@ class CanvasManager:
                                 try:
                                     async with aiofiles.open(make_long_path(part_path), 'wb') as f:
                                         total_bytes = 0
+                                        # Hash the bytes as they stream past so the
+                                        # sync manifest gets an MD5 baseline without a
+                                        # second full read of the file. Created fresh
+                                        # per attempt (retries re-open this block), so
+                                        # it always reflects exactly the bytes written.
+                                        _dl_hasher = hashlib.md5()
                                         while True:
                                             # Instant cancel check INSIDE the chunk loop via decoupled callable
                                             if check_cancellation and check_cancellation():
                                                 download_interrupted = True
                                                 break
-                                            
+
                                             chunk = await response.content.read(1024*1024)
                                             if not chunk: break
                                             await f.write(chunk)
+                                            _dl_hasher.update(chunk)
                                             total_bytes += len(chunk)
                                             _attempt_bytes += len(chunk)
 
@@ -2742,7 +2765,8 @@ class CanvasManager:
                                             canvas_filename=getattr(file_obj, 'filename', ''),
                                             local_path=rel_path,
                                             canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
-                                            original_size=getattr(file_obj, 'size', 0)
+                                            original_size=getattr(file_obj, 'size', 0),
+                                            local_md5=_dl_hasher.hexdigest()
                                         )
                                     except Exception as db_err:
                                         log_debug(f"Warning: DB record failed for {filename}: {db_err}", debug_file)
