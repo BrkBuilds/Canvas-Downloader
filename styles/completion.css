@@ -201,6 +201,11 @@
     user-select: none;
     transition: background-color 0.15s ease;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    list-style: none;
+}
+
+.error-panel-header::-webkit-details-marker {
+    display: none;
 }
 
 .error-panel-header:hover {
@@ -213,11 +218,11 @@
     transition: transform 0.2s ease;
     flex-shrink: 0;
     opacity: 0.6;
-    transform: rotate(90deg);
+    transform: rotate(0deg);
 }
 
 details[open]>.error-panel-header .chevron {
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
 }
 
 .error-panel-header .ep-header-row {
@@ -415,8 +420,8 @@ a.err-link-btn svg {
 
 /* --- Retry Button (Premium) --- */
 div[class*="st-key-"][class*="_retry_failed_btn"] button {
-    background: linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%) !important;
-    border: none !important;
+    background: #d97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
     border-radius: 8px !important;
@@ -639,9 +644,12 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p {
     font-size: 0.92em !important;
 }
 
-/* Align Open Folder button with title text - fixed pixel indent, screen-size independent */
-div[class*="st-key-dl_fc_"] [data-testid="stButton"],
-div[class*="st-key-sync_complete_fc_"] [data-testid="stButton"] {
+/* Align Open Folder button with title text - fixed pixel indent, screen-size
+   independent. Scoped to the Open Folder button key (`*_open_*`) ONLY so it does
+   NOT leak onto the per-file Open/Reveal action buttons (`fileact_*`), which live
+   inside this same folder card and must hug their filename like the history rows. */
+div[class*="st-key-dl_open_"] [data-testid="stButton"],
+div[class*="st-key-sync_complete_open_"] [data-testid="stButton"] {
     margin-left: 29px !important;
 }
 
@@ -820,8 +828,9 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stExpanderDetails"] {
 .skip-panel {
     background: #1a1a1a;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    margin: 10px 0 8px 0;
+    border-radius: 0 0 8px 8px;
+    margin: 0 0 8px 0;
+    border-top: none;
     overflow: hidden;
 }
 
@@ -855,11 +864,11 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stExpanderDetails"] {
     transition: transform 0.2s ease;
     flex-shrink: 0;
     opacity: 0.65;
-    transform: rotate(90deg);
+    transform: rotate(0deg);
 }
 
 details[open] > .skip-panel-header .sp-chevron {
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
 }
 
 .skip-panel-header .sp-title {
@@ -908,7 +917,7 @@ details[open] > .skip-panel-header .sp-chevron {
 .skip-file-name {
     font-size: 0.88em;
     color: #e2e8f0;
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;

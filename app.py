@@ -552,7 +552,8 @@ with _main_content.container():
         if 'courses_to_download' not in st.session_state or 'current_course_index' not in st.session_state:
             _is_sync = st.session_state.get('current_mode') == 'sync'
             _err_msg = 'Sync state not initialized.' if _is_sync else 'Download state not initialized.'
-            st.error(f'{_err_msg} Please go back and try again.')
+            from ui.amber_notice import render_error_notice
+            render_error_notice(f'{_err_msg} Please go back and try again.')
             _btn_label = 'Go Back to Sync Hub' if _is_sync else 'Go Back to Settings'
             if st.button(_btn_label, key="page_nav_back_to_settings"):
                 st.session_state['step'] = 1 if _is_sync else 2
@@ -568,12 +569,14 @@ with _main_content.container():
             # upcoming system dialogs are expected and one-time. Rendered for the
             # whole first run; the flag is re-armed False at every run start.
             if st.session_state.get('_tcc_batch_active'):
-                st.info(
-                    "**First-time macOS setup:** macOS will show a few one-time permission "
+                from ui.amber_notice import render_info_notice
+                render_info_notice(
+                    "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
                     "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
-                    "and folder access). Click **Allow / OK** on each - Canvas Downloader uses them "
+                    "and folder access). Click <b>Allow / OK</b> on each - Canvas Downloader uses them "
                     "only to convert Office files to PDF on your own Mac.",
                     icon="🔐",
+                    allow_html=True,
                 )
             if 'start_time' not in st.session_state:
                 st.session_state['start_time'] = time.time()

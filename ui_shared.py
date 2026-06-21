@@ -328,15 +328,6 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
                 f'</div>'
             )
 
-        
-    if size_skipped_count > 0:
-        _sw = 'file' if size_skipped_count == 1 else 'files'
-        notes_html += (
-            f'<div class="card-note">'
-            f'{size_skipped_count} {_sw} skipped because they exceeded the {size_limit_mb} MB limit.'
-            f'</div>'
-        )
-
     if card_class == 'failure':
         bg_color = 'rgba(127, 29, 29, 0.30)'
         border_color = 'rgba(239, 68, 68, 0.45)'
@@ -377,6 +368,11 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
             " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
             "%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
         )
+        _FUNNEL_SVG = (
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+            " fill='%239ca3af' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+            "%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E"
+        )
         _skip_word = 'file' if size_skipped_count == 1 else 'files'
         _rows_html = ''
         for _sf in size_skipped_files:
@@ -404,7 +400,16 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
                 f'{_size_badge}'
                 f'</div>'
             )
+        
+        _header_html = (
+            f'<div style="display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1px solid rgba(255, 255, 255, 0.15);border-bottom:none;border-radius:8px 8px 0 0;padding:12px 16px;margin:18px 0 0 0;">'
+            f'<img src="{_FUNNEL_SVG}" style="width:16px;height:16px;opacity:0.8;"/>'
+            f'<span style="font-size:0.92em;color:#e2e8f0;font-weight:500;"><b>{size_skipped_count}</b> {_skip_word} skipped because they exceeded the <b>{size_limit_mb} MB limit</b>.</span>'
+            f'</div>'
+        )
+
         st.markdown(
+            f'{_header_html}'
             f'<details class="skip-panel">'
             f'<summary class="skip-panel-header">'
             f'<div class="sp-header-row">'
@@ -413,7 +418,7 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
             f'</div>'
             f'</summary>'
             f'<div class="skip-panel-body">'
-            f'<div class="sp-subtitle">These files are marked as ignored and won\'t appear as new during sync. You can manage them in the Sync Hub.</div>'
+            f'<div class="sp-subtitle">These files are marked as ignored and won\'t appear as new during sync. You can manage them in the <b>Sync Mode front page</b>, with the <b>Ignored Files</b> button.</div>'
             f'<div class="skip-file-list">{_rows_html}</div>'
             f'</div>'
             f'</details>',
@@ -490,14 +495,14 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
         with st.container(border=True, key=f"{key_prefix}_fc_{idx}"):
             st.markdown(header_html, unsafe_allow_html=True)
             if records:
-                # Interactive list: per-file Open / Reveal + subfolder chip.
+                # Interactive list: per-file Open / Reveal + subfolder chip,
+                # grouped by category exactly like the sync-history panel.
                 # Open by default for small batches (the common Quick Sync case
                 # where the student wants the files immediately); keep big syncs
                 # collapsed so the completion screen stays tidy.
                 with st.expander("Files added", expanded=len(records) <= 12):
-                    render_synced_file_rows(
+                    render_course_file_breakdown(
                         records, folder_path, key_scope=f"{key_prefix}_{idx}",
-                        sort_mode='folder',
                     )
             elif show_files_expander and files:
                 with st.expander("Files added"):
@@ -766,6 +771,57 @@ def render_synced_file_rows(files: list, course_root: str, key_scope: str,
                     st.markdown(folder_html, unsafe_allow_html=True)
 
 
+# Synced-file categories, in display order: (record-key, header, HELP_ICONS-key).
+# Shared by the sync completion screen and the sync-history panel so both group
+# and label files identically.
+SYNC_FILE_CATEGORIES = [
+    ('new',       'New Files Added',          'cat_new'),
+    ('updated',   'Updates Overwritten',      'cat_update'),
+    ('protected', 'Modified Files Protected', 'cat_miss'),
+]
+
+
+def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
+    """Render ONE course's synced files grouped by category, each with a header.
+
+    This is the single source of truth for the per-file breakdown shown on BOTH
+    the sync completion screen and the sync-history panel - guaranteeing the rows
+    (filetype icon + name + Open/Reveal + destination chip) and the category
+    headers are pixel-identical in both places.
+
+    ``files`` is a list of ``{'name', 'rel', 'category'}`` records; ``course_root``
+    is the absolute course folder (abs path = ``course_root / rel``). Call
+    :func:`inject_file_action_css` once before using this.
+    """
+    files = [fi for fi in (files or []) if isinstance(fi, dict)]
+    if not files:
+        return
+
+    by_cat: dict[str, list] = {}
+    for fi in files:
+        by_cat.setdefault(fi.get('category', 'new'), []).append(fi)
+
+    for cat_key, cat_title, cat_icon in SYNC_FILE_CATEGORIES:
+        cfiles = by_cat.get(cat_key)
+        if not cfiles:
+            continue
+        _desc = ('Your unedited local copies were replaced with the newer versions'
+                 if cat_key == 'updated' else
+                 'Saved alongside the files you had edited'
+                 if cat_key == 'protected' else '')
+        _desc_html = (f"<div style='margin-left:-26px;color:#8b949e;font-size:0.75rem;'>{_desc}</div>"
+                      if _desc else "")
+        _hdr = (f"<div style='margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;'>"
+                f"{HELP_ICONS[cat_icon]} {cat_title} "
+                f"<span style='color:#b1bac4;font-weight:500;'>({len(cfiles)})</span></div>"
+                + _desc_html)
+        render_synced_file_rows(
+            cfiles, course_root,
+            key_scope=f"{key_scope}_{cat_key}",
+            sort_mode='folder', header_html=_hdr,
+        )
+
+
 # --- Base64 SVG icons for filetype pills ---
 _FILETYPE_SVGS = {
     'pdf': "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fca5a5'/%3E%3Ctext x='7' y='17' font-size='6' font-weight='bold' fill='white'%3EPDF%3C/text%3E%3C/svg%3E",
@@ -1005,7 +1061,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             subtitle = "We tried to download these files again, with no success. Please try downloading these files manually via Canvas."
             subtitle_class = 'err-col-subtitle err-col-subtitle-failed'
         else:
-            subtitle = "These files timed out or failed. Click the <b>Retry Failed Files</b> button below to try grabbing them again."
+            subtitle = "These files timed out or failed. Click the <b>Retry</b> button below to try grabbing them again."
             subtitle_class = 'err-col-subtitle'
         rows = ''.join(_err_row_html(e) for e in actionable)
         left_col_html = (
@@ -1132,8 +1188,9 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             and err.context.get('filepath')
             and getattr(err, 'error_type', '') != 'LTI/Media Stream'
         )
-        btn_text = "Retry Failed Files" if retry_failed else (
-            f"Retry Failed Files ({retriable_count})" if retriable_count > 0 else "Retry Failed Files"
+        _dl_word = 'download' if retriable_count == 1 else 'downloads'
+        btn_text = "Retry failed downloads" if retry_failed else (
+            f"Retry {retriable_count} failed {_dl_word}" if retriable_count > 0 else "Retry failed downloads"
         )
         retry_tooltip = (
             "We couldn't download these files after retrying. "
@@ -1268,10 +1325,12 @@ def error_log_dialog(log_paths):
                         st.markdown(f"**📁 {log_path.parent.name}**")
                         st.code(content, language="text")
                 except Exception as e:
-                    st.warning(f"Could not read {log_path}: {e}")
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(f"Could not read {log_path}: {e}")
 
         if not found_any:
-            st.info("No error log files found on disk.")
+            from ui.amber_notice import render_info_notice
+            render_info_notice("No error log files found on disk.")
 
     if st.button("Close", type="primary", use_container_width=True):
         st.rerun(scope="app")

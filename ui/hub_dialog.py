@@ -469,7 +469,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     if layer == 'layer_1':
         groups = mgr.load_groups()
         if not groups:
-            st.info("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
+            from ui.amber_notice import render_info_notice
+            render_info_notice("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
             if st.button("Close", type="secondary", use_container_width=True, key="hub_close_empty"):
                 hub_cleanup()
                 try:
@@ -514,7 +515,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             filtered_groups = groups
 
         if not filtered_groups:
-            st.info(f"No {'pairs' if _vm == 'Pairs' else 'groups'} saved yet.")
+            from ui.amber_notice import render_info_notice
+            render_info_notice(f"No {'pairs' if _vm == 'Pairs' else 'groups'} saved yet.")
 
         # Hoist missing folder CSS
         pass
@@ -755,7 +757,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         groups = mgr.load_groups()
         group = next((g for g in groups if g.get('group_id') == gid), None)
         if not group:
-            st.error("Group not found.")
+            from ui.amber_notice import render_error_notice
+            render_error_notice("Group not found.")
             st.button("\u2b05\ufe0f Back", key="hub_back_l2_err", type="tertiary",
                       on_click=change_hub_layer, kwargs={'target_layer': 'layer_1'})
             return
@@ -829,7 +832,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             is_adding = st.session_state.get('hub_is_adding_new_pair', False)
 
             if not pairs and not is_adding:
-                st.info("No courses in this group yet. Add one below.")
+                from ui.amber_notice import render_info_notice
+                render_info_notice("No courses in this group yet. Add one below.")
 
             for p_idx, pair in enumerate(pairs):
                 # === INLINE EDIT MODE ===
@@ -907,7 +911,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             # Duplicate pair detection
                             candidates = [p for i, p in enumerate(pairs) if i != p_idx]
                             if any(p.get('local_folder') == temp_folder and p.get('course_id') == temp_course_id for p in candidates):
-                                st.warning('⚠️ This folder is already paired with this course in this group.')
+                                from ui.amber_notice import render_amber_notice
+                                render_amber_notice('⚠️ This folder is already paired with this course in this group.')
 
                             # Manifest binding notice
                             _bound_id = SyncManager.peek_bound_course_id(temp_folder)
@@ -1078,7 +1083,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
                         # Duplicate pair detection
                         if any(p.get('local_folder') == add_folder and p.get('course_id') == add_course_id for p in pairs):
-                            st.warning('⚠️ This folder is already paired with this course in this group.')
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice('⚠️ This folder is already paired with this course in this group.')
 
                         # Manifest binding notice
                         _bound_id = SyncManager.peek_bound_course_id(add_folder)
@@ -1222,7 +1228,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
 
         if not visible_courses:
-            st.warning("No courses found with the current filter.")
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice("No courses found with the current filter.")
             return
 
         # --- CBS Filters (centralized) ---
@@ -1277,7 +1284,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                           '_pop_keys': ['hub_rescue_group_id', 'hub_rescue_pairs',
                                         'hub_rescue_missing', 'hub_rescue_skipped', 'rescue_paths']})
 
-        st.warning(
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
             "\u26a0\ufe0f Some folders could not be found. They may have been "
             "moved or deleted. Please remap them to continue."
         )

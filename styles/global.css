@@ -873,10 +873,22 @@ div.st-key-btn_convert_video button::after {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
     }
 
-    /* 13. Missing-folder pair cards - distinctive warning border */
-    div[class*="st-key-sync_pair_card_missing_"] {
-        border-color: rgba(239, 68, 68, 0.5) !important;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
+    /* 13. Missing-folder pair cards - distinctive warning border and darkened background */
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] {
+        background: linear-gradient(180deg, #181a1f 0%, #1e2126 100%) !important;
+    }
+
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"],
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
+        border: 1px solid rgba(202, 138, 4, 0.85) !important;
+        box-shadow: none !important;
+    }
+
+    /* Dim the text inside missing-folder cards to make them look disabled */
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] p,
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] div,
+    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] strong {
+        color: rgba(255, 255, 255, 0.5) !important;
     }
 
     /* 14. Fix summary marker (chevron) size and spacing in WebKit (Safari/macOS) */

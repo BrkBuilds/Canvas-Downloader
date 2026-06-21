@@ -786,11 +786,17 @@ def _sync_pairs_section(courses, course_names, course_options):
                     # Pre-compute save state for inline button
                     _pair_sig = (pair.get('course_id'), pair.get('local_folder', ''))
                     _pair_already_saved = _pair_sig in _saved_pair_sigs
-                    _save_help = (
-                        "This pair is saved - go to Saved Groups & Pairs to see, rename, or edit."
-                        if _pair_already_saved
-                        else "Save as Pair"
-                    )
+                    
+                    if not folder_exists:
+                        _is_save_disabled = True
+                        _save_help = "Cannot save pair: folder could not be located."
+                    else:
+                        _is_save_disabled = _pair_already_saved
+                        _save_help = (
+                            "This pair is saved - go to Saved Groups & Pairs to see, rename, or edit."
+                            if _pair_already_saved
+                            else "Save as Pair"
+                        )
 
                     # Card container with 💾 button INSIDE
                     # Use a different key suffix for missing-folder cards so CSS can apply red border
@@ -799,7 +805,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         # Title rendered first, naturally
                         st.markdown(f"**{'Course: '} {display_name}**")
                         # Save button rendered after - CSS absolute-positions it to top-right
-                        if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_pair_already_saved,
+                        if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_is_save_disabled,
                                      help=_save_help):
                             _deferred_save_pair = pair
                         st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
@@ -828,7 +834,8 @@ def _sync_pairs_section(courses, course_names, course_options):
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
                     ignored_help = "No files have been ignored for this course." if ignored_count == 0 else None
-                    if st.button(f"Ignored Files \u00A0:gray[({ignored_count})]", key=f"ignored_btn_{idx}",
+                    btn_text = f"Ignored Files \u00A0:gray[({ignored_count})]" if ignored_count > 0 else "Ignored Files"
+                    if st.button(btn_text, key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
                         course_data = ignored_by_course.get(pair['course_id'])
                         if course_data:
@@ -1831,7 +1838,8 @@ def _render_sync_history():
                     filtered_history.append(entry)
                 
                 if not filtered_history:
-                    st.info("No history matches your filter.")
+                    from ui.amber_notice import render_info_notice
+                    render_info_notice("No history matches your filter.")
                     return
 
                 # Group by date
@@ -1863,7 +1871,7 @@ def _render_sync_history():
                 # forbids inside the outer 'Sync History' expander.)
                 from ui_shared import (
                     _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT,
-                    inject_file_action_css, render_synced_file_rows,
+                    inject_file_action_css, render_course_file_breakdown,
                 )
                 import os as _os
                 from collections import defaultdict as _dd
@@ -2123,29 +2131,10 @@ def _render_sync_history():
                                                         f"{HELP_ICONS['folder']} {_cname}</div>",
                                                         unsafe_allow_html=True,
                                                     )
-                                                by_cat = {}
-                                                for f in files:
-                                                    if isinstance(f, dict):
-                                                        by_cat.setdefault(f.get('category', 'new'), []).append(f)
-                                                for cat_key, cat_title, cat_icon in _SYNC_HISTORY_CATEGORIES:
-                                                    cfiles = by_cat.get(cat_key)
-                                                    if not cfiles:
-                                                        continue
-                                                    _desc = ('Your unedited local copies were replaced with the newer versions'
-                                                             if cat_key == 'updated' else
-                                                             'Saved alongside the files you had edited'
-                                                             if cat_key == 'protected' else '')
-                                                    _desc_html = (f"<div style='margin-left:-26px;color:#8b949e;font-size:0.75rem;'>{_desc}</div>"
-                                                                  if _desc else "")
-                                                    _hdr = (f"<div style='margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;'>"
-                                                            f"{HELP_ICONS[cat_icon]} {cat_title} "
-                                                            f"<span style='color:#b1bac4;font-weight:500;'>({len(cfiles)})</span></div>"
-                                                            + _desc_html)
-                                                    render_synced_file_rows(
-                                                        cfiles, course_root,
-                                                        key_scope=f"synchist_{run_seq}_{gi}_{cat_key}",
-                                                        sort_mode='folder', header_html=_hdr,
-                                                    )
+                                                render_course_file_breakdown(
+                                                    files, course_root,
+                                                    key_scope=f"synchist_{run_seq}_{gi}",
+                                                )
                                         elif count > 0:
                                             categorized_files = entry.get('categorized_files') or {}
                                             if not isinstance(categorized_files, dict):

@@ -1152,7 +1152,7 @@ def render_login_page(fetch_courses_fn):
         st.markdown(f"""
         <div class="login-portal-container">
             <div class="login-brand-header">
-                <img class="login-brand-logo" src="data:image/png;base64,{icon_b64}"/>
+                <img class="login-brand-logo" src="data:image/png;base64,{icon_b64}" style="width: 56px; height: 56px;" />
                 <div class="login-brand-title">Canvas Downloader</div>
                 <div class="login-brand-subtitle">Your Canvas courses.<br/>Downloaded. Up to date. Optimized for AI.</div>
                 <div class="login-brand-header-separator"></div>
@@ -1798,7 +1798,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                             os.unlink(_tmp_config)
                     except OSError:
                         pass
-                    st.error(f"Could not save settings: {e}")
+                    from ui.amber_notice import render_error_notice
+                    render_error_notice(f"Could not save settings: {e}")
 
                 st.session_state.pop('_temp_default_path', None)
                 if _changed:
