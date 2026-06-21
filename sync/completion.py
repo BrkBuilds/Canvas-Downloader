@@ -237,7 +237,8 @@ def show_sync_complete():
             if res.get('res_data') and 'result' in res['res_data'] and hasattr(res['res_data']['result'], 'structural_errors')
         )
         if total_structural_errors > 0:
-            st.warning(
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
                 f"{total_structural_errors} module(s) or folder(s) could not be fetched from Canvas due to connection/server errors. Their files are consequently missing from the syncing checklist and cannot be isolated for a targeted retry. A full Rescan is recommended later.",
                 icon="⚠️"
             )

@@ -507,7 +507,8 @@ def show_analysis_review(on_confirm_sync):
 
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
-        st.error("Analysis failed. Please try again.")
+        from ui.amber_notice import render_error_notice
+        render_error_notice("Analysis failed. Please try again.")
         if st.button('Back', key="page_nav_back_sr_err"):
             st.session_state['step'] = 1
             st.rerun()
@@ -1770,7 +1771,8 @@ def show_analysis_review(on_confirm_sync):
                             total_bytes += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
 
                     if total_count == 0:
-                        st.info('Nothing to sync - all files are up to date!')
+                        from ui.amber_notice import render_info_notice
+                        render_info_notice('Nothing to sync - all files are up to date!')
                         st.stop()
 
                     # Disk space check - partition bytes by target drive so
@@ -1803,7 +1805,8 @@ def show_analysis_review(on_confirm_sync):
                         if avail_mb == 0:  # capture first drive's values for the confirmation dialog
                             avail_mb, total_mb = _avail_mb, _total_mb
                         if not _has_space:
-                            st.error(f'Insufficient disk space on drive {_drv or _rep_folder}. Need at least 1 GB free to proceed safely.')
+                            from ui.amber_notice import render_error_notice
+                            render_error_notice(f'Insufficient disk space on drive {_drv or _rep_folder}. Need at least 1 GB free to proceed safely.')
                             _disk_ok = False
                     if not _disk_ok:
                         st.stop()
