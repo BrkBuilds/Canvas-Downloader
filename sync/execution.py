@@ -104,6 +104,18 @@ def _build_synced_groups(sync_selections, synced_details):
     degrades to ``rel == name`` rather than raising into the sync finalizer.
     """
     import urllib.parse as _urlparse
+    import unicodedata as _ud
+
+    def _norm(s):
+        # Canonical NFC form so a Canvas-supplied name and the on-disk name that
+        # differ ONLY by Unicode normalization (e.g. Danish 'æ'/'ø'/'å' stored
+        # NFD vs NFC) still resolve to the same key. Without this the lookup
+        # misses and the file silently loses its subfolder path.
+        try:
+            return _ud.normalize('NFC', s)
+        except Exception:
+            return s
+
     groups = []
     for sel in sync_selections:
         pair_idx = sel.get('pair_idx')
@@ -148,11 +160,19 @@ def _build_synced_groups(sync_selections, synced_details):
                         if fn.startswith('._') or fn == '.canvas_sync.db':
                             continue
                         rel = os.path.relpath(os.path.join(dirpath, fn), root_str).replace('\\', '/')
-                        name_index.setdefault(fn, []).append(rel)
+                        # Key on the NFC-normalized basename so the lookup below
+                        # is resilient to NFC/NFD mismatches between disk and the
+                        # Canvas-supplied filename.
+                        name_index.setdefault(_norm(fn), []).append(rel)
             except Exception:
                 name_index = {}
 
         files = []
+        # Paths already assigned to an earlier record this course, so two synced
+        # entries that share a basename but genuinely live in DIFFERENT subfolders
+        # each resolve to their OWN path instead of both collapsing onto the
+        # freshest copy (which would hide one behind a duplicate-looking row).
+        used_rels: set[str] = set()
         for nm in names:
             if "_NewVersion" in nm:
                 category = 'protected'
@@ -162,20 +182,24 @@ def _build_synced_groups(sync_selections, synced_details):
                 category = 'new'
 
             rel = nm
-            candidates = name_index.get(nm)
+            candidates = name_index.get(_norm(nm))
             if candidates:
-                if len(candidates) == 1:
-                    rel = candidates[0]
+                # Prefer candidates not yet claimed by a prior record; only fall
+                # back to the full list if every copy is already spoken for.
+                pool = [c for c in candidates if c not in used_rels] or candidates
+                if len(pool) == 1:
+                    rel = pool[0]
                 else:
                     # Same basename in multiple subfolders - prefer the freshest,
                     # which is the copy this run just wrote.
                     try:
                         rel = max(
-                            candidates,
+                            pool,
                             key=lambda r: os.path.getmtime(os.path.join(str(course_root), r)),
                         )
                     except Exception:
-                        rel = candidates[0]
+                        rel = pool[0]
+                used_rels.add(rel)
 
             files.append({'name': nm, 'rel': rel, 'category': category})
 
@@ -252,12 +276,14 @@ def run_sync():
     # First-run macOS permission batch is in flight: tell the user the upcoming
     # system dialogs are expected and one-time (mirrors the download flow).
     if st.session_state.get('_tcc_batch_active'):
-        st.info(
-            "**First-time macOS setup:** macOS will show a few one-time permission "
+        from ui.amber_notice import render_info_notice
+        render_info_notice(
+            "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
             "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
-            "and folder access). Click **Allow / OK** on each - Canvas Downloader uses them "
+            "and folder access). Click <b>Allow / OK</b> on each - Canvas Downloader uses them "
             "only to convert Office files to PDF on your own Mac.",
             icon="🔐",
+            allow_html=True,
         )
 
     sync_selections = st.session_state.get('sync_selections') or []
@@ -382,6 +408,14 @@ def run_sync():
         # Track synced files per pair for the results screen dropdowns
         # Key: pair_idx (int), Value: list of strings (filenames)
         synced_details = defaultdict(list)
+        # Parallel set of FINAL relative paths already recorded this run, per
+        # pair. The on-disk path (computed AFTER conflict resolution) is the
+        # single source of truth for "what files exist": a file that reaches the
+        # download queue from two sources (e.g. a regular File AND a secondary
+        # attachment of the same physical file) overwrites the same path, so it
+        # must be counted and listed ONCE. Two same-named files that land in
+        # DIFFERENT folders have different paths and are correctly both kept.
+        synced_rel_paths = defaultdict(set)
         retry_selections = []
         
         # certifi-backed SSL context: frozen macOS builds have no OpenSSL default
@@ -967,9 +1001,13 @@ def run_sync():
                             if is_url_ext or is_html_ext:
                                 rel_path = str(filepath.relative_to(local_path)).replace('\\', '/')
                                 sync_mgr.add_file_to_manifest(manifest, file, rel_path)
-                                synced_counter[0] += 1
-                                st.session_state['sync_cancelled_file_count'] = synced_counter[0]
-                                synced_details[pair_idx].append(display_file_name)
+                                # One record per final on-disk path (see binary-download note).
+                                _rel_key = os.path.normcase(rel_path)
+                                if _rel_key not in synced_rel_paths[pair_idx]:
+                                    synced_rel_paths[pair_idx].add(_rel_key)
+                                    synced_counter[0] += 1
+                                    st.session_state['sync_cancelled_file_count'] = synced_counter[0]
+                                    synced_details[pair_idx].append(display_file_name)
                                 terminal_log.append(log_line('success', display_file_name, icon=file_icon_svg(display_file_name)))
                                 log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                 if _debug_file:
@@ -1105,12 +1143,19 @@ def run_sync():
                                                     # Only commit to DB AFTER file is physically complete on disk
                                                     rel_path = str(filepath.relative_to(local_path)).replace('\\', '/')
                                                     sync_mgr.add_file_to_manifest(manifest, file, rel_path)
-                                                    synced_counter[0] += 1
-                                                    st.session_state['sync_cancelled_file_count'] = synced_counter[0]
-                                                    
-                                                    # Track success for UI dropdown
+
+                                                    # Count + list each final on-disk path ONCE. A second queue
+                                                    # entry that resolved to this exact path (same physical file
+                                                    # reached via two sources, e.g. regular File + attachment)
+                                                    # just overwrote it - so it must not inflate "files synced"
+                                                    # nor show a duplicate row on the completion screen.
                                                     final_name = filepath.name
-                                                    synced_details[pair_idx].append(final_name)
+                                                    _rel_key = os.path.normcase(rel_path)
+                                                    if _rel_key not in synced_rel_paths[pair_idx]:
+                                                        synced_rel_paths[pair_idx].add(_rel_key)
+                                                        synced_counter[0] += 1
+                                                        st.session_state['sync_cancelled_file_count'] = synced_counter[0]
+                                                        synced_details[pair_idx].append(final_name)
                                                     terminal_log.append(log_line('success', final_name, icon=file_icon_svg(final_name)))
                                                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                                                     if _debug_file:
