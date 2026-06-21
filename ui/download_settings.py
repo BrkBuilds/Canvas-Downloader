@@ -1731,11 +1731,13 @@ div.st-key-review_browse_folder button:hover {
                         _probe.write_bytes(b'ok')
                         _probe.unlink()
                     except Exception as _wp_err:
-                        st.error(
-                            f"⚠️ Cannot write to the selected download folder.\n\n"
-                            f"**Path:** `{_dl_path}`\n\n"
-                            f"**Reason:** {_wp_err}\n\n"
-                            f"Please select a different folder with write permissions."
+                        from ui.amber_notice import render_error_notice
+                        render_error_notice(
+                            f"Cannot write to the selected download folder.<br><br>"
+                            f"<b>Path:</b> <code>{_dl_path}</code><br><br>"
+                            f"<b>Reason:</b> {_wp_err}<br><br>"
+                            f"Please select a different folder with write permissions.",
+                            allow_html=True
                         )
                         st.stop()
 
@@ -1807,7 +1809,8 @@ div.st-key-review_browse_folder button:hover {
                     step2_container.empty() # Clear EVERYTHING in Step 2
                     st.rerun()
                 except Exception as e:
-                    st.error(f"Error initializing: {e}")
+                    from ui.amber_notice import render_error_notice
+                    render_error_notice(f"Error initializing: {e}")
 
         with col_back:
             if st.button('Back', use_container_width=True, key='action_dl_back'):

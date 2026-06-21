@@ -651,7 +651,8 @@ def select_course_dialog_inner(courses, current_selected_id, ):
         visible_courses = [c for c in courses if getattr(c, 'is_favorite', False)]
 
     if not visible_courses:
-        st.warning('No courses found.')
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice('No courses found.')
         if st.button("Close"):
              st.rerun(scope="app")
         return
@@ -852,7 +853,8 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             for cid, cname in course_names.items():
                 if cname == selected_course_name:
                     if any(p['local_folder'] == pending_folder and p['course_id'] == cid for p in candidates):
-                        st.warning('⚠️ This folder is already paired with this course.')
+                        from ui.amber_notice import render_amber_notice
+                        render_amber_notice('⚠️ This folder is already paired with this course.')
                     break
 
 

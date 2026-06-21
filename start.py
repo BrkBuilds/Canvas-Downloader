@@ -32,8 +32,6 @@ import threading
 import time
 import logging
 
-from streamlit.web import cli as stcli
-
 logger = logging.getLogger(__name__)
 
 _MAX_LAUNCH_ATTEMPTS = 3   # Windows auto-retry limit
@@ -107,6 +105,7 @@ def _start_streamlit_server(port: str, failed_event: threading.Event) -> None:
         if threading.current_thread() is not threading.main_thread():
             signal.signal = lambda *_args, **_kwargs: None
 
+        from streamlit.web import cli as stcli
         stcli.main()
 
     except SystemExit:
@@ -305,6 +304,7 @@ if __name__ == "__main__":
     webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
+        background_color='#0f1117'
     )
 
     def _boot() -> None:

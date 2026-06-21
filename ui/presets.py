@@ -269,7 +269,8 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
         if _active_tab == 'user':
             _user_presets = mgr.load_presets()
             if not _user_presets:
-                st.info("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
+                from ui.amber_notice import render_info_notice
+                render_info_notice("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
             for _up in _user_presets:
                 _render_preset_card(mgr, _up, is_builtin=False,
                                     b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)

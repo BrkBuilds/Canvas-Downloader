@@ -342,7 +342,8 @@ def render_course_list(
         Returns ``None``.
     """
     if not courses:
-        st.info('No courses match the selected filters.')
+        from ui.amber_notice import render_info_notice
+        render_info_notice('No courses match the selected filters.')
         if multi_select:
             return []
         else:
@@ -837,7 +838,8 @@ def render_course_selector(fetch_courses_fn):
 
     if not courses:
         with _courses_area.container():
-            st.warning('No courses found.')
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice('No courses found.')
         st.stop()
 
     # --- Replace spinner with fragment: CBS filters + action buttons + course list ---

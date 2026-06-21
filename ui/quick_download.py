@@ -1111,10 +1111,12 @@ div.st-key-page_nav_quick_back button:hover {{
                 _probe.write_bytes(b'ok')
                 _probe.unlink()
             except Exception as _wp_err:
-                st.error(
-                    f"Cannot write to the selected folder.  \n"
-                    f"**Reason:** {_wp_err}  \n"
-                    f"Please choose a different folder."
+                from ui.amber_notice import render_error_notice
+                render_error_notice(
+                    f"Cannot write to the selected folder.<br>"
+                    f"<b>Reason:</b> {_wp_err}<br>"
+                    f"Please choose a different folder.",
+                    allow_html=True
                 )
                 st.stop()
 
