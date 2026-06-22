@@ -23,7 +23,7 @@ from ui_helpers import (
     format_file_size,
     esc,
 )
-from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT
+from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
 
 # ---- Confirmation dialog ----
 
@@ -75,7 +75,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted(file_items))}</ul>"
     sorted_folders = sorted(list(folder_set))
     _folder_lis = "".join(
-        "<li><span class='li-icon'>📁</span><span class='li-text'>" + esc(p) + "</span></li>"
+        f"<li>{SVG_FOLDER_YELLOW}<span class='li-text'>" + esc(p) + "</span></li>"
         for p in sorted_folders
     )
     folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{_folder_lis}</ul>"
@@ -100,7 +100,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             f'<div class="stat-row-dropdown">'
             f'<details>'
             f'<summary>'
-            f'<div class="stat-left">📁 <span class="stat-label">Destination:</span></div>'
+            f'<div class="stat-left" style="display: flex; align-items: center;">{SVG_FOLDER_YELLOW} <span class="stat-label">Destination:</span></div>'
             f'<div class="stat-value">{len(folder_set)} courses <span class="arrow-icon"></span></div>'
             f'</summary>'
             f'<div class="dropdown-list">{folder_list_html}</div>'
@@ -112,7 +112,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         _sf0 = esc(sorted_folders[0])
         dest_html = (
             f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
-            f'<div style="font-weight: 600; color: #e2e8f0; white-space: nowrap;">📁 Destination:</div>'
+            f'<div style="font-weight: 600; color: #e2e8f0; white-space: nowrap; display: flex; align-items: center;">{SVG_FOLDER_YELLOW} Destination:</div>'
             f'<div title="{_sf0}" style="text-align: right; font-weight: 600; color: #f8fafc; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'
             f'{_sf0}'
             f'</div>'
@@ -126,15 +126,12 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     _css_block = (
         f'<style>'
         f'/* Override modal styles */'
-        f'div[data-testid="stDialog"] > div[data-testid="stAppViewBlockContainer"] > div > [data-testid="stVerticalBlock"] {{'
-        f'padding: 25px !important;'
-        f'gap: 0 !important;'
+        f'div[data-testid="stDialog"] div[role="dialog"] > div:first-child {{'
+        f'padding-top: 12px !important;'
+        f'padding-bottom: 12px !important;'
         f'}}'
-        f'div[data-testid="stDialog"] h2 {{'
-        f'margin: 0 0 12px 0 !important;'
-        f'font-size: 1.6rem !important;'
-        f'font-weight: 700 !important;'
-        f'color: {theme.WHITE} !important;'
+        f'div[data-testid="stDialog"] > div[data-testid="stAppViewBlockContainer"] > div > [data-testid="stVerticalBlock"] {{'
+        f'gap: 0 !important;'
         f'}}'
         f'.sync-subtitle {{'
         f'color: rgba(255, 255, 255, 0.6);'
@@ -246,6 +243,36 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'border: 1px solid rgba(255, 255, 255, 0.1) !important;'
         f'color: {theme.WHITE} !important;'
         f'}}'
+        f'div[data-testid="stDialog"] div.st-key-cancel_sync_dialog_btn button {{'
+        f'background-color: rgba(255, 255, 255, 0.07) !important;'
+        f'background-image: none !important;'
+        f'border: 1px solid rgba(255, 255, 255, 0.2) !important;'
+        f'color: #ffffff !important;'
+        f'font-weight: 500 !important;'
+        f'display: flex !important;'
+        f'align-items: center !important;'
+        f'justify-content: center !important;'
+        f'gap: 8px !important;'
+        f'transition: all 0.15s ease !important;'
+        f'box-shadow: none !important;'
+        f'}}'
+        f'div[data-testid="stDialog"] div.st-key-cancel_sync_dialog_btn button::before {{'
+        f'content: "" !important;'
+        f'display: block !important;'
+        f'width: 17px !important;'
+        f'height: 17px !important;'
+        f'min-width: 17px !important;'
+        f'background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 8L2 12L6 16\'/%3E%3Cpath d=\'M2 12H22\'/%3E%3C/svg%3E") !important;'
+        f'background-size: contain !important;'
+        f'background-repeat: no-repeat !important;'
+        f'background-position: center !important;'
+        f'flex-shrink: 0 !important;'
+        f'}}'
+        f'div[data-testid="stDialog"] div.st-key-cancel_sync_dialog_btn button:hover {{'
+        f'background-color: rgba(255, 255, 255, 0.13) !important;'
+        f'background-image: none !important;'
+        f'border-color: rgba(255, 255, 255, 0.3) !important;'
+        f'}}'
         f'/* Direct Left alignment and hanging indent for dropdown lists */'
         f'.dropdown-list ul li {{'
         f'margin: 0 0 4px 0 !important;'
@@ -301,14 +328,14 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'<div class="stat-row-dropdown">'
         f'<details>'
         f'<summary>'
-        f'<div class="stat-left">📄 <span class="stat-label">Files:</span></div>'
+        f'<div class="stat-left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.45em;height:1.45em;vertical-align:-0.3em;display:inline-block;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="rgba(255,255,255,0.85)"/><path d="M14 2v6h6" fill="rgba(255,255,255,0.4)"/></svg> <span class="stat-label">Files:</span></div>'
         f'<div class="stat-value">{count} files <span class="arrow-icon"></span></div>'
         f'</summary>'
         f'<div class="dropdown-list">{file_list_html}</div>'
         f'</details>'
         f'</div>'
         f'<div class="stat-row-static">'
-        f'<div class="stat-left">💾 <span class="stat-label">Total Size:</span></div>'
+        f'<div class="stat-left">{SVG_SAVE_COLORFUL} <span class="stat-label">Total Size:</span></div>'
         f'<div class="stat-value">{size}</div>'
         f'</div>'
         f'{dest_html}'
@@ -322,8 +349,12 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'</div>'
         f'</div>'
     )
-    st.html(_css_block)
-    st.markdown(html_content, unsafe_allow_html=True)
+    st.markdown(_css_block, unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size: 1.6rem; font-weight: 700; color: #ffffff; margin-top: -70px; margin-bottom: 4px;">Confirm Sync</div>'
+        + html_content,
+        unsafe_allow_html=True,
+    )
 
     # Amber notice when disk space is tight (download > 70% of remaining space)
     if fill_percent > 70:

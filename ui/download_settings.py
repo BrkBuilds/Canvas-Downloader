@@ -34,7 +34,7 @@ from core.state_registry import (
     NOTEBOOK_SUB_KEYS,
     TOTAL_SECONDARY_SUBS,
 )
-from ui_shared import render_help_card, HELP_ICONS
+from ui_shared import render_help_card, HELP_ICONS, SVG_SAVE_COLORFUL
 
 
 def _resolve_path(path):
@@ -242,7 +242,7 @@ def render_download_settings(fetch_courses_fn):
         "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
         f"<div style='font-weight: 700; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 7px;'>{HELP_ICONS['save']} Saving a preset</div>"
         "<div style='color: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.6;'>"
-        "1. Configure the download settings (and optionally also the output folder), then click <b style='color: #e2e8f0;'>💾 Save Preset</b> in the top right. <br>2. Give it a name (required) and a description (optional), and click <b>Save Preset</b>. <br><b>Note:</b> Settings are stored locally on your computer."
+        f"1. Configure the download settings (and optionally also the output folder), then click <b style='color: #e2e8f0;'>{SVG_SAVE_COLORFUL} Save Preset</b> in the top right. <br>2. Give it a name (required) and a description (optional), and click <b>Save Preset</b>. <br><b>Note:</b> Settings are stored locally on your computer."
         "</div>"
         "</div>"
         "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 11px 13px;'>"
@@ -386,7 +386,7 @@ def render_download_settings(fetch_courses_fn):
             </style>""")
         _pb1, _pb2 = st.columns([3, 5], gap="small")
         with _pb1:
-            if st.button("💾 Save Preset", key="btn_save_config", use_container_width=True):
+            if st.button("Save Preset", key="btn_save_config", use_container_width=True):
                 _save_config_dialog()
         with _pb2:
             if st.button("Presets", key="btn_presets_hub", use_container_width=True):
@@ -1813,7 +1813,7 @@ div.st-key-review_browse_folder button:hover {
                     render_error_notice(f"Error initializing: {e}")
 
         with col_back:
-            if st.button('Back', use_container_width=True, key='action_dl_back'):
+            if st.button('Go back', use_container_width=True, key='action_dl_back'):
                 if st.session_state.get('came_from_quick_dl', False):
                     st.session_state['quick_download_mode'] = True
                     st.session_state.pop('came_from_quick_dl', None)

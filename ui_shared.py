@@ -35,6 +35,133 @@ _MAT_SVG_INNER: dict[str, str] = {
     'error':     "<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/>",
 }
 
+
+SVG_FOLDER_YELLOW = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#facc15" style="width:1.4em; height:1.4em; vertical-align:-0.2em; display:inline-block; margin-right:4px;"><path d="M20 5h-7.586l-2-2H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z"/></svg>'
+SVG_EDIT_WHITE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" style="width:1.4em; height:1.4em; vertical-align:-0.2em; display:inline-block; margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
+SVG_TRASH_WHITE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" style="width:1.4em; height:1.4em; vertical-align:-0.2em; display:inline-block; margin-right:4px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>'
+SVG_CLOCK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:1.15em; height:1.15em; vertical-align:-0.2em; display:inline-block; margin-right:4px;"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>'
+SVG_SAVE_COLORFUL = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" '
+    'style="width:1.6em; height:1.6em; vertical-align:-0.3em; display:inline-block; margin-right:4px;">'
+    '<path d="M36 106 A70 70 0 0 1 106 36 H404 L476 108 V406 A70 70 0 0 1 406 476 H106 A70 70 0 0 1 36 406 Z" fill="#5C5C94"/>'
+    '<path d="M116 36 H396 V182 A26 26 0 0 1 370 208 H142 A26 26 0 0 1 116 182 Z" fill="#2E1A33"/>'
+    '<path d="M176 36 H336 V158 A22 22 0 0 1 314 180 H198 A22 22 0 0 1 176 158 Z" fill="#E6E6E6"/>'
+    '<rect x="288" y="56" width="36" height="104" rx="12" fill="#5C5C94"/>'
+    '<path d="M96 244 A8 8 0 0 1 104 236 H408 A8 8 0 0 1 416 244 V450 A10 10 0 0 1 406 460 H106 A10 10 0 0 1 96 450 Z" fill="#E6E6E6"/>'
+    '<path d="M96 244 A8 8 0 0 1 104 236 H408 A8 8 0 0 1 416 244 V280 H96 Z" fill="#ED3B34"/>'
+    '</svg>'
+)
+
+
+SVG_SAVE_COLORFUL_SMALL = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" '
+    'style="width:1.0em; height:1.0em; vertical-align:-0.15em; display:inline-block; margin-right:3px;">'
+    '<path d="M36 106 A70 70 0 0 1 106 36 H404 L476 108 V406 A70 70 0 0 1 406 476 H106 A70 70 0 0 1 36 406 Z" fill="#5C5C94"/>'
+    '<path d="M116 36 H396 V182 A26 26 0 0 1 370 208 H142 A26 26 0 0 1 116 182 Z" fill="#2E1A33"/>'
+    '<path d="M176 36 H336 V158 A22 22 0 0 1 314 180 H198 A22 22 0 0 1 176 158 Z" fill="#E6E6E6"/>'
+    '<rect x="288" y="56" width="36" height="104" rx="12" fill="#5C5C94"/>'
+    '<path d="M96 244 A8 8 0 0 1 104 236 H408 A8 8 0 0 1 416 244 V450 A10 10 0 0 1 406 460 H106 A10 10 0 0 1 96 450 Z" fill="#E6E6E6"/>'
+    '<path d="M96 244 A8 8 0 0 1 104 236 H408 A8 8 0 0 1 416 244 V280 H96 Z" fill="#ED3B34"/>'
+    '</svg>'
+)
+
+
+# Small versions for compact configuration summary badges & tags
+SVG_FOLDER_YELLOW_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#facc15" style="width:1.35em; height:1.35em; vertical-align:-0.25em; display:inline-block; margin-right:4px;"><path d="M20 5h-7.586l-2-2H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z"/></svg>'
+SVG_EDIT_WHITE_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
+
+
+def live_enable_button(input_key: str, button_key: str, *,
+                       require_change_from: str | None = None) -> None:
+    """Make a Save button enable/disable live as the user types, without
+    waiting for the text input to lose focus (blur).
+
+    Streamlit's ``st.text_input`` only commits its value - and triggers the
+    rerun that re-evaluates a button's ``disabled=`` flag - on blur or Enter.
+    So a validity-gated Save button stays greyed out until the user clicks
+    away, which feels broken: you type a name and the button does nothing until
+    you click elsewhere. This injects a tiny client-side script (the same
+    ``components.html`` + ``window.parent.document`` pattern app.py already uses
+    for the loading overlay) that watches the input's live ``input`` events and
+    toggles the button's ``disabled`` attribute in real time.
+
+    Python's ``disabled=`` flag stays the source of truth on every rerun: this
+    is purely a UX accelerator. Clicking the now-enabled button blurs the input,
+    commits the value, and the server-side check still gates the actual save -
+    so an invalid value can never be saved even though the attribute was forced
+    off client-side.
+
+    Call this once, AFTER both the ``st.text_input`` and the ``st.button`` have
+    been rendered (only their keys matter, not call order vs. this helper).
+
+    Args:
+        input_key:           ``key=`` of the ``st.text_input`` that gates the button.
+        button_key:          ``key=`` of the ``st.button`` to enable/disable.
+        require_change_from: if given, the button also stays disabled while the
+                             trimmed input equals this baseline (used by rename
+                             dialogs, where an unchanged name is a no-op).
+    """
+    import json
+    import streamlit.components.v1 as components
+
+    # Streamlit lowercases widget keys when generating st-key-* DOM classes.
+    in_cls = f"st-key-{input_key.lower()}"
+    btn_cls = f"st-key-{button_key.lower()}"
+    baseline_js = json.dumps(require_change_from or "")
+    require_change = "true" if require_change_from is not None else "false"
+
+    components.html(
+        f"""
+        <script>
+        (function(){{
+            var doc = window.parent.document;
+            var IN_SEL  = '.{in_cls} input, .{in_cls} textarea';
+            var BTN_SEL = '.{btn_cls} button';
+            var REQUIRE_CHANGE = {require_change};
+            var BASELINE = {baseline_js};
+
+            function isValid(v){{
+                var t = (v || '').trim();
+                if (t.length === 0) return false;
+                if (REQUIRE_CHANGE && t === BASELINE) return false;
+                return true;
+            }}
+
+            // Re-query the button on every call so a stale closure can never
+            // point at a button node Streamlit replaced on the last rerun.
+            function syncBtn(input){{
+                var btn = doc.querySelector(BTN_SEL);
+                if (!btn) return;
+                if (isValid(input.value)){{
+                    btn.removeAttribute('disabled');
+                    btn.removeAttribute('aria-disabled');
+                }} else {{
+                    btn.setAttribute('disabled', '');
+                    btn.setAttribute('aria-disabled', 'true');
+                }}
+            }}
+
+            var tries = 0;
+            (function bind(){{
+                var input = doc.querySelector(IN_SEL);
+                if (!input || !doc.querySelector(BTN_SEL)){{
+                    if (tries++ < 100) setTimeout(bind, 50);  // wait out render order
+                    return;
+                }}
+                syncBtn(input);  // match the freshly-rendered button to committed state
+                if (input.dataset.cdLiveBound === '1') return;  // listener already live
+                input.dataset.cdLiveBound = '1';
+                var handler = function(){{ syncBtn(input); }};
+                input.addEventListener('input', handler);
+                input.addEventListener('keyup', handler);
+            }})();
+        }})();
+        </script>
+        """,
+        height=0,
+    )
+
+
 def inject_material_icons_font() -> None:
     """No-op - Material Symbols font replaced by inline SVGs (issue 2 fix)."""
     pass
@@ -479,7 +606,7 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
             f'<div class="fc-wrapper">'
             f'<input type="checkbox" id="{expand_id}" class="ft-expand-toggle"/>'
             f'<div class="fc-header">'
-            f'<div class="fc-folder-icon" style="font-size:1.15rem; line-height:1; display:flex; align-items:center; justify-content:center; opacity:1;">📁</div>'
+            f'<div class="fc-folder-icon" style="font-size:1.4rem; line-height:1; display:flex; align-items:center; justify-content:center; opacity:1; color:#facc15; width:1.4rem; height:1.4rem;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:100%; height:100%;"><path d="M20 5h-7.586l-2-2H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z"/></svg></div>'
             f'<div class="fc-title">{esc(folder_name)}</div>'
             f'<label for="{expand_id}" class="ft-expander-trigger">'
             f'{_FC_CHEVRON_SVG}'
@@ -731,17 +858,21 @@ def render_synced_file_rows(files: list, course_root: str, key_scope: str,
                 "</div>"
             )
             folder_html = ''
-            if show_subfolder and subdir:
+            if show_subfolder:
                 # Path rendered as a dark, rounded chip so it reads as a distinct
                 # "destination" token. inline-flex → the chip hugs its text.
+                # Files at the course root show "Course folder" so students know
+                # where to find them without seeing a blank path column.
+                chip_label = subdir if subdir else "Course folder"
+                chip_color = "#9aa4af" if subdir else "#6b7280"
                 folder_html = (
                     "<div style='display:flex;align-items:center;min-width:0;'>"
                     "<span style='display:inline-flex;align-items:center;gap:6px;max-width:100%;"
                     "background:#161b22;border:1px solid rgba(255,255,255,0.06);"
                     "border-radius:6px;box-sizing:border-box;height:22px;padding:0 9px;'>"
                     f'<img src="{_FOLDER_ICON_SVG}" style="width:13px;height:13px;flex-shrink:0;" alt="folder"/>'
-                    "<span style='font-size:0.75rem;color:#9aa4af;white-space:nowrap;"
-                    f"overflow:hidden;text-overflow:ellipsis;'>{esc(subdir)}</span></span></div>"
+                    f"<span style='font-size:0.75rem;color:{chip_color};white-space:nowrap;"
+                    f"overflow:hidden;text-overflow:ellipsis;'>{esc(chip_label)}</span></span></div>"
                 )
 
             # Column weights are placeholders only - the scoped CSS in
@@ -775,9 +906,10 @@ def render_synced_file_rows(files: list, course_root: str, key_scope: str,
 # Shared by the sync completion screen and the sync-history panel so both group
 # and label files identically.
 SYNC_FILE_CATEGORIES = [
-    ('new',       'New Files Added',          'cat_new'),
-    ('updated',   'Updates Overwritten',      'cat_update'),
-    ('protected', 'Modified Files Protected', 'cat_miss'),
+    ('new',       'New Files Added',                'cat_new'),
+    ('updated',   'Updates Overwritten',           'cat_update'),
+    ('restored',  'Locally-Deleted Files Restored', 'cat_locdel'),
+    ('protected', 'Modified Files Protected',       'cat_miss'),
 ]
 
 
@@ -807,6 +939,8 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
             continue
         _desc = ('Your unedited local copies were replaced with the newer versions'
                  if cat_key == 'updated' else
+                 'Re-downloaded because your local copy was missing'
+                 if cat_key == 'restored' else
                  'Saved alongside the files you had edited'
                  if cat_key == 'protected' else '')
         _desc_html = (f"<div style='margin-left:-26px;color:#8b949e;font-size:0.75rem;'>{_desc}</div>"
@@ -1227,22 +1361,22 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     core_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
     <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Core Settings</div>
-    <div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>📁 {_mode_disp}</span></div>
-    <span style='display:inline-flex; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>{_filter_disp}</span>
+    <div style='width: 100%;'><span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(63, 217, 255, 0.05); color:{c_core}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.7);'>{SVG_FOLDER_YELLOW_SMALL} {_mode_disp}</span></div>
+    <span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(63, 217, 255, 0.15); color:{c_core}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(63, 217, 255, 0.3);'>{_filter_disp}</span>
 </div>
 """
     
     # Build Green Canvas Content Badges
     c_canvas = "#2DFFA0"
     _sec_mode_disp = "Separate Folders" if settings.get('dl_isolate_secondary') else "Matching Core Settings"
-    sec_org_badge = f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.05); color:{c_canvas}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.7);'>📁 {_sec_mode_disp}</span>"
+    sec_org_badge = f"<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(45, 255, 160, 0.05); color:{c_canvas}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.7);'>{SVG_FOLDER_YELLOW_SMALL} {_sec_mode_disp}</span>"
     
     _sec_on = [k.replace('dl_', '').replace('_', ' ').title() for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k)]
     if _sec_on:
-        sec_badges_list = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
+        sec_badges_list = "".join([f"<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(45, 255, 160, 0.15); color:{c_canvas}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(45, 255, 160, 0.3);'>✓ {x}</span>" for x in _sec_on])
         sec_badges = f"<div style='width: 100%;'>{sec_org_badge}</div>{sec_badges_list}"
     else:
-        sec_badges = "<div style='width: 100%;'><span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
+        sec_badges = "<div style='width: 100%;'><span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
         
     content_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
@@ -1265,9 +1399,9 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     }
     _conv_on = [conv_mapping.get(k, k) for k in PresetManager.NOTEBOOK_SUB_KEYS if settings.get(k)]
     if _conv_on:
-        conv_badges = "".join([f"<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
+        conv_badges = "".join([f"<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(255, 152, 56, 0.15); color:{c_ai}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(255, 152, 56, 0.3);'>⚡ {x}</span>" for x in _conv_on])
     else:
-        conv_badges = "<span style='display:inline-flex; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span>"
+        conv_badges = "<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span>"
         
     conv_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
@@ -1322,7 +1456,7 @@ def error_log_dialog(log_paths):
                     content = log_path.read_text(encoding='utf-8').strip()
                     if content:
                         found_any = True
-                        st.markdown(f"**📁 {log_path.parent.name}**")
+                        st.markdown(f"**{SVG_FOLDER_YELLOW} {log_path.parent.name}**", unsafe_allow_html=True)
                         st.code(content, language="text")
                 except Exception as e:
                     from ui.amber_notice import render_amber_notice

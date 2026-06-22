@@ -22,7 +22,7 @@ import streamlit as st
 from collections import defaultdict
 
 import theme
-
+from ui_shared import SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL
 from sync_manager import SyncManager, SavedGroupsManager
 from ui_helpers import (
     esc,
@@ -157,7 +157,7 @@ _SYNC_HELP_TEXT = (
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
     f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['sync_pair']} Save a Pair</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
-    f"After adding a pair to the Sync List, click the save icon 💾 on the top right of the pair card. Give it a name and save it. <br>It is now stored in the hub and can be loaded with a single click in any future session."
+    f"After adding a pair to the Sync List, click the save icon {SVG_SAVE_COLORFUL} on the top right of the pair card. Give it a name and save it. <br>It is now stored in the hub and can be loaded with a single click in any future session."
     "</div>"
     "</div>"
 
@@ -377,6 +377,7 @@ _SYNC_HELP_TEXT = (
     "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 18px;'>"
     f"<li><b>{HELP_ICONS['cat_new']} New Files Added:</b> Brand new files downloaded from Canvas.</li>"
     f"<li><b>{HELP_ICONS['cat_update']} Updates Overwritten:</b> Canvas updates that cleanly replaced your unmodified local files.</li>"
+    f"<li><b>{HELP_ICONS['cat_locdel']} Locally-Deleted Files Restored:</b> Files you had deleted from your local folder that you chose to re-download, restoring them from Canvas.</li>"
     f"<li><b>{HELP_ICONS['cat_miss']} Modified Files Protected:</b> Updated Canvas files that you had edited locally. The sync engine saved the new version as <em>_NewVersion</em> next to your modified copy to protect your edits!</li>"
     f"<li><b>{HELP_ICONS['error']} Skipped / Failed:</b> A list of any files that failed to sync, grouped by the exact error reason (like network timeouts) so you know exactly what manual action is needed.</li>"
     "</ul>"
@@ -565,13 +566,13 @@ def _save_group_or_pair_inner(sync_pairs, is_pair=False, pair_data=None):
     save_group_or_pair_inner(sync_pairs, is_pair, pair_data)
 
 
-@st.dialog("\U0001F4BE Save as Group")
+@st.dialog("\u200b")
 def _save_group_dialog(sync_pairs: list[dict]):
     """Delegate to ui.hub_dialog."""
     _save_group_or_pair_inner(sync_pairs, is_pair=False)
 
 
-@st.dialog("\U0001F4BE Save as Pair")
+@st.dialog("\u200b")
 def _save_pair_dialog(pair_data: dict):
     """Delegate to ui.hub_dialog."""
     _save_group_or_pair_inner([], is_pair=True, pair_data=pair_data)
@@ -643,7 +644,13 @@ def _confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
     confirm_course_selection_cb(cid, cname, course_names_map, courses_list)
 
 
-@st.dialog("\u200b", width="large")
+# on_dismiss="rerun": a dialog reruns like a fragment, so deleting/renaming
+# saved groups inside the hub only reruns the dialog - the main page's floppy
+# "Save as Pair" / "Save as Group" disabled states (computed from load_groups()
+# when the hub opened) go stale. Dismissing via backdrop/ESC would otherwise
+# reveal that stale render until the next click. "rerun" forces a full app rerun
+# on dismissal so _sync_pairs_section recomputes those states from fresh data.
+@st.dialog("\u200b", width="large", on_dismiss="rerun")
 def _saved_groups_hub_dialog(courses, course_names):
     """Delegate to ui.hub_dialog."""
     from ui.hub_dialog import saved_groups_hub_dialog_inner
@@ -679,11 +686,11 @@ def _inject_hub_global_css():
 def _sync_pairs_section(courses, course_names, course_options):
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []
-    _deferred_save_pair = None   # Will hold pair data if inline 💾 is clicked
+    _deferred_save_pair = None   # Will hold pair data if inline Save is clicked
     _deferred_save_group = False # Will be True if "Save as Group" is clicked
     _deferred_ignored = None     # Will hold (course_name, course_id, course_data) if "Ignored Files" is clicked
 
-    # Pre-compute set of already-saved (course_id, local_folder) tuples for inline 💾 button
+    # Pre-compute set of already-saved (course_id, local_folder) tuples for inline Save button
     from ui_helpers import get_config_dir as _get_config_dir
     _saved_mgr = SavedGroupsManager(_get_config_dir())
     _all_saved_groups = _saved_mgr.load_groups()
@@ -695,28 +702,158 @@ def _sync_pairs_section(courses, course_names, course_options):
         for _sp in _sg.get('pairs', []):
             _saved_pair_sigs.add((_sp.get('course_id'), _sp.get('local_folder', '')))
 
-    # Load ignore icon for CSS injection
-    _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
+    # Pre-compute missing-folder state once; used by both per-pair save buttons and "Save as Group"
+    _any_missing_folder = any(
+        not Path(p.get('local_folder', '')).exists()
+        for p in sync_pairs
+        if p.get('local_folder')
+    )
 
-    # Inject ignore icon CSS for "Ignored Files" buttons (needs f-string for b64 variable)
-    st.html(f"""<style>
-    div[class*="st-key-ignored_btn_"] button p::before {{
+    # Load SVG icons for CSS injection
+    _b64_icon_ignore = get_base64_image("assets/Icon_Ignore.svg")
+    _b64_icon_folder = get_base64_image("assets/Icon_Folder.svg")
+    _b64_icon_edit   = get_base64_image("assets/Icon_Edit.svg")
+    _b64_icon_trash  = get_base64_image("assets/Icon_Trash.svg")
+
+    # Inject SVG icons, layout, hover animations, and boxes for the 4 action buttons.
+    # Uses st.markdown (NOT st.html): st.html()'s shadow-root <style> block is silently
+    # unmounted by Streamlit's React reconciliation during a partial rerun (e.g. opening
+    # the Saved Groups @st.dialog), causing a one-frame "flash" where these buttons lose
+    # their styling. st.markdown injects into the main DOM and survives the dialog rerun.
+    # (CLAUDE.md "Headless Injection Rule" - ghost-box margin is killed by global.css.)
+    st.markdown(f"""<style>
+    /* General styling for the 4 action buttons - shared light-grey resting state */
+    div[class*="st-key-open_folder_"] button,
+    div[class*="st-key-edit_pair_"] button,
+    div[class*="st-key-ignored_btn_"] button,
+    div[class*="st-key-remove_pair_"] button {{
+        border-radius: 10px !important;
+        background-color: rgba(255, 255, 255, 0.07) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+        color: rgba(255, 255, 255, 0.88) !important;
+        transition: all 0.2s ease !important;
+        padding: 0 12px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+
+    /* Inner wrapper: force vertical centering via align-self (immune to Streamlit overriding button align-items) */
+    div[class*="st-key-open_folder_"] button > div,
+    div[class*="st-key-edit_pair_"] button > div,
+    div[class*="st-key-ignored_btn_"] button > div,
+    div[class*="st-key-remove_pair_"] button > div,
+    div[class*="st-key-open_folder_"] button > div > span,
+    div[class*="st-key-edit_pair_"] button > div > span,
+    div[class*="st-key-ignored_btn_"] button > div > span,
+    div[class*="st-key-remove_pair_"] button > div > span,
+    div[class*="st-key-open_folder_"] button div[data-testid="stMarkdownContainer"],
+    div[class*="st-key-edit_pair_"] button div[data-testid="stMarkdownContainer"],
+    div[class*="st-key-ignored_btn_"] button div[data-testid="stMarkdownContainer"],
+    div[class*="st-key-remove_pair_"] button div[data-testid="stMarkdownContainer"] {{
+        display: flex !important;
+        align-items: center !important;
+        align-self: center !important;
+        width: 100% !important;
+    }}
+
+    /* p is the icon+text row - inline-flex so ::before sits beside text in flow */
+    div[class*="st-key-open_folder_"] button p,
+    div[class*="st-key-edit_pair_"] button p,
+    div[class*="st-key-ignored_btn_"] button p,
+    div[class*="st-key-remove_pair_"] button p {{
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 9px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        width: 100% !important;
+    }}
+
+    /* Base icon: inline-block ::before (CLAUDE.md pattern for icon-beside-text buttons) */
+    div[class*="st-key-open_folder_"] button p::before,
+    div[class*="st-key-edit_pair_"] button p::before,
+    div[class*="st-key-ignored_btn_"] button p::before,
+    div[class*="st-key-remove_pair_"] button p::before {{
         content: '';
         display: inline-block;
-        width: 19px;
-        height: 19px;
-        background-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        filter: brightness(0) invert(1) opacity(0.9);
-        vertical-align: middle;
-        margin-right: 6px;
+        width: 20px;
+        height: 20px;
         flex-shrink: 0;
-        position: relative;
-        top: -1px;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        transition: background-color 0.2s ease;
     }}
-    </style>""")
+
+    /* SVG Assignments - neutral white icon at rest */
+    div[class*="st-key-open_folder_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{_b64_icon_folder}');
+        -webkit-mask-size: 18px;
+        background-color: rgba(255, 255, 255, 0.88);
+    }}
+    div[class*="st-key-edit_pair_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{_b64_icon_edit}');
+        -webkit-mask-size: 18px;
+        background-color: rgba(255, 255, 255, 0.88);
+    }}
+    div[class*="st-key-ignored_btn_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{_b64_icon_ignore}');
+        -webkit-mask-size: 18px;
+        background-color: rgba(255, 255, 255, 0.88);
+    }}
+    div[class*="st-key-remove_pair_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{_b64_icon_trash}');
+        -webkit-mask-size: 17px;
+        background-color: rgba(255, 255, 255, 0.88);
+    }}
+
+    /* ===== HOVER STATES - coloured border + icon only ===== */
+
+    /* Open Folder -> Yellow (#facc15) */
+    div[class*="st-key-open_folder_"] button:hover {{
+        border-color: rgba(250, 204, 21, 0.7) !important;
+        background-color: rgba(250, 204, 21, 0.08) !important;
+    }}
+    div[class*="st-key-open_folder_"] button:hover p::before {{
+        background-color: #facc15;
+    }}
+
+    /* Edit -> Blue */
+    div[class*="st-key-edit_pair_"] button:hover {{
+        border-color: rgba(59, 130, 246, 0.7) !important;
+        background-color: rgba(59, 130, 246, 0.08) !important;
+    }}
+    div[class*="st-key-edit_pair_"] button:hover p::before {{
+        background-color: #93c5fd;
+    }}
+
+    /* Ignored Files -> White */
+    div[class*="st-key-ignored_btn_"] button:hover {{
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+    }}
+    div[class*="st-key-ignored_btn_"] button:hover p::before {{
+        background-color: #ffffff;
+    }}
+
+    /* Remove -> Red */
+    div[class*="st-key-remove_pair_"] button:hover {{
+        border-color: rgba(255, 75, 75, 0.7) !important;
+        background-color: rgba(255, 75, 75, 0.08) !important;
+    }}
+    div[class*="st-key-remove_pair_"] button:hover p::before {{
+        background-color: #ff4b4b;
+    }}
+
+    /* Folder icon inside pair cards: 4px smaller than the global SVG_FOLDER_YELLOW (1.4em ≈ 19px → 15px) */
+    div[class*="st-key-sync_pair_card_"] svg {{
+        width: 15px !important;
+        height: 15px !important;
+    }}
+    </style>""", unsafe_allow_html=True)
 
     # --- Pre-compute ignored files per course (cached to avoid N SQLite reads per rerun) ---
     # L-8: Acknowledged race: cleanup_sync_state() pops this cache while a
@@ -798,32 +935,32 @@ def _sync_pairs_section(courses, course_names, course_options):
                             else "Save as Pair"
                         )
 
-                    # Card container with 💾 button INSIDE
+                    # Card container with Save button INSIDE
                     # Use a different key suffix for missing-folder cards so CSS can apply red border
                     _card_key = f"sync_pair_card_missing_{idx}" if not folder_exists else f"sync_pair_card_{idx}"
                     with st.container(border=True, key=_card_key):
                         # Title rendered first, naturally
                         st.markdown(f"**{'Course: '} {display_name}**")
                         # Save button rendered after - CSS absolute-positions it to top-right
-                        if st.button("\U0001F4BE", key=f"save_pair_{idx}", disabled=_is_save_disabled,
+                        if st.button("\u200b", key=f"save_pair_{idx}", disabled=_is_save_disabled,
                                      help=_save_help):
                             _deferred_save_pair = pair
-                        st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;">\U0001F4C1 {folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
-                            <div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">\U0001F553 {ts_str}</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;display:flex;align-items:center;">{SVG_FOLDER_YELLOW}{folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
+                            <div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">{SVG_CLOCK}{ts_str}</div>""", unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
                     if folder_exists:
-                        if st.button("📂 " + 'Open Folder',
+                        if st.button('Open Folder',
                                      key=f"open_folder_{idx}", use_container_width=True):
                             open_folder(pair['local_folder'])
                     else:
-                        st.button("📂 " + 'Open Folder',
+                        st.button('Open Folder',
                                      key=f"open_folder_{idx}", use_container_width=True, disabled=True,
                                      help="This folder could not be found (it may have been deleted or moved).")
 
                 with col_edit:
-                    if st.button("✏️ " + 'Edit', 
+                    if st.button('Edit', 
                                  key=f"edit_pair_{idx}", use_container_width=True):
                         st.session_state['pending_sync_folder'] = pair['local_folder']
                         st.session_state['editing_pair_idx'] = idx
@@ -834,7 +971,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                 with col_ignored:
                     ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
                     ignored_help = "No files have been ignored for this course." if ignored_count == 0 else None
-                    btn_text = f"Ignored Files \u00A0:gray[({ignored_count})]" if ignored_count > 0 else "Ignored Files"
+                    btn_text = f"Ignored Files\u2009:gray[({ignored_count})]" if ignored_count > 0 else "Ignored Files"
                     if st.button(btn_text, key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
                         course_data = ignored_by_course.get(pair['course_id'])
@@ -844,7 +981,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                                 pair['course_id'], course_data)
 
                 with col_remove:
-                    if st.button("🗑️ " + 'Remove', 
+                    if st.button('Remove', 
                                  key=f"remove_pair_{idx}", use_container_width=True):
                         pairs_to_remove.append(idx)
                 
@@ -854,9 +991,9 @@ def _sync_pairs_section(courses, course_names, course_options):
                 # Build toast message before modifying the sync_pairs array
                 if len(pairs_to_remove) == 1:
                     display_name = friendly_course_name(sync_pairs[pairs_to_remove[0]].get('course_name', 'Course'))
-                    st.session_state['pending_toast'] = f"🗑️ Removed '{display_name}' from Sync List"
+                    st.session_state['pending_toast'] = f"Removed '{display_name}' from Sync List"
                 else:
-                    st.session_state['pending_toast'] = f"🗑️ Removed {len(pairs_to_remove)} courses from Sync List"
+                    st.session_state['pending_toast'] = f"Removed {len(pairs_to_remove)} courses from Sync List"
                     
                 _remove_pairs_by_signature(signatures)
                 st.session_state.pop("_ignored_files_cache", None)
@@ -864,31 +1001,22 @@ def _sync_pairs_section(courses, course_names, course_options):
             if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
-                # (9) "Add Course folder" + "Save List as Group" - full width
-                col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom") 
+                # (9) "Add Course folder" + "Save List as Group" - full width.
+                # Button styling lives entirely in styles/sync_hub.css (static) - NO inline
+                # st.markdown(<style>) here: a <style> injection inside this container adds a
+                # ghost box that inflates the gap above this row above the inter-card gap.
+                _save_disabled = len(sync_pairs) < 2 or _any_missing_folder or _saved_mgr.matches_existing_group(sync_pairs)
+                _save_group_help = "Save this exact list of courses as a group."
+                if _save_disabled:
+                    if len(sync_pairs) < 2:
+                        _save_group_help = "You need at least 2 courses to save a group."
+                    elif _any_missing_folder:
+                        _save_group_help = "Cannot save group: one or more folders could not be located."
+                    else:
+                        _save_group_help = "This exact group of courses is already saved."
+
+                col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom")
                 with col_add:
-                    # Clean, isolated CSS for "Add Course" using its Streamlit key
-                    st.html("""<style>
-                    div.st-key-btn_add_folder button {
-                        border: none !important;
-                        background-color: #0b5a6e !important;
-                        color: #ffffff !important;
-                        margin-top: 0px !important;
-                        position: relative;
-                        z-index: 1;
-                        opacity: 1 !important;
-                        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-                        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
-                    }
-                    div.st-key-btn_add_folder button:hover {
-                         background-color: #106e85 !important;
-                         border: none !important;
-                         color: #ffffff !important;
-                         box-shadow: 0 4px 15px rgba(11, 90, 110, 0.25),
-                                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
-                    }
-                    </style>""")
-                    
                     if st.button('Add Course', key="btn_add_folder", use_container_width=True):
                         st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
@@ -896,45 +1024,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.rerun(scope="app")
 
                 with col_save:
-                    # Disable if < 2 pairs or current list matches an already saved group
-                    # Reusing the existing _saved_mgr instance from the top of the render loop
-                    _save_disabled = len(sync_pairs) < 2 or _saved_mgr.matches_existing_group(sync_pairs)
-                    _save_group_help = "Save this exact list of courses as a group."
-                    if _save_disabled:
-                        _save_group_help = "You need at least 2 courses to save a group." if len(sync_pairs) < 2 else "This exact group of courses is already saved."
-
-                    # Clean, isolated CSS for "Save List" using its Streamlit key
-                    st.html(f"""<style>
-                    div.st-key-btn_save_group_main div[data-testid="stTooltipHoverTarget"] {{
-                        margin-top: 0px !important;
-                        position: relative;
-                        z-index: 1;
-                        display: block !important;
-                        width: 100% !important;
-                    }}
-                    div.st-key-btn_save_group_main button {{
-                        background-color: rgba(95, 100, 200, 0.075) !important;
-                        color: #e0e7ff !important;
-                        border: 1px solid rgba(95, 100, 200, 0.75) !important;
-                        width: 100% !important;
-                        height: 48px !important;
-                        min-height: 48px !important;
-                    }}
-                    div.st-key-btn_save_group_main button:hover {{
-                        background-color: rgba(95, 100, 200, 0.2) !important;
-                        border-color: rgba(95, 100, 200, 1) !important;
-                        color: {theme.WHITE} !important;
-                        transition: all 0.2s ease-in-out;
-                    }}
-                    div.st-key-btn_save_group_main button[disabled] {{
-                        background-color: rgba(95, 100, 200, 0.1) !important;
-                        border: 1px solid rgba(95, 100, 200, 0.3) !important;
-                        color: rgba(255, 255, 255, 0.3) !important;
-                        cursor: not-allowed !important;
-                    }}
-                    </style>""")
-
-                    if st.button("💾 Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
+                    if st.button("Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
                         _deferred_save_group = True
 
         else:
@@ -942,30 +1032,11 @@ def _sync_pairs_section(courses, course_names, course_options):
             if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
-                col_add, _ = st.columns([2.25, 7.75]) 
+                # Button styling lives in styles/sync_hub.css (static). An inline
+                # <style> injection inside col_add adds a ghost box above the button,
+                # pushing it down out of alignment with the container's left padding.
+                col_add, _ = st.columns([2.25, 7.75])
                 with col_add:
-                    st.html("""
-                    <style>
-                    /* Scoped to the button's own key - NO :has() to prevent
-                       leaking into dialog portals via ancestor climbing */
-                    div.st-key-btn_add_folder_empty button {
-                        border: none !important;
-                        background-color: #0b5a6e !important;
-                        color: #ffffff !important;
-                        margin-top: 0px !important;
-                        opacity: 1 !important;
-                        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-                        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
-                    }
-                    div.st-key-btn_add_folder_empty button:hover {
-                         background-color: #106e85 !important;
-                         border: none !important;
-                         color: #ffffff !important;
-                         box-shadow: 0 4px 15px rgba(11, 90, 110, 0.25),
-                                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
-                    }
-                    </style>""")
-    
                     if st.button('Add Course', key="btn_add_folder_empty", use_container_width=True):
                         st.session_state['pending_sync_folder'] = ""
                         st.session_state['sync_selected_course_id'] = None
@@ -1411,9 +1482,10 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
 # Order + labels + icons for the per-run file-category sections in Sync History.
 _SYNC_HISTORY_CATEGORIES = [
-    ('new',       'New Files Added',          'cat_new'),
-    ('updated',   'Updates Overwritten',      'cat_update'),
-    ('protected', 'Modified Files Protected', 'cat_miss'),
+    ('new',       'New Files Added',                'cat_new'),
+    ('updated',   'Updates Overwritten',           'cat_update'),
+    ('restored',  'Locally-Deleted Files Restored', 'cat_locdel'),
+    ('protected', 'Modified Files Protected',       'cat_miss'),
 ]
 
 
@@ -1576,6 +1648,28 @@ def _render_sync_history():
             border-color: #ff4b4b !important;
             color: #ff4b4b !important;
             background-color: rgba(255, 75, 75, 0.1) !important;
+        }
+        div.st-key-btn_sync_hist_clear button p {
+            padding-left: 24px !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+        }
+        div.st-key-btn_sync_hist_clear button p::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background-color: currentColor !important;
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            -webkit-mask-size: contain;
+            transition: background-color 0.2s ease !important;
         }
         /* Rotate chevron strictly from center */
         .sync-history-details[open] .sync-history-chevron {
@@ -1806,7 +1900,7 @@ def _render_sync_history():
                         from ui.amber_notice import render_amber_notice
                         render_amber_notice("Are you sure you want to delete all sync history?", detail="This cannot be undone.")
                     else:
-                        if st.button("🗑️ Clear History", key="btn_sync_hist_clear", use_container_width=True):
+                        if st.button("Clear History", key="btn_sync_hist_clear", use_container_width=True):
                             st.session_state.confirm_clear_history = True
                             st.rerun()
 
@@ -2232,7 +2326,7 @@ def render_sync_step4( main_placeholder=None):
             "No course folders found - this can happen after a page refresh.",
             detail="Go back and add your courses again to continue.",
         )
-        if st.button('Back to Sync Setup', key="page_nav_back"):
+        if st.button('Go back', key="page_nav_back"):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
@@ -2373,7 +2467,7 @@ def _show_analysis_review():
 
 # ---- Confirmation dialog ----
 
-@st.dialog("Confirm Sync")
+@st.dialog("​")
 def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, _total_mb, _target_folder, total_bytes):
     """Delegate to ui.sync_confirmation."""
     from ui.sync_confirmation import show_sync_confirmation_inner
