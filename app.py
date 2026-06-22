@@ -554,7 +554,7 @@ with _main_content.container():
             _err_msg = 'Sync state not initialized.' if _is_sync else 'Download state not initialized.'
             from ui.amber_notice import render_error_notice
             render_error_notice(f'{_err_msg} Please go back and try again.')
-            _btn_label = 'Go Back to Sync Hub' if _is_sync else 'Go Back to Settings'
+            _btn_label = 'Go back'
             if st.button(_btn_label, key="page_nav_back_to_settings"):
                 st.session_state['step'] = 1 if _is_sync else 2
                 st.rerun()
@@ -865,7 +865,7 @@ with _main_content.container():
                             st.session_state['total_mb'] = max(0.0, st.session_state.get('total_mb', total_mb) - (sz / (1024 * 1024)))
                             if msg:
                                 _name = _clean_display_name(str(msg))
-                                log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='too large'))
+                                log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='Skipped - Exceeds filesize limit'))
                             render_dashboard()
 
                         elif progress_type == 'attachment_discovered':
@@ -1278,7 +1278,7 @@ with _main_content.container():
                         if msg:
                             st.session_state['size_skipped_files'].append(msg)
                             _name = _clean_display_name(str(msg))
-                            log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='too large'))
+                            log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name), detail='Skipped - Exceeds filesize limit'))
                         # In the retry path the total_items denominator is the length
                         # of the retry queue, not the global total, so we leave it alone.
                         render_dashboard(course_name_ref)

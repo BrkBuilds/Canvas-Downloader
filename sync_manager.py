@@ -1561,9 +1561,9 @@ class SyncManager:
             logger.warning(f"Error getting ignored files: {e}")
         return ignored
 
-    def ignore_file(self, canvas_file_id: int, canvas_filename: str = "") -> bool:
+    def ignore_file(self, canvas_file_id: int, canvas_filename: str = "", original_size: int = 0) -> bool:
         """Mark a file as ignored in the SQLite DB using UPSERT.
-        
+
         If the file already exists in the manifest, UPDATE its is_ignored flag.
         If the file is brand-new (not yet downloaded), INSERT a stub row with is_ignored=1.
         """
@@ -1572,11 +1572,11 @@ class SyncManager:
             try:
                 with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     conn.execute(
-                        '''INSERT INTO sync_manifest 
+                        '''INSERT INTO sync_manifest
                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                           VALUES (?, ?, '', '', '', 0, 1, '')
+                           VALUES (?, ?, '', '', '', ?, 1, '')
                            ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
-                        (canvas_file_id, canvas_filename)
+                        (canvas_file_id, canvas_filename, original_size)
                     )
                     conn.commit()
                 success = True
@@ -1641,22 +1641,22 @@ class SyncManager:
         if not file_ids_and_names:
             return True
             
-        # Normalize input: accept both list[int] and list[tuple]
+        # Normalize input: accept list[int], list[(id, name)], or list[(id, name, size)]
         rows = []
         for item in file_ids_and_names:
             if isinstance(item, (list, tuple)):
-                rows.append((item[0], item[1] if len(item) > 1 else ''))
+                rows.append((item[0], item[1] if len(item) > 1 else '', item[2] if len(item) > 2 else 0))
             else:
-                rows.append((item, ''))
-            
+                rows.append((item, '', 0))
+
         success = False
         for attempt in range(3):
             try:
                 with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
                     conn.executemany(
-                        '''INSERT INTO sync_manifest 
+                        '''INSERT INTO sync_manifest
                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                           VALUES (?, ?, '', '', '', 0, 1, '')
+                           VALUES (?, ?, '', '', '', ?, 1, '')
                            ON CONFLICT(canvas_file_id) DO UPDATE SET is_ignored = 1''',
                         rows
                     )

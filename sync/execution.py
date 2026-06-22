@@ -100,8 +100,10 @@ def _build_synced_groups(sync_selections, synced_details):
          'files': [{'name', 'rel', 'category'}]}
 
     ``rel`` is POSIX-style and relative to ``local_folder``; ``category`` is one
-    of ``'new' | 'updated' | 'protected'``. Best-effort and total: any failure
-    degrades to ``rel == name`` rather than raising into the sync finalizer.
+    of ``'new' | 'updated' | 'restored' | 'protected'`` (``'restored'`` = a file
+    the user had deleted locally and chose to re-download this run). Best-effort
+    and total: any failure degrades to ``rel == name`` rather than raising into
+    the sync finalizer.
     """
     import urllib.parse as _urlparse
     import unicodedata as _ud
@@ -149,6 +151,22 @@ def _build_synced_groups(sync_selections, synced_details):
             except Exception:
                 updates_for_pair = set()
 
+        # Locally-deleted files the user chose to re-download this run - drives
+        # the 'restored' category so they're no longer mis-labelled as brand-new.
+        # Match on the NFC-normalized basename of either the Canvas filename or
+        # the analyzer's resolved target path so a synced basename resolves even
+        # when the two forms differ. A file is in exactly one selection bucket,
+        # so 'restored' never collides with 'updated'.
+        redownloads_for_pair = set()
+        for _si in (sel.get('redownload') or []):
+            for _attr in ('canvas_filename', 'target_local_path'):
+                _val = getattr(_si, _attr, '') or ''
+                if _val:
+                    try:
+                        redownloads_for_pair.add(_norm(_urlparse.unquote(Path(_val).name)))
+                    except Exception:
+                        pass
+
         # Walk the folder ONCE to build basename -> [rel paths]; resolving each
         # name against this index is O(1) and tolerates module subfolders.
         name_index = {}
@@ -178,6 +196,8 @@ def _build_synced_groups(sync_selections, synced_details):
                 category = 'protected'
             elif nm in updates_for_pair:
                 category = 'updated'
+            elif _norm(nm) in redownloads_for_pair:
+                category = 'restored'
             else:
                 category = 'new'
 
@@ -541,7 +561,8 @@ def run_sync():
                     # Update SQLite DB (bulk UPSERT with is_ignored=1)
                     sync_mgr.bulk_ignore_files([
                         (getattr(f, 'id', getattr(f, 'canvas_file_id', None)),
-                         getattr(f, 'filename', getattr(f, 'canvas_filename', '')))
+                         getattr(f, 'filename', getattr(f, 'canvas_filename', '')),
+                         getattr(f, 'size', getattr(f, 'original_size', 0)) or 0)
                         for f in sel['ignore']
                     ])
                     # Mirror the DB state into the in-memory manifest so the
@@ -656,7 +677,7 @@ def run_sync():
                         st.session_state['size_skipped_files'].append(f"{display_file_name} ({_f_mb:.1f} MB)")
                         total_files = max(0, total_files - 1)  # keep denominator accurate
                         current_file -= 1  # undo the increment - this file never ran
-                        terminal_log.append(log_line('skip', display_file_name, icon=file_icon_svg(display_file_name), detail=f'too large · {_f_mb:.1f} MB'))
+                        terminal_log.append(log_line('skip', display_file_name, icon=file_icon_svg(display_file_name), detail=f'Skipped - Exceeds filesize limit · {_f_mb:.1f} MB'))
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
                             log_debug(f"⏭ Skipped (too large, {_f_mb:.1f} MB): {display_file_name}", _debug_file)
@@ -668,7 +689,8 @@ def run_sync():
                                 await asyncio.to_thread(
                                     sync_mgr.ignore_file,
                                     _gate_id,
-                                    getattr(file, 'filename', '')
+                                    getattr(file, 'filename', ''),
+                                    _f_size
                                 )
                             except Exception as e:
                                 if _debug_file: log_debug(f"Warning: Failed to ignore large file in DB: {e}", _debug_file)
@@ -1826,26 +1848,38 @@ def run_sync():
             history_mgr = SyncHistoryManager(get_config_dir())
             
             import urllib.parse
-            categorized_files = {'new': [], 'updated': [], 'protected': []}
+            categorized_files = {'new': [], 'updated': [], 'restored': [], 'protected': []}
             synced_course_names = []
-            
+
             for sel in sync_selections:
                 pair_idx = sel['pair_idx']
                 pair_files = synced_details.get(pair_idx, [])
                 if pair_files:
                     synced_course_names.append(sel['res_data']['pair']['course_name'])
-                
+
                 # Extract updates list for this pair
                 updates_for_pair = []
                 res_data = sel.get('res_data', {})
                 if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
                     updates_for_pair = [urllib.parse.unquote(f.filename) for f, _ in res_data['result'].updated_files]
-                    
+
+                # Locally-deleted files re-downloaded this run - keyed on basename
+                # of the Canvas filename / resolved target path (mirrors
+                # _build_synced_groups) so they land in 'restored', not 'new'.
+                redownloads_for_pair = set()
+                for _si in (sel.get('redownload') or []):
+                    for _attr in ('canvas_filename', 'target_local_path'):
+                        _val = getattr(_si, _attr, '') or ''
+                        if _val:
+                            redownloads_for_pair.add(urllib.parse.unquote(Path(_val).name))
+
                 for fname in pair_files:
                     if "_NewVersion" in fname:
                         categorized_files['protected'].append(fname)
                     elif fname in updates_for_pair:
                         categorized_files['updated'].append(fname)
+                    elif fname in redownloads_for_pair:
+                        categorized_files['restored'].append(fname)
                     else:
                         categorized_files['new'].append(fname)
 

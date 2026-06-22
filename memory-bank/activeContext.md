@@ -11,6 +11,28 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-06-21: Replace Clock and Save Emojis with Custom SVGs**
+    - **Centralized SVG Constants**: Added `SVG_CLOCK` (grey outline clock icon) and `SVG_SAVE_COLORFUL` (colorful floppy disk icon) constants to `ui_shared.py`.
+    - **Custom Dialog Headers**: Configured `@st.dialog` decorators to use zero-width space `\u200b` titles to bypass Streamlit title escaping, and rendered custom HTML/SVG headers directly inside the dialog bodies.
+    - **CSS Button Icons**: Prepended the colorful floppy disk SVG using base64-encoded background images on `::before` pseudo-elements in `styles/sync_hub.css` and `styles/preset_dialogs.css`.
+    - **Application-wide Emoji Purging**: Purged all literal clock (`🕒`) and save (`💾`) emojis from text strings, notice boards, tooltips, and button text across the codebase.
+
+- **Session 2026-06-21: SVG Icon Resizing and Badge Vertical Alignment Fixes**
+    - **Icon Resizing (+4px)**: Systematically increased all newly introduced SVG icons inside buttons and text fields by 4px. Modified `preset_dialogs.css` (preset delete), `sync_hub.css` (dialog action buttons), `sync_ui.py` (main page action buttons and clear history), and `completion.css`/`ui_shared.py` (folders updated completion cards). Adjusted text padding-left elements to ensure identical gaps and avoid squishing or overlapping.
+    - **Badge Sizing & Alignment Fix**: Added `align-items: center;` to the `display: inline-flex` styles of the configuration summary badges (`render_config_summary_badges` in `ui_shared.py`) to align the folder icon SVG perfectly with the text. Defined smaller `SVG_FOLDER_YELLOW_SMALL` and `SVG_EDIT_WHITE_SMALL` constants (1.1em size) and applied them to configuration summary badges and preset summaries to keep tags and summaries compact.
+    - **CSS Leakage Resolution**: Resolved a CSS selector collision where `div[class*="st-key-hub_edit_"]` erroneously targeted Cancel and Save buttons inside the name editor container. Renamed the container key to `hub_rename_group_meta` and text input key to `hub_rename_name_input` in `ui/hub_dialog.py` and `styles/sync_hub.css`.
+
+- **Session 2026-06-21: SVG Icon Integration & Emoji Removal**
+    - **Central SVG Constants**: Created yellow folder, white edit, and white trashcan SVG string constants in `ui_shared.py` for inline HTML and markdown rendering.
+    - **Inline Emoji Purge**: Replaced folder (📁/📂), edit (✏️/📝), and trashcan (🗑️) emojis with crisp SVGs in course cards, summary badges, log viewer headers, and confirmation forms.
+    - **Dialog and Card Button Overlays**: Stripped emojis from button labels in presets dialogs, saved lists, and clear history actions. Injected SVG masks in `preset_dialogs.css`, `sync_hub.css`, and `sync_ui.py` to overlay solid SVGs via CSS pseudo-elements.
+    - **Hover Color Bindings**: Configured trashcan/delete SVGs to use `currentColor` to dynamically turn red on hover matching text colors, and folder SVGs to be consistently `#facc15` (yellow).
+
+- **Session 2026-06-21: Sync Action Button filled SVGs & alignment fix**
+    - **Filled SVG Icons**: Replaced stroked folder, edit (pencil), and trash SVGs in `assets/` with crisp, solid, filled versions to match the styling of the Ignored Files icon.
+    - **Left alignment of button contents**: Injected CSS in `sync_ui.py` to override Streamlit's default center-alignment and nested flexbox behavior on `st.button` wrapper `div`s and `span`s, ensuring that action buttons' text and icons are perfectly left-aligned.
+    - **Removed Icon Boxes**: Discarded the background box structures (`::before` pseudo-elements) to render the icons cleanly on transparent backgrounds. Tuned dimensions to a standard 40px height with balanced 10px padding (left, top, bottom) for optimal visual symmetry.
+
 - **Session 2026-06-14: Security Terminology Update**
     - **Replaced "API Token" with "Canvas Access Token"**: Systematically purged all user-facing references to "API Token" across the frontend (`ui/auth.py`, `ui_shared.py`) and website (`index.html`, `guide.html`, `privacy.html`, `mac-setup.html`) to reduce user intimidation and align with Canvas's official terminology.
 

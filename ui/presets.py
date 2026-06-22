@@ -18,22 +18,22 @@ import streamlit as st
 
 from preset_manager import PresetManager
 from ui_helpers import esc
-from ui_shared import render_config_summary_badges
+from ui_shared import render_config_summary_badges, SVG_FOLDER_YELLOW_SMALL, SVG_EDIT_WHITE_SMALL, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
 
 
 def _build_preset_summary(settings):
     """Build a dynamic, grammar-correct summary string for a preset's settings."""
     # 1. Organization
-    mode_str = "📁 With Subfolders" if settings.get('download_mode') == 'modules' else "📁 All in One Folder"
+    mode_str = f"{SVG_FOLDER_YELLOW_SMALL} With Subfolders" if settings.get('download_mode') == 'modules' else f"{SVG_FOLDER_YELLOW_SMALL} All in One Folder"
     # 2. File Filter
     filter_str = "📦 All Files" if settings.get('file_filter') == 'all' else "📦 Slides & PDFs"
     # 3. Canvas Content
     sec_count = sum(1 for k in PresetManager.SECONDARY_CONTENT_KEYS if settings.get(k))
     sec_total = len(PresetManager.SECONDARY_CONTENT_KEYS)
     if sec_count == sec_total:
-        sec_str = "📝 All Canvas Content"
+        sec_str = f"{SVG_EDIT_WHITE_SMALL} All Canvas Content"
     elif sec_count > 0:
-        sec_str = f"📝 {sec_count} Canvas Content"
+        sec_str = f"{SVG_EDIT_WHITE_SMALL} {sec_count} Canvas Content"
     else:
         sec_str = ""
     # 4. Conversions - correct grammar
@@ -79,7 +79,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
             )
 
         # Dynamic settings summary as an expander
-        with st.expander("⚙️ See Configuration"):
+        with st.expander("See Configuration"):
             path = str(preset.get('download_path', '')) if preset.get('include_path') else None
             _s = settings.copy()
             if path:
@@ -113,20 +113,27 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
             with col_del:
                 def _do_delete(pid=preset['preset_id'], pname=name):
                     mgr.delete_preset(pid)
-                    st.session_state['preset_hub_toast'] = f"🗑️ Preset '{pname}' deleted."
+                    st.session_state['preset_hub_toast'] = f"Preset '{pname}' deleted."
                     
-                st.button("🗑️ Delete", key=f"preset_delete_{preset['preset_id']}",
+                st.button("Delete", key=f"preset_delete_{preset['preset_id']}",
                           use_container_width=True, on_click=_do_delete)
 
 
-@st.dialog("💾 Save Settings as Preset")
+@st.dialog("\u200b")
 def _save_config_dialog():
     from ui_helpers import get_config_dir
     mgr = PresetManager(get_config_dir())
 
+    # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
+    # Title + subtitle in ONE st.markdown to avoid Streamlit's ~1rem inter-element gap
     st.markdown(
-        '<p style="color:#aaa; font-size:0.9rem; margin-bottom:20px; margin-top: -20px;">'
-        'Save your current Download Settings as a reusable preset.</p>',
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: -70px; margin-bottom: 4px;">
+            {SVG_SAVE_COLORFUL}
+            <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">Save Settings as Preset</div>
+        </div>
+        <p style="color:#aaa; font-size:0.9rem; margin: 4px 0 16px 0;">Save your current Download Settings as a reusable preset.</p>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -150,7 +157,7 @@ def _save_config_dialog():
 
     # Preview current settings (collapsed)
     with st.container(key="preset_save_preview", border=False):
-        with st.expander("📋 Current settings being saved"):
+        with st.expander("Current settings being saved"):
             _preview = mgr.capture_current_settings(st.session_state)
             path = str(st.session_state.get('download_path', '')) if include_path else None
             _p = _preview.copy()
@@ -168,8 +175,9 @@ def _save_config_dialog():
                 st.rerun()  # audit-ignore
     with col_create:
         create_disabled = not preset_name or not preset_name.strip()
+        _save_help = "Enter a preset title to save." if create_disabled else None
         if st.button("Save Preset", use_container_width=True,
-                     key="preset_save_create", disabled=create_disabled):
+                     key="preset_save_create", disabled=create_disabled, help=_save_help):
             _settings = mgr.capture_current_settings(st.session_state)
             _path = st.session_state.get('download_path', '') if include_path else ''
             mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
@@ -178,6 +186,9 @@ def _save_config_dialog():
                 st.rerun(scope="app")
             except TypeError:
                 st.rerun()  # audit-ignore
+
+    # Enable Save Preset the instant a title is typed (no blur required).
+    live_enable_button("preset_save_name_input", "preset_save_create")
 
 
 @st.dialog("\u200b", width="large")
@@ -270,7 +281,7 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
             _user_presets = mgr.load_presets()
             if not _user_presets:
                 from ui.amber_notice import render_info_notice
-                render_info_notice("No saved presets yet. Use the '💾 Save Configuration' button to create one.")
+                render_info_notice(f"No saved presets yet. Use the '{SVG_SAVE_COLORFUL_SMALL} Save Configuration' button to create one.", allow_html=True)
             for _up in _user_presets:
                 _render_preset_card(mgr, _up, is_builtin=False,
                                     b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)
@@ -301,9 +312,9 @@ def render_preset_buttons(get_base64_image_fn):
     col_save, col_load, _ = st.columns([1, 1, 7])
 
     with col_save:
-        if st.button("💾 Save", key="step2_save_preset_btn", use_container_width=True):
+        if st.button("Save", key="step2_save_preset_btn", use_container_width=True):
             _save_config_dialog()
 
     with col_load:
-        if st.button("⚙️ Presets", key="step2_load_preset_btn", use_container_width=True):
+        if st.button("Presets", key="step2_load_preset_btn", use_container_width=True):
             _presets_hub_dialog()

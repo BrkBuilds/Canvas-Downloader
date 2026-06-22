@@ -26,6 +26,7 @@ from ui_helpers import (
     open_folder,
 )
 from styles import inject_css
+from ui_shared import SVG_FOLDER_YELLOW, SVG_EDIT_WHITE, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
 
 
 # Lazy imports to avoid circular dependency with sync_ui.py
@@ -45,6 +46,13 @@ def _add_pairs_batch_lazy(pairs_list):
 
 def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair_data: dict = None):
     """Shared inner logic for the Save Group/Pair dialog."""
+    st.markdown("""
+<style>
+div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role="dialog"] > div:first-child {
+    padding-bottom: 0.25rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
     if is_pair:
         desc_text = (
             'Save your selected course/folder pair to the "Saved Groups & Pairs" tab, '
@@ -62,9 +70,16 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
         input_placeholder = "e.g., 1st Semester"
         entity = "Group"
 
+    # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
+    # Title + subtitle in ONE st.markdown to avoid Streamlit's ~1rem inter-element gap
     st.markdown(
-        f'<p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">'  # audit-ignore: desc_text is a static app string
-        f'{desc_text}</p>',
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: -70px; margin-bottom: 4px;">
+            {SVG_SAVE_COLORFUL}
+            <div style="margin: 0; padding: 0; font-size: 1.75rem; font-weight: 600; color: white;">Save as {entity}</div>
+        </div>
+        <p style="color:#aaa; font-size:0.9rem; margin: 4px 0 10px 0;">{desc_text}</p>
+        """,  # audit-ignore: desc_text is a static app string
         unsafe_allow_html=True,
     )
     item_name = st.text_input(
@@ -82,8 +97,9 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
             st.rerun(scope="app")
     with col_create:
         create_disabled = not item_name or not item_name.strip()
-        if st.button("Create", type="primary", use_container_width=True,
-                     key="save_group_create", disabled=create_disabled):
+        _save_help = f"Enter a name for this {entity.lower()} to save." if create_disabled else None
+        if st.button("Save", type="primary", use_container_width=True,
+                     key="save_group_create", disabled=create_disabled, help=_save_help):
             from ui_helpers import get_config_dir
             mgr = SavedGroupsManager(get_config_dir())
             if is_pair and pair_data:
@@ -92,6 +108,9 @@ def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair
                 mgr.save_group(item_name.strip(), sync_pairs)
             st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
             st.rerun(scope="app")
+
+    # Enable the Save button the instant a name is typed (no blur required).
+    live_enable_button("save_group_name_input", "save_group_create")
 
 
 
@@ -132,7 +151,7 @@ def delete_group_callback(mgr, group_id, group_name, is_single_pair: bool = Fals
     """Callback to delete a group before the dialog re-renders."""
     mgr.delete_group(group_id)
     entity = "Pair" if is_single_pair else "Group"
-    st.session_state['hub_toast'] = f"🗑️ {entity} '{group_name}' deleted."
+    st.session_state['hub_toast'] = f"{entity} '{group_name}' deleted."
 
 
 def remove_pair_from_group(mgr, group_id, pair_idx):
@@ -142,7 +161,7 @@ def remove_pair_from_group(mgr, group_id, pair_idx):
     if group and 0 <= pair_idx < len(group.get('pairs', [])):
         popped = group['pairs'].pop(pair_idx)
         mgr.update_group(group_id, {'pairs': group['pairs']})
-        st.session_state['hub_toast'] = f"🗑️ Removed '{popped.get('course_name', 'course')}' from group."
+        st.session_state['hub_toast'] = f"Removed '{popped.get('course_name', 'course')}' from group."
     # Clear any active edit state that might reference stale indices
     st.session_state.pop('hub_editing_pair_idx', None)
     st.session_state.pop('hub_is_adding_new_pair', None)
@@ -409,20 +428,20 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             }}
 
             /* Fix Group Name Edit Box padding to prevent height jumps */
-            div.st-key-hub_edit_group_meta {{
+            div.st-key-hub_rename_group_meta {{
                 padding: 10px 12px !important;
                 margin-bottom: 5px !important;
                 background-color: rgba(255, 255, 255, 0.02) !important;
             }}
             /* Style the text input box to be distinguishable */
-            div.st-key-hub_edit_name_input div[data-baseweb="input"] {{
+            div.st-key-hub_rename_name_input div[data-baseweb="input"] {{
                 background-color: rgba(0, 0, 0, 0.3) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-radius: 6px !important;
                 min-height: 48px !important;
                 height: 48px !important;
             }}
-            div.st-key-hub_edit_name_input div[data-baseweb="input"]:focus-within {{
+            div.st-key-hub_rename_name_input div[data-baseweb="input"]:focus-within {{
                 border-color: #4a90e2 !important;
             }}
 
@@ -431,6 +450,18 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             div.st-key-hub_save_name button {{
                 min-height: 48px !important;
                 height: 48px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }}
+            div.st-key-hub_cancel_edit_name button div[data-testid="stMarkdownContainer"],
+            div.st-key-hub_save_name button div[data-testid="stMarkdownContainer"] {{
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }}
 
             /* ===== ADD BUTTONS - Base64 Icon via ::before ===== */
@@ -467,10 +498,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
     )
     
     if layer == 'layer_1':
-        groups = mgr.load_groups()
+        # save_group() appends, so load_groups() returns oldest-first. Reverse
+        # once here so every view (View All / Groups / Pairs) lists the newest
+        # saved group/pair at the top and the oldest at the bottom.
+        groups = list(reversed(mgr.load_groups()))
         if not groups:
             from ui.amber_notice import render_info_notice
-            render_info_notice("No saved groups or pairs yet. Use the \"\U0001F4BE Save List as Group\" button or the inline \U0001F4BE button to create one.")
+            render_info_notice(f"No saved groups or pairs yet. Use the \"{SVG_SAVE_COLORFUL_SMALL} Save List as Group\" button or the inline {SVG_SAVE_COLORFUL_SMALL} button to create one.", allow_html=True)
             if st.button("Close", type="secondary", use_container_width=True, key="hub_close_empty"):
                 hub_cleanup()
                 try:
@@ -599,12 +633,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 hub_cleanup()
                                 st.rerun(scope="app")
                         with c2:
-                            st.button("\u270f\ufe0f Edit Pair", key=f"hub_edit_{g_idx}",
+                            st.button("Edit Pair", key=f"hub_edit_{g_idx}",
                                       use_container_width=True,
                                       on_click=change_hub_layer,
                                       kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
                         with c3:
-                            st.button("\U0001F5D1\ufe0f Delete", key=f"btn_hub_delete_{group['group_id']}",
+                            st.button("Delete", key=f"btn_hub_delete_{group['group_id']}",
                                       use_container_width=True,
                                       on_click=delete_group_callback,
                                       args=(mgr, group['group_id'], group['group_name'], True))
@@ -732,12 +766,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # if-block above. On the click-frame, st.rerun()
                         # fires before these render - by design.
                         with c2:
-                            st.button("\u270f\ufe0f Edit Group", key=f"hub_edit_{g_idx}",
+                            st.button("Edit Group", key=f"hub_edit_{g_idx}",
                                       use_container_width=True,
                                       on_click=change_hub_layer,
                                       kwargs={'target_layer': 'layer_2', 'hub_active_group_id': group['group_id']})
                         with c3:
-                            st.button("\U0001F5D1\ufe0f Delete", key=f"btn_hub_delete_{group['group_id']}",
+                            st.button("Delete", key=f"btn_hub_delete_{group['group_id']}",
                                       use_container_width=True,
                                       on_click=delete_group_callback,
                                       args=(mgr, group['group_id'], group['group_name']))
@@ -782,7 +816,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             st.session_state['hub_edit_group_name_active'] = False
 
         def _save_name_cb():
-            val = st.session_state.get("hub_edit_name_input", "").strip()
+            val = st.session_state.get("hub_rename_name_input", "").strip()
             if val and val != group['group_name']:
                 mgr.update_group(gid, {'group_name': val})
                 st.session_state['pending_toast'] = f"✅ {entity_label} renamed to '{val}'"
@@ -801,7 +835,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         <h1 style='margin: 0px; padding: 0px; font-size: 2.2rem; display: inline-block; line-height: 1;'>{group['group_name']}</h1>
                     """, unsafe_allow_html=True)
                 with cv2:
-                    st.button("✏️ Edit", key="btn_enable_edit_name", on_click=_toggle_edit_name)
+                    st.button("Edit", key="btn_enable_edit_name", on_click=_toggle_edit_name)
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # Spacing before cards
         else:
             # EDIT MODE (Ultra-compact to prevent dialog height jump)
@@ -811,17 +845,24 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     <span style='color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 500;'>{name_label}</span>
                 </div>
             """, unsafe_allow_html=True)
-            with st.container(border=True, key="hub_edit_group_meta"):
+            with st.container(border=True, key="hub_rename_group_meta"):
                 col_name, col_cancel, col_save = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
                     new_name = st.text_input(f"{entity_label} Name", value=group['group_name'],
-                                             key="hub_edit_name_input", label_visibility="collapsed")
+                                             key="hub_rename_name_input", label_visibility="collapsed")
                 with col_cancel:
                     st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
                 with col_save:
                     name_changed = new_name.strip() and new_name.strip() != group['group_name']
-                    st.button("💾 Save", disabled=not name_changed,
-                              use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
+                    _save_name_help = None if name_changed else (
+                        "Enter a name to save" if not new_name.strip() else "Name is unchanged"
+                    )
+                    st.button("Save", type="primary", disabled=not name_changed,
+                              use_container_width=True, key="hub_save_name", on_click=_save_name_cb,
+                              help=_save_name_help)
+            # Enable Save the instant the name changes to something new (no blur required).
+            live_enable_button("hub_rename_name_input", "hub_save_name",
+                               require_change_from=group['group_name'])
 
         st.markdown("")
 
@@ -839,7 +880,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 # === INLINE EDIT MODE ===
                 if editing_idx is not None and editing_idx == p_idx:
                     with st.container(border=True, key=f"hub_compact_edit_form_{p_idx}"):
-                        st.markdown("<h3 style='margin-top: -15px; margin-bottom: 5px;'>✏️ Editing Pair</h3>", unsafe_allow_html=True)
+                        st.markdown(f"<h3 style='margin-top: -15px; margin-bottom: 5px;'>{SVG_EDIT_WHITE} Editing Pair</h3>", unsafe_allow_html=True)
 
                         # --- Course row ---
                         temp_course_id = st.session_state.get('hub_edit_temp_course_id')
@@ -871,7 +912,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 st.markdown(
                                     f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                     f'Folder:</span>'  # audit-ignore: folder_display is a local path
-                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {folder_display}</span>',
+                                    f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{SVG_FOLDER_YELLOW} {folder_display}</span>',
                                     unsafe_allow_html=True,
                                 )
                             with col_f_btn:
@@ -958,8 +999,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 final_folder != pair.get('local_folder', '')
                                 or final_cid != pair.get('course_id')
                             )
-                            st.button("💾 Save Changes", type="primary", use_container_width=True,
+                            st.button("Save Changes", type="primary", use_container_width=True,
                                       key=f"hub_save_edit_{p_idx}", disabled=not has_changes,
+                                      help=None if has_changes else "Change the course or folder to save",
                                       on_click=save_inline_edit_cb,
                                       args=(mgr, gid, p_idx, final_folder, final_cid, final_cname))
 
@@ -972,7 +1014,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         st.markdown(f"""
                             <div style='margin-bottom: 12px; margin-top: 6px;'>
                                 <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{esc(display_name)}</div>
-                                <div style='color: #a3a8b8; font-size: 14px;'>📁 {pair.get('local_folder', '')}</div><!-- # audit-ignore: local_folder is a filesystem path -->
+                                <div style='color: #a3a8b8; font-size: 14px;'>{SVG_FOLDER_YELLOW} {pair.get('local_folder', '')}</div><!-- # audit-ignore: local_folder is a filesystem path -->
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -988,25 +1030,25 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             # Single pair: 2 columns (no Remove button)
                             c1, c2 = st.columns([0.5, 0.5])
                             with c1:
-                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
+                                if st.button("Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
                                     open_folder(pair['local_folder'])
                             with c2:
-                                st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
+                                st.button("Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
                                           on_click=hub_start_edit_pair, args=(p_idx, pair))
                         else:
                             c1, c2, c3 = st.columns(3)
                             with c1:
-                                if st.button("📂 Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
+                                if st.button("Open Folder", key=f"hub_open_{p_idx}", disabled=not folder_exists, help="The folder has been moved or deleted." if not folder_exists else None, use_container_width=True):
                                     open_folder(pair['local_folder'])
                             with c2:
-                                st.button("✏️ Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
+                                st.button("Edit Pair", key=f"hub_editp_{p_idx}", use_container_width=True,
                                           on_click=hub_start_edit_pair, args=(p_idx, pair))
                             with c3:
-                                st.button("🗑️ Remove", key=f"btn_hub_remove_pair_{p_idx}", use_container_width=True,
+                                st.button("Remove", key=f"btn_hub_remove_pair_{p_idx}", use_container_width=True,
                                           on_click=remove_pair_from_group, args=(mgr, gid, p_idx))
 
                         # --- Config expander ---
-                        with st.expander("⚙️ See Configuration", expanded=False):
+                        with st.expander("See Configuration", expanded=False):
                             render_hub_config(pair)
 
             # === INLINE ADD NEW PAIR (Hidden for single pairs) ===
@@ -1023,7 +1065,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                                 f'Folder:</span>'  # audit-ignore: add_folder_display is a local path
-                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">📁 {add_folder_display}</span>',
+                                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{SVG_FOLDER_YELLOW} {add_folder_display}</span>',
                                 unsafe_allow_html=True,
                              )
                         with col_af_btn:
@@ -1125,7 +1167,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         st.button("Cancel", key="btn_inline_new_cancel",
                                   use_container_width=True, on_click=hub_cancel_edit)
                     with col_add:
-                        st.button("💾 Add to Group", use_container_width=True,
+                        st.button("Add to Group", use_container_width=True,
                                   key="btn_inline_new_confirm", disabled=not can_add,
                                   on_click=save_inline_add_cb,
                                   args=(mgr, gid, add_folder, add_course_id, add_cname_final))
