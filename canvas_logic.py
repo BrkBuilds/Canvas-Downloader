@@ -2534,7 +2534,8 @@ class CanvasManager:
                     await asyncio.to_thread(
                         sync_manager.ignore_file,
                         file_obj.id,
-                        getattr(file_obj, 'filename', '')
+                        getattr(file_obj, 'filename', ''),
+                        file_size_bytes
                     )
                 except Exception:
                     pass  # Non-fatal: don't break download for DB issues

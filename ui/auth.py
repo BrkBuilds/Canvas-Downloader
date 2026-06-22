@@ -1478,7 +1478,20 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
     _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
 
-    @st.dialog("\u200b", width="large")
+    # Clear all staged (unsaved) settings state on dismissal. Save and Cancel
+    # already pop '_temp_default_path', but a backdrop/ESC dismiss runs neither -
+    # so a picked-but-unsaved folder (and any toggled temp_* control) would
+    # linger and look applied when the dialog is reopened. Passing a callable to
+    # on_dismiss both reruns the app and runs this cleanup first.
+    def _stg_dismiss_cleanup():
+        for _k in ('_temp_default_path', '_stg_reopen_dialog',
+                   'temp_max_downloads', 'temp_max_size_enabled', 'temp_max_size_mb',
+                   'temp_error_log_enabled', 'temp_debug_mode',
+                   'temp_notifications_enabled', 'temp_cbs_filters',
+                   'temp_use_12h_format', 'temp_sync_history_retention'):
+            st.session_state.pop(_k, None)
+
+    @st.dialog("\u200b", width="large", on_dismiss=_stg_dismiss_cleanup)
     def _global_settings_dialog():
         st.html("""<style>
         div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }

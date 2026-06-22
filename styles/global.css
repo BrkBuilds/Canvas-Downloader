@@ -100,6 +100,30 @@ div[data-testid="stHtml"] {
     padding-bottom: 0.5rem !important;
 }
 
+/* When a button has help=, Streamlit wraps the <button> in a
+   stTooltipHoverTarget, so it is no longer a DIRECT child of .stButton and the
+   `.stButton>button` height rule above stops applying - the button shrinks to
+   ~3/4 height. live_enable_button() keeps such a button visible while it is
+   still help-wrapped (the JS flips it enabled before Streamlit reruns and drops
+   the wrapper), exposing the shrink as height jank. Re-apply full sizing for
+   ONLY these two full-width dialog Save buttons. Scoped by key so it never
+   touches small icon buttons that also use help= (e.g. the save_pair_N floppy
+   on pair cards) or buttons with their own explicit height (hub_save_name). */
+div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"],
+div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"],
+div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] {
+    width: 100% !important;
+}
+div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"] > button,
+div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"] > button,
+div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] > button {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 3em !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
 /* Ensure button text wraps correctly at word boundaries and not mid-word */
 .stButton > button p,
 .stButton > button div[data-testid="stMarkdownContainer"] > p {
@@ -355,6 +379,20 @@ section[data-testid="stSidebar"] [data-testid="stHtml"] iframe {
 /* 25px gap between header/separator and first button */
 div[class*="st-key-sidebar_top"] [data-testid="stHtml"] {
     margin-bottom: 25px !important;
+}
+
+/* ui_shared.live_enable_button() injects a 0-height components.html iframe to
+   toggle a Save button's disabled state live as the user types. Pull its
+   element container out of the dialog's flex flow so it contributes no gap.
+   position:absolute (not display:none) keeps the iframe painted so its script
+   is guaranteed to run. */
+div[data-testid="stDialog"] [data-testid="stElementContainer"]:has(iframe[height="0"]) {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* ═══════════════════════════════════════════════
@@ -741,6 +779,7 @@ div.st-key-btn_convert_video button::after {
         opacity: 0.4 !important;
         filter: grayscale(100%) !important;
         cursor: not-allowed !important;
+        box-shadow: none !important;
     }
 
     /* Fix Streamlit tooltip wrappers shrinking buttons vertically */
@@ -904,6 +943,123 @@ div.st-key-btn_convert_video button::after {
         size-adjust: 85%;
         /* Target all standard emoji blocks */
         unicode-range: U+200D, U+2600-26FF, U+2700-27BF, U+1F000-1F02F, U+1F0A0-1F0FF, U+1F1E6-1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F700-1F77F, U+1F780-1F7FF, U+1F800-1F8FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF;
+    }
+
+    /* ═══════════════════════════════════════════════
+       16. "Go back" Buttons — action-button style + curved arrow via ::before
+       ═══════════════════════════════════════════════ */
+    div.st-key-page_nav_back_to_settings button,
+    div.st-key-page_nav_back button,
+    div.st-key-action_dl_back button,
+    div.st-key-page_nav_quick_back button,
+    div.st-key-page_nav_back_sr_err button,
+    div.st-key-page_nav_sync_review_back button {
+        background-color: rgba(255, 255, 255, 0.07) !important;
+        background-image: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        transition: all 0.15s ease !important;
+        box-shadow: none !important;
+    }
+
+    div.st-key-page_nav_back_to_settings button::before,
+    div.st-key-page_nav_back button::before,
+    div.st-key-action_dl_back button::before,
+    div.st-key-page_nav_quick_back button::before,
+    div.st-key-page_nav_back_sr_err button::before,
+    div.st-key-page_nav_sync_review_back button::before {
+        content: '' !important;
+        display: block !important;
+        width: 17px !important;
+        height: 17px !important;
+        min-width: 17px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8L2 12L6 16'/%3E%3Cpath d='M2 12H22'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    div.st-key-page_nav_back_to_settings button:hover,
+    div.st-key-page_nav_back button:hover,
+    div.st-key-action_dl_back button:hover,
+    div.st-key-page_nav_quick_back button:hover,
+    div.st-key-page_nav_back_sr_err button:hover,
+    div.st-key-page_nav_sync_review_back button:hover {
+        background-color: rgba(255, 255, 255, 0.13) !important;
+        background-image: none !important;
+        border-color: rgba(255, 255, 255, 0.45) !important;
+    }
+
+    /* ═══════════════════════════════════════════════
+       16b. Operation "Cancel" Buttons — identical to "Go back"
+            style, but with an X icon that turns red on hover.
+            (Cancel Download / Analysis / Retry / Sync / Post-Processing)
+       ═══════════════════════════════════════════════ */
+    div[class*="st-key-cancel_download_btn"] button,
+    div[class*="st-key-cancel_pp_download"] button,
+    div[class*="st-key-cancel_retry_btn"] button,
+    div[class*="st-key-cancel_analysis_btn"] button,
+    div[class*="st-key-cancel_sync_btn"] button,
+    div[class*="st-key-cancel_pp_btn_sync_phase3"] button {
+        background-color: rgba(255, 255, 255, 0.07) !important;
+        background-image: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        transition: all 0.15s ease !important;
+        box-shadow: none !important;
+    }
+
+    div[class*="st-key-cancel_download_btn"] button::before,
+    div[class*="st-key-cancel_pp_download"] button::before,
+    div[class*="st-key-cancel_retry_btn"] button::before,
+    div[class*="st-key-cancel_analysis_btn"] button::before,
+    div[class*="st-key-cancel_sync_btn"] button::before,
+    div[class*="st-key-cancel_pp_btn_sync_phase3"] button::before {
+        content: '' !important;
+        display: block !important;
+        width: 17px !important;
+        height: 17px !important;
+        min-width: 17px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        flex-shrink: 0 !important;
+        transition: all 0.15s ease !important;
+    }
+
+    div[class*="st-key-cancel_download_btn"] button:hover,
+    div[class*="st-key-cancel_pp_download"] button:hover,
+    div[class*="st-key-cancel_retry_btn"] button:hover,
+    div[class*="st-key-cancel_analysis_btn"] button:hover,
+    div[class*="st-key-cancel_sync_btn"] button:hover,
+    div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover {
+        background-color: rgba(255, 75, 75, 0.1) !important;
+        background-image: none !important;
+        border-color: #ff4b4b !important;
+        color: #ffffff !important;
+    }
+
+    div[class*="st-key-cancel_download_btn"] button:hover::before,
+    div[class*="st-key-cancel_pp_download"] button:hover::before,
+    div[class*="st-key-cancel_retry_btn"] button:hover::before,
+    div[class*="st-key-cancel_analysis_btn"] button:hover::before,
+    div[class*="st-key-cancel_sync_btn"] button:hover::before,
+    div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
     }
 
     </style>

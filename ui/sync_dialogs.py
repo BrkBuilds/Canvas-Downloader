@@ -22,6 +22,7 @@ from pathlib import Path
 import streamlit as st
 
 import theme
+from ui_shared import SVG_FOLDER_YELLOW
 from sync_manager import SyncHistoryManager, SyncManager
 from ui_helpers import (
     esc,
@@ -168,7 +169,12 @@ def show_course_ignored_files(course_name, course_id, course_data):
     from sync_manager import format_file_size
     from ui_helpers import get_base64_image
 
-    @st.dialog("\u200b", width="large")
+    # on_dismiss="rerun": restoring files is an on_click callback that mutates
+    # the manifest and invalidates _ignored_files_cache via a fragment rerun, so
+    # the main-page card's "Ignored Files (N)" count + disabled state go stale.
+    # Backdrop/ESC dismissal would reveal that stale render until the next click;
+    # "rerun" forces a full app rerun so the card recomputes from fresh data.
+    @st.dialog("\u200b", width="large", on_dismiss="rerun")
     def _dialog():
         sm = course_data['sync_manager']
         files = sm.get_ignored_files()
@@ -201,6 +207,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
 
         is_expanded = st.session_state.get(f"{prefix}_chevron", False)
         bottom_padding = "14px" if is_expanded else "4px"
+        filelist_height = 340 if is_expanded else 480
 
         _css = f"""<style>
             /* -- Dialog compact gaps -- */
@@ -313,16 +320,17 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 background-image: url('data:image/png;base64,{b64_clear}') !important;
             }}
             /* Restore button icon */
+            div[class*="st-key-{prefix}_restore"] button p {{
+                display: flex !important; align-items: center !important;
+                justify-content: center !important; gap: 8px !important;
+                margin: 0 !important; line-height: 1 !important;
+            }}
             div[class*="st-key-{prefix}_restore"] button p::before {{
                 content: "" !important; display: inline-block !important;
-                width: 14px !important; height: 14px !important;
+                width: 18px !important; height: 18px !important;
                 background-image: url('data:image/png;base64,{b64_restore}') !important;
                 background-size: contain !important; background-repeat: no-repeat !important;
                 background-position: center !important; flex-shrink: 0 !important;
-                margin-right: 8px !important; 
-                vertical-align: middle !important;
-                position: relative !important;
-                /* rely on vertical-align: middle */
             }}
             /* Action Buttons Explicit Match */
             div[class*="st-key-{prefix}_close"] button,
@@ -337,6 +345,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 background-color: rgba(255, 255, 255, 0.075) !important;
                 border: 1px solid rgba(255, 255, 255, 0.075) !important;
                 color: rgba(255, 255, 255, 0.2) !important;
+                box-shadow: none !important;
             }}
             /* Dim the icon when disabled */
             div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button:disabled p::before,
@@ -511,7 +520,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                         st.button("Deselect All", key=f"{prefix}_btn_da", use_container_width=True, on_click=_deselect_all)
 
         # ── 4. File list with extension + size tags ───────────────────
-        with st.container(height=400, border=True, key=f"{prefix}_filelist"):
+        with st.container(height=filelist_height, border=True, key=f"{prefix}_filelist"):
             for key, f in all_file_tuples:
                 _disp_raw = urllib.parse.unquote_plus(f.canvas_filename)
                 _name, _ext = os.path.splitext(_disp_raw)
@@ -762,7 +771,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             st.markdown(
                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
                 f'{"Added Folder:" if pending_folder else "Folder:"}</span>'  # audit-ignore: folder_name is a local filesystem path
-                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{"📁 " if pending_folder else ""}{folder_name}</span>',
+                f'<span style="color:{theme.WHITE};font-weight:600;font-size:0.95rem;white-space:nowrap;">{SVG_FOLDER_YELLOW if pending_folder else ""}{folder_name}</span>',
                 unsafe_allow_html=True,
             )
         with col_change_btn:
@@ -816,6 +825,19 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             st.session_state['sync_selected_course_id'] = selected_course_id
             st.rerun()
 
+        # Pre-compute manifest rebind state so the name-mismatch warning can be
+        # suppressed when the more informative rebind notice will already be shown.
+        _manifest_rebind_needed = False
+        _bound_name = _new_name = None
+        if pending_folder and selected_course_id:
+            _bound_id = SyncManager.peek_bound_course_id(pending_folder)
+            if _bound_id is not None and _bound_id != selected_course_id:
+                _manifest_rebind_needed = True
+                _bound_name = friendly_course_name(
+                    SyncManager.peek_bound_course_name(pending_folder) or f"course #{_bound_id}"
+                )
+                _new_name = friendly_course_name(selected_course_name or f"course #{selected_course_id}")
+
         # --- Warnings ---
         # Mismatch warning
         if selected_course_name and pending_folder:
@@ -825,7 +847,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                  original_pair = st.session_state['sync_pairs'][editing_idx]
                  if original_pair.get('course_id') == selected_course_id and original_pair.get('local_folder') == pending_folder:
                      is_same_as_original = True
-            
+
             folder_lower = folder_name.lower()
             course_lower = selected_course_name.lower()
             course_words = [w for w in course_lower.replace('(', ' ').replace(')', ' ').replace('-', ' ').replace('_', ' ').split() if len(w) >= 2]
@@ -834,9 +856,10 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 any(cw in folder_lower for cw in course_words)
                 or any(fw in course_lower for fw in folder_words)
             )
-            
-            # Mismatch warning: Only if not the original selection (user changed it)
-            if not has_match and not is_same_as_original:
+
+            # Suppress name-mismatch when the rebind notice is already shown — it
+            # conveys the same information (wrong course) with more detail.
+            if not has_match and not is_same_as_original and not _manifest_rebind_needed:
                 from ui.amber_notice import render_amber_notice
                 render_amber_notice(
                     "The folder name doesn't seem to match the selected course.",
@@ -857,44 +880,33 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         render_amber_notice('⚠️ This folder is already paired with this course.')
                     break
 
-
-
         # --- Manifest binding notice ---
         # Shown when the chosen folder already has a .canvas_sync.db bound to
-        # a DIFFERENT course (e.g. user re-directed an existing pair). We surface
-        # this here so the user understands what "Confirm and Add" will do.
-        _manifest_rebind_needed = False
-        if pending_folder and selected_course_id:
-            _bound_id = SyncManager.peek_bound_course_id(pending_folder)
-            if _bound_id is not None and _bound_id != selected_course_id:
-                _manifest_rebind_needed = True
-                _bound_name = friendly_course_name(
-                    SyncManager.peek_bound_course_name(pending_folder) or f"course #{_bound_id}"
-                )
-                _new_name = friendly_course_name(selected_course_name or f"course #{selected_course_id}")
-                st.html(f"""
-                <div style="
-                    background: rgba(234, 179, 8, 0.12);
-                    border: 1px solid rgba(234, 179, 8, 0.55);
-                    border-radius: 6px;
-                    padding: 10px 14px;
-                    margin: 4px 0 20px 0;
-                    font-size: 0.9rem;
-                    line-height: 1.5;
-                ">
-                    <div style="color:#fbbf24; font-weight:700; margin-bottom:3px;">
-                        🔗 This folder is already linked to a different course
-                    </div>
-                    <div style="color:#fde68a;">
-                        <b>Currently linked to:</b> <span style="color:white;">{esc(_bound_name)}</span><br>
-                        <b>You've selected:</b> <span style="color:white;">{esc(_new_name)}</span>
-                    </div>
-                    <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
-                        Clicking <b>Confirm and Add</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
-                        If you meant to sync to a different course, change the course with the <b>Select Course</b> button above.
-                    </div>
+        # a DIFFERENT course (e.g. user re-directed an existing pair).
+        if _manifest_rebind_needed:
+            st.html(f"""
+            <div style="
+                background: rgba(234, 179, 8, 0.12);
+                border: 1px solid rgba(234, 179, 8, 0.55);
+                border-radius: 6px;
+                padding: 10px 14px;
+                margin: 4px 0 8px 0;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            ">
+                <div style="color:#fbbf24; font-weight:700; margin-bottom:3px;">
+                    🔗 This folder is already linked to a different course
                 </div>
-                """)
+                <div style="color:#fde68a;">
+                    <b>Currently linked to:</b> <span style="color:white;">{esc(_bound_name)}</span><br>
+                    <b>You've selected:</b> <span style="color:white;">{esc(_new_name)}</span>
+                </div>
+                <div style="color:rgba(253,230,138,0.75); margin-top:5px; font-size:0.85rem;">
+                    Clicking <b>{"Save Changes" if editing_idx is not None else "Confirm and Add"}</b> will re-link this folder to the new course. Your files on disk won't be deleted.<br>
+                    If you meant to sync to a different course, change the course with the <b>Select Course</b> button above.
+                </div>
+            </div>
+            """)
 
         # Error container Relocated HERE (Below dropdown/warnings, Above buttons)
         error_container = st.empty()
@@ -916,10 +928,25 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_add:
             is_folder_selected = bool(pending_folder)
             is_course_selected = bool(selected_course_id)
-            
+            is_edit_mode = editing_idx is not None
+
+            has_changes = True
+            if is_edit_mode and 0 <= editing_idx < len(st.session_state.get('sync_pairs', [])):
+                _orig = st.session_state['sync_pairs'][editing_idx]
+                has_changes = (
+                    _orig.get('course_id') != selected_course_id
+                    or _orig.get('local_folder') != pending_folder
+                )
+
+            btn_label = "Save Changes" if is_edit_mode else "Confirm and Add"
+
             if is_folder_selected and is_course_selected:
-                btn_disabled = False
-                btn_tooltip = None
+                if is_edit_mode and not has_changes:
+                    btn_disabled = True
+                    btn_tooltip = None
+                else:
+                    btn_disabled = False
+                    btn_tooltip = None
             elif is_folder_selected and not is_course_selected:
                 btn_disabled = True
                 btn_tooltip = "Select a course to continue."
@@ -930,7 +957,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 btn_disabled = True
                 btn_tooltip = "Select a Canvas course, and its corresponding course folder on your pc to continue."
 
-            if st.button('Confirm and Add', key="confirm_pair",
+            if st.button(btn_label, key="confirm_pair",
                          type="primary", use_container_width=True,
                          disabled=btn_disabled, help=btn_tooltip):
                 if not pending_folder:

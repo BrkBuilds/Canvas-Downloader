@@ -18,6 +18,7 @@ from urllib.parse import unquote_plus
 import streamlit as st
 
 import theme
+from ui_shared import SVG_FOLDER_YELLOW
 from ui_helpers import (
     render_sync_wizard,
     friendly_course_name,
@@ -509,7 +510,7 @@ def show_analysis_review(on_confirm_sync):
     if not all_results:
         from ui.amber_notice import render_error_notice
         render_error_notice("Analysis failed. Please try again.")
-        if st.button('Back', key="page_nav_back_sr_err"):
+        if st.button('Go back', key="page_nav_back_sr_err"):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
@@ -1472,7 +1473,7 @@ def show_analysis_review(on_confirm_sync):
                         <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{display_name}</span>
                     </div>
                     <div style="display: flex; align-items: center; overflow: hidden; padding-left: 25px;">
-                        <span style="font-size: 0.88rem; flex-shrink: 0; color: initial; filter: none; line-height: 1; margin-right: 5px;">📁</span>
+                        {SVG_FOLDER_YELLOW}
                         <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
                     </div>
                 </div>
@@ -1772,7 +1773,7 @@ def show_analysis_review(on_confirm_sync):
 
                     if total_count == 0:
                         from ui.amber_notice import render_info_notice
-                        render_info_notice('Nothing to sync - all files are up to date!')
+                        render_info_notice('Nothing to sync - your!')
                         st.stop()
 
                     # Disk space check - partition bytes by target drive so
@@ -1829,7 +1830,7 @@ def show_analysis_review(on_confirm_sync):
 
         with col_back:
             with st.container(key="btn_sync_back"):
-                if st.button('Back', use_container_width=True):
+                if st.button('Go back', use_container_width=True, key="page_nav_sync_review_back"):
                     cleanup_sync_state()
                     st.rerun()
 
