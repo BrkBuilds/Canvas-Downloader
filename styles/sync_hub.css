@@ -28,15 +28,13 @@ div.st-key-sync_list_outline {
     margin-top: -10px !important;
 }
 
-/* Dusty Slate-Indigo theme for Group features */
-div.st-key-btn_save_group_main button,
+/* Dusty Slate-Indigo theme for the Hub button */
 div.st-key-btn_hub_main button {
     background-color: rgba(95, 100, 200, 0.35) !important;
     color: #e0e7ff !important;
     border: 1px solid rgba(95, 100, 200, 0.6) !important;
 }
 
-div.st-key-btn_save_group_main button:hover,
 div.st-key-btn_hub_main button:hover {
     background-color: rgba(95, 100, 200, 0.55) !important;
     border-color: rgba(95, 100, 200, 0.9) !important;
@@ -44,9 +42,89 @@ div.st-key-btn_hub_main button:hover {
     transition: all 0.2s ease-in-out;
 }
 
+/* ---------------------------------------------------------
+   MAIN SYNC LIST: "Add Course" + "Save as Group" button row
+   (moved out of inline st.markdown in sync_ui.py - inline
+   <style> injections create ghost boxes inside the
+   sync_list_outline container, inflating the gap above this
+   row and pushing the empty-state button down.)
+   --------------------------------------------------------- */
+div.st-key-btn_add_folder button,
+div.st-key-btn_add_folder_empty button {
+    border: none !important;
+    background-color: #0b5a6e !important;
+    color: #ffffff !important;
+    margin-top: 0px !important;
+    position: relative;
+    z-index: 1;
+    opacity: 1 !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+}
+
+div.st-key-btn_add_folder button:hover,
+div.st-key-btn_add_folder_empty button:hover {
+    background-color: #106e85 !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(11, 90, 110, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* "Save as Group" (main sync list) - subtle indigo, separate from the Hub button.
+   Has help= so the button is wrapped in stTooltipHoverTarget - keep it full-width. */
+div.st-key-btn_save_group_main div[data-testid="stTooltipHoverTarget"] {
+    margin-top: 0px !important;
+    position: relative;
+    z-index: 1;
+    display: block !important;
+    width: 100% !important;
+}
+
+div.st-key-btn_save_group_main button {
+    background-color: rgba(95, 100, 200, 0.075) !important;
+    color: #e0e7ff !important;
+    border: 1px solid rgba(95, 100, 200, 0.75) !important;
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+}
+
+div.st-key-btn_save_group_main button:hover {
+    background-color: rgba(95, 100, 200, 0.2) !important;
+    border-color: rgba(95, 100, 200, 1) !important;
+    color: #ffffff !important;
+    transition: all 0.2s ease-in-out;
+}
+
+div.st-key-btn_save_group_main button div[data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+div.st-key-btn_save_group_main button p {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+
+div.st-key-btn_save_group_main button p::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTM2IDEwNiBBNzAgNzAgMCAwIDEgMTA2IDM2IEg0MDQgTDQ3NiAxMDggVjQwNiBBNzAgNzAgMCAwIDEgNDA2IDQ3NiBIMTA2IEE3MCA3MCAwIDAgMSAzNiA0MDYgWiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik0xMTYgMzYgSDM5NiBWMTgyIEEyNiAyNiAwIDAgMSAzNzAgMjA4IEgxNDIgQTI2IDI2IDAgMCAxIDExNiAxODIgWiIgZmlsbD0iIzJFMUEzMyIvPjxwYXRoIGQ9Ik0xNzYgMzYgSDMzNiBWMTU4IEEyMiAyMiAwIDAgMSAzMTQgMTgwIEgxOTggQTIyIDIyIDAgMCAxIDE3NiAxNTggWiIgZmlsbD0iI0U2RTZFNiIvPjxyZWN0IHg9IjI4OCIgeT0iNTYiIHdpZHRoPSIzNiIgaGVpZ2h0PSIxMDQiIHJ4PSIxMiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik05NiAyNDQgQTggOCAwIDAgMSAxMDQgMjM2IEg0MDggQTggOCAwIDAgMSA0MTYgMjQ0IFY0NTAgQTEwIDEwIDAgMCAxIDQwNiA0NjAgSDEwNiBBMTAgMTAgMCAwIDEgOTYgNDUwIFoiIGZpbGw9IiNFNkU2RTYiLz48cGF0aCBkPSJNOTYgMjQ0IEE4IDggMCAwIDEgMTA0IDIzNiBINDA4IEE4IDggMCAwIDEgNDE2IDI0NCBWMjgwIEg5NiBaIiBmaWxsPSIjRUQzQjM0Ii8+PC9zdmc+");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 /* Disabled state for Save Group button */
 div.st-key-btn_save_group_main button[disabled] {
-    background-color: rgba(95, 100, 200, 0.15) !important;
+    background-color: rgba(95, 100, 200, 0.1) !important;
     border: 1px solid rgba(95, 100, 200, 0.3) !important;
     color: rgba(255, 255, 255, 0.3) !important;
     cursor: not-allowed !important;
@@ -99,6 +177,7 @@ div[data-testid="stDialog"] button[kind="primary"][disabled] {
     opacity: 1 !important;
     color: rgba(255, 255, 255, 0.5) !important;
     cursor: not-allowed !important;
+    box-shadow: none !important;
 }
 
 /* Secondary button baseline */
@@ -163,6 +242,11 @@ div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
     box-shadow: 0 4px 15px rgba(95, 100, 200, 0.3),
         inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
     color: #ffffff !important;
+}
+
+/* Disabled state for "Add to Sync List" */
+div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button[disabled] {
+    box-shadow: none !important;
 }
 
 /* 4. Default state for "Delete" (Dark Grey / Recessed) */
@@ -238,7 +322,7 @@ div[data-testid="stDialog"] div.st-key-btn_hub_add_new_pair {
 }
 
 /* 1. Edit Group Meta Box */
-div.st-key-hub_edit_group_meta {
+div.st-key-hub_rename_group_meta {
     background-color: rgba(220, 210, 180, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     margin-bottom: 25px !important;
@@ -295,6 +379,24 @@ div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summar
 
 div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details[open] summary {
     border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary p {
+    display: flex !important;
+    align-items: center !important;
+}
+
+div[class*="st-key-hub_pair_card_"] div[data-testid="stExpander"] details summary p::before {
+    content: "";
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    min-width: 17px;
+    margin-right: 6px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 17H5'/%3E%3Cpath d='M19 7h-9'/%3E%3Ccircle cx='17' cy='17' r='3'/%3E%3Ccircle cx='7' cy='7' r='3'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 /* 4. Remove Button (Recessed Dark Default, Danger on Hover) */
@@ -527,6 +629,24 @@ div[class*="st-key-save_pair_"] button {
     transition: transform 0.2s ease;
 }
 
+div[class*="st-key-save_pair_"] button p {
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+div[class*="st-key-save_pair_"] button p::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTM2IDEwNiBBNzAgNzAgMCAwIDEgMTA2IDM2IEg0MDQgTDQ3NiAxMDggVjQwNiBBNzAgNzAgMCAwIDEgNDA2IDQ3NiBIMTA2IEE3MCA3MCAwIDAgMSAzNiA0MDYgWiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik0xMTYgMzYgSDM5NiBWMTgyIEEyNiAyNiAwIDAgMSAzNzAgMjA4IEgxNDIgQTI2IDI2IDAgMCAxIDExNiAxODIgWiIgZmlsbD0iIzJFMUEzMyIvPjxwYXRoIGQ9Ik0xNzYgMzYgSDMzNiBWMTU4IEEyMiAyMiAwIDAgMSAzMTQgMTgwIEgxOTggQTIyIDIyIDAgMCAxIDE3NiAxNTggWiIgZmlsbD0iI0U2RTZFNiIvPjxyZWN0IHg9IjI4OCIgeT0iNTYiIHdpZHRoPSIzNiIgaGVpZ2h0PSIxMDQiIHJ4PSIxMiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik05NiAyNDQgQTggOCAwIDAgMSAxMDQgMjM2IEg0MDggQTggOCAwIDAgMSA0MTYgMjQ0IFY0NTAgQTEwIDEwIDAgMCAxIDQwNiA0NjAgSDEwNiBBMTAgMTAgMCAwIDEgOTYgNDUwIFoiIGZpbGw9IiNFNkU2RTYiLz48cGF0aCBkPSJNOTYgMjQ0IEE4IDggMCAwIDEgMTA0IDIzNiBINDA4IEE4IDggMCAwIDEgNDE2IDI0NCBWMjgwIEg5NiBaIiBmaWxsPSIjRUQzQjM0Ii8+PC9zdmc+");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 div[class*="st-key-save_pair_"] button:hover {
     transform: scale(1.15);
     background-color: transparent !important;
@@ -629,4 +749,96 @@ div[class*="st-key-hub_layer2_add_btn_wrapper"] {
    ========================================= */
 div[data-testid="stDialog"] button[aria-label="Close"] {
     display: none !important;
+}
+
+/* =========================================
+   SVG ICON INJECTION VIA PSEUDO-ELEMENTS
+   ========================================= */
+div[class*="st-key-btn_enable_edit_name"] button p,
+div[class*="st-key-hub_edit_"] button p,
+div[class*="st-key-hub_editp_"] button p,
+div[class*="st-key-hub_open_"] button p,
+div[class*="st-key-btn_hub_remove_pair_"] button p,
+div[class*="st-key-btn_hub_delete_"] button p {
+    padding-left: 24px !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+div[class*="st-key-btn_enable_edit_name"] button p::after,
+div[class*="st-key-hub_edit_"] button p::after,
+div[class*="st-key-hub_editp_"] button p::after,
+div[class*="st-key-hub_open_"] button p::after,
+div[class*="st-key-btn_hub_remove_pair_"] button p::after,
+div[class*="st-key-btn_hub_delete_"] button p::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    transition: background-color 0.2s ease !important;
+}
+
+/* Edit icons (white) */
+div[class*="st-key-btn_enable_edit_name"] button p::after,
+div[class*="st-key-hub_edit_"] button p::after,
+div[class*="st-key-hub_editp_"] button p::after {
+    background-color: #ffffff !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
+}
+
+/* Folder open icon (yellow) */
+div[class*="st-key-hub_open_"] button p::after {
+    background-color: #facc15 !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M20 5h-7.586l-2-2H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z'/%3E%3C/svg%3E");
+}
+
+/* Trash icons (white on normal, red on hover via currentColor) */
+div[class*="st-key-btn_hub_remove_pair_"] button p::after,
+div[class*="st-key-btn_hub_delete_"] button p::after {
+    background-color: currentColor !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+}
+
+/* =========================================
+   SVG SAVE ICON INJECTION (FLOPPY DISK)
+   ========================================= */
+div[class*="st-key-hub_save_edit_"] button,
+div.st-key-btn_inline_new_confirm button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+div[class*="st-key-hub_save_edit_"] button div[data-testid="stMarkdownContainer"],
+div.st-key-btn_inline_new_confirm button div[data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+div.st-key-btn_inline_new_confirm button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+
+div.st-key-btn_inline_new_confirm button p::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTM2IDEwNiBBNzAgNzAgMCAwIDEgMTA2IDM2IEg0MDQgTDQ3NiAxMDggVjQwNiBBNzAgNzAgMCAwIDEgNDA2IDQ3NiBIMTA2IEE3MCA3MCAwIDAgMSAzNiA0MDYgWiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik0xMTYgMzYgSDM5NiBWMTgyIEEyNiAyNiAwIDAgMSAzNzAgMjA4IEgxNDIgQTI2IDI2IDAgMCAxIDExNiAxODIgWiIgZmlsbD0iIzJFMUEzMyIvPjxwYXRoIGQ9Ik0xNzYgMzYgSDMzNiBWMTU4IEEyMiAyMiAwIDAgMSAzMTQgMTgwIEgxOTggQTIyIDIyIDAgMCAxIDE3NiAxNTggWiIgZmlsbD0iI0U2RTZFNiIvPjxyZWN0IHg9IjI4OCIgeT0iNTYiIHdpZHRoPSIzNiIgaGVpZ2h0PSIxMDQiIHJ4PSIxMiIgZmlsbD0iIzVDNUM5NCIvPjxwYXRoIGQ9Ik05NiAyNDQgQTggOCAwIDAgMSAxMDQgMjM2IEg0MDggQTggOCAwIDAgMSA0MTYgMjQ0IFY0NTAgQTEwIDEwIDAgMCAxIDQwNiA0NjAgSDEwNiBBMTAgMTAgMCAwIDEgOTYgNDUwIFoiIGZpbGw9IiNFNkU2RTYiLz48cGF0aCBkPSJNOTYgMjQ0IEE4IDggMCAwIDEgMTA0IDIzNiBINDA4IEE4IDggMCAwIDEgNDE2IDI0NCBWMjgwIEg5NiBaIiBmaWxsPSIjRUQzQjM0Ii8+PC9zdmc+");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }

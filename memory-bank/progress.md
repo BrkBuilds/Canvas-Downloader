@@ -1,5 +1,27 @@
 ## Latest Updates
 
+- [x] **Replace Clock and Save Emojis with Custom SVGs** (2026-06-21):
+    - [x] **Centralized SVG Constants**: Defined `SVG_CLOCK` (stroke clock outline) and `SVG_SAVE_COLORFUL` (colorful vector floppy disk) constants in `ui_shared.py`.
+    - [x] **Dialog Header Customizations**: Updated `@st.dialog` decorators to use zero-width space (`\u200b`) titles to avoid raw HTML escaping, and rendered custom HTML/SVG headers inside the dialog bodies.
+    - [x] **Button Icon Injections**: Stripped emojis from button text and prepended the colorful floppy disk SVG using base64-encoded background images in `styles/sync_hub.css` and `styles/preset_dialogs.css`.
+    - [x] **Application-Wide Text Purging**: Removed literal clock (`🕒`) and save (`💾`) emojis from all text strings, notices, and tooltips across the UI.
+
+- [x] **SVG Icon Resizing and Badge Vertical Alignment Fixes** (2026-06-21):
+    - [x] **Icon Resizing (+4px)**: Increased the size of all newly introduced SVG icons inside buttons and text fields by 4px. Modified `preset_dialogs.css` (preset delete), `sync_hub.css` (dialog action buttons), `sync_ui.py` (main page action buttons and clear history), and `completion.css`/`ui_shared.py` (folders updated completion cards). Adjusted text padding-left elements to ensure identical gaps and avoid squishing or overlapping.
+    - [x] **Badge Alignment & Sizing Fix**: Added `align-items: center;` to the `display: inline-flex` styles of the configuration summary badges (`render_config_summary_badges` in `ui_shared.py`) to align the folder icon SVG perfectly with the text. Created `SVG_FOLDER_YELLOW_SMALL` and `SVG_EDIT_WHITE_SMALL` (same 1.1em size as original) and used them inside configuration summary badges/preset summaries to restore the smaller, cleaner icon layout inside tags.
+    - [x] **CSS Leakage Resolution**: Fixed a CSS wildcard selector leak where the rename form container's prefix `hub_edit_` matched `div[class*="st-key-hub_edit_"]` styling rules, causing the Cancel and Save buttons inside it to draw duplicate/incorrect pencil icons. Renamed the form container to `hub_rename_group_meta` and the text input to `hub_rename_name_input` in `ui/hub_dialog.py` and `styles/sync_hub.css`.
+
+- [x] **SVG Icon Integration & Emoji Removal** (2026-06-21):
+    - [x] **Central SVG Constants**: Defined yellow folder, white edit, and white trashcan SVGs in `ui_shared.py` for inline HTML/markdown rendering.
+    - [x] **Inline Emoji Replacements**: Purged folder (📁/📂), edit (✏️/📝), and trashcan (🗑️) emojis from paths, list items, description texts, and headers, replacing them with inline SVGs.
+    - [x] **Dialog & Card Button SVG Overlays**: Removed emojis from button labels in Preset Cards, Sync Hub Dialogs, and main Sync Page. Added CSS pseudo-elements in `preset_dialogs.css`, `sync_hub.css`, and `sync_ui.py` to overlay corresponding SVG masks.
+    - [x] **Hover Color & currentColor Binding**: Bound trashcan/remove SVGs to `currentColor` inside button styles, making the icons automatically turn red on hover when the text color changes. Made folder SVGs consistently yellow `#facc15` and edit SVGs white `#ffffff`.
+
+- [x] **Sync Action Button filled SVGs & alignment fix** (2026-06-21):
+    - [x] **Filled SVG Icons**: Replaced stroked folder, edit (pencil), and trash SVGs in `assets/` with crisp, solid, filled versions to match the styling of the Ignored Files icon.
+    - [x] **Left alignment of button contents**: Injected CSS in `sync_ui.py` to override Streamlit's default center-alignment and nested flexbox behavior on `st.button` wrapper `div`s and `span`s, ensuring that action buttons' text and icons are perfectly left-aligned.
+    - [x] **Removed Icon Boxes**: Discarded the background box structures (`::before` pseudo-elements) to render the icons cleanly on transparent backgrounds. Tuned dimensions to a standard 40px height with balanced 10px padding (left, top, bottom) for optimal visual symmetry.
+
 - [x] **Unified Website Navigation Header and Footer Standardisation** (2026-06-13):
     - [x] **Navigation Header Standardization**: Standardized the header navigation markup and styles across all website pages (`index.html`, `guide.html`, `mac-setup.html`, `privacy.html`, `thanks-mac.html`, and `thanks-win.html`) for a unified user experience.
     - [x] **Header Link Renames**: Renamed the "Mac Setup" link to "How to set up" and moved it to the left of "How It Works" across all website headers to prioritize and guide first-time users cleanly.

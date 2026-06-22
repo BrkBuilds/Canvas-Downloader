@@ -737,22 +737,7 @@ div.st-key-page_nav_quick_start button:active {{
     transform: none !important;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
 }}
-div.st-key-page_nav_quick_back button {{
-    background: transparent !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    color: #94a3b8 !important;
-    font-weight: 500 !important;
-    border-radius: 8px !important;
-    height: 48px !important;
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease !important;
-    transform: none !important;
-}}
-div.st-key-page_nav_quick_back button:hover {{
-    border-color: rgba(255,255,255,0.22) !important;
-    color: #cbd5e1 !important;
-    background: rgba(255,255,255,0.03) !important;
-    transform: none !important;
-}}
+
 </style>
 """)
 
@@ -1039,13 +1024,8 @@ div.st-key-page_nav_quick_back button:hover {{
             with st.expander("See configuration"):
                 if active_preset is not None:
                     _config_badges = render_config_summary_badges(active_preset['settings'], show_path=False)
-                    st.html(
-                        "<div style='margin-bottom: 12px;'>"
-                        "<p style='color:#64748b; font-size:0.82rem; margin:0 0 10px 0; line-height:1.5;'>"
-                        "The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted). "
-                        f"{_config_badges}"
-                        "</div>"
-                    )
+                    st.html("<div style='color:#64748b; font-size:0.82rem; padding:0 0 10px 0; line-height:1.5;'>The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted).</div>")
+                    st.markdown(_config_badges, unsafe_allow_html=True)
                 else:
                     st.html("<div style='color:#64748b; font-size:0.82rem; padding:4px 0 8px 0;'>Select a preset above to preview its configuration.</div>")
                 if st.button(
@@ -1085,7 +1065,7 @@ div.st-key-page_nav_quick_back button:hover {{
 
         act_back, _spacer, act_start = st.columns([1, 3.5, 1.5])
         with act_back:
-            back_clicked = st.button("← Back", key="page_nav_quick_back", use_container_width=True)
+            back_clicked = st.button("Go back", key="page_nav_quick_back", use_container_width=True)
         with act_start:
             start_clicked = st.button(
                 "Confirm and Download", key="page_nav_quick_start", type="primary",
