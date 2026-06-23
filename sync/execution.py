@@ -1912,7 +1912,15 @@ def run_sync():
         st.session_state['download_status'] = 'sync_cancelled'
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:
-        st.session_state['download_status'] = 'sync_complete'
+        # Terminal Panopto pass (premium feature) runs after the file sync, before
+        # the completion screen - mirrors the Download-mode 'panopto' phase.
+        _pan_on = False
+        try:
+            from panopto.settings import load_settings as _pan_load
+            _pan_on = bool(_pan_load().get('enabled'))
+        except Exception:
+            _pan_on = False
+        st.session_state['download_status'] = 'sync_panopto' if _pan_on else 'sync_complete'
 
     st.session_state['step'] = 4
     st.rerun()

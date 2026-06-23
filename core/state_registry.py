@@ -99,6 +99,12 @@ DOWNLOAD_DEFAULTS = {
     'quick_org_mode': 'modules',
     # L-13: Sync history retention - number of past operations to keep.
     'sync_history_retention': 50,
+    # ── Panopto (premium hidden feature) ──
+    # Master visibility flag for the sidebar entry + whether Panopto runs are
+    # included in download/sync. Loaded from the persisted panopto settings on
+    # login; defaults keep the feature dormant until explicitly enabled.
+    'panopto_feature_enabled': True,   # show the sidebar nav entry (dev/testing)
+    'panopto_settings_loaded': False,  # one-shot guard for loading panopto config
 }
 
 SYNC_DEFAULTS = {
@@ -131,6 +137,10 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'retry_isolated_details', 'retry_mb_tracker',
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'size_skipped_files', 'skipped_discovery_errors',
+    # Panopto run state (Phase 2): per-run discovery/progress trackers.
+    'panopto_queue', 'panopto_done_count', 'panopto_failed_count',
+    'panopto_details', 'panopto_mb_tracker', 'panopto_run_started',
+    'panopto_total', '_panopto_warned', 'panopto_summary',
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
@@ -158,6 +168,9 @@ SYNC_TRANSIENT_KEYS = {
     'synced_details', 'synced_groups', 'pp_failure_count', 'pp_success_count',
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'completion_beep_fired',
+    # Panopto sync-pass trackers (mirror the download-mode transient keys).
+    'panopto_total', 'panopto_done_count', 'panopto_mb_tracker',
+    'panopto_run_started', '_panopto_warned', 'panopto_summary',
     # M-8: reset per-run warning sentinels so they re-arm on the next sync
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).

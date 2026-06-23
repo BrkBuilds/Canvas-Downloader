@@ -2444,6 +2444,8 @@ def render_sync_step4( main_placeholder=None):
 
     elif status == 'syncing':
         _run_sync()
+    elif status == 'sync_panopto':
+        _run_sync_panopto()
     elif status == 'sync_cancelled':
         _show_sync_cancelled()
     elif status == 'sync_complete':
@@ -2479,6 +2481,185 @@ def _show_sync_confirmation(sync_selections, count, size, folders, avail_mb, _to
 def _run_sync():
     """Delegate to sync.execution.run_sync."""
     _run_sync_impl()
+
+
+def _run_sync_panopto():
+    """Terminal Panopto pass for Sync mode.
+
+    Runs after the file sync completes: for each synced folder, discovers,
+    downloads and transcribes Panopto lectures (skipping ones already on disk),
+    records them in the folder's dedicated panopto_manifest, then advances to the
+    sync completion screen. Mirrors the Download-mode 'panopto' phase.
+    """
+    import collections
+    import time as _time
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    from canvas_logic import CanvasManager
+    from core.cancellation import cancel_sync, is_sync_cancelled
+    from engine.progress_dashboard import (
+        DashboardPlaceholders, render_full_dashboard, render_active_file,
+        log_line, log_divider, log_meta, file_icon_svg,
+    )
+    from panopto.settings import load_settings as _pan_load
+    from panopto.runner import run_course_panopto, make_recorder
+    from sync_manager import SyncManager
+    from ui_helpers import esc as _esc, render_sync_wizard as _wizard
+
+    pan = _pan_load()
+    sels = st.session_state.get('sync_selections') or []
+
+    _wizard(st, 3)
+    st.markdown('<h2 class="step-header">Panopto Lectures</h2>', unsafe_allow_html=True)
+
+    # Cancel re-entry guard (a cancel raises RerunException at a render call).
+    if is_sync_cancelled():
+        st.session_state['download_status'] = 'sync_cancelled'
+        st.rerun()
+
+    header_ph = st.empty(); prog_ph = st.empty(); metrics_ph = st.empty()
+    active_ph = st.empty(); log_ph = st.empty()
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+    cancel_ph = st.empty()
+    if cancel_ph.button('Cancel', key='cancel_panopto_sync_btn', type='secondary'):
+        cancel_sync()
+        st.session_state['download_status'] = 'sync_cancelled'
+        st.rerun()
+
+    dq = st.session_state.get('log_deque') or collections.deque(maxlen=200)
+    st.session_state['log_deque'] = dq
+    # Fresh counters for this pass (runs exactly once per sync).
+    st.session_state['panopto_total'] = 0
+    st.session_state['panopto_done_count'] = 0
+    st.session_state['panopto_mb_tracker'] = {'bytes': 0}
+    st.session_state['panopto_run_started'] = _time.time()
+    st.session_state['panopto_summary'] = {
+        'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0, 'failed': 0, 'courses': 0
+    }
+    pan_start = st.session_state['panopto_run_started']
+
+    dp = DashboardPlaceholders(header=header_ph, progress=prog_ph, metrics=metrics_ph,
+                               active_file=active_ph, log=log_ph)
+    cur = {'name': ''}
+    warned = set()
+
+    def _render():
+        render_full_dashboard(
+            dp, dq, header_label="Panopto Lectures", course_name=_esc(cur['name']),
+            current_files=st.session_state['panopto_done_count'],
+            total_files=max(1, st.session_state['panopto_total']),
+            downloaded_mb=st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024),
+            total_mb=0, start_time=pan_start, show_total_mb=False,
+        )
+
+    def progress(kind, **kw):
+        try:
+            if kind == 'discovering':
+                render_active_file(active_ph, f"Finding Panopto lectures in {kw.get('course', '')}…"); _render()
+            elif kind == 'found':
+                c = kw.get('count', 0)
+                if c:
+                    st.session_state['panopto_total'] += c
+                    dq.append(log_divider(f"Panopto · {kw.get('course', '')} ({c})"))
+                else:
+                    dq.append(log_meta(f"No Panopto lectures in {kw.get('course', '')}"))
+                _render()
+            elif kind == 'video_start':
+                render_active_file(active_ph, f"Downloading: {kw.get('title', '')}")
+            elif kind == 'skipped':
+                st.session_state['panopto_done_count'] += 1
+                dq.append(log_line('skip', kw.get('title', ''), icon=file_icon_svg('x.mp3'))); _render()
+            elif kind == 'downloaded':
+                sz = kw.get('size', 0) or 0
+                st.session_state['panopto_mb_tracker']['bytes'] += sz
+                dq.append(log_line('success', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
+                                   detail=f"{sz / (1024 * 1024):.1f} MB")); _render()
+            elif kind == 'transcribe':
+                render_active_file(active_ph, f"Transcribing: {kw.get('title', '')} ({kw.get('pct', 0)}%)")
+            elif kind == 'video_done':
+                st.session_state['panopto_done_count'] += 1
+                st.session_state['synced_count'] = st.session_state.get('synced_count', 0) + 1
+                _render()
+            elif kind == 'warn':
+                m = kw.get('message', '')
+                if m not in warned:
+                    warned.add(m); dq.append(log_line('attention', m)); _render()
+            elif kind == 'error':
+                err = kw.get('error')
+                if err is not None:
+                    _e = list(st.session_state.get('sync_errors', []))
+                    _e.append(f"Panopto: {getattr(err, 'message', err)}")
+                    st.session_state['sync_errors'] = _e
+                    dq.append(log_line('error', f"{getattr(err, 'item_name', '')}",
+                                       detail=str(getattr(err, 'message', err)))); _render()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            pass
+
+    cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+    _render()
+
+    for sel in sels:
+        if is_sync_cancelled():
+            break
+        rd = sel.get('res_data', {})
+        pair = rd.get('pair', {})
+        sm = rd.get('sync_manager')
+        local_folder = pair.get('local_folder')
+        if not local_folder and sm is not None:
+            try:
+                local_folder = str(sm.local_path)
+            except Exception:
+                local_folder = None
+        if not local_folder:
+            continue
+        course = SimpleNamespace(id=pair.get('course_id'), name=pair.get('course_name') or 'Course')
+        cur['name'] = course.name
+        _render()
+
+        if sm is None:
+            try:
+                sm = SyncManager(Path(local_folder), course.id, course.name)
+            except Exception:
+                sm = None
+        dmode = 'modules'
+        if sm is not None:
+            try:
+                dmode = sm._load_metadata('download_mode') or 'modules'
+            except Exception:
+                dmode = 'modules'
+        rec = make_recorder(sm, Path(local_folder)) if sm is not None else None
+
+        try:
+            _summary = run_course_panopto(
+                cm, course,
+                course_root=str(local_folder),
+                settings=pan,
+                download_mode=dmode,
+                progress=progress,
+                is_cancelled=is_sync_cancelled,
+                record_fn=rec,
+            )
+            _agg = st.session_state.setdefault(
+                'panopto_summary',
+                {'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0, 'failed': 0, 'courses': 0},
+            )
+            for _k in ('found', 'downloaded', 'transcribed', 'skipped', 'failed'):
+                _agg[_k] += int(_summary.get(_k, 0) or 0)
+            if _summary.get('found'):
+                _agg['courses'] += 1
+            st.session_state['panopto_summary'] = _agg
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as e:
+            logger.error(f"Sync Panopto pass crashed for '{course.name}': {e}", exc_info=True)
+            progress('error', error=SimpleNamespace(item_name=course.name, message=str(e)))
+
+    active_ph.empty()
+    st.session_state['download_status'] = 'sync_cancelled' if is_sync_cancelled() else 'sync_complete'
+    st.rerun()
 
 
 # ---- Cancelled ----

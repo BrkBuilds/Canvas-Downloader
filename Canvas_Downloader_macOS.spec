@@ -38,6 +38,7 @@ datas = [
     ('core', 'core'),
     ('engine', 'engine'),
     ('sync', 'sync'),
+    ('panopto', 'panopto'),   # Panopto lecture downloader (premium feature)
     ('ui', 'ui'),
     ('styles', 'styles'),
     ('LICENSE', '.'),
@@ -83,6 +84,10 @@ packages_to_collect = [
     # no-op on a non-mac build host (wrapped in try/except below); on macOS it
     # pulls the PyObjC framework bindings. Falls back to NSUserNotification if absent.
     'UserNotifications',
+    # Panopto transcription stack (faster-whisper via CTranslate2; NO torch).
+    # Wrapped in try/except below, so a host without these still builds.
+    'faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub',
+    'av', 'onnxruntime', 'numpy',
 ]
 
 for package in packages_to_collect:
