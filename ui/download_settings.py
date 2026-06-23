@@ -1337,64 +1337,15 @@ def render_download_settings(fetch_courses_fn):
                             )
                         with c2:
                             st.button(
-                                "In Separate Folders",
-                                key="btn_sec_org_subfolders",
-                                on_click=_set_isolate_secondary,
-                                args=(True,),
+                                "In Separate Folders", 
+                                key="btn_sec_org_subfolders", 
+                                on_click=_set_isolate_secondary, 
+                                args=(True,), 
                                 use_container_width=True,
                                 disabled=is_disabled
                             )
 
-                # CSS active-state is re-injected by Python each rerun; React patches
-                # the stylesheet atomically so no browser transition ever fires.
-                # This bridge intercepts each click before the rerun lands, applies
-                # the animated style change immediately, then cleans up on re-injection
-                # so hover states resume normally after the rerun CSS takes over.
-                import streamlit.components.v1 as components
-                components.html("""<script>
-(function () {
-    var doc = window.parent.document;
-    if (!window.parent._cdSegCtrl) window.parent._cdSegCtrl = {};
-    var reg = window.parent._cdSegCtrl;
-    if (reg.handlers) {
-        reg.handlers.forEach(function (h) {
-            try { h.el.removeEventListener('click', h.fn, false); } catch (e) {}
-        });
-    }
-    reg.handlers = [];
-    var TR = ['background-color','border-color','box-shadow','opacity','color']
-             .map(function(p){return p+' 0.22s cubic-bezier(0.4,0,0.2,1)';}).join(',');
-    var PROPS = ['transition','background-color','border-color','box-shadow','opacity','color'];
-    var groups = [
-        {sel:'div[class*="st-key-include_files_segmented_wrapper"]',bg:'rgba(63,217,255,0.15)',bd:'#3fd9ff'},
-        {sel:'div[class*="st-key-org_segmented_wrapper"]',bg:'rgba(63,217,255,0.15)',bd:'#3fd9ff'},
-        {sel:'div[class*="st-key-sec_org_segmented_wrapper"]',bg:'rgba(104,212,163,0.15)',bd:'#68d4a3'}
-    ];
-    groups.forEach(function(g){
-        var wrap=doc.querySelector(g.sel);
-        if(!wrap)return;
-        var all=Array.from(wrap.querySelectorAll('button'));
-        all.forEach(function(b){PROPS.forEach(function(p){b.style.removeProperty(p);});});
-        var btns=all.filter(function(b){return!b.disabled;});
-        if(btns.length<2)return;
-        btns.forEach(function(btn){
-            var fn=function(){
-                btns.forEach(function(b){
-                    var s=b.style,on=(b===btn);
-                    s.setProperty('transition',TR,'important');
-                    s.setProperty('background-color',on?g.bg:'transparent','important');
-                    s.setProperty('border-color',on?g.bd:'transparent','important');
-                    s.setProperty('box-shadow',on?'0 4px 6px rgba(0,0,0,0.3)':'none','important');
-                    s.setProperty('opacity',on?'1':'0.75','important');
-                    s.setProperty('color',on?'#ffffff':'#a0a0a0','important');
-                });
-            };
-            btn.addEventListener('click',fn,false);
-            reg.handlers.push({el:btn,fn:fn});
-        });
-    });
-})();
-</script>""", height=0)
+
 
 
         with col2:
