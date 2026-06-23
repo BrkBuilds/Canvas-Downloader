@@ -61,7 +61,7 @@ class PresetManager:
                 'dl_announcements': True,
                 'dl_discussions': True,
                 'dl_quizzes': True,
-                'dl_rubrics': True,
+                # 'dl_rubrics': True,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                 'dl_submissions': True,
                 'dl_secondary_master': True,
                 'notebooklm_master': False,
@@ -95,7 +95,7 @@ class PresetManager:
                 'dl_announcements': True,
                 'dl_discussions': True,
                 'dl_quizzes': True,
-                'dl_rubrics': True,
+                # 'dl_rubrics': True,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                 'dl_submissions': True,
                 'dl_secondary_master': True,
                 'notebooklm_master': False,
@@ -129,7 +129,7 @@ class PresetManager:
                 'dl_announcements': False,
                 'dl_discussions': False,
                 'dl_quizzes': False,
-                'dl_rubrics': False,
+                # 'dl_rubrics': False,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                 'dl_submissions': False,
                 'dl_secondary_master': False,
                 'notebooklm_master': True,

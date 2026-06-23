@@ -587,7 +587,11 @@ def show_course_ignored_files(course_name, course_id, course_data):
 
 @st.dialog("Select Course to sync", width="large")
 def select_course_dialog_inner(courses, current_selected_id, ):
-    from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list, render_favorites_pill
+    from ui.course_selector import (
+        inject_course_selector_css, render_cbs_filters, render_course_list,
+        render_favorites_pill, render_course_search, _filter_and_rank_courses,
+        _render_search_empty_notice,
+    )
 
     # Static CSS: scroll-container + compact dialog spacing
     st.html("""
@@ -628,8 +632,13 @@ def select_course_dialog_inner(courses, current_selected_id, ):
             }
             /* Restore natural gap for the checkbox rows inside the course list.
                The rows already use margin-bottom:-10px tightening; a 0.4rem gap
-               on top would cause them to overlap. */
-            div[data-testid="stVerticalBlock"]:has(div[class*="st-key-sync_d_chk_"]) {
+               on top would cause them to overlap.
+               CRITICAL: use :has(> ...) (DIRECT child), not :has(...) (descendant).
+               A descendant :has() also matches every ANCESTOR block containing a
+               checkbox - including the dialog's top-level block - so the 1rem gap
+               leaks onto the whole dialog, inflating spacing and breaking the
+               scroll container's -0.4rem flush-margins (CLAUDE.md JS/CSS rules). */
+            div[data-testid="stVerticalBlock"]:has(> div[class*="st-key-sync_d_chk_"]) {
                 gap: 1rem !important;
             }
             /* Reduce dialog scrollable body top padding so content sits closer
@@ -669,6 +678,10 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     # 2. CBS Filters (centralized)
     filtered_courses = render_cbs_filters(visible_courses, "sync_d")
 
+    # 2b. Search box (live, relevance-ranked) - refines the CBS-filtered set.
+    query = render_course_search("sync_d", in_dialog=True)
+    displayed_courses = _filter_and_rank_courses(filtered_courses, query)
+
     # Initialize single-select state.
     # NOTE: Only check key *existence*, not value.  When the user deselects
     # a course inside the dialog, _on_toggle sets the value to None; if we
@@ -683,8 +696,17 @@ def select_course_dialog_inner(courses, current_selected_id, ):
     # border=True required so the st-key-* CSS class is reliably emitted
     # (CLAUDE.md "Border Strip" rule). The border is stripped in CSS above.
     with st.container(border=True, key="course_list_scroll_container"):
-        render_course_list(filtered_courses, "sync_d", multi_select=False,
-                           first_item_top_offset="-10px")
+        if displayed_courses:
+            render_course_list(displayed_courses, "sync_d", multi_select=False,
+                               first_item_top_offset="-10px",
+                               sort=not query.strip())
+        elif query.strip():
+            _render_search_empty_notice(
+                query, favorites_only, visible_courses, filtered_courses, courses)
+        else:
+            # No query - let the list render its own "no filter matches" notice.
+            render_course_list(displayed_courses, "sync_d", multi_select=False,
+                               first_item_top_offset="-10px")
 
     # 4. Confirm
     st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')
@@ -839,6 +861,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 _new_name = friendly_course_name(selected_course_name or f"course #{selected_course_id}")
 
         # --- Warnings ---
+        is_duplicate_pair = False
         # Mismatch warning
         if selected_course_name and pending_folder:
             # Determine if this is the original course selection
@@ -876,8 +899,12 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             for cid, cname in course_names.items():
                 if cname == selected_course_name:
                     if any(p['local_folder'] == pending_folder and p['course_id'] == cid for p in candidates):
+                        is_duplicate_pair = True
                         from ui.amber_notice import render_amber_notice
-                        render_amber_notice('⚠️ This folder is already paired with this course.')
+                        render_amber_notice(
+                            'This folder is already on your sync list for this course.',
+                            detail='To update its settings, use the edit button on the existing pair instead.',
+                        )
                     break
 
         # --- Manifest binding notice ---
@@ -940,7 +967,10 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
 
             btn_label = "Save Changes" if is_edit_mode else "Confirm and Add"
 
-            if is_folder_selected and is_course_selected:
+            if is_duplicate_pair:
+                btn_disabled = True
+                btn_tooltip = "This pair is already on your sync list — cancel to go back."
+            elif is_folder_selected and is_course_selected:
                 if is_edit_mode and not has_changes:
                     btn_disabled = True
                     btn_tooltip = None

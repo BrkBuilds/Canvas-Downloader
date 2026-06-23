@@ -1,5 +1,9 @@
 ## Latest Updates
 
+- [x] **Amber Notice warning for course selector validation** (2026-06-23):
+    - [x] **Updated validation warning**: Migrated the "Please select at least one course" error alert in `ui/course_selector.py` from a standard red Streamlit error message to the styled `render_amber_notice` component.
+    - [x] **Loading Screen Bypass on Zero Selection**: Relocated the `cdp_selected_courses_count` DOM element into the course list fragment (`_course_list_section` in `ui/course_selector.py`). This ensures the course selection count is dynamically updated on every checkbox click, search, and selection clearing, preventing the client-side JavaScript loading overlay from incorrectly triggering when validation will fail.
+
 - [x] **Replace Clock and Save Emojis with Custom SVGs** (2026-06-21):
     - [x] **Centralized SVG Constants**: Defined `SVG_CLOCK` (stroke clock outline) and `SVG_SAVE_COLORFUL` (colorful vector floppy disk) constants in `ui_shared.py`.
     - [x] **Dialog Header Customizations**: Updated `@st.dialog` decorators to use zero-width space (`\u200b`) titles to avoid raw HTML escaping, and rendered custom HTML/SVG headers inside the dialog bodies.

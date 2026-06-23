@@ -11,6 +11,10 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-06-23: Amber Notice warning for course selector validation**
+    - **Validation Alert Migration**: Replaced the default Streamlit `st.error('Please select at least one course.')` with the styled amber notice `render_amber_notice('Please select at least one course.', margin="0 0 16px 0")` inside the error container placeholder when attempting to start a download without selecting any courses.
+    - **Loading Screen Bypass on Zero Selection**: Relocated the `cdp_selected_courses_count` DOM element into the course list fragment (`_course_list_section` in `ui/course_selector.py`). This ensures the course selection count is dynamically updated on every checkbox click, search, and selection clearing, preventing the client-side JavaScript loading overlay from incorrectly triggering when validation will fail.
+
 - **Session 2026-06-21: Replace Clock and Save Emojis with Custom SVGs**
     - **Centralized SVG Constants**: Added `SVG_CLOCK` (grey outline clock icon) and `SVG_SAVE_COLORFUL` (colorful floppy disk icon) constants to `ui_shared.py`.
     - **Custom Dialog Headers**: Configured `@st.dialog` decorators to use zero-width space `\u200b` titles to bypass Streamlit title escaping, and rendered custom HTML/SVG headers directly inside the dialog bodies.

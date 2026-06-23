@@ -42,7 +42,7 @@ Free, open source, and runs entirely on your machine.
 - **Async parallel downloads** - `asyncio` + `aiohttp` with configurable concurrency; Canvas rate-limit backoff built in
 - **Atomic file writes** - `.part` staging pattern; a crash mid-download never leaves corrupted files
 - **File size filters** - skip large video files you don't need right now. Skipped files are marked as *ignored* in the sync manifest (by design, so future syncs don't keep re-listing them) - restore them anytime from the Sync Hub's ignored-files list, even after raising the limit
-- **Full Canvas content support** - module files, assignments, syllabi, announcements, discussions, quizzes, and rubrics
+- **Full Canvas content support** - module files, assignments, syllabi, announcements, discussions, and quizzes
 
 ### Sync Mode
 
