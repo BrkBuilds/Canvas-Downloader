@@ -1392,6 +1392,67 @@ def render_pp_warning(pp_failure_count: int):
             margin="12px 0 2px 0",
         )
 
+def render_panopto_summary(summary: dict | None) -> None:
+    """Render a Panopto results card on the Download / Sync completion screens.
+
+    ``summary`` aggregates the terminal Panopto phase:
+        {found, downloaded, transcribed, skipped, failed, courses}
+    No-ops when summary is missing or nothing was found (feature off / no videos).
+    """
+    if not summary:
+        return
+    found = int(summary.get('found', 0) or 0)
+    if found <= 0:
+        return
+
+    import theme as _theme
+    downloaded = int(summary.get('downloaded', 0) or 0)
+    transcribed = int(summary.get('transcribed', 0) or 0)
+    skipped = int(summary.get('skipped', 0) or 0)
+    failed = int(summary.get('failed', 0) or 0)
+    courses = int(summary.get('courses', 0) or 0)
+
+    _icon = (
+        "<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' "
+        f"fill='{_theme.ACCENT_BLUE}' style='flex-shrink:0'>"
+        "<polygon points='23 7 16 12 23 17 23 7'/>"
+        "<rect x='1' y='5' width='15' height='14' rx='2'/></svg>"
+    )
+
+    def _metric(value: int, label: str, color: str) -> str:
+        return (
+            "<div style='display:flex;flex-direction:column;align-items:center;min-width:64px;'>"
+            f"<span style='color:{color};font-size:1.35rem;font-weight:800;line-height:1;'>{value}</span>"
+            f"<span style='color:{_theme.TEXT_SECONDARY};font-size:0.72rem;font-weight:600;"
+            f"text-transform:uppercase;letter-spacing:0.04em;margin-top:4px;'>{esc(label)}</span>"
+            "</div>"
+        )
+
+    metrics = [
+        _metric(downloaded, "Downloaded", _theme.SUCCESS),
+        _metric(transcribed, "Transcribed", _theme.ACCENT_LINK),
+        _metric(skipped, "Skipped", _theme.TEXT_SECONDARY),
+    ]
+    if failed:
+        metrics.append(_metric(failed, "Errors", _theme.ERROR_LIGHT))
+
+    _scope = f" across {courses} course{'s' if courses != 1 else ''}" if courses else ""
+    # HTML assembled in locals (only app-controlled values: ints, theme tokens,
+    # self-built SVG, esc'd labels) so the unsafe_allow_html call carries no
+    # interpolation. esc() is applied to the only text input (metric labels).
+    _hdr = (
+        f"<div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>{_icon}"
+        f"<span style='color:{_theme.TEXT_PRIMARY};font-weight:700;font-size:1.02rem;'>Panopto Lectures</span>"
+        f"<span style='color:{_theme.TEXT_SECONDARY};font-size:0.85rem;'>· {found} found{_scope}</span></div>"
+    )
+    _body = f"<div style='display:flex;gap:2.5rem;flex-wrap:wrap;'>{''.join(metrics)}</div>"
+    _card = (
+        "<div style='background:rgba(77,168,218,0.08);border:1px solid rgba(77,168,218,0.35);"
+        "border-radius:10px;padding:16px 20px;margin:12px 0 2px 0;'>" + _hdr + _body + "</div>"
+    )
+    st.markdown(_card, unsafe_allow_html=True)
+
+
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     """Render a rich HTML preview of active settings using color-coded badges."""
     # Build Blue Core Badges

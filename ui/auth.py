@@ -307,6 +307,9 @@ div.st-key-nav_btn_download button p::before {{
 div.st-key-nav_btn_sync button p::before {{
     background-image: url("data:image/png;base64,{icon_sync_b64}");
 }}
+div.st-key-nav_btn_panopto button p::before {{
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='23 7 16 12 23 17 23 7'/%3E%3Crect x='1' y='5' width='15' height='14' rx='2'/%3E%3C/svg%3E");
+}}
 div.st-key-nav_btn_settings button p::before {{
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'%3E%3C/path%3E%3Ccircle cx='12' cy='12' r='3'%3E%3C/circle%3E%3C/svg%3E");
 }}
@@ -1423,7 +1426,7 @@ def _render_authenticated_nav_top():
     st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
 
     # Active-state CSS is dynamic (depends on session state) - inject separately
-    if mode in ['download', 'sync']:
+    if mode in ['download', 'sync', 'panopto']:
         active_key = f"st-key-nav_btn_{mode}"
         st.html(f"""<style>
         section[data-testid="stSidebar"] div.{active_key} button {{ background-color: rgba(255, 255, 255, 0.10) !important; }}
@@ -1456,6 +1459,18 @@ def _render_authenticated_nav_top():
             st.session_state['sync_pairs'] = []
             st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
+
+    # Panopto Lectures (premium hidden feature) - settings/setup page.
+    # Gated so it can be hidden in production by flipping panopto_feature_enabled.
+    if st.session_state.get('panopto_feature_enabled', False):
+        if st.button('Panopto Lectures', use_container_width=True, key="nav_btn_panopto"):
+            if mode != 'panopto':
+                from core.state_registry import cleanup_download_state
+                cleanup_download_state()
+                st.session_state['current_mode'] = 'panopto'
+                st.session_state['step'] = 1
+                st.session_state['sync_mode'] = False
+                st.rerun()
 
 
 def _render_authenticated_nav_bottom(fetch_courses_fn):

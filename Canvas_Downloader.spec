@@ -38,6 +38,7 @@ datas = [
     ('core', 'core'),
     ('engine', 'engine'),
     ('sync', 'sync'),
+    ('panopto', 'panopto'),   # Panopto lecture downloader (premium feature)
     ('ui', 'ui'),
     ('styles', 'styles'),
     ('.streamlit', '.streamlit'),
@@ -67,7 +68,12 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'bs4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast', 'openpyxl', 'pillow'
+    'webview', 'sqlite3', 'imageio', 'imageio_ffmpeg', 'win11toast', 'openpyxl', 'pillow',
+    # Panopto transcription stack (faster-whisper via CTranslate2; NO torch).
+    # Each is wrapped in try/except below, so a dev machine without these
+    # installed still builds - they're only bundled when present.
+    'faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub',
+    'av', 'onnxruntime', 'numpy',
 ]
 for package in packages_to_collect:
     try:

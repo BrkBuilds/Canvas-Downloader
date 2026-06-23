@@ -383,6 +383,24 @@ class SyncManager:
                         value TEXT
                     )
                 ''')
+
+                # Panopto lectures are tracked in a DEDICATED table, kept
+                # separate from sync_manifest on purpose: Panopto videos have no
+                # Canvas file id and never appear in Canvas file metadata, so
+                # putting them in sync_manifest would make the Canvas-vs-local
+                # analyzer flag them as "deleted on Canvas". This table records
+                # what we've downloaded (for the Panopto pass + a future diff
+                # view) without touching the file-sync analyzer at all.
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS panopto_manifest (
+                        video_id TEXT,
+                        kind TEXT,
+                        local_path TEXT,
+                        title TEXT,
+                        downloaded_at TEXT,
+                        PRIMARY KEY (video_id, kind)
+                    )
+                ''')
                 
                 # Course-identity binding: only set course_id once. The
                 # manifest's canvas_file_ids are course-specific, so the
@@ -1315,6 +1333,52 @@ class SyncManager:
             'original_md5': local_md5
         }
         return self._save_single_file_to_db(info)
+
+    # ── Panopto manifest (dedicated, decoupled from sync_manifest) ──
+    def record_panopto_file(self, video_id: str, kind: str, local_path: str,
+                            title: str = "") -> bool:
+        """Record a downloaded Panopto artifact (mp3/txt/srt) for tracking.
+
+        Idempotent per (video_id, kind) via INSERT OR REPLACE. ``local_path``
+        should be relative to this folder when possible (absolute is tolerated).
+        Never raises into the caller - returns False on failure.
+        """
+        try:
+            for attempt in range(3):
+                try:
+                    with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+                        conn.execute(
+                            '''INSERT OR REPLACE INTO panopto_manifest
+                               (video_id, kind, local_path, title, downloaded_at)
+                               VALUES (?, ?, ?, ?, ?)''',
+                            (str(video_id), str(kind), str(local_path), str(title),
+                             datetime.now(timezone.utc).isoformat()),
+                        )
+                        conn.commit()
+                    return True
+                except sqlite3.OperationalError as e:
+                    if 'locked' in str(e).lower() and attempt < 2:
+                        import time as _t
+                        _t.sleep(0.3 * (attempt + 1))
+                        continue
+                    raise
+        except Exception as e:
+            logger.debug(f"record_panopto_file failed ({video_id}/{kind}): {e}")
+        return False
+
+    def get_panopto_manifest(self) -> dict:
+        """Return {video_id: {kind: local_path}} for all tracked Panopto files."""
+        out: dict = {}
+        try:
+            with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+                rows = conn.execute(
+                    'SELECT video_id, kind, local_path FROM panopto_manifest'
+                ).fetchall()
+            for vid, kind, lp in rows:
+                out.setdefault(vid, {})[kind] = lp
+        except Exception as e:
+            logger.debug(f"get_panopto_manifest failed: {e}")
+        return out
 
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry.
