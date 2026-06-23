@@ -187,10 +187,8 @@ def render_download_settings(fetch_courses_fn):
         f"<div style='{_ans2}'>Saves discussion threads. Useful if your teacher posts key content there, or if you want to review classmates' responses when studying.</div></details>"
         f"<details style='{_row}'><summary style='{_b2}'>Quizzes</summary>"
         f"<div style='{_ans2}'>Saves quiz Q/A choices. What is visible depends on your teacher's configured privacy settings in Canvas.</div></details>"
-        f"<details style='{_row}'><summary style='{_b2}'>Rubrics</summary>"
-        f"<div style='{_ans2}'>Saves the grading criteria for each assignment, if created by your teacher. Helpful for understanding exactly how your work will be marked before you submit.</div></details>"
         f"<details style='{_row}'><summary style='{_b2}'>Submissions (Results)</summary>"
-        f"<div style='{_ans2}'>Saves feedback and grades you received on your own submitted work: teacher comments, rubric scores, and the grade per assignment. Note: Your teacher is not notified. It does not download your submitted file.</div></details>"
+        f"<div style='{_ans2}'>Saves feedback and grades you received on your own submitted work: teacher comments, grading scores, and the grade per assignment. Note: Your teacher is not notified. It does not download your submitted file.</div></details>"
 
         f"<div style='{_lbl}'>Choose how Canvas Content should be organized</div>"
         f"<details style='{_row}'><summary style='{_b2}'>Match Course Folder Structure</summary>"
@@ -289,7 +287,7 @@ def render_download_settings(fetch_courses_fn):
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What does Submissions (Results) save, and will my teacher know?</summary>"
         "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-        "It saves the feedback and grades you received on your own submitted assignments - teacher comments, rubric scores, and your grade per assignment. This is your personal data - your teacher is not notified. It does NOT download any submitted files (you have these on your PC already)."
+        "It saves the feedback and grades you received on your own submitted assignments - teacher comments, grading scores, and your grade per assignment. This is your personal data - your teacher is not notified. It does NOT download any submitted files (you have these on your PC already)."
         "</div></details>"
         "<details style='margin-top: 8px; cursor: pointer;'>"
         "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do I have to re-download everything every time, or can I just get new files?</summary>"
@@ -439,46 +437,69 @@ def render_download_settings(fetch_courses_fn):
             }}
             div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
                 gap: 4px !important;
+                align-items: stretch !important;
             }}
-            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="column"] > div, 
-            div[class*="st-key-sec_org_segmented_wrapper"] div[data-testid="stButton"], 
-            div[class*="st-key-sec_org_segmented_wrapper"] button {{
-                height: 100% !important;
-            }}
-            div[class*="st-key-btn_sec_org_"] button {{
-                background-color: transparent !important;
-                border: 1px solid transparent !important;
+            /* Equal-height segments even when descriptions wrap to different line counts.
+               Flex-grow chain from stColumn down to the button so the shorter segment
+               stretches to match the taller (wrapping) one. (testid is stColumn here.) */
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] {{
                 display: flex !important;
                 flex-direction: column !important;
-                padding: 12px 12px 12px 52px !important;
-                border-radius: 8px !important;
-                color: #a0a0a0 !important;
-                opacity: 0.75 !important;
-                transition: opacity 0.2s ease, background-color 0.2s ease, filter 0.2s ease, color 0.2s ease !important;
-                position: relative !important;
-                min-height: 62px !important;
             }}
-            /* Nuke Streamlit's center alignment for the segmented control */
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 auto !important;
+            }}
+            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] button {{
+                flex: 1 1 auto !important;
+                height: 100% !important;
+            }}
+            /* Base Segment: tall content (icon top, title, desc) inside the pill */
+            div[class*="st-key-btn_sec_org_"] button {{
+                position: relative !important;
+                min-height: 140px !important;
+                background-color: transparent !important;
+                border: 1px solid transparent !important;
+                background-repeat: no-repeat !important;
+                background-position: center 18px !important;
+                background-size: 50px !important;
+                padding: 80px 14px 16px 14px !important;
+                border-radius: 8px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                transition: all 0.2s ease-in-out !important;
+                opacity: 0.75 !important;
+                color: #a0a0a0 !important;
+            }}
+            /* Radio pseudo-element (top-right corner) */
+            div[class*="st-key-btn_sec_org_"] button::before {{
+                top: 16px !important;
+                right: 16px !important;
+                box-sizing: border-box !important;
+            }}
+            /* Center the native label */
             div[class*="st-key-btn_sec_org_"] button > div,
             div[class*="st-key-btn_sec_org_"] button div[data-testid="stMarkdownContainer"] {{
                 width: 100% !important;
                 display: flex !important;
-                justify-content: flex-start !important;
-                text-align: left !important;
+                justify-content: center !important;
+                text-align: center !important;
             }}
             div[class*="st-key-btn_sec_org_"] button p {{
-                text-align: left !important;
+                text-align: center !important;
                 width: 100% !important;
                 margin: 0 !important;
-                font-size: 0.95rem !important;
+                padding-right: 0 !important;
+                font-size: 1.05rem !important;
                 font-weight: 600 !important;
                 line-height: 1.2 !important;
                 color: inherit !important;
-            }}
-            div[class*="st-key-btn_sec_org_"] button {{
-                background-size: 28px !important;
-                background-repeat: no-repeat !important;
-                background-position: 12px center !important;
             }}
             div.st-key-btn_sec_org_inline button {{ background-image: url('data:image/png;base64,{b64_inline}') !important; }}
             div.st-key-btn_sec_org_subfolders button {{ background-image: url('data:image/png;base64,{b64_sub}') !important; }}
@@ -500,19 +521,20 @@ def render_download_settings(fetch_courses_fn):
             div.st-key-btn_sec_org_inline button::after {{ content: "Place Canvas Content alongside your other downloaded files." !important; }}
             div.st-key-btn_sec_org_subfolders button::after {{ content: "Create folders for each type (e.g. Assignments/, Quizzes/)" !important; }}
             div[class*="st-key-btn_sec_org_"] button::after {{
-                text-align: left !important;
+                text-align: center !important;
                 width: 100% !important;
                 display: block !important;
-                font-size: 0.75rem !important;
+                padding-right: 0 !important;
+                font-size: 0.8rem !important;
                 color: #a0a0a0 !important;
-                margin-top: 2px !important;
+                margin-top: 5px !important;
                 font-weight: 400 !important;
                 white-space: normal !important;
-                line-height: 1.2 !important;
+                line-height: 1.25 !important;
             }}
             div.st-key-btn_sec_org_{active_key} button {{
                 background-color: rgba(104, 212, 163, 0.15) !important; /* Muted Green */
-                border: 1px solid rgba(104, 212, 163, 0.3) !important;
+                border: 1px solid #68d4a3 !important;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; /* Slight drop shadow for the pill */
                 color: #ffffff !important;
                 opacity: 1 !important;
@@ -520,13 +542,13 @@ def render_download_settings(fetch_courses_fn):
             /* Protect Active Green Pill from Grey Hover Override */
             div.st-key-btn_sec_org_{active_key} button:hover {{
                 background-color: rgba(104, 212, 163, 0.15) !important;
-                border: 1px solid rgba(104, 212, 163, 0.3) !important;
+                border: 1px solid #68d4a3 !important;
                 opacity: 1 !important;
             }}
             div[class*="st-key-btn_sec_org_"] button:hover::before {{ border-color: #68d4a3 !important; }}
             div.st-key-btn_sec_org_{active_key} button:hover::before {{ border-color: transparent !important; }}
             div.st-key-btn_sec_org_{active_key} button p {{ color: #ffffff !important; }}
-            div.st-key-btn_sec_org_{active_key} button::before {{ 
+            div.st-key-btn_sec_org_{active_key} button::before {{
                 border: none !important;
                 background-color: transparent !important;
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%2368d4a3' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%2368d4a3'/%3E%3C/svg%3E") !important;
@@ -557,7 +579,7 @@ def render_download_settings(fetch_courses_fn):
         <style>
         /* Tree-view styling for secondary content sub-checkboxes */
         .st-key-dl_assignments, .st-key-dl_syllabus, .st-key-dl_announcements,
-        .st-key-dl_discussions, .st-key-dl_quizzes, .st-key-dl_rubrics,
+        .st-key-dl_discussions, .st-key-dl_quizzes,
         .st-key-dl_submissions {
             margin-left: 28px !important;
             padding-left: 15px !important;
@@ -674,32 +696,52 @@ def render_download_settings(fetch_courses_fn):
                 padding-right: 0px !important;
             }}
 
-            /* 1. Outer Container & Crush horizontal gap */
+            /* 1. Outer Container: segmented-control pill shell */
             div[class*="st-key-include_files_segmented_wrapper"] {{
+                background-color: rgba(0, 0, 0, 0.25) !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-radius: 12px !important;
+                padding: 4px !important;
                 margin-top: 5px !important;
             }}
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
+                gap: 4px !important;
+                align-items: stretch !important;
+            }}
 
-            /* 2. Stretch column wrappers for dynamic height */
-            div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="column"] > div,
-            div[class*="st-key-include_files_segmented_wrapper"] div[data-testid="stButton"] {{
+            /* 2. Equal-height segments: flex-grow chain from stColumn down to the button */
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] {{
+                display: flex !important;
+                flex-direction: column !important;
+            }}
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 auto !important;
+            }}
+            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] button {{
+                flex: 1 1 auto !important;
                 height: 100% !important;
             }}
 
-            /* 3. Base Button: Flex Column + Relative Position */
+            /* 3. Base Segment: tall content (icon top, title, desc) inside the pill */
             div[class*="st-key-btn_include_"] button {{
                 position: relative !important;
-                min-height: 150px !important;
+                min-height: 140px !important;
                 background-color: transparent !important;
                 background-repeat: no-repeat !important;
                 background-position: center 18px !important;
-                background-size: 55px !important;
-                padding-top: 85px !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                background-size: 50px !important;
+                padding: 80px 14px 16px 14px !important;
+                border: 1px solid transparent !important;
                 border-radius: 8px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;
-                justify-content: flex-start !important;
+                justify-content: center !important;
                 transition: all 0.2s ease-in-out !important;
                 opacity: 0.75 !important;
                 color: #a0a0a0 !important;
@@ -707,17 +749,23 @@ def render_download_settings(fetch_courses_fn):
 
             /* 4. Primary Title Styling (The native button label) */
             div[class*="st-key-btn_include_"] button p {{
-                font-size: 1.1rem !important;
+                font-size: 1.05rem !important;
                 font-weight: 600 !important;
                 margin: 0 !important;
                 margin-bottom: 0px !important;
                 line-height: 1.2 !important;
                 color: inherit !important;
+                width: 100% !important;
+                text-align: center !important;
+                padding-right: 0 !important;
             }}
 
             div[class*="st-key-btn_include_"] button::after {{
                 margin-bottom: 0px !important;
                 padding-bottom: 0px !important;
+                width: 100% !important;
+                text-align: center !important;
+                padding-right: 0 !important;
             }}
 
             /* 5. Geometry lockdown for radio pseudo-element on Card 1 */
@@ -749,28 +797,27 @@ def render_download_settings(fetch_courses_fn):
                 font-weight: 400 !important;
             }}
 
-            /* 6.5 Hover State (Inactive Buttons) */
+            /* 6.5 Hover State (Inactive Buttons) - matches Card 2 segmented styling */
             div[class*="st-key-btn_include_"] button:hover {{
                 border-color: #3fd9ff !important;
-                background-color: rgba(255, 255, 255, 0.02) !important;
-                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                background-color: rgba(255, 255, 255, 0.05) !important;
                 opacity: 1 !important;
                 color: #ffffff !important;
             }}
 
-            /* 7. Active State Logic */
+            /* 7. Active State Logic - matches Card 2 (bg 0.15 + 0.3-alpha border + drop shadow) */
             div.st-key-btn_include_{active_include_key} button {{
+                background-color: rgba(63, 217, 255, 0.15) !important;
                 border: 1px solid #3fd9ff !important;
-                background-color: rgba(56, 189, 248, 0.05) !important;
-                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
                 opacity: 1 !important;
                 color: #ffffff !important;
             }}
             /* Protect Active Blue Pill from Grey Hover Override */
             div.st-key-btn_include_{active_include_key} button:hover {{
+                background-color: rgba(63, 217, 255, 0.15) !important;
                 border: 1px solid #3fd9ff !important;
-                background-color: rgba(56, 189, 248, 0.08) !important;
-                box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
                 opacity: 1 !important;
                 color: #ffffff !important;
             }}
@@ -823,15 +870,15 @@ def render_download_settings(fetch_courses_fn):
                     unsafe_allow_html=True
                 )
 
-                btn_left, btn_right = st.columns(2)
                 b64_subfolders = get_base64_image("assets/icon_subfolders.png")
                 b64_flat = get_base64_image("assets/icon_flat.png")
 
-                with btn_left:
-                    st.button("With Subfolders", key="btn_org_subfolders", use_container_width=True, on_click=update_org_state, args=("subfolders",))
-
-                with btn_right:
-                    st.button("All in One Folder", key="btn_org_flat", use_container_width=True, on_click=update_org_state, args=("flat",))
+                with st.container(key="org_segmented_wrapper"):
+                    btn_left, btn_right = st.columns(2)
+                    with btn_left:
+                        st.button("With Subfolders", key="btn_org_subfolders", use_container_width=True, on_click=update_org_state, args=("subfolders",))
+                    with btn_right:
+                        st.button("All in One Folder", key="btn_org_flat", use_container_width=True, on_click=update_org_state, args=("flat",))
 
                 active_mode = st.session_state.get('download_mode', 'modules')
                 active_btn_key = "subfolders" if active_mode == 'modules' else "flat"
@@ -843,21 +890,51 @@ def render_download_settings(fetch_courses_fn):
 
                 st.markdown(f'''
                 <style>
-                /* Base Card Styling for BOTH buttons */
+                /* Outer Container: segmented-control pill shell */
+                div[class*="st-key-org_segmented_wrapper"] {{
+                    background-color: rgba(0, 0, 0, 0.25) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                    border-radius: 12px !important;
+                    padding: 4px !important;
+                    margin-top: 5px !important;
+                }}
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
+                    gap: 4px !important;
+                    align-items: stretch !important;
+                }}
+                /* Equal-height segments: flex-grow chain from stColumn down to the button */
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] {{
+                    display: flex !important;
+                    flex-direction: column !important;
+                }}
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
+                    display: flex !important;
+                    flex-direction: column !important;
+                    flex: 1 1 auto !important;
+                }}
+                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] button {{
+                    flex: 1 1 auto !important;
+                    height: 100% !important;
+                }}
+
+                /* Base Segment: tall content (icon top, title, desc) inside the pill */
                 div[class*="st-key-btn_org_"] button {{
                     position: relative !important;
-                    min-height: 150px !important;
+                    min-height: 140px !important;
                     background-color: transparent !important;
                     background-repeat: no-repeat !important;
                     background-position: center 18px !important;
-                    background-size: 55px !important;
-                    padding-top: 85px !important;
-                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                    background-size: 50px !important;
+                    padding: 80px 14px 16px 14px !important;
+                    border: 1px solid transparent !important;
                     border-radius: 8px !important;
                     display: flex !important;
                     flex-direction: column !important;
                     align-items: center !important;
-                    justify-content: flex-start !important;
+                    justify-content: center !important;
                     transition: all 0.2s ease-in-out !important;
                     opacity: 0.75 !important;
                     color: #a0a0a0 !important;
@@ -865,17 +942,23 @@ def render_download_settings(fetch_courses_fn):
 
                 /* Primary Title Styling (The native button label) */
                 div[class*="st-key-btn_org_"] button p {{
-                    font-size: 1.1rem !important;
+                    font-size: 1.05rem !important;
                     font-weight: 600 !important;
                     margin: 0 !important;
                     margin-bottom: 0px !important;
                     line-height: 1.2 !important;
                     color: inherit !important;
+                    width: 100% !important;
+                    text-align: center !important;
+                    padding-right: 0 !important;
                 }}
 
                 div[class*="st-key-btn_org_"] button::after {{
                     margin-bottom: 0px !important;
                     padding-bottom: 0px !important;
+                    width: 100% !important;
+                    text-align: center !important;
+                    padding-right: 0 !important;
                 }}
 
                 /* Geometry lockdown for radio pseudo-element on Card 1 */
@@ -885,11 +968,10 @@ def render_download_settings(fetch_courses_fn):
                     box-sizing: border-box !important;
                 }}
 
-                /* Hover State */
+                /* Hover State - matches Card 2 segmented styling */
                 div[class*="st-key-btn_org_"] button:hover {{
                     border-color: #3fd9ff !important;
-                    background-color: rgba(255, 255, 255, 0.02) !important;
-                    box-shadow: inset 0 0 0 1px #3fd9ff, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                    background-color: rgba(255, 255, 255, 0.05) !important;
                     opacity: 1 !important;
                     color: #ffffff !important;
                 }}
@@ -920,19 +1002,19 @@ def render_download_settings(fetch_courses_fn):
                     font-weight: 400 !important;
                 }}
 
-                /* Active State Highlight */
+                /* Active State Highlight - matches Card 2 (bg 0.15 + 0.3-alpha border + drop shadow) */
                 div.st-key-btn_org_{active_btn_key} button {{
-                    border: 1px solid {border_color} !important;
-                    background-color: rgba(56, 189, 248, 0.05) !important;
-                    box-shadow: inset 0 0 0 1px {border_color}, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                    background-color: rgba(63, 217, 255, 0.15) !important;
+                    border: 1px solid #3fd9ff !important;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
                     opacity: 1 !important;
                     color: #ffffff !important;
                 }}
                 /* Protect Active State from generic Hover Overrides */
                 div.st-key-btn_org_{active_btn_key} button:hover {{
-                    border: 1px solid {border_color} !important;
-                    background-color: rgba(56, 189, 248, 0.08) !important;
-                    box-shadow: inset 0 0 0 1px {border_color}, 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                    background-color: rgba(63, 217, 255, 0.15) !important;
+                    border: 1px solid #3fd9ff !important;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
                     opacity: 1 !important;
                     color: #ffffff !important;
                 }}
@@ -1085,7 +1167,7 @@ def render_download_settings(fetch_courses_fn):
                     ('dl_announcements', 'Announcements', 'Save course announcements and any attached files.', 'icon_announcements.png'),
                     ('dl_discussions', 'Discussions', 'Save discussion threads as HTML.', 'icon_discussions.png'),
                     ('dl_quizzes', 'Quizzes', 'Save quiz questions and answers as HTML.', 'icon_quizzes.png'),
-                    ('dl_rubrics', 'Rubrics', 'Save rubric criteria to text files.', 'icon_rubrics.png'),
+                    # ('dl_rubrics', 'Rubrics', 'Save rubric criteria to text files.', 'icon_rubrics.png'),  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                     ('dl_submissions', 'Submissions (Results)', 'Save feedback & grades from your submissions.', 'icon_submissions.png')
                 ]
 
@@ -1219,14 +1301,15 @@ def render_download_settings(fetch_courses_fn):
 
                     with st.container(key="secondary_cards_grid"):
                         c1, c2, c3 = st.columns(3)
+                        # 6 items distributed evenly as a clean 3x2 grid (2 per column).
                         with c1:
-                            for key, title, _, _ in button_defs[:3]:
+                            for key, title, _, _ in button_defs[:2]:
                                 st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
                         with c2:
-                            for key, title, _, _ in button_defs[3:5]:
+                            for key, title, _, _ in button_defs[2:4]:
                                 st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
                         with c3:
-                            for key, title, _, _ in button_defs[5:]:
+                            for key, title, _, _ in button_defs[4:]:
                                 st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
 
                     # --- Section 2: Canvas-Native Content Organization ---
@@ -1254,15 +1337,64 @@ def render_download_settings(fetch_courses_fn):
                             )
                         with c2:
                             st.button(
-                                "In Separate Folders", 
-                                key="btn_sec_org_subfolders", 
-                                on_click=_set_isolate_secondary, 
-                                args=(True,), 
+                                "In Separate Folders",
+                                key="btn_sec_org_subfolders",
+                                on_click=_set_isolate_secondary,
+                                args=(True,),
                                 use_container_width=True,
                                 disabled=is_disabled
                             )
 
-
+                # CSS active-state is re-injected by Python each rerun; React patches
+                # the stylesheet atomically so no browser transition ever fires.
+                # This bridge intercepts each click before the rerun lands, applies
+                # the animated style change immediately, then cleans up on re-injection
+                # so hover states resume normally after the rerun CSS takes over.
+                import streamlit.components.v1 as components
+                components.html("""<script>
+(function () {
+    var doc = window.parent.document;
+    if (!window.parent._cdSegCtrl) window.parent._cdSegCtrl = {};
+    var reg = window.parent._cdSegCtrl;
+    if (reg.handlers) {
+        reg.handlers.forEach(function (h) {
+            try { h.el.removeEventListener('click', h.fn, false); } catch (e) {}
+        });
+    }
+    reg.handlers = [];
+    var TR = ['background-color','border-color','box-shadow','opacity','color']
+             .map(function(p){return p+' 0.22s cubic-bezier(0.4,0,0.2,1)';}).join(',');
+    var PROPS = ['transition','background-color','border-color','box-shadow','opacity','color'];
+    var groups = [
+        {sel:'div[class*="st-key-include_files_segmented_wrapper"]',bg:'rgba(63,217,255,0.15)',bd:'#3fd9ff'},
+        {sel:'div[class*="st-key-org_segmented_wrapper"]',bg:'rgba(63,217,255,0.15)',bd:'#3fd9ff'},
+        {sel:'div[class*="st-key-sec_org_segmented_wrapper"]',bg:'rgba(104,212,163,0.15)',bd:'#68d4a3'}
+    ];
+    groups.forEach(function(g){
+        var wrap=doc.querySelector(g.sel);
+        if(!wrap)return;
+        var all=Array.from(wrap.querySelectorAll('button'));
+        all.forEach(function(b){PROPS.forEach(function(p){b.style.removeProperty(p);});});
+        var btns=all.filter(function(b){return!b.disabled;});
+        if(btns.length<2)return;
+        btns.forEach(function(btn){
+            var fn=function(){
+                btns.forEach(function(b){
+                    var s=b.style,on=(b===btn);
+                    s.setProperty('transition',TR,'important');
+                    s.setProperty('background-color',on?g.bg:'transparent','important');
+                    s.setProperty('border-color',on?g.bd:'transparent','important');
+                    s.setProperty('box-shadow',on?'0 4px 6px rgba(0,0,0,0.3)':'none','important');
+                    s.setProperty('opacity',on?'1':'0.75','important');
+                    s.setProperty('color',on?'#ffffff':'#a0a0a0','important');
+                });
+            };
+            btn.addEventListener('click',fn,false);
+            reg.handlers.push({el:btn,fn:fn});
+        });
+    });
+})();
+</script>""", height=0)
 
 
         with col2:

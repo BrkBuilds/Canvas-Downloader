@@ -96,18 +96,20 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
         if st.button("Cancel", type="secondary", use_container_width=True, key="cancel_save_group"):
             st.rerun(scope="app")
     with col_create:
-        create_disabled = not item_name or not item_name.strip()
-        _save_help = f"Enter a name for this {entity.lower()} to save." if create_disabled else None
+        # Button stays genuinely enabled server-side (so a single click works);
+        # live_enable_button() greys it + blocks pointer events while invalid,
+        # and this guard is the server-side source of truth for the save.
         if st.button("Save", type="primary", use_container_width=True,
-                     key="save_group_create", disabled=create_disabled, help=_save_help):
-            from ui_helpers import get_config_dir
-            mgr = SavedGroupsManager(get_config_dir())
-            if is_pair and pair_data:
-                mgr.save_group(item_name.strip(), [pair_data], is_single_pair=True)
-            else:
-                mgr.save_group(item_name.strip(), sync_pairs)
-            st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
-            st.rerun(scope="app")
+                     key="save_group_create"):
+            if item_name and item_name.strip():
+                from ui_helpers import get_config_dir
+                mgr = SavedGroupsManager(get_config_dir())
+                if is_pair and pair_data:
+                    mgr.save_group(item_name.strip(), [pair_data], is_single_pair=True)
+                else:
+                    mgr.save_group(item_name.strip(), sync_pairs)
+                st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
+                st.rerun(scope="app")
 
     # Enable the Save button the instant a name is typed (no blur required).
     live_enable_button("save_group_name_input", "save_group_create")
@@ -853,13 +855,11 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 with col_cancel:
                     st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
                 with col_save:
-                    name_changed = new_name.strip() and new_name.strip() != group['group_name']
-                    _save_name_help = None if name_changed else (
-                        "Enter a name to save" if not new_name.strip() else "Name is unchanged"
-                    )
-                    st.button("Save", type="primary", disabled=not name_changed,
-                              use_container_width=True, key="hub_save_name", on_click=_save_name_cb,
-                              help=_save_name_help)
+                    # Genuinely enabled (single click works); live_enable_button()
+                    # greys it + blocks clicks until the name actually changes, and
+                    # _save_name_cb is the server-side guard.
+                    st.button("Save", type="primary",
+                              use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
             # Enable Save the instant the name changes to something new (no blur required).
             live_enable_button("hub_rename_name_input", "hub_save_name",
                                require_change_from=group['group_name'])
@@ -931,6 +931,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             )
 
                         # --- Warnings ---
+                        is_hub_dup_edit = False
                         if temp_course_name and temp_folder:
                             folder_lower = Path(temp_folder).name.lower()
                             course_lower = temp_course_name.lower()
@@ -952,8 +953,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             # Duplicate pair detection
                             candidates = [p for i, p in enumerate(pairs) if i != p_idx]
                             if any(p.get('local_folder') == temp_folder and p.get('course_id') == temp_course_id for p in candidates):
+                                is_hub_dup_edit = True
                                 from ui.amber_notice import render_amber_notice
-                                render_amber_notice('⚠️ This folder is already paired with this course in this group.')
+                                render_amber_notice(
+                                    'This folder is already paired with this course in this group.',
+                                    detail='To update its settings, use the edit button on the existing pair instead.',
+                                )
 
                             # Manifest binding notice
                             _bound_id = SyncManager.peek_bound_course_id(temp_folder)
@@ -999,9 +1004,15 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 final_folder != pair.get('local_folder', '')
                                 or final_cid != pair.get('course_id')
                             )
+                            _save_disabled = not has_changes or is_hub_dup_edit
+                            _save_help = (
+                                "This pair already exists in this group — cancel to go back."
+                                if is_hub_dup_edit else
+                                None if has_changes else "Change the course or folder to save"
+                            )
                             st.button("Save Changes", type="primary", use_container_width=True,
-                                      key=f"hub_save_edit_{p_idx}", disabled=not has_changes,
-                                      help=None if has_changes else "Change the course or folder to save",
+                                      key=f"hub_save_edit_{p_idx}", disabled=_save_disabled,
+                                      help=_save_help,
                                       on_click=save_inline_edit_cb,
                                       args=(mgr, gid, p_idx, final_folder, final_cid, final_cname))
 
@@ -1106,6 +1117,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         )
 
                     # --- Warnings ---
+                    is_hub_dup_add = False
                     if add_course_name and add_folder:
                         folder_lower = Path(add_folder).name.lower()
                         course_lower = add_course_name.lower()
@@ -1125,8 +1137,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
 
                         # Duplicate pair detection
                         if any(p.get('local_folder') == add_folder and p.get('course_id') == add_course_id for p in pairs):
+                            is_hub_dup_add = True
                             from ui.amber_notice import render_amber_notice
-                            render_amber_notice('⚠️ This folder is already paired with this course in this group.')
+                            render_amber_notice(
+                                'This folder is already paired with this course in this group.',
+                                detail='To update its settings, use the edit button on the existing pair instead.',
+                            )
 
                         # Manifest binding notice
                         _bound_id = SyncManager.peek_bound_course_id(add_folder)
@@ -1160,7 +1176,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             """)
 
                     # --- Add / Cancel ---
-                    can_add = bool(add_folder) and bool(add_course_id)
+                    can_add = bool(add_folder) and bool(add_course_id) and not is_hub_dup_add
                     add_cname_final = add_course_name if add_course_name else course_names.get(add_course_id, '')
                     col_cancel_add, col_add, _ = st.columns([1, 1, 3])
                     with col_cancel_add:
@@ -1208,8 +1224,11 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             gap: 0.25rem !important;
         }
         /* Restore natural gap for checkbox rows in the course list; they already
-           use margin-bottom:-10px tightening so 0.25rem would cause overlap. */
-        div[role="dialog"] div[data-testid="stVerticalBlock"]:has(div[class*="st-key-hub_cs_chk_"]) {
+           use margin-bottom:-10px tightening so 0.25rem would cause overlap.
+           CRITICAL: :has(> ...) (DIRECT child), not descendant - a descendant
+           :has() also matches ancestor blocks (incl. the dialog top-level block)
+           and leaks the 1rem gap onto the whole dialog (CLAUDE.md CSS rules). */
+        div[role="dialog"] div[data-testid="stVerticalBlock"]:has(> div[class*="st-key-hub_cs_chk_"]) {
             gap: 1rem !important;
         }
         /* Compact "Back to Edit" button - shrink to content height so it doesn't
@@ -1275,9 +1294,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             return
 
         # --- CBS Filters (centralized) ---
-        from ui.course_selector import inject_course_selector_css, render_cbs_filters, render_course_list
+        from ui.course_selector import (
+            inject_course_selector_css, render_cbs_filters, render_course_list,
+            render_course_search, _filter_and_rank_courses,
+            _render_search_empty_notice,
+        )
         inject_course_selector_css()
         filtered_courses = render_cbs_filters(visible_courses, "hub_cs")
+
+        # Search box (live, relevance-ranked) - refines the CBS-filtered set.
+        query = render_course_search("hub_cs", in_dialog=True)
+        displayed_courses = _filter_and_rank_courses(filtered_courses, query)
 
         # --- Initialize single-select state ---
         # NOTE: Only check key *existence*, not value.  When the user deselects
@@ -1291,8 +1318,16 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         # --- Scrollable course list (centralized single-select) ---
         # border=True for reliable st-key-* class; border stripped + max-height set in CSS above.
         with st.container(border=True, key="hub_cs_scroll_container"):
-            render_course_list(filtered_courses, "hub_cs", multi_select=False,
-                               first_item_top_offset="-10px")
+            if displayed_courses:
+                render_course_list(displayed_courses, "hub_cs", multi_select=False,
+                                   first_item_top_offset="-10px",
+                                   sort=not query.strip())
+            elif query.strip():
+                _render_search_empty_notice(
+                    query, favorites_only, visible_courses, filtered_courses, courses)
+            else:
+                render_course_list(displayed_courses, "hub_cs", multi_select=False,
+                                   first_item_top_offset="-10px")
 
         # --- Confirm Selection ---
         st.html('<hr style="margin-top: 2px; margin-bottom: 4px; border-color: rgba(255,255,255,0.1);" />')

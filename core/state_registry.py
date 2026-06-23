@@ -27,7 +27,8 @@ NOTEBOOK_SUB_KEYS = [
 
 SECONDARY_CONTENT_KEYS = [
     'dl_assignments', 'dl_syllabus', 'dl_announcements',
-    'dl_discussions', 'dl_quizzes', 'dl_rubrics', 'dl_submissions',
+    'dl_discussions', 'dl_quizzes', 'dl_submissions',
+    # 'dl_rubrics',  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
 ]
 
 TOTAL_SECONDARY_SUBS = len(SECONDARY_CONTENT_KEYS)

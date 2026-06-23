@@ -111,17 +111,36 @@ div[data-testid="stHtml"] {
    on pair cards) or buttons with their own explicit height (hub_save_name). */
 div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"],
 div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"],
-div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] {
+div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"],
+div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"],
+div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"],
+div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"] {
     width: 100% !important;
 }
 div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"] > button,
 div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"] > button,
-div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] > button {
+div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] > button,
+div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"] > button,
+div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"] > button,
+div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"] > button {
     width: 100% !important;
     height: auto !important;
     min-height: 3em !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
+}
+/* Covers the no-tooltip case (help=None while disabled): Streamlit's primary-disabled
+   CSS can win over the non-!important base min-height rule above. Force full height
+   on the button directly, regardless of wrapper presence. */
+div.st-key-confirm_pair button,
+div.st-key-sync_confirm_btn button,
+div[class*="st-key-hub_save_edit_"] button,
+div.st-key-hub_cs_confirm_btn button {
+    min-height: 3em !important;
+    height: auto !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    width: 100% !important;
 }
 
 /* Ensure button text wraps correctly at word boundaries and not mid-word */
@@ -387,6 +406,20 @@ div[class*="st-key-sidebar_top"] [data-testid="stHtml"] {
    position:absolute (not display:none) keeps the iframe painted so its script
    is guaranteed to run. */
 div[data-testid="stDialog"] [data-testid="stElementContainer"]:has(iframe[height="0"]) {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* course_selector.inject_shift_select_bridge() injects the same kind of
+   0-height components.html iframe on the main download page (Shift-click range
+   select). Collapse its element container so it adds no gap above the download
+   buttons. Kept separate from the dialog-scoped rule above because main-page
+   containers are not inside div[data-testid="stDialog"]. */
+[data-testid="stMain"] [data-testid="stElementContainer"]:has(iframe[height="0"]) {
     position: absolute !important;
     width: 0 !important;
     height: 0 !important;

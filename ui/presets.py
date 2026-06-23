@@ -174,18 +174,20 @@ def _save_config_dialog():
             except TypeError:
                 st.rerun()  # audit-ignore
     with col_create:
-        create_disabled = not preset_name or not preset_name.strip()
-        _save_help = "Enter a preset title to save." if create_disabled else None
+        # Button stays genuinely enabled server-side (so a single click works);
+        # live_enable_button() greys it + blocks pointer events while invalid,
+        # and this guard is the server-side source of truth for the save.
         if st.button("Save Preset", use_container_width=True,
-                     key="preset_save_create", disabled=create_disabled, help=_save_help):
-            _settings = mgr.capture_current_settings(st.session_state)
-            _path = st.session_state.get('download_path', '') if include_path else ''
-            mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
-            st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
-            try:
-                st.rerun(scope="app")
-            except TypeError:
-                st.rerun()  # audit-ignore
+                     key="preset_save_create"):
+            if preset_name and preset_name.strip():
+                _settings = mgr.capture_current_settings(st.session_state)
+                _path = st.session_state.get('download_path', '') if include_path else ''
+                mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
+                st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
+                try:
+                    st.rerun(scope="app")
+                except TypeError:
+                    st.rerun()  # audit-ignore
 
     # Enable Save Preset the instant a title is typed (no blur required).
     live_enable_button("preset_save_name_input", "preset_save_create")
