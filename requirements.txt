@@ -23,3 +23,10 @@ pync==2.0.3; sys_platform == 'darwin'
 # The app degrades gracefully to NSUserNotification if this isn't present.
 pyobjc-framework-UserNotifications; sys_platform == 'darwin'
 
+# ── Panopto lecture transcription (premium feature) ──
+# faster-whisper runs Whisper via CTranslate2 (NO PyTorch). Model weights are
+# downloaded on demand via huggingface_hub into the app config dir. Pulls in
+# ctranslate2, tokenizers, av (PyAV), onnxruntime (VAD), and numpy transitively.
+faster-whisper==1.1.1
+huggingface_hub>=0.23
+

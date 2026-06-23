@@ -19,7 +19,7 @@ from ui_helpers import esc, render_download_wizard
 from ui_shared import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
-    error_log_dialog,
+    error_log_dialog, render_panopto_summary,
 )
 from styles import inject_css
 from ui_shared import inject_material_icons_font
@@ -251,6 +251,7 @@ components.html("""<script>
         'div[class*="st-key-page_nav_"]',         // Continue, Back, Yes Start Sync, Go to front page (all variants)
         'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
         'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Course Folders
+        'div[class*="st-key-nav_btn_panopto"]',   // sidebar: Panopto Lectures
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
         'div[class*="st-key-login_submit_btn"]',  // login submission button
         'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
@@ -469,6 +470,21 @@ def cancel_download_callback():
     cancel_download()
 
 
+def _next_phase_after_courses() -> str:
+    """Decide the status after all courses' files + post-processing finish.
+
+    Runs the terminal Panopto phase if the premium feature is enabled; otherwise
+    goes straight to the completion screen.
+    """
+    try:
+        from panopto.settings import load_settings as _pan_load
+        if _pan_load().get('enabled'):
+            return 'panopto'
+    except Exception:
+        pass
+    return 'done'
+
+
 
 @st.cache_resource(ttl=600, show_spinner=False)  # 10-minute TTL; spinner handled by course selector placeholder
 def fetch_courses(token, url):
@@ -511,9 +527,16 @@ with _main_content.container():
     # Preset Dialogs (delegated to ui.presets)
     from ui.presets import _save_config_dialog, _presets_hub_dialog
 
+    # ========== PANOPTO MODE (premium hidden feature) ==========
+    # Settings/setup page; not a wizard. Takes priority over the step chain so
+    # it renders regardless of the leftover step value.
+    if st.session_state.get('current_mode') == 'panopto':
+        from ui.panopto_page import render_panopto_page
+        render_panopto_page()
+
     # STEP 1: Different UI based on mode
-    if st.session_state['step'] == 1:
-        
+    elif st.session_state['step'] == 1:
+
         # ========== SYNC MODE - STEP 1 ==========
         if st.session_state['current_mode'] == 'sync':
             render_sync_step1(fetch_courses, _main_content)
@@ -545,6 +568,8 @@ with _main_content.container():
             st.markdown('<h2 class="step-header">Download Complete!</h2>', unsafe_allow_html=True)
         elif current_status == 'cancelled':
             pass
+        elif current_status == 'panopto':
+            st.markdown('<h2 class="step-header">Panopto Lectures</h2>', unsafe_allow_html=True)
         else:
             st.markdown('<h2 class="step-header">Downloading...</h2>', unsafe_allow_html=True)
         
@@ -1137,13 +1162,13 @@ with _main_content.container():
                 
                 # Check if we're done
                 if st.session_state['current_course_index'] >= total:
-                    st.session_state['download_status'] = 'done'
+                    st.session_state['download_status'] = _next_phase_after_courses()
 
                 # Auto-rerun instantly to process next course or done screen
                 st.rerun()
             else:
                 # All done
-                st.session_state['download_status'] = 'done'
+                st.session_state['download_status'] = _next_phase_after_courses()
                 
                 # --- NEW: Force-write session error log (Backup/Guaranteed file) ---
                 if 'download_errors_list' in st.session_state and st.session_state['download_errors_list'] and st.session_state.get('error_log_enabled', False):
@@ -1526,6 +1551,196 @@ with _main_content.container():
                 st.session_state['download_status'] = 'done'
             st.rerun()
 
+        elif st.session_state.get('download_status') == 'panopto':
+            # ── Terminal Panopto phase ──
+            # Runs after every course's files + post-processing have finished.
+            # Discovers, downloads, and transcribes Panopto lectures for all
+            # selected courses, folding results into the same completion screen.
+            from panopto.settings import load_settings as _pan_load
+            from panopto.runner import run_course_panopto
+
+            # Cancel re-entry guard: a cancel click raises RerunException at a
+            # render call mid-run; on the rerun the event is set, so route to the
+            # cancelled screen instead of restarting the phase.
+            if is_download_cancelled():
+                st.session_state['download_status'] = 'cancelled'
+                st.rerun()
+
+            pan_settings = _pan_load()
+
+            header_placeholder = st.empty()
+            progress_placeholder = st.empty()
+            metrics_placeholder = st.empty()
+            active_file_placeholder = st.empty()
+            log_placeholder = st.empty()
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            cancel_placeholder = st.empty()
+            cancel_placeholder.button(
+                'Cancel', type="secondary", key="cancel_panopto_btn",
+                on_click=cancel_download_callback,
+            )
+
+            log_deque = st.session_state.get('log_deque') or collections.deque(maxlen=200)
+            st.session_state['log_deque'] = log_deque
+            if 'panopto_run_started' not in st.session_state:
+                st.session_state['panopto_run_started'] = time.time()
+            pan_start = st.session_state['panopto_run_started']
+
+            st.session_state.setdefault('panopto_total', 0)
+            st.session_state.setdefault('panopto_done_count', 0)
+            st.session_state.setdefault('panopto_mb_tracker', {'bytes': 0})
+            st.session_state.setdefault('download_file_details', {})
+            st.session_state.setdefault('course_mb_downloaded', {})
+            _pan_warned = st.session_state.setdefault('_panopto_warned', set())
+
+            _pan_dp = DashboardPlaceholders(
+                header=header_placeholder, progress=progress_placeholder,
+                metrics=metrics_placeholder, active_file=active_file_placeholder,
+                log=log_placeholder,
+            )
+            _pan_cur = {'course': None}
+
+            def _render_pan():
+                _cname = _pan_cur['course'].name if _pan_cur['course'] else ''
+                render_full_dashboard(
+                    _pan_dp, log_deque,
+                    header_label="Panopto Lectures",
+                    course_name=esc(_cname),
+                    current_files=st.session_state.get('panopto_done_count', 0),
+                    total_files=max(1, st.session_state.get('panopto_total', 0)),
+                    downloaded_mb=st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024),
+                    total_mb=0,
+                    start_time=pan_start,
+                    show_total_mb=False,
+                )
+
+            def _pan_ledger_add(path):
+                course = _pan_cur['course']
+                if not course:
+                    return
+                d = st.session_state['download_file_details']
+                d.setdefault(course.name, [])
+                if path not in d[course.name]:
+                    d[course.name].append(path)
+                st.session_state['download_file_details'] = d
+
+            def pan_progress(kind, **kw):
+                try:
+                    course = _pan_cur['course']
+                    if kind == 'discovering':
+                        render_active_file(active_file_placeholder,
+                                           f"Finding Panopto lectures in {kw.get('course', '')}…")
+                        _render_pan()
+                    elif kind == 'found':
+                        cnt = kw.get('count', 0)
+                        if cnt:
+                            st.session_state['panopto_total'] += cnt
+                            log_deque.append(log_divider(f"Panopto · {kw.get('course', '')} ({cnt})"))
+                        else:
+                            log_deque.append(log_meta(f"No Panopto lectures in {kw.get('course', '')}"))
+                        _render_pan()
+                    elif kind == 'video_start':
+                        render_active_file(active_file_placeholder, f"Downloading: {kw.get('title', '')}")
+                    elif kind == 'skipped':
+                        st.session_state['panopto_done_count'] += 1
+                        for p in kw.get('paths', []):
+                            _pan_ledger_add(p)
+                        log_deque.append(log_line('skip', kw.get('title', ''),
+                                                  icon=file_icon_svg('x.mp3')))
+                        _render_pan()
+                    elif kind == 'downloaded':
+                        size = kw.get('size', 0) or 0
+                        st.session_state['panopto_mb_tracker']['bytes'] += size
+                        if course is not None:
+                            cmb = st.session_state['course_mb_downloaded']
+                            cmb[course.id] = cmb.get(course.id, 0) + size / (1024 * 1024)
+                            st.session_state['course_mb_downloaded'] = cmb
+                        log_deque.append(log_line('success', kw.get('title', ''),
+                                                  icon=file_icon_svg('x.mp3'),
+                                                  detail=f"{size / (1024 * 1024):.1f} MB"))
+                        _render_pan()
+                    elif kind == 'produced':
+                        _pan_ledger_add(kw.get('path', ''))
+                    elif kind == 'transcribe':
+                        render_active_file(active_file_placeholder,
+                                           f"Transcribing: {kw.get('title', '')} ({kw.get('pct', 0)}%)")
+                    elif kind == 'video_done':
+                        st.session_state['panopto_done_count'] += 1
+                        _render_pan()
+                    elif kind == 'warn':
+                        msg = kw.get('message', '')
+                        if msg not in _pan_warned:
+                            _pan_warned.add(msg)
+                            log_deque.append(log_line('attention', msg))
+                            _render_pan()
+                    elif kind == 'error':
+                        err = kw.get('error')
+                        if err is not None:
+                            st.session_state.setdefault('download_errors_list', []).append(err)
+                            log_deque.append(log_line('error', f"[{getattr(err, 'item_name', '')}] {getattr(err, 'message', err)}"))
+                            _render_pan()
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except Exception as _pe:
+                    # Swallow render noise; RerunException (BaseException) passes
+                    # through to drive cancellation, mirroring update_ui.
+                    if type(_pe).__name__ != 'RuntimeError':
+                        logger.debug(f"pan_progress swallowed: {type(_pe).__name__}: {_pe}")
+
+            cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+            _pan_debug = (Path(st.session_state['download_path']) / 'debug_log.txt') if st.session_state.get('debug_mode', False) else None
+            _render_pan()
+
+            for course in st.session_state.get('courses_to_download', []):
+                if is_download_cancelled():
+                    break
+                _pan_cur['course'] = course
+                _render_pan()
+                # Record produced lectures in the course folder's panopto_manifest.
+                _pan_rec = None
+                try:
+                    from sync_manager import SyncManager as _PanSM
+                    from panopto.runner import make_recorder as _make_rec
+                    _pan_course_folder = Path(st.session_state['download_path']) / cm._sanitize_filename(course.name)
+                    _pan_rec = _make_rec(_PanSM(_pan_course_folder, course.id, course.name), _pan_course_folder)
+                except Exception:
+                    _pan_rec = None
+                try:
+                    _pan_course_summary = run_course_panopto(
+                        cm, course,
+                        save_dir=st.session_state['download_path'],
+                        settings=pan_settings,
+                        download_mode=st.session_state.get('download_mode', 'modules'),
+                        progress=pan_progress,
+                        is_cancelled=check_cancellation,
+                        debug_file=_pan_debug,
+                        record_fn=_pan_rec,
+                    )
+                    _pan_agg = st.session_state.setdefault(
+                        'panopto_summary',
+                        {'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0, 'failed': 0, 'courses': 0},
+                    )
+                    for _k in ('found', 'downloaded', 'transcribed', 'skipped', 'failed'):
+                        _pan_agg[_k] += int(_pan_course_summary.get(_k, 0) or 0)
+                    if _pan_course_summary.get('found'):
+                        _pan_agg['courses'] += 1
+                    st.session_state['panopto_summary'] = _pan_agg
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except Exception as _pan_crash:
+                    logger.error(f"Panopto phase crashed for '{course.name}': {_pan_crash}", exc_info=True)
+                    _pc_err = DownloadError(course.name, "Panopto", "Phase Crash",
+                                            str(_pan_crash), raw_error=_pan_crash, is_app_error=True)
+                    st.session_state.setdefault('download_errors_list', []).append(_pc_err)
+                    log_deque.append(log_line('error', f"Panopto failed for {course.name}: {_pan_crash}"))
+
+            active_file_placeholder.empty()
+            if is_download_cancelled():
+                st.session_state['download_status'] = 'cancelled'
+            else:
+                st.session_state['download_status'] = 'done'
+            st.rerun()
+
         elif st.session_state.get('download_status') == 'done':
             # --- Premium Completion Screen (Parity with Sync) ---
             download_errors = st.session_state.get('download_errors_list', [])
@@ -1619,6 +1834,9 @@ with _main_content.container():
 
                 # 2. Post-processing warning
                 render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+                # 2b. Panopto lectures summary (if the terminal Panopto phase ran)
+                render_panopto_summary(st.session_state.get('panopto_summary'))
 
                 # Office watchdog broad-kill warning (parity with the sync
                 # completion screen - previously only shown there even though

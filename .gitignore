@@ -42,3 +42,7 @@ Thumbs.db
 .claude/*
 !.claude/commands/
 .claude/worktrees/
+
+#Panopto
+panopto_models/*
+PANOPTO DOWNLOADER CODE/*
