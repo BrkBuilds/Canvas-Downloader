@@ -215,6 +215,10 @@ def show_sync_complete():
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
+        # Panopto lectures summary (if the terminal Panopto pass ran)
+        from ui_shared import render_panopto_summary
+        render_panopto_summary(st.session_state.get('panopto_summary'))
+
         # L-12: Warn user when Office watchdog did a broad /IM kill (may have
         # closed other open Office documents the user had open independently).
         if st.session_state.pop('pp_force_kill_warning', False):
