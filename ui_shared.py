@@ -73,31 +73,34 @@ SVG_EDIT_WHITE_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 
 
 def live_enable_button(input_key: str, button_key: str, *,
                        require_change_from: str | None = None) -> None:
-    """Make a Save button enable/disable live as the user types, without
-    waiting for the text input to lose focus (blur).
+    """Make a Save button look enabled/disabled live as the user types, while
+    keeping it GENUINELY clickable server-side so a single click always works.
 
-    Streamlit's ``st.text_input`` only commits its value - and triggers the
-    rerun that re-evaluates a button's ``disabled=`` flag - on blur or Enter.
-    So a validity-gated Save button stays greyed out until the user clicks
-    away, which feels broken: you type a name and the button does nothing until
-    you click elsewhere. This injects a tiny client-side script (the same
-    ``components.html`` + ``window.parent.document`` pattern app.py already uses
-    for the loading overlay) that watches the input's live ``input`` events and
-    toggles the button's ``disabled`` attribute in real time.
+    Why the button must NOT be server-side ``disabled=``: Streamlit only commits
+    a text input's value (and reruns to re-evaluate ``disabled=``) on blur/Enter.
+    A validity-gated ``disabled=True`` button therefore stays disabled
+    *server-side* until the value commits - so the user's first click is
+    swallowed (it merely blurs the input and triggers the rerun that finally
+    enables the button), and only the second click registers. Forcing the
+    DOM ``disabled`` attribute off via JS does not help: React still has
+    ``disabled=true`` internally and suppresses its synthetic onClick.
 
-    Python's ``disabled=`` flag stays the source of truth on every rerun: this
-    is purely a UX accelerator. Clicking the now-enabled button blurs the input,
-    commits the value, and the server-side check still gates the actual save -
-    so an invalid value can never be saved even though the attribute was forced
-    off client-side.
+    The fix: render the button with ``disabled=False`` (always genuinely
+    clickable) and gate the actual save inside the click handler. This helper
+    then only handles the *appearance*: it toggles a ``data-cd-valid`` attribute
+    on the button as the user types and injects parent-document CSS that greys
+    the button out and sets ``pointer-events:none`` while invalid. When the
+    value is valid the button looks and behaves like a normal enabled button, so
+    one click both commits the typed value and fires the action - no two-click,
+    no stale ``help`` tooltip (call sites pass no dynamic ``help``).
 
     Call this once, AFTER both the ``st.text_input`` and the ``st.button`` have
     been rendered (only their keys matter, not call order vs. this helper).
 
     Args:
         input_key:           ``key=`` of the ``st.text_input`` that gates the button.
-        button_key:          ``key=`` of the ``st.button`` to enable/disable.
-        require_change_from: if given, the button also stays disabled while the
+        button_key:          ``key=`` of the ``st.button`` to grey out while invalid.
+        require_change_from: if given, the button also looks disabled while the
                              trimmed input equals this baseline (used by rename
                              dialogs, where an unchanged name is a no-op).
     """
@@ -109,16 +112,43 @@ def live_enable_button(input_key: str, button_key: str, *,
     btn_cls = f"st-key-{button_key.lower()}"
     baseline_js = json.dumps(require_change_from or "")
     require_change = "true" if require_change_from is not None else "false"
+    style_id = f"cd-live-css-{button_key.lower()}"
+    # CSS that paints the (genuinely enabled) button as disabled while invalid.
+    disabled_css = (
+        f'div[class*="{btn_cls}"] button:not([data-cd-valid="1"]) {{'
+        '  background-color: rgba(255,255,255,0.075) !important;'
+        '  border-color: rgba(255,255,255,0.075) !important;'
+        '  color: rgba(255,255,255,0.25) !important;'
+        '  box-shadow: none !important;'
+        '  cursor: not-allowed !important;'
+        '  pointer-events: none !important;'
+        '}'
+        f'div[class*="{btn_cls}"] button:not([data-cd-valid="1"]) p {{'
+        '  color: rgba(255,255,255,0.25) !important;'
+        '}'
+    )
+    css_js = json.dumps(disabled_css)
 
     components.html(
         f"""
         <script>
         (function(){{
             var doc = window.parent.document;
-            var IN_SEL  = '.{in_cls} input, .{in_cls} textarea';
-            var BTN_SEL = '.{btn_cls} button';
+            var IN_SEL   = '.{in_cls} input, .{in_cls} textarea';
+            var BTN_SEL  = '.{btn_cls} button';
+            var WRAP_SEL = '.{btn_cls}';
             var REQUIRE_CHANGE = {require_change};
             var BASELINE = {baseline_js};
+            var STYLE_ID = {json.dumps(style_id)};
+            var CSS = {css_js};
+
+            // Inject the "disabled look" CSS into the PARENT document once.
+            if (!doc.getElementById(STYLE_ID)){{
+                var st = doc.createElement('style');
+                st.id = STYLE_ID;
+                st.textContent = CSS;
+                doc.head.appendChild(st);
+            }}
 
             function isValid(v){{
                 var t = (v || '').trim();
@@ -131,29 +161,40 @@ def live_enable_button(input_key: str, button_key: str, *,
             // point at a button node Streamlit replaced on the last rerun.
             function syncBtn(input){{
                 var btn = doc.querySelector(BTN_SEL);
-                if (!btn) return;
+                if (!btn || !input) return;
                 if (isValid(input.value)){{
-                    btn.removeAttribute('disabled');
-                    btn.removeAttribute('aria-disabled');
+                    btn.setAttribute('data-cd-valid', '1');
                 }} else {{
-                    btn.setAttribute('disabled', '');
-                    btn.setAttribute('aria-disabled', 'true');
+                    btn.removeAttribute('data-cd-valid');
                 }}
             }}
 
             var tries = 0;
             (function bind(){{
                 var input = doc.querySelector(IN_SEL);
+                var wrap  = doc.querySelector(WRAP_SEL);
                 if (!input || !doc.querySelector(BTN_SEL)){{
                     if (tries++ < 100) setTimeout(bind, 50);  // wait out render order
                     return;
                 }}
-                syncBtn(input);  // match the freshly-rendered button to committed state
-                if (input.dataset.cdLiveBound === '1') return;  // listener already live
-                input.dataset.cdLiveBound = '1';
-                var handler = function(){{ syncBtn(input); }};
-                input.addEventListener('input', handler);
-                input.addEventListener('keyup', handler);
+
+                syncBtn(input);  // match the freshly-rendered button to live value
+
+                if (input.dataset.cdLiveBound !== '1'){{
+                    input.dataset.cdLiveBound = '1';
+                    var handler = function(){{ syncBtn(input); }};
+                    input.addEventListener('input', handler);
+                    input.addEventListener('keyup', handler);
+                }}
+
+                // Streamlit re-renders the button node on each rerun, dropping
+                // our data-cd-valid attribute. Watch the wrapper and re-apply so
+                // a freshly-rendered valid button is never momentarily greyed.
+                if (wrap && wrap.dataset.cdObserved !== '1'){{
+                    wrap.dataset.cdObserved = '1';
+                    var obs = new MutationObserver(function(){{ syncBtn(input); }});
+                    obs.observe(wrap, {{ childList: true, subtree: true }});
+                }}
             }})();
         }})();
         </script>

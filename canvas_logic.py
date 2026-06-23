@@ -205,6 +205,16 @@ _ENTITY_ROUTING = {
     'link':         {'folder': 'Links',         'prefix': 'Link'},
 }
 
+# Feature flag: rubric fetching is temporarily disabled.
+# The Canvas course-level rubrics endpoint (GET /courses/:id/rubrics) requires
+# the teacher/admin `manage_rubrics` permission, so student tokens always get a
+# 401 - the feature could never work for the typical user and only produced
+# noisy "user not authorised" errors. All rubric handling code is intentionally
+# kept intact; flip this back to True to fully re-enable rubric download (both
+# the metadata-listing path used by sync analysis AND the secondary-content
+# download path used by Download mode are gated on this single flag).
+RUBRICS_ENABLED = False
+
 def _format_canvas_date(date_str):
     """
     Formats ISO 8601 UTC strings from Canvas (e.g., '2025-08-26T14:07:50Z')
@@ -472,6 +482,9 @@ class CanvasManager:
                     all_files_map[file.id] = f_info
                 except Exception as e:
                     logger.warning(f"Error parsing file object {getattr(file, 'id', '?')}: {e}")
+        except (Unauthorized, ResourceDoesNotExist, CanvasException):
+            logger.debug(f"Files tab not accessible for course {getattr(course, 'id', '?')} (permission denied — module scan will supplement)")
+            # Expected for courses with restricted Files tabs; Phase 2 module scan recovers the files.
         except Exception as e:
             logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")
             # We do NOT raise here. We continue to Phase 2 to supplement what we found.
@@ -1219,12 +1232,15 @@ class CanvasManager:
                             content_type=att.get('content-type', ''),
                         ))
                 fetch_success['quiz'] = True
+            except (Unauthorized, ResourceDoesNotExist, CanvasException):
+                logger.debug(f"Quizzes not accessible for course {getattr(course, 'id', '?')} (permission denied or not supported)")
+                fetch_success['quiz'] = False
             except Exception as e:
                 logger.warning(f"Fetching quizzes failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['quiz'] = False
 
-        # Rubrics
-        if settings.get('download_rubrics'):
+        # Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
+        if RUBRICS_ENABLED and settings.get('download_rubrics'):
             try:
                 for rubric in course.get_rubrics():
                     r_id = getattr(rubric, 'id', 0)
@@ -1246,6 +1262,9 @@ class CanvasManager:
                         content_type='text/markdown',
                     ))
                 fetch_success['rubric'] = True
+            except (Unauthorized, ResourceDoesNotExist, CanvasException):
+                logger.debug(f"Rubrics not accessible for course {getattr(course, 'id', '?')} (permission denied or not supported)")
+                fetch_success['rubric'] = False
             except Exception as e:
                 logger.warning(f"Fetching rubrics failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['rubric'] = False
@@ -4469,8 +4488,8 @@ class CanvasManager:
                 sync_manager, module_handled_ids,
             )
 
-        # 6. Rubrics
-        if settings.get('download_rubrics'):
+        # 6. Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
+        if RUBRICS_ENABLED and settings.get('download_rubrics'):
             self._fetch_and_save_rubrics(
                 course, base_path, progress_callback,
                 check_cancellation, settings,
