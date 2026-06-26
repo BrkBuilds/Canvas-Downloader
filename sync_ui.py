@@ -873,10 +873,12 @@ def _sync_pairs_section(courses, course_names, course_options):
                 if local_folder and Path(local_folder).exists():
                     sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
                     ignored = sm.get_ignored_files()
-                    if ignored:
+                    ignored_pan = sm.get_ignored_panopto()
+                    if ignored or ignored_pan:
                         ignored_by_course[course_id] = {
                             'pair': pair,
                             'files': ignored,
+                            'panopto': ignored_pan,
                             'sync_manager': sm,
                         }
         st.session_state[_cache_key] = ignored_by_course
@@ -969,8 +971,9 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.rerun(scope="app")
 
                 with col_ignored:
-                    ignored_count = len(ignored_by_course.get(pair['course_id'], {}).get('files', []))
-                    ignored_help = "No files have been ignored for this course." if ignored_count == 0 else None
+                    _ign_cd = ignored_by_course.get(pair['course_id'], {})
+                    ignored_count = len(_ign_cd.get('files', [])) + len(_ign_cd.get('panopto', {}) or {})
+                    ignored_help = "Nothing has been ignored for this course." if ignored_count == 0 else None
                     btn_text = f"Ignored Files\u2009:gray[({ignored_count})]" if ignored_count > 0 else "Ignored Files"
                     if st.button(btn_text, key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
@@ -2239,13 +2242,11 @@ def _render_sync_history():
                                                 cf = categorized_files.get(cat_key)
                                                 if not cf:
                                                     continue
-                                                st.markdown(
-                                                    f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin:10px 0 0 0;'>"
-                                                    f"{HELP_ICONS[cat_icon]} {cat_title} "
-                                                    f"<span style='color:#b1bac4;font-weight:500;'>({len(cf)})</span></div>"
-                                                    + _read_only_list(cf),
-                                                    unsafe_allow_html=True,
-                                                )
+                                                with st.container(border=True, key=f"fileactlist_synchist_{run_seq}_{cat_key}"):
+                                                    _hdr = (f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:8px;'>"
+                                                            f"{HELP_ICONS[cat_icon]} {cat_title} "
+                                                            f"<span style='color:#b1bac4;font-weight:500;'>({len(cf)})</span></div>")
+                                                    st.markdown(_hdr + _read_only_list(cf), unsafe_allow_html=True)
                                         elif errors == 0:
                                             st.markdown(
                                                 "<div style='color:#8b949e;font-size:0.84rem;margin-top:6px;'>Everything was up to date.</div>",
@@ -2262,13 +2263,14 @@ def _render_sync_history():
                                                     err_dict[reason].append(fname)
                                                 else:
                                                     err_dict["Unknown error"].append(err)
-                                            _eh = [f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin:10px 0 0 0;'>"
-                                                   f"{HELP_ICONS['error']} Skipped / Failed "
-                                                   f"<span style='color:#ff7b72;font-weight:500;'>({errors})</span></div>"]
-                                            for reason, fnames in err_dict.items():
-                                                _eh.append(f"<div style='color:#8b949e;font-size:0.75rem;margin-top:2px;'>({esc(reason)})</div>")
-                                                _eh.append(_read_only_list(fnames))
-                                            st.markdown("".join(_eh), unsafe_allow_html=True)
+                                            with st.container(border=True, key=f"fileactlist_synchist_{run_seq}_failed"):
+                                                _eh = [f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:2px;'>"
+                                                       f"{HELP_ICONS['error']} Skipped / Failed "
+                                                       f"<span style='color:#ff7b72;font-weight:500;'>({errors})</span></div>"]
+                                                for reason, fnames in err_dict.items():
+                                                    _eh.append(f"<div style='color:#8b949e;font-size:0.75rem;margin-top:2px;margin-bottom:4px;'>({esc(reason)})</div>")
+                                                    _eh.append(_read_only_list(fnames))
+                                                st.markdown("".join(_eh), unsafe_allow_html=True)
 
                         # Backstop: render each entry behind a try/except so a
                         # single malformed/corrupt history entry can never crash
@@ -2487,11 +2489,12 @@ def _run_sync_panopto():
     """Terminal Panopto pass for Sync mode.
 
     Runs after the file sync completes: for each synced folder, discovers,
-    downloads and transcribes Panopto lectures (skipping ones already on disk),
+    downloads and transcribes Panopto recordings (skipping ones already on disk),
     records them in the folder's dedicated panopto_manifest, then advances to the
     sync completion screen. Mirrors the Download-mode 'panopto' phase.
     """
     import collections
+    import json as _json
     import time as _time
     from pathlib import Path
     from types import SimpleNamespace
@@ -2499,19 +2502,24 @@ def _run_sync_panopto():
     from canvas_logic import CanvasManager
     from core.cancellation import cancel_sync, is_sync_cancelled
     from engine.progress_dashboard import (
-        DashboardPlaceholders, render_full_dashboard, render_active_file,
-        log_line, log_divider, log_meta, file_icon_svg,
+        DashboardPlaceholders, render_progress_header, render_progress_bar,
+        render_custom_metrics, render_terminal_log, render_active_file,
+        PHASE_BAR_COLOR, log_line, log_divider, log_meta, file_icon_svg,
     )
-    from panopto.settings import load_settings as _pan_load
-    from panopto.runner import run_course_panopto, make_recorder
+    import theme as _theme
+    from panopto.settings import compose_settings as _pan_compose
+    from panopto.runner import run_panopto_batch, make_recorder
     from sync_manager import SyncManager
     from ui_helpers import esc as _esc, render_sync_wizard as _wizard
 
-    pan = _pan_load()
+    # Batch-level settings carry only the global engine config (model/device/
+    # language); each target supplies its own output/layout contract, so the
+    # batch outputs stay empty (compose_settings(None) -> all outputs off).
+    pan = _pan_compose(None)
     sels = st.session_state.get('sync_selections') or []
 
     _wizard(st, 3)
-    st.markdown('<h2 class="step-header">Panopto Lectures</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="step-header">Panopto Recordings</h2>', unsafe_allow_html=True)
 
     # Cancel re-entry guard (a cancel raises RerunException at a render call).
     if is_sync_cancelled():
@@ -2530,57 +2538,140 @@ def _run_sync_panopto():
     dq = st.session_state.get('log_deque') or collections.deque(maxlen=200)
     st.session_state['log_deque'] = dq
     # Fresh counters for this pass (runs exactly once per sync).
-    st.session_state['panopto_total'] = 0
-    st.session_state['panopto_done_count'] = 0
     st.session_state['panopto_mb_tracker'] = {'bytes': 0}
     st.session_state['panopto_run_started'] = _time.time()
-    st.session_state['panopto_summary'] = {
-        'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0, 'failed': 0, 'courses': 0
-    }
     pan_start = st.session_state['panopto_run_started']
 
     dp = DashboardPlaceholders(header=header_ph, progress=prog_ph, metrics=metrics_ph,
                                active_file=active_ph, log=log_ph)
-    cur = {'name': ''}
     warned = set()
+    _pan = {
+        # Recordings were already discovered during analysis, so the pass starts
+        # straight in the download phase - no redundant "Searching…" screen. (If a
+        # fallback discovery ever runs, the runner's 'discovering' event flips this
+        # back to 'search'.)
+        'phase': 'download', 'course': '',
+        'courses_total': len(sels), 'courses_scanned': 0, 'found': 0,
+        'dl_total': 0, 'dl_done': 0,
+        'tx_total': 0, 'tx_done': 0, 'tx_pct': 0, 'tx_pct_shown': -10,
+    }
+
+    def _elapsed():
+        return _time.strftime('%M:%S', _time.gmtime(max(0, _time.time() - pan_start)))
 
     def _render():
-        render_full_dashboard(
-            dp, dq, header_label="Panopto Lectures", course_name=_esc(cur['name']),
-            current_files=st.session_state['panopto_done_count'],
-            total_files=max(1, st.session_state['panopto_total']),
-            downloaded_mb=st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024),
-            total_mb=0, start_time=pan_start, show_total_mb=False,
-        )
+        ph = _pan['phase']
+        if ph == 'download':
+            render_progress_header(dp, "Downloading Recordings", _esc(_pan['course']))
+            pct = int(_pan['dl_done'] / _pan['dl_total'] * 100) if _pan['dl_total'] else 0
+            render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
+            _mb = st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024)
+            _el = max(0.0, _time.time() - pan_start)
+            _spd = (_mb / _el) if _el > 0 else 0.0
+            render_custom_metrics(dp, [
+                ("Downloaded", f"{_mb:.1f} <span style='font-size:0.9rem;color:#a855f7;'>MB</span>", _theme.TEXT_PRIMARY),
+                ("Speed", f"{_spd:.1f} <span style='font-size:0.9rem;'>MB/s</span>", "#10B981"),
+                ("Recordings", f"{_pan['dl_done']} <span style='font-size:0.9rem;color:#a855f7;'>/ {_pan['dl_total']}</span>", _theme.TEXT_PRIMARY),
+                ("Elapsed", _elapsed(), "#F59E0B"),
+            ])
+        elif ph == 'transcribe':
+            render_progress_header(dp, "Transcribing Recordings", _esc(_pan['course']))
+            _base = _pan['tx_done'] + (_pan['tx_pct'] / 100.0)
+            pct = int(_base / _pan['tx_total'] * 100) if _pan['tx_total'] else 0
+            render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['transcribe'])
+            render_custom_metrics(dp, [
+                ("Transcribed", f"{_pan['tx_done']} <span style='font-size:0.9rem;color:#2dd4bf;'>/ {_pan['tx_total']}</span>", _theme.TEXT_PRIMARY),
+                ("Current File", f"{_pan['tx_pct']}%", "#2dd4bf"),
+                ("Elapsed", _elapsed(), "#F59E0B"),
+            ])
+        else:  # search
+            render_progress_header(dp, "Searching for Panopto Recordings", _esc(_pan['course']))
+            render_progress_bar(dp, 0, color=PHASE_BAR_COLOR['search'],
+                                indeterminate=True, label="Searching…")
+            render_custom_metrics(dp, [
+                ("Folders Scanned", f"{_pan['courses_scanned']} <span style='font-size:0.9rem;color:{_theme.ACCENT_BLUE};'>/ {_pan['courses_total']}</span>", _theme.TEXT_PRIMARY),
+                ("Recordings Found", str(_pan['found']), "#10B981"),
+                ("Elapsed", _elapsed(), "#F59E0B"),
+            ])
+        render_terminal_log(dp, dq)
 
     def progress(kind, **kw):
         try:
             if kind == 'discovering':
-                render_active_file(active_ph, f"Finding Panopto lectures in {kw.get('course', '')}…"); _render()
-            elif kind == 'found':
-                c = kw.get('count', 0)
-                if c:
-                    st.session_state['panopto_total'] += c
-                    dq.append(log_divider(f"Panopto · {kw.get('course', '')} ({c})"))
-                else:
-                    dq.append(log_meta(f"No Panopto lectures in {kw.get('course', '')}"))
+                _pan['phase'] = 'search'
+                _pan['course'] = kw.get('course', '')
+                dq.append(log_divider(f"Scanning · {kw.get('course', '')}"))
+                render_active_file(active_ph,
+                                   f"Scanning {kw.get('course', '')} for Panopto recordings…",
+                                   phase='search'); _render()
+            elif kind == 'scan_stage':
+                render_active_file(active_ph, f"Scanning {_esc(_pan['course'])} — {kw.get('name', '')}",
+                                   phase='search', label='Searching'); _render()
+            elif kind == 'scan_item':
+                render_active_file(active_ph, kw.get('detail', ''), phase='search', label='Searching')
                 _render()
-            elif kind == 'video_start':
-                render_active_file(active_ph, f"Downloading: {kw.get('title', '')}")
+            elif kind == 'scan_found':
+                _pan['found'] += 1
+                dq.append(log_line('success', kw.get('title', ''),
+                                   icon=file_icon_svg('x.mp4'), detail='recording found'))
+                render_active_file(active_ph, f"Found: {kw.get('title', '')}", phase='search'); _render()
+            elif kind == 'found':
+                _pan['courses_scanned'] += 1
+                if not kw.get('count', 0):
+                    dq.append(log_meta(f"No Panopto recordings in {kw.get('course', '')}"))
+                _render()
+            elif kind == 'discovery_done':
+                _n = kw.get('found', 0)
+                dq.append(log_divider(f"{_n} recording{'s' if _n != 1 else ''} found")); _render()
             elif kind == 'skipped':
-                st.session_state['panopto_done_count'] += 1
-                dq.append(log_line('skip', kw.get('title', ''), icon=file_icon_svg('x.mp3'))); _render()
+                dq.append(log_line('skip', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
+                                   detail='already saved')); _render()
+            elif kind == 'download_phase':
+                _pan['phase'] = 'download'
+                _pan['dl_total'] = kw.get('total', 0)
+                dq.append(log_divider(
+                    f"Downloading {_pan['dl_total']} recording{'s' if _pan['dl_total'] != 1 else ''}")); _render()
+            elif kind == 'video_start':
+                render_active_file(active_ph, kw.get('title', ''), phase='panopto')
             elif kind == 'downloaded':
                 sz = kw.get('size', 0) or 0
                 st.session_state['panopto_mb_tracker']['bytes'] += sz
-                dq.append(log_line('success', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
-                                   detail=f"{sz / (1024 * 1024):.1f} MB")); _render()
-            elif kind == 'transcribe':
-                render_active_file(active_ph, f"Transcribing: {kw.get('title', '')} ({kw.get('pct', 0)}%)")
-            elif kind == 'video_done':
-                st.session_state['panopto_done_count'] += 1
-                st.session_state['synced_count'] = st.session_state.get('synced_count', 0) + 1
+                _pan['dl_done'] += 1
+                if not kw.get('intermediate'):
+                    st.session_state['synced_bytes'] = st.session_state.get('synced_bytes', 0) + sz
+                    dq.append(log_line('success', kw.get('title', ''),
+                                       icon=file_icon_svg(kw.get('path') or 'x.mp3'),
+                                       detail=f"{sz / (1024 * 1024):.1f} MB"))
+                else:
+                    dq.append(log_line('success', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
+                                       detail='audio'))
                 _render()
+            elif kind == 'download_done':
+                _render()
+            elif kind == 'transcribe_phase':
+                _pan['phase'] = 'transcribe'
+                _pan['tx_total'] = kw.get('total', 0)
+                dq.append(log_divider(
+                    f"Transcribing {_pan['tx_total']} recording{'s' if _pan['tx_total'] != 1 else ''}")); _render()
+            elif kind == 'transcribe_start':
+                _pan['tx_pct'] = 0; _pan['tx_pct_shown'] = -10
+                render_active_file(active_ph, kw.get('title', ''), phase='transcribe'); _render()
+            elif kind == 'transcribe':
+                _pan['tx_pct'] = kw.get('pct', 0)
+                if _pan['tx_pct'] - _pan['tx_pct_shown'] >= 2 or _pan['tx_pct'] >= 99:
+                    _pan['tx_pct_shown'] = _pan['tx_pct']; _render()
+            elif kind == 'transcribed':
+                _pan['tx_done'] += 1; _pan['tx_pct'] = 0
+                _made = kw.get('paths', []) or []
+                _det = ", ".join(Path(p).suffix.lstrip('.').upper() for p in _made) or None
+                dq.append(log_line('success', kw.get('title', ''),
+                                   icon=file_icon_svg('x.txt'), detail=_det)); _render()
+            elif kind == 'transcribe_done':
+                _render()
+            elif kind == 'produced':
+                # Each kept artifact (mp3/txt/srt) counts toward the sync total so
+                # the completion screen reflects the new recording files.
+                st.session_state['synced_count'] = st.session_state.get('synced_count', 0) + 1
             elif kind == 'warn':
                 m = kw.get('message', '')
                 if m not in warned:
@@ -2601,11 +2692,25 @@ def _run_sync_panopto():
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
     _render()
 
+    # Build one target per synced folder that has selected recordings. Discovery
+    # already ran during analysis, so we reuse those PanoptoVideo objects and only
+    # act on the recordings the user selected in Review (the allowlist) - no second
+    # slow discovery pass, and execution can't diverge from what Review showed.
+    _targets = []
+    _total_selected = 0
+    # Capture the final artifacts each recording produces, per pair, so they can
+    # be merged into the completion screen's synced-files lists (Open / Reveal /
+    # path) - recordings are treated like every other downloaded file.
+    _pan_produced: dict = {}      # pair_idx -> [(video_id, abs path), ...]
+    _pan_pair_meta: dict = {}     # pair_idx -> {course_name, course_id, local_folder}
+    _pan_bucket: dict = {}        # pair_idx -> {video_id: 'new'|'restore'}
     for sel in sels:
-        if is_sync_cancelled():
-            break
+        selected_ids = sel.get('panopto') or []
+        if not selected_ids:
+            continue  # this pair had no recordings selected
         rd = sel.get('res_data', {})
         pair = rd.get('pair', {})
+        pair_idx = sel.get('pair_idx')
         sm = rd.get('sync_manager')
         local_folder = pair.get('local_folder')
         if not local_folder and sm is not None:
@@ -2616,46 +2721,177 @@ def _run_sync_panopto():
         if not local_folder:
             continue
         course = SimpleNamespace(id=pair.get('course_id'), name=pair.get('course_name') or 'Course')
-        cur['name'] = course.name
-        _render()
-
         if sm is None:
             try:
                 sm = SyncManager(Path(local_folder), course.id, course.name)
             except Exception:
                 sm = None
-        dmode = 'modules'
-        if sm is not None:
+        pan_payload = rd.get('panopto') or {}
+        # Use the SAME download_mode analysis used to classify paths, so execution
+        # writes where Review said files were missing.
+        dmode = pan_payload.get('download_mode')
+        if not dmode and sm is not None:
             try:
-                dmode = sm._load_metadata('download_mode') or 'modules'
+                dmode = sm._load_metadata('download_mode')
             except Exception:
-                dmode = 'modules'
-        rec = make_recorder(sm, Path(local_folder)) if sm is not None else None
+                dmode = None
+        dmode = dmode or 'modules'
 
+        # Per-folder Panopto settings (output formats + layout) resolved during
+        # analysis. Durably seed the folder's panopto_contract on first run so
+        # future syncs inherit it - mirrors the secondary_content_contract seed.
+        _pan_settings = pan_payload.get('settings')
+        if sm is not None and _pan_settings is not None:
+            try:
+                if sm._load_metadata('panopto_contract') is None:
+                    from panopto.settings import extract_contract as _pan_extract
+                    sm._save_metadata('panopto_contract',
+                                      _json.dumps(_pan_extract(_pan_settings)))
+            except Exception:
+                pass
+
+        _base_rec = make_recorder(sm, Path(local_folder)) if sm is not None else None
+
+        def _rec_wrap(video, produced_paths, _pi=pair_idx, _base=_base_rec):
+            # Record to the panopto manifest (idempotent) AND remember the kept
+            # artifacts (with their video id) so the completion screen can list
+            # them per course AND categorize new vs restored correctly.
+            if _base is not None:
+                try:
+                    _base(video, produced_paths)
+                except Exception:
+                    pass
+            if _pi is not None and produced_paths:
+                _vid = getattr(video, 'video_id', '')
+                _pan_produced.setdefault(_pi, []).extend((_vid, _p) for _p in produced_paths)
+
+        # video_id -> bucket ('new' / 'restore') so produced files inherit the
+        # same category they had in Review (restore = locally-deleted restore).
+        _pan_bucket[pair_idx] = {
+            c.video_id: c.bucket
+            for c in (rd.get('panopto') or {}).get('changes', [])
+        }
+        _pan_pair_meta[pair_idx] = {
+            'course_name': pair.get('course_name', ''),
+            'course_id': pair.get('course_id'),
+            'local_folder': str(local_folder),
+        }
+        _total_selected += len(selected_ids)
+        _targets.append({
+            'course': course, 'course_root': str(local_folder),
+            'download_mode': dmode, 'record_fn': _rec_wrap,
+            'videos': pan_payload.get('videos'),     # pre-discovered (may be None)
+            'selected_ids': selected_ids,            # allowlist of video_id
+            'settings': _pan_settings,               # this folder's output/layout contract
+        })
+
+    # Honest scan denominator (some sels may have been skipped above).
+    _pan['courses_total'] = len(_targets)
+
+    try:
+        _summary = run_panopto_batch(
+            cm, _targets, settings=pan,
+            progress=progress, is_cancelled=is_sync_cancelled,
+        )
+        # Carry the analysis-derived "already up to date" count + the selected
+        # count so the completion card reads honestly (no misleading "Skipped").
+        _summary['uptodate'] = int(st.session_state.get('panopto_uptodate_total', 0) or 0)
+        _summary['selected'] = _total_selected
+        st.session_state['panopto_summary'] = _summary
+
+        # Merge produced recordings into the completion screen's synced-files
+        # structures so each appears with Open / Reveal / path like other files.
         try:
-            _summary = run_course_panopto(
-                cm, course,
-                course_root=str(local_folder),
-                settings=pan,
-                download_mode=dmode,
-                progress=progress,
-                is_cancelled=is_sync_cancelled,
-                record_fn=rec,
-            )
-            _agg = st.session_state.setdefault(
-                'panopto_summary',
-                {'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0, 'failed': 0, 'courses': 0},
-            )
-            for _k in ('found', 'downloaded', 'transcribed', 'skipped', 'failed'):
-                _agg[_k] += int(_summary.get(_k, 0) or 0)
-            if _summary.get('found'):
-                _agg['courses'] += 1
-            st.session_state['panopto_summary'] = _agg
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception as e:
-            logger.error(f"Sync Panopto pass crashed for '{course.name}': {e}", exc_info=True)
-            progress('error', error=SimpleNamespace(item_name=course.name, message=str(e)))
+            _sd = st.session_state.get('synced_details')
+            _sd = dict(_sd) if isinstance(_sd, dict) else {}
+            _sg = list(st.session_state.get('synced_groups') or [])
+            _by_pair = {g.get('pair_idx'): g for g in _sg}
+            for _pi, _items in _pan_produced.items():
+                if _pi is None or not _items:
+                    continue
+                _meta = _pan_pair_meta.get(_pi, {})
+                _root = _meta.get('local_folder') or ''
+                _bmap = _pan_bucket.get(_pi, {})
+                _grp = _by_pair.get(_pi)
+                if _grp is None:
+                    _grp = {
+                        'pair_idx': _pi, 'course_name': _meta.get('course_name', ''),
+                        'course_id': _meta.get('course_id'),
+                        'local_folder': _root, 'files': [],
+                    }
+                    _sg.append(_grp)
+                    _by_pair[_pi] = _grp
+                _grp.setdefault('files', [])
+                _existing_rels = {f.get('rel') for f in _grp['files']}
+                _names = _sd.setdefault(_pi, [])
+                for _vid, _p in _items:
+                    _name = Path(_p).name
+                    try:
+                        _rel = str(Path(_p).relative_to(_root)).replace('\\', '/') if _root else _name
+                    except Exception:
+                        _rel = _name
+                    if _rel in _existing_rels:
+                        continue
+                    _existing_rels.add(_rel)
+                    # Restored recordings (their outputs were deleted locally) land
+                    # in 'restored', not 'new' - same category they showed in Review.
+                    _cat = 'restored' if _bmap.get(_vid) == 'restore' else 'new'
+                    _grp['files'].append({'name': _name, 'rel': _rel, 'category': _cat})
+                    if _name not in _names:
+                        _names.append(_name)
+            st.session_state['synced_details'] = _sd
+            st.session_state['synced_groups'] = _sg
+        except Exception as _merge_err:
+            logger.debug(f"Panopto completion merge failed: {_merge_err}")
+
+        # Record the recordings into sync history. The file-sync entry was already
+        # written (run_sync) BEFORE this pass, so we amend THAT entry; if there was
+        # no file entry (a recordings-only sync), we create a fresh one. Without
+        # this, recordings never show up in Sync History.
+        try:
+            from datetime import datetime as _dt
+            from ui_helpers import get_config_dir
+            from sync_manager import SyncHistoryManager
+            _h_new, _h_restored, _h_names = [], [], []
+            for _pi, _items in _pan_produced.items():
+                _bmap = _pan_bucket.get(_pi, {})
+                for _vid, _p in _items:
+                    _nm = Path(_p).name
+                    _h_names.append(_nm)
+                    (_h_restored if _bmap.get(_vid) == 'restore' else _h_new).append(_nm)
+            if _h_names:
+                _hm = SyncHistoryManager(get_config_dir())
+                _ts = st.session_state.get('_sync_history_ts')
+                _amended = _hm.amend_last_entry(
+                    timestamp=_ts,
+                    add_files_synced=len(_h_names),
+                    add_categorized={'new': _h_new, 'restored': _h_restored},
+                    add_synced_files=_h_names,
+                    synced_groups=st.session_state.get('synced_groups'),
+                )
+                if not _amended:
+                    # No file-sync entry to amend (recordings-only sync) - create one.
+                    _cnames = list({m.get('course_name', '') for m in _pan_pair_meta.values() if m.get('course_name')})
+                    _hm.add_entry({
+                        'timestamp': _ts or _dt.now().strftime("%Y-%m-%d %H:%M"),
+                        'files_synced': len(_h_names),
+                        'courses': len(_pan_pair_meta),
+                        'course_names': _cnames,
+                        'errors': len(st.session_state.get('sync_errors', []) or []),
+                        'error_details': list(st.session_state.get('sync_errors', []) or []),
+                        'synced_files': _h_names,
+                        'categorized_files': {'new': _h_new, 'updated': [], 'restored': _h_restored, 'protected': []},
+                        'synced_groups': st.session_state.get('synced_groups'),
+                        'sync_mode': st.session_state.get('sync_mode', 'normal'),
+                    })
+                st.session_state.pop('_sync_history_cache', None)
+        except Exception as _hist_err:
+            logger.debug(f"Panopto history amend failed: {_hist_err}")
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception as e:
+        logger.error(f"Sync Panopto pass crashed: {e}", exc_info=True)
+        progress('error', error=SimpleNamespace(item_name='Panopto', message=str(e)))
 
     active_ph.empty()
     st.session_state['download_status'] = 'sync_cancelled' if is_sync_cancelled() else 'sync_complete'

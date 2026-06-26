@@ -185,13 +185,16 @@ def show_sync_complete():
         canvas_del = skipped_data.get('canvas_del', 0)
         edited = skipped_data.get('edited', 0)
         filtered = skipped_data.get('filtered', 0)
+        pan_local_del = skipped_data.get('panopto_local_del', 0)
 
-        if local_del > 0 or canvas_del > 0 or edited > 0 or filtered > 0:
+        if local_del > 0 or canvas_del > 0 or edited > 0 or filtered > 0 or pan_local_del > 0:
             parts = []
             if edited > 0:
                 parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
             if local_del > 0:
                 parts.append(f"{local_del} {'file' if local_del == 1 else 'files'} deleted locally")
+            if pan_local_del > 0:
+                parts.append(f"{pan_local_del} Panopto recording{'s' if pan_local_del != 1 else ''} deleted locally")
             if canvas_del > 0:
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
             if filtered > 0:
@@ -215,7 +218,7 @@ def show_sync_complete():
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
-        # Panopto lectures summary (if the terminal Panopto pass ran)
+        # Panopto recordings summary (if the terminal Panopto pass ran)
         from ui_shared import render_panopto_summary
         render_panopto_summary(st.session_state.get('panopto_summary'))
 
