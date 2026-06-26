@@ -33,12 +33,12 @@ from ui_helpers import (
 def _checkbox_default(key: str) -> bool:
     """Return the correct unchecked/checked default for a sync checkbox key.
 
-    ``sync_locdel_`` and ``sync_updmod_`` categories start unchecked (False)
-    because the user probably doesn't want locally-deleted re-downloads or
-    modified-file overwrites by default.  All other categories (new, upd)
-    start checked (True).
+    ``sync_locdel_``, ``sync_updmod_`` and ``sync_panlocdel_`` categories start
+    unchecked (False) because the user probably doesn't want locally-deleted
+    re-downloads or modified-file overwrites by default. All other categories
+    (new, upd, pan) start checked (True).
     """
-    if key.startswith('sync_locdel_') or key.startswith('sync_updmod_'):
+    if key.startswith('sync_locdel_') or key.startswith('sync_updmod_') or key.startswith('sync_panlocdel_'):
         return False
     return True
 from core.state_registry import cleanup_sync_state
@@ -193,6 +193,20 @@ _HELP_TEXT = (
     )
 
 
+# Small film/clapperboard icon used to label the Panopto sub-section inside the
+# New Files / Deleted Locally categories (recordings are shown as files).
+_PAN_REC_SVG = (
+    "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' "
+    "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round' style='vertical-align:middle;flex-shrink:0;'>"
+    "<rect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'/>"
+    "<line x1='7' y1='2' x2='7' y2='22'/><line x1='17' y1='2' x2='17' y2='22'/>"
+    "<line x1='2' y1='12' x2='22' y2='12'/><line x1='2' y1='7' x2='7' y2='7'/>"
+    "<line x1='2' y1='17' x2='7' y2='17'/><line x1='17' y1='17' x2='22' y2='17'/>"
+    "<line x1='17' y1='7' x2='22' y2='7'/></svg>"
+)
+
+
 # ---- Analysis review ----
 
 def show_analysis_review(on_confirm_sync):
@@ -259,16 +273,20 @@ def show_analysis_review(on_confirm_sync):
         sm = pair_data.get('sync_manager') or SyncManager(
             pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
         )
-        # Extract filename for UPSERT (works for new files not yet in DB)
+        # Extract filename and size for UPSERT (works for new files not yet in DB)
         if isinstance(item, tuple):
             fname = item[0].display_name or item[0].filename if hasattr(item[0], 'filename') else ''
+            _sz = getattr(item[0], 'size', 0) or 0
         elif hasattr(item, 'canvas_filename'):
             fname = item.canvas_filename
+            _sz = getattr(item, 'original_size', 0) or 0
         elif hasattr(item, 'filename'):
             fname = item.display_name or item.filename
+            _sz = getattr(item, 'size', 0) or 0
         else:
             fname = ''
-        sm.ignore_file(canvas_file_id, fname)
+            _sz = 0
+        sm.ignore_file(canvas_file_id, fname, _sz)
         
         # 1. Safely remove from origin list
         source_list = getattr(pair_data['result'], source_list_name)
@@ -346,24 +364,61 @@ def show_analysis_review(on_confirm_sync):
         _fname_clean, _ = os.path.splitext(unquote_plus(fname))
         st.toast(f"↩️ Restored '{_fname_clean}'")
 
+    def handle_ignore_panopto(pair_idx, change):
+        """Ignore one Panopto recording (the whole entity). Persists to the DB and
+        flips the in-memory change to 'ignored' so it moves to the Ignored section."""
+        pair_data = st.session_state['sync_analysis_results'][pair_idx]
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
+        sm.ignore_panopto(change.video_id, change.title)
+        if change.state != 'ignored':
+            change.pre_ignore_state = change.state
+            change.state = 'ignored'
+        st.session_state['keep_ignored_open'] = True
+        st.toast(f"🚫 Ignored '{change.title}'")
+
+    def _restore_one_panopto(pair_data, change):
+        """Shared: un-ignore a recording in memory + reseed its checkbox default."""
+        change.state = change.pre_ignore_state or 'new'
+        change.pre_ignore_state = ''
+        cid = pair_data['pair']['course_id']
+        if change.bucket == 'restore':
+            st.session_state[f"sync_panlocdel_{cid}_{change.video_id}"] = False
+        else:
+            st.session_state[f"sync_pan_{cid}_{change.video_id}"] = True
+
+    def handle_restore_panopto(pair_idx, change):
+        pair_data = st.session_state['sync_analysis_results'][pair_idx]
+        sm = pair_data.get('sync_manager') or SyncManager(
+            pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
+        )
+        sm.restore_panopto(change.video_id)
+        _restore_one_panopto(pair_data, change)
+        st.session_state['keep_ignored_open'] = True
+        st.toast(f"↩️ Restored '{change.title}'")
+
     def handle_restore_all(pair_idx):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
         sm = pair_data.get('sync_manager') or SyncManager(
             pair_data['pair']['local_folder'], pair_data['pair']['course_id'], pair_data['pair']['course_name']
         )
-        
-        if not hasattr(pair_data['result'], 'ignored_files') or not pair_data['result'].ignored_files:
+
+        has_ign_files = hasattr(pair_data['result'], 'ignored_files') and pair_data['result'].ignored_files
+        pan_ignored = [c for c in (pair_data.get('panopto') or {}).get('changes', []) if c.state == 'ignored']
+        if not has_ign_files and not pan_ignored:
             return
-            
-        file_ids = [f.canvas_file_id for f in pair_data['result'].ignored_files]
-        sm.bulk_restore_files(file_ids)
-        
+
+        file_ids = [f.canvas_file_id for f in pair_data['result'].ignored_files] if has_ign_files else []
+        if file_ids:
+            sm.bulk_restore_files(file_ids)
+
         def get_id(x):
             if isinstance(x, tuple): return x[0].id
             elif hasattr(x, 'canvas_file_id'): return x.canvas_file_id
             return x.id
-        
-        for sync_info in list(pair_data['result'].ignored_files):
+
+        for sync_info in list(pair_data['result'].ignored_files) if has_ign_files else []:
             sync_info.is_ignored = False
             origin = getattr(sync_info, 'origin_category', 'new_files')
             dest_list = getattr(pair_data['result'], origin, pair_data['result'].new_files)
@@ -382,11 +437,19 @@ def show_analysis_review(on_confirm_sync):
             prefix = prefixes.get(origin, 'sync_new')
             restore_default = origin != 'updated_modified_files'
             st.session_state[f'{prefix}_{pair_data["pair"]["course_id"]}_{sync_info.canvas_file_id}'] = restore_default
-            
-        pair_data['result'].ignored_files.clear()
+
+        if has_ign_files:
+            pair_data['result'].ignored_files.clear()
+
+        # Also restore any ignored Panopto recordings for this course.
+        if pan_ignored:
+            sm.bulk_restore_panopto([c.video_id for c in pan_ignored])
+            for c in pan_ignored:
+                _restore_one_panopto(pair_data, c)
+
         st.session_state['keep_ignored_open'] = True
-        
-        st.toast(f"♻️ Restored {len(file_ids)} ignored files")
+        _n = len(file_ids) + len(pan_ignored)
+        st.toast(f"♻️ Restored {_n} ignored item{'s' if _n != 1 else ''}")
 
     def handle_sweep(pair_idx, source_list_name, item_key_prefix):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -405,6 +468,15 @@ def show_analysis_review(on_confirm_sync):
             elif hasattr(x, 'filename'):
                 return x.display_name or x.filename
             return ''
+
+        def _get_size(x):
+            if isinstance(x, tuple):
+                return getattr(x[0], 'size', 0) or 0
+            elif hasattr(x, 'original_size'):
+                return x.original_size or 0
+            elif hasattr(x, 'size'):
+                return x.size or 0
+            return 0
             
         items_to_ignore = []
         file_ids_and_names = []
@@ -414,7 +486,7 @@ def show_analysis_review(on_confirm_sync):
             chk_key = f"{item_key_prefix}_{pair_data['pair']['course_id']}_{fid}"
             if not st.session_state.get(chk_key, True):
                 items_to_ignore.append(item)
-                file_ids_and_names.append((fid, get_fname(item)))
+                file_ids_and_names.append((fid, get_fname(item), _get_size(item)))
                 
         if not items_to_ignore:
             return
@@ -474,6 +546,17 @@ def show_analysis_review(on_confirm_sync):
         for item in source_list:
             st.session_state[f"{item_key_prefix}_{cid}_{get_id(item)}"] = value
 
+        # Also toggle Panopto recordings in this category if any exist
+        pan_changes = (pair_data.get('panopto') or {}).get('changes', [])
+        if source_list_name == 'new_files':
+            for c in pan_changes:
+                if c.bucket == 'new':
+                    st.session_state[f"sync_pan_{cid}_{c.video_id}"] = value
+        elif source_list_name == 'locally_deleted_files':
+            for c in pan_changes:
+                if c.bucket == 'restore':
+                    st.session_state[f"sync_panlocdel_{cid}_{c.video_id}"] = value
+
     def render_category_action_row(pair_idx, course_id, source_list_name, item_key_prefix,
                                    sweep_label, sweep_key, sweep_disabled, sweep_help):
         """Top-of-expander action row.
@@ -516,16 +599,25 @@ def show_analysis_review(on_confirm_sync):
         st.stop()
 
     _valid_results = [r for r in all_results if r.get('result') is not None]
-    total_new = sum(len(r['result'].new_files) for r in _valid_results)
+
+    # Panopto recordings (discovered + disk-compared during analysis). Counted as
+    # changes so a course whose only change is a recording still opens Review.
+    def _pan_changes_of(r):
+        return (r.get('panopto') or {}).get('changes', [])
+    total_pan_new = sum(1 for r in all_results for c in _pan_changes_of(r) if c.bucket == 'new')
+    total_pan_restore = sum(1 for r in all_results for c in _pan_changes_of(r) if c.bucket == 'restore')
+    total_panopto = total_pan_new + total_pan_restore
+
+    total_new = sum(len(r['result'].new_files) for r in _valid_results) + total_pan_new
     total_upd_clean = sum(len(r['result'].updated_clean_files) for r in _valid_results)
     total_upd_mod = sum(len(r['result'].updated_modified_files) for r in _valid_results)
     total_upd = total_upd_clean + total_upd_mod
-    total_loc_del = sum(len(r['result'].locally_deleted_files) for r in _valid_results)
+    total_loc_del = sum(len(r['result'].locally_deleted_files) for r in _valid_results) + total_pan_restore
     total_del = sum(len(r['result'].deleted_on_canvas) for r in _valid_results)
     total_uptodate = sum(len(r['result'].uptodate_files) + getattr(r['result'], 'untracked_shortcuts', 0) for r in _valid_results)
     total_ignored = sum(len(r['result'].ignored_files) if hasattr(r['result'], 'ignored_files') else 0 for r in _valid_results)
 
-    
+
 
     # Load sync-type icons for metric cards and expander headers
     _b64_icon_new    = get_base64_image("assets/Icon_Sync_Review_New_File.png")
@@ -542,7 +634,8 @@ def show_analysis_review(on_confirm_sync):
     def _sync_icon_img(b64, size=26):
         return f'<img src="data:image/png;base64,{b64}" style="width:{size}px; height:{size}px; object-fit:contain; display:block;" />'
 
-    # Summary logic
+    # Summary logic (top metric cards are file-centric; a Panopto-only review
+    # simply shows the per-course recording lists below instead of a zero-card row)
     if total_new > 0 or total_upd > 0 or total_del > 0 or total_loc_del > 0 or total_ignored > 0:
 
         sum_cols = st.columns([3, 2])
@@ -601,7 +694,7 @@ def show_analysis_review(on_confirm_sync):
     # Nothing actionable to sync - redirect to completion screen.
     # Exception: if the user manually ignored files, stay on the review page so they
     # can restore or go back. Only auto-route when analysis genuinely found nothing.
-    if total_new == 0 and total_upd == 0 and total_del == 0 and total_loc_del == 0:
+    if total_new == 0 and total_upd == 0 and total_del == 0 and total_loc_del == 0 and total_panopto == 0:
         if total_ignored == 0:
             # M-1: persist auto-discovered / healed entries before bypassing to
             # completion, so an up-to-date folder still builds its sync memory
@@ -649,6 +742,16 @@ def show_analysis_review(on_confirm_sync):
             ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_locdel_{cid}_{si.canvas_file_id}')
+        
+        # Collect Panopto recordings for this course as a special 'panopto' filetype
+        pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+        for c in pan_changes:
+            if c.bucket in ('new', 'restore'):
+                all_extensions.add('panopto')
+                if c.bucket == 'restore':
+                    files_by_ext['panopto'].append(f"sync_panlocdel_{cid}_{c.video_id}")
+                else:
+                    files_by_ext['panopto'].append(f"sync_pan_{cid}_{c.video_id}")
 
     if all_extensions or total_ignored > 0:
         all_exts_sorted = sorted(list(all_extensions))
@@ -886,7 +989,18 @@ def show_analysis_review(on_confirm_sync):
                 st.html("<div style='padding: 5px 0 10px 0;'><hr style='border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;' /></div>")
 
                 # border=True required for st-key class to be reliably emitted (CLAUDE.md Border Strip rule)
-                _all_keys = sum(files_by_ext.values(), [])
+                # Panopto recordings live inside the file categories, so the global
+                # Select All / Deselect All toggles their checkboxes too.
+                _all_pan_keys = []
+                for _r in all_results:
+                    _cid = _r['pair']['course_id']
+                    for _c in (_r.get('panopto') or {}).get('changes', []):
+                        if _c.bucket == 'new':
+                            _all_pan_keys.append(f"sync_pan_{_cid}_{_c.video_id}")
+                        elif _c.bucket == 'restore':
+                            _all_pan_keys.append(f"sync_panlocdel_{_cid}_{_c.video_id}")
+                # Deduplicate to prevent double-adding Panopto keys
+                _all_keys = list(set(sum(files_by_ext.values(), []) + _all_pan_keys))
                 def _select_all(keys=_all_keys):
                     for k in keys:
                         if k.startswith('sync_locdel_'):
@@ -1025,6 +1139,7 @@ def show_analysis_review(on_confirm_sync):
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
+        min-height: 32px !important;
     }}
     div[class*="st-key-sync_row_"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
     div[class*="st-key-sync_row_"] [data-testid="stColumn"] [data-testid="stVerticalBlock"] {{
@@ -1134,6 +1249,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"],
     div[class*="st-key-ign_upd_"],
     div[class*="st-key-ign_updmod_"],
+    div[class*="st-key-ign_pan_"],
     div[class*="st-key-ign_locdel_"] {{
         display: flex !important;
         justify-content: flex-end !important;
@@ -1142,6 +1258,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] div[data-testid="stButton"],
     div[class*="st-key-ign_upd_"] div[data-testid="stButton"],
     div[class*="st-key-ign_updmod_"] div[data-testid="stButton"],
+    div[class*="st-key-ign_pan_"] div[data-testid="stButton"],
     div[class*="st-key-ign_locdel_"] div[data-testid="stButton"] {{
         display: flex !important;
         justify-content: flex-end !important;
@@ -1150,6 +1267,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button,
     div[class*="st-key-ign_upd_"] button,
     div[class*="st-key-ign_updmod_"] button,
+    div[class*="st-key-ign_pan_"] button,
     div[class*="st-key-ign_locdel_"] button {{
         background: transparent !important;
         border: none !important;
@@ -1167,6 +1285,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button p,
     div[class*="st-key-ign_upd_"] button p,
     div[class*="st-key-ign_updmod_"] button p,
+    div[class*="st-key-ign_pan_"] button p,
     div[class*="st-key-ign_locdel_"] button p {{
         display: none !important;
     }}
@@ -1174,6 +1293,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button::before,
     div[class*="st-key-ign_upd_"] button::before,
     div[class*="st-key-ign_updmod_"] button::before,
+    div[class*="st-key-ign_pan_"] button::before,
     div[class*="st-key-ign_locdel_"] button::before {{
         content: '';
         position: absolute;
@@ -1193,6 +1313,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button::after,
     div[class*="st-key-ign_upd_"] button::after,
     div[class*="st-key-ign_updmod_"] button::after,
+    div[class*="st-key-ign_pan_"] button::after,
     div[class*="st-key-ign_locdel_"] button::after {{
         content: '';
         position: absolute;
@@ -1211,6 +1332,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button:hover,
     div[class*="st-key-ign_upd_"] button:hover,
     div[class*="st-key-ign_updmod_"] button:hover,
+    div[class*="st-key-ign_pan_"] button:hover,
     div[class*="st-key-ign_locdel_"] button:hover {{
         background: transparent !important;
         border: none !important;
@@ -1219,6 +1341,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button:hover::before,
     div[class*="st-key-ign_upd_"] button:hover::before,
     div[class*="st-key-ign_updmod_"] button:hover::before,
+    div[class*="st-key-ign_pan_"] button:hover::before,
     div[class*="st-key-ign_locdel_"] button:hover::before {{
         opacity: 0;
         transform: scale(1.2);
@@ -1226,6 +1349,7 @@ def show_analysis_review(on_confirm_sync):
     div[class*="st-key-ign_new_"] button:hover::after,
     div[class*="st-key-ign_upd_"] button:hover::after,
     div[class*="st-key-ign_updmod_"] button:hover::after,
+    div[class*="st-key-ign_pan_"] button:hover::after,
     div[class*="st-key-ign_locdel_"] button:hover::after {{
         opacity: 1;
         transform: scale(1.2);
@@ -1368,6 +1492,46 @@ def show_analysis_review(on_confirm_sync):
     }}
     </style>""")
 
+    def _render_pan_subsection(idx, pair, changes, default_on, list_suffix):
+        """Render Panopto recording rows INSIDE a file category (New Files /
+        Deleted Locally) so recordings carry the same visible status as the files
+        around them. One checkbox per recording; MP3/TXT/SRT badges show which
+        outputs will be produced. Checkbox keys match the selection collector
+        (sync_pan_* for new, sync_panlocdel_* for deleted-locally)."""
+        cid = pair['course_id']
+        st.markdown(
+            "<div style='margin:10px 0 10px 0; padding-top:12px; "
+            "border-top:1px solid rgba(255,255,255,0.10); color:rgba(255,255,255,0.8); "
+            "font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:7px;'>"
+            f"{_PAN_REC_SVG}<span>Panopto Recordings</span></div>",  # audit-ignore: _PAN_REC_SVG is a self-built constant SVG (no user input)
+            unsafe_allow_html=True,
+        )
+        with st.container(key=f"sync_review_file_list_{idx}_{list_suffix}"):
+            for c in changes:
+                if c.bucket == 'restore':
+                    key = f"sync_panlocdel_{cid}_{c.video_id}"
+                    badge_kinds = c.deleted_kinds or c.missing_kinds
+                else:
+                    key = f"sync_pan_{cid}_{c.video_id}"
+                    badge_kinds = c.missing_kinds
+                st.session_state.setdefault(key, default_on)
+                _badges = " ".join(f"~{k.upper()}~" for k in badge_kinds)
+                # Recording total = sum of the outputs that will actually be
+                # produced (badge_kinds). "~" marks an estimate (not yet on disk).
+                _sz = c.size_for(badge_kinds)
+                _size_clean = ""
+                if _sz > 0:
+                    _approx = "~" if c.estimated_for(badge_kinds) else ""
+                    _size_clean = f" `{_approx}{format_file_size(_sz)}`"
+                with st.container(key=f"sync_row_{list_suffix}_{cid}_{c.video_id}"):
+                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                    with col1:
+                        st.checkbox(f"{c.title}  {_badges}{_size_clean}", key=key)
+                    with col2:
+                        st.button("​", key=f"ign_pan_{cid}_{c.video_id}",
+                                  help="Ignore this recording (remove from sync list)",
+                                  on_click=handle_ignore_panopto, args=(idx, c))
+
     # Per-folder results
     for idx, res_data in enumerate(all_results):
         with st.container(border=True):
@@ -1377,12 +1541,19 @@ def show_analysis_review(on_confirm_sync):
             display_name = friendly_course_name(pair['course_name'])
             folder_display = short_path(pair['local_folder'])
             
+            # Panopto recordings for THIS course, split into the review buckets.
+            pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+            pan_new = [c for c in pan_changes if c.bucket == 'new']
+            pan_restore = [c for c in pan_changes if c.bucket == 'restore']
+            pan_ignored = [c for c in pan_changes if c.bucket == 'ignored']
+
             has_new = bool(result.new_files)
             has_updated_clean = bool(result.updated_clean_files)
             has_updated_modified = bool(result.updated_modified_files)
             has_locally_deleted = bool(result.locally_deleted_files)
-            has_ignored = hasattr(result, 'ignored_files') and bool(result.ignored_files)
-            is_fully_up_to_date = not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted]) and not has_ignored
+            has_panopto = bool(pan_new or pan_restore)
+            has_ignored = (hasattr(result, 'ignored_files') and bool(result.ignored_files)) or bool(pan_ignored)
+            is_fully_up_to_date = not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted, has_panopto]) and not has_ignored
 
             # Build status pill - pending takes priority over up-to-date
             # Strictly use uptodate_files only - do NOT add untracked_shortcuts
@@ -1393,6 +1564,7 @@ def show_analysis_review(on_confirm_sync):
                 + len(result.updated_clean_files)
                 + len(result.updated_modified_files)
                 + len(result.locally_deleted_files)
+                + len(pan_new) + len(pan_restore)
             )
             _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
             # Dimmed white sync icon for the pending-sync label
@@ -1486,39 +1658,41 @@ def show_analysis_review(on_confirm_sync):
 
 
 
-            # New files - always starts OPEN
-            if result.new_files:
-                total_new = len(result.new_files)
-                selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
-                
-                
-
+            # New files - always starts OPEN. New / not-yet-downloaded Panopto
+            # recordings are shown here too (treated as new files) at the bottom.
+            if result.new_files or pan_new:
                 with st.container(key=f"cat_new_{pair['course_id']}"):
                     with st.expander(f"{'New Files'}"):
-                        deselected_new = total_new - selected_new
-                        render_category_action_row(
-                            idx, pair['course_id'], 'new_files', 'sync_new',
-                            f"Move deselected files to Ignored *({deselected_new})*",
-                            f"sweep_new_{pair['course_id']}", (selected_new == total_new),
-                            "These files will be moved to the Ignored Files section and skipped during sync.")
-                        st.caption("Brand new files available on Canvas that you don't have locally yet.")
-                        
-                        with st.container(key=f"sync_review_file_list_{idx}_new"):
-                            for file in result.new_files:
-                                ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
-                                size = format_file_size(file.size) if file.size else ""
-                                key = f"sync_new_{pair['course_id']}_{file.id}"
-                                st.session_state.setdefault(key, True)
-                                with st.container(key=f"sync_row_new_{pair['course_id']}_{file.id}"):
-                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                    with col1:
-                                        _disp_raw = unquote_plus(file.display_name or file.filename)
-                                        _name, _ext = os.path.splitext(_disp_raw)
-                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                        _size_clean = f" `{size}`" if size else ""
-                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
-                                    with col2:
-                                        st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                        if result.new_files:
+                            total_new = len(result.new_files)
+                            selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
+                            deselected_new = total_new - selected_new
+                            render_category_action_row(
+                                idx, pair['course_id'], 'new_files', 'sync_new',
+                                f"Move deselected files to Ignored *({deselected_new})*",
+                                f"sweep_new_{pair['course_id']}", (selected_new == total_new),
+                                "These files will be moved to the Ignored Files section and skipped during sync.")
+                            st.caption("Brand new files available on Canvas that you don't have locally yet.")
+
+                            with st.container(key=f"sync_review_file_list_{idx}_new"):
+                                for file in result.new_files:
+                                    ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
+                                    size = format_file_size(file.size) if file.size else ""
+                                    key = f"sync_new_{pair['course_id']}_{file.id}"
+                                    st.session_state.setdefault(key, True)
+                                    with st.container(key=f"sync_row_new_{pair['course_id']}_{file.id}"):
+                                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                        with col1:
+                                            _disp_raw = unquote_plus(file.display_name or file.filename)
+                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                            _size_clean = f" `{size}`" if size else ""
+                                            st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                        with col2:
+                                            st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+
+                        if pan_new:
+                            _render_pan_subsection(idx, pair, pan_new, True, 'pannew')
 
             # Updated files - always starts OPEN
             # Updates Available (clean) \u2014 default CHECKED. Local file is
@@ -1593,38 +1767,41 @@ def show_analysis_review(on_confirm_sync):
             # Missing files - always starts OPEN
             # (Missing Files category retired \u2014 rolled into New Files.)
 
-            # Locally Deleted Files (Student deleted locally to save space)
-            if result.locally_deleted_files:
-                total_locdel = len(result.locally_deleted_files)
-                selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", False))
-                
-                
-
+            # Locally Deleted Files (Student deleted locally to save space).
+            # Recordings whose downloaded outputs were deleted appear here too.
+            if result.locally_deleted_files or pan_restore:
                 with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
                     with st.expander("Deleted Locally"):
-                        deselected_locdel = total_locdel - selected_locdel
-                        is_disabled_locdel = (selected_locdel == total_locdel)
-                        help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
-                        render_category_action_row(
-                            idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
-                            f"Move deselected files to Ignored *({deselected_locdel})*",
-                            f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
-                        st.caption("These files are missing from your Course Folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
+                        if result.locally_deleted_files:
+                            total_locdel = len(result.locally_deleted_files)
+                            selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", False))
+                            deselected_locdel = total_locdel - selected_locdel
+                            is_disabled_locdel = (selected_locdel == total_locdel)
+                            help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
+                            render_category_action_row(
+                                idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
+                                f"Move deselected files to Ignored *({deselected_locdel})*",
+                                f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
+                            st.caption("These files are missing from your Course Folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
 
-                        with st.container(key=f"sync_review_file_list_{idx}_locdel"):
-                            for sync_info in result.locally_deleted_files:
-                                ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                                key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
-                                st.session_state.setdefault(key, False)
-                                with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
-                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                    with col1:
-                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                        _name, _ext = os.path.splitext(_disp_raw)
-                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                        st.checkbox(f"{_name}{_ext_clean}", key=key)
-                                    with col2:
-                                        st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                            with st.container(key=f"sync_review_file_list_{idx}_locdel"):
+                                for sync_info in result.locally_deleted_files:
+                                    ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
+                                    key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
+                                    st.session_state.setdefault(key, False)
+                                    with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                        with col1:
+                                            _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                            _size_clean = f" `{format_file_size(sync_info.original_size)}`" if sync_info.original_size else ""
+                                            st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                        with col2:
+                                            st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+
+                        if pan_restore:
+                            _render_pan_subsection(idx, pair, pan_restore, False, 'panlocdel')
 
             # Deleted files - always starts OPEN
             if result.deleted_on_canvas:
@@ -1639,10 +1816,11 @@ def show_analysis_review(on_confirm_sync):
                             _disp_raw = unquote_plus(sync_info.canvas_filename)
                             _name, _ext = os.path.splitext(_disp_raw)
                             _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}</div>", unsafe_allow_html=True)
+                            _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
+                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
 
-            # Ignored files Bucket
-            if hasattr(result, 'ignored_files') and result.ignored_files:
+            # Ignored files Bucket (Canvas files AND/OR Panopto recordings)
+            if (hasattr(result, 'ignored_files') and result.ignored_files) or pan_ignored:
                 is_ignored_open = st.session_state.get('keep_ignored_open', False)
                 with st.container(key=f"cat_ignored_{pair['course_id']}"):
                     with st.expander(f"Ignored Files", expanded=is_ignored_open):
@@ -1650,16 +1828,43 @@ def show_analysis_review(on_confirm_sync):
                         st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again")
                         st.caption("These files are safely ignored and will not be synced.")
                         with st.container(key=f"sync_review_file_list_{idx}_ign"):
-                            for sync_info in result.ignored_files:
+                            for sync_info in (result.ignored_files if hasattr(result, 'ignored_files') else []):
                                 with st.container(key=f"ign_restore_row_{pair['course_id']}_{sync_info.canvas_file_id}"):
                                     col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                     with col1:
                                         _disp_raw = unquote_plus(sync_info.canvas_filename)
                                         _name, _ext = os.path.splitext(_disp_raw)
                                         _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}</div>", unsafe_allow_html=True)
+                                        _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
+                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
                                     with col2:
                                         st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
+
+                        # Ignored Panopto recordings (the whole recording entity).
+                        if pan_ignored:
+                            st.markdown(
+                                "<div style='margin:10px 0 6px 0; padding-top:10px; "
+                                "border-top:1px solid rgba(255,255,255,0.10); color:rgba(255,255,255,0.6); "
+                                "font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:7px;'>"
+                                f"{_PAN_REC_SVG}<span>Panopto Recordings</span></div>",  # audit-ignore: _PAN_REC_SVG is a self-built constant SVG (no user input)
+                                unsafe_allow_html=True,
+                            )
+                            with st.container(key=f"sync_review_file_list_{idx}_ign_pan"):
+                                for c in pan_ignored:
+                                    # Show the size of the outputs it WOULD produce.
+                                    _ik = c.download_kinds or c.wanted_kinds
+                                    _isz = c.size_for(_ik)
+                                    _isize_html = ""
+                                    if _isz > 0:
+                                        _iapprox = "~" if c.estimated_for(_ik) else ""
+                                        _isize_html = f" <code>{_iapprox}{format_file_size(_isz)}</code>"
+                                    _badges_html = "".join(f" <del>{k.upper()}</del>" for k in _ik)
+                                    with st.container(key=f"ign_restore_row_{pair['course_id']}_pan_{c.video_id}"):
+                                        col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                        with col1:
+                                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(c.title)}{_badges_html}{_isize_html}</div>", unsafe_allow_html=True)
+                                        with col2:
+                                            st.button("\u200b", key=f"restitem_pan_{pair['course_id']}_{c.video_id}", help="Restore this recording to the sync list above", on_click=handle_restore_panopto, args=(idx, c))
             
         # Inject 20px gap BETWEEN courses, outside the course's content container
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
@@ -1667,6 +1872,10 @@ def show_analysis_review(on_confirm_sync):
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
     # --- Action buttons (Back left, Sync right) ---
+    # "Active" = anything the user could sync (files + Panopto recordings).
+    # is_actionable already excludes ignored recordings, so a course whose only
+    # actionable change is a recording still counts (and one whose recordings are
+    # all ignored does not trip a false "nothing to sync").
     total_active_files = sum(
         len(pd['result'].new_files)
         + len(pd['result'].updated_clean_files)
@@ -1674,9 +1883,15 @@ def show_analysis_review(on_confirm_sync):
         + len(pd['result'].locally_deleted_files)
         for pd in all_results
     )
+    total_active_panopto = sum(
+        1 for pd in all_results
+        for c in (pd.get('panopto') or {}).get('changes', []) if c.is_actionable
+    )
+    total_active = total_active_files + total_active_panopto
 
-    # Count only the files the user has actually checked
+    # Count only the files + recordings the user has actually checked
     total_selected_files = 0
+    total_selected_recordings = 0
     for pd in all_results:
         cid = pd['pair']['course_id']
         result = pd['result']
@@ -1684,8 +1899,14 @@ def show_analysis_review(on_confirm_sync):
         total_selected_files += sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f'sync_upd_{cid}_{f.id}', True))
         total_selected_files += sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f'sync_updmod_{cid}_{f.id}', False))
         total_selected_files += sum(1 for si in result.locally_deleted_files if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False))
+        for c in (pd.get('panopto') or {}).get('changes', []):
+            if c.bucket == 'new' and st.session_state.get(f'sync_pan_{cid}_{c.video_id}', True):
+                total_selected_recordings += 1
+            elif c.bucket == 'restore' and st.session_state.get(f'sync_panlocdel_{cid}_{c.video_id}', False):
+                total_selected_recordings += 1
+    total_selected = total_selected_files + total_selected_recordings
 
-    if total_active_files == 0:
+    if total_active == 0:
         # All files have been manually ignored - show amber notice, keep buttons visible
         from ui.amber_notice import render_amber_notice
         render_amber_notice(
@@ -1709,16 +1930,23 @@ def show_analysis_review(on_confirm_sync):
     col_back, _, col_sync = st.columns([1, 5, 1.5])
     with col_sync:
         with st.container(key="btn_sync_selected"):
-            sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'
-            
-            if total_active_files == 0:
+            if total_selected_recordings > 0:
+                _lbl_parts = []
+                if total_selected_files:
+                    _lbl_parts.append(f'{total_selected_files} {"file" if total_selected_files == 1 else "files"}')
+                _lbl_parts.append(f'{total_selected_recordings} {"recording" if total_selected_recordings == 1 else "recordings"}')
+                sync_label = "Sync & Download " + " + ".join(_lbl_parts)
+            else:
+                sync_label = f'Sync & Download {total_selected_files} {"file" if total_selected_files == 1 else "files"}'
+
+            if total_active == 0:
                 _sync_help = "All files are currently ignored. Restore files in the Ignored Files section above to enable syncing."
-            elif total_selected_files == 0:
-                _sync_help = "No files selected. Please select at least one file to sync, or press Back to return."
+            elif total_selected == 0:
+                _sync_help = "Nothing selected. Please select at least one file or recording to sync, or press Back to return."
             else:
                 _sync_help = None
-                
-            if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected_files == 0, help=_sync_help):
+
+            if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected == 0, help=_sync_help):
                     # Collect selections
                     sync_selections = []
                     for idx, res_data in enumerate(all_results):
@@ -1740,6 +1968,15 @@ def show_analysis_review(on_confirm_sync):
                             si for si in result.locally_deleted_files
                             if st.session_state.get(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
                         ]
+                        # Panopto recordings: selected video_ids from BOTH buckets
+                        # (new + restore). These drive the runner's allowlist; the
+                        # actual download/transcribe happens in the panopto pass.
+                        _pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+                        selected_panopto = [
+                            c.video_id for c in _pan_changes
+                            if (c.bucket == 'new' and st.session_state.get(f'sync_pan_{cid}_{c.video_id}', True))
+                            or (c.bucket == 'restore' and st.session_state.get(f'sync_panlocdel_{cid}_{c.video_id}', False))
+                        ]
 
                         sync_selections.append({
                             'pair_idx': idx,
@@ -1754,12 +1991,24 @@ def show_analysis_review(on_confirm_sync):
                             'updates_modified': selected_upd_mod,
                             'redownload': selected_locdel,
                             'ignore': [],  # ignore was handled by immediate DB updates
+                            'panopto': selected_panopto,
                         })
 
-                    # Total count & size for confirmation
+                    # Total count & size for confirmation. `total_count` stays
+                    # file-only (it drives the dialog's "X files" + byte/disk math);
+                    # Panopto recordings are counted separately for the proceed guard.
                     total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
+                    total_panopto_sel = sum(len(s.get('panopto', [])) for s in sync_selections)
+
+                    def _pan_selected_bytes(s):
+                        """Bytes the selected recordings will add (sum of each
+                        recording's download_kinds sizes - real or estimated)."""
+                        chmap = {c.video_id: c for c in (s['res_data'].get('panopto') or {}).get('changes', [])}
+                        return sum(chmap[vid].download_size for vid in s.get('panopto', []) if vid in chmap)
+
                     # Compute total byte size - new and updated CanvasFileInfo have .size,
-                    # redownload items are SyncInfo; look up their size from canvas_files
+                    # redownload items are SyncInfo; look up their size from canvas_files.
+                    # Panopto recordings contribute their (possibly estimated) size too.
                     total_bytes = 0
                     for s in sync_selections:
                         total_bytes += sum(getattr(f, 'size', 0) or 0 for f in s['new'])
@@ -1771,9 +2020,11 @@ def show_analysis_review(on_confirm_sync):
                             cf = cfmap.get(str(si.canvas_file_id))
                             total_bytes += (getattr(cf, 'size', 0) or getattr(si, 'original_size', 0) or 0)
 
-                    if total_count == 0:
+                        total_bytes += _pan_selected_bytes(s)
+
+                    if total_count == 0 and total_panopto_sel == 0:
                         from ui.amber_notice import render_info_notice
-                        render_info_notice('Nothing to sync - your!')
+                        render_info_notice('Nothing to sync - select at least one file or recording.')
                         st.stop()
 
                     # Disk space check - partition bytes by target drive so
@@ -1793,6 +2044,7 @@ def show_analysis_review(on_confirm_sync):
                         for _si in _s.get('redownload', []):
                             _cf = _cfmap.get(str(_si.canvas_file_id))
                             _sel_bytes += (getattr(_cf, 'size', 0) or getattr(_si, 'original_size', 0) or 0)
+                        _sel_bytes += _pan_selected_bytes(_s)
                         _drive_bytes[_drive] = _drive_bytes.get(_drive, 0) + _sel_bytes
                         _drive_bytes[f'__folder__{_drive}'] = _folder  # representative path for check
 
@@ -1814,7 +2066,7 @@ def show_analysis_review(on_confirm_sync):
 
                     folders_count = len(set(
                         s['res_data']['pair']['local_folder'] for s in sync_selections
-                        if s['new'] or s['updates'] or s['redownload']
+                        if s['new'] or s['updates'] or s['redownload'] or s.get('panopto')
                     ))
 
                     # Extract destination folder from the first selection
@@ -1822,7 +2074,7 @@ def show_analysis_review(on_confirm_sync):
                     if folders_count == 1:
                         # Find the single folder used
                         for s in sync_selections:
-                            if s['new'] or s['updates'] or s['redownload']:
+                            if s['new'] or s['updates'] or s['redownload'] or s.get('panopto'):
                                 dest_folder = short_path(s['res_data']['pair']['local_folder'])
                                 break
 
@@ -1850,10 +2102,17 @@ def inject_dynamic_sync_review_css():
         pair = res_data['pair']
         result = res_data['result']
         cid = pair['course_id']
-        
-        if result.new_files:
-            total_new = len(result.new_files)
+
+        # Panopto recordings now live INSIDE the New Files / Deleted Locally
+        # categories, so their counts roll into those category counters.
+        _pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+        _pan_new = [c for c in _pan_changes if c.bucket == 'new']
+        _pan_restore = [c for c in _pan_changes if c.bucket == 'restore']
+
+        if result.new_files or _pan_new:
+            total_new = len(result.new_files) + len(_pan_new)
             selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{cid}_{f.id}", True))
+            selected_new += sum(1 for c in _pan_new if st.session_state.get(f"sync_pan_{cid}_{c.video_id}", True))
             css_blocks.append(f"""
             div[class*="st-key-cat_new_{cid}"] div[data-testid="stExpander"] details summary p::after {{
                 content: "\\00a0\\00a0 ({selected_new} / {total_new} selected)";
@@ -1879,14 +2138,15 @@ def inject_dynamic_sync_review_css():
                 color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
             
-        if result.locally_deleted_files:
-            total_locdel = len(result.locally_deleted_files)
+        if result.locally_deleted_files or _pan_restore:
+            total_locdel = len(result.locally_deleted_files) + len(_pan_restore)
             selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{cid}_{f.canvas_file_id}", False))
+            selected_locdel += sum(1 for c in _pan_restore if st.session_state.get(f"sync_panlocdel_{cid}_{c.video_id}", False))
             css_blocks.append(f"""
             div[class*="st-key-cat_deleted_local_{cid}"] div[data-testid="stExpander"] details summary p::after {{
                 content: "\\00a0\\00a0 ({selected_locdel} / {total_locdel} selected)"; color: {theme.TEXT_SECONDARY}; font-weight: normal; font-size: 0.9rem;
             }}""")
-            
+
         if result.deleted_on_canvas:
             total_del_canvas = len(result.deleted_on_canvas)
             css_blocks.append(f"""

@@ -264,6 +264,15 @@ def run_sync():
         st.session_state['completion_beep_fired'] = False
         # Re-arm the "quit Office apps on completion" one-shot for this sync.
         st.session_state['_office_quit_fired'] = False
+        # Drop any stale Panopto results from a prior sync on a FRESH run (but keep
+        # them on a Retry, which re-enters run_sync after the Panopto pass already
+        # produced the real summary the completion card must still show).
+        if not st.session_state.get('retry_selections'):
+            st.session_state.pop('panopto_summary', None)
+            st.session_state.pop('panopto_uptodate_total', None)
+            # Clear the prior run's history timestamp so this sync's Panopto pass
+            # amends THIS run's entry (or creates one), never a stale earlier entry.
+            st.session_state.pop('_sync_history_ts', None)
         # macOS: forget Office apps primed by a previous run (quit at its completion)
         # so this sync launches them fresh + scoped to the files it actually converts.
         import sys as _sys_reset
@@ -1900,6 +1909,10 @@ def run_sync():
             # M-1: Invalidate the step-1 history cache so the next render
             # re-reads from disk and shows the entry we just wrote.
             st.session_state.pop('_sync_history_cache', None)
+            # Remember this entry's timestamp so the terminal Panopto pass can
+            # amend THIS entry with the recordings it downloads afterwards
+            # (instead of them being silently absent from sync history).
+            st.session_state['_sync_history_ts'] = now_str
         except Exception as e:
             logger.error(f"Failed to record sync history: {e}")
 
@@ -1912,15 +1925,41 @@ def run_sync():
         st.session_state['download_status'] = 'sync_cancelled'
         st.session_state['sync_cancelled_file_count'] = synced_counter[0]
     else:
+        # Stash how many recordings analysis found already up to date, so the
+        # completion card can show an honest "N already up to date" note instead
+        # of the old misleading "Skipped" count - regardless of whether the
+        # Panopto pass runs.
+        _pan_uptodate = 0
+        _pan_selected = 0
+        for _sel in sync_selections:
+            _pan_uptodate += sum(
+                1 for _c in (_sel.get('res_data', {}).get('panopto') or {}).get('changes', [])
+                if _c.bucket is None  # uptodate
+            )
+            _pan_selected += len(_sel.get('panopto', []))
+        st.session_state['panopto_uptodate_total'] = _pan_uptodate
+
         # Terminal Panopto pass (premium feature) runs after the file sync, before
-        # the completion screen - mirrors the Download-mode 'panopto' phase.
-        _pan_on = False
-        try:
-            from panopto.settings import load_settings as _pan_load
-            _pan_on = bool(_pan_load().get('enabled'))
-        except Exception:
-            _pan_on = False
-        st.session_state['download_status'] = 'sync_panopto' if _pan_on else 'sync_complete'
+        # the completion screen - mirrors the Download-mode 'panopto' phase. It runs
+        # whenever the user actually selected at least one recording in Review.
+        # Selection is already gated per-folder by each folder's contract (a folder
+        # with no Panopto outputs configured surfaces no recordings to select), so
+        # the selection count alone is the correct, per-folder-aware trigger.
+        if _pan_selected > 0:
+            st.session_state['download_status'] = 'sync_panopto'
+        else:
+            st.session_state['download_status'] = 'sync_complete'
+            # No recordings to process, but surface the up-to-date count on the
+            # completion card when there were recordings in the course(s). Guard:
+            # never clobber a real summary already produced by the Panopto pass
+            # (e.g. on a post-Panopto file Retry, which re-enters run_sync with
+            # no recordings selected but the real results still on screen).
+            if _pan_uptodate > 0 and not st.session_state.get('panopto_summary'):
+                st.session_state['panopto_summary'] = {
+                    'found': 0, 'downloaded': 0, 'transcribed': 0, 'skipped': 0,
+                    'failed': 0, 'courses': 0, 'selected': 0,
+                    'uptodate': _pan_uptodate,
+                }
 
     st.session_state['step'] = 4
     st.rerun()

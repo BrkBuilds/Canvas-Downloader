@@ -220,7 +220,124 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             _fn = getattr(_si, 'canvas_filename', str(_si))
             log_debug(f"  [LOCAL-DEL]    {_fn}", debug_file)
 
-    return course, sync_mgr, manifest, canvas_files, result, detected
+    # ── Panopto recordings (discovered + disk-compared, like any other file) ──
+    # Only when the premium feature is enabled. Discovery is slow (per-recording
+    # LTI handshakes), so it runs here ONCE during analysis; execution reuses the
+    # result so Review and what actually syncs can never disagree. A failure here
+    # must never block the file analysis.
+    panopto_payload = None
+    try:
+        from panopto.settings import (
+            wants_transcription as _pan_wants_tx,
+            compose_settings as _pan_compose, is_enabled as _pan_is_enabled,
+        )
+        # Per-folder Panopto contract (output formats + layout), mirroring the
+        # secondary_content_contract: read from this folder's manifest, falling
+        # back to the current Section 4 session toggles on the first-ever sync
+        # (read-only here - execution durably seeds it). Engine config
+        # (model/device/language) is layered in by compose_settings.
+        _raw_pan = sync_mgr._load_metadata('panopto_contract')
+        _pan_contract = None
+        if _raw_pan is not None:
+            try:
+                _pan_contract = json.loads(_raw_pan)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                _pan_contract = None
+        if _pan_contract is None:
+            _pan_contract = {
+                'output_mp4': st.session_state.get('persistent_pan_out_mp4', False),
+                'output_mp3': st.session_state.get('persistent_pan_out_mp3', False),
+                'output_txt': st.session_state.get('persistent_pan_out_txt', False),
+                'output_srt': st.session_state.get('persistent_pan_out_srt', False),
+                'layout': st.session_state.get('persistent_pan_layout', 'match'),
+            }
+        _pan = _pan_compose(_pan_contract)
+        if _pan_is_enabled(_pan_contract):
+            from panopto.discovery import discover_course_videos
+            from panopto.sync_plan import (
+                classify_videos, tally as _pan_tally,
+                videos_needing_duration as _pan_need_dur,
+                apply_size_estimates as _pan_apply_sizes,
+            )
+            from panopto.stream import fetch_durations as _pan_fetch_dur
+            from panopto import models as _pmodels
+
+            progress_hook(0, 1, "Searching for Panopto recordings…")
+
+            def _pan_scan(kind, **kw):
+                try:
+                    if kind == 'stage':
+                        progress_hook(0, 1, f"Scanning Panopto — {kw.get('name', '')}…")
+                    elif kind == 'video':
+                        progress_hook(0, 1, f"Found recording: {kw.get('title', '')}")
+                except Exception:
+                    pass
+
+            _pan_videos = discover_course_videos(
+                cm.api_url, cm.api_key, course_id,
+                include_folder_sessions=True,
+                is_cancelled=is_sync_cancelled,
+                on_event=_pan_scan,
+            )
+
+            _model_id = _pan.get('model', 'small')
+            _model_ready = bool(
+                _pan_wants_tx(_pan)
+                and _pmodels.whisper_available()
+                and _pmodels.is_installed(_model_id)
+            )
+            # Use the SAME download_mode the execution panopto pass will use, so
+            # classification paths line up exactly with where files land.
+            _pan_dmode = sync_mgr._load_metadata('download_mode') or detected or 'modules'
+            _pan_manifest = sync_mgr.get_panopto_manifest()
+            _pan_ignored = set(sync_mgr.get_ignored_panopto().keys())
+            _pan_changes = classify_videos(
+                cm, _pan_videos, local_folder, _pan_dmode, _pan,
+                _pan_manifest, model_ready=_model_ready,
+                ignored_ids=_pan_ignored,
+            )
+            # Size the recordings whose outputs aren't on disk yet (new/restore/
+            # ignored): fetch durations only for those, then estimate. Best-effort -
+            # a probe failure just leaves those sizes unknown.
+            try:
+                _need = _pan_need_dur(_pan_changes)
+                if _need and not is_sync_cancelled():
+                    progress_hook(0, 1, "Measuring recording sizes…")
+                    _durs = _pan_fetch_dur(cm, _need, is_cancelled=is_sync_cancelled)
+                    if _durs:
+                        _pan_apply_sizes(_pan_changes, _durs)
+            except Exception as _pan_size_err:
+                logger.debug(f"Panopto size estimation skipped: {_pan_size_err}")
+            panopto_payload = {
+                'changes': _pan_changes,
+                'videos': _pan_videos,
+                'download_mode': _pan_dmode,
+                'settings': _pan,
+                'model_ready': _model_ready,
+            }
+            if debug_file:
+                _t = _pan_tally(_pan_changes)
+                log_debug(
+                    f"Panopto: discovered {len(_pan_videos)} recording(s) | "
+                    f"new/missing {_t['new']} | deleted-locally {_t['restore']} | "
+                    f"ignored {_t['ignored']} | up to date {_t['uptodate']}"
+                    + ("" if _model_ready else " | (transcription engine/model not "
+                       "ready - audio only)"),
+                    debug_file,
+                )
+                for _c in _pan_changes:
+                    if _c.bucket == 'new':
+                        log_debug(f"  [PAN-NEW]      {_c.title} (missing: {', '.join(_c.missing_kinds)})", debug_file)
+                    elif _c.bucket == 'restore':
+                        log_debug(f"  [PAN-LOCDEL]   {_c.title} (deleted: {', '.join(_c.deleted_kinds)})", debug_file)
+    except Exception as _pan_err:
+        logger.warning(f"Panopto analysis failed for course {course_id}: {_pan_err}", exc_info=True)
+        if debug_file:
+            log_debug(f"[WARNING] Panopto analysis skipped (error): {_pan_err}", debug_file)
+        panopto_payload = {'changes': [], 'videos': [], 'download_mode': detected,
+                           'settings': {}, 'error': str(_pan_err)}
+
+    return course, sync_mgr, manifest, canvas_files, result, detected, panopto_payload
 
 
 def run_analysis(sync_pairs, main_placeholder=None):
@@ -401,7 +518,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             _analysis_heartbeat.empty()
             if is_sync_cancelled():
                 break
-            course, sync_mgr, manifest, canvas_files, result, detected = _analysis_result
+            course, sync_mgr, manifest, canvas_files, result, detected, panopto_payload = _analysis_result
 
             # Do NOT save manifest here! Fixes Verify-Then-Commit state leakage if user hits Back.
 
@@ -421,6 +538,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 'canvas_files': canvas_files,
                 'course': course,
                 'detected_structure': detected,
+                'panopto': panopto_payload,
             })
         except Exception as e:
             traceback.print_exc()
@@ -444,9 +562,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
     
     st.session_state['sync_analysis_results'] = all_results
 
-    # Reset locally-deleted checkbox state so they always start deselected in the review.
+    # Reset locally-deleted + Panopto checkbox state so they always start at their
+    # defaults in the review (locdel/restore deselected, new-panopto reselected).
     for k in list(st.session_state.keys()):
-        if k.startswith('sync_locdel_'):
+        if (k.startswith('sync_locdel_') or k.startswith('sync_pan_')
+                or k.startswith('sync_panlocdel_')):
             del st.session_state[k]
 
     # Quick Sync mode - skip review and go straight to sync
@@ -558,6 +678,18 @@ def run_analysis(sync_pairs, main_placeholder=None):
             for si in actionable_del:
                 st.session_state.setdefault(f'sync_locdel_{cid}_{si.canvas_file_id}', False)
 
+            # Panopto recordings: auto-select New/missing (like new files), skip
+            # Deleted-Locally (like locally-deleted files). Parity with the file
+            # buckets above. Selection is by video_id (the runner's allowlist key).
+            _pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+            _pan_selected_ids = []
+            for _c in _pan_changes:
+                if _c.bucket == 'new':
+                    st.session_state[f'sync_pan_{cid}_{_c.video_id}'] = True
+                    _pan_selected_ids.append(_c.video_id)
+                elif _c.bucket == 'restore':
+                    st.session_state.setdefault(f'sync_panlocdel_{cid}_{_c.video_id}', False)
+
             clean_updates = [f for f, _ in actionable_updated_clean]
             sync_selections.append({
                 'pair_idx': idx,
@@ -568,14 +700,19 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 'updates_modified': [],
                 'redownload': [],
                 'ignore': [],
+                'panopto': _pan_selected_ids,
             })
-            
-        total_count = sum(len(s['new']) + len(s['updates']) + len(s['redownload']) for s in sync_selections)
+
+        total_count = sum(
+            len(s['new']) + len(s['updates']) + len(s['redownload']) + len(s.get('panopto', []))
+            for s in sync_selections
+        )
         
         # 1. Tally skipped files globally using a bulletproof net
         total_locdel = 0
         total_canvasdel = 0
         total_edited = 0
+        total_pan_locdel = 0  # Panopto recordings deleted locally (Quick Sync skips)
 
         for pair_res in all_results:
             if not isinstance(pair_res, dict):
@@ -592,12 +729,16 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 total_canvasdel += len(res_obj.deleted_on_canvas)
             if hasattr(res_obj, 'updated_modified_files') and res_obj.updated_modified_files is not None:
                 total_edited += len(res_obj.updated_modified_files)
+            for _c in (pair_res.get('panopto') or {}).get('changes', []):
+                if _c.bucket == 'restore':
+                    total_pan_locdel += 1
 
         st.session_state['qs_skipped'] = {
             'local_del': total_locdel,
             'canvas_del': total_canvasdel,
             'edited': total_edited,
             'filtered': total_filter_skipped,
+            'panopto_local_del': total_pan_locdel,
         }
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
 
@@ -644,6 +785,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         total_updated_clean = 0
         total_updated_modified = 0
         total_local_del = 0
+        total_panopto = 0  # actionable recordings (new/missing + deleted-locally)
 
         for res_data in all_results:
             result = res_data.get('result')
@@ -652,9 +794,14 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 total_updated_clean += len(getattr(result, 'updated_clean_files', []) or [])
                 total_updated_modified += len(getattr(result, 'updated_modified_files', []) or [])
                 total_local_del += len(getattr(result, 'locally_deleted_files', []) or [])
+            for _c in (res_data.get('panopto') or {}).get('changes', []):
+                if _c.is_actionable:
+                    total_panopto += 1
 
         total_updated = total_updated_clean + total_updated_modified
-        total_changes = total_new + total_updated + total_local_del
+        # Panopto recordings count as changes too, so a course whose ONLY change is
+        # a new/deleted recording still routes to Review instead of skipping it.
+        total_changes = total_new + total_updated + total_local_del + total_panopto
 
         if st.session_state.get('debug_mode'):
             from canvas_debug import log_debug as _rv_log
@@ -665,7 +812,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 _rv_log(
                     f"New: {total_new} | Clean updates: {total_updated_clean} | "
                     f"Locally-edited: {total_updated_modified} | Locally-deleted: {total_local_del} | "
-                    f"Total changes: {total_changes}",
+                    f"Panopto: {total_panopto} | Total changes: {total_changes}",
                     _rv_dbg,
                 )
                 _rv_log(f"→ Routing to: {_rv_route}", _rv_dbg)
@@ -694,6 +841,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
             parts.append(f"{total_updated_modified} edited locally")
         if total_local_del > 0:
             parts.append(f"{total_local_del} file{'s' if total_local_del != 1 else ''} deleted locally")
+        if total_panopto > 0:
+            parts.append(f"{total_panopto} Panopto recording{'s' if total_panopto != 1 else ''}")
 
         summary = ", ".join(parts) + " found."
         # M-7 parity: respect the notifications toggle here too (the other

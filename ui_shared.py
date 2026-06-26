@@ -254,7 +254,7 @@ def _build_help_icons() -> dict:
         'folder_open': _img('icon_preset_builtin.png'),
         'restore': _img('icon_restore.png', size=16),
         'calendar': _mat('calendar_today', color='#bac2cc'),
-        'error': _mat('error', color='#ff7b72'),
+        'error': _mat('error', color='#ff7b72', size=12),
         'sync_hub': _img('icon_sync_hub.png'),
         'sync_pair': _img('icon_sync_pair.png'),
         'sync_group': _img('icon_sync_group.png'),
@@ -736,11 +736,32 @@ def inject_file_action_css():
     every key starting ``fileact_open_`` / ``fileact_reveal_``.
     """
     st.markdown(f"""<style>
-    /* Action-list container: strip chrome, indent the files under their
-       category header (the header cancels it with a negative margin). */
+    /* Action-list container: styled boxes for each category */
     div[class*="st-key-fileactlist_"] {{
-        border: none !important; background: transparent !important;
-        padding: 0 0 0 26px !important; margin: 0 !important;
+        border-radius: 8px !important;
+        padding: 12px 16px 20px 34px !important;
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+    }}
+    div[class*="st-key-fileactlist_"][class*="_new"] {{
+        background-color: rgba(59, 130, 246, 0.03) !important;
+        border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    }}
+    div[class*="st-key-fileactlist_"][class*="_updated"] {{
+        background-color: rgba(16, 185, 129, 0.03) !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    }}
+    div[class*="st-key-fileactlist_"][class*="_restored"] {{
+        background-color: rgba(139, 92, 246, 0.03) !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    }}
+    div[class*="st-key-fileactlist_"][class*="_protected"] {{
+        background-color: rgba(245, 158, 11, 0.03) !important;
+        border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    }}
+    div[class*="st-key-fileactlist_"][class*="_failed"] {{
+        background-color: rgba(239, 68, 68, 0.03) !important;
+        border: 1px solid rgba(239, 68, 68, 0.3) !important;
     }}
     /* Pack rows close, but with a little breathing room between them. */
     div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] {{ gap: 4px !important; }}
@@ -974,6 +995,7 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
     for fi in files:
         by_cat.setdefault(fi.get('category', 'new'), []).append(fi)
 
+    rendered_any = False
     for cat_key, cat_title, cat_icon in SYNC_FILE_CATEGORIES:
         cfiles = by_cat.get(cat_key)
         if not cfiles:
@@ -984,9 +1006,10 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
                  if cat_key == 'restored' else
                  'Saved alongside the files you had edited'
                  if cat_key == 'protected' else '')
-        _desc_html = (f"<div style='margin-left:-26px;color:#8b949e;font-size:0.75rem;'>{_desc}</div>"
+        _mb = "2px" if _desc else "8px"
+        _desc_html = (f"<div style='color:#8b949e;font-size:0.75rem;margin-bottom:8px;'>{_desc}</div>"
                       if _desc else "")
-        _hdr = (f"<div style='margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;'>"
+        _hdr = (f"<div style='margin-top:0;margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;margin-bottom:{_mb};'>"
                 f"{HELP_ICONS[cat_icon]} {cat_title} "
                 f"<span style='color:#b1bac4;font-weight:500;'>({len(cfiles)})</span></div>"
                 + _desc_html)
@@ -995,6 +1018,7 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
             key_scope=f"{key_scope}_{cat_key}",
             sort_mode='folder', header_html=_hdr,
         )
+        rendered_any = True
 
 
 # --- Base64 SVG icons for filetype pills ---
@@ -1402,55 +1426,122 @@ def render_panopto_summary(summary: dict | None) -> None:
     if not summary:
         return
     found = int(summary.get('found', 0) or 0)
-    if found <= 0:
+    # Both modes show only what this run actually DID (Downloaded / Transcribed,
+    # plus Errors if any). We deliberately do NOT surface a "Skipped" / "already
+    # present" stat: a big "24 skipped" reads as "24 missing from my course" and
+    # alarms users who in fact have the full course on disk. Sync mode adds a
+    # quiet "N already up to date" note in the subtitle instead.
+    is_sync = 'uptodate' in summary
+    uptodate = int(summary.get('uptodate', 0) or 0)
+    selected = int(summary.get('selected', found) or 0)
+    if is_sync:
+        _did_work = (int(summary.get('downloaded', 0) or 0)
+                     or int(summary.get('transcribed', 0) or 0)
+                     or int(summary.get('failed', 0) or 0)
+                     or selected)
+        if not (_did_work or uptodate):
+            return
+    elif found <= 0:
         return
+
+    # Reuse the completion stat-card styling so this section matches the top
+    # metric boxes exactly (neutral white/grey - no per-metric "skittles" colour,
+    # no blue card that clashes with the amber/green/red completion backgrounds).
+    from styles import inject_css
+    inject_css('completion.css')
 
     import theme as _theme
     downloaded = int(summary.get('downloaded', 0) or 0)
     transcribed = int(summary.get('transcribed', 0) or 0)
-    skipped = int(summary.get('skipped', 0) or 0)
     failed = int(summary.get('failed', 0) or 0)
     courses = int(summary.get('courses', 0) or 0)
 
-    _icon = (
-        "<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' "
-        f"fill='{_theme.ACCENT_BLUE}' style='flex-shrink:0'>"
-        "<polygon points='23 7 16 12 23 17 23 7'/>"
-        "<rect x='1' y='5' width='15' height='14' rx='2'/></svg>"
+    _dl_icon = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/>"
+        "<polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/></svg>"
+    )
+    _tx_icon = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/>"
+        "<polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/>"
+        "<line x1='16' y1='17' x2='8' y2='17'/><line x1='10' y1='9' x2='8' y2='9'/></svg>"
+    )
+    _skip_icon = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "<circle cx='12' cy='12' r='10'/><line x1='8' y1='12' x2='16' y2='12'/></svg>"
     )
 
-    def _metric(value: int, label: str, color: str) -> str:
+    def _stat(icon: str, value: int, label: str, error: bool = False) -> str:
+        cls = "stat-card stat-error" if error else "stat-card"
         return (
-            "<div style='display:flex;flex-direction:column;align-items:center;min-width:64px;'>"
-            f"<span style='color:{color};font-size:1.35rem;font-weight:800;line-height:1;'>{value}</span>"
-            f"<span style='color:{_theme.TEXT_SECONDARY};font-size:0.72rem;font-weight:600;"
-            f"text-transform:uppercase;letter-spacing:0.04em;margin-top:4px;'>{esc(label)}</span>"
-            "</div>"
+            f"<div class='{cls}'>"
+            f"<div class='stat-icon-wrapper'>{icon}</div>"
+            "<div class='stat-info'>"
+            f"<div class='stat-value'>{value}</div>"
+            f"<div class='stat-label'>{esc(label)}</div>"
+            "</div></div>"
         )
 
-    metrics = [
-        _metric(downloaded, "Downloaded", _theme.SUCCESS),
-        _metric(transcribed, "Transcribed", _theme.ACCENT_LINK),
-        _metric(skipped, "Skipped", _theme.TEXT_SECONDARY),
+    # Show only what this run produced; never a "Skipped"/"already present" stat
+    # (see the note above). Errors appear only when something actually failed.
+    cards = [
+        _stat(_dl_icon, downloaded, "Downloaded"),
+        _stat(_tx_icon, transcribed, "Transcribed"),
     ]
     if failed:
-        metrics.append(_metric(failed, "Errors", _theme.ERROR_LIGHT))
+        cards.append(_stat(_skip_icon, failed, "Errors", error=True))
 
-    _scope = f" across {courses} course{'s' if courses != 1 else ''}" if courses else ""
-    # HTML assembled in locals (only app-controlled values: ints, theme tokens,
-    # self-built SVG, esc'd labels) so the unsafe_allow_html call carries no
-    # interpolation. esc() is applied to the only text input (metric labels).
+    # HTML assembled from app-controlled values only (ints, theme tokens, self-
+    # built SVG, esc'd labels), so the unsafe_allow_html call carries no raw input.
+    if is_sync:
+        # "processed" = recordings acted on this run; "already up to date" sits
+        # right beside it so the whole status reads on one line.
+        _parts = []
+        if selected:
+            _parts.append(f"{selected} processed")
+        if uptodate:
+            _parts.append(f"{uptodate} already up to date")
+        _scope = (" · " + " · ".join(_parts)) if _parts else ""
+    else:
+        _scope = f" · {found} found"
+        if courses:
+            _scope += f" across {courses} course{'s' if courses != 1 else ''}"
     _hdr = (
-        f"<div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>{_icon}"
-        f"<span style='color:{_theme.TEXT_PRIMARY};font-weight:700;font-size:1.02rem;'>Panopto Lectures</span>"
-        f"<span style='color:{_theme.TEXT_SECONDARY};font-size:0.85rem;'>· {found} found{_scope}</span></div>"
+        f"<div style='display:flex;align-items:center;gap:6px;margin:0 0 10px 0;'>"
+        f"<span style='color:{_theme.TEXT_PRIMARY};font-weight:700;font-size:1.02rem;'>Panopto Recordings</span>"
+        f"<span style='color:{_theme.TEXT_PRIMARY};font-size:0.85rem;'>{_scope}</span></div>"
     )
-    _body = f"<div style='display:flex;gap:2.5rem;flex-wrap:wrap;'>{''.join(metrics)}</div>"
-    _card = (
-        "<div style='background:rgba(77,168,218,0.08);border:1px solid rgba(77,168,218,0.35);"
-        "border-radius:10px;padding:16px 20px;margin:12px 0 2px 0;'>" + _hdr + _body + "</div>"
-    )
-    st.markdown(_card, unsafe_allow_html=True)
+    _body = f"<div class='completion-stats-grid'>{''.join(cards)}</div>"
+
+    _style = """
+    <style>
+    div[class*="st-key-panopto_summary_dashboard"] {
+        background-color: rgba(255, 255, 255, 0.075) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        padding-bottom: 25px !important;
+        margin-top: 0px;
+        margin-bottom: 0px !important;
+    }
+    div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        margin-top: 5px;
+    }
+    </style>
+    """
+
+    col1, _ = st.columns([1, 1])
+    with col1:
+        with st.container(key='panopto_summary_dashboard'):
+            st.markdown(_hdr + _body + _style, unsafe_allow_html=True)
 
 
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:

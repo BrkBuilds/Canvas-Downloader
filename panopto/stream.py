@@ -1,9 +1,10 @@
-"""Panopto stream resolution + audio download via the bundled ffmpeg.
+"""Panopto stream resolution + audio/video download via the bundled ffmpeg.
 
 ``DeliveryInfo.aspx`` returns the stream URL(s) for a video given an
-authenticated Panopto session. We pull the audio (podcast) stream and transcode
-to MP3 with the ffmpeg binary that ships with the app (imageio_ffmpeg) - never
-relying on a system PATH ffmpeg.
+authenticated Panopto session. The "podcast" stream is a single combined
+MP4 (primary view + audio); we either transcode its audio to MP3, or remux the
+whole stream to a kept MP4. Both use the ffmpeg binary that ships with the app
+(imageio_ffmpeg) - never relying on a system PATH ffmpeg.
 """
 
 from __future__ import annotations
@@ -48,14 +49,25 @@ def get_delivery_info(session, panopto_base: str, video_id: str):
     body = f"deliveryId={video_id}&isEmbed=true&responseType=json"
     try:
         r = session.post(url, data=body, headers=headers, timeout=30)
+        status = r.status_code
         r.raise_for_status()
         data = r.json()
     except Exception as e:
+        logger.info("Panopto DeliveryInfo failed for %s: %s", video_id, e)
         return None, str(e)
 
     if data.get("ErrorCode"):
-        return None, data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}")
-    return data.get("Delivery", {}) or {}, None
+        msg = data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}")
+        logger.info("Panopto DeliveryInfo error for %s: %s", video_id, msg)
+        return None, msg
+    delivery = data.get("Delivery", {}) or {}
+    logger.debug(
+        "Panopto DeliveryInfo %s: HTTP %s, duration=%.0fs, podcast=%d streams=%d",
+        video_id, status, delivery_duration(delivery),
+        len(delivery.get("PodcastStreams", []) or []),
+        len(delivery.get("Streams", []) or []),
+    )
+    return delivery, None
 
 
 def pick_audio_stream(delivery: dict) -> str | None:
@@ -67,6 +79,99 @@ def pick_audio_stream(delivery: dict) -> str | None:
             if u:
                 return u
     return None
+
+
+# ── Size estimation (for the sync review / confirm UI before a download) ──────
+# Recordings that aren't downloaded yet have no file on disk to measure, so we
+# estimate from the recording's duration. Audio is CBR so the estimate is exact;
+# video bitrate varies, so the video figure is an approximation (shown as "~").
+_AUDIO_BITS_PER_SEC = 128_000          # matches download_audio_mp3's -ab 128k
+_VIDEO_BITS_PER_SEC = 1_500_000        # ~1.5 Mbps: typical mixed lecture
+
+
+def estimate_kind_size(kind: str, duration_sec: float) -> int | None:
+    """Estimate the on-disk byte size of a not-yet-downloaded output.
+
+    Returns None for kinds we can't meaningfully estimate (txt/srt transcripts
+    are tiny and length-dependent, so they're only sized once on disk).
+    """
+    try:
+        d = float(duration_sec or 0.0)
+    except (TypeError, ValueError):
+        d = 0.0
+    if d <= 0:
+        return None
+    if kind == "mp3":
+        return int(d * _AUDIO_BITS_PER_SEC / 8)
+    if kind == "mp4":
+        return int(d * _VIDEO_BITS_PER_SEC / 8)
+    return None
+
+
+def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> dict:
+    """Return {video_id: duration_seconds} for *videos*, fetched concurrently.
+
+    Authenticates to Panopto ONCE (one LTI handshake, reused for every lookup),
+    then pulls each recording's DeliveryInfo in a small thread pool. Best-effort:
+    a recording whose duration can't be resolved is simply absent from the result
+    (its size is then shown as unknown rather than estimated). Never raises.
+    """
+    from panopto.auth import lti_launch
+
+    out: dict = {}
+    videos = list(videos or [])
+    if not videos:
+        return out
+
+    session = panopto_base = None
+    for v in videos:
+        if getattr(v, "launch_url", "") and "sessionless_launch" in v.launch_url:
+            try:
+                session, _final, _rid, panopto_base = lti_launch(v.launch_url, cm.api_key)
+            except Exception as e:
+                logger.debug("fetch_durations LTI launch failed: %s", e)
+                session = panopto_base = None
+            if session and panopto_base:
+                break
+    if session is None or panopto_base is None:
+        logger.info("Panopto duration probe skipped: no authenticated session.")
+        return out
+
+    import concurrent.futures as _cf
+
+    def _one(v):
+        if is_cancelled and is_cancelled():
+            return v.video_id, None
+        try:
+            delivery, _err = get_delivery_info(session, panopto_base, v.video_id)
+            if delivery:
+                d = delivery_duration(delivery)
+                if d > 0:
+                    return v.video_id, d
+        except Exception as e:
+            logger.debug("fetch_durations failed for %s: %s", v.video_id, e)
+        return v.video_id, None
+
+    try:
+        with _cf.ThreadPoolExecutor(max_workers=max(1, min(max_workers, len(videos)))) as ex:
+            for vid, dur in ex.map(_one, videos):
+                if dur:
+                    out[vid] = dur
+    except Exception as e:
+        logger.debug("fetch_durations pool failed: %s", e)
+    logger.info("Panopto duration probe: resolved %d/%d recording(s).", len(out), len(videos))
+    return out
+
+
+def pick_video_stream(delivery: dict) -> str | None:
+    """Pick the combined video+audio stream URL from a Delivery node.
+
+    Panopto's podcast stream is a single MP4 that combines the primary view and
+    the audio - exactly what we keep as the recording's video. It's the same
+    stream the audio path uses (we just keep the video track instead of dropping
+    it), so the selection mirrors :func:`pick_audio_stream`.
+    """
+    return pick_audio_stream(delivery)
 
 
 def delivery_duration(delivery: dict) -> float:
@@ -84,34 +189,33 @@ def _cookie_header(session, panopto_base: str) -> str:
     )
 
 
-def download_audio_mp3(
-    session,
-    panopto_base: str,
-    stream_url: str,
-    out_path,
-    *,
-    is_cancelled=None,
-    bitrate: str = "128k",
-) -> tuple[bool, str | None]:
-    """Transcode the stream to MP3 at *out_path*. Returns (ok, error).
+def _input_headers(session, panopto_base: str) -> list[str]:
+    """ffmpeg ``-headers`` args carrying the authenticated cookies + referer.
 
-    Cancellable: polls *is_cancelled* and terminates ffmpeg if requested.
+    The stream URLs are gated by the Panopto session cookies; ffmpeg has no
+    access to the requests session, so we hand it the cookies (and a referer the
+    CDN expects) explicitly.
     """
-    out_path = str(out_path)
     cookie_str = _cookie_header(session, panopto_base)
-
-    cmd = [ffmpeg_exe(), "-y", "-loglevel", "warning"]
     headers = ""
     if cookie_str:
         headers += f"Cookie: {cookie_str}\r\n"
     headers += f"Referer: {panopto_base}/\r\n"
-    cmd += ["-headers", headers]
-    cmd += ["-i", stream_url, "-vn", "-acodec", "libmp3lame", "-ab", bitrate, out_path]
+    return ["-headers", headers]
 
+
+def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) -> tuple[bool, str | None]:
+    """Run an ffmpeg download *cmd* writing *out_path*. Returns (ok, error).
+
+    Shared by the audio (MP3) and video (MP4) downloaders: launches ffmpeg
+    headless, polls *is_cancelled* (terminating + cleaning up on abort), drains
+    stderr so a failure carries the real reason, and validates a non-empty file.
+    """
     creationflags = 0
     if sys.platform == "win32":
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
+    _t0 = time.time()
     try:
         proc = subprocess.Popen(
             cmd,
@@ -120,8 +224,10 @@ def download_audio_mp3(
             creationflags=creationflags,
         )
     except Exception as e:
+        logger.warning("Panopto ffmpeg launch failed for %s: %s", os.path.basename(out_path), e)
         return False, f"ffmpeg launch failed: {e}"
 
+    stderr_text = ""
     try:
         while proc.poll() is None:
             if is_cancelled and is_cancelled():
@@ -140,12 +246,85 @@ def download_audio_mp3(
             time.sleep(0.25)
         rc = proc.returncode
     finally:
+        # Drain ffmpeg's stderr - this is WHERE the real reason for a failed
+        # download lives (HTTP 403, connection reset, codec error, ...). Without
+        # it a failure was an opaque "exited with code N".
         try:
             if proc.stderr:
-                proc.stderr.read()
+                stderr_text = proc.stderr.read().decode("utf-8", "replace").strip()
         except Exception:
             pass
 
-    if rc != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
-        return False, f"ffmpeg exited with code {rc}"
+    try:
+        size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
+    except OSError:
+        size = 0
+
+    if rc != 0 or size == 0:
+        # Keep the last few stderr lines (the actionable part).
+        tail = " | ".join(stderr_text.splitlines()[-4:]) if stderr_text else ""
+        detail = f"ffmpeg exited with code {rc}"
+        if size == 0 and rc == 0:
+            detail = "ffmpeg produced an empty file"
+        if tail:
+            detail += f" — {tail}"
+        logger.warning("Panopto download failed (%s): %s", os.path.basename(out_path), detail)
+        # Remove the empty/partial artifact so it isn't mistaken for a good file.
+        try:
+            if os.path.exists(out_path) and size == 0:
+                os.remove(out_path)
+        except OSError:
+            pass
+        return False, detail
+
+    logger.info(
+        "Panopto downloaded %s (%.1f MB in %.1fs)",
+        os.path.basename(out_path), size / (1024 * 1024), time.time() - _t0,
+    )
     return True, None
+
+
+def download_audio_mp3(
+    session,
+    panopto_base: str,
+    stream_url: str,
+    out_path,
+    *,
+    is_cancelled=None,
+    bitrate: str = "128k",
+) -> tuple[bool, str | None]:
+    """Transcode the stream to MP3 at *out_path*. Returns (ok, error).
+
+    Cancellable: polls *is_cancelled* and terminates ffmpeg if requested.
+    """
+    out_path = str(out_path)
+    cmd = [ffmpeg_exe(), "-y", "-loglevel", "warning"]
+    cmd += _input_headers(session, panopto_base)
+    cmd += ["-i", stream_url, "-vn", "-acodec", "libmp3lame", "-ab", bitrate, out_path]
+    return _run_ffmpeg_download(cmd, out_path, is_cancelled=is_cancelled)
+
+
+def download_video_mp4(
+    session,
+    panopto_base: str,
+    stream_url: str,
+    out_path,
+    *,
+    is_cancelled=None,
+) -> tuple[bool, str | None]:
+    """Remux the combined stream to a kept MP4 at *out_path*. Returns (ok, error).
+
+    Uses stream copy (``-c copy``) so the original audio/video are kept verbatim
+    (fast, no quality loss). HLS sources (.m3u8) carry ADTS-framed AAC that must
+    be converted to the MP4 ASC framing on remux, hence the conditional bitstream
+    filter. ``+faststart`` moves the moov atom to the front so the file plays
+    while still on disk. Cancellable like the audio path.
+    """
+    out_path = str(out_path)
+    cmd = [ffmpeg_exe(), "-y", "-loglevel", "warning"]
+    cmd += _input_headers(session, panopto_base)
+    cmd += ["-i", stream_url, "-c", "copy"]
+    if ".m3u8" in stream_url.lower():
+        cmd += ["-bsf:a", "aac_adtstoasc"]
+    cmd += ["-movflags", "+faststart", out_path]
+    return _run_ffmpeg_download(cmd, out_path, is_cancelled=is_cancelled)

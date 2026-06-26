@@ -1,41 +1,86 @@
-"""Per-course Panopto orchestration.
+"""Panopto orchestration, grouped by activity.
 
-Ties discovery -> LTI auth -> audio download -> transcription together, with
-output-path routing (match course structure vs separate folder), skip-if-exists,
-and optional sync-manifest recording (Phase 3).
+Discovery -> audio download -> transcription, run as three distinct PHASES
+across all selected courses (mirroring the app's Download -> Post-Processing
+flow): every recording is discovered first, then every audio file is downloaded,
+then every transcription runs one-by-one. This keeps the progress UI honest
+(one phase, one colour, one moving bar) instead of flip-flopping per video.
 
 The caller (app.py download phase / sync execution) supplies a ``progress``
 callback and an ``is_cancelled`` checker, and renders the dashboard. The runner
 itself never touches Streamlit.
 
 progress(kind, **kw) event kinds:
-    'discovering'  course=...
-    'found'        course=..., count=int
-    'video_start'  title=...
-    'skipped'      title=..., paths=[...]
-    'downloaded'   title=..., path=..., size=int
-    'transcribe'   title=..., pct=int
-    'produced'     title=..., path=...        (a final file written: mp3/txt/srt)
-    'video_done'   title=...
-    'warn'         message=...                (one-off, e.g. model missing)
-    'error'        error=DownloadError
+    # ── Discovery ──
+    'discovering'    course=..., index=int, total=int   (about to scan a course)
+    'scan_stage'     name=...                            (section: Modules/Pages/…)
+    'scan_item'      detail=...                          (item currently examined)
+    'scan_found'     title=..., source=...               (a recording was found)
+    'found'          course=..., count=int               (finished scanning a course)
+    'skipped'        title=..., paths=[...]              (already fully on disk)
+    'discovery_done' found=int, courses=int, scanned=int
+    # ── Download ──
+    'download_phase' total=int
+    'video_start'    title=...
+    'downloaded'     title=..., path=..., size=int
+    'download_done'  total=int, ok=int
+    # ── Transcription ──
+    'transcribe_phase' total=int
+    'transcribe_start' title=..., index=int, total=int
+    'transcribe'       title=..., pct=int
+    'transcribed'      title=..., paths=[...]
+    'transcribe_done'  total=int, ok=int
+    # ── Shared ──
+    'produced'       title=..., path=...   (a final artifact written: mp3/txt/srt)
+    'warn'           message=...           (one-off, e.g. model missing)
+    'error'          error=DownloadError
 """
 
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from panopto import models as pmodels
 from panopto.auth import lti_launch
 from panopto.discovery import discover_course_videos
 from panopto.stream import (
-    download_audio_mp3, get_delivery_info, pick_audio_stream,
+    download_audio_mp3, download_video_mp4, get_delivery_info,
+    pick_audio_stream, pick_video_stream,
 )
-from panopto.transcribe import PanoptoCancelled, transcribe
+from panopto.transcribe import (
+    PanoptoCancelled, TranscriptionEngineCrash, transcribe_in_subprocess,
+)
 from panopto.settings import wants_transcription
 
 logger = logging.getLogger(__name__)
+
+
+def _log_engine_diagnostics() -> None:
+    """Dump the transcription-stack status to the debug log (once per batch).
+
+    This is the single highest-value diagnostic for "transcription doesn't
+    work" reports: it reveals a missing engine OR an installed-but-broken
+    PyTorch (the WinError 1114 / c10.dll case that silently crashes the
+    ctranslate2 import that faster-whisper relies on).
+    """
+    try:
+        from canvas_debug import get_active_debug_file, log_debug
+        diag = pmodels.engine_diagnostics()
+        lines = ["=== Panopto transcription engine diagnostics ==="]
+        for k, v in diag.items():
+            lines.append(f"  {k}: {v}")
+        lines.append("================================================")
+        block = "\n".join(lines)
+        # Mirror to the debug file AND the app logger (so it shows in dev consoles
+        # too). get_active_debug_file() returns None when debug mode is off -
+        # log_debug then no-ops, but the logger.info still fires.
+        log_debug(block, get_active_debug_file())
+        logger.info("Transcription engine: backend_usable=%s | torch=%s",
+                    diag.get("backend_usable"), diag.get("torch"))
+    except Exception as e:
+        logger.debug(f"engine diagnostics dump failed: {e}")
 
 
 def _noop(*_a, **_k):
@@ -61,11 +106,11 @@ PANOPTO_SUBFOLDER = "Panopto Recordings"
 
 def video_dir(course_root, module_name_sanitized, settings: dict, download_mode: str,
               *, lecture_title_sanitized: str) -> Path:
-    """Resolve the output directory for a lecture, honoring the layout setting.
+    """Resolve the output directory for a recording, honoring the layout setting.
 
-    Both layouts keep lectures INSIDE the course folder (``course_root``):
-      - 'separate' -> ``<course_root>/Panopto Recordings/<lecture>/`` so a
-        lecture's possibly-many artifacts (mp3/txt/srt) stay grouped together
+    Both layouts keep recordings INSIDE the course folder (``course_root``):
+      - 'separate' -> ``<course_root>/Panopto Recordings/<recording>/`` so a
+        recording's possibly-many artifacts (mp3/txt/srt) stay grouped together
         and don't clutter the course folder.
       - 'match'    -> alongside course files: the module subfolder in modules
         mode, or the course root in flat mode.
@@ -94,6 +139,588 @@ def _unique_base(directory: Path, safe_title: str, seen: set) -> Path:
         n += 1
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Planning data
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class _Task:
+    """One planned recording: everything needed to download + transcribe it."""
+    video: object
+    course: object
+    course_name: str
+    mp4_path: Path
+    mp3_path: Path
+    txt_path: Path
+    srt_path: Path
+    record_fn: object
+    # auth context (resolved once per course during planning)
+    session: object
+    panopto_base: object
+    canvas_token: str
+    # transcription input: the local media file we feed to whisper. When a video
+    # is kept we transcribe straight from the MP4 (no second download of the same
+    # lecture); otherwise the MP3 audio intermediate is the source.
+    tx_source: object = None
+    # work flags
+    need_video: bool = False     # download the kept MP4
+    need_audio: bool = False     # download the MP3 (kept, and/or transcription source)
+    want_tx: bool = False        # this recording wants a transcript/subtitle written
+    want_mp3: bool = False
+    want_mp4: bool = False
+    # Per-recording transcript outputs (resolved from this target's contract, so a
+    # sync run can produce txt for one folder and srt for another in one pass).
+    want_txt: bool = False
+    want_srt: bool = False
+    # runtime state
+    downloaded: bool = False
+    failed: bool = False
+    produced: list = field(default_factory=list)
+
+
+def _is_fatal_engine_error(exc: Exception) -> bool:
+    """True if *exc* signals the transcription ENGINE is broken on this machine
+    (missing DLL / runtime), so retrying every remaining recording would only
+    reproduce the identical error. Distinguishes from a per-file decode error."""
+    if isinstance(exc, (ImportError, ModuleNotFoundError)):
+        return True
+    msg = str(exc).lower()
+    needles = (
+        ".dll", "winerror 1114", "winerror 126", "winerror 127",
+        "failed to load", "error loading", "cudnn", "cublas", "libomp",
+        "cannot load library", "shared object", "image not found",
+        "dll initialization", "dll load failed",
+    )
+    return any(n in msg for n in needles)
+
+
+def _is_cuda_runtime_error(exc: Exception) -> bool:
+    """True if *exc* is a GPU/CUDA failure that a CPU retry would avoid (e.g.
+    cuBLAS/cuDNN missing, out-of-memory). Used to downgrade GPU -> CPU rather
+    than killing the whole transcription phase."""
+    msg = str(exc).lower()
+    needles = ("cublas", "cudnn", "cuda", "gpu", "nvrtc", "curand",
+               "out of memory", "cublaslt")
+    return any(n in msg for n in needles)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phased batch runner
+# ─────────────────────────────────────────────────────────────────────────────
+
+def run_panopto_batch(
+    cm,
+    targets: list,
+    *,
+    settings: dict,
+    progress=None,
+    is_cancelled=None,
+    debug_file=None,
+) -> dict:
+    """Download + transcribe Panopto recordings for many courses, grouped by phase.
+
+    ``targets`` is a list of dicts, one per course/folder:
+        {
+            'course':        obj with .id and .name,
+            'course_root':   Path to the course folder (recordings saved inside),
+            'download_mode': 'modules' | 'flat',
+            'record_fn':     callable(video, produced_paths) | None,
+            # Optional (sync mode): reuse the recordings discovered during the
+            # analysis phase instead of re-running the slow discovery, and limit
+            # work to the recordings the user selected in Review.
+            'videos':        list[PanoptoVideo] | None,   # skip discovery if set
+            'selected_ids':  iterable[str] | None,        # allowlist of video_id
+            # Optional per-target output/layout contract. When present, THIS
+            # target's output formats (output_mp4/mp3/txt/srt) and folder
+            # 'layout' are read from here instead of the batch ``settings`` - so a
+            # sync run can honour each folder's own stored contract. Engine config
+            # (model/device/language) always comes from the batch ``settings``.
+            'settings':      dict | None,
+        }
+
+    Returns a summary dict:
+        {found, downloaded, transcribed, skipped, failed, courses}.
+    """
+    from canvas_logic import DownloadError
+
+    progress = progress or _noop
+    is_cancelled = is_cancelled or (lambda: False)
+    summary = {"found": 0, "downloaded": 0, "transcribed": 0,
+               "skipped": 0, "failed": 0, "courses": 0}
+
+    # Per-target settings: the OUTPUT formats (mp4/mp3/txt/srt) and the folder
+    # LAYOUT are resolved from each target's own ``settings`` contract (download
+    # mode passes one global contract for every course; sync mode passes each
+    # folder's stored contract). Engine config (model/device/language) is global
+    # - the model lives on disk and is shared by every target.
+    def _ts(target):
+        return target.get("settings") or settings
+
+    model_id = settings.get("model", "small")
+    engine_ready = pmodels.whisper_available() and pmodels.is_installed(model_id)
+    any_want_tx = any(wants_transcription(_ts(t)) for t in targets)
+    if any_want_tx and not engine_ready:
+        if not pmodels.whisper_available():
+            progress("warn", message="Transcription engine not installed - audio only.")
+        elif not pmodels.is_installed(model_id):
+            progress("warn", message=f"Model '{model_id}' not installed - transcription skipped.")
+    model_path = str(pmodels.model_dir(model_id)) if engine_ready else None
+    device = settings.get("device", "cpu")
+    language = settings.get("language", "auto")
+
+    logger.info(
+        "Panopto batch start: %d target(s) | model=%s device=%s lang=%s | "
+        "engine_ready=%s (outputs + layout resolved per target)",
+        len(targets), model_id, device, language, engine_ready,
+    )
+    # When transcription is configured, dump the engine + hardware diagnostics
+    # up front so a broken backend / missing GPU is diagnosable from the log.
+    if any_want_tx:
+        _log_engine_diagnostics()
+        try:
+            from panopto.hardware import detect_compute_hardware
+            hw = detect_compute_hardware()
+            logger.info(
+                "Transcription hardware: requested device=%s | gpu_available=%s "
+                "gpu=%s vram=%sMB | cpu=%s cores | status=%s",
+                device, hw.get("gpu_available"), hw.get("gpu_name"),
+                hw.get("gpu_vram_mb"), hw.get("cpu_cores"), hw.get("status"),
+            )
+            if device == "cuda" and not hw.get("gpu_available"):
+                logger.warning("Requested GPU but none usable (%s) - will run on CPU.",
+                               hw.get("gpu_reason"))
+        except Exception as e:
+            logger.debug(f"hardware diagnostics failed: {e}")
+
+    # ═══ Phase 1: Discover every recording across every course ═══
+    tasks: list[_Task] = []
+    seen_bases: set = set()
+    n_targets = len(targets)
+    _did_discover = False  # True if any target actually ran discovery (vs reused)
+
+    for ti, target in enumerate(targets):
+        if is_cancelled():
+            break
+        course = target["course"]
+        course_root = Path(target["course_root"])
+        download_mode = target.get("download_mode", "modules")
+        record_fn = target.get("record_fn")
+
+        # This target's output/layout contract (per-folder in sync mode).
+        t_settings = _ts(target)
+        t_want_mp4 = bool(t_settings.get("output_mp4"))
+        t_want_mp3 = bool(t_settings.get("output_mp3"))
+        t_want_txt = bool(t_settings.get("output_txt"))
+        t_want_srt = bool(t_settings.get("output_srt"))
+        t_model_ready = engine_ready and (t_want_txt or t_want_srt)
+
+        prediscovered = target.get("videos")
+
+        def _on_scan(kind, **kw):
+            if kind == "stage":
+                progress("scan_stage", name=kw.get("name", ""))
+            elif kind == "scan":
+                progress("scan_item", detail=kw.get("detail", ""))
+            elif kind == "video":
+                progress("scan_found", title=kw.get("title", ""),
+                         source=kw.get("source", ""))
+
+        if prediscovered is not None:
+            # Sync mode: discovery already ran during the analysis phase. Reuse it
+            # verbatim so what executes is exactly what the user reviewed (no
+            # drift) and we skip the second, slow per-video LTI handshake pass.
+            # No 'discovering'/'found' events here - there is NO search to show;
+            # the UI goes straight to the download phase like any other file.
+            videos = list(prediscovered)
+            logger.info("Reusing %d pre-discovered Panopto recording(s) for '%s'.",
+                        len(videos), course.name)
+        else:
+            _did_discover = True
+            progress("discovering", course=course.name, index=ti + 1, total=n_targets)
+            logger.info("Discovering Panopto recordings in '%s' (course id=%s)...",
+                        course.name, course.id)
+            try:
+                videos = discover_course_videos(
+                    cm.api_url, cm.api_key, course.id,
+                    include_folder_sessions=True,
+                    is_cancelled=is_cancelled,
+                    on_event=_on_scan,
+                )
+            except Exception as e:
+                logger.error(f"Panopto discovery failed for '{course.name}': {e}", exc_info=True)
+                progress("error", error=DownloadError(
+                    course.name, "Panopto", "Discovery Error", str(e),
+                    raw_error=e, is_app_error=True,
+                ))
+                progress("found", course=course.name, count=0)
+                continue
+
+        # Optional allowlist: only act on the recordings the user selected in
+        # Review. Non-selected (including up-to-date) recordings are never
+        # planned, so they can't be re-touched or inflate any "skipped" count.
+        selected_ids = target.get("selected_ids")
+        if selected_ids is not None:
+            _sel = {str(s).lower() for s in selected_ids}
+            videos = [v for v in videos if str(v.video_id).lower() in _sel]
+
+        summary["found"] += len(videos)
+        if videos:
+            summary["courses"] += 1
+        # Breakdown by source helps explain unexpected counts (folder expansion,
+        # page/assignment links, etc.).
+        _by_source: dict[str, int] = {}
+        for v in videos:
+            _by_source[v.source] = _by_source.get(v.source, 0) + 1
+        logger.info("Discovered %d recording(s) in '%s'%s",
+                    len(videos), course.name,
+                    (" by source " + str(_by_source)) if videos else "")
+        if prediscovered is None:
+            progress("found", course=course.name, count=len(videos))
+        if not videos:
+            continue
+
+        # Authenticate once per course (reused for every DeliveryInfo call).
+        session = panopto_base = None
+        for v in videos:
+            if v.launch_url and "sessionless_launch" in v.launch_url:
+                session, _final, _rid, panopto_base = lti_launch(v.launch_url, cm.api_key)
+                if session and panopto_base:
+                    break
+        if session is None or panopto_base is None:
+            logger.warning(
+                "Panopto auth could NOT be established for '%s' - downloads for "
+                "this course will fail (no Panopto session/host).", course.name)
+
+        for v in videos:
+            if is_cancelled():
+                break
+            safe_title = cm._sanitize_filename(v.title) or v.video_id[:8]
+            module_safe = cm._sanitize_filename(v.module_name) if v.module_name else ""
+            out_dir = video_dir(course_root, module_safe, t_settings, download_mode,
+                                lecture_title_sanitized=safe_title)
+            try:
+                out_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                progress("error", error=DownloadError(
+                    course.name, v.title, "Folder Error", str(e), raw_error=e))
+                summary["failed"] += 1
+                continue
+
+            base = _unique_base(out_dir, safe_title, seen_bases)
+            mp4_path = Path(str(base) + ".mp4")
+            mp3_path = Path(str(base) + ".mp3")
+            txt_path = Path(str(base) + ".txt")
+            srt_path = Path(str(base) + ".srt")
+
+            mp4_missing = t_want_mp4 and not mp4_path.exists()
+            mp3_missing = t_want_mp3 and not mp3_path.exists()
+            txt_missing = t_want_txt and t_model_ready and not txt_path.exists()
+            srt_missing = t_want_srt and t_model_ready and not srt_path.exists()
+            tx_missing = txt_missing or srt_missing
+
+            # Nothing to do -> already fully present on disk.
+            if not (mp4_missing or mp3_missing or txt_missing or srt_missing):
+                existing = [str(p) for p in (mp4_path, mp3_path, txt_path, srt_path) if p.exists()]
+                progress("skipped", title=v.title, paths=existing, course=course.name)
+                summary["skipped"] += 1
+                continue
+
+            # Transcription reads its audio from the kept MP4 when we have one
+            # (avoids downloading the same lecture twice); otherwise from the MP3.
+            # So a standalone audio download is only needed for a kept MP3, or to
+            # feed transcription when no video is kept.
+            tx_source = mp4_path if t_want_mp4 else mp3_path
+            need_video = mp4_missing
+            need_audio = mp3_missing or (tx_missing and not t_want_mp4 and not mp3_path.exists())
+            tasks.append(_Task(
+                video=v, course=course, course_name=course.name,
+                mp4_path=mp4_path, mp3_path=mp3_path, txt_path=txt_path, srt_path=srt_path,
+                record_fn=record_fn, session=session, panopto_base=panopto_base,
+                canvas_token=cm.api_key,
+                tx_source=tx_source,
+                need_video=need_video,
+                need_audio=need_audio,
+                want_tx=(t_model_ready and tx_missing),
+                want_mp3=t_want_mp3,
+                want_mp4=t_want_mp4,
+                want_txt=t_want_txt,
+                want_srt=t_want_srt,
+            ))
+
+    # Only announce a discovery phase if one actually ran. In sync mode the
+    # recordings were discovered during analysis, so there is nothing to "search".
+    if _did_discover:
+        progress("discovery_done", found=summary["found"],
+                 courses=summary["courses"], scanned=n_targets)
+
+    _n_dl = sum(1 for t in tasks if t.need_video or t.need_audio)
+    _n_tx = sum(1 for t in tasks if t.want_tx)
+    logger.info(
+        "Discovery complete: %d found across %d course(s); planned %d download(s) "
+        "(%d video), %d transcription(s), %d skipped (already on disk).",
+        summary["found"], summary["courses"], _n_dl,
+        sum(1 for t in tasks if t.need_video), _n_tx, summary["skipped"],
+    )
+
+    if is_cancelled() or not tasks:
+        logger.info("Panopto batch ending after discovery (cancelled=%s, tasks=%d).",
+                    is_cancelled(), len(tasks))
+        return summary
+
+    # ═══ Phase 2: Download every recording's media (video and/or audio) ═══
+    dl_tasks = [t for t in tasks if t.need_video or t.need_audio]
+    if dl_tasks:
+        logger.info("Download phase: %d recording(s) (%d video, %d audio).",
+                    len(dl_tasks),
+                    sum(1 for t in dl_tasks if t.need_video),
+                    sum(1 for t in dl_tasks if t.need_audio))
+        progress("download_phase", total=len(dl_tasks))
+        _ok = 0
+        for t in dl_tasks:
+            if is_cancelled():
+                break
+            v = t.video
+            progress("video_start", title=v.title)
+            if t.session is None or t.panopto_base is None:
+                progress("error", error=DownloadError(
+                    t.course_name, v.title, "Auth Error",
+                    "Could not authenticate to Panopto (LTI handshake failed)."))
+                summary["failed"] += 1
+                t.failed = True
+                continue
+
+            # Resolve the Delivery node ONCE (with a per-video LTI fallback), then
+            # pull whichever media this recording needs from that single response.
+            session, panopto_base, delivery, derr = _resolve_delivery(
+                t.session, t.panopto_base, v, t.canvas_token)
+            if not delivery:
+                logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",
+                               v.title, v.video_id, derr or "no delivery")
+                progress("error", error=DownloadError(
+                    t.course_name, v.title, "Download Error",
+                    derr or "No stream found for this recording.",
+                    context={"video_id": v.video_id}))
+                summary["failed"] += 1
+                t.failed = True
+                continue
+
+            # Video first (the big file), then audio. The 'keep' flag marks whether
+            # the file is a kept artifact (vs an audio-only transcription source).
+            plan = []
+            if t.need_video:
+                plan.append(("video", t.mp4_path, t.want_mp4))
+            if t.need_audio:
+                plan.append(("audio", t.mp3_path, t.want_mp3))
+
+            total_bytes = 0
+            primary_path = None     # first KEPT file (drives the log icon)
+            kept_any = False
+            rec_failed = False
+            cancelled = False
+            for kind, out_path, keep in plan:
+                if is_cancelled():
+                    cancelled = True
+                    break
+                ok, err = _download_media(
+                    session, panopto_base, delivery, kind, out_path, is_cancelled)
+                if not ok:
+                    if err == "cancelled":
+                        cancelled = True
+                        break
+                    logger.warning("Panopto %s download failed for '%s' (id=%s): %s",
+                                   kind, v.title, v.video_id, err or "Unknown error")
+                    progress("error", error=DownloadError(
+                        t.course_name, v.title, "Download Error", err or "Unknown error",
+                        context={"video_id": v.video_id}))
+                    rec_failed = True
+                    continue
+                try:
+                    sz = out_path.stat().st_size
+                except OSError:
+                    sz = 0
+                total_bytes += sz
+                if keep:
+                    kept_any = True
+                    primary_path = primary_path or str(out_path)
+                    t.produced.append(str(out_path))
+                    progress("produced", title=v.title, path=str(out_path),
+                             course=t.course_name)
+
+            if cancelled:
+                logger.info("Panopto download cancelled at '%s'.", v.title)
+                break
+            if total_bytes == 0:
+                # Nothing came down for this recording (every media failed) -> a
+                # failure; don't advance the "downloaded" tally.
+                if rec_failed:
+                    summary["failed"] += 1
+                    t.failed = True
+                continue
+
+            t.downloaded = True
+            _ok += 1
+            if kept_any:
+                # "Downloaded" stat counts recordings with a kept media file
+                # (mp4/mp3), mirroring the per-recording dashboard counter.
+                summary["downloaded"] += 1
+            # One 'downloaded' event per recording (aggregated bytes) keeps the
+            # dashboard's recording counter aligned with the phase total. It's an
+            # 'intermediate' only when nothing was kept (audio pulled purely to
+            # feed transcription).
+            progress("downloaded", title=v.title,
+                     path=primary_path or str(t.mp3_path),
+                     size=total_bytes, course=t.course_name,
+                     intermediate=(not kept_any))
+        progress("download_done", total=len(dl_tasks), ok=_ok)
+
+    if is_cancelled():
+        return summary
+
+    # ═══ Phase 3: Transcribe every downloaded recording, one-by-one ═══
+    # Source is the MP4 when a video was kept, else the MP3 intermediate; either
+    # way it must exist on disk (a failed download drops the recording here).
+    tx_tasks = [t for t in tasks
+                if t.want_tx and t.tx_source and Path(t.tx_source).exists()]
+    engine_failed = False
+    if engine_ready and tx_tasks:
+        logger.info("Transcription phase: %d file(s) (model=%s, device=%s).",
+                    len(tx_tasks), model_id, device)
+        progress("transcribe_phase", total=len(tx_tasks))
+        # active_device may be downgraded cuda -> cpu mid-phase if the GPU fails
+        # at runtime (e.g. cuBLAS/cuDNN missing); the recording is then retried on
+        # CPU so the user still gets transcripts instead of a dead/crashed phase.
+        active_device = device
+        _ok = 0
+        i = 0
+        while i < len(tx_tasks):
+            if is_cancelled() or engine_failed:
+                break
+            t = tx_tasks[i]
+            v = t.video
+            progress("transcribe_start", title=v.title, index=i + 1, total=len(tx_tasks))
+            try:
+                # Runs in an isolated child process: a native CUDA crash can no
+                # longer take down the host (the "server closed itself" bug).
+                result = transcribe_in_subprocess(
+                    t.tx_source, model_path,
+                    language=language, device=active_device,
+                    want_txt=t.want_txt, want_srt=t.want_srt,
+                    progress=lambda pct, _lang, _t=v.title: progress(
+                        "transcribe", title=_t, pct=pct),
+                    is_cancelled=is_cancelled,
+                )
+                summary["transcribed"] += 1
+                _ok += 1
+                made = []
+                for key in ("txt", "srt"):
+                    p = result.get(key)
+                    if p:
+                        made.append(p)
+                        t.produced.append(p)
+                        progress("produced", title=v.title, path=p, course=t.course_name)
+                progress("transcribed", title=v.title, paths=made)
+                # Transcription succeeded: drop the intermediate audio unless kept.
+                if not t.want_mp3 and t.mp3_path.exists():
+                    try:
+                        t.mp3_path.unlink()
+                    except OSError:
+                        pass
+                i += 1
+            except PanoptoCancelled:
+                break
+            except TranscriptionEngineCrash as e:
+                # The child process died NATIVELY (e.g. a CUDA/cuDNN access
+                # violation) - uncatchable in-process, which is exactly why it now
+                # runs in a subprocess. The host server is unharmed.
+                logger.error("Transcription worker crashed for '%s' (exit=%s): %s\n%s",
+                             v.title, getattr(e, "exit_code", "?"), e,
+                             getattr(e, "stderr_tail", "") or "(no stderr)")
+                if active_device != "cpu":
+                    # GPU path crashes on this machine -> CPU for the rest, retry.
+                    progress("warn", message=(
+                        "GPU transcription crashed on this PC - switching to CPU "
+                        "for the remaining recordings (transcripts still produced)."))
+                    logger.warning("Downgrading transcription to CPU after GPU worker crash.")
+                    active_device = "cpu"
+                    continue  # retry this same recording on CPU
+                # CPU worker also crashed -> the engine is unusable here. Stop
+                # trying (every remaining recording would crash identically).
+                engine_failed = True
+                progress("error", error=DownloadError(
+                    t.course_name, "Transcription", "Transcription Engine Error",
+                    "The transcription engine crashed on this computer. Audio was "
+                    "downloaded but transcripts were skipped.",
+                    raw_error=e, is_app_error=True))
+                progress("warn", message=(
+                    "Transcription skipped for the remaining recordings - engine "
+                    "crashed. Downloaded audio has been kept."))
+                if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+                    t.produced.append(str(t.mp3_path))
+                    progress("produced", title=v.title, path=str(t.mp3_path),
+                             course=t.course_name)
+                i += 1
+            except Exception as e:
+                # GPU runtime failure (cuBLAS/cuDNN missing, OOM, ...): downgrade
+                # the whole remaining phase to CPU and RETRY this same recording.
+                if active_device != "cpu" and _is_cuda_runtime_error(e):
+                    logger.warning("GPU transcription failed (%s); falling back to CPU "
+                                   "for the rest of the run.", e)
+                    progress("warn", message=(
+                        "GPU transcription failed (CUDA libraries unavailable) - "
+                        "switching to CPU for the remaining recordings."))
+                    active_device = "cpu"
+                    continue  # retry the same recording on CPU
+                if _is_fatal_engine_error(e):
+                    engine_failed = True
+                    logger.error(f"Panopto transcription engine unavailable: {e}")
+                    progress("error", error=DownloadError(
+                        t.course_name, "Transcription", "Transcription Engine Error",
+                        "The local transcription engine could not start on this "
+                        "computer (a required component failed to load). Audio was "
+                        "downloaded but transcripts were skipped.",
+                        raw_error=e, is_app_error=True))
+                    progress("warn", message=(
+                        "Transcription skipped for the remaining recordings - engine "
+                        "unavailable. Downloaded audio has been kept."))
+                else:
+                    logger.error(f"Transcription failed for '{v.title}': {e}", exc_info=True)
+                    summary["failed"] += 1
+                    progress("error", error=DownloadError(
+                        t.course_name, v.title, "Transcription Error", str(e), raw_error=e))
+                # Failure of any kind: keep the audio so the user has SOMETHING,
+                # even if they only asked for a transcript.
+                if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+                    t.produced.append(str(t.mp3_path))
+                    progress("produced", title=v.title, path=str(t.mp3_path),
+                             course=t.course_name)
+                i += 1
+        progress("transcribe_done", total=len(tx_tasks), ok=_ok)
+
+    # If the engine died mid-phase, retain audio for every not-yet-processed
+    # recording too (so nothing is silently deleted as a stale intermediate).
+    if engine_failed:
+        for t in tx_tasks:
+            if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+                t.produced.append(str(t.mp3_path))
+                progress("produced", title=t.video.title, path=str(t.mp3_path),
+                         course=t.course_name)
+
+    # ═══ Record produced artifacts to the per-folder manifest ═══
+    for t in tasks:
+        if t.record_fn and t.produced:
+            try:
+                t.record_fn(t.video, t.produced)
+            except Exception as e:
+                logger.debug(f"Panopto record_fn failed for '{t.video.title}': {e}")
+
+    logger.info(
+        "Panopto batch done: found=%(found)d downloaded=%(downloaded)d "
+        "transcribed=%(transcribed)d skipped=%(skipped)d failed=%(failed)d "
+        "courses=%(courses)d", summary,
+    )
+    return summary
+
+
 def run_course_panopto(
     cm,
     course,
@@ -107,205 +734,57 @@ def run_course_panopto(
     debug_file=None,
     record_fn=None,
 ) -> dict:
-    """Download + transcribe Panopto lectures for a single course.
+    """Backward-compatible single-course entry point (delegates to the batch).
 
     Provide EITHER ``save_dir`` (download mode: course folder is
     ``save_dir/<course>``) OR ``course_root`` (sync mode: the synced folder IS
     the course folder).
-
-    record_fn(video, produced_paths) -> optional hook for manifest recording;
-    called once per fully-processed video.
-
-    Returns a summary dict: {found, downloaded, transcribed, skipped, failed}.
     """
-    from canvas_logic import DownloadError
-
-    progress = progress or _noop
-    is_cancelled = is_cancelled or (lambda: False)
-    summary = {"found": 0, "downloaded": 0, "transcribed": 0, "skipped": 0, "failed": 0}
-
-    course_safe = cm._sanitize_filename(course.name)
     if course_root is None:
-        course_root = Path(save_dir) / course_safe
-    want_mp3 = bool(settings.get("output_mp3"))
-    want_tx = wants_transcription(settings)
-    want_txt = bool(settings.get("output_txt"))
-    want_srt = bool(settings.get("output_srt"))
-
-    # Transcription readiness (checked once).
-    model_id = settings.get("model", "small")
-    model_ready = want_tx and pmodels.whisper_available() and pmodels.is_installed(model_id)
-    if want_tx and not model_ready:
-        if not pmodels.whisper_available():
-            progress("warn", message="Transcription engine not installed - audio only.")
-        elif not pmodels.is_installed(model_id):
-            progress("warn", message=f"Model '{model_id}' not installed - transcription skipped.")
-    model_path = str(pmodels.model_dir(model_id)) if model_ready else None
-    device = settings.get("device", "cpu")
-    language = settings.get("language", "auto")
-
-    # ── Discover ──
-    progress("discovering", course=course.name)
-    try:
-        # Always fetch every video available in the course: directly-linked
-        # videos PLUS every session in any linked Panopto folder.
-        videos = discover_course_videos(
-            cm.api_url, cm.api_key, course.id,
-            include_folder_sessions=True,
-            is_cancelled=is_cancelled,
-        )
-    except Exception as e:
-        logger.warning(f"Panopto discovery failed for '{course.name}': {e}")
-        progress("error", error=DownloadError(
-            course.name, "Panopto", "Discovery Error", str(e),
-            raw_error=e, is_app_error=True,
-        ))
-        return summary
-    summary["found"] = len(videos)
-    progress("found", course=course.name, count=len(videos))
-    if not videos:
-        return summary
-    if is_cancelled():
-        return summary
-
-    # ── Authenticate once (reused for every DeliveryInfo call) ──
-    session = None
-    panopto_base = None
-    for v in videos:
-        if v.launch_url and "sessionless_launch" in v.launch_url:
-            session, _final, _rid, panopto_base = lti_launch(v.launch_url, cm.api_key)
-            if session and panopto_base:
-                break
-    seen_bases: set = set()
-
-    for v in videos:
-        if is_cancelled():
-            break
-        progress("video_start", title=v.title)
-
-        safe_title = cm._sanitize_filename(v.title) or v.video_id[:8]
-        module_safe = cm._sanitize_filename(v.module_name) if v.module_name else ""
-        out_dir = video_dir(course_root, module_safe, settings, download_mode,
-                            lecture_title_sanitized=safe_title)
-        try:
-            out_dir.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            progress("error", error=DownloadError(
-                course.name, v.title, "Folder Error", str(e), raw_error=e))
-            summary["failed"] += 1
-            continue
-
-        base = _unique_base(out_dir, safe_title, seen_bases)
-        mp3_path = Path(str(base) + ".mp3")
-        txt_path = Path(str(base) + ".txt")
-        srt_path = Path(str(base) + ".srt")
-
-        mp3_missing = want_mp3 and not mp3_path.exists()
-        txt_missing = want_txt and model_ready and not txt_path.exists()
-        srt_missing = want_srt and model_ready and not srt_path.exists()
-
-        if not (mp3_missing or txt_missing or srt_missing):
-            existing = [str(p) for p in (mp3_path, txt_path, srt_path) if p.exists()]
-            progress("skipped", title=v.title, paths=existing)
-            summary["skipped"] += 1
-            continue
-
-        # Need audio on disk for either the mp3 output or transcription.
-        need_audio = mp3_missing or ((txt_missing or srt_missing) and not mp3_path.exists())
-        downloaded_mp3 = False
-        if need_audio:
-            if session is None or panopto_base is None:
-                progress("error", error=DownloadError(
-                    course.name, v.title, "Auth Error",
-                    "Could not authenticate to Panopto (LTI handshake failed)."))
-                summary["failed"] += 1
-                continue
-            ok, err = _download_one(
-                session, panopto_base, v, cm.api_key, mp3_path, is_cancelled)
-            if not ok:
-                if err == "cancelled":
-                    break
-                progress("error", error=DownloadError(
-                    course.name, v.title, "Download Error", err or "Unknown error",
-                    context={"video_id": v.video_id}))
-                summary["failed"] += 1
-                continue
-            downloaded_mp3 = True
-
-        # Report the mp3 as produced (kept) only if the user wants it.
-        if want_mp3 and mp3_path.exists():
-            if downloaded_mp3:
-                summary["downloaded"] += 1
-                try:
-                    sz = mp3_path.stat().st_size
-                except OSError:
-                    sz = 0
-                progress("downloaded", title=v.title, path=str(mp3_path), size=sz)
-            progress("produced", title=v.title, path=str(mp3_path))
-
-        produced = [str(mp3_path)] if (want_mp3 and mp3_path.exists()) else []
-
-        # ── Transcribe ──
-        if model_ready and (txt_missing or srt_missing) and mp3_path.exists():
-            try:
-                result = transcribe(
-                    mp3_path, model_path,
-                    language=language, device=device,
-                    want_txt=want_txt, want_srt=want_srt,
-                    progress=lambda pct, _lang, _t=v.title: progress(
-                        "transcribe", title=_t, pct=pct),
-                    is_cancelled=is_cancelled,
-                )
-                summary["transcribed"] += 1
-                for key in ("txt", "srt"):
-                    p = result.get(key)
-                    if p:
-                        produced.append(p)
-                        progress("produced", title=v.title, path=p)
-            except PanoptoCancelled:
-                break
-            except Exception as e:
-                logger.warning(f"Transcription failed for '{v.title}': {e}")
-                progress("error", error=DownloadError(
-                    course.name, v.title, "Transcription Error", str(e), raw_error=e))
-
-        # If audio was only a transcription intermediate, remove it.
-        if not want_mp3 and mp3_path.exists():
-            try:
-                mp3_path.unlink()
-            except OSError:
-                pass
-
-        if record_fn and produced:
-            try:
-                record_fn(v, produced)
-            except Exception as e:
-                logger.debug(f"Panopto record_fn failed for '{v.title}': {e}")
-
-        progress("video_done", title=v.title)
-
-    return summary
+        course_root = Path(save_dir) / cm._sanitize_filename(course.name)
+    target = {
+        "course": course,
+        "course_root": Path(course_root),
+        "download_mode": download_mode,
+        "record_fn": record_fn,
+    }
+    return run_panopto_batch(
+        cm, [target], settings=settings, progress=progress,
+        is_cancelled=is_cancelled, debug_file=debug_file,
+    )
 
 
-def _download_one(session, panopto_base, video, canvas_token, mp3_path, is_cancelled):
-    """Resolve the stream and download MP3, with a per-video LTI fallback.
+def _resolve_delivery(session, panopto_base, video, canvas_token):
+    """Resolve the Delivery node for a recording, with a per-video LTI fallback.
 
-    Returns (ok, error). error == 'cancelled' signals user abort.
+    Returns ``(session, panopto_base, delivery, error)``. Some Canvas links need
+    the embed's *real* id resolved via a per-video LTI launch (the Canvas-side id
+    differs from the delivery id); when the first lookup yields no usable stream
+    we retry through that launch and adopt its session/host.
     """
     delivery, err = get_delivery_info(session, panopto_base, video.video_id)
-    stream_url = pick_audio_stream(delivery) if delivery else None
-
-    # Fallback: some links need the embed's *real* id resolved via a per-video
-    # LTI launch (the Canvas-side id differs from the delivery id).
-    if not stream_url and video.launch_url and "sessionless_launch" in video.launch_url:
+    has_stream = bool(delivery and pick_audio_stream(delivery))
+    if not has_stream and video.launch_url and "sessionless_launch" in video.launch_url:
         v_session, _final, real_id, v_base = lti_launch(video.launch_url, canvas_token)
         if v_session and v_base and real_id:
             session, panopto_base = v_session, v_base
             delivery, err = get_delivery_info(session, panopto_base, real_id)
-            stream_url = pick_audio_stream(delivery) if delivery else None
+    return session, panopto_base, delivery, err
 
-    if not stream_url:
-        return False, err or "No stream found for this video."
 
-    return download_audio_mp3(session, panopto_base, stream_url, mp3_path,
+def _download_media(session, panopto_base, delivery, kind, out_path, is_cancelled):
+    """Download one media *kind* ('video' | 'audio') from a resolved Delivery node.
+
+    Returns (ok, error); error == 'cancelled' signals user abort.
+    """
+    if kind == "video":
+        url = pick_video_stream(delivery)
+        if not url:
+            return False, "No video stream available for this recording."
+        return download_video_mp4(session, panopto_base, url, out_path,
+                                  is_cancelled=is_cancelled)
+    url = pick_audio_stream(delivery)
+    if not url:
+        return False, "No audio stream available for this recording."
+    return download_audio_mp3(session, panopto_base, url, out_path,
                               is_cancelled=is_cancelled)

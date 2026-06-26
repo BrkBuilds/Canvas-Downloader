@@ -33,6 +33,7 @@ from core.state_registry import (
     SECONDARY_CONTENT_KEYS,
     NOTEBOOK_SUB_KEYS,
     TOTAL_SECONDARY_SUBS,
+    PANOPTO_OUTPUT_KEYS,
 )
 from ui_shared import render_help_card, HELP_ICONS, SVG_SAVE_COLORFUL
 
@@ -74,6 +75,179 @@ def _select_folder():
         st.session_state['download_path'] = folder_path
 
 
+# ── Panopto Section 4 ───────────────────────────────────────────────────────
+# Purple theme tokens (the new Panopto icons ship in two tones; #b89dfe reads
+# best as the active accent on the dark cards, mirroring Card 2's green accent).
+PAN_ACCENT = "#b89dfe"          # light purple - active borders / checkmarks / text
+PAN_ACCENT_DARK = "#7037da"     # dark purple - reserved for solid fills
+PAN_ACTIVE_BG = "rgba(176, 157, 254, 0.15)"
+
+# (session key, label, description, asset icon) for the four output toggles,
+# ordered left-to-right: mp4, mp3, txt, srt.
+PANOPTO_OUTPUT_DEFS = [
+    ('pan_out_mp4', 'Video',     'Full lecture video (MP4)', 'pan_mp4.png'),
+    ('pan_out_mp3', 'Audio',     'Audio only (MP3)',         'pan_mp3.png'),
+    ('pan_out_txt', 'Transcript', 'Plain-text transcript',    'pan_txt.png'),
+    ('pan_out_srt', 'Subtitles', 'Subtitles & timestamps',   'pan_srt.png'),
+]
+# Outputs that require a transcription model (disabled until one is installed).
+PANOPTO_TRANSCRIPT_KEYS = {'pan_out_txt', 'pan_out_srt'}
+
+
+def _panopto_transcription_ready() -> tuple[bool, bool, str]:
+    """Return ``(ready, engine_available, model_id)`` for the Section 4 banner.
+
+    ``ready`` is True only when the local transcription engine is importable AND
+    the currently-selected model is installed - the exact condition the runner
+    uses before it will produce txt/srt. Drives the disabled state of the
+    Transcript/Subtitles toggles. Never raises.
+    """
+    try:
+        from panopto import models as pmodels
+        from panopto.settings import load_settings as _pl
+        model_id = _pl().get('model', 'small')
+        engine = bool(pmodels.whisper_available())
+        ready = engine and bool(pmodels.is_installed(model_id))
+        return ready, engine, model_id
+    except Exception:
+        return False, False, 'small'
+
+
+def _panopto_selectable_keys(ready: bool) -> list[str]:
+    """Output keys the user can actually toggle (txt/srt gated on a model)."""
+    return [k for k, *_ in PANOPTO_OUTPUT_DEFS
+            if ready or k not in PANOPTO_TRANSCRIPT_KEYS]
+
+
+def _get_pan_layout_segmented_css() -> str:
+    """Purple segmented-control CSS for the Panopto organization choice.
+
+    A direct sibling of ``_get_sec_org_segmented_css`` (Canvas Content), re-themed
+    purple with the ``pan_matching`` / ``pan_separate_folders`` icons and keyed to
+    ``btn_pan_layout_match`` / ``btn_pan_layout_separate``.
+    """
+    b64_match = _load_b64("assets/pan_matching.png")
+    b64_sep = _load_b64("assets/pan_separate_folders.png")
+    is_sep = st.session_state.get('pan_layout', 'match') == 'separate'
+    active_key = "separate" if is_sep else "match"
+    return f"""
+    <style>
+    div[class*="st-key-pan_layout_segmented_wrapper"] {{
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 12px !important;
+        padding: 4px !important;
+        margin-top: 5px !important;
+    }}
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stHorizontalBlock"] {{
+        gap: 4px !important;
+        align-items: stretch !important;
+    }}
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] {{
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+    }}
+    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] button {{
+        flex: 1 1 auto !important;
+        height: 100% !important;
+    }}
+    /* Base segment: tall content (icon top, title, desc) inside the pill */
+    div[class*="st-key-btn_pan_layout_"] button {{
+        position: relative !important;
+        min-height: 140px !important;
+        background-color: transparent !important;
+        border: 1px solid transparent !important;
+        background-repeat: no-repeat !important;
+        background-position: center 18px !important;
+        background-size: 50px !important;
+        padding: 80px 14px 16px 14px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease-in-out !important;
+        opacity: 0.75 !important;
+        color: #a0a0a0 !important;
+    }}
+    /* Circular radio pseudo-element (top-right) */
+    div[class*="st-key-btn_pan_layout_"] button::before {{
+        top: 16px !important;
+        right: 16px !important;
+        border-radius: 50% !important;
+        box-sizing: border-box !important;
+    }}
+    div[class*="st-key-btn_pan_layout_"] button > div,
+    div[class*="st-key-btn_pan_layout_"] button div[data-testid="stMarkdownContainer"] {{
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }}
+    div[class*="st-key-btn_pan_layout_"] button p {{
+        text-align: center !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding-right: 0 !important;
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        color: inherit !important;
+    }}
+    div.st-key-btn_pan_layout_match button {{ background-image: url('data:image/png;base64,{b64_match}') !important; }}
+    div.st-key-btn_pan_layout_separate button {{ background-image: url('data:image/png;base64,{b64_sep}') !important; }}
+    div[class*="st-key-btn_pan_layout_"] button:hover {{
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border-color: {PAN_ACCENT} !important;
+        opacity: 1 !important;
+        color: #ffffff !important;
+    }}
+    div.st-key-btn_pan_layout_match button::after {{ content: "Save recordings alongside your course files." !important; }}
+    div.st-key-btn_pan_layout_separate button::after {{ content: "A \\201CPanopto Recordings\\201D folder in each course." !important; }}
+    div[class*="st-key-btn_pan_layout_"] button::after {{
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        padding-right: 0 !important;
+        font-size: 0.8rem !important;
+        color: #a0a0a0 !important;
+        margin-top: 5px !important;
+        font-weight: 400 !important;
+        white-space: normal !important;
+        line-height: 1.25 !important;
+    }}
+    div.st-key-btn_pan_layout_{active_key} button {{
+        background-color: {PAN_ACTIVE_BG} !important;
+        border: 1px solid {PAN_ACCENT} !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }}
+    div.st-key-btn_pan_layout_{active_key} button:hover {{
+        background-color: {PAN_ACTIVE_BG} !important;
+        border: 1px solid {PAN_ACCENT} !important;
+        opacity: 1 !important;
+    }}
+    div[class*="st-key-btn_pan_layout_"] button:hover::before {{ border-color: {PAN_ACCENT} !important; }}
+    div.st-key-btn_pan_layout_{active_key} button:hover::before {{ border-color: transparent !important; }}
+    div.st-key-btn_pan_layout_{active_key} button p {{ color: #ffffff !important; }}
+    div.st-key-btn_pan_layout_{active_key} button::before {{
+        border: none !important;
+        background-color: transparent !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%23b89dfe' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%23b89dfe'/%3E%3C/svg%3E") !important;
+    }}
+    </style>
+    """
+
+
 def _get_chevron_base64(is_expanded):
     if is_expanded:
         svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1792" height="1792" viewBox="0 0 1792 1792" id="chevron"><path d="m1683 808-742 741q-19 19-45 19t-45-19L109 808q-19-19-19-45.5t19-45.5l166-165q19-19 45-19t45 19l531 531 531-531q19-19 45-19t45 19l166 165q19 19 19 45.5t-19 45.5z"></path></svg>'''
@@ -106,6 +280,13 @@ def render_download_settings(fetch_courses_fn):
     # Consume pending toasts from preset dialogs
     if 'pending_toast' in st.session_state:
         st.toast(st.session_state.pop('pending_toast'))
+
+    # Panopto transcription-config dialog host. Rendered at the main script level
+    # (not inside a fragment) so its internal model-download auto-rerun loop keeps
+    # the modal alive across reruns; the flag is cleared on close/dismiss.
+    if st.session_state.get('_pan_dialog_open'):
+        from ui.panopto_page import render_transcription_dialog
+        render_transcription_dialog()
 
     # Step 2 Header with Preset Buttons
     _hdr_left, _hdr_right = st.columns([0.6, 0.4])
@@ -418,6 +599,31 @@ def render_download_settings(fetch_courses_fn):
         def _set_isolate_secondary(is_subfolders: bool):
             """Sets the secondary content organization mode."""
             st.session_state['dl_isolate_secondary'] = is_subfolders
+
+        # ── Panopto (Section 4) callbacks ──
+        def _pan_recompute_master():
+            ready, _, _ = _panopto_transcription_ready()
+            sel = _panopto_selectable_keys(ready)
+            active = sum(1 for k in sel if st.session_state.get(k, False))
+            st.session_state['pan_master'] = bool(sel) and active == len(sel)
+
+        def _toggle_pan_sub(target_key):
+            st.session_state[target_key] = not st.session_state.get(target_key, False)
+            _pan_recompute_master()
+
+        def _toggle_pan_master():
+            ready, _, _ = _panopto_transcription_ready()
+            sel = _panopto_selectable_keys(ready)
+            # If every selectable output is on, clear all; otherwise select all
+            # selectable outputs (a disabled transcript output stays off).
+            all_on = bool(sel) and all(st.session_state.get(k, False) for k in sel)
+            new_state = not all_on
+            for k, *_ in PANOPTO_OUTPUT_DEFS:
+                st.session_state[k] = new_state and (k in sel)
+            st.session_state['pan_master'] = new_state and bool(sel)
+
+        def _set_pan_layout(value: str):
+            st.session_state['pan_layout'] = value if value in ('match', 'separate') else 'match'
 
         def _get_sec_org_segmented_css():
             b64_inline = _load_b64("assets/icon_sec_inline.png")
@@ -1558,6 +1764,304 @@ def render_download_settings(fetch_courses_fn):
         with st.container(border=True, key="card_ai_engine"):
             _render_card3_inner()
 
+        # Spacer between Card 3 and the full-width Panopto section.
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
+        # --- SECTION 4: Panopto Recordings (full-width, collapsible) ---
+        @st.fragment
+        def _render_card_panopto():
+            with st.container(border=True, key="card_panopto"):
+                ready, engine_avail, model_id = _panopto_transcription_ready()
+                selectable = _panopto_selectable_keys(ready)
+                _pan_active = sum(1 for k in selectable if st.session_state.get(k, False))
+                has_active = _pan_active > 0
+                _is_exp = st.session_state.get('card_panopto_expanded', False)
+
+                # Header ON/OFF tag (purple), mirroring Card 2's behaviour.
+                if _pan_active == 0:
+                    tag_bg = "rgba(255, 255, 255, 0.05)"
+                    tag_col = "#94a3b8"
+                    tag_bor = "1px solid rgba(255, 255, 255, 0.1)"
+                    dynamic_tag = "<strong>OFF</strong>" if not _is_exp else "<strong>OFF</strong>  |  None selected"
+                elif _pan_active == len(selectable):
+                    tag_bg = PAN_ACTIVE_BG
+                    tag_col = PAN_ACCENT
+                    tag_bor = "1px solid transparent"
+                    dynamic_tag = "<strong>ON</strong>  |  All selected"
+                else:
+                    tag_bg = PAN_ACTIVE_BG
+                    tag_col = PAN_ACCENT
+                    tag_bor = "1px solid transparent"
+                    dynamic_tag = f"<strong>ON</strong>  |  {_pan_active} selected"
+
+                def toggle_panopto():
+                    st.session_state['card_panopto_expanded'] = not st.session_state.get('card_panopto_expanded', False)
+
+                p_exp = _is_exp
+                chrp_svg = _get_chevron_base64(p_exp)
+                b64_panicon = _load_b64("assets/icon_workflow_4.png")
+                cp_filter = "grayscale(0%) brightness(100%)" if has_active else "grayscale(100%) brightness(60%)"
+                cp_base_color = "#94a3b8" if p_exp else "#64748b"
+                cp_hover_color = "#cbd5e1" if p_exp else "#94a3b8"
+
+                # Chevron CSS injected BEFORE the button (prevents ghost flash) -
+                # same proven pattern as Card 2/3.
+                st.markdown(f'''<style>
+                div.st-key-header_wrap_panopto {{
+                    display: flex !important;
+                    flex-direction: row !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    gap: 12px !important;
+                    padding-top: 0px !important;
+                    padding-bottom: 0px !important;
+                    margin-top: -35px !important;
+                }}
+                div.st-key-header_wrap_panopto > div[data-testid="element-container"] {{ margin-bottom: 0px !important; }}
+                div.st-key-header_wrap_panopto > div[data-testid="element-container"]:nth-child(1) {{
+                    width: 24px !important; min-width: 24px !important; flex: 0 0 24px !important;
+                }}
+                div.st-key-header_wrap_panopto > div[data-testid="element-container"]:nth-child(2) {{
+                    flex: 1 1 auto !important; width: 100% !important;
+                }}
+                div.st-key-toggle_panopto div[data-testid="stButton"]:focus-within,
+                div.st-key-toggle_panopto div[data-testid="stBaseButton-secondary"]:focus-within {{
+                    box-shadow: none !important; outline: none !important; background: transparent !important;
+                }}
+                div.st-key-toggle_panopto button:focus-visible,
+                div.st-key-toggle_panopto button:focus:not(:active),
+                div.st-key-toggle_panopto button:focus {{
+                    box-shadow: none !important; outline: none !important; border: none !important;
+                    background-color: {cp_base_color} !important;
+                }}
+                div.st-key-toggle_panopto button > div {{ display: none !important; }}
+                div.st-key-toggle_panopto button {{
+                    all: unset !important;
+                    display: inline-block !important;
+                    cursor: pointer !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    position: relative !important;
+                    top: 5px !important;
+                    -webkit-mask-image: {chrp_svg} !important;
+                    -webkit-mask-size: contain !important;
+                    -webkit-mask-repeat: no-repeat !important;
+                    -webkit-mask-position: center !important;
+                    background-color: {cp_base_color} !important;
+                    transition: background-color 0.2s ease !important;
+                    box-shadow: none !important; outline: none !important; border: none !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                }}
+                div.st-key-toggle_panopto button:hover {{ background-color: {cp_hover_color} !important; box-shadow: none !important; }}
+                div.st-key-toggle_panopto button:active {{ box-shadow: none !important; outline: none !important; border: none !important; transform: none !important; }}
+                div.st-key-toggle_panopto button[disabled] {{
+                    box-shadow: none !important; outline: none !important; border: none !important;
+                    background-color: {cp_base_color} !important; opacity: 0.8 !important;
+                }}
+                </style>''', unsafe_allow_html=True)
+
+                st.markdown(f"<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'><img src='data:image/png;base64,{b64_panicon}' style='position: absolute; width: 36px; height: 36px; top: -24px; left: -34px; z-index: 10; filter: {cp_filter}; transition: all 0.2s ease;' /></div>", unsafe_allow_html=True)
+
+                with st.container(key="header_wrap_panopto"):
+                    st.button("​", key="toggle_panopto", on_click=toggle_panopto)
+                    st.markdown(f"""<div style='display: flex; align-items: center; justify-content: space-between; padding-right: 10px; width: 100%; transform: translateY(-5px);'><h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>Panopto Recordings <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>(Optional)</span></h3><span style='background-color: {tag_bg}; color: {tag_col}; border: {tag_bor}; font-size: 0.8rem; padding: 2px 12px; border-radius: 15px; font-weight: 600; transition: all 0.2s ease;'>{dynamic_tag}</span></div>""", unsafe_allow_html=True)
+
+                if not p_exp:
+                    return
+
+                # ── Dynamic format-toggle CSS (icons + active states + disabled) ──
+                pan_css = []
+                pan_css.append('''
+                div.st-key-panopto_outputs_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }
+                div.st-key-btn_pan_master button > div,
+                div.st-key-btn_pan_master button div[data-testid="stMarkdownContainer"],
+                div[class*="st-key-btn_pan_out_"] button > div,
+                div[class*="st-key-btn_pan_out_"] button div[data-testid="stMarkdownContainer"] {
+                    width: 100% !important; display: flex !important; justify-content: flex-start !important; text-align: left !important;
+                }
+                div.st-key-btn_pan_master button p,
+                div[class*="st-key-btn_pan_out_"] button p {
+                    text-align: left !important; width: 100% !important; margin-top: 0px !important; margin-bottom: 0px !important; line-height: 1.2 !important;
+                }
+                div[class*="st-key-btn_pan_out_"] button::after {
+                    text-align: left !important; width: 100% !important; display: block !important;
+                    font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; margin-top: -2px !important; line-height: 1.2 !important;
+                }
+                div[class*="st-key-btn_pan_out_"] button {
+                    height: 58px !important; min-height: 0px !important;
+                    padding: 10px 10px 10px 50px !important;
+                    background-position: 15px center !important; background-size: 24px !important; background-repeat: no-repeat !important;
+                    border-radius: 12px !important; display: flex; flex-direction: column;
+                    -webkit-tap-highlight-color: transparent !important;
+                }
+                div.st-key-btn_pan_master button::before { display: none !important; }
+                div.st-key-btn_pan_master button {
+                    height: 48px !important; padding-top: 0px !important; padding-bottom: 0px !important; justify-content: center !important;
+                    display: flex !important; flex-direction: column !important;
+                }
+                ''')
+
+                # Master "Select All" - purple bottom-ledge when active.
+                pm_active = st.session_state.get('pan_master', False)
+                pm_bg = "rgba(255, 255, 255, 0.12)" if pm_active else "rgba(255, 255, 255, 0.1)"
+                pm_ledge = PAN_ACCENT if pm_active else "transparent"
+                pm_ledge_border = PAN_ACCENT if pm_active else "rgba(255, 255, 255, 0.1)"
+                b64_pan_m = safe_b64('icon_pan_select_all.png')
+                pm_img_rule = f"background-image: url('data:image/png;base64,{b64_pan_m}') !important;" if b64_pan_m else ""
+                pan_css.append(f'''
+                div.st-key-btn_pan_master button {{
+                    background-color: {pm_bg} !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    border-bottom: 1px solid {pm_ledge_border} !important;
+                    box-shadow: inset 0 -3px 0 0 {pm_ledge} !important;
+                    border-radius: 12px !important;
+                    padding-left: 50px !important;
+                    background-position: 15px center !important;
+                    background-size: 24px !important;
+                    background-repeat: no-repeat !important;
+                    {pm_img_rule}
+                }}
+                ''')
+                if not pm_active:
+                    pan_css.append(f'''
+                    div.st-key-btn_pan_master button:hover {{
+                        border-bottom: 1px solid {PAN_ACCENT_DARK} !important;
+                        box-shadow: inset 0 -3px 0 0 {PAN_ACCENT_DARK} !important;
+                    }}
+                    ''')
+
+                # Per-output icon + active colours + active purple checkmark.
+                _check_svg = (
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' rx='4' fill='%23b89dfe' mask='url(%23m)'/%3E%3C/svg%3E\")"
+                )
+                for key, _title, desc, icon in PANOPTO_OUTPUT_DEFS:
+                    is_active = st.session_state.get(key, False)
+                    b64_i = safe_b64(icon)
+                    img_rule = f"background-image: url('data:image/png;base64,{b64_i}') !important;" if b64_i else ""
+                    c_bg = PAN_ACTIVE_BG if is_active else "rgba(255, 255, 255, 0.02)"
+                    c_border = PAN_ACCENT if is_active else "rgba(255, 255, 255, 0.1)"
+                    if is_active:
+                        check = (
+                            f'div.st-key-btn_{key} button::before {{ border: none !important; background-color: transparent !important; background-image: {_check_svg} !important; }}\n'
+                            f'div.st-key-btn_{key} button:hover::before {{ border-color: transparent !important; }}\n'
+                        )
+                    else:
+                        check = ""
+                    pan_css.append(f'''
+                    div.st-key-btn_{key} button {{
+                        background-color: {c_bg} !important; border: 1px solid {c_border} !important; {img_rule}
+                    }}
+                    div.st-key-btn_{key} button::after {{ content: "{desc}" !important; }}
+                    div.st-key-btn_{key} button:hover {{ border-color: {PAN_ACCENT} !important; }}
+                    div.st-key-btn_{key} button:hover::before {{ border-color: {PAN_ACCENT} !important; }}
+                    {check}
+                    ''')
+
+                if not ready:
+                    pan_css.append('''
+                    div.st-key-btn_pan_out_txt button[disabled],
+                    div.st-key-btn_pan_out_srt button[disabled] {
+                        opacity: 0.4 !important; filter: grayscale(85%) !important; cursor: not-allowed !important;
+                    }
+                    ''')
+
+                pan_css_html = "<style>" + "".join(pan_css) + "</style>"
+                st.markdown(f"""{pan_css_html}
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file.</p>
+<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
+
+                # ── Element 0: transcription configuration status ──
+                if ready:
+                    _m = None
+                    try:
+                        from panopto import models as _pm
+                        _m = _pm.get_model(model_id)
+                    except Exception:
+                        _m = None
+                    _mlabel = (_m or {}).get('label', model_id)
+                    st.markdown(
+                        f"<div style='display:flex; align-items:center; gap:12px; padding:11px 15px; margin-bottom:12px; "
+                        f"background: rgba(176,157,254,0.06); border:1px solid rgba(176,157,254,0.28); border-radius:10px;'>"
+                        # PAN_ACCENT is a trusted module constant (hex color), not external data.
+                        # audit-ignore
+                        f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2.4' "
+                        f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M20 6 9 17l-5-5'/></svg>"
+                        f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready &mdash; "
+                        f"using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. Transcript &amp; Subtitles are available.</div>"
+                        f"</div>", unsafe_allow_html=True)
+                    _dlg_label = "Manage transcription models"
+                else:
+                    _why = ("The local transcription engine isn't available yet."
+                            if not engine_avail else
+                            "No transcription model is installed yet.")
+                    st.markdown(
+                        f"<div style='display:flex; align-items:flex-start; gap:12px; padding:12px 15px; margin-bottom:12px; "
+                        f"background: rgba(176,157,254,0.06); border:1px solid rgba(176,157,254,0.28); border-radius:10px;'>"
+                        # PAN_ACCENT is a trusted module constant (hex color), not external data.
+                        # audit-ignore
+                        f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2' "
+                        f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
+                        f"<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
+                        f"<div style='flex:1;'>"
+                        f"<div style='color:#e2e8f0; font-weight:600; font-size:0.9rem;'>Transcripts &amp; Subtitles need a one-time setup</div>"
+                        f"<div style='color:#94a3b8; font-size:0.84rem; margin-top:2px; line-height:1.45;'>{esc(_why)} "
+                        f"Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
+                        f"Video &amp; Audio work without it.</div></div></div>", unsafe_allow_html=True)
+                    _dlg_label = "Set up transcription"
+
+                # Button to open the transcription-config dialog. A full-app rerun
+                # is forced so the main-level dialog host renders it (the dialog runs
+                # an internal model-download auto-rerun loop, so it must persist).
+                st.html("""<style>
+                div.st-key-pan_open_dialog_btn button {
+                    background: rgba(176,157,254,0.10) !important;
+                    border: 1px solid rgba(176,157,254,0.35) !important;
+                    color: #d8caff !important; font-weight: 600 !important;
+                    border-radius: 8px !important; transition: all 0.15s ease !important;
+                }
+                div.st-key-pan_open_dialog_btn button:hover {
+                    background: rgba(176,157,254,0.18) !important;
+                    border-color: #b89dfe !important; color: #ffffff !important;
+                }
+                </style>""")
+                if st.button(_dlg_label, key="pan_open_dialog_btn", use_container_width=True):
+                    st.session_state['_pan_dialog_open'] = True
+                    st.rerun(scope="app")
+
+                # ── Element 1: choose what to download ──
+                st.markdown(
+                    "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 6px; margin-bottom: 0px;'>Choose what to download <span style='color:#64748b; font-weight:400;'>(select one or more):</span></p>",
+                    unsafe_allow_html=True,
+                )
+                st.button("Select All", key="btn_pan_master", on_click=_toggle_pan_master, use_container_width=True)
+                with st.container(key="panopto_outputs_grid"):
+                    _pan_cols = st.columns(4)
+                    for _i, (key, title, _desc, _icon) in enumerate(PANOPTO_OUTPUT_DEFS):
+                        with _pan_cols[_i]:
+                            _disabled = (key in PANOPTO_TRANSCRIPT_KEYS and not ready)
+                            st.button(
+                                title, key=f"btn_{key}", on_click=_toggle_pan_sub,
+                                args=(key,), use_container_width=True, disabled=_disabled,
+                                help=("Install a transcription model to enable this output."
+                                      if _disabled else None),
+                            )
+
+                # ── Element 2: choose how to organize ──
+                st.markdown(f"""
+                <p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose how to organize Panopto Recordings:</p>
+                {_get_pan_layout_segmented_css()}
+                """, unsafe_allow_html=True)
+                with st.container(key="pan_layout_segmented_wrapper"):
+                    _pl1, _pl2 = st.columns(2, gap="small")
+                    with _pl1:
+                        st.button("Match Course Folder structure", key="btn_pan_layout_match",
+                                  on_click=_set_pan_layout, args=("match",), use_container_width=True)
+                    with _pl2:
+                        st.button("In Separate Folders", key="btn_pan_layout_separate",
+                                  on_click=_set_pan_layout, args=("separate",), use_container_width=True)
+
+        _render_card_panopto()
+
         # Separator above Output Folder section
         st.markdown(
             "<hr style='border:none; border-top:1px solid rgba(255,255,255,0.08); margin:28px 0 20px 0;'>",
@@ -1868,6 +2372,12 @@ div.st-key-review_browse_folder button:hover {
                     for _sck in SECONDARY_CONTENT_KEYS:
                         st.session_state[f'persistent_{_sck}'] = st.session_state.get(_sck, False)
                     st.session_state['persistent_dl_isolate_secondary'] = st.session_state.get('dl_isolate_secondary', True)
+
+                    # Task 1c: Save Panopto (Section 4) output formats + layout. The
+                    # runtime reads these persistent_* keys to build the run contract.
+                    for _pk in PANOPTO_OUTPUT_KEYS:
+                        st.session_state[f'persistent_{_pk}'] = st.session_state.get(_pk, False)
+                    st.session_state['persistent_pan_layout'] = st.session_state.get('pan_layout', 'match')
 
                     # Clear debug log once at session start (subsequent courses append)
                     if st.session_state.get('debug_mode', False):
