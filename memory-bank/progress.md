@@ -1,4 +1,14 @@
 ## Latest Updates
+- [x] **Panopto Terminology Standardisation** (2026-06-24):
+    - [x] **Replaced Lectures with Recordings**: Changed all user-facing labels, progress indicators, terminal logs, and code comments referencing "Panopto Lectures" or "Panopto lectures" to "Panopto Recordings" or "Panopto recordings" in `app.py`, `sync_ui.py`, `ui/panopto_page.py`, `sync/completion.py`, `panopto/*.py`, spec files, and configurations.
+
+- [x] **Panopto Summary Card Layout & Styling Overhaul** (2026-06-24):
+    - [x] **Inside Completion Dashboard**: Kept the Panopto recordings summary card inside the main completion/success panel (`completion_dashboard`) in both `app.py` and `sync/completion.py`.
+    - [x] **1/2 Width Layout**: Positioned the card inside a `st.columns([1, 1])[0]` (1/2 width) wrapper.
+    - [x] **Standard Metrics Size & Style**: Restored standard metric card styling, sizing, height, margins, padding, and fonts so they match the main metrics above exactly.
+    - [x] **Symmetric 16px Padding & Border Fix**: Removed Streamlit's default container border (`border=False`) and styled the outer card `div[class*="st-key-panopto_summary_dashboard"]` directly with `padding: 16px !important` and borders. This completely bypasses the buggy inner `stVerticalBlock` layouts, preventing overlapping borders and card clipping.
+    - [x] **Reduced Top Margin Gap**: Inline-injected the `<style>` block directly inside the single `st.markdown` content container to prevent Streamlit from adding layout row gap spacing above the title.
+    - [x] **Video Icon Removal**: Removed the Panopto video SVG icon from the summary card header.
 
 - [x] **Amber Notice warning for course selector validation** (2026-06-23):
     - [x] **Updated validation warning**: Migrated the "Please select at least one course" error alert in `ui/course_selector.py` from a standard red Streamlit error message to the styled `render_amber_notice` component.

@@ -1,6 +1,6 @@
 """Panopto integration package for Canvas Downloader.
 
-Premium hidden feature: discovers Panopto lecture videos linked in a Canvas
+Premium hidden feature: discovers Panopto recordings linked in a Canvas
 course, downloads their audio, and transcribes them locally with faster-whisper.
 
 Submodules
