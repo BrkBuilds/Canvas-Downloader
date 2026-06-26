@@ -55,6 +55,55 @@ def _gear_svg(color: str) -> str:
         f'</svg>'
     )
 
+
+def _search_svg(color: str) -> str:
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
+        f'fill="none" stroke="{color}" stroke-width="2.5" stroke-linecap="round" '
+        f'stroke-linejoin="round" style="display:inline-block;vertical-align:middle;'
+        f'flex-shrink:0;margin-top:-1px">'
+        f'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'
+        f'</svg>'
+    )
+
+
+def _transcribe_svg(color: str) -> str:
+    # Speech / waveform glyph for the local transcription phase.
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
+        f'fill="none" stroke="{color}" stroke-width="2.3" stroke-linecap="round" '
+        f'stroke-linejoin="round" style="display:inline-block;vertical-align:middle;'
+        f'flex-shrink:0;margin-top:-1px">'
+        f'<line x1="4" y1="10" x2="4" y2="14"/><line x1="8" y1="6" x2="8" y2="18"/>'
+        f'<line x1="12" y1="9" x2="12" y2="15"/><line x1="16" y1="4" x2="16" y2="20"/>'
+        f'<line x1="20" y1="10" x2="20" y2="14"/>'
+        f'</svg>'
+    )
+
+
+# Per-phase visual identity for the active-file indicator AND progress bar.
+# Each phase owns a distinct colour so the user can tell, at a glance, whether
+# the app is searching, downloading regular files, downloading Panopto audio,
+# transcribing, or post-processing.
+#   color           label          icon builder
+_PHASE_STYLE = {
+    'download':    (theme.ACCENT_LINK, 'Downloading',  _download_svg),
+    'postprocess': ('#f97316',         'Processing',   _gear_svg),
+    'search':      ('#60a5fa',         'Searching',    _search_svg),
+    'panopto':     ('#a855f7',         'Downloading',  _download_svg),
+    'transcribe':  ('#2dd4bf',         'Transcribing', _transcribe_svg),
+}
+
+# Progress-bar colour per phase (kept separate so a phase can recolour the bar
+# even when it does not own an active-file card).
+PHASE_BAR_COLOR = {
+    'download':    theme.ACCENT_BLUE,
+    'postprocess': '#f97316',
+    'search':      '#60a5fa',
+    'panopto':     '#a855f7',
+    'transcribe':  '#2dd4bf',
+}
+
 _ACTIVE_FILE_PREFIXES = ('Downloading file: ', 'Created link: ', 'Creating link: ', 'Saved: ')
 
 _LOG_MAX_LINES = 200
@@ -226,11 +275,13 @@ def log_meta(text: str) -> str:
 # Active File Indicator
 # ═══════════════════════════════════════════════
 
-def render_active_file(placeholder, filename: str, phase: str = 'download') -> None:
+def render_active_file(placeholder, filename: str, phase: str = 'download',
+                       *, label: str | None = None) -> None:
     """Render the active-file indicator with SVG icon and left-accent card design.
 
     Replaces the old emoji-based 'Currently downloading:' label.
-    phase: 'download' | 'postprocess'
+    phase: 'download' | 'postprocess' | 'search' | 'panopto' | 'transcribe'
+    label: optional override for the small uppercase phase label.
     Strips Canvas callback prefixes ('Downloading file: ', etc.) automatically.
     """
     clean = str(filename)
@@ -240,14 +291,9 @@ def render_active_file(placeholder, filename: str, phase: str = 'download') -> N
             break
     clean = _html_escape(clean)
 
-    if phase == 'postprocess':
-        color = '#f97316'
-        label = 'Processing'
-        icon = _gear_svg(color)
-    else:
-        color = theme.ACCENT_LINK
-        label = 'Downloading'
-        icon = _download_svg(color)
+    color, default_label, icon_fn = _PHASE_STYLE.get(phase, _PHASE_STYLE['download'])
+    label = label or default_label
+    icon = icon_fn(color)
 
     placeholder.markdown(f'''
     <div style="display:flex; align-items:center; gap:10px; padding:8px 14px;
@@ -313,16 +359,49 @@ def render_progress_header(placeholders: DashboardPlaceholders, label: str, cour
     ''', unsafe_allow_html=True)
 
 
-def render_progress_bar(placeholders: DashboardPlaceholders, percent: int) -> None:
-    """Render the custom HTML progress bar."""
-    placeholders.progress.markdown(f'''
-    <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-        <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
-            {percent}%
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+def render_progress_bar(placeholders: DashboardPlaceholders, percent: int,
+                        *, color: str | None = None, indeterminate: bool = False,
+                        label: str | None = None) -> None:
+    """Render the custom HTML progress bar.
+
+    color        : fill colour (defaults to the download blue).
+    indeterminate: render an animated sweeping bar for work of unknown duration
+                   (e.g. the Panopto discovery phase) instead of a % fill. The
+                   ``.cd-indeterminate-*`` animation lives in styles/global.css.
+    label        : optional centered text override (defaults to "{percent}%").
+    """
+    placeholders.progress.markdown(
+        build_progress_bar_html(percent, color=color, indeterminate=indeterminate, label=label),
+        unsafe_allow_html=True,
+    )
+
+
+def build_progress_bar_html(percent: int, *, color: str | None = None,
+                            indeterminate: bool = False, label: str | None = None) -> str:
+    """Return the progress-bar HTML as a string (shared by download + sync flows)."""
+    color = color or theme.ACCENT_BLUE
+    if indeterminate:
+        return (
+            f'<div class="cd-indeterminate-track" style="background-color:{theme.BG_CARD};'
+            f'border-radius:8px;width:100%;height:24px;position:relative;margin-bottom:10px;'
+            f'overflow:hidden;">'
+            f'<div class="cd-indeterminate-bar" style="background-color:{color};"></div>'
+            f'<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;'
+            f'align-items:center;justify-content:center;color:white;font-size:12px;'
+            f'font-weight:bold;letter-spacing:0.04em;">{_html_escape(label or "Working…")}</div>'
+            f'</div>'
+        )
+    text = label if label is not None else f"{percent}%"
+    return (
+        f'<div style="background-color:{theme.BG_CARD};border-radius:8px;width:100%;height:24px;'
+        f'position:relative;margin-bottom:10px;">'
+        f'<div style="background-color:{color};width:{percent}%;height:100%;border-radius:8px;'
+        f'transition:width 0.3s ease;"></div>'
+        f'<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;'
+        f'align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;">'
+        f'{_html_escape(text)}</div>'
+        f'</div>'
+    )
 
 
 def render_metrics_row(
@@ -368,6 +447,35 @@ def render_metrics_row(
         </div>
     </div>
     ''', unsafe_allow_html=True)
+
+
+def build_custom_metrics_html(metrics: list) -> str:
+    """Return a metrics-row HTML string from arbitrary (label, value, color) cells.
+
+    ``metrics`` is a list of (label, value_html, color) tuples. ``value_html`` may
+    contain pre-built inline markup (e.g. a dim unit span); it is NOT escaped, so
+    callers must only pass app-controlled content. Used by the phased Panopto
+    dashboard whose columns differ per phase (search vs download vs transcribe).
+    """
+    cells = ""
+    for label, value, color in metrics:
+        cells += (
+            '<div style="display:flex;flex-direction:column;align-items:center;">'
+            f'<span style="color:{theme.TEXT_SECONDARY};font-size:0.75rem;font-weight:bold;'
+            f'text-transform:uppercase;">{_html_escape(str(label))}</span>'
+            f'<span style="color:{color};font-size:1.2rem;font-weight:bold;">{value}</span>'
+            '</div>'
+        )
+    return (
+        f'<div style="display:flex;justify-content:center;gap:4rem;background-color:{theme.BG_DARK};'
+        f'padding:15px 25px;border-radius:8px;border:1px solid {theme.BG_CARD};margin-top:5px;'
+        f'margin-bottom:15px;flex-wrap:wrap;">{cells}</div>'
+    )
+
+
+def render_custom_metrics(placeholders: DashboardPlaceholders, metrics: list) -> None:
+    """Render an arbitrary metrics row (see build_custom_metrics_html)."""
+    placeholders.metrics.markdown(build_custom_metrics_html(metrics), unsafe_allow_html=True)
 
 
 def render_terminal_log(placeholders: DashboardPlaceholders, log_deque) -> None:

@@ -33,6 +33,14 @@ SECONDARY_CONTENT_KEYS = [
 
 TOTAL_SECONDARY_SUBS = len(SECONDARY_CONTENT_KEYS)
 
+# Panopto output toggles (Section 4 of the download settings page). Session-only
+# and reset each app launch, EXACTLY like the Canvas Content keys above: the
+# engine config (model/device/language) is the only persisted part. Ordered
+# mp4, mp3, txt, srt (left-to-right display order).
+PANOPTO_OUTPUT_KEYS = ['pan_out_mp4', 'pan_out_mp3', 'pan_out_txt', 'pan_out_srt']
+
+TOTAL_PANOPTO_OUTPUTS = len(PANOPTO_OUTPUT_KEYS)
+
 
 # ═══════════════════════════════════════════════
 # Default Value Dictionaries
@@ -71,9 +79,15 @@ DOWNLOAD_DEFAULTS = {
     # Secondary content master toggles
     'dl_secondary_master': False,
     'dl_isolate_secondary': False,
+    # Panopto (Section 4) master toggle + organization layout (session-only).
+    # 'pan_layout': 'match' -> alongside course files; 'separate' -> a
+    # "Panopto Recordings" subfolder. Mirrors dl_isolate_secondary's role.
+    'pan_master': False,
+    'pan_layout': 'match',
     # Card expansion state
     'card2_expanded': False,
     'card3_expanded': False,
+    'card_panopto_expanded': False,
     'token_loaded': False,
     'hub_view_mode': 'View All',
     'hub_layer': 'layer_1',
@@ -145,6 +159,9 @@ DOWNLOAD_TRANSIENT_KEYS = {
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
     'persistent_dl_isolate_secondary',
+    # Per-run Panopto snapshot (mirrors the secondary content persistent keys).
+    *[f'persistent_{k}' for k in PANOPTO_OUTPUT_KEYS],
+    'persistent_pan_layout',
     'log_content',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
     '_office_primed', '_office_quit_fired', '_tcc_batch_active',
@@ -171,6 +188,7 @@ SYNC_TRANSIENT_KEYS = {
     # Panopto sync-pass trackers (mirror the download-mode transient keys).
     'panopto_total', 'panopto_done_count', 'panopto_mb_tracker',
     'panopto_run_started', '_panopto_warned', 'panopto_summary',
+    'panopto_uptodate_total', '_sync_history_ts',
     # M-8: reset per-run warning sentinels so they re-arm on the next sync
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
@@ -202,6 +220,11 @@ def ensure_download_state() -> None:
     for sck in SECONDARY_CONTENT_KEYS:
         if sck not in st.session_state:
             st.session_state[sck] = False
+
+    # Per-toggle sub-keys for Panopto outputs (session-only, like the above).
+    for pk in PANOPTO_OUTPUT_KEYS:
+        if pk not in st.session_state:
+            st.session_state[pk] = False
 
 
 def ensure_sync_state() -> None:
@@ -299,6 +322,7 @@ def cleanup_sync_state() -> None:
         k for k in st.session_state
         if k.startswith((
             'sync_new_', 'sync_upd_', 'sync_updmod_', 'sync_locdel_', 'ignore_',
+            'sync_pan_', 'sync_panlocdel_',
             'sync_filter_ext_', 'sync_filter_btn_',
         ))
     ]

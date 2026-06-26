@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 # ── Model registry ──────────────────────────────────────────────────────────
 # size_mb is the approximate on-disk size of the essential CT2 files, used for
 # the progress denominator and the UI size hint.
+# ``speed`` and ``accuracy`` are 1-5 display ratings for the model card's twin
+# dash-bars (5 = fastest / most accurate). Roughly inverse along the size axis,
+# except Turbo, which is engineered to be both fast and highly accurate.
 MODEL_REGISTRY: list[dict] = [
     {
         "id": "tiny",
@@ -29,6 +32,7 @@ MODEL_REGISTRY: list[dict] = [
         "repo": "Systran/faster-whisper-tiny",
         "size_mb": 75,
         "note": "Fastest, lowest accuracy. Good for quick tests.",
+        "speed": 5, "accuracy": 1,
     },
     {
         "id": "base",
@@ -36,6 +40,7 @@ MODEL_REGISTRY: list[dict] = [
         "repo": "Systran/faster-whisper-base",
         "size_mb": 145,
         "note": "Fast, modest accuracy.",
+        "speed": 4, "accuracy": 2,
     },
     {
         "id": "small",
@@ -44,6 +49,7 @@ MODEL_REGISTRY: list[dict] = [
         "size_mb": 484,
         "note": "Balanced speed/accuracy on CPU. Recommended default.",
         "recommended": True,
+        "speed": 3, "accuracy": 3,
     },
     {
         "id": "medium",
@@ -51,6 +57,7 @@ MODEL_REGISTRY: list[dict] = [
         "repo": "Systran/faster-whisper-medium",
         "size_mb": 1530,
         "note": "Strong accuracy, slower on CPU.",
+        "speed": 2, "accuracy": 4,
     },
     {
         "id": "large-v3",
@@ -58,6 +65,7 @@ MODEL_REGISTRY: list[dict] = [
         "repo": "Systran/faster-whisper-large-v3",
         "size_mb": 3090,
         "note": "Best accuracy (notably better for Danish). Wants a GPU.",
+        "speed": 1, "accuracy": 5,
     },
     {
         "id": "turbo",
@@ -65,6 +73,7 @@ MODEL_REGISTRY: list[dict] = [
         "repo": "deepdml/faster-whisper-large-v3-turbo-ct2",
         "size_mb": 1620,
         "note": "Near-large accuracy, much faster. Excellent on GPU.",
+        "speed": 4, "accuracy": 4,
     },
 ]
 
@@ -108,12 +117,91 @@ def whisper_available() -> bool:
 
     Needed for transcription (Phase 2); the model manager itself only needs
     huggingface_hub.
+
+    NOTE: this is a cheap *presence* check (find_spec) - it does NOT prove the
+    backend actually imports. A broken optional dependency (e.g. a corrupt
+    PyTorch whose c10.dll fails with WinError 1114) lets the package resolve but
+    crashes on real import. Use ``engine_diagnostics()`` / ``backend_import_ok()``
+    for a definitive answer (and for the debug log).
     """
     import importlib.util
     return (
         importlib.util.find_spec("faster_whisper") is not None
         and importlib.util.find_spec("ctranslate2") is not None
     )
+
+
+# Cached real-import probe result: (ok: bool, error: str|None).
+_BACKEND_PROBE: tuple[bool, str | None] | None = None
+
+
+def backend_import_ok(force: bool = False) -> tuple[bool, str | None]:
+    """Actually import the transcription backend and report (ok, error).
+
+    Unlike ``whisper_available()`` this performs the real ``import
+    faster_whisper`` (which transitively imports ctranslate2 -> optional torch),
+    so it catches the broken-DLL case the presence check misses. Result is cached
+    for the process (the import outcome won't change mid-run); pass force=True to
+    re-probe. Never raises.
+    """
+    global _BACKEND_PROBE
+    if _BACKEND_PROBE is not None and not force:
+        return _BACKEND_PROBE
+    try:
+        import faster_whisper  # noqa: F401  (import side effect is the probe)
+        _BACKEND_PROBE = (True, None)
+    except BaseException as e:  # noqa: BLE001 - a broken DLL can raise OSError/SystemError
+        _BACKEND_PROBE = (False, f"{type(e).__name__}: {e}")
+    return _BACKEND_PROBE
+
+
+def engine_diagnostics() -> dict:
+    """Probe the transcription stack and return a structured status dict.
+
+    Never raises. Designed for the debug log: a single dump here pinpoints the
+    common "transcription silently fails" causes (missing engine, or - the
+    nastier one - an installed-but-broken PyTorch that crashes ctranslate2's
+    import because ctranslate2 guards its optional ``import torch`` with
+    ``except ImportError`` only, which does NOT catch an OSError/DLL failure).
+    """
+    import importlib
+    import importlib.util
+
+    diag: dict = {}
+
+    def _probe(mod: str, attr: str = "__version__") -> str:
+        if importlib.util.find_spec(mod) is None:
+            return "not installed"
+        try:
+            m = importlib.import_module(mod)
+            return f"{getattr(m, attr, 'unknown')} (import OK)"
+        except BaseException as e:  # noqa: BLE001
+            return f"PRESENT BUT IMPORT FAILED -> {type(e).__name__}: {e}"
+
+    diag["faster_whisper"] = _probe("faster_whisper")
+    diag["ctranslate2"] = _probe("ctranslate2")
+    diag["onnxruntime"] = _probe("onnxruntime")
+
+    # torch is OPTIONAL for inference, but a BROKEN torch breaks ctranslate2's
+    # import (see docstring). Call it out explicitly.
+    if importlib.util.find_spec("torch") is None:
+        diag["torch"] = "not installed (fine - optional for inference)"
+    else:
+        try:
+            import torch
+            diag["torch"] = f"{torch.__version__} (loads OK; optional)"
+        except BaseException as e:  # noqa: BLE001
+            diag["torch"] = (
+                f"INSTALLED BUT BROKEN -> {type(e).__name__}: {e} "
+                "** this also breaks ctranslate2/faster-whisper. Fix: reinstall a "
+                "working CPU build (pip install torch --index-url "
+                "https://download.pytorch.org/whl/cpu) or uninstall torch entirely "
+                "(it is not required)."
+            )
+
+    ok, err = backend_import_ok()
+    diag["backend_usable"] = "YES" if ok else f"NO -> {err}"
+    return diag
 
 
 def dir_size_bytes(path: Path) -> int:

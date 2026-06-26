@@ -4,6 +4,26 @@
    ═══════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════
+   Indeterminate progress bar (work of unknown duration)
+   ───────────────────────────────────────────────
+   Used by the Panopto discovery phase, where the run time (2-5 min) cannot be
+   predicted and a fixed 0% bar reads as "frozen". The sweeping bar signals
+   continuous activity. Fill colour is set inline per phase; animation here. */
+@keyframes cd-indeterminate {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(360%); }
+}
+.cd-indeterminate-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 30%;
+    border-radius: 8px;
+    animation: cd-indeterminate 1.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+/* ═══════════════════════════════════════════════
    Native desktop feel: no rubber-band selection of UI chrome
    ───────────────────────────────────────────────
    In the PyWebView window, letting the user drag-select labels, padding and

@@ -105,18 +105,20 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
         r.raise_for_status()
         launch_url = r.json().get("url", "")
     except Exception as e:
-        logger.debug(f"Panopto LTI: sessionless_launch failed: {e}")
+        logger.warning(f"Panopto LTI: sessionless_launch API failed: {e}")
         return None, None, None, None
 
     if not launch_url:
+        logger.warning("Panopto LTI: sessionless_launch returned no launch URL.")
         return None, None, None, None
 
     try:
         r = session.get(launch_url, timeout=timeout, allow_redirects=True)
     except Exception as e:
-        logger.debug(f"Panopto LTI: GET launch url failed: {e}")
+        logger.warning(f"Panopto LTI: GET launch url failed: {e}")
         return None, None, None, None
 
+    steps_used = 0
     for _step in range(6):
         if "panopto" in r.url.lower() and (
             "Viewer.aspx" in r.url or "Embed.aspx" in r.url
@@ -126,13 +128,25 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
         if not action:
             break
         action = urljoin(r.url, action)
+        steps_used += 1
         try:
             r = session.post(action, data=form_data, timeout=timeout, allow_redirects=True)
         except Exception as e:
-            logger.debug(f"Panopto LTI: POST step failed: {e}")
+            logger.warning(f"Panopto LTI: OIDC POST step {steps_used} failed: {e}")
             return None, None, None, None
 
     panopto_base = panopto_base_from_url(r.url)
     real_ids = extract_panopto_ids(r.url)
     real_video_id = real_ids[0] if real_ids else None
+    if panopto_base:
+        logger.info(
+            "Panopto LTI handshake OK (%d redirect step(s)); host=%s, resolved_id=%s",
+            steps_used, panopto_base, real_video_id or "none",
+        )
+    else:
+        logger.warning(
+            "Panopto LTI handshake did not reach a Panopto host (landed on %s). "
+            "Cookies may be missing - downloads will likely fail.",
+            r.url.split("?")[0] if r.url else "?",
+        )
     return session, r.url, real_video_id, panopto_base

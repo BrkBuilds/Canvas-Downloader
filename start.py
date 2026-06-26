@@ -171,6 +171,18 @@ def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Eve
 # ── Entry Point ───────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    # Frozen worker re-exec: the transcription engine runs in an isolated child
+    # process so a native CUDA crash can't take down the app (see
+    # panopto.transcribe.transcribe_in_subprocess). In a frozen build the child
+    # is THIS exe relaunched with the worker flag - route it here BEFORE any
+    # webview/streamlit startup, run the worker, and exit.
+    if "--panopto-transcribe-worker" in sys.argv:
+        try:
+            from panopto.transcribe_worker import main as _worker_main
+            sys.exit(_worker_main())
+        except Exception:
+            sys.exit(1)
+
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 

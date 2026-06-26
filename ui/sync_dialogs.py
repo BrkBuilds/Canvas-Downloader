@@ -29,6 +29,17 @@ from ui_helpers import (
     friendly_course_name,
 )
 
+_PAN_REC_SVG = (
+    "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' "
+    "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round' style='vertical-align:middle;flex-shrink:0;'>"
+    "<rect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'/>"
+    "<line x1='7' y1='2' x2='7' y2='22'/><line x1='17' y1='2' x2='17' y2='22'/>"
+    "<line x1='2' y1='12' x2='22' y2='12'/><line x1='2' y1='7' x2='7' y2='7'/>"
+    "<line x1='2' y1='17' x2='7' y2='17'/><line x1='17' y1='17' x2='22' y2='17'/>"
+    "<line x1='17' y1='7' x2='22' y2='7'/></svg>"
+)
+
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _select_sync_folder_lazy():
     """Open native folder picker, store result, and auto-detect bound course."""
@@ -180,6 +191,31 @@ def show_course_ignored_files(course_name, course_id, course_data):
         files = sm.get_ignored_files()
         prefix = f"cign_{course_id}"
 
+        # Ignored Panopto recordings (the whole recording entity). Sized from the
+        # manifest's on-disk outputs when present (this management dialog runs
+        # outside analysis, so there's no duration probe / estimate here).
+        pan_ignored = sm.get_ignored_panopto()
+        _pan_manifest = sm.get_panopto_manifest() if pan_ignored else {}
+        try:
+            _pan_root = sm.local_path
+        except Exception:
+            _pan_root = None
+
+        def _pan_rec_size(vid: str) -> int:
+            total = 0
+            for rel in (_pan_manifest.get(vid) or {}).values():
+                try:
+                    p = (_pan_root / rel) if _pan_root else None
+                    if p and p.exists():
+                        total += p.stat().st_size
+                except OSError:
+                    pass
+            return total
+
+        pan_keys = [f"{prefix}_pan_{vid}" for vid in pan_ignored]
+        for k in pan_keys:
+            st.session_state.setdefault(k, False)
+
         # ── Build data structures ──────────────────────────────────────
         all_keys: list[str] = []
         all_file_tuples: list[tuple[str, object]] = []
@@ -193,6 +229,10 @@ def show_course_ignored_files(course_name, course_id, course_data):
             all_file_tuples.append((key, f))
             ext = os.path.splitext(f.canvas_filename)[1].lower() or ".unknown"
             ext_to_keys[ext].append(key)
+
+        for vid in pan_ignored:
+            key = f"{prefix}_pan_{vid}"
+            ext_to_keys['panopto'].append(key)
 
         all_exts_sorted = sorted(ext_to_keys.keys())
 
@@ -510,29 +550,103 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     col_sel, col_clr = st.columns([1, 1])
                     with col_sel:
                         def _select_all():
-                            for k in all_keys:
+                            for k in all_keys + pan_keys:
                                 st.session_state[k] = True
                         st.button("Select All", key=f"{prefix}_btn_sa", use_container_width=True, on_click=_select_all)
                     with col_clr:
                         def _deselect_all():
-                            for k in all_keys:
+                            for k in all_keys + pan_keys:
                                 st.session_state[k] = False
                         st.button("Deselect All", key=f"{prefix}_btn_da", use_container_width=True, on_click=_deselect_all)
 
         # ── 4. File list with extension + size tags ───────────────────
-        with st.container(height=filelist_height, border=True, key=f"{prefix}_filelist"):
-            for key, f in all_file_tuples:
-                _disp_raw = urllib.parse.unquote_plus(f.canvas_filename)
-                _name, _ext = os.path.splitext(_disp_raw)
-                _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                _size_clean = ""
-                if f.original_size and f.original_size > 0:
-                    _size_clean = f" `{format_file_size(f.original_size)}`"
-                with st.container(key=f"ign_row_{course_id}_{f.canvas_file_id}"):
-                    st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+        if all_file_tuples or pan_ignored:
+            with st.container(height=filelist_height, border=True, key=f"{prefix}_filelist"):
+                # Render normal files
+                if all_file_tuples:
+                    for key, f in all_file_tuples:
+                        _disp_raw = urllib.parse.unquote_plus(f.canvas_filename)
+                        _name, _ext = os.path.splitext(_disp_raw)
+                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                        _size_clean = ""
+                        if f.original_size and f.original_size > 0:
+                            _size_clean = f" `{format_file_size(f.original_size)}`"
+                        with st.container(key=f"ign_row_{course_id}_{f.canvas_file_id}"):
+                            st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+
+                # Render Panopto recordings inside the same list
+                if pan_ignored:
+                    st.markdown(
+                        "<div style='margin:10px 0 6px 0; padding-top:10px; "
+                        "border-top:1px solid rgba(255,255,255,0.10); color:rgba(255,255,255,0.6); "
+                        "font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:7px;'>"
+                        f"{_PAN_REC_SVG}<span>Panopto Recordings</span></div>",
+                        unsafe_allow_html=True,
+                    )
+                    # Per-folder contract (output formats) drives which kinds count
+                    # as "configured"; fall back to the current Section 4 session
+                    # toggles when this folder has no stored contract yet.
+                    from panopto.settings import compose_settings as _compose_pan
+                    _pan_raw = None
+                    try:
+                        _pan_raw = sm._load_metadata('panopto_contract')
+                    except Exception:
+                        _pan_raw = None
+                    _pan_contract = None
+                    if _pan_raw:
+                        try:
+                            import json as _json_pan
+                            _pan_contract = _json_pan.loads(_pan_raw)
+                        except Exception:
+                            _pan_contract = None
+                    if _pan_contract is None:
+                        _pan_contract = {
+                            'output_mp4': st.session_state.get('persistent_pan_out_mp4', False),
+                            'output_mp3': st.session_state.get('persistent_pan_out_mp3', False),
+                            'output_txt': st.session_state.get('persistent_pan_out_txt', False),
+                            'output_srt': st.session_state.get('persistent_pan_out_srt', False),
+                            'layout': st.session_state.get('persistent_pan_layout', 'match'),
+                        }
+                    _pan_settings = _compose_pan(_pan_contract)
+                    _default_kinds = []
+                    if _pan_settings.get("output_mp4"):
+                        _default_kinds.append("mp4")
+                    if _pan_settings.get("output_mp3"):
+                        _default_kinds.append("mp3")
+                    if _pan_settings.get("output_txt"):
+                        _default_kinds.append("txt")
+                    if _pan_settings.get("output_srt"):
+                        _default_kinds.append("srt")
+
+                    for vid, title in pan_ignored.items():
+                        _psz = _pan_rec_size(vid)
+                        _psize = f" `{format_file_size(_psz)}`" if _psz > 0 else ""
+
+                        # Show what is missing/actionable (i.e. configured kinds minus what is already on disk)
+                        _existing_kinds = []
+                        for _k, _rel in _pan_manifest.get(vid, {}).items():
+                            try:
+                                _p = (_pan_root / _rel) if _pan_root else None
+                                if _p and _p.exists():
+                                    _existing_kinds.append(_k)
+                            except OSError:
+                                pass
+
+                        _kinds = [k for k in _default_kinds if k not in _existing_kinds]
+                        if not _kinds:
+                            _kinds = _default_kinds
+
+                        _badges_clean = " ".join(f"~{k.upper()}~" for k in _kinds)
+                        _badges_sep = "  " if _badges_clean else ""
+
+                        with st.container(key=f"ign_row_{course_id}_pan_{vid}"):
+                            st.checkbox(f"{title or 'Untitled recording'}{_badges_sep}{_badges_clean}{_psize}",
+                                        key=f"{prefix}_pan_{vid}")
 
         # ── 5. Count + success feedback ───────────────────────────────
-        checked_count = sum(1 for k in all_keys if st.session_state.get(k, False))
+        checked_files = sum(1 for k in all_keys if st.session_state.get(k, False))
+        checked_pan = sum(1 for k in pan_keys if st.session_state.get(k, False))
+        checked_count = checked_files + checked_pan
 
         if st.session_state.get(f"{prefix}_success"):
             from ui.amber_notice import render_success_notice
@@ -540,17 +654,17 @@ def show_course_ignored_files(course_name, course_id, course_data):
 
         # ── 6. Dynamic button text ────────────────────────────────────
         if checked_count == 0:
-            btn_text = "Restore files"
+            btn_text = "Restore"
         elif checked_count == 1:
-            btn_text = "Restore 1 file"
+            btn_text = "Restore 1 item"
         else:
-            btn_text = f"Restore {checked_count} files"
+            btn_text = f"Restore {checked_count} items"
 
         # ── 7. Action buttons (Cancel left, Action right) ─────────────
         col_cancel, col_restore = st.columns([1, 1])
         with col_cancel:
             if st.button("Close", type="secondary", use_container_width=True, key=f"{prefix}_close"):
-                for k in all_keys:
+                for k in all_keys + pan_keys:
                     st.session_state.pop(k, None)
                 st.rerun(scope="app")
 
@@ -560,20 +674,30 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     f.canvas_file_id for f in files
                     if st.session_state.get(f"{prefix}_{f.canvas_file_id}")
                 ]
-                if to_restore:
-                    sm.bulk_restore_files(to_restore)
-                    fw = 'file' if len(to_restore) == 1 else 'files'
+                pan_to_restore = [
+                    vid for vid in pan_ignored
+                    if st.session_state.get(f"{prefix}_pan_{vid}")
+                ]
+                n = len(to_restore) + len(pan_to_restore)
+                if n:
+                    if to_restore:
+                        sm.bulk_restore_files(to_restore)
+                    if pan_to_restore:
+                        sm.bulk_restore_panopto(pan_to_restore)
+                    fw = 'item' if n == 1 else 'items'
                     st.session_state[f"{prefix}_success"] = (
-                        f"Successfully restored {len(to_restore)} {fw}! "
+                        f"Successfully restored {n} {fw}! "
                         f"They will appear in your next Sync Review."
                     )
                     for fid in to_restore:
                         st.session_state.pop(f"{prefix}_{fid}", None)
+                    for vid in pan_to_restore:
+                        st.session_state.pop(f"{prefix}_pan_{vid}", None)
                     # Invalidate the ignored-files cache so the sync list
-                    # re-queries SQLite and reflects the restored files.
+                    # re-queries SQLite and reflects the restored items.
                     st.session_state.pop('_ignored_files_cache', None)
 
-            btn_help = "Select files to restore" if checked_count == 0 else "Remove selected files from the ignored list so they are included in future syncs"
+            btn_help = "Select items to restore" if checked_count == 0 else "Remove selected items from the ignored list so they are included in future syncs"
             st.button(
                 btn_text, type="primary", disabled=(checked_count == 0),
                 use_container_width=True, key=f"{prefix}_restore",

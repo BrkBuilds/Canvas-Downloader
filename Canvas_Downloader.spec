@@ -38,7 +38,7 @@ datas = [
     ('core', 'core'),
     ('engine', 'engine'),
     ('sync', 'sync'),
-    ('panopto', 'panopto'),   # Panopto lecture downloader (premium feature)
+    ('panopto', 'panopto'),   # Panopto recording downloader (premium feature)
     ('ui', 'ui'),
     ('styles', 'styles'),
     ('.streamlit', '.streamlit'),

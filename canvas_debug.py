@@ -107,7 +107,7 @@ _APP_LOGGER_PREFIXES = (
     'pdf_converter', 'word_converter', 'excel_converter', 'video_converter',
     'md_converter', 'code_converter', 'archive_extractor', 'url_compiler',
     'preset_manager', 'ui_helpers', 'ui_shared', 'theme',
-    'engine', 'sync', 'ui', 'core',
+    'engine', 'sync', 'ui', 'core', 'panopto',
 )
 
 

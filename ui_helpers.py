@@ -525,6 +525,30 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
             except Exception:
                 pass
 
+def _win_short_path(path: str) -> str:
+    """Return the Windows 8.3 short path for *path* (unchanged on failure or
+    non-Windows). Every component of an 8.3 path is <= 12 chars, so a deeply
+    nested path stays under MAX_PATH (~260) - which the legacy shell commands
+    ``explorer /select`` and the ShellExecute "open" verb need (a longer path
+    makes them silently open Documents/Desktop instead). Requires the path to
+    exist (callers check first)."""
+    if os.name != 'nt':
+        return path
+    try:
+        import ctypes
+        from ctypes import wintypes
+        _GetShort = ctypes.windll.kernel32.GetShortPathNameW
+        _GetShort.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        _GetShort.restype = wintypes.DWORD
+        buf = ctypes.create_unicode_buffer(4096)
+        n = _GetShort(path, buf, len(buf))
+        if n and n < len(buf) and buf.value:
+            return buf.value
+    except Exception:
+        pass
+    return path
+
+
 def open_folder(path: str):
     """
     Opens a folder in the native file explorer and forces it to the foreground.
@@ -535,10 +559,17 @@ def open_folder(path: str):
         return
 
     sys_platform = platform.system()
-    
+
     if sys_platform == "Windows":
         try:
-            os.startfile(path)
+            # Long folder paths (>~260) can't be opened via the shell - use the
+            # 8.3 short path when needed so the correct folder actually opens.
+            _open_target = path
+            if len(path) >= 240:
+                _short = _win_short_path(path)
+                if _short != path and len(_short) < 240:
+                    _open_target = _short
+            os.startfile(_open_target)
         except OSError as e:
             logger.warning(f"Could not open folder {path!r}: {e}")
             return
@@ -628,7 +659,20 @@ def reveal_in_folder(path: str) -> bool:
             # a single command STRING so CreateProcess hands explorer exactly
             # `/select,"<path>"` - the form it actually honours. (Returns exit
             # code 1 even on success, so Popen, not check_call.)
-            subprocess.Popen(f'explorer /select,"{path}"')
+            #
+            # explorer /select ALSO silently opens Documents/Desktop when the
+            # path is at/over MAX_PATH (~260). Use the 8.3 short path so it can
+            # still select the real file; if 8.3 is unavailable on this volume
+            # and the path is long, degrade to opening the containing folder.
+            sel_path = path
+            if len(path) >= 240:
+                _short = _win_short_path(path)
+                if _short != path and len(_short) < 240:
+                    sel_path = _short
+                else:
+                    open_folder(os.path.dirname(path))
+                    return True
+            subprocess.Popen(f'explorer /select,"{sel_path}"')
             _windows_foreground_nudge()
         elif sys_platform == "Darwin":
             subprocess.Popen(["open", "-R", path])

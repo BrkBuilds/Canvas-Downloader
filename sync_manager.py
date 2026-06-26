@@ -384,7 +384,7 @@ class SyncManager:
                     )
                 ''')
 
-                # Panopto lectures are tracked in a DEDICATED table, kept
+                # Panopto recordings are tracked in a DEDICATED table, kept
                 # separate from sync_manifest on purpose: Panopto videos have no
                 # Canvas file id and never appear in Canvas file metadata, so
                 # putting them in sync_manifest would make the Canvas-vs-local
@@ -399,6 +399,18 @@ class SyncManager:
                         title TEXT,
                         downloaded_at TEXT,
                         PRIMARY KEY (video_id, kind)
+                    )
+                ''')
+
+                # Recordings the user chose to permanently skip. Keyed by the
+                # Panopto video GUID (a recording is ONE entity regardless of how
+                # many outputs - mp4/mp3/txt/srt - it would produce), mirroring the
+                # per-file ignore concept for Canvas files.
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS panopto_ignored (
+                        video_id TEXT PRIMARY KEY,
+                        title TEXT,
+                        ignored_at TEXT
                     )
                 ''')
                 
@@ -1380,6 +1392,74 @@ class SyncManager:
             logger.debug(f"get_panopto_manifest failed: {e}")
         return out
 
+    def ignore_panopto(self, video_id: str, title: str = "") -> bool:
+        """Mark a Panopto recording as permanently ignored (UPSERT).
+
+        Keyed by video GUID - the whole recording is skipped, regardless of how
+        many outputs it would produce. Idempotent; never raises into the caller.
+        """
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.execute(
+                        '''INSERT INTO panopto_ignored (video_id, title, ignored_at)
+                           VALUES (?, ?, ?)
+                           ON CONFLICT(video_id) DO UPDATE SET title = excluded.title''',
+                        (str(video_id), str(title or ""),
+                         datetime.now(timezone.utc).isoformat()),
+                    )
+                    conn.commit()
+                return True
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.3 * (attempt + 1))
+                    continue
+                logger.warning(f"ignore_panopto failed ({video_id}): {e}")
+            except sqlite3.Error as e:
+                logger.warning(f"ignore_panopto failed ({video_id}): {e}")
+                break
+        return False
+
+    def restore_panopto(self, video_id: str) -> bool:
+        """Remove a recording from the ignored list. Never raises."""
+        return self.bulk_restore_panopto([video_id])
+
+    def bulk_restore_panopto(self, video_ids: list) -> bool:
+        """Un-ignore multiple recordings in one transaction. Never raises."""
+        if not video_ids:
+            return True
+        rows = [(str(v),) for v in video_ids]
+        for attempt in range(3):
+            try:
+                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                    conn.executemany(
+                        'DELETE FROM panopto_ignored WHERE video_id = ?', rows)
+                    conn.commit()
+                return True
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.3 * (attempt + 1))
+                    continue
+                logger.warning(f"bulk_restore_panopto failed: {e}")
+            except sqlite3.Error as e:
+                logger.warning(f"bulk_restore_panopto failed: {e}")
+                break
+        return False
+
+    def get_ignored_panopto(self) -> dict:
+        """Return {video_id: title} for all ignored Panopto recordings."""
+        out: dict = {}
+        try:
+            with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+                rows = conn.execute(
+                    'SELECT video_id, title FROM panopto_ignored'
+                ).fetchall()
+            for vid, title in rows:
+                out[str(vid)] = title or ""
+        except Exception as e:
+            logger.debug(f"get_ignored_panopto failed: {e}")
+        return out
+
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry.
 
@@ -1842,6 +1922,68 @@ class SyncHistoryManager:
                         tmp_path.unlink()
                 except OSError:
                     pass
+
+    def amend_last_entry(self, *, timestamp=None, add_files_synced=0,
+                         add_categorized=None, add_synced_files=None,
+                         synced_groups=None) -> bool:
+        """Merge extra results into an existing history entry.
+
+        The terminal Panopto pass runs AFTER the file-sync history entry is
+        written, so its recordings would otherwise be missing from history. This
+        bumps ``files_synced``, extends ``categorized_files`` / ``synced_files``,
+        and replaces ``synced_groups`` (the caller passes the now-complete list).
+
+        Targets the entry whose ``timestamp`` matches (else the most recent).
+        Returns False if there is no entry to amend (caller then creates one).
+        Best-effort, atomic write; never raises.
+        """
+        with self._lock:
+            history = self.load_history()
+            if not history:
+                return False
+            target = None
+            if timestamp is not None:
+                for e in reversed(history):
+                    if e.get('timestamp') == timestamp:
+                        target = e
+                        break
+            if target is None:
+                target = history[-1]
+
+            if add_files_synced:
+                target['files_synced'] = int(target.get('files_synced', 0) or 0) + int(add_files_synced)
+            if add_categorized:
+                cats = target.setdefault(
+                    'categorized_files',
+                    {'new': [], 'updated': [], 'restored': [], 'protected': []},
+                )
+                for k, v in add_categorized.items():
+                    if v:
+                        cats.setdefault(k, []).extend(v)
+            if add_synced_files:
+                target.setdefault('synced_files', []).extend(add_synced_files)
+            if synced_groups is not None:
+                target['synced_groups'] = synced_groups
+
+            tmp_path = self.history_path.with_suffix('.tmp')
+            try:
+                with open(tmp_path, 'w', encoding='utf-8') as f:
+                    json.dump(history, f, indent=2, ensure_ascii=False)
+                    f.flush()
+                    try:
+                        os.fsync(f.fileno())
+                    except OSError:
+                        pass
+                os.replace(str(tmp_path), str(self.history_path))
+                return True
+            except OSError as e:
+                logger.warning(f"Error amending sync history: {e}")
+                try:
+                    if tmp_path.exists():
+                        tmp_path.unlink()
+                except OSError:
+                    pass
+                return False
 
     def clear_history(self):
         """Clear all sync history."""

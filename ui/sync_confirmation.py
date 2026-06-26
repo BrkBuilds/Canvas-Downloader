@@ -25,15 +25,26 @@ from ui_helpers import (
 )
 from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
 
+_PAN_FMT_LABELS = {
+    "mp3": "Audio Track",
+    "txt": "Transcript",
+    "srt": "Subtitles",
+    "mp4": "Video",
+}
+
 # ---- Confirmation dialog ----
 
 def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb, _total_mb, _target_folder, total_bytes):
     # --- Data Collection for Dropdowns ---
-    file_items = []
+    file_items = []  # will hold tuples: (sort_name_lower, html_content)
     folder_set = set()
     modified_update_count = sum(len(s.get('updates_modified', [])) for s in sync_selections)
+    # Panopto recordings selected in Review. They have no known size yet (not
+    # downloaded), so they're surfaced in the subtitle + destination list rather
+    # than the file dropdown / byte math.
+    panopto_count = sum(len(s.get('panopto', [])) for s in sync_selections)
     for s in sync_selections:
-        if not (s['new'] or s['updates'] or s['redownload']):
+        if not (s['new'] or s['updates'] or s['redownload'] or s.get('panopto')):
             continue
             
         # Get the friendly course name for the folder
@@ -55,7 +66,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
                 f"<span class='li-ext-badge'>{esc(ext.upper())}</span>"
             ) if ext else ""
             size_badge = f"<span class='li-size-badge'>{format_file_size(size_bytes)}</span>"
-            return (
+            html = (
                 f"<li>"
                 f'<img class="li-img" src="{icon_url}" alt="{esc(ext)}"/>'
                 f"<span class='li-text'>{esc(fname)}</span>"
@@ -63,6 +74,8 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
                 f"{size_badge}"
                 f"</li>"
             )
+            sort_name = get_friendly_name(display_name or raw_name).lower()
+            return (sort_name, html)
 
         for f in s['new']:
             file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
@@ -70,9 +83,74 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
         for f in s['redownload']:
             file_items.append(_file_li(f.canvas_filename, f.canvas_filename, f.original_size))
-    
-    # Tight HTML structure - NO whitespace
-    file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted(file_items))}</ul>"
+
+        # Collect selected Panopto changes
+        _pan_changes = {c.video_id: c for c in (s['res_data'].get('panopto') or {}).get('changes', [])}
+        for vid in s.get('panopto', []):
+            c = _pan_changes.get(vid)
+            if c:
+                if c.bucket == 'restore':
+                    formats = c.deleted_kinds or c.missing_kinds
+                else:
+                    formats = c.missing_kinds
+
+                _PAN_ICON_SVG = (
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" '
+                    'stroke="rgba(255,255,255,0.85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
+                    'style="width:13px; height:13px; flex-shrink:0; margin-right:6px; margin-top:1px;"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg>'
+                )
+                # Recording total = sum of the outputs it will produce (formats).
+                # "~" denotes an estimate (size not yet known from disk).
+                _rec_sz = c.size_for(formats)
+                _rec_size_badge = ""
+                if _rec_sz > 0:
+                    _rec_approx = "~" if c.estimated_for(formats) else ""
+                    _rec_size_badge = f"<span class='li-size-badge'>{_rec_approx}{format_file_size(_rec_sz)}</span>"
+                recording_html = (
+                    f"<li>"
+                    f"{_PAN_ICON_SVG}"
+                    f"<span class='li-text' style='font-weight:600;'>{esc(c.title)}</span>"
+                    f"{_rec_size_badge}"
+                    f"</li>"
+                )
+
+                sub_lis = []
+                for fmt in formats:
+                    icon_url = _FILETYPE_SVGS.get(fmt, _FILETYPE_SVG_DEFAULT)
+                    ext_badge = f"<span class='li-ext-badge'>{esc(fmt.upper())}</span>"
+
+                    # Per-output size: real (on disk) or estimated; "~" marks an estimate.
+                    _fsz = c.sizes.get(fmt)
+                    if _fsz:
+                        _fapprox = "~" if fmt in c.estimated else ""
+                        size_badge = f"<span class='li-size-badge'>{_fapprox}{format_file_size(_fsz)}</span>"
+                    else:
+                        size_badge = ""
+
+                    label = _PAN_FMT_LABELS.get(fmt, fmt.upper())
+                    sub_li = (
+                        f"<li class='li-sub-item'>"
+                        f'<img class="li-img" src="{icon_url}" alt="{esc(fmt)}"/>'
+                        f"<span class='li-text' style='font-size:0.9em;'>{esc(label)}</span>"
+                        f"{ext_badge}"
+                        f"{size_badge}"
+                        f"</li>"
+                    )
+                    sub_lis.append(sub_li)
+                
+                combined_html = recording_html + "".join(sub_lis)
+                file_items.append((c.title.lower(), combined_html))
+
+    # Sort the tuples by display name, then extract the HTML contents
+    sorted_items = [html for _, html in sorted(file_items, key=lambda x: x[0])]
+    file_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{''.join(sorted_items)}</ul>"
+
+    if count and panopto_count:
+        lbl_value = f"{count} file{'s' if count != 1 else ''}, {panopto_count} recording{'s' if panopto_count != 1 else ''}"
+    elif panopto_count:
+        lbl_value = f"{panopto_count} recording{'s' if panopto_count != 1 else ''}"
+    else:
+        lbl_value = f"{count} file{'s' if count != 1 else ''}"
     sorted_folders = sorted(list(folder_set))
     _folder_lis = "".join(
         f"<li>{SVG_FOLDER_YELLOW}<span class='li-text'>" + esc(p) + "</span></li>"
@@ -314,11 +392,22 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'flex-shrink: 0 !important;'
         f'margin-left: 3px !important;'
         f'}}'
+        f'.dropdown-list ul li.li-sub-item {{'
+        f'padding-left: 19px !important;'
+        f'opacity: 0.85 !important;'
+        f'}}'
         f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
         f'</style>'
     )
+    # Adaptive lead line: files and/or Panopto recordings.
+    _dl_targets = []
+    if count:
+        _dl_targets.append(f'<b>{count} file{"s" if count != 1 else ""}</b> ({size})')
+    if panopto_count:
+        _dl_targets.append(f'<b>{panopto_count} Panopto recording{"s" if panopto_count != 1 else ""}</b>')
+    _dl_phrase = " and ".join(_dl_targets) if _dl_targets else f'<b>{count} files</b> ({size})'
     html_content = (
-        f'<div class="sync-subtitle">You are about to download <b>{count} files</b> ({size}) to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.'
+        f'<div class="sync-subtitle">You are about to download {_dl_phrase} to <b>{folders} {"folder" if folders == 1 else "folders"}</b>.'
         + (
             f'<br><span style="color:#fcd34d;">&#9998; {modified_update_count} of these are files you\'ve edited locally - the new Canvas version will be saved alongside as <code>_NewVersion</code> so your edits are preserved.</span>'
             if modified_update_count > 0 else ''
@@ -329,7 +418,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'<details>'
         f'<summary>'
         f'<div class="stat-left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.45em;height:1.45em;vertical-align:-0.3em;display:inline-block;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="rgba(255,255,255,0.85)"/><path d="M14 2v6h6" fill="rgba(255,255,255,0.4)"/></svg> <span class="stat-label">Files:</span></div>'
-        f'<div class="stat-value">{count} files <span class="arrow-icon"></span></div>'
+        f'<div class="stat-value">{lbl_value} <span class="arrow-icon"></span></div>'
         f'</summary>'
         f'<div class="dropdown-list">{file_list_html}</div>'
         f'</details>'
