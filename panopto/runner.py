@@ -39,6 +39,7 @@ progress(kind, **kw) event kinds:
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -46,8 +47,8 @@ from panopto import models as pmodels
 from panopto.auth import lti_launch
 from panopto.discovery import discover_course_videos
 from panopto.stream import (
-    download_audio_mp3, download_video_mp4, get_delivery_info,
-    pick_audio_stream, pick_video_stream,
+    delivery_duration, download_audio_mp3, download_video_mp4,
+    estimate_kind_size, get_delivery_info, pick_audio_stream, pick_video_stream,
 )
 from panopto.transcribe import (
     PanoptoCancelled, TranscriptionEngineCrash, transcribe_in_subprocess,
@@ -101,6 +102,20 @@ def make_recorder(sync_manager, course_root):
     return _rec
 
 
+def make_ignorer(sync_manager):
+    """Return an ignore_fn(video) that marks a recording as ignored in the
+    folder's panopto_ignored table. Used by the size-limit gate so an oversized
+    recording lands in the Ignored bucket (like a manually-ignored recording or
+    an over-limit Canvas file) instead of being re-offered on every future sync.
+    Best-effort; never raises."""
+    def _ign(video):
+        try:
+            sync_manager.ignore_panopto(video.video_id, getattr(video, "title", ""))
+        except Exception:
+            pass
+    return _ign
+
+
 PANOPTO_SUBFOLDER = "Panopto Recordings"
 
 
@@ -139,6 +154,35 @@ def _unique_base(directory: Path, safe_title: str, seen: set) -> Path:
         n += 1
 
 
+def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
+                    video_id: str, manifest: dict | None, seen: set) -> Path:
+    """Resolve the output stem (no extension) for a recording - manifest-first.
+
+    If this recording was downloaded in a prior run, the per-folder manifest
+    records the EXACT relative path of each artifact (including any collision
+    suffix like ``Title (1).mp3``). Reusing that stem guarantees a restore /
+    new-output sync writes alongside the existing files instead of diverging to a
+    fresh ``Title (2)`` - the runner thus resolves paths the same way the sync
+    analysis (``panopto.sync_plan.classify_videos``) did, so what executed matches
+    what Review showed. Only a never-before-downloaded recording falls back to a
+    freshly de-duplicated stem under *out_dir*. The chosen stem is reserved in
+    *seen* so a later same-titled recording can't collide with it.
+    """
+    if manifest:
+        mani = manifest.get(video_id) or manifest.get(str(video_id)) or {}
+        for kind in ("mp4", "mp3", "txt", "srt"):
+            rel = mani.get(kind)
+            if not rel:
+                continue
+            try:
+                base = (Path(course_root) / rel).with_suffix("")
+                seen.add(str(base).lower())
+                return base
+            except Exception:
+                pass
+    return _unique_base(out_dir, safe_title, seen)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Planning data
 # ─────────────────────────────────────────────────────────────────────────────
@@ -154,10 +198,22 @@ class _Task:
     txt_path: Path
     srt_path: Path
     record_fn: object
+    # Marks an oversized recording as ignored when the size-limit gate trips
+    # (parallel to record_fn; resolved per target during planning). None when no
+    # sync_manager is available (best-effort).
+    ignore_fn: object = None
+    # Max-file-size gate (bytes). 0/None = disabled. A recording whose estimated
+    # download size exceeds this is skipped + ignored instead of downloaded.
+    max_bytes: int = 0
     # auth context (resolved once per course during planning)
-    session: object
-    panopto_base: object
-    canvas_token: str
+    session: object = None
+    panopto_base: object = None
+    canvas_token: str = ""
+    # Serializes access to the shared per-course ``session`` across the concurrent
+    # download workers (requests.Session is not thread-safe). All tasks of one
+    # course share the SAME lock instance. Defaults to a private lock so a task
+    # built without one (e.g. the single-course helper) is still safe.
+    auth_lock: object = field(default_factory=threading.Lock)
     # transcription input: the local media file we feed to whisper. When a video
     # is kept we transcribe straight from the MP4 (no second download of the same
     # lecture); otherwise the MP3 audio intermediate is the source.
@@ -216,6 +272,7 @@ def run_panopto_batch(
     progress=None,
     is_cancelled=None,
     debug_file=None,
+    max_file_size_bytes: int | None = None,
 ) -> dict:
     """Download + transcribe Panopto recordings for many courses, grouped by phase.
 
@@ -225,6 +282,7 @@ def run_panopto_batch(
             'course_root':   Path to the course folder (recordings saved inside),
             'download_mode': 'modules' | 'flat',
             'record_fn':     callable(video, produced_paths) | None,
+            'ignore_fn':     callable(video) | None,   # mark recording ignored
             # Optional (sync mode): reuse the recordings discovered during the
             # analysis phase instead of re-running the slow discovery, and limit
             # work to the recordings the user selected in Review.
@@ -246,7 +304,15 @@ def run_panopto_batch(
     progress = progress or _noop
     is_cancelled = is_cancelled or (lambda: False)
     summary = {"found": 0, "downloaded": 0, "transcribed": 0,
-               "skipped": 0, "failed": 0, "courses": 0}
+               "skipped": 0, "size_skipped": 0, "failed": 0, "courses": 0}
+
+    # Max-file-size gate (skip-large-files Setting): a recording whose estimated
+    # download size exceeds this is skipped + ignored mid-download, exactly like
+    # an over-limit Canvas file. 0/None disables it.
+    try:
+        _gate_bytes = int(max_file_size_bytes or 0)
+    except (TypeError, ValueError):
+        _gate_bytes = 0
 
     # Per-target settings: the OUTPUT formats (mp4/mp3/txt/srt) and the folder
     # LAYOUT are resolved from each target's own ``settings`` contract (download
@@ -259,11 +325,6 @@ def run_panopto_batch(
     model_id = settings.get("model", "small")
     engine_ready = pmodels.whisper_available() and pmodels.is_installed(model_id)
     any_want_tx = any(wants_transcription(_ts(t)) for t in targets)
-    if any_want_tx and not engine_ready:
-        if not pmodels.whisper_available():
-            progress("warn", message="Transcription engine not installed - audio only.")
-        elif not pmodels.is_installed(model_id):
-            progress("warn", message=f"Model '{model_id}' not installed - transcription skipped.")
     model_path = str(pmodels.model_dir(model_id)) if engine_ready else None
     device = settings.get("device", "cpu")
     language = settings.get("language", "auto")
@@ -312,7 +373,6 @@ def run_panopto_batch(
         t_want_mp3 = bool(t_settings.get("output_mp3"))
         t_want_txt = bool(t_settings.get("output_txt"))
         t_want_srt = bool(t_settings.get("output_srt"))
-        t_model_ready = engine_ready and (t_want_txt or t_want_srt)
 
         prediscovered = target.get("videos")
 
@@ -363,6 +423,18 @@ def run_panopto_batch(
             _sel = {str(s).lower() for s in selected_ids}
             videos = [v for v in videos if str(v.video_id).lower() in _sel]
 
+        # Sync mode: per-recording allowed output kinds from the analysis phase.
+        # A restore-from-deleted recording only has 'mp4' (or 'mp3') in its
+        # download_kinds; it should NOT produce txt/srt for the first time just
+        # because settings have those enabled. When absent (download mode or
+        # unknown), fall back to settings for all recordings.
+        per_video_kinds: dict | None = target.get("per_video_kinds")
+
+        # Per-folder Panopto manifest ({video_id: {kind: rel_path}}), passed by
+        # sync mode so a re-download/restore reuses the exact recorded path. None
+        # in download mode (a fresh run has no prior manifest to honour).
+        target_manifest: dict | None = target.get("manifest")
+
         summary["found"] += len(videos)
         if videos:
             summary["courses"] += 1
@@ -391,6 +463,11 @@ def run_panopto_batch(
                 "Panopto auth could NOT be established for '%s' - downloads for "
                 "this course will fail (no Panopto session/host).", course.name)
 
+        # One lock per course-session, shared by every task of this course, so the
+        # concurrent download workers never touch the shared requests.Session at
+        # the same time (it is not thread-safe).
+        auth_lock = threading.Lock()
+
         for v in videos:
             if is_cancelled():
                 break
@@ -406,16 +483,34 @@ def run_panopto_batch(
                 summary["failed"] += 1
                 continue
 
-            base = _unique_base(out_dir, safe_title, seen_bases)
+            base = _recording_base(course_root, out_dir, safe_title, v.video_id,
+                                   target_manifest, seen_bases)
+            # Defensive: a manifest-derived stem could live in a different subfolder
+            # than out_dir (e.g. layout history); make sure its parent exists.
+            try:
+                base.parent.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                pass
             mp4_path = Path(str(base) + ".mp4")
             mp3_path = Path(str(base) + ".mp3")
             txt_path = Path(str(base) + ".txt")
             srt_path = Path(str(base) + ".srt")
 
-            mp4_missing = t_want_mp4 and not mp4_path.exists()
-            mp3_missing = t_want_mp3 and not mp3_path.exists()
-            txt_missing = t_want_txt and t_model_ready and not txt_path.exists()
-            srt_missing = t_want_srt and t_model_ready and not srt_path.exists()
+            # Narrow to the kinds this specific recording is allowed to produce.
+            # In sync mode this comes from PanoptoChange.download_kinds (what the
+            # analysis determined needs action); e.g. a restore-from-deleted mp4
+            # only has 'mp4' in its allowed set even if settings have txt=True.
+            v_kinds = (per_video_kinds or {}).get(str(v.video_id).lower()) if per_video_kinds else None
+            v_want_mp4 = t_want_mp4 and (v_kinds is None or 'mp4' in v_kinds)
+            v_want_mp3 = t_want_mp3 and (v_kinds is None or 'mp3' in v_kinds)
+            v_want_txt = t_want_txt and (v_kinds is None or 'txt' in v_kinds)
+            v_want_srt = t_want_srt and (v_kinds is None or 'srt' in v_kinds)
+            v_model_ready = engine_ready and (v_want_txt or v_want_srt)
+
+            mp4_missing = v_want_mp4 and not mp4_path.exists()
+            mp3_missing = v_want_mp3 and not mp3_path.exists()
+            txt_missing = v_want_txt and v_model_ready and not txt_path.exists()
+            srt_missing = v_want_srt and v_model_ready and not srt_path.exists()
             tx_missing = txt_missing or srt_missing
 
             # Nothing to do -> already fully present on disk.
@@ -429,22 +524,24 @@ def run_panopto_batch(
             # (avoids downloading the same lecture twice); otherwise from the MP3.
             # So a standalone audio download is only needed for a kept MP3, or to
             # feed transcription when no video is kept.
-            tx_source = mp4_path if t_want_mp4 else mp3_path
+            tx_source = mp4_path if v_want_mp4 else mp3_path
             need_video = mp4_missing
-            need_audio = mp3_missing or (tx_missing and not t_want_mp4 and not mp3_path.exists())
+            need_audio = mp3_missing or (tx_missing and not v_want_mp4 and not mp3_path.exists())
             tasks.append(_Task(
                 video=v, course=course, course_name=course.name,
                 mp4_path=mp4_path, mp3_path=mp3_path, txt_path=txt_path, srt_path=srt_path,
-                record_fn=record_fn, session=session, panopto_base=panopto_base,
-                canvas_token=cm.api_key,
+                record_fn=record_fn, ignore_fn=target.get("ignore_fn"),
+                max_bytes=_gate_bytes,
+                session=session, panopto_base=panopto_base,
+                canvas_token=cm.api_key, auth_lock=auth_lock,
                 tx_source=tx_source,
                 need_video=need_video,
                 need_audio=need_audio,
-                want_tx=(t_model_ready and tx_missing),
-                want_mp3=t_want_mp3,
-                want_mp4=t_want_mp4,
-                want_txt=t_want_txt,
-                want_srt=t_want_srt,
+                want_tx=(v_model_ready and tx_missing),
+                want_mp3=v_want_mp3,
+                want_mp4=v_want_mp4,
+                want_txt=v_want_txt,
+                want_srt=v_want_srt,
             ))
 
     # Only announce a discovery phase if one actually ran. In sync mode the
@@ -452,6 +549,16 @@ def run_panopto_batch(
     if _did_discover:
         progress("discovery_done", found=summary["found"],
                  courses=summary["courses"], scanned=n_targets)
+
+    # Warn if transcription outputs were genuinely wanted (files missing, per-video
+    # kinds allow it) but can't run because the engine/model isn't installed.
+    # Checked post-task-build so restore-only recordings (where per_video_kinds
+    # excluded txt/srt) don't trigger a false "skipped transcription" notice.
+    if not engine_ready and any(t.want_txt or t.want_srt for t in tasks):
+        if not pmodels.whisper_available():
+            progress("warn", message="Transcription engine not installed — Transcript & Subtitle outputs will be skipped.")
+        else:
+            progress("warn", message="Transcription model not set up — Transcript & Subtitle outputs will be skipped.")
 
     _n_dl = sum(1 for t in tasks if t.need_video or t.need_audio)
     _n_tx = sum(1 for t in tasks if t.want_tx)
@@ -546,6 +653,18 @@ def run_panopto_batch(
                     for err in res.errors:
                         progress("error", error=err)
                     if res.cancelled:
+                        continue
+                    if res.size_skipped:
+                        # Over the size limit: nothing downloaded. Register it as
+                        # ignored (so future syncs don't re-offer it) and surface
+                        # it as a size-skip, like an over-limit Canvas file. The
+                        # recording has no media on disk, so Phase 3 skips its
+                        # transcription automatically.
+                        summary["size_skipped"] += 1
+                        if t.ignore_fn:
+                            t.ignore_fn(v)
+                        progress("size_skipped", title=v.title,
+                                 size=res.est_bytes, course=t.course_name)
                         continue
                     # Apply kept artifacts here (task mutation on the main thread).
                     for p in res.produced_kept:
@@ -791,21 +910,23 @@ def _resolve_delivery(session, panopto_base, video, canvas_token):
     return session, panopto_base, delivery, err
 
 
-def _download_media(session, panopto_base, delivery, kind, out_path, is_cancelled):
+def _download_media(cookie_header, panopto_base, delivery, kind, out_path, is_cancelled):
     """Download one media *kind* ('video' | 'audio') from a resolved Delivery node.
 
-    Returns (ok, error); error == 'cancelled' signals user abort.
+    *cookie_header* is the pre-snapshotted auth cookie string (the session is not
+    touched here, so this runs safely on a worker thread). Returns (ok, error);
+    error == 'cancelled' signals user abort.
     """
     if kind == "video":
         url = pick_video_stream(delivery)
         if not url:
             return False, "No video stream available for this recording."
-        return download_video_mp4(session, panopto_base, url, out_path,
+        return download_video_mp4(cookie_header, panopto_base, url, out_path,
                                   is_cancelled=is_cancelled)
     url = pick_audio_stream(delivery)
     if not url:
         return False, "No audio stream available for this recording."
-    return download_audio_mp3(session, panopto_base, url, out_path,
+    return download_audio_mp3(cookie_header, panopto_base, url, out_path,
                               is_cancelled=is_cancelled)
 
 
@@ -823,6 +944,10 @@ class _DLResult:
     task: object
     cancelled: bool = False
     rec_failed: bool = False
+    # Set when the size-limit gate skips this recording before any download.
+    # ``est_bytes`` is the estimated size that tripped the gate (for the UI).
+    size_skipped: bool = False
+    est_bytes: int = 0
     total_bytes: int = 0
     kept_any: bool = False
     primary_path: object = None       # first KEPT file (drives the log icon)
@@ -878,9 +1003,17 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
         return res
 
     # Resolve the Delivery node ONCE (with a per-video LTI fallback), then pull
-    # whichever media this recording needs from that single response.
-    session, panopto_base, delivery, derr = _resolve_delivery(
-        t.session, t.panopto_base, v, t.canvas_token)
+    # whichever media this recording needs from that single response. The resolve
+    # touches the shared per-course requests.Session (a POST, and possibly a new
+    # login), which is NOT thread-safe - so it runs under the course's auth_lock,
+    # and we snapshot the auth cookies into a plain string WHILE STILL HOLDING the
+    # lock. ffmpeg is then handed that string and never reads the session, so the
+    # long concurrent downloads stay fully parallel and race-free.
+    from panopto.stream import _cookie_header
+    with t.auth_lock:
+        _session, panopto_base, delivery, derr = _resolve_delivery(
+            t.session, t.panopto_base, v, t.canvas_token)
+        cookie_header = _cookie_header(_session, panopto_base) if _session else ""
     if not delivery:
         logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",
                        v.title, v.video_id, derr or "no delivery")
@@ -899,12 +1032,33 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
     if t.need_audio:
         plan.append(("audio", t.mp3_path, t.want_mp3))
 
+    # Max-file-size gate (skip-large-files Setting). Panopto recordings have no
+    # known byte size before download, so we estimate from the now-resolved
+    # exact duration (audio is CBR/exact; video is ~1.5 Mbps, the same estimate
+    # the disk-check and sync Review use). Gate on the LARGEST artifact this
+    # recording would pull: if it exceeds the limit, skip the WHOLE recording
+    # (no media, no transcription) and flag it for the main thread to ignore -
+    # mirroring how an over-limit Canvas file is treated as an intentional skip.
+    if t.max_bytes and plan:
+        _dur = delivery_duration(delivery)
+        _est = 0
+        for _kind, _out, _keep in plan:
+            _pk = "mp4" if _kind == "video" else "mp3"
+            _est = max(_est, estimate_kind_size(_pk, _dur) or 0)
+        if _est > t.max_bytes:
+            logger.info(
+                "Panopto size gate: skipping '%s' (~%.0f MB est > %.0f MB limit).",
+                v.title, _est / (1024 * 1024), t.max_bytes / (1024 * 1024))
+            res.size_skipped = True
+            res.est_bytes = _est
+            return res
+
     for kind, out_path, keep in plan:
         if is_cancelled():
             res.cancelled = True
             break
         ok, err = _download_media(
-            session, panopto_base, delivery, kind, out_path, is_cancelled)
+            cookie_header, panopto_base, delivery, kind, out_path, is_cancelled)
         if not ok:
             if err == "cancelled":
                 res.cancelled = True

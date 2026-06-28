@@ -159,6 +159,24 @@ _HELP_TEXT = (
         "</details>"
         "<hr>"
 
+        # -- Panopto recordings --
+        "<details style='margin-top: 4px;'>"
+        f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS.get('video', HELP_ICONS['search'])} Panopto Lecture Recordings</summary>"
+        "<div style='margin-top: 6px; padding-left: 12px;'>"
+        "<div style='font-size: 0.88rem; color: rgba(255,255,255,0.88); line-height: 1.7; margin-bottom: 8px;'>"
+        "If this folder was set up to download <b>Panopto lecture recordings</b>, sync treats them just like any other file. They appear in their own <b>Panopto Recordings</b> list within each course, and are sorted into the same buckets:"
+        "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 20px; line-height: 1.7;'>"
+        "<li><b style='color:#ffffff;'>New / missing outputs</b> - a recording you don't have yet, or one whose configured formats aren't all on disk. <b>Checked by default.</b></li>"
+        "<li><b style='color:#ffffff;'>Deleted Locally</b> - a recording you previously downloaded then removed. Respected and left alone unless you check it. <b>Unchecked by default.</b></li>"
+        "<li><b style='color:#ffffff;'>Ignored</b> - use the eye icon to permanently skip a recording (e.g. a guest lecture you don't need).</li>"
+        "</ul></div>"
+        "<div style='background-color: rgba(184,157,254,0.1); border-left: 3px solid #b89dfe; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 4px; font-size: 0.85rem; color: rgba(255,255,255,0.9);'>"
+        "Recording sizes are estimated from their length before download (shown with a &ldquo;~&rdquo;). If a recording is set to produce a <b>Transcript</b> or <b>Subtitles</b> but no transcription model is installed yet, a notice appears with a one-click <b>Set up transcription</b> button - install a model and those transcripts are generated on the next sync. Everything runs locally; nothing is uploaded."
+        "</div>"
+        "</div>"
+        "</details>"
+        "<hr>"
+
         # -- FAQ --
         "<details style='margin-top: 4px;'>"
         f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['question']} Frequently Asked Questions</summary>"
@@ -213,18 +231,34 @@ def _render_transcription_setup_notice(results):
     """Warn (and offer one-click setup) when a synced course is configured to
     produce Panopto Transcripts/Subtitles but the engine/model isn't ready.
 
-    "Wants transcription" is read from each folder's composed Panopto settings
-    (stable, from analysis); the live readiness check + notice/button rendering
-    is the shared ``ui_shared.render_transcription_setup_notice``.
+    "Wants transcription" is determined by whether any *actionable* recording
+    actually has txt/srt in its download_kinds (what will run on the next sync).
+    Checking settings alone is wrong — a restore-from-deleted MP4 only ever
+    re-downloads the mp4 even if txt/srt are enabled in settings, so the notice
+    must not fire in that case.
     """
-    def _wants_tx(r):
-        s = (r.get('panopto') or {}).get('settings') or {}
-        return bool(s.get('output_txt') or s.get('output_srt'))
+    def _tx_recording_count(r):
+        changes = (r.get('panopto') or {}).get('changes') or []
+        return sum(
+            1 for c in changes
+            if getattr(c, 'is_actionable', False)
+            and any(k in ('txt', 'srt') for k in getattr(c, 'download_kinds', []))
+        )
+
+    total_tx = sum(_tx_recording_count(r) for r in (results or []))
+    if not total_tx:
+        return
+
+    _note = (
+        f"{total_tx} pending recording{'s' if total_tx != 1 else ''} "
+        f"{'are' if total_tx != 1 else 'is'} set to produce Transcript or Subtitle files."
+    )
 
     from ui_shared import render_transcription_setup_notice
     render_transcription_setup_notice(
-        any(_wants_tx(r) for r in (results or [])),
+        True,
         key="sync_review_setup_tx",
+        context_note=_note,
     )
 
 
@@ -232,11 +266,9 @@ def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
 
-    # Host the transcription engine-setup dialog on this page so the
-    # "Set up transcription" notice button (and Section 4's) can open it here.
-    if st.session_state.get('_pan_dialog_open'):
-        from ui.panopto_page import render_transcription_dialog
-        render_transcription_dialog()
+    # NOTE: The transcription engine-setup dialog is hosted centrally in app.py;
+    # the "Set up transcription" notice button (and Section 4's) opens it by
+    # setting st.session_state['_pan_dialog_open'] = True + an app-scoped rerun.
 
     from ui_shared import render_help_card
 
@@ -289,10 +321,6 @@ def show_analysis_review(on_confirm_sync):
     )
 
     st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; margin-top: -15px; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
-
-    # Heads-up (with one-click setup) if any synced course is configured for
-    # Transcripts/Subtitles but the transcription engine/model isn't ready.
-    _render_transcription_setup_notice(st.session_state.get('sync_analysis_results', []))
 
     from sync_manager import SyncFileInfo, SyncManager
 
@@ -1954,7 +1982,14 @@ def show_analysis_review(on_confirm_sync):
         max-height: 48px !important;
         height: 48px !important;
     }
+    div[class*="st-key-tx_setup_card_sync_review_setup_tx"] {
+        margin-top: -24px !important;
+    }
     </style>""")
+
+    # Heads-up (with one-click setup) if any synced course is configured for
+    # Transcripts/Subtitles but the transcription engine/model isn't ready.
+    _render_transcription_setup_notice(st.session_state.get('sync_analysis_results', []))
 
     col_back, _, col_sync = st.columns([1, 5, 1.5])
     with col_sync:

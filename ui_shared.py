@@ -244,6 +244,7 @@ def _build_help_icons() -> dict:
         'star': _mat('star'),
         'warning': '⚠️',
         'package': _mat('inventory_2'),
+        'video': _mat('smart_display'),   # Panopto lecture recordings
         'check_circle': _mat('check_circle'),
         'cursor': _mat('arrow_selector_tool'),
         'eye': _mat('visibility'),
@@ -738,8 +739,21 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
                         unsafe_allow_html=True,
                     )
             if folder_path and Path(folder_path).exists():
-                if st.button('Open Folder', key=f"{key_prefix}_open_{idx}", use_container_width=False):
-                    open_folder(folder_path)
+                _open_folder_button(folder_path, f"{key_prefix}_open_{idx}")
+
+
+@st.fragment
+def _open_folder_button(folder_path: str, key: str):
+    """Render an "Open Folder" button isolated in a fragment.
+
+    Clicking a plain ``st.button`` triggers a FULL-script rerun, so the entire
+    completion screen (stat cards, error details, every folder card) re-renders
+    *before* the click handler reaches ``open_folder`` - a visible 1-2s lag
+    before the folder actually opens. Wrapping the button in ``@st.fragment``
+    scopes the click's rerun to just this button, so the folder opens instantly.
+    """
+    if st.button('Open Folder', key=key, use_container_width=False):
+        open_folder(folder_path)
 
 
 # ===================================================================
@@ -1005,18 +1019,36 @@ def render_synced_file_rows(files: list, course_root: str, key_scope: str,
                 st.markdown(name_html, unsafe_allow_html=True)
             _help_missing = "File not found at its last known location"
             with cols[1]:
-                if st.button("​", key=f"fileact_open_{key_scope}_{i}",
-                             help="Open file" if exists else _help_missing,
-                             disabled=not exists, use_container_width=True):
-                    open_file(abs_path)
+                _fileact_button(
+                    f"fileact_open_{key_scope}_{i}",
+                    "Open file" if exists else _help_missing,
+                    not exists, open_file, abs_path,
+                )
             with cols[2]:
-                if st.button("​", key=f"fileact_reveal_{key_scope}_{i}",
-                             help="Show in folder" if exists else _help_missing,
-                             disabled=not exists, use_container_width=True):
-                    reveal_in_folder(abs_path)
+                _fileact_button(
+                    f"fileact_reveal_{key_scope}_{i}",
+                    "Show in folder" if exists else _help_missing,
+                    not exists, reveal_in_folder, abs_path,
+                )
             with cols[3]:
                 if folder_html:
                     st.markdown(folder_html, unsafe_allow_html=True)
+
+
+@st.fragment
+def _fileact_button(key: str, help_text: str, disabled: bool, action, arg):
+    """Render a per-file Open/Reveal icon button isolated in a fragment.
+
+    Same rationale as ``_open_folder_button``: a plain ``st.button`` click forces
+    a full-script rerun, re-rendering the whole completion/history screen before
+    the file actually opens. The fragment scopes the click's rerun to this button
+    so the file opens instantly. The zero-width-space label and the
+    ``fileact_open_``/``fileact_reveal_`` key prefixes (and thus the
+    ``inject_file_action_css`` styling) are preserved.
+    """
+    if st.button("​", key=key, help=help_text,
+                 disabled=disabled, use_container_width=True):
+        action(arg)
 
 
 # Synced-file categories, in display order: (record-key, header, HELP_ICONS-key).
@@ -1307,6 +1339,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             and isinstance(getattr(err, 'context', None), dict)
             and err.context.get('filepath')
             and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+            and not getattr(err, 'retry_exhausted', False)
         )
         if is_retriable or not hasattr(err, 'item_name'):
             actionable.append(err)
@@ -1449,6 +1482,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             and isinstance(getattr(err, 'context', None), dict)
             and err.context.get('filepath')
             and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+            and not getattr(err, 'retry_exhausted', False)
         )
         _dl_word = 'download' if retriable_count == 1 else 'downloads'
         btn_text = "Retry failed downloads" if retry_failed else (
@@ -1718,7 +1752,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     return f"{grid_container}{path_html}"
 
 
-def render_transcription_setup_notice(wants_transcription: bool, *, key: str) -> bool:
+def render_transcription_setup_notice(wants_transcription: bool, *, key: str, context_note: str = "") -> bool:
     """Shared "Panopto transcription isn't set up" warning + one-click setup.
 
     Renders an amber notice card (with the live, specific reason) and a "Set up
@@ -1826,6 +1860,7 @@ def render_transcription_setup_notice(wants_transcription: bool, *, key: str) ->
             "<div style='color:#fde68a; font-weight:600; font-size:0.9rem;'>"
             "Transcripts &amp; Subtitles need a one-time setup</div>"
             f"<div style='color:#d4a017; font-size:0.84rem; margin-top:2px; line-height:1.45;'>"
+            f"{('<b>' + esc(context_note) + '</b> ') if context_note else ''}"
             f"{esc(_why)} "
             "Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
             "Video &amp; Audio work without it.</div></div></div>",

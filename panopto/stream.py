@@ -182,6 +182,12 @@ def delivery_duration(delivery: dict) -> float:
 
 
 def _cookie_header(session, panopto_base: str) -> str:
+    """Snapshot the Panopto auth cookies into a single ``Cookie:`` header value.
+
+    Returns a plain string so callers can capture it ONCE (under a lock, on the
+    main/owning thread) and hand it to ffmpeg, instead of having concurrent
+    download workers iterate the shared (non-thread-safe) session cookie jar.
+    """
     return "; ".join(
         f"{c.name}={c.value}"
         for c in session.cookies
@@ -189,17 +195,18 @@ def _cookie_header(session, panopto_base: str) -> str:
     )
 
 
-def _input_headers(session, panopto_base: str) -> list[str]:
+def _input_headers(cookie_header: str, panopto_base: str) -> list[str]:
     """ffmpeg ``-headers`` args carrying the authenticated cookies + referer.
 
     The stream URLs are gated by the Panopto session cookies; ffmpeg has no
-    access to the requests session, so we hand it the cookies (and a referer the
-    CDN expects) explicitly.
+    access to the requests session, so we hand it a pre-snapshotted cookie string
+    (and a referer the CDN expects) explicitly. Taking the cookie value as a
+    plain string (not the session) keeps the concurrent download path off the
+    shared session entirely.
     """
-    cookie_str = _cookie_header(session, panopto_base)
     headers = ""
-    if cookie_str:
-        headers += f"Cookie: {cookie_str}\r\n"
+    if cookie_header:
+        headers += f"Cookie: {cookie_header}\r\n"
     headers += f"Referer: {panopto_base}/\r\n"
     return ["-headers", headers]
 
@@ -285,7 +292,7 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
 
 
 def download_audio_mp3(
-    session,
+    cookie_header: str,
     panopto_base: str,
     stream_url: str,
     out_path,
@@ -295,17 +302,20 @@ def download_audio_mp3(
 ) -> tuple[bool, str | None]:
     """Transcode the stream to MP3 at *out_path*. Returns (ok, error).
 
-    Cancellable: polls *is_cancelled* and terminates ffmpeg if requested.
+    *cookie_header* is the pre-snapshotted Panopto cookie string (see
+    ``_cookie_header``); this function never touches the requests session, so it
+    is safe to run concurrently. Cancellable: polls *is_cancelled* and terminates
+    ffmpeg if requested.
     """
     out_path = str(out_path)
     cmd = [ffmpeg_exe(), "-y", "-loglevel", "warning"]
-    cmd += _input_headers(session, panopto_base)
+    cmd += _input_headers(cookie_header, panopto_base)
     cmd += ["-i", stream_url, "-vn", "-acodec", "libmp3lame", "-ab", bitrate, out_path]
     return _run_ffmpeg_download(cmd, out_path, is_cancelled=is_cancelled)
 
 
 def download_video_mp4(
-    session,
+    cookie_header: str,
     panopto_base: str,
     stream_url: str,
     out_path,
@@ -314,15 +324,17 @@ def download_video_mp4(
 ) -> tuple[bool, str | None]:
     """Remux the combined stream to a kept MP4 at *out_path*. Returns (ok, error).
 
-    Uses stream copy (``-c copy``) so the original audio/video are kept verbatim
-    (fast, no quality loss). HLS sources (.m3u8) carry ADTS-framed AAC that must
-    be converted to the MP4 ASC framing on remux, hence the conditional bitstream
-    filter. ``+faststart`` moves the moov atom to the front so the file plays
-    while still on disk. Cancellable like the audio path.
+    *cookie_header* is the pre-snapshotted Panopto cookie string (see
+    ``_cookie_header``) - the session is never touched here, so concurrent
+    downloads are safe. Uses stream copy (``-c copy``) so the original audio/video
+    are kept verbatim (fast, no quality loss). HLS sources (.m3u8) carry
+    ADTS-framed AAC that must be converted to the MP4 ASC framing on remux, hence
+    the conditional bitstream filter. ``+faststart`` moves the moov atom to the
+    front so the file plays while still on disk. Cancellable like the audio path.
     """
     out_path = str(out_path)
     cmd = [ffmpeg_exe(), "-y", "-loglevel", "warning"]
-    cmd += _input_headers(session, panopto_base)
+    cmd += _input_headers(cookie_header, panopto_base)
     cmd += ["-i", stream_url, "-c", "copy"]
     if ".m3u8" in stream_url.lower():
         cmd += ["-bsf:a", "aac_adtstoasc"]

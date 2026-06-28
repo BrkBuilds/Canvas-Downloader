@@ -321,6 +321,10 @@ class DownloadError:
         self.raw_error = str(raw_error) if isinstance(raw_error, Exception) else raw_error
         self.context = context or {}
         self.is_app_error = is_app_error  # True for engine/infra failures, not individual file failures
+        # True once this file has been through an isolated retry and still failed.
+        # Re-categorizes the error from "Failed to Download" (retriable) to
+        # "Cannot Be Downloaded" (permanent) on the completion screen.
+        self.retry_exhausted = False
         self.timestamp = datetime.now(timezone.utc)
 
     def __str__(self):
@@ -2525,6 +2529,24 @@ class CanvasManager:
         if file_filter == 'study':
             ext = filepath.suffix.lower()
             if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
+                # "Only slides & PDF" filtered this file out. Register it as
+                # ignored in the sync DB - exactly like the max-file-size gate
+                # below - so a later sync of this folder treats it as an
+                # intentional skip and lands it in the Ignored bucket, instead
+                # of resurfacing it as "new" on every sync. The user can restore
+                # it any time from the Sync Hub's ignored-files list.
+                if sync_manager:
+                    _fid = getattr(file_obj, 'id', 0)
+                    if _fid:
+                        try:
+                            await asyncio.to_thread(
+                                sync_manager.ignore_file,
+                                _fid,
+                                getattr(file_obj, 'filename', ''),
+                                getattr(file_obj, 'size', 0) or 0,
+                            )
+                        except Exception:
+                            pass  # Non-fatal: never break a download for a DB write
                 return
 
         # We save the original filepath to serve as our concurrency lock target key.

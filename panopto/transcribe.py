@@ -165,13 +165,17 @@ def transcribe(
 
     try:
         idx = 0
+        _txt_started = False  # have we written the first non-empty txt segment?
         for seg in segments:
             if is_cancelled and is_cancelled():
                 raise PanoptoCancelled()
             idx += 1
             text = (seg.text or "").strip()
-            if txt_f:
-                txt_f.write(text + " ")
+            if txt_f and text:
+                # Space-separate segments WITHOUT a leading/trailing space: write a
+                # separator only before the 2nd+ segment, and skip empty segments.
+                txt_f.write((" " + text) if _txt_started else text)
+                _txt_started = True
             if srt_f:
                 srt_f.write(
                     f"{idx}\n{_fmt_srt_time(seg.start)} --> {_fmt_srt_time(seg.end)}\n{text}\n\n"

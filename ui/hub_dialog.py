@@ -308,13 +308,17 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 color: #e0e7ff !important;
                 transition: all 0.2s ease !important;
+                box-shadow: none !important;
+                outline: none !important;
             }}
 
-            /* Hover State (All Tabs) - Solid Indigo */
+            /* Hover State (All Tabs) - Subtle Active Color (No Bottom Stroke) */
             div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button:hover {{
-                background-color: rgba(95, 100, 200, 0.85) !important;
-                border-color: rgba(95, 100, 200, 1) !important;
+                background-color: rgba(95, 100, 200, 0.15) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 color: #ffffff !important;
+                box-shadow: none !important;
+                outline: none !important;
             }}
 
             /* Active Tab (Primary) Context styling */
@@ -323,14 +327,21 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-bottom: 3px solid rgba(140, 150, 255, 1) !important; /* Light indigo bottom border */
                 color: #ffffff !important;
+                box-shadow: none !important;
+                outline: none !important;
             }}
 
             /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
-            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:hover {{
-                background-color: rgba(95, 100, 200, 0.4) !important;
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:hover,
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:focus,
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:focus-visible,
+            div[data-testid="stDialog"] div[class*="st-key-btn_hub_tab_"] button[kind="primary"]:active {{
+                background-color: rgba(95, 100, 200, 0.3) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
                 color: #ffffff !important;
+                box-shadow: none !important;
+                outline: none !important;
             }}
             div[data-testid="stDialog"] div.st-key-btn_hub_tab_view_all button div[data-testid="stMarkdownContainer"] p::before {{
                 content: "";
