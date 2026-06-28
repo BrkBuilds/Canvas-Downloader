@@ -192,7 +192,7 @@ def discover_course_videos(
     # Pass 2 (parallel): the slow part. Each pending ExternalTool item needs an
     # item-detail fetch and (usually) an LTI handshake - ~1-2s of pure network
     # I/O each. They are independent (own request/session, read-only token), so
-    # resolving them concurrently turns N×2s of sequential waiting into a handful
+    # Finding them concurrently turns N×2s of sequential waiting into a handful
     # of round-trips. add()/folder-expansion stay sequential in pass 3.
     def _resolve(entry):
         mod, item, mod_name, item_title, item_id, launch_url = entry
@@ -217,7 +217,7 @@ def discover_course_videos(
     resolved: list[tuple] = []
     if pending and not _cancelled():
         import concurrent.futures as _cf
-        _emit('scan', detail=f"Resolving {len(pending)} lecture link(s)…")
+        _emit('scan', detail=f"Finding {len(pending)} lecture link(s)…")
         try:
             with _cf.ThreadPoolExecutor(max_workers=min(6, len(pending))) as _ex:
                 resolved = list(_ex.map(_resolve, pending))

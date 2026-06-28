@@ -302,7 +302,7 @@ def run_pptx_conversion(files, ui: UIBridge):
         # DispatchEx failed. Without this check the loop runs silently with no
         # conversions and no error visible to the user.
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _emit(ui, 'error', "PowerPoint COM init failed — conversions skipped")
+            _emit(ui, 'error', "PowerPoint COM init failed - conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (pptx_file, sm, ctx) in enumerate(files, 1):
@@ -481,7 +481,7 @@ def run_word_conversion(files, ui: UIBridge):
 
     with WordToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _emit(ui, 'error', "Word COM init failed — conversions skipped")
+            _emit(ui, 'error', "Word COM init failed - conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (word_file, sm, ctx) in enumerate(files, 1):
@@ -591,7 +591,7 @@ def run_excel_conversion(files, ui: UIBridge):
 
     with ExcelToPDF() as converter:
         if getattr(converter, 'app', None) is None and sys.platform != 'darwin':
-            _emit(ui, 'error', "Excel COM init failed — conversions skipped")
+            _emit(ui, 'error', "Excel COM init failed - conversions skipped")
             ui.pp_failure_count += total
         else:
             for i, (excel_file, sm, ctx) in enumerate(files, 1):

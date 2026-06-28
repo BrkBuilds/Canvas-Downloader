@@ -224,6 +224,47 @@ def is_installed(model_id: str) -> bool:
     return (d / "model.bin").exists() and (d / "config.json").exists()
 
 
+def transcription_status() -> dict:
+    """Readiness of the local transcription stack for the ACTIVE model, with a
+    user-facing reason. Single source of truth for the Section 4 banner and the
+    sync-review "transcription not set up" notice. Never raises.
+
+    Returns a dict:
+      ``ready``            engine importable AND the active model is installed
+      ``engine_available`` faster-whisper / ctranslate2 importable
+      ``model_id``         the configured active model id
+      ``any_installed``    at least one model exists on disk (any id)
+      ``reason``           "" when ready, else a short lowercase clause saying
+                           why (engine missing / installed-but-not-activated /
+                           none downloaded) - safe to interpolate after a dash.
+    """
+    from panopto.settings import load_settings
+    try:
+        model_id = load_settings().get("model", "small")
+        engine = whisper_available()
+        installed = is_installed(model_id)
+        any_inst = any(is_installed(m["id"]) for m in MODEL_REGISTRY)
+    except Exception:
+        return {
+            "ready": False, "engine_available": False, "model_id": "small",
+            "any_installed": False,
+            "reason": "the local transcription engine isn't available yet",
+        }
+    ready = engine and installed
+    if ready:
+        reason = ""
+    elif not engine:
+        reason = "the local transcription engine isn't available yet"
+    elif any_inst:
+        reason = "a transcription model is installed but not activated yet"
+    else:
+        reason = "no transcription model is downloaded yet"
+    return {
+        "ready": ready, "engine_available": engine, "model_id": model_id,
+        "any_installed": any_inst, "reason": reason,
+    }
+
+
 def installed_size_mb(model_id: str) -> float:
     return dir_size_bytes(model_dir(model_id)) / (1024 * 1024)
 
@@ -321,7 +362,7 @@ def _download_worker(model_id: str, entry: dict) -> None:
     target.mkdir(parents=True, exist_ok=True)
 
     try:
-        api = HfApi()
+        api = HfApi(token=False)
         all_files = api.list_repo_files(repo)
         wanted = [
             f for f in all_files
@@ -348,7 +389,7 @@ def _download_worker(model_id: str, entry: dict) -> None:
             for i, fname in enumerate(wanted):
                 if _cancel_requested(model_id):
                     raise ModelDownloadCancelled()
-                hf_hub_download(repo_id=repo, filename=fname, local_dir=str(target))
+                hf_hub_download(repo_id=repo, filename=fname, local_dir=str(target), token=False)
                 _set_state(model_id, files_done=i + 1,
                            downloaded_bytes=dir_size_bytes(target))
         finally:

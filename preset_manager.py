@@ -1,7 +1,7 @@
 """
 Preset Manager - Saved Download Settings & Presets for Step 2.
 
-Persists user-defined presets to a JSON file and provides 3 built-in
+Persists user-defined presets to a JSON file and provides 5 built-in
 immutable presets.  Uses the same atomic serialization pattern as
 SavedGroupsManager (`.tmp` + `os.replace` + `threading.Lock`).
 """
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 from core.state_registry import (
     SECONDARY_CONTENT_KEYS as _SECONDARY_CONTENT_KEYS,
     NOTEBOOK_SUB_KEYS as _NOTEBOOK_SUB_KEYS,
+    PANOPTO_OUTPUT_KEYS as _PANOPTO_OUTPUT_KEYS,
 )
 
 PRESETS_FILENAME = "saved_download_presets.json"
@@ -29,9 +30,10 @@ _presets_lock = threading.RLock()
 class PresetManager:
     """CRUD operations for download-settings presets."""
 
-    # ── The 19 session-state keys that define a preset ──────────────
+    # ── The session-state keys that define a preset ─────────────────
     SECONDARY_CONTENT_KEYS = _SECONDARY_CONTENT_KEYS
     NOTEBOOK_SUB_KEYS = _NOTEBOOK_SUB_KEYS
+    PANOPTO_OUTPUT_KEYS = _PANOPTO_OUTPUT_KEYS
 
     SETTINGS_KEYS = [
         'download_mode', 'file_filter', 'dl_isolate_secondary',
@@ -39,17 +41,25 @@ class PresetManager:
         'dl_secondary_master',
         'notebooklm_master',
         *NOTEBOOK_SUB_KEYS,
+        # Panopto (Section 4) output formats + layout. pan_layout is a string
+        # ('match'|'separate'); the four pan_out_* keys are booleans.
+        *PANOPTO_OUTPUT_KEYS,
+        'pan_layout',
     ]
 
-    # ── 3 Immutable Built-in Presets ────────────────────────────────
+    # ── 5 Immutable Built-in Presets ────────────────────────────────
+    # Mirror the Quick Download presets exactly so both entry points
+    # offer the same configurations.
 
     _BUILTIN_PRESETS = [
         {
             'preset_id': 'builtin_full_canvas',
-            'preset_name': '1:1 Full Canvas Course Download',
+            'preset_name': 'Complete Canvas Download',
             'description': (
-                'Downloads the course files and Canvas content exactly '
-                'like they are displayed on Canvas.'
+                'Downloads everything as shown on Canvas — all files '
+                'organized by module, with assignments, syllabus, '
+                'discussions, quizzes, announcements, and submissions. '
+                'Panopto video recordings included.'
             ),
             'is_builtin': True,
             'settings': {
@@ -61,7 +71,6 @@ class PresetManager:
                 'dl_announcements': True,
                 'dl_discussions': True,
                 'dl_quizzes': True,
-                # 'dl_rubrics': True,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                 'dl_submissions': True,
                 'dl_secondary_master': True,
                 'notebooklm_master': False,
@@ -73,17 +82,23 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
+                'pan_out_mp4': True,
+                'pan_out_mp3': False,
+                'pan_out_txt': False,
+                'pan_out_srt': False,
+                'pan_layout': 'match',
             },
             'include_path': False,
             'download_path': '',
         },
         {
-            'preset_id': 'builtin_ai_power_user',
-            'preset_name': 'AI Power-User Student',
+            'preset_id': 'builtin_daily_study',
+            'preset_name': 'Daily Study Pack (Optimized)',
             'description': (
-                'Downloads course files as organized by the teacher, '
-                'but optimizes core files for AI. Canvas Content is '
-                'isolated in separate folders to keep you updated.'
+                'All course files organized by module, with PowerPoints '
+                'and Word docs converted to PDF for AI compatibility. '
+                'Canvas Content is isolated in separate folders. '
+                'Includes both Panopto video and audio.'
             ),
             'is_builtin': True,
             'settings': {
@@ -95,7 +110,6 @@ class PresetManager:
                 'dl_announcements': True,
                 'dl_discussions': True,
                 'dl_quizzes': True,
-                # 'dl_rubrics': True,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
                 'dl_submissions': True,
                 'dl_secondary_master': True,
                 'notebooklm_master': False,
@@ -107,31 +121,36 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
+                'pan_out_mp4': True,
+                'pan_out_mp3': True,
+                'pan_out_txt': False,
+                'pan_out_srt': False,
+                'pan_layout': 'match',
             },
             'include_path': False,
             'download_path': '',
         },
         {
             'preset_id': 'builtin_notebooklm',
-            'preset_name': 'NotebookLM Optimized (Drag-and-Drop)',
+            'preset_name': '100% AI & NotebookLM Ready',
             'description': (
-                "Downloads only the core files from the Canvas 'files' "
-                'tab and converts them to AI-friendly formats in a '
-                'single folder. Ready to drag and drop into NotebookLM.'
+                'Everything in one flat folder with all file types '
+                'converted to AI-friendly formats (PPTX, Word, Excel, '
+                'HTML, code, links, video). Panopto audio saved '
+                'separately. Drag-and-drop ready for NotebookLM.'
             ),
             'is_builtin': True,
             'settings': {
                 'download_mode': 'flat',
                 'file_filter': 'all',
-                'dl_isolate_secondary': False,
-                'dl_assignments': False,
-                'dl_syllabus': False,
-                'dl_announcements': False,
-                'dl_discussions': False,
-                'dl_quizzes': False,
-                # 'dl_rubrics': False,  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
-                'dl_submissions': False,
-                'dl_secondary_master': False,
+                'dl_isolate_secondary': True,
+                'dl_assignments': True,
+                'dl_syllabus': True,
+                'dl_announcements': True,
+                'dl_discussions': True,
+                'dl_quizzes': True,
+                'dl_submissions': True,
+                'dl_secondary_master': True,
                 'notebooklm_master': True,
                 'convert_zip': True,
                 'convert_pptx': True,
@@ -141,6 +160,88 @@ class PresetManager:
                 'convert_code': True,
                 'convert_urls': True,
                 'convert_video': True,
+                'pan_out_mp4': False,
+                'pan_out_mp3': True,
+                'pan_out_txt': False,
+                'pan_out_srt': False,
+                'pan_layout': 'separate',
+            },
+            'include_path': False,
+            'download_path': '',
+        },
+        {
+            'preset_id': 'builtin_slides_pdfs',
+            'preset_name': 'Slides & PDFs Only',
+            'description': (
+                'Downloads only lecture slides and PDFs — no Canvas '
+                'Content, no conversions, no Panopto. The fastest, '
+                'most focused download for studying core materials.'
+            ),
+            'is_builtin': True,
+            'settings': {
+                'download_mode': 'modules',
+                'file_filter': 'study',
+                'dl_isolate_secondary': False,
+                'dl_assignments': False,
+                'dl_syllabus': False,
+                'dl_announcements': False,
+                'dl_discussions': False,
+                'dl_quizzes': False,
+                'dl_submissions': False,
+                'dl_secondary_master': False,
+                'notebooklm_master': False,
+                'convert_zip': False,
+                'convert_pptx': False,
+                'convert_word': False,
+                'convert_excel': False,
+                'convert_html': False,
+                'convert_code': False,
+                'convert_urls': False,
+                'convert_video': False,
+                'pan_out_mp4': False,
+                'pan_out_mp3': False,
+                'pan_out_txt': False,
+                'pan_out_srt': False,
+                'pan_layout': 'match',
+            },
+            'include_path': False,
+            'download_path': '',
+        },
+        {
+            'preset_id': 'builtin_files_only',
+            'preset_name': 'Files Only',
+            'description': (
+                'Only the files your teacher uploaded, organized by '
+                'Canvas module. Skips all Canvas-generated content '
+                '(assignments, announcements, discussions). '
+                'Panopto video recordings included.'
+            ),
+            'is_builtin': True,
+            'settings': {
+                'download_mode': 'modules',
+                'file_filter': 'all',
+                'dl_isolate_secondary': False,
+                'dl_assignments': False,
+                'dl_syllabus': False,
+                'dl_announcements': False,
+                'dl_discussions': False,
+                'dl_quizzes': False,
+                'dl_submissions': False,
+                'dl_secondary_master': False,
+                'notebooklm_master': False,
+                'convert_zip': False,
+                'convert_pptx': False,
+                'convert_word': False,
+                'convert_excel': False,
+                'convert_html': False,
+                'convert_code': False,
+                'convert_urls': False,
+                'convert_video': False,
+                'pan_out_mp4': True,
+                'pan_out_mp3': False,
+                'pan_out_txt': False,
+                'pan_out_srt': False,
+                'pan_layout': 'match',
             },
             'include_path': False,
             'download_path': '',
@@ -194,7 +295,7 @@ class PresetManager:
                 return []
 
     def get_builtin_presets(self) -> list[dict]:
-        """Return the 3 immutable built-in presets (deep copies)."""
+        """Return the 5 immutable built-in presets (deep copies)."""
         import copy
         return copy.deepcopy(self._BUILTIN_PRESETS)
 
@@ -287,6 +388,8 @@ class PresetManager:
                 settings[key] = session_state.get(key, 'modules')
             elif key == 'file_filter':
                 settings[key] = session_state.get(key, 'all')
+            elif key == 'pan_layout':
+                settings[key] = session_state.get(key, 'match')
             else:
                 settings[key] = session_state.get(key, False)
         return settings
@@ -311,6 +414,9 @@ class PresetManager:
                 session_state[key] = _mode if _mode in ('modules', 'flat') else 'modules'
             elif key == 'file_filter':
                 session_state[key] = settings.get(key, 'all')
+            elif key == 'pan_layout':
+                _pl = settings.get(key, 'match')
+                session_state[key] = _pl if _pl in ('match', 'separate') else 'match'
             else:
                 session_state[key] = settings.get(key, False)
 

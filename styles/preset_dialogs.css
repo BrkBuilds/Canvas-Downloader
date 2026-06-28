@@ -11,11 +11,11 @@ div[data-testid="stDialog"] button[aria-label="Close"] {
 }
 
 /* ═══════════════════════════════════════════════
-   Dialog top/bottom padding — tighten to match side padding
+   Dialog top/bottom padding - tighten to match side padding
    The padding lives on the first scrollable child, not div[role="dialog"] itself.
    Only override vertical; leave horizontal so sides stay unchanged.
    ═══════════════════════════════════════════════ */
-div[data-testid="stDialog"] div[role="dialog"] > div:first-child {
+div[data-testid="stDialog"] div[role="dialog"]>div:first-child {
     padding-top: 1.5rem !important;
     padding-bottom: 1rem !important;
 }

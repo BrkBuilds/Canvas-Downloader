@@ -284,7 +284,7 @@ div.st-key-preset_tab_builtin button div[data-testid="stMarkdownContainer"] p::b
             if not _user_presets:
                 from ui.amber_notice import render_info_notice
                 render_info_notice(f"No saved presets yet. Use the '{SVG_SAVE_COLORFUL_SMALL} Save Configuration' button to create one.", allow_html=True)
-            for _up in _user_presets:
+            for _up in reversed(_user_presets):
                 _render_preset_card(mgr, _up, is_builtin=False,
                                     b64_icon_builtin=_b64_builtin, b64_icon_user=_b64_user)
         else:
