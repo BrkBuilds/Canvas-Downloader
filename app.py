@@ -364,6 +364,79 @@ components.html("""<script>
 })();
 </script>""", height=0)
 
+# --- Settings → Panopto transcription-dialog transition mask ---
+# Clicking "Configure transcription" in the Settings modal closes Settings, fires
+# a full-app rerun, and re-opens the Panopto config dialog. For ~0.5s the bare
+# (undimmed) main page flashes through between the two modals. The big overlay
+# above is geared to MAIN-PAGE navigation (it polls stMain geometry to hide) and
+# would hang here because the background page doesn't actually change - so this is
+# a dedicated, self-contained mask: show on click, hide the instant the Panopto
+# dialog's own content has rendered (or after a short safety timeout).
+# State lives on window.parent and the click handler is re-bound every injection
+# (the components.html iframe is destroyed/recreated each rerun; a listener from a
+# dead iframe realm silently stops firing - see CLAUDE.md JS-bridge rules).
+components.html("""<script>
+(function(){
+    var win=window.parent, doc=win.document;
+    var M=win._cdPanMask||(win._cdPanMask={handler:null,el:null,timer:null});
+
+    function maskEl(){
+        if(M.el && M.el.isConnected) return M.el;
+        var e=doc.getElementById('_cdPanMaskOv');
+        if(!e){
+            var s=doc.getElementById('_cdPanMaskKf');
+            if(!s){s=doc.createElement('style');s.id='_cdPanMaskKf';
+                s.textContent='@keyframes _cdPanR{to{transform:rotate(360deg)}}';
+                doc.head.appendChild(s);}
+            e=doc.createElement('div');
+            e.id='_cdPanMaskOv';
+            e.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;'
+                +'background:#0e1117;z-index:99999;display:none;flex-direction:column;'
+                +'align-items:center;justify-content:center;gap:16px';
+            e.innerHTML=
+                '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
+                +'border-top-color:#b89dfe;border-radius:50%;'
+                +'animation:_cdPanR .75s linear infinite"></div>'
+                +'<div style="color:rgba(255,255,255,.38);font:13px/1 system-ui,sans-serif;'
+                +'letter-spacing:.04em">Loading…</div>';
+            doc.body.appendChild(e);
+        }
+        M.el=e; return e;
+    }
+
+    function show(){
+        var e=maskEl();
+        e.style.display='flex';
+        if(M.timer)win.clearTimeout(M.timer);
+        var start=Date.now();
+        (function poll(){
+            // The Panopto dialog is identifiable by its language card, which only
+            // exists once that dialog has rendered its body. Wait a beat after it
+            // appears so the dialog's scoped CSS has painted (no flash of unstyled
+            // cards), then drop the mask. 2.5s hard cap so a hung rerun can't trap it.
+            var ready=doc.querySelector('div[data-testid="stDialog"] div[class*="st-key-pan_lang_card"]');
+            if(ready || Date.now()-start>2500){
+                M.timer=win.setTimeout(function(){
+                    var el=doc.getElementById('_cdPanMaskOv');
+                    if(el)el.style.display='none';
+                }, ready?90:0);
+                return;
+            }
+            M.timer=win.setTimeout(poll,60);
+        })();
+    }
+
+    // Re-bind a fresh listener every injection (old realm may be dead).
+    try{ if(M.handler) doc.removeEventListener('click',M.handler,true); }catch(_){}
+    M.handler=function(e){
+        if(!e.target||!e.target.closest)return;
+        if(!e.target.closest('button'))return;
+        if(e.target.closest('div[class*="st-key-stg_btn_pan"]')) show();
+    };
+    doc.addEventListener('click',M.handler,true);
+})();
+</script>""", height=0)
+
 # --- URL Query-Param Navigation Persistence ---
 
 def _restore_nav_from_query_params() -> None:
@@ -545,6 +618,17 @@ if not st.session_state['is_authenticated']:
     from ui.auth import render_login_page
     render_login_page(fetch_courses)
     st.stop()
+
+# --- Panopto transcription-config dialog: centralized host ---
+# Rendered once at the top script level (not inside a fragment or any single
+# page) so it can be opened from ANY page OR from the global Settings dialog in
+# the sidebar - and so its internal model-download auto-rerun loop keeps the
+# modal alive across reruns. The flag is cleared on close/dismiss. Do NOT also
+# host this inside individual page modules: a second call in the same run crashes
+# Streamlit ("only one dialog allowed open at a time").
+if st.session_state.get('_pan_dialog_open'):
+    from ui.panopto_page import render_transcription_dialog
+    render_transcription_dialog()
 
 # --- Wizard Steps ---
 # Wrap in st.empty().container() to prevent stale elements from previous steps
@@ -1558,6 +1642,25 @@ with _main_content.container():
                         new_global_errors.append(err)
                 global_errors = new_global_errors
 
+            # Any retriable error that survived the retry is now permanent: flag it
+            # so the completion screen re-categorizes it from "Failed to Download"
+            # into "Cannot Be Downloaded" (a re-retry would just fail again). LTI
+            # streams and app-level errors were never in the retry queue, so skip them.
+            # Skip when the retry was cancelled - some queued items never actually
+            # ran, so they are not genuinely exhausted.
+            _retry_was_cancelled = (
+                st.session_state.get('cancel_requested') or st.session_state.get('download_cancelled')
+            )
+            if not _retry_was_cancelled:
+                for err in global_errors:
+                    if getattr(err, 'is_app_error', False) or isinstance(err, dict):
+                        continue
+                    ctx = getattr(err, 'context', None)
+                    err_filepath = ctx.get('filepath') if isinstance(ctx, dict) else None
+                    err_type = getattr(err, 'error_type', '')
+                    if err_filepath and err_type != 'LTI/Media Stream':
+                        err.retry_exhausted = True
+
             # Update session state with rehydrated metrics
             st.session_state['download_file_details'] = global_details
             st.session_state['download_errors_list'] = global_errors
@@ -1762,6 +1865,22 @@ with _main_content.container():
                                                       icon=file_icon_svg('x.mp3'),
                                                       detail='audio'))
                         _render_pan()
+                    elif kind == 'size_skipped':
+                        # A recording exceeded the skip-large-files limit and was
+                        # skipped + ignored mid-download. Drop it from the phase
+                        # denominator (it never ran) and surface it on the
+                        # completion screen alongside any size-skipped Canvas files.
+                        _pan['dl_total'] = max(0, _pan['dl_total'] - 1)
+                        _sz_mb = (kw.get('size', 0) or 0) / (1024 * 1024)
+                        if 'size_skipped_files' not in st.session_state:
+                            st.session_state['size_skipped_files'] = []
+                        st.session_state['size_skipped_files'].append(
+                            f"{kw.get('title', '')} (~{_sz_mb:.0f} MB)")
+                        log_deque.append(log_line(
+                            'skip', kw.get('title', ''),
+                            icon=file_icon_svg('x.mp4'),
+                            detail=f"Skipped - exceeds filesize limit · ~{_sz_mb:.0f} MB"))
+                        _render_pan()
                     elif kind == 'download_tick':
                         # Heartbeat during concurrent downloads - repaint so
                         # elapsed/speed keep ticking between 'downloaded' events.
@@ -1830,10 +1949,12 @@ with _main_content.container():
             _pan_targets = []
             for course in st.session_state.get('courses_to_download', []):
                 _pan_rec = None
+                _pan_ign = None
                 try:
                     import json as _json
                     from sync_manager import SyncManager as _PanSM
-                    from panopto.runner import make_recorder as _make_rec
+                    from panopto.runner import (
+                        make_recorder as _make_rec, make_ignorer as _make_ign)
                     _pan_course_folder = Path(st.session_state['download_path']) / cm._sanitize_filename(course.name)
                     _pan_sm = _PanSM(_pan_course_folder, course.id, course.name)
                     # Persist this run's contract (output formats + layout) into the
@@ -1845,14 +1966,26 @@ with _main_content.container():
                     except Exception:
                         pass
                     _pan_rec = _make_rec(_pan_sm, _pan_course_folder)
+                    _pan_ign = _make_ign(_pan_sm)
                 except Exception:
                     _pan_rec = None
+                    _pan_ign = None
                 _pan_targets.append({
                     'course': course,
                     'course_root': Path(st.session_state['download_path']) / cm._sanitize_filename(course.name),
                     'download_mode': st.session_state.get('download_mode', 'modules'),
                     'record_fn': _pan_rec,
+                    'ignore_fn': _pan_ign,
                 })
+
+            # Skip-large-files Setting: gate Panopto recordings by the same limit
+            # as Canvas files (recordings - usually the kept mp4 - over the limit
+            # are skipped + ignored). 0/None when disabled.
+            if st.session_state.get('max_file_size_enabled', False):
+                _pan_size_mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
+                _pan_max_bytes = _pan_size_mb * 1024 * 1024 if _pan_size_mb > 0 else None
+            else:
+                _pan_max_bytes = None
 
             try:
                 _pan_summary = run_panopto_batch(
@@ -1860,6 +1993,7 @@ with _main_content.container():
                     settings=pan_settings,
                     progress=pan_progress,
                     is_cancelled=check_cancellation,
+                    max_file_size_bytes=_pan_max_bytes,
                 )
                 st.session_state['panopto_summary'] = _pan_summary
             except (KeyboardInterrupt, SystemExit):
@@ -1950,6 +2084,7 @@ with _main_content.container():
                     if isinstance(getattr(err, 'context', None), dict)
                     and err.context.get('filepath')
                     and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+                    and not getattr(err, 'retry_exhausted', False)
                 )
                 _unresolvable = len(_file_errors) - _retriable
 
@@ -2008,6 +2143,7 @@ with _main_content.container():
                     and isinstance(getattr(err, 'context', None), dict)
                     and err.context.get('filepath')
                     and getattr(err, 'error_type', '') != 'LTI/Media Stream'
+                    and not getattr(err, 'retry_exhausted', False)
                     for err in download_errors
                 ) if download_errors else False
 

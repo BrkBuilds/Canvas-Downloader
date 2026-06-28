@@ -311,12 +311,9 @@ def render_download_settings(fetch_courses_fn):
     if 'pending_toast' in st.session_state:
         st.toast(st.session_state.pop('pending_toast'))
 
-    # Panopto transcription-config dialog host. Rendered at the main script level
-    # (not inside a fragment) so its internal model-download auto-rerun loop keeps
-    # the modal alive across reruns; the flag is cleared on close/dismiss.
-    if st.session_state.get('_pan_dialog_open'):
-        from ui.panopto_page import render_transcription_dialog
-        render_transcription_dialog()
+    # NOTE: The Panopto transcription-config dialog is hosted centrally in app.py
+    # (it can be opened from any page or the Settings dialog). Setting
+    # st.session_state['_pan_dialog_open'] = True + an app-scoped rerun opens it.
 
     # Step 2 Header with Preset Buttons
     _hdr_left, _hdr_right = st.columns([0.6, 0.4])
@@ -358,6 +355,13 @@ def render_download_settings(fetch_courses_fn):
         "<b style='color: #e2e8f0; font-size: 0.85rem;'>AI Optimization</b>"
         "</div>"
         "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Optional. When toggled, the app will automatically convert your files into the formats that work best with your favorite AI, specifically NotebookLM. Runs after files are downloaded.</div>"
+        "</div>"
+        "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(184,157,254,0.05); border-radius: 6px; border-left: 3px solid rgba(184,157,254,0.55);'>"
+        "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
+        "<span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Section 4</span>"
+        "<b style='color: #e2e8f0; font-size: 0.85rem;'>Panopto Lecture Recordings</b>"
+        "</div>"
+        "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Optional. Finds Panopto lecture recordings linked in your courses and saves them inside the course folder. Choose any combination of <b>Video (MP4)</b>, <b>Audio (MP3)</b>, <b>Transcript (.txt)</b> and <b>Subtitles (.srt)</b>. Video &amp; audio download and sync with no setup; <b>transcripts &amp; subtitles need a one-time transcription model</b> - they're generated locally on your machine (nothing is uploaded). Click <b>Set up transcription</b> to download one.</div>"
         "</div>"
         "<hr>"
 
@@ -431,6 +435,27 @@ def render_download_settings(fetch_courses_fn):
         f"<div style='{_ans3}'>Extracts the audio track from video files and saves it as an MP3. Lecture recordings become much smaller (typically 10 to 20 times smaller) and most AI tools support audio upload. The original video is <b>replaced</b> by the MP3.</div></details>"
         "<div style='background-color: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
         f"<span style='color: #fbd38d; font-weight: 600;'>{HELP_ICONS['warning']} Required software:</span> PowerPoint and Word PDF conversions require the matching Microsoft Office desktop app (PowerPoint / Word). <br>Excel PDF conversion requires Microsoft Excel, and the Excel AI data file extraction works for .xlsx/.xlsm only <b>(not legacy .xls)</b>. <br>If the required app is not installed, that step is silently skipped and your original file is kept."
+        "</div>"
+        "</div></details>"
+
+        # ── Section 4: Panopto ─────────────────────────────────────────────────
+        "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(184,157,254,0.25); border-radius: 7px; overflow: hidden;'>"
+        "<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>Panopto Lecture Recordings</span><span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;'>Section 4</span></summary>"
+        "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
+        "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>The app scans each course for embedded <b>Panopto</b> lecture links and saves the recordings inside the course folder. Pick any mix of the four outputs below - each is written per recording. Click an item to read more.</p>"
+        "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>Video (MP4)</summary>"
+        "<div style='padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(184,157,254,0.5); margin-top: 1px; line-height: 1.6;'>Downloads the full lecture video (the combined screen + camera stream) as an MP4. Best when you want to watch the lecture offline. Note: video files can be large.</div></details>"
+        "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>Audio (MP3)</summary>"
+        "<div style='padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(184,157,254,0.5); margin-top: 1px; line-height: 1.6;'>Downloads just the lecture audio as an MP3 - far smaller than video and perfect for re-listening or uploading to AI tools.</div></details>"
+        "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>Transcript (.txt) &amp; Subtitles (.srt)</summary>"
+        "<div style='padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(184,157,254,0.5); margin-top: 1px; line-height: 1.6;'>Generates a written transcript and/or timestamped subtitles <b>locally on your own computer</b> using on-device speech recognition - nothing is uploaded. You must download a transcription model once via <b>Set up transcription</b>; pick your language and (if you have an NVIDIA GPU on Windows) enable GPU acceleration for a big speed-up. On Macs transcription runs on the CPU.</div></details>"
+        "<div style='font-size: 0.73rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin: 13px 0 5px 0; color: rgba(255,255,255,0.9);'>Choose how recordings should be organized</div>"
+        "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>Match Course Folder structure</summary>"
+        "<div style='padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(184,157,254,0.5); margin-top: 1px; line-height: 1.6;'>Saves each recording alongside your course files (in its module subfolder when using subfolders, or the course root when flat).</div></details>"
+        "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>In Separate Folders</summary>"
+        "<div style='padding: 9px 13px 11px 13px; font-size: 0.85rem; color: #e2e8f0; background: rgba(0,0,0,0.32); border-left: 2px solid rgba(184,157,254,0.5); margin-top: 1px; line-height: 1.6;'>Groups all recordings into a dedicated &ldquo;Panopto Recordings&rdquo; folder inside the course folder, one subfolder per recording - keeps lectures separate from your files.</div></details>"
+        "<div style='background-color: rgba(184,157,254,0.1); border-left: 3px solid #b89dfe; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-top: 10px; font-size: 0.85rem;'>"
+        f"<span style='color: #cbb8ff; font-weight: 600;'>{HELP_ICONS['lightbulb']} Privacy:</span> Transcription is 100% local (faster-whisper). Your lectures never leave your computer. Recordings are discovered first, then downloaded, then transcribed - you'll see each phase on the progress screen."
         "</div>"
         "</div></details>"
 
@@ -2100,7 +2125,7 @@ def render_download_settings(fetch_courses_fn):
                             # audit-ignore
                             f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2.4' "
                             f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M20 6 9 17l-5-5'/></svg>"
-                            f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready &mdash; "
+                            f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready - "
                             f"using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. Transcript &amp; Subtitles are available.</div>"
                             f"</div>", unsafe_allow_html=True)
                         _dlg_label = "Manage transcription models"

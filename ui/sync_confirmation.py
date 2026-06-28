@@ -89,10 +89,11 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         for vid in s.get('panopto', []):
             c = _pan_changes.get(vid)
             if c:
-                if c.bucket == 'restore':
-                    formats = c.deleted_kinds or c.missing_kinds
-                else:
-                    formats = c.missing_kinds
+                # Single source of truth for "what this recording will produce on
+                # the next sync" - same set the runner acts on (PanoptoChange.
+                # download_kinds == missing_kinds), so the confirm dialog can never
+                # promise an output the execution then skips.
+                formats = c.download_kinds
 
                 _PAN_ICON_SVG = (
                     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" '

@@ -1,4 +1,9 @@
 ## Latest Updates
+- [x] **Clear History Button Styling and Confirmation Removal** (2026-06-28):
+    - [x] **Removed delete confirmation**: Allowed immediate history deletion on the first click, bypassing the Yes/No buttons and amber notice warning.
+    - [x] **Aligned default styling**: Made the resting state of the "Clear History" button identical to the list action buttons (Open Folder, Edit, etc.) in `sync_ui.py`, while retaining its customized red danger hover styling.
+    - [x] **Updated help text**: Edited the UI guide section in `sync_ui.py` to reflect that clicking the button deletes entries instantly.
+
 - [x] **Panopto Terminology Standardisation** (2026-06-24):
     - [x] **Replaced Lectures with Recordings**: Changed all user-facing labels, progress indicators, terminal logs, and code comments referencing "Panopto Lectures" or "Panopto lectures" to "Panopto Recordings" or "Panopto recordings" in `app.py`, `sync_ui.py`, `ui/panopto_page.py`, `sync/completion.py`, `panopto/*.py`, spec files, and configurations.
 

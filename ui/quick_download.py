@@ -113,8 +113,11 @@ _QUICK_PRESETS = [
             'convert_zip': False,  'convert_pptx': False, 'convert_word': False,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
-            # Panopto: full video, saved alongside course files (modules).
-            'pan_out_mp4': True, 'pan_out_mp3': False,
+            # Panopto: none. "Files Only" means just the teacher's uploaded files -
+            # lecture recordings are a separate, opt-in content type, so this
+            # preset must NOT pull multi-GB Panopto videos (matches its
+            # "no distractions" promise and "Slides & PDFs Only" above).
+            'pan_out_mp4': False, 'pan_out_mp3': False,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
@@ -769,12 +772,16 @@ div.st-key-page_nav_quick_start button:active {{
             "A preset is a pre-packaged 'recipe' that defines exactly what gets downloaded, what conversions are run, and how your folders are organized."
             f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['save']} Picking the right Preset</div>"
             "<ul style='margin-top: 5px; margin-bottom: 10px; padding-left: 20px; font-size: 0.9rem; line-height: 1.5;'>"
-            "<li><b>Complete Canvas Download</b>: Downloads everything (files, assignments, quizzes, etc.) keeping everything organized just like canvas. Best for a complete, 1:1 backup.</li>"
-            "<li><b>Daily study pack (Optimized)</b>: Downloads all files, converting PowerPoints and outdated Word filetypes to PDF for best AI compatibility.</li>"
-            "<li><b>100% AI & NotebookLM Ready</b>: All files in one folder, everything AI-Optimized, and ready to drag into notebookLM or your favorite AI.</li>"
-            "<li><b>Slides & PDFs Only</b>: Only downloads lecture slides and PDFs, skipping all other files. Good if you want to focus only on the essentials.</li>"
-            "<li><b>Files Only</b>: Pure files - only downloads teacher-uploaded files while skipping all Canvas text-based content (e.g. Assignment descriptions and announcements, etc.).</li>"
+            "<li><b>Complete Canvas Download</b>: Downloads everything (files, assignments, quizzes, etc.) keeping everything organized just like canvas, <b>including full Panopto lecture videos</b>. Best for a complete, 1:1 backup.</li>"
+            "<li><b>Daily study pack (Optimized)</b>: Downloads all files, converting PowerPoints and outdated Word filetypes to PDF for best AI compatibility, <b>plus Panopto lecture video &amp; audio</b>.</li>"
+            "<li><b>100% AI & NotebookLM Ready</b>: All files in one folder, everything AI-Optimized, and ready to drag into notebookLM or your favorite AI, <b>plus Panopto lecture audio</b> in a separate Recordings folder.</li>"
+            "<li><b>Slides & PDFs Only</b>: Only downloads lecture slides and PDFs, skipping all other files (no Panopto recordings). Good if you want to focus only on the essentials.</li>"
+            "<li><b>Files Only</b>: Pure files - only downloads teacher-uploaded files while skipping all Canvas text-based content (e.g. Assignment descriptions and announcements) and Panopto recordings.</li>"
             "</ul>"
+            f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS.get('video', HELP_ICONS['package'])} Panopto Lecture Recordings</div>"
+            "Several presets also fetch <b>Panopto lecture recordings</b> linked in your courses - the app finds them automatically, downloads the video and/or audio, and saves them right inside the course folder (you'll see a <b>Searching for Panopto Recordings</b> step after the files finish). "
+            "The configuration preview at the bottom of this page shows exactly which recording formats a preset includes. "
+            "Want transcripts or subtitles too, or finer control over video vs. audio? Switch to <b>Custom Download</b>, where Section 4 lets you pick formats and set up on-device transcription."
             f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['folder']} Organization Styles</div>"
             "You can choose between <b>With Subfolders</b> (mirrors Canvas Modules exactly) or <b>All in One Folder</b> (flattens directories by placing all files in one single folder). <br>"
             "<i>Note: The NotebookLM preset locks this choice to All in One Folder to ensure compatibility with NotebookLM's subfolder limitations.</i>"
@@ -807,6 +814,11 @@ div.st-key-page_nav_quick_start button:active {{
             "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Does Quick Download update existing folders on my computer?</summary>"
             "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
             "Yes! If you select a folder that already contains downloads from a previous run, the app will safely add any new files and apply updates without deleting your existing work or custom files. However, for continuous syncing, we highly recommend using <b>Sync Mode</b> from the sidebar instead, which is optimized for tracking changes."
+            "</div></details>"
+            "<details style='margin-top: 8px; cursor: pointer;'>"
+            "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What are the Panopto lecture recordings some presets download?</summary>"
+            "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
+            "Many courses embed lecture recordings from <b>Panopto</b>. The app detects those links, downloads the lecture video and/or audio, and stores them inside the course folder. Some presets include them by default (see each preset's badges in the preview). For transcripts (.txt) and subtitles (.srt) - generated locally on your machine, nothing uploaded - use <b>Custom Download → Section 4</b> to choose formats and download a transcription model. Recordings are also fully supported in <b>Sync Mode</b>."
             "</div></details>"
             "<hr>"
             f"<b>{HELP_ICONS['lightbulb']} Pro Tip:</b> If you need to tweak individual settings (like specific AI Optimizations, or certain Canvas Content), "

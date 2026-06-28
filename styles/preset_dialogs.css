@@ -175,13 +175,17 @@ div[class*="st-key-preset_tab_"] button {
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #e0e7ff !important;
     transition: all 0.2s ease !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
-/* Hover State (All Tabs) - Solid Indigo */
+/* Hover State (All Tabs) - Subtle Active Color (No Bottom Stroke) */
 div[class*="st-key-preset_tab_"] button:hover {
-    background-color: rgba(95, 100, 200, 0.85) !important;
-    border-color: rgba(95, 100, 200, 1) !important;
+    background-color: rgba(95, 100, 200, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #ffffff !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Active Tab (Primary) Context styling */
@@ -191,14 +195,21 @@ div[class*="st-key-preset_tab_"] button[kind="primary"] {
     border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
     /* Light indigo bottom border */
     color: #ffffff !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Maintain bottom border and border color on Active Tab hover so it doesn't jump */
-div[class*="st-key-preset_tab_"] button[kind="primary"]:hover {
-    background-color: rgba(95, 100, 200, 0.4) !important;
+div[class*="st-key-preset_tab_"] button[kind="primary"]:hover,
+div[class*="st-key-preset_tab_"] button[kind="primary"]:focus,
+div[class*="st-key-preset_tab_"] button[kind="primary"]:focus-visible,
+div[class*="st-key-preset_tab_"] button[kind="primary"]:active {
+    background-color: rgba(95, 100, 200, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-bottom: 3px solid rgba(140, 150, 255, 1) !important;
     color: #ffffff !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Settings2 SVG icon on all dialog expanders (preset_card_ rules below override this) */

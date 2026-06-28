@@ -11,6 +11,11 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 
 ## Recent Activity
+- **Session 2026-06-28: Clear History Button Styling and Confirmation Removal**
+    - **Removed delete confirmation**: Allowed immediate history deletion on the first click, bypassing the Yes/No buttons and amber notice warning.
+    - **Aligned default styling**: Made the resting state of the "Clear History" button identical to the list action buttons (Open Folder, Edit, etc.) in `sync_ui.py`, centering its text and icon while retaining its customized red danger hover styling.
+    - **Updated help text**: Edited the UI guide section in `sync_ui.py` to reflect that clicking the button deletes entries instantly.
+
 - **Session 2026-06-26: Panopto Recordings Dialog, Card Header, and Button Icon Refinements**
     - **Step 4 Workflow Icon**: Replaced the Panopto brand icon (`pan_icon.png`) with the workflow sequence icon (`icon_workflow_4.png`) on the Panopto Recordings card header in `ui/download_settings.py` to maintain step number continuity (Steps 1-4).
     - **Select All Icon & Alignment**: Loaded and styled the `icon_pan_select_all.png` icon on the Panopto "Select All" master button in `ui/download_settings.py` with padding-left, background settings, flexbox direction, and left alignment of inner text containers matching the Canvas Content master button.
