@@ -70,6 +70,20 @@ if _tn_bin is None:
 if _tn_bin and os.path.isfile(_tn_bin):
     binaries += [(_tn_bin, os.path.join('pync', 'vendor', 'terminal-notifier.app', 'Contents', 'MacOS'))]
 
+# ── WebKit lookbehind patch (macOS) ──────────────────────────────────
+# pywebview renders inside WKWebView (system WebKit). JavaScriptCore on
+# macOS < 13.3 (Safari < 16.4) cannot parse regex lookbehind, which Streamlit
+# 1.51's markdown autolink transform builds at runtime - crashing the whole UI
+# with "Invalid regular expression: invalid group specifier name". Strip the
+# lookbehind assertions from the bundled JS BEFORE collecting them.
+_patch_spec = _ilu.spec_from_file_location(
+    "patch_streamlit_webkit",
+    os.path.join(os.path.dirname(os.path.abspath(SPEC)), "patch_streamlit_webkit.py"),
+)
+_patch_mod = _ilu.module_from_spec(_patch_spec)
+_patch_spec.loader.exec_module(_patch_mod)
+_patch_mod.patch()
+
 tmp_ret = collect_all('streamlit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
