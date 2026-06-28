@@ -56,6 +56,16 @@ hiddenimports = []
 # ImageIO needs its own metadata to survive importlib.metadata.version() checks
 datas += copy_metadata('imageio')
 
+# Strip regex lookbehind from Streamlit's bundled JS so the UI renders on older
+# WebKit/JS engines (see patch_streamlit_webkit.py). Harmless on WebView2 but
+# kept for parity with the macOS build, where it is required.
+_pspec = importlib.util.spec_from_file_location(
+    "patch_streamlit_webkit", os.path.join(SPECPATH, "patch_streamlit_webkit.py")
+)
+_pmod = importlib.util.module_from_spec(_pspec)
+_pspec.loader.exec_module(_pmod)
+_pmod.patch()
+
 # Collect all Streamlit dependencies
 tmp_ret = collect_all('streamlit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
