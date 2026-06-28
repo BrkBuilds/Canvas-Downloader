@@ -749,7 +749,7 @@ def friendly_course_name(raw_name: str) -> str:
             break
     
     # Clean up any trailing whitespace or stray characters
-    name = name.rstrip(' -–-')
+    name = name.rstrip(' ---')
     
     # Append found group codes (e.g., " (LA)")
     if found_codes:

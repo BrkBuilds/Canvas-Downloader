@@ -85,6 +85,47 @@ def _release_sync_worker() -> None:
     return None
 
 
+def _basename_variants(value: str) -> set[str]:
+    """NFC-normalized basename variants of a path or filename.
+
+    Decodes BOTH ``%XX`` and ``+`` so a form-URL-encoded Canvas filename
+    (e.g. ``'Klyngevejledning+-+Upload.pptx'``) matches the real on-disk basename
+    (``'Klyngevejledning - Upload.pptx'``). ``urllib.parse.unquote`` alone leaves
+    ``+`` untouched - that was why locally-deleted files re-downloaded this run were
+    mis-labelled brand-'new' instead of 'restored'. Returns ``set()`` for falsy input.
+    """
+    import urllib.parse as _urlparse
+    import unicodedata as _ud
+    if not value:
+        return set()
+    base = Path(value).name
+    out: set[str] = set()
+    for variant in (base, _urlparse.unquote(base), _urlparse.unquote_plus(base)):
+        try:
+            out.add(_ud.normalize('NFC', variant))
+        except Exception:
+            out.add(variant)
+    return out
+
+
+def _redownload_restore_keys(redownload_items) -> set[str]:
+    """NFC-normalized basename keys identifying the locally-deleted files chosen for
+    re-download this run, so the completion screen and sync history label them
+    'restored' (re-downloaded) rather than mis-labelling them brand-'new'.
+
+    A locally-deleted ``SyncFileInfo`` carries the real on-disk relative path in
+    ``local_path`` (real spaces); ``target_local_path`` is empty (it is only filled
+    for new/updated files) and ``canvas_filename`` is form-URL-encoded. We harvest
+    basename variants from all three attributes via :func:`_basename_variants` so the
+    real on-disk synced name resolves regardless of which form Canvas supplied.
+    """
+    keys: set[str] = set()
+    for _si in (redownload_items or []):
+        for _attr in ('local_path', 'target_local_path', 'canvas_filename'):
+            keys |= _basename_variants(getattr(_si, _attr, '') or '')
+    return keys
+
+
 def _build_synced_groups(sync_selections, synced_details):
     """Build a per-course breakdown of the files synced this run.
 
@@ -105,7 +146,6 @@ def _build_synced_groups(sync_selections, synced_details):
     and total: any failure degrades to ``rel == name`` rather than raising into
     the sync finalizer.
     """
-    import urllib.parse as _urlparse
     import unicodedata as _ud
 
     def _norm(s):
@@ -141,33 +181,26 @@ def _build_synced_groups(sync_selections, synced_details):
             course_root = Path(_lf) if _lf else None
 
         # Pre-conversion names of files Canvas updated - drives 'updated' category.
+        # Harvest basename variants from BOTH the Canvas filename and the tracked
+        # SyncFileInfo.local_path (the real on-disk name) so the match survives the
+        # same '+'-encoding pitfall that broke 'restored'.
         updates_for_pair = set()
         result = res_data.get('result')
         if result is not None and hasattr(result, 'updated_files'):
             try:
-                updates_for_pair = {
-                    _urlparse.unquote(f.filename) for f, _ in result.updated_files
-                }
+                for _cf, _sf in result.updated_files:
+                    updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
+                    updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
             except Exception:
                 updates_for_pair = set()
 
         # Locally-deleted files the user chose to re-download this run - drives
         # the 'restored' category so they're no longer mis-labelled as brand-new.
-        # Match on the NFC-normalized basename of either the Canvas filename or
-        # the analyzer's resolved target path so a synced basename resolves even
-        # when the two forms differ. A file is in exactly one selection bucket,
-        # so 'restored' never collides with 'updated'.
-        redownloads_for_pair = set()
-        for _si in (sel.get('redownload') or []):
-            for _attr in ('canvas_filename', 'target_local_path'):
-                _val = getattr(_si, _attr, '') or ''
-                if _val:
-                    try:
-                        redownloads_for_pair.add(_norm(_urlparse.unquote(Path(_val).name)))
-                    except Exception:
-                        pass
+        # A file is in exactly one selection bucket, so 'restored' never collides
+        # with 'updated'.
+        redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
 
-        # Walk the folder ONCE to build basename -> [rel paths]; resolving each
+        # Walk the folder ONCE to build basename -> [rel paths]; Finding each
         # name against this index is O(1) and tolerates module subfolders.
         name_index = {}
         if course_root is not None:
@@ -192,17 +225,18 @@ def _build_synced_groups(sync_selections, synced_details):
         # freshest copy (which would hide one behind a duplicate-looking row).
         used_rels: set[str] = set()
         for nm in names:
+            _nm_key = _norm(nm)
             if "_NewVersion" in nm:
                 category = 'protected'
-            elif nm in updates_for_pair:
+            elif _nm_key in updates_for_pair:
                 category = 'updated'
-            elif _norm(nm) in redownloads_for_pair:
+            elif _nm_key in redownloads_for_pair:
                 category = 'restored'
             else:
                 category = 'new'
 
             rel = nm
-            candidates = name_index.get(_norm(nm))
+            candidates = name_index.get(_nm_key)
             if candidates:
                 # Prefer candidates not yet claimed by a prior record; only fall
                 # back to the full list if every copy is already spoken for.
@@ -1856,7 +1890,7 @@ def run_sync():
             from ui_helpers import get_config_dir
             history_mgr = SyncHistoryManager(get_config_dir())
             
-            import urllib.parse
+            import unicodedata as _ud_hist
             categorized_files = {'new': [], 'updated': [], 'restored': [], 'protected': []}
             synced_course_names = []
 
@@ -1866,28 +1900,30 @@ def run_sync():
                 if pair_files:
                     synced_course_names.append(sel['res_data']['pair']['course_name'])
 
-                # Extract updates list for this pair
-                updates_for_pair = []
+                # Updates / restores categorisation MUST mirror _build_synced_groups
+                # exactly so the history panel and completion screen agree. Both use
+                # the shared basename-variant helpers (which decode '+' and %XX and
+                # NFC-normalize) instead of the bare unquote that mis-labelled
+                # form-encoded names as brand-'new'.
+                updates_for_pair = set()
                 res_data = sel.get('res_data', {})
                 if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
-                    updates_for_pair = [urllib.parse.unquote(f.filename) for f, _ in res_data['result'].updated_files]
+                    for _cf, _sf in res_data['result'].updated_files:
+                        updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
+                        updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
 
-                # Locally-deleted files re-downloaded this run - keyed on basename
-                # of the Canvas filename / resolved target path (mirrors
-                # _build_synced_groups) so they land in 'restored', not 'new'.
-                redownloads_for_pair = set()
-                for _si in (sel.get('redownload') or []):
-                    for _attr in ('canvas_filename', 'target_local_path'):
-                        _val = getattr(_si, _attr, '') or ''
-                        if _val:
-                            redownloads_for_pair.add(urllib.parse.unquote(Path(_val).name))
+                redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
 
                 for fname in pair_files:
+                    try:
+                        _fn_key = _ud_hist.normalize('NFC', fname)
+                    except Exception:
+                        _fn_key = fname
                     if "_NewVersion" in fname:
                         categorized_files['protected'].append(fname)
-                    elif fname in updates_for_pair:
+                    elif _fn_key in updates_for_pair:
                         categorized_files['updated'].append(fname)
-                    elif fname in redownloads_for_pair:
+                    elif _fn_key in redownloads_for_pair:
                         categorized_files['restored'].append(fname)
                     else:
                         categorized_files['new'].append(fname)

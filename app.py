@@ -1699,7 +1699,7 @@ with _main_content.container():
                         _render_pan()
                     elif kind == 'scan_stage':
                         render_active_file(active_file_placeholder,
-                                           f"Scanning {esc(_pan['course'])} — {kw.get('name', '')}",
+                                           f"Scanning {esc(_pan['course'])} - {kw.get('name', '')}",
                                            phase='search', label='Searching')
                         _render_pan()
                     elif kind == 'scan_item':
@@ -1761,6 +1761,10 @@ with _main_content.container():
                             log_deque.append(log_line('success', kw.get('title', ''),
                                                       icon=file_icon_svg('x.mp3'),
                                                       detail='audio'))
+                        _render_pan()
+                    elif kind == 'download_tick':
+                        # Heartbeat during concurrent downloads - repaint so
+                        # elapsed/speed keep ticking between 'downloaded' events.
                         _render_pan()
                     elif kind == 'download_done':
                         _render_pan()

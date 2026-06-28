@@ -1004,7 +1004,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 or any(fw in course_lower for fw in folder_words)
             )
 
-            # Suppress name-mismatch when the rebind notice is already shown — it
+            # Suppress name-mismatch when the rebind notice is already shown - it
             # conveys the same information (wrong course) with more detail.
             if not has_match and not is_same_as_original and not _manifest_rebind_needed:
                 from ui.amber_notice import render_amber_notice
@@ -1093,7 +1093,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
 
             if is_duplicate_pair:
                 btn_disabled = True
-                btn_tooltip = "This pair is already on your sync list — cancel to go back."
+                btn_tooltip = "This pair is already on your sync list - cancel to go back."
             elif is_folder_selected and is_course_selected:
                 if is_edit_mode and not has_changes:
                     btn_disabled = True

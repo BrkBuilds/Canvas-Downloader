@@ -267,7 +267,7 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
         if size == 0 and rc == 0:
             detail = "ffmpeg produced an empty file"
         if tail:
-            detail += f" — {tail}"
+            detail += f" - {tail}"
         logger.warning("Panopto download failed (%s): %s", os.path.basename(out_path), detail)
         # Remove the empty/partial artifact so it isn't mistaken for a good file.
         try:

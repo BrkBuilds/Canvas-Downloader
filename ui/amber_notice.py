@@ -2,8 +2,8 @@
 ui.amber_notice - Reusable notice cards for inline warnings and info messages.
 
 Two variants:
-  - ``render_amber_notice`` – amber/gold warning card for non-fatal warnings.
-  - ``render_info_notice``  – blue/teal info card for informational messages.
+  - ``render_amber_notice`` - amber/gold warning card for non-fatal warnings.
+  - ``render_info_notice``  - blue/teal info card for informational messages.
 
 Usage:
     from ui.amber_notice import render_amber_notice, render_info_notice, render_error_notice

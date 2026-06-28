@@ -133,7 +133,22 @@ def _cpu_name() -> str | None:
         if sysname == "Darwin":
             return _run(["sysctl", "-n", "machdep.cpu.brand_string"])
         if sysname == "Windows":
-            return os.environ.get("PROCESSOR_IDENTIFIER") or platform.processor() or None
+            # Registry ProcessorNameString gives the friendly brand name
+            # (e.g. "Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz") rather than
+            # the raw family/model/stepping string in PROCESSOR_IDENTIFIER.
+            try:
+                import winreg
+                with winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+                ) as key:
+                    name, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+                    if name and name.strip():
+                        # Collapse repeated spaces (common in AMD/Intel strings)
+                        return " ".join(name.strip().split())
+            except Exception:
+                pass
+            return platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER") or None
         if sysname == "Linux":
             try:
                 with open("/proc/cpuinfo", "r", encoding="utf-8", errors="ignore") as f:
@@ -331,8 +346,8 @@ def device_advisory(device: str, model_id: str, hw: dict | None = None) -> tuple
                     f"{vram} MB of VRAM. It will fall back to CPU if it runs out.")
         if not hw.get("cuda_has_fp16"):
             return ("info",
-                    "Your GPU is an older model without fast FP16, so transcription "
-                    "will use INT8 - still much faster than the CPU.")
+                    "Your GPU is an older model, but it's fully supported and "
+                    "transcription will still be much faster than using the CPU.")
         return None
 
     if device == "cpu":

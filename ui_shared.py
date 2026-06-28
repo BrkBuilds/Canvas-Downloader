@@ -630,6 +630,47 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
     if file_records:
         inject_file_action_css()
 
+    # Folder glyph to the left of each "Open Folder" button's centred label
+    # (light grey at rest, white on hover). Scoped to THIS call's key_prefix so
+    # it targets only these folder buttons - never the per-file fileact_open_
+    # icon buttons. The icon is a ::before on the label <p> (Streamlit button
+    # labels are plain text), with the <p> flexed so icon + text stay centred.
+    _ofp = key_prefix.lower()
+    st.markdown(f"""<style>
+    div[class*="st-key-{_ofp}_open_"] button {{
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    /* Flex the markdown container (the button's actual flex child) so the label
+       block centres vertically; then flex the <p> so the icon + text sit on one
+       centred line. margin:0 removes the label's default bottom margin that would
+       otherwise bias the content upward. (No line-height override - that clips
+       the glyphs.) */
+    div[class*="st-key-{_ofp}_open_"] button [data-testid="stMarkdownContainer"] {{
+        display: flex !important;
+        align-items: center !important;
+    }}
+    div[class*="st-key-{_ofp}_open_"] button p {{
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+    }}
+    div[class*="st-key-{_ofp}_open_"] button p::before {{
+        content: "";
+        display: inline-block;
+        width: 15px; height: 15px;
+        flex-shrink: 0;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        background-image: url("{_FOLDER_ICON_GREY}");
+    }}
+    div[class*="st-key-{_ofp}_open_"] button:hover p::before {{
+        background-image: url("{_FOLDER_ICON_WHITE}");
+    }}
+    </style>""", unsafe_allow_html=True)
+
     st.markdown('<div class="completion-section-header">Folders Updated</div>', unsafe_allow_html=True)
 
     for idx, (folder_key, files) in enumerate(file_details.items()):
@@ -724,6 +765,16 @@ _FOLDER_ICON_SVG = (
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0a836'%3E"
     "%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E"
 )
+# Same folder glyph in two neutral tints for the "Open Folder" button icon:
+# light grey at rest, white on hover. Swapped via background-image on :hover.
+_FOLDER_ICON_GREY = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b1bac4'%3E"
+    "%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E"
+)
+_FOLDER_ICON_WHITE = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E"
+    "%3Cpath d='M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z'/%3E%3C/svg%3E"
+)
 
 
 def inject_file_action_css():
@@ -736,32 +787,36 @@ def inject_file_action_css():
     every key starting ``fileact_open_`` / ``fileact_reveal_``.
     """
     st.markdown(f"""<style>
-    /* Action-list container: styled boxes for each category */
+    /* Category sections are separated by a thin divider (the .cat-section-sep
+       element rendered at the top of every category AFTER the first - see
+       render_course_file_breakdown) instead of each sitting inside its own
+       coloured box. Strip the box entirely; keep the content indent + a little
+       bottom breathing room. */
     div[class*="st-key-fileactlist_"] {{
-        border-radius: 8px !important;
-        padding: 12px 16px 20px 34px !important;
-        margin-top: 5px !important;
-        margin-bottom: 5px !important;
+        border: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 0 16px 2px 34px !important;
+        margin: 0 !important;
     }}
-    div[class*="st-key-fileactlist_"][class*="_new"] {{
-        background-color: rgba(59, 130, 246, 0.03) !important;
-        border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    /* Collapse the gap between sibling category containers so the divider's own
+       5px-above / 5px-below margin is the ONLY spacing between categories. The
+       direct-child :has(> ...) matches only the immediate parent block, never an
+       ancestor. */
+    [data-testid="stVerticalBlock"]:has(> div[class*="st-key-fileactlist_"]) {{
+        gap: 0 !important;
     }}
-    div[class*="st-key-fileactlist_"][class*="_updated"] {{
-        background-color: rgba(16, 185, 129, 0.03) !important;
-        border: 1px solid rgba(16, 185, 129, 0.3) !important;
-    }}
-    div[class*="st-key-fileactlist_"][class*="_restored"] {{
-        background-color: rgba(139, 92, 246, 0.03) !important;
-        border: 1px solid rgba(139, 92, 246, 0.3) !important;
-    }}
-    div[class*="st-key-fileactlist_"][class*="_protected"] {{
-        background-color: rgba(245, 158, 11, 0.03) !important;
-        border: 1px solid rgba(245, 158, 11, 0.3) !important;
-    }}
-    div[class*="st-key-fileactlist_"][class*="_failed"] {{
-        background-color: rgba(239, 68, 68, 0.03) !important;
-        border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    /* The category separator line. The line is a border-bottom; the space ABOVE
+       it is padding-top (NOT margin-top) so it is immune to margin-collapse - a
+       margin-top collapses to zero inside the sync-history container (the divider
+       then sits flush against the row above it), whereas padding always renders.
+       Space below is margin-bottom (safe: the next header has margin-top:0). The
+       negative left margin lines the rule up with the category header text. */
+    .cat-section-sep {{
+        height: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+        padding-top: 6px !important;
+        margin: 0 0 12px -26px !important;
     }}
     /* Pack rows close, but with a little breathing room between them. */
     div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] {{ gap: 4px !important; }}
@@ -1009,7 +1064,10 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
         _mb = "2px" if _desc else "8px"
         _desc_html = (f"<div style='color:#8b949e;font-size:0.75rem;margin-bottom:8px;'>{_desc}</div>"
                       if _desc else "")
-        _hdr = (f"<div style='margin-top:0;margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;margin-bottom:{_mb};'>"
+        # Divider between categories (not above the first one).
+        _sep = "<div class='cat-section-sep'></div>" if rendered_any else ""
+        _hdr = (_sep
+                + f"<div style='margin-top:0;margin-left:-26px;color:#fff;font-size:0.85rem;font-weight:600;margin-bottom:{_mb};'>"
                 f"{HELP_ICONS[cat_icon]} {cat_title} "
                 f"<span style='color:#b1bac4;font-weight:500;'>({len(cfiles)})</span></div>"
                 + _desc_html)
@@ -1150,9 +1208,11 @@ def _friendly_error_reason(err) -> str:
 
 
 # SVG chevron for error panel toggle
-_CHEVRON_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
+_CHEVRON_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
 # SVG alert circle for error rows
 _ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E"
+# Light version of alert for the error expander title, matching the stat-card.stat-error icon color
+_ALERT_LIGHT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fca5a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E"
 
 
 def render_error_section(error_list: list, error_log_paths: list = None,
@@ -1358,7 +1418,10 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         f'<summary class="error-panel-header">'
         f'<div class="ep-header-row">'
         f'<img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>'
-        f'<span class="ep-title">Error Details</span>'
+        f'<div style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; background:rgba(239, 68, 68, 0.2); border-radius:6px; flex-shrink:0;">'
+        f'<img src="{_ALERT_LIGHT_SVG}" alt="error" style="width:16px; height:16px;"/>'
+        f'</div>'
+        f'<span class="ep-title" style="color: #d1d5db; font-weight: 400;">Error Details</span>'
         f'</div>'
         f'</summary>'
         f'<div class="error-panel-body">'
@@ -1435,11 +1498,16 @@ def render_panopto_summary(summary: dict | None) -> None:
     uptodate = int(summary.get('uptodate', 0) or 0)
     selected = int(summary.get('selected', found) or 0)
     if is_sync:
+        # Only surface the card when this run actually DID something with Panopto
+        # (downloaded / transcribed / processed, or hit an error). A run where
+        # everything was "already up to date" produced no Panopto work, so the
+        # card would just read "0 / 0" - hide it entirely rather than show an
+        # empty section.
         _did_work = (int(summary.get('downloaded', 0) or 0)
                      or int(summary.get('transcribed', 0) or 0)
                      or int(summary.get('failed', 0) or 0)
                      or selected)
-        if not (_did_work or uptodate):
+        if not _did_work:
             return
     elif found <= 0:
         return
@@ -1602,7 +1670,34 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     {conv_badges}
 </div>
 """
-    
+
+    # Build Purple Panopto Recordings Badges.
+    # Accepts the UI/session key names (pan_out_*, pan_layout); callers holding a
+    # stored Panopto contract should map it first via
+    # panopto.settings.contract_to_ui_keys so this stays a single renderer.
+    c_pan = "#b89dfe"
+    _pan_outputs = [
+        (settings.get('pan_out_mp4'), 'Video'),
+        (settings.get('pan_out_mp3'), 'Audio'),
+        (settings.get('pan_out_txt'), 'Transcript'),
+        (settings.get('pan_out_srt'), 'Subtitles'),
+    ]
+    _pan_on = [label for active, label in _pan_outputs if active]
+    if _pan_on:
+        _pan_layout_disp = "Separate Folders" if settings.get('pan_layout') == 'separate' else "Matching Course Folder"
+        pan_org_badge = f"<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(184, 157, 254, 0.05); color:{c_pan}; border-radius:4px; font-size:0.78rem; border:1px solid rgba(184, 157, 254, 0.7);'>{SVG_FOLDER_YELLOW_SMALL} {_pan_layout_disp}</span>"
+        pan_badges_list = "".join([f"<span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(184, 157, 254, 0.15); color:{c_pan}; border-radius:12px; font-size:0.78rem; border:1px solid rgba(184, 157, 254, 0.3);'>✓ {x}</span>" for x in _pan_on])
+        pan_badges = f"<div style='width: 100%;'>{pan_org_badge}</div>{pan_badges_list}"
+    else:
+        pan_badges = "<div style='width: 100%;'><span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
+
+    pan_html = f"""
+<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
+    <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Panopto Recordings</div>
+    {pan_badges}
+</div>
+"""
+
     path_html = ""
     if show_path and settings.get('download_path'):
         path_html = f"""
@@ -1612,14 +1707,137 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
 </div>
 """
     grid_container = f"""
-<div style="display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr; gap: 15px; margin-bottom: 5px;">
+<div style="display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr 1.0fr; gap: 15px; margin-bottom: 5px;">
     {core_html}
     {content_html}
     {conv_html}
+    {pan_html}
 </div>
 """
 
     return f"{grid_container}{path_html}"
+
+
+def render_transcription_setup_notice(wants_transcription: bool, *, key: str) -> bool:
+    """Shared "Panopto transcription isn't set up" warning + one-click setup.
+
+    Renders an amber notice card (with the live, specific reason) and a "Set up
+    transcription" button whenever *wants_transcription* is True but the local
+    engine/model isn't ready.  The icon, title, detail text, and button are all
+    rendered **inside** the card - matching the Custom Download page's layout.
+
+    The button opens the same engine-setup dialog used by Section 4 (sets
+    ``_pan_dialog_open`` + full-app rerun); the CALLER's page must host
+    ``render_transcription_dialog()`` when that flag is set.
+
+    Readiness is re-checked live via ``panopto.models.transcription_status`` so
+    the notice clears the instant a model is installed/activated. Single source
+    of this messaging for the sync list and the sync review page.
+
+    Returns True if the warning was rendered.
+    """
+    if not wants_transcription:
+        return False
+    from panopto import models as _pmodels
+    status = _pmodels.transcription_status()
+    if status.get('ready'):
+        return False
+
+    _engine_avail = status.get('engine_available', False)
+    _any_installed = status.get('any_installed', False)
+    _why = ("The local transcription engine isn't available yet."
+            if not _engine_avail else
+            "A model is installed but not activated yet."
+            if _any_installed else
+            "No transcription model is installed yet.")
+
+    # CSS for the card container and its embedded button.  Uses amber tones
+    # (matching render_amber_notice) and the same structural pattern as the
+    # Custom Download page's purple pan_info_card.
+    _card_key = f"tx_setup_card_{key}"
+    _btn_key = key
+    st.html(f"""<style>
+    div[class*="st-key-{_card_key}"] {{
+        border: 1px solid rgba(234, 179, 8, 0.45) !important;
+        border-radius: 10px !important;
+        background: rgba(234, 179, 8, 0.08) !important;
+        margin-bottom: 0px !important;
+        padding: 12px 15px 12px 15px !important;
+    }}
+    div[class*="st-key-{_card_key}"] div[data-testid="stVerticalBlock"] {{
+        padding-bottom: 0 !important;
+    }}
+    div[class*="st-key-{_card_key}"] div[data-testid="stElementContainer"]:last-child {{
+        margin-bottom: 0 !important;
+    }}
+    div.st-key-{_btn_key} {{
+        margin-left: 32px !important;
+        margin-top: 6px !important;
+        margin-bottom: 18px !important;
+    }}
+    div.st-key-{_btn_key} button {{
+        background: rgba(176,157,254,0.10) !important;
+        border: 1px solid rgba(176,157,254,0.35) !important;
+        color: #d8caff !important; font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        height: 32px !important; min-height: 32px !important;
+        min-width: 220px !important;
+        padding: 0 14px !important;
+    }}
+    div.st-key-{_btn_key} button [data-testid="stMarkdownContainer"] {{
+        display: flex !important;
+        align-items: center !important;
+    }}
+    div.st-key-{_btn_key} button p {{
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+    }}
+    div.st-key-{_btn_key} button p::before {{
+        content: "" !important;
+        display: inline-block !important;
+        width: 14px !important; height: 14px !important;
+        flex-shrink: 0 !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23d8caff'%3E%3Cpath fill-rule='evenodd' d='M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z' clip-rule='evenodd'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+    }}
+    div.st-key-{_btn_key} button:hover {{
+        background-color: rgba(176,157,254,0.18) !important;
+        border-color: #b89dfe !important; color: #ffffff !important;
+    }}
+    </style>""")
+
+    with st.container(key=_card_key):
+        # Amber info-circle SVG icon + title + detail, matching Custom Download layout
+        st.markdown(
+            "<div style='display:flex; align-items:flex-start; gap:12px;'>"
+            "<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#fbbf24' stroke-width='2' "
+            "stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
+            "<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/>"
+            "<line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
+            "<div style='flex:1;'>"
+            "<div style='color:#fde68a; font-weight:600; font-size:0.9rem;'>"
+            "Transcripts &amp; Subtitles need a one-time setup</div>"
+            f"<div style='color:#d4a017; font-size:0.84rem; margin-top:2px; line-height:1.45;'>"
+            f"{esc(_why)} "
+            "Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
+            "Video &amp; Audio work without it.</div></div></div>",
+            unsafe_allow_html=True,
+        )
+        if st.button("Set up transcription", key=_btn_key,
+                     help="Download and activate a transcription model, then continue."):
+            st.session_state['_pan_dialog_open'] = True
+            st.rerun(scope="app")
+
+    st.markdown("<div style='margin-bottom:14px;'></div>", unsafe_allow_html=True)
+    return True
 
 
 @st.dialog("📄 Error Log", width="large")
