@@ -1,5 +1,5 @@
 """
-fake_quick_sync_setup.py  —  Opsæt fake Quick Sync til video-optagelse
+fake_quick_sync_setup.py  -  Opsæt fake Quick Sync til video-optagelse
 Kør: python fake_quick_sync_setup.py          (apply)
      python fake_quick_sync_setup.py --undo   (gendannelse - se backup-mappen)
 
@@ -98,7 +98,7 @@ def apply():
         if deleted:
             print(f"    Slettet fra DB  : id={fid}")
         else:
-            print(f"  ⚠  Ikke i DB (id={fid}) – allerede slettet?")
+            print(f"  ⚠  Ikke i DB (id={fid}) - allerede slettet?")
 
     # ── 2. UPDATE FILES: gammel dato + rigtig md5 → ren overskrivning ────────
     print("\n[OPDATERINGER] Sætter gammel canvas_updated_at:")

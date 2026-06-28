@@ -196,3 +196,22 @@ def compose_settings(contract: dict | None) -> dict:
 def is_enabled(contract: dict | None) -> bool:
     """True if a contract selects at least one output kind."""
     return bool(contract) and any(contract.get(k) for k in _OUTPUT_KEYS)
+
+
+def contract_to_ui_keys(contract: dict | None) -> dict:
+    """Map a per-run contract ({output_mp4..., layout}) to the badge/UI key
+    names ({pan_out_mp4..., pan_layout}) consumed by the shared configuration
+    summary renderer (``ui_shared.render_config_summary_badges``).
+
+    Single source of truth so every config viewer (sync hub, dialogs) can show
+    Panopto pills from a stored contract without re-deriving the mapping.
+    """
+    c = contract or {}
+    layout = c.get("layout", "match")
+    return {
+        "pan_out_mp4": bool(c.get("output_mp4")),
+        "pan_out_mp3": bool(c.get("output_mp3")),
+        "pan_out_txt": bool(c.get("output_txt")),
+        "pan_out_srt": bool(c.get("output_srt")),
+        "pan_layout": layout if layout in ("match", "separate") else "match",
+    }

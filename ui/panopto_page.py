@@ -45,6 +45,10 @@ PAN_PURPLE = "#b89dfe"
 PAN_PURPLE_DARK = "#7037da"
 PAN_PURPLE_URL = "%23b89dfe"
 PAN_PURPLE_RGB = "176,157,254"
+# Green for the "Active" (selected model) button state.
+PAN_GREEN = "#22c55e"
+PAN_GREEN_URL = "%2322c55e"
+PAN_GREEN_RGB = "34,197,94"
 
 _P_CPU = "%3Cpath d='M7 17h10V7H7v10zm2-8h6v6H9V9zM21 11V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z'/%3E"
 _P_GPU = "%3Cpath d='M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z'/%3E"
@@ -57,7 +61,7 @@ SVG_GPU_ACT = f"data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='{PAN_PURPLE_
 # Twin model-card meters: speed (lightning) over accuracy (target), 5 segments
 # each. Replaces the old single bar + "Fastest/Slow" text.
 _IC_SPEED = "data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23b89dfe' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E"
-_IC_ACCURACY = "data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23b89dfe' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='4.5'/%3E%3Ccircle cx='12' cy='12' r='1' fill='%23b89dfe' stroke='none'/%3E%3C/svg%3E"
+_IC_ACCURACY = "data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23b89dfe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 16 6-12 6 12'/%3E%3Cpath d='M8 12h8'/%3E%3Cpath d='m16 20 2 2 4-4'/%3E%3C/svg%3E"
 
 
 def _twin_bars(speed: int, accuracy: int) -> str:
@@ -160,18 +164,6 @@ def _inject_dialog_css() -> None:
         border-radius: 6px !important; font-size: 0.8rem !important; padding: 0 6px !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
     }}
-    /* Active (selected) - purple */
-    div[data-testid="stDialog"] div[class*="st-key-pan_model_act_"] button[disabled] {{
-        background-color: rgba({PAN_PURPLE_RGB},0.15) !important;
-        border: 1px solid {PAN_PURPLE} !important; color: {PAN_PURPLE} !important;
-        font-weight: 600 !important; opacity: 1 !important;
-    }}
-    div[data-testid="stDialog"] div[class*="st-key-pan_model_act_"] button[disabled] p::before {{
-        content: "" !important; display: inline-block !important; width: 11px !important; height: 11px !important; margin-right: 5px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='{PAN_PURPLE_URL}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
-        background-size: contain !important; background-repeat: no-repeat !important; background-position: center !important; vertical-align: middle !important;
-    }}
-    div[data-testid="stDialog"] div[class*="st-key-pan_model_act_"] button[disabled] p {{ display: inline-flex !important; align-items: center !important; justify-content: center !important; }}
     div[data-testid="stDialog"] div[class*="st-key-pan_model_act_"] button:not([disabled]) {{
         background-color: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.08) !important; color: #cbd5e1 !important;
     }}
@@ -211,6 +203,48 @@ def _inject_dialog_css() -> None:
         color: #ffffff !important; font-weight: 600 !important;
     }}
     div[data-testid="stDialog"] div.st-key-pan_dialog_done button:hover {{ background-color: #5b29b0 !important; border-color: #5b29b0 !important; }}
+
+    /* Cancel buttons (model download + CUDA provision) - app-style X icon, keep compact height */
+    div[data-testid="stDialog"] div[class*="st-key-pan_model_cancel_"] button,
+    div[data-testid="stDialog"] div.st-key-pan_cuda_cancel button {{
+        background-color: rgba(255,255,255,0.07) !important;
+        background-image: none !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        gap: 6px !important;
+        transition: all 0.15s ease !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-pan_model_cancel_"] button::before,
+    div[data-testid="stDialog"] div.st-key-pan_cuda_cancel button::before {{
+        content: '' !important;
+        display: block !important;
+        width: 13px !important; height: 13px !important; min-width: 13px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
+        background-size: contain !important; background-repeat: no-repeat !important; background-position: center !important;
+        flex-shrink: 0 !important; transition: background-image 0.15s ease !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-pan_model_cancel_"] button:hover,
+    div[data-testid="stDialog"] div.st-key-pan_cuda_cancel button:hover {{
+        background-color: rgba(255,75,75,0.1) !important;
+        background-image: none !important;
+        border-color: #ff4b4b !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-pan_model_cancel_"] button:hover::before,
+    div[data-testid="stDialog"] div.st-key-pan_cuda_cancel button:hover::before {{
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
+    }}
+
+    /* Progress bar - light purple fill + bold % text */
+    div[data-testid="stDialog"] [data-testid="stProgressBar"] div[style*="width"],
+    div[data-testid="stDialog"] [data-testid="stProgress"] div[style*="width"] {{
+        background-color: {PAN_PURPLE} !important;
+        background-image: none !important;
+    }}
+    div[data-testid="stDialog"] [data-testid="stProgress"] p,
+    div[data-testid="stDialog"] [data-testid="stProgress"] small {{
+        font-weight: 700 !important;
+    }}
     </style>""")
 
 
@@ -356,7 +390,17 @@ def _render_model_manager() -> bool:
                         ac1, ac2 = st.columns([0.72, 0.28], gap="small")
                         with ac1:
                             if is_active:
-                                st.button("Active", key=f"pan_model_act_{mid}", disabled=True, use_container_width=True)
+                                st.html(
+                                    f"<div style='display:flex;align-items:center;justify-content:center;"
+                                    f"height:26px;border-radius:6px;background:rgba({PAN_GREEN_RGB},0.15);"
+                                    f"border:1px solid {PAN_GREEN};color:{PAN_GREEN};font-size:0.8rem;"
+                                    f"font-weight:600;gap:5px;box-sizing:border-box;cursor:default;'>"
+                                    f"<img src=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+                                    f"viewBox='0 0 24 24' fill='none' stroke='{PAN_GREEN_URL}' stroke-width='3' "
+                                    f"stroke-linecap='round' stroke-linejoin='round'%3E"
+                                    f"%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E\" "
+                                    f"width='11' height='11' style='flex-shrink:0;'> Active</div>"
+                                )
                             elif st.button("Activate", key=f"pan_model_act_{mid}", use_container_width=True):
                                 _set_radio_card("pan_model", mid)
                                 st.rerun(scope="app")
@@ -364,6 +408,9 @@ def _render_model_manager() -> bool:
                             if st.button("", key=f"pan_model_del_{mid}", help="Remove model", use_container_width=True):
                                 pmodels.delete_model(mid)
                                 pmodels.clear_download_state(mid)
+                                if st.session_state.get("pan_model") == mid:
+                                    st.session_state["pan_model"] = PANOPTO_DEFAULTS["model"]
+                                    _persist()
                                 st.rerun(scope="app")
                     else:
                         disabled = not pmodels.hf_available()
@@ -407,19 +454,19 @@ def _render_compute_hardware_status(hw: dict) -> None:
     elif status == "gpu_unusable":
         gpu_row = _row("#f59e0b", "GPU",
                        f"<b>{gpu_name}</b>{vram_str} · found, but its CUDA libraries "
-                       "(cuBLAS/cuDNN) aren't installed — using CPU")
+                       "(cuBLAS/cuDNN) aren't installed - using CPU")
     elif status == "cpu_only_mac":
         _chip = "Apple Silicon" if hw.get("is_arm_mac") else "macOS"
-        gpu_row = _row("#8A91A6", "GPU", f"{_chip} — no GPU mode (the engine runs on the CPU)")
+        gpu_row = _row("#8A91A6", "GPU", f"{_chip} - no GPU mode (the engine runs on the CPU)")
     elif status == "engine_missing":
-        gpu_row = _row("#f87171", "GPU", "Transcription engine unavailable — see Available Models below")
+        gpu_row = _row("#f87171", "GPU", "Transcription engine unavailable - see Available Models below")
     else:  # cpu_only
         gpu_row = _row("#8A91A6", "GPU", "No compatible NVIDIA GPU found")
 
     cores = hw.get("cpu_cores") or 0
     cpu_name = _esc((hw.get("cpu_name") or "").strip())
-    if len(cpu_name) > 46:
-        cpu_name = cpu_name[:46].rstrip() + "…"
+    if len(cpu_name) > 52:
+        cpu_name = cpu_name[:52].rstrip() + "…"
     cpu_txt = (f"{cores}-core CPU" if cores else "CPU")
     if cpu_name:
         cpu_txt += f" · {cpu_name}"
@@ -453,7 +500,7 @@ def _render_gpu_enablement(hw: dict) -> bool:
     status = state.get("status") if state else None
 
     # ── Active download ──
-    if status in ("resolving", "downloading", "extracting"):
+    if status in ("Finding", "downloading", "extracting"):
         total = state.get("total_bytes") or 0
         done = state.get("downloaded_bytes") or 0
         pct = int(done / total * 100) if total else 0
@@ -499,7 +546,7 @@ def _render_gpu_enablement(hw: dict) -> bool:
             "Enable GPU acceleration</div>"
             "<div style='color:#94a3b8;font-size:0.82rem;line-height:1.5;'>"
             "Your GPU is ready but needs NVIDIA's CUDA libraries (cuBLAS + cuDNN). "
-            "The app can download and install them just for transcription — about "
+            "The app can download and install them just for transcription - about "
             "<b>1.3&nbsp;GB</b>, one time, no admin needed.</div></div>",
             unsafe_allow_html=True,
         )
@@ -513,7 +560,7 @@ def _render_gpu_enablement(hw: dict) -> bool:
         render_info_notice(
             "Your NVIDIA GPU was found, but its CUDA driver isn't available. "
             "Update to the latest NVIDIA driver (GeForce Experience or nvidia.com/drivers), "
-            "then reopen this dialog — the app will offer to finish GPU setup.",
+            "then reopen this dialog - the app will offer to finish GPU setup.",
             margin="10px 0 0 0",
         )
 

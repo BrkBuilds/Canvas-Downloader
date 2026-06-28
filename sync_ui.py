@@ -883,6 +883,36 @@ def _sync_pairs_section(courses, course_names, course_options):
                         }
         st.session_state[_cache_key] = ignored_by_course
 
+    # --- Pre-compute which pair indices need transcription highlight ---
+    # If the transcription engine/model isn't ready, highlight pairs whose
+    # stored panopto contract requests Transcript or Subtitles.
+    _tx_highlight_indices = set()
+    try:
+        from panopto import models as _pmodels_pre
+        _tx_status_pre = _pmodels_pre.transcription_status()
+        if not _tx_status_pre.get('ready') and sync_pairs:
+            import json as _json_hl
+            for _hi, _hp in enumerate(sync_pairs):
+                _hf = _hp.get('local_folder')
+                _hcontract = None
+                if _hf and Path(_hf).exists():
+                    try:
+                        _hsm = SyncManager(_hf, _hp.get('course_id'), _hp.get('course_name', ''))
+                        _hraw = _hsm._load_metadata('panopto_contract')
+                        if _hraw:
+                            _hcontract = _json_hl.loads(_hraw)
+                    except Exception:
+                        _hcontract = None
+                if _hcontract is None:
+                    _hcontract = {
+                        'output_txt': st.session_state.get('persistent_pan_out_txt', False),
+                        'output_srt': st.session_state.get('persistent_pan_out_srt', False),
+                    }
+                if _hcontract.get('output_txt') or _hcontract.get('output_srt'):
+                    _tx_highlight_indices.add(_hi)
+    except Exception:
+        pass  # fail open - no highlighting
+
     with st.container(border=True, key="sync_list_outline"):
         if sync_pairs:
             editing_idx = st.session_state.get('editing_pair_idx')
@@ -938,8 +968,14 @@ def _sync_pairs_section(courses, course_names, course_options):
                         )
 
                     # Card container with Save button INSIDE
-                    # Use a different key suffix for missing-folder cards so CSS can apply red border
-                    _card_key = f"sync_pair_card_missing_{idx}" if not folder_exists else f"sync_pair_card_{idx}"
+                    # Use a different key suffix for missing-folder / transcription-needed
+                    # cards so CSS can apply distinctive borders.
+                    if not folder_exists:
+                        _card_key = f"sync_pair_card_missing_{idx}"
+                    elif idx in _tx_highlight_indices:
+                        _card_key = f"sync_pair_card_txsetup_{idx}"
+                    else:
+                        _card_key = f"sync_pair_card_{idx}"
                     with st.container(border=True, key=_card_key):
                         # Title rendered first, naturally
                         st.markdown(f"**{'Course: '} {display_name}**")
@@ -1077,6 +1113,36 @@ def _sync_pairs_section(courses, course_names, course_options):
 
 
 
+def _sync_pairs_want_transcription(sync_pairs) -> bool:
+    """True if any pair's resolved Panopto contract requests Transcript/Subtitles.
+
+    Per-folder source of truth is the stored ``panopto_contract`` (seeded on the
+    first sync); for a not-yet-synced pair it falls back to the current Section 4
+    selection (``persistent_pan_*``) that the first sync will seed - mirroring
+    ``sync.analysis`` so the heads-up matches what the run will actually do.
+    """
+    import json as _json_tx
+    for p in sync_pairs or []:
+        folder = p.get('local_folder')
+        contract = None
+        if folder and Path(folder).exists():
+            try:
+                sm = SyncManager(folder, p.get('course_id'), p.get('course_name', ''))
+                raw = sm._load_metadata('panopto_contract')
+                if raw:
+                    contract = _json_tx.loads(raw)
+            except Exception:
+                contract = None
+        if contract is None:
+            contract = {
+                'output_txt': st.session_state.get('persistent_pan_out_txt', False),
+                'output_srt': st.session_state.get('persistent_pan_out_srt', False),
+            }
+        if contract.get('output_txt') or contract.get('output_srt'):
+            return True
+    return False
+
+
 def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     """Render Sync Step 1: folder pairing UI."""
 
@@ -1087,6 +1153,13 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     _init_sync_session_state()
     _load_persistent_pairs()
+
+    # Host the transcription engine-setup dialog on this page so the sync-list
+    # "Set up transcription" notice button can open it here (and persist its
+    # model-download auto-rerun loop).
+    if st.session_state.get('_pan_dialog_open'):
+        from ui.panopto_page import render_transcription_dialog
+        render_transcription_dialog()
 
     # Inject Google Material Symbols font once per render (M-24).
     from ui_shared import inject_material_icons_font
@@ -1324,6 +1397,16 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # Read sync_pairs here so the Analyze/Quick Sync buttons below can check it.
     # The fragment may have mutated session state (add/remove via scope="app" reruns).
     sync_pairs = st.session_state.get('sync_pairs', [])
+
+    # Heads-up directly under the sync list: a course here is configured to create
+    # Panopto Transcripts/Subtitles but the transcription engine/model isn't ready
+    # (e.g. the model was deleted after setup). Offers one-click setup; clears the
+    # instant a model is installed. Shared renderer with the sync-review notice.
+    from ui_shared import render_transcription_setup_notice
+    render_transcription_setup_notice(
+        _sync_pairs_want_transcription(sync_pairs),
+        key="sync_list_setup_tx",
+    )
 
     # --- (5) Analyze + Quick Sync action buttons ---
 
@@ -2091,6 +2174,20 @@ def _render_sync_history():
                        equal specificity. */
                     div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"] { gap: 9px !important; }
                     div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] { gap: 4px !important; }
+                    /* Categories within a course are separated by the divider line
+                       (see render_course_file_breakdown / the legacy loop below), so
+                       collapse the 9px gap between the category containers themselves
+                       - the divider owns that 5px-above/5px-below spacing. Course
+                       name headers keep their own margins. */
+                    div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"]:has(> div[class*="st-key-fileactlist_"]) { gap: 0 !important; }
+                    /* The shared .cat-section-sep rule is asymmetric (6px padding
+                       above the line, 12px margin below) - tuned for the completion
+                       screen, where the category gap is NOT collapsed so the extra
+                       space above the line comes for free. Here we collapse that gap
+                       to 0 (above), so the divider's 6px alone leaves it almost flush
+                       against the file row above it. Bump the divider's own top
+                       spacing to match its 12px bottom so it sits symmetrically. */
+                    div[class*="st-key-shist_body_"] .cat-section-sep { padding-top: 18px !important; }
                     </style>""",
                     unsafe_allow_html=True,
                 )
@@ -2238,12 +2335,17 @@ def _render_sync_history():
                                                 categorized_files = {}
                                             if not categorized_files and entry.get('synced_files'):
                                                 categorized_files = {'new': [], 'updated': entry.get('synced_files') or [], 'protected': []}
+                                            _legacy_first = True
                                             for cat_key, cat_title, cat_icon in _SYNC_HISTORY_CATEGORIES:
                                                 cf = categorized_files.get(cat_key)
                                                 if not cf:
                                                     continue
                                                 with st.container(border=True, key=f"fileactlist_synchist_{run_seq}_{cat_key}"):
-                                                    _hdr = (f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:8px;'>"
+                                                    # Divider between categories (not above the first).
+                                                    _sep = "" if _legacy_first else "<div class='cat-section-sep'></div>"
+                                                    _legacy_first = False
+                                                    _hdr = (_sep
+                                                            + f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:8px;'>"
                                                             f"{HELP_ICONS[cat_icon]} {cat_title} "
                                                             f"<span style='color:#b1bac4;font-weight:500;'>({len(cf)})</span></div>")
                                                     st.markdown(_hdr + _read_only_list(cf), unsafe_allow_html=True)
@@ -2264,7 +2366,12 @@ def _render_sync_history():
                                                 else:
                                                     err_dict["Unknown error"].append(err)
                                             with st.container(border=True, key=f"fileactlist_synchist_{run_seq}_failed"):
-                                                _eh = [f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:2px;'>"
+                                                # Divider above the failed section only when synced files
+                                                # were listed above it (not on an all-failed run).
+                                                _sep_failed = ("<div class='cat-section-sep'></div>"
+                                                               if (synced_groups or count > 0) else "")
+                                                _eh = [_sep_failed
+                                                       + f"<div style='color:#fff;font-size:0.85rem;font-weight:600;margin-top:0;margin-left:-26px;margin-bottom:2px;'>"
                                                        f"{HELP_ICONS['error']} Skipped / Failed "
                                                        f"<span style='color:#ff7b72;font-weight:500;'>({errors})</span></div>"]
                                                 for reason, fnames in err_dict.items():
@@ -2605,7 +2712,7 @@ def _run_sync_panopto():
                                    f"Scanning {kw.get('course', '')} for Panopto recordings…",
                                    phase='search'); _render()
             elif kind == 'scan_stage':
-                render_active_file(active_ph, f"Scanning {_esc(_pan['course'])} — {kw.get('name', '')}",
+                render_active_file(active_ph, f"Scanning {_esc(_pan['course'])} - {kw.get('name', '')}",
                                    phase='search', label='Searching'); _render()
             elif kind == 'scan_item':
                 render_active_file(active_ph, kw.get('detail', ''), phase='search', label='Searching')
@@ -2645,6 +2752,10 @@ def _run_sync_panopto():
                 else:
                     dq.append(log_line('success', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
                                        detail='audio'))
+                _render()
+            elif kind == 'download_tick':
+                # Heartbeat during concurrent downloads - repaint so the
+                # elapsed/speed metrics keep ticking between 'downloaded' events.
                 _render()
             elif kind == 'download_done':
                 _render()

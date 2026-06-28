@@ -134,7 +134,7 @@ def remove_provision() -> bool:
 
 
 # ── Progress state (module-level, thread-safe) ───────────────────────────────
-# {status: idle|resolving|downloading|extracting|done|error|cancelled,
+# {status: idle|Finding|downloading|extracting|done|error|cancelled,
 #  phase: str, downloaded_bytes, total_bytes, current, error, cancel}
 _STATE: dict = {}
 _LOCK = threading.Lock()
@@ -147,7 +147,7 @@ def get_state() -> dict | None:
 
 def is_running() -> bool:
     st = get_state()
-    return bool(st and st.get("status") in ("resolving", "downloading", "extracting"))
+    return bool(st and st.get("status") in ("Finding", "downloading", "extracting"))
 
 
 def request_cancel() -> None:
@@ -262,7 +262,7 @@ def _worker() -> None:
     out_dir = cuda_libs_dir()
     tmp_dir = out_dir / "_tmp"
     try:
-        _set(status="resolving", phase="Resolving NVIDIA packages…",
+        _set(status="Finding", phase="Finding NVIDIA packages…",
              downloaded_bytes=0, total_bytes=0, current="")
         wheels = []
         for pkg, major in _PACKAGES:
@@ -335,7 +335,7 @@ def start_provision() -> bool:
         return False
     with _LOCK:
         _STATE.clear()
-        _STATE.update(status="resolving", cancel=False, downloaded_bytes=0,
+        _STATE.update(status="Finding", cancel=False, downloaded_bytes=0,
                       total_bytes=0, phase="Starting…", current="")
     threading.Thread(target=_worker, daemon=True).start()
     return True

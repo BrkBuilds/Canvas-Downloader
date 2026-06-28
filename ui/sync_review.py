@@ -209,9 +209,34 @@ _PAN_REC_SVG = (
 
 # ---- Analysis review ----
 
+def _render_transcription_setup_notice(results):
+    """Warn (and offer one-click setup) when a synced course is configured to
+    produce Panopto Transcripts/Subtitles but the engine/model isn't ready.
+
+    "Wants transcription" is read from each folder's composed Panopto settings
+    (stable, from analysis); the live readiness check + notice/button rendering
+    is the shared ``ui_shared.render_transcription_setup_notice``.
+    """
+    def _wants_tx(r):
+        s = (r.get('panopto') or {}).get('settings') or {}
+        return bool(s.get('output_txt') or s.get('output_srt'))
+
+    from ui_shared import render_transcription_setup_notice
+    render_transcription_setup_notice(
+        any(_wants_tx(r) for r in (results or [])),
+        key="sync_review_setup_tx",
+    )
+
+
 def show_analysis_review(on_confirm_sync):
     # Step wizard
     render_sync_wizard(st, 2)
+
+    # Host the transcription engine-setup dialog on this page so the
+    # "Set up transcription" notice button (and Section 4's) can open it here.
+    if st.session_state.get('_pan_dialog_open'):
+        from ui.panopto_page import render_transcription_dialog
+        render_transcription_dialog()
 
     from ui_shared import render_help_card
 
@@ -264,6 +289,10 @@ def show_analysis_review(on_confirm_sync):
     )
 
     st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; margin-top: -15px; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
+
+    # Heads-up (with one-click setup) if any synced course is configured for
+    # Transcripts/Subtitles but the transcription engine/model isn't ready.
+    _render_transcription_setup_notice(st.session_state.get('sync_analysis_results', []))
 
     from sync_manager import SyncFileInfo, SyncManager
 

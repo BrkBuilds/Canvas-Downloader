@@ -81,6 +81,15 @@ def _select_folder():
 PAN_ACCENT = "#b89dfe"          # light purple - active borders / checkmarks / text
 PAN_ACCENT_DARK = "#7037da"     # dark purple - reserved for solid fills
 PAN_ACTIVE_BG = "rgba(176, 157, 254, 0.15)"
+# Gear/settings icon for the transcription-config button (Heroicons solid cog).
+_PAN_GEAR_SVG = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23d8caff'%3E"
+                 "%3Cpath fill-rule='evenodd' d='M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948"
+                 "c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978"
+                 "a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947"
+                 "c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106"
+                 "a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287"
+                 "c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z'"
+                 " clip-rule='evenodd' /%3E%3C/svg%3E")
 
 # (session key, label, description, asset icon) for the four output toggles,
 # ordered left-to-right: mp4, mp3, txt, srt.
@@ -94,23 +103,21 @@ PANOPTO_OUTPUT_DEFS = [
 PANOPTO_TRANSCRIPT_KEYS = {'pan_out_txt', 'pan_out_srt'}
 
 
-def _panopto_transcription_ready() -> tuple[bool, bool, str]:
-    """Return ``(ready, engine_available, model_id)`` for the Section 4 banner.
+def _panopto_transcription_ready() -> tuple[bool, bool, str, bool]:
+    """Return ``(ready, engine_available, model_id, any_installed)`` for the Section 4 banner.
 
     ``ready`` is True only when the local transcription engine is importable AND
     the currently-selected model is installed - the exact condition the runner
     uses before it will produce txt/srt. Drives the disabled state of the
-    Transcript/Subtitles toggles. Never raises.
+    Transcript/Subtitles toggles. ``any_installed`` is True when at least one
+    model exists on disk (regardless of which is active). Never raises.
+
+    Thin adapter over the shared ``panopto.models.transcription_status`` (single
+    source of truth, also used by the sync-review setup notice).
     """
-    try:
-        from panopto import models as pmodels
-        from panopto.settings import load_settings as _pl
-        model_id = _pl().get('model', 'small')
-        engine = bool(pmodels.whisper_available())
-        ready = engine and bool(pmodels.is_installed(model_id))
-        return ready, engine, model_id
-    except Exception:
-        return False, False, 'small'
+    from panopto import models as pmodels
+    s = pmodels.transcription_status()
+    return s['ready'], s['engine_available'], s['model_id'], s['any_installed']
 
 
 def _panopto_selectable_keys(ready: bool) -> list[str]:
@@ -210,6 +217,14 @@ def _get_pan_layout_segmented_css() -> str:
         opacity: 1 !important;
         color: #ffffff !important;
     }}
+    /* Disabled State Overrides (no Panopto output selected). The [disabled]
+       attribute selector outranks the active-pill rule, so the whole control -
+       including the default 'match' pill - dims, mirroring Canvas Content. */
+    div[class*="st-key-btn_pan_layout_"] button[disabled] {{
+        opacity: 0.4 !important;
+        pointer-events: none !important;
+        filter: grayscale(100%) !important;
+    }}
     div.st-key-btn_pan_layout_match button::after {{ content: "Save recordings alongside your course files." !important; }}
     div.st-key-btn_pan_layout_separate button::after {{ content: "A \\201CPanopto Recordings\\201D folder in each course." !important; }}
     div[class*="st-key-btn_pan_layout_"] button::after {{
@@ -267,6 +282,21 @@ def render_download_settings(fetch_courses_fn):
     from ui.presets import _save_config_dialog, _presets_hub_dialog
 
     render_download_wizard(st, 2)
+
+    # Pre-warm Panopto hardware detection in background so the transcription
+    # dialog opens without the ~5s delay on first click. backend_import_ok()
+    # does `import faster_whisper` on first call which is slow; this warms the
+    # _CACHE while the user is reading the settings page.
+    if not st.session_state.get('_pan_hw_prewarm_done'):
+        import threading as _t
+        def _prewarm_hw():
+            try:
+                from panopto.hardware import detect_compute_hardware as _dhw
+                _dhw()
+            except Exception:
+                pass
+        _t.Thread(target=_prewarm_hw, daemon=True).start()
+        st.session_state['_pan_hw_prewarm_done'] = True
 
     # Hoisted CSS Overrides for Step 2 UI Component geometry
     # Use st.html (not st.markdown) to avoid ghost-box 1rem margin below the stepper.
@@ -602,7 +632,7 @@ def render_download_settings(fetch_courses_fn):
 
         # ── Panopto (Section 4) callbacks ──
         def _pan_recompute_master():
-            ready, _, _ = _panopto_transcription_ready()
+            ready, _, _, _ = _panopto_transcription_ready()
             sel = _panopto_selectable_keys(ready)
             active = sum(1 for k in sel if st.session_state.get(k, False))
             st.session_state['pan_master'] = bool(sel) and active == len(sel)
@@ -612,7 +642,7 @@ def render_download_settings(fetch_courses_fn):
             _pan_recompute_master()
 
         def _toggle_pan_master():
-            ready, _, _ = _panopto_transcription_ready()
+            ready, _, _, _ = _panopto_transcription_ready()
             sel = _panopto_selectable_keys(ready)
             # If every selectable output is on, clear all; otherwise select all
             # selectable outputs (a disabled transcript output stays off).
@@ -811,6 +841,7 @@ def render_download_settings(fetch_courses_fn):
     div[class*="st-key-card_core_files"],
     div[class*="st-key-card_native_content"],
     div[class*="st-key-card_ai_engine"],
+    div[class*="st-key-card_panopto"],
 
     /* 2. Target via modern Streamlit 1.51+ Container ID + Trojan Class */
     div[data-testid="stContainer"]:has(.step-2-card-target) {
@@ -1771,8 +1802,17 @@ def render_download_settings(fetch_courses_fn):
         @st.fragment
         def _render_card_panopto():
             with st.container(border=True, key="card_panopto"):
-                ready, engine_avail, model_id = _panopto_transcription_ready()
+                ready, engine_avail, model_id, any_installed = _panopto_transcription_ready()
                 selectable = _panopto_selectable_keys(ready)
+                # Self-heal unavailable outputs: an applied preset (or a restored
+                # sync contract) can carry pan_out_txt/srt = True even though the
+                # transcription model was deleted since it was saved. Those outputs
+                # are no longer selectable, so clear them here BEFORE anything reads
+                # them - keeps the card, the master toggle, and the run contract
+                # (persisted on Confirm) consistent with what's actually available.
+                for _pk in PANOPTO_OUTPUT_KEYS:
+                    if _pk not in selectable and st.session_state.get(_pk):
+                        st.session_state[_pk] = False
                 _pan_active = sum(1 for k in selectable if st.session_state.get(k, False))
                 has_active = _pan_active > 0
                 _is_exp = st.session_state.get('card_panopto_expanded', False)
@@ -1868,6 +1908,12 @@ def render_download_settings(fetch_courses_fn):
 
                 if not p_exp:
                     return
+
+                # Keep the "Select All" highlight (pan_master) in sync with the
+                # actual selected outputs on every render. The toggle callbacks
+                # recompute it too, but applying a preset / arriving from Quick
+                # Download sets pan_out_* directly without touching pan_master.
+                _pan_recompute_master()
 
                 # ── Dynamic format-toggle CSS (icons + active states + disabled) ──
                 pan_css = []
@@ -1965,72 +2011,133 @@ def render_download_settings(fetch_courses_fn):
                     }
                     ''')
 
-                pan_css_html = "<style>" + "".join(pan_css) + "</style>"
-                st.markdown(f"""{pan_css_html}
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 0px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file.</p>
-<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 15px; margin-bottom: 15px;'>""", unsafe_allow_html=True)
-
-                # ── Element 0: transcription configuration status ──
-                if ready:
-                    _m = None
-                    try:
-                        from panopto import models as _pm
-                        _m = _pm.get_model(model_id)
-                    except Exception:
-                        _m = None
-                    _mlabel = (_m or {}).get('label', model_id)
-                    st.markdown(
-                        f"<div style='display:flex; align-items:center; gap:12px; padding:11px 15px; margin-bottom:12px; "
-                        f"background: rgba(176,157,254,0.06); border:1px solid rgba(176,157,254,0.28); border-radius:10px;'>"
-                        # PAN_ACCENT is a trusted module constant (hex color), not external data.
-                        # audit-ignore
-                        f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2.4' "
-                        f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M20 6 9 17l-5-5'/></svg>"
-                        f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready &mdash; "
-                        f"using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. Transcript &amp; Subtitles are available.</div>"
-                        f"</div>", unsafe_allow_html=True)
-                    _dlg_label = "Manage transcription models"
-                else:
-                    _why = ("The local transcription engine isn't available yet."
-                            if not engine_avail else
-                            "No transcription model is installed yet.")
-                    st.markdown(
-                        f"<div style='display:flex; align-items:flex-start; gap:12px; padding:12px 15px; margin-bottom:12px; "
-                        f"background: rgba(176,157,254,0.06); border:1px solid rgba(176,157,254,0.28); border-radius:10px;'>"
-                        # PAN_ACCENT is a trusted module constant (hex color), not external data.
-                        # audit-ignore
-                        f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2' "
-                        f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
-                        f"<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
-                        f"<div style='flex:1;'>"
-                        f"<div style='color:#e2e8f0; font-weight:600; font-size:0.9rem;'>Transcripts &amp; Subtitles need a one-time setup</div>"
-                        f"<div style='color:#94a3b8; font-size:0.84rem; margin-top:2px; line-height:1.45;'>{esc(_why)} "
-                        f"Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
-                        f"Video &amp; Audio work without it.</div></div></div>", unsafe_allow_html=True)
-                    _dlg_label = "Set up transcription"
-
-                # Button to open the transcription-config dialog. A full-app rerun
-                # is forced so the main-level dialog host renders it (the dialog runs
-                # an internal model-download auto-rerun loop, so it must persist).
-                st.html("""<style>
-                div.st-key-pan_open_dialog_btn button {
+                # Info card container (purple-tinted border/bg) and compact gear-icon button.
+                # Uses the outer keyed-div directly - stVerticalBlockBorderWrapper does not
+                # exist in Streamlit 1.51; the key class reliably lands on the outer wrapper div.
+                pan_css.append(f'''
+                div[class*="st-key-pan_info_card"] {{
+                    border: 1px solid rgba(176,157,254,0.28) !important;
+                    border-radius: 10px !important;
+                    background: rgba(176,157,254,0.06) !important;
+                    margin-bottom: 0px !important;
+                    padding: 12px 15px 12px 15px !important;
+                }}
+                /* Streamlit leaves trailing space below the last child (the button)
+                   inside a container; the outer keyed wrapper's `padding-bottom: 0`
+                   alone does NOT remove it. Strip the inner stVerticalBlock's bottom
+                   padding AND the last element-container's margin so the purple
+                   border hugs the button - killing the empty band above the divider. */
+                div[class*="st-key-pan_info_card"] div[data-testid="stVerticalBlock"] {{
+                    padding-bottom: 0 !important;
+                }}
+                div[class*="st-key-pan_info_card"] div[data-testid="stElementContainer"]:last-child {{
+                    margin-bottom: 0 !important;
+                }}
+                div.st-key-pan_open_dialog_btn {{
+                    margin-left: 32px !important;
+                    margin-top: 6px !important;
+                    margin-bottom: 18px !important;
+                }}
+                div.st-key-pan_open_dialog_btn button {{
                     background: rgba(176,157,254,0.10) !important;
                     border: 1px solid rgba(176,157,254,0.35) !important;
                     color: #d8caff !important; font-weight: 600 !important;
-                    border-radius: 8px !important; transition: all 0.15s ease !important;
-                }
-                div.st-key-pan_open_dialog_btn button:hover {
-                    background: rgba(176,157,254,0.18) !important;
+                    font-size: 0.85rem !important;
+                    border-radius: 8px !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+                    height: 32px !important; min-height: 32px !important;
+                    min-width: 220px !important;
+                    padding: 0 14px !important;
+                }}
+                div.st-key-pan_open_dialog_btn button [data-testid="stMarkdownContainer"] {{
+                    display: flex !important;
+                    align-items: center !important;
+                }}
+                div.st-key-pan_open_dialog_btn button p {{
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 6px !important;
+                    margin: 0 !important;
+                }}
+                div.st-key-pan_open_dialog_btn button p::before {{
+                    content: "" !important;
+                    display: inline-block !important;
+                    width: 14px !important; height: 14px !important;
+                    flex-shrink: 0 !important;
+                    background-image: url("{_PAN_GEAR_SVG}") !important;
+                    background-size: contain !important;
+                    background-repeat: no-repeat !important;
+                    background-position: center !important;
+                }}
+                div.st-key-pan_open_dialog_btn button:hover {{
+                    background-color: rgba(176,157,254,0.18) !important;
                     border-color: #b89dfe !important; color: #ffffff !important;
-                }
-                </style>""")
-                if st.button(_dlg_label, key="pan_open_dialog_btn", use_container_width=True):
-                    st.session_state['_pan_dialog_open'] = True
-                    st.rerun(scope="app")
+                }}
+                ''')
 
-                # ── Element 1: choose what to download ──
+                pan_css_html = "<style>" + "".join(pan_css) + "</style>"
+                st.markdown(f"""{pan_css_html}
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 12px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file.</p>""", unsafe_allow_html=True)
+
+                # ── Element 0: transcription status card with embedded action button ──
+                # Lives ABOVE the separator, inside the top description section. The
+                # separator below it divides description+notice from the toggles.
+                # Card container styled purple via pan_css (stVerticalBlockBorderWrapper override).
+                with st.container(key="pan_info_card"):
+                    if ready:
+                        _m = None
+                        try:
+                            from panopto import models as _pm
+                            _m = _pm.get_model(model_id)
+                        except Exception:
+                            _m = None
+                        _mlabel = (_m or {}).get('label', model_id)
+                        st.markdown(
+                            f"<div style='display:flex; align-items:center; gap:12px;'>"
+                            # PAN_ACCENT is a trusted module constant (hex color), not external data.
+                            # audit-ignore
+                            f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2.4' "
+                            f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M20 6 9 17l-5-5'/></svg>"
+                            f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready &mdash; "
+                            f"using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. Transcript &amp; Subtitles are available.</div>"
+                            f"</div>", unsafe_allow_html=True)
+                        _dlg_label = "Manage transcription models"
+                    else:
+                        _why = ("The local transcription engine isn't available yet."
+                                if not engine_avail else
+                                "A model is installed but not activated yet."
+                                if any_installed else
+                                "No transcription model is installed yet.")
+                        st.markdown(
+                            f"<div style='display:flex; align-items:flex-start; gap:12px;'>"
+                            # PAN_ACCENT is a trusted module constant (hex color), not external data.
+                            # audit-ignore
+                            f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2' "
+                            f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
+                            f"<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
+                            f"<div style='flex:1;'>"
+                            f"<div style='color:#e2e8f0; font-weight:600; font-size:0.9rem;'>Transcripts &amp; Subtitles need a one-time setup</div>"
+                            f"<div style='color:#94a3b8; font-size:0.84rem; margin-top:2px; line-height:1.45;'>{esc(_why)} "
+                            f"Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
+                            f"Video &amp; Audio work without it.</div></div></div>", unsafe_allow_html=True)
+                        _dlg_label = "Set up transcription"
+
+                    # Button at the bottom of the card - content-sized, indented via CSS
+                    # margin-left on stButton wrapper (32px = info icon + gap).
+                    # A full-app rerun is forced so the main-level dialog host renders it
+                    # (dialog runs an internal auto-rerun loop, so it must persist).
+                    if st.button(_dlg_label, key="pan_open_dialog_btn", use_container_width=False):
+                        st.session_state['_pan_dialog_open'] = True
+                        st.rerun(scope="app")
+
+                # ── Element 1: separator + choose what to download ──
+                # The <hr> is merged into the same st.markdown so it shares one flex
+                # slot with the label - prevents a double flex-gap below the card.
                 st.markdown(
-                    "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 6px; margin-bottom: 0px;'>Choose what to download <span style='color:#64748b; font-weight:400;'>(select one or more):</span></p>",
+                    "<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 6px; margin-bottom: 10px;'>"
+                    "<p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 0; margin-bottom: 10px;'>Choose what to download <span style='color:#64748b; font-weight:400;'>(select one or more):</span></p>",
                     unsafe_allow_html=True,
                 )
                 st.button("Select All", key="btn_pan_master", on_click=_toggle_pan_master, use_container_width=True)
@@ -2047,18 +2154,24 @@ def render_download_settings(fetch_courses_fn):
                             )
 
                 # ── Element 2: choose how to organize ──
+                # Disabled until at least one output is selected (mirrors Canvas
+                # Content): dim the label and the segmented control.
+                _pan_layout_disabled = not has_active
+                _pan_org_label_color = "#cbd5e1" if has_active else "#475569"
                 st.markdown(f"""
-                <p style='font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-top: 15px; margin-bottom: 0px;'>Choose how to organize Panopto Recordings:</p>
+                <p style='font-size: 0.9rem; font-weight: 600; color: {_pan_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how to organize Panopto Recordings:</p>
                 {_get_pan_layout_segmented_css()}
                 """, unsafe_allow_html=True)
                 with st.container(key="pan_layout_segmented_wrapper"):
                     _pl1, _pl2 = st.columns(2, gap="small")
                     with _pl1:
                         st.button("Match Course Folder structure", key="btn_pan_layout_match",
-                                  on_click=_set_pan_layout, args=("match",), use_container_width=True)
+                                  on_click=_set_pan_layout, args=("match",), use_container_width=True,
+                                  disabled=_pan_layout_disabled)
                     with _pl2:
                         st.button("In Separate Folders", key="btn_pan_layout_separate",
-                                  on_click=_set_pan_layout, args=("separate",), use_container_width=True)
+                                  on_click=_set_pan_layout, args=("separate",), use_container_width=True,
+                                  disabled=_pan_layout_disabled)
 
         _render_card_panopto()
 

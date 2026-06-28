@@ -483,7 +483,7 @@ class CanvasManager:
                 except Exception as e:
                     logger.warning(f"Error parsing file object {getattr(file, 'id', '?')}: {e}")
         except (Unauthorized, ResourceDoesNotExist, CanvasException):
-            logger.debug(f"Files tab not accessible for course {getattr(course, 'id', '?')} (permission denied — module scan will supplement)")
+            logger.debug(f"Files tab not accessible for course {getattr(course, 'id', '?')} (permission denied - module scan will supplement)")
             # Expected for courses with restricted Files tabs; Phase 2 module scan recovers the files.
         except Exception as e:
             logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")

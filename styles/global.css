@@ -10,9 +10,15 @@
    predicted and a fixed 0% bar reads as "frozen". The sweeping bar signals
    continuous activity. Fill colour is set inline per phase; animation here. */
 @keyframes cd-indeterminate {
-    0%   { transform: translateX(-110%); }
-    100% { transform: translateX(360%); }
+    0% {
+        transform: translateX(-110%);
+    }
+
+    100% {
+        transform: translateX(360%);
+    }
 }
+
 .cd-indeterminate-bar {
     position: absolute;
     top: 0;
@@ -35,15 +41,20 @@
    individual widget elements which then win the cascade and re-enable drag-
    select. Targeting every element (+ ::before/::after) with !important is the
    only WKWebView-proof way to kill it. WebKit needs the -webkit- prefix. */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-user-drag: none;
 }
+
 /* Re-enable selection + editing ONLY for real text entry fields (the Canvas
    API token/URL on the auth page). Higher specificity than `*` so it wins. */
-input, textarea,
-[contenteditable="true"], [contenteditable=""],
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable=""],
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
 [data-baseweb="input"] input,
@@ -137,18 +148,20 @@ div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"],
 div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"] {
     width: 100% !important;
 }
-div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"] > button,
-div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"] > button,
-div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"] > button,
-div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"] > button,
-div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"] > button,
-div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"] > button {
+
+div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"]>button,
+div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"]>button,
+div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"]>button {
     width: 100% !important;
     height: auto !important;
     min-height: 3em !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
 }
+
 /* Covers the no-tooltip case (help=None while disabled): Streamlit's primary-disabled
    CSS can win over the non-!important base min-height rule above. Force full height
    on the button directly, regardless of wrapper presence. */
@@ -164,8 +177,8 @@ div.st-key-hub_cs_confirm_btn button {
 }
 
 /* Ensure button text wraps correctly at word boundaries and not mid-word */
-.stButton > button p,
-.stButton > button div[data-testid="stMarkdownContainer"] > p {
+.stButton>button p,
+.stButton>button div[data-testid="stMarkdownContainer"]>p {
     word-break: normal !important;
     overflow-wrap: break-word !important;
     white-space: normal !important;
@@ -183,8 +196,8 @@ button[kind="primary"] {
 
 button[kind="primary"]:hover {
     background-color: #2b8cbe !important;
-    box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2), 
-                inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
     color: #ffffff !important;
 }
 
@@ -769,22 +782,32 @@ div[class*="st-key-btn_convert_"] button::after {
     line-height: 1.2 !important;
 }
 
-/* Conv button hover (inactive). Active state overrides via Python. */
-div[class*="st-key-btn_convert_"] button:hover {
+/* Conv button hover (inactive). Active state overrides via Python.
+   Exclude the master here: [class*="st-key-btn_convert_"] also matches
+   btn_convert_master, and a full orange border-color is wrong for the master -
+   it gets a bottom-ledge-only hover from Python instead (mirrors Card 2 / 4). */
+div[class*="st-key-btn_convert_"]:not(.st-key-btn_convert_master) button:hover {
     border-color: #f97316 !important;
 }
 
-div[class*="st-key-btn_convert_"] button:hover::before {
+div[class*="st-key-btn_convert_"]:not(.st-key-btn_convert_master) button:hover::before {
     border-color: #f97316 !important;
 }
 
-/* Master "Select All" button geometry - overrides the conv button base */
+/* Master "Select All" button geometry - overrides the conv button base.
+   The base rule above (div[class*="st-key-btn_convert_"]) also matches this
+   master, so we must explicitly undo its min-height (58px) and dim fill (0.02)
+   here - otherwise the master renders as tall as, and the same colour as, the
+   child conversion buttons. The active-state fill (0.12) is set from Python and
+   wins by source order. Mirrors the Card 2 / Card 4 master pattern. */
 div.st-key-btn_convert_master button {
     height: 48px !important;
+    min-height: 0px !important;
     padding-top: 0px !important;
     padding-bottom: 0px !important;
     padding-left: 50px !important;
     background-size: 24px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
     justify-content: center !important;
     border-radius: 12px !important;
 }
@@ -825,294 +848,310 @@ div.st-key-btn_convert_video button::after {
 /* ═══════════════════════════════════════════════
    Moved from sync_ui.py (Pair Action Buttons & Layout)
    ═══════════════════════════════════════════════ */
-    div[data-testid="column"] { display: flex; flex-direction: column; justify-content: center; }
+div[data-testid="column"] {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
-    /* Universal disabled button dimming */
-    button[disabled] {
-        opacity: 0.4 !important;
-        filter: grayscale(100%) !important;
-        cursor: not-allowed !important;
-        box-shadow: none !important;
-    }
+/* Universal disabled button dimming */
+button[disabled] {
+    opacity: 0.4 !important;
+    filter: grayscale(100%) !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
 
-    /* Fix Streamlit tooltip wrappers shrinking buttons vertically */
-    div[class*="st-key-open_folder_"] div[data-testid="stTooltipHoverTarget"],
-    div[class*="st-key-ignored_btn_"] div[data-testid="stTooltipHoverTarget"] {
-        display: block !important;
-        width: 100% !important;
-    }
-    
-    div[class*="st-key-open_folder_"] button,
-    div[class*="st-key-ignored_btn_"] button,
-    div[class*="st-key-edit_pair_"] button,
-    div[class*="st-key-remove_pair_"] button {
-        height: auto !important;
-        min-height: 42px !important;
-        padding-top: 8px !important;
-        padding-bottom: 8px !important;
-    }
+/* Fix Streamlit tooltip wrappers shrinking buttons vertically */
+div[class*="st-key-open_folder_"] div[data-testid="stTooltipHoverTarget"],
+div[class*="st-key-ignored_btn_"] div[data-testid="stTooltipHoverTarget"] {
+    display: block !important;
+    width: 100% !important;
+}
 
-    /* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
-    div[class*="st-key-cancel_pair"] button:hover,
-    div[class*="st-key-cancel_add"] button:hover {
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
-    }
+div[class*="st-key-open_folder_"] button,
+div[class*="st-key-ignored_btn_"] button,
+div[class*="st-key-edit_pair_"] button,
+div[class*="st-key-remove_pair_"] button {
+    height: auto !important;
+    min-height: 42px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
 
-    /* ===== SYNC FOLDER ROW COMPACT LAYOUT =====
+/* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
+div[class*="st-key-cancel_pair"] button:hover,
+div[class*="st-key-cancel_add"] button:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* ===== SYNC FOLDER ROW COMPACT LAYOUT =====
      * Scoped to .st-key-edit_form_container (the bordered container key)
      * so rules NEVER leak to page-level stVerticalBlocks.
      */
-    
-    /* 0. Remove top margin from the edit form container itself to match list spacing */
-    .st-key-edit_form_container {
-        margin-top: 0px !important; /* Match bottom spacing (10px) exactly */
-        margin-bottom: 10px !important; /* Ensure consistent bottom spacing */
-    }
 
-    /* 1. Compact padding & gap on the bordered container ONLY */
-    .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
-        padding: 8px 15px !important;
-        gap: 4px !important;
-    }
+/* 0. Remove top margin from the edit form container itself to match list spacing */
+.st-key-edit_form_container {
+    margin-top: 0px !important;
+    /* Match bottom spacing (10px) exactly */
+    margin-bottom: 10px !important;
+    /* Ensure consistent bottom spacing */
+}
 
-    /* 2. RESET: Inner stVerticalBlocks inside columns back to 0 */
-    .st-key-edit_form_container div[data-testid="stColumn"] div[data-testid="stVerticalBlock"] {
-        padding: 0 !important;
-        gap: 0 !important;
-    }
+/* 1. Compact padding & gap on the bordered container ONLY */
+.st-key-edit_form_container>div[data-testid="stVerticalBlock"] {
+    padding: 8px 15px !important;
+    gap: 4px !important;
+}
 
-    /* 3. Hide ONLY the first child (CSS style block) & empty spacers */
-    .st-key-edit_form_container > div[data-testid="stVerticalBlock"]
-    > div[data-testid="stElementContainer"]:has(div:empty:only-child) {
-         display: none !important;
-    }
+/* 2. RESET: Inner stVerticalBlocks inside columns back to 0 */
+.st-key-edit_form_container div[data-testid="stColumn"] div[data-testid="stVerticalBlock"] {
+    padding: 0 !important;
+    gap: 0 !important;
+}
 
-    /* 4. Folder/Course row: center items vertically, controlled gap */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder),
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) {
-        align-items: center !important;
-        gap: 10px !important;
-        min-height: 0 !important;
-    }
+/* 3. Hide ONLY the first child (CSS style block) & empty spacers */
+.st-key-edit_form_container>div[data-testid="stVerticalBlock"]>div[data-testid="stElementContainer"]:has(div:empty:only-child) {
+    display: none !important;
+}
 
-    /* 5. Columns in folder/course row: shrink-wrap, center contents */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stColumn"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stColumn"] {
-        width: auto !important;
-        flex: 0 0 auto !important;
-        min-width: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-    
+/* 4. Folder/Course row: center items vertically, controlled gap */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder),
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) {
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 0 !important;
+}
+
+/* 5. Columns in folder/course row: shrink-wrap, center contents */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stColumn"],
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stColumn"] {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
 
 
-    /* 6. Fix stMarkdownContainer negative bottom margin that clips text */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdownContainer"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdownContainer"] {
-        margin: 0 !important;
-    }
 
-    /* 7. stMarkdown wrapper: flex-center for true vertical alignment */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdown"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdown"] {
-        display: flex !important;
-        align-items: center !important;
-        overflow: visible !important;
-    }
+/* 6. Fix stMarkdownContainer negative bottom margin that clips text */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdownContainer"],
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdownContainer"] {
+    margin: 0 !important;
+}
 
-    /* 8. Element containers in folder/course row: no margin, visible overflow */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stElementContainer"],
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stElementContainer"] {
-        margin: 0 !important;
-        overflow: visible !important;
-    }
+/* 7. stMarkdown wrapper: flex-center for true vertical alignment */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stMarkdown"],
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stMarkdown"] {
+    display: flex !important;
+    align-items: center !important;
+    overflow: visible !important;
+}
 
-    /* 9. Kill paragraph margins & normalize line height */
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) p,
-    .st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) p {
-        margin: 0 !important;
-        line-height: 1.4 !important;
-    }
+/* 8. Element containers in folder/course row: no margin, visible overflow */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) div[data-testid="stElementContainer"],
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) div[data-testid="stElementContainer"] {
+    margin: 0 !important;
+    overflow: visible !important;
+}
 
-    /* 10. Change Folder/Course button: compact styling */
-    .st-key-btn_change_folder button,
-    .st-key-btn_open_course_dialog button {
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        padding: 4px 14px !important;
-        font-size: 0.85rem !important;
-        line-height: 1.4 !important;
-        height: auto !important;
-    }
+/* 9. Kill paragraph margins & normalize line height */
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_change_folder) p,
+.st-key-edit_form_container div[data-testid="stHorizontalBlock"]:has(.st-key-btn_open_course_dialog) p {
+    margin: 0 !important;
+    line-height: 1.4 !important;
+}
 
-    /* 11. Sync list container minimum height */
-    .st-key-sync_list_outline {
-        min-height: 50vh !important;
-    }
-    .st-key-sync_list_outline > div[data-testid="stVerticalBlockBorderWrapper"] {
-        padding-top: 16px !important;
-    }
+/* 10. Change Folder/Course button: compact styling */
+.st-key-btn_change_folder button,
+.st-key-btn_open_course_dialog button {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 4px 14px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
+    height: auto !important;
+}
 
-    /* 12. Sync Pair Cards Gradient Styling */
-    div[class*="st-key-sync_pair_card_"] {
-        background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        border-radius: 8px !important;
-        padding-top: 5px !important;
-        padding-bottom: 20px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-    }
+/* 11. Sync list container minimum height */
+.st-key-sync_list_outline {
+    min-height: 50vh !important;
+}
 
-    /* 13. Missing-folder pair cards - distinctive warning border and darkened background */
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] {
-        background: linear-gradient(180deg, #181a1f 0%, #1e2126 100%) !important;
-    }
+.st-key-sync_list_outline>div[data-testid="stVerticalBlockBorderWrapper"] {
+    padding-top: 16px !important;
+}
 
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"],
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
-        border: 1px solid rgba(202, 138, 4, 0.85) !important;
-        box-shadow: none !important;
-    }
+/* 12. Sync Pair Cards Gradient Styling */
+div[class*="st-key-sync_pair_card_"] {
+    background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 8px !important;
+    padding-top: 5px !important;
+    padding-bottom: 20px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
 
-    /* Dim the text inside missing-folder cards to make them look disabled */
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] p,
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] div,
-    div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] strong {
-        color: rgba(255, 255, 255, 0.5) !important;
-    }
+/* 13. Missing-folder pair cards - distinctive warning border and darkened background */
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] {
+    background: linear-gradient(180deg, #181a1f 0%, #1e2126 100%) !important;
+}
 
-    /* 14. Fix summary marker (chevron) size and spacing in WebKit (Safari/macOS) */
-    summary::-webkit-details-marker {
-        margin-right: 8px;
-        font-size: 115%;
-    }
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"],
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
+    border: 1px solid rgba(202, 138, 4, 0.85) !important;
+    box-shadow: none !important;
+}
 
-    /* 15. Scale down Apple Emojis (~15-20%) globally without breaking layout */
-    @font-face {
-        font-family: "Source Sans Pro";
-        src: local("Apple Color Emoji");
-        size-adjust: 85%;
-        /* Target all standard emoji blocks */
-        unicode-range: U+200D, U+2600-26FF, U+2700-27BF, U+1F000-1F02F, U+1F0A0-1F0FF, U+1F1E6-1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F700-1F77F, U+1F780-1F7FF, U+1F800-1F8FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF;
-    }
+/* Dim the text inside missing-folder cards to make them look disabled */
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] p,
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] div,
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stMarkdownContainer"] strong {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
 
-    /* ═══════════════════════════════════════════════
-       16. "Go back" Buttons — action-button style + curved arrow via ::before
+/* 13b. Transcription-setup-needed pair cards - amber border (softer than missing-folder) */
+div[class*="st-key-sync_pair_card_txsetup_"][class*="st-key-"],
+div[class*="st-key-sync_pair_card_txsetup_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
+    border: 1px solid rgba(234, 179, 8, 0.55) !important;
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.08) !important;
+}
+/* 14. Fix summary marker (chevron) size and spacing in WebKit (Safari/macOS) */
+summary::-webkit-details-marker {
+    margin-right: 8px;
+    font-size: 115%;
+}
+
+/* 15. Scale down Apple Emojis (~15-20%) globally without breaking layout */
+@font-face {
+    font-family: "Source Sans Pro";
+    src: local("Apple Color Emoji");
+    size-adjust: 85%;
+    /* Target all standard emoji blocks */
+    unicode-range: U+200D, U+2600-26FF, U+2700-27BF, U+1F000-1F02F, U+1F0A0-1F0FF, U+1F1E6-1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F700-1F77F, U+1F780-1F7FF, U+1F800-1F8FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF;
+}
+
+/* ═══════════════════════════════════════════════
+       16. "Go back" Buttons - action-button style + curved arrow via ::before
        ═══════════════════════════════════════════════ */
-    div.st-key-page_nav_back_to_settings button,
-    div.st-key-page_nav_back button,
-    div.st-key-action_dl_back button,
-    div.st-key-page_nav_quick_back button,
-    div.st-key-page_nav_back_sr_err button,
-    div.st-key-page_nav_sync_review_back button {
-        background-color: rgba(255, 255, 255, 0.07) !important;
-        background-image: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 8px !important;
-        color: #ffffff !important;
-        font-weight: 500 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        transition: all 0.15s ease !important;
-        box-shadow: none !important;
-    }
+div.st-key-page_nav_back_to_settings button,
+div.st-key-page_nav_back button,
+div.st-key-action_dl_back button,
+div.st-key-page_nav_quick_back button,
+div.st-key-page_nav_back_sr_err button,
+div.st-key-page_nav_sync_review_back button {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    background-image: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+}
 
-    div.st-key-page_nav_back_to_settings button::before,
-    div.st-key-page_nav_back button::before,
-    div.st-key-action_dl_back button::before,
-    div.st-key-page_nav_quick_back button::before,
-    div.st-key-page_nav_back_sr_err button::before,
-    div.st-key-page_nav_sync_review_back button::before {
-        content: '' !important;
-        display: block !important;
-        width: 17px !important;
-        height: 17px !important;
-        min-width: 17px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8L2 12L6 16'/%3E%3Cpath d='M2 12H22'/%3E%3C/svg%3E") !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        flex-shrink: 0 !important;
-    }
+div.st-key-page_nav_back_to_settings button::before,
+div.st-key-page_nav_back button::before,
+div.st-key-action_dl_back button::before,
+div.st-key-page_nav_quick_back button::before,
+div.st-key-page_nav_back_sr_err button::before,
+div.st-key-page_nav_sync_review_back button::before {
+    content: '' !important;
+    display: block !important;
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8L2 12L6 16'/%3E%3Cpath d='M2 12H22'/%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+}
 
-    div.st-key-page_nav_back_to_settings button:hover,
-    div.st-key-page_nav_back button:hover,
-    div.st-key-action_dl_back button:hover,
-    div.st-key-page_nav_quick_back button:hover,
-    div.st-key-page_nav_back_sr_err button:hover,
-    div.st-key-page_nav_sync_review_back button:hover {
-        background-color: rgba(255, 255, 255, 0.13) !important;
-        background-image: none !important;
-        border-color: rgba(255, 255, 255, 0.45) !important;
-    }
+div.st-key-page_nav_back_to_settings button:hover,
+div.st-key-page_nav_back button:hover,
+div.st-key-action_dl_back button:hover,
+div.st-key-page_nav_quick_back button:hover,
+div.st-key-page_nav_back_sr_err button:hover,
+div.st-key-page_nav_sync_review_back button:hover {
+    background-color: rgba(255, 255, 255, 0.13) !important;
+    background-image: none !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+}
 
-    /* ═══════════════════════════════════════════════
-       16b. Operation "Cancel" Buttons — identical to "Go back"
+/* ═══════════════════════════════════════════════
+       16b. Operation "Cancel" Buttons - identical to "Go back"
             style, but with an X icon that turns red on hover.
             (Cancel Download / Analysis / Retry / Sync / Post-Processing)
        ═══════════════════════════════════════════════ */
-    div[class*="st-key-cancel_download_btn"] button,
-    div[class*="st-key-cancel_pp_download"] button,
-    div[class*="st-key-cancel_retry_btn"] button,
-    div[class*="st-key-cancel_analysis_btn"] button,
-    div[class*="st-key-cancel_sync_btn"] button,
-    div[class*="st-key-cancel_pp_btn_sync_phase3"] button {
-        background-color: rgba(255, 255, 255, 0.07) !important;
-        background-image: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 8px !important;
-        color: #ffffff !important;
-        font-weight: 500 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        transition: all 0.15s ease !important;
-        box-shadow: none !important;
-    }
+div[class*="st-key-cancel_download_btn"] button,
+div[class*="st-key-cancel_panopto_btn"] button,
+div[class*="st-key-cancel_pp_download"] button,
+div[class*="st-key-cancel_retry_btn"] button,
+div[class*="st-key-cancel_analysis_btn"] button,
+div[class*="st-key-cancel_sync_btn"] button,
+div[class*="st-key-cancel_pp_btn_sync_phase3"] button {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    background-image: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+}
 
-    div[class*="st-key-cancel_download_btn"] button::before,
-    div[class*="st-key-cancel_pp_download"] button::before,
-    div[class*="st-key-cancel_retry_btn"] button::before,
-    div[class*="st-key-cancel_analysis_btn"] button::before,
-    div[class*="st-key-cancel_sync_btn"] button::before,
-    div[class*="st-key-cancel_pp_btn_sync_phase3"] button::before {
-        content: '' !important;
-        display: block !important;
-        width: 17px !important;
-        height: 17px !important;
-        min-width: 17px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        flex-shrink: 0 !important;
-        transition: all 0.15s ease !important;
-    }
+div[class*="st-key-cancel_download_btn"] button::before,
+div[class*="st-key-cancel_panopto_btn"] button::before,
+div[class*="st-key-cancel_pp_download"] button::before,
+div[class*="st-key-cancel_retry_btn"] button::before,
+div[class*="st-key-cancel_analysis_btn"] button::before,
+div[class*="st-key-cancel_sync_btn"] button::before,
+div[class*="st-key-cancel_pp_btn_sync_phase3"] button::before {
+    content: '' !important;
+    display: block !important;
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
 
-    div[class*="st-key-cancel_download_btn"] button:hover,
-    div[class*="st-key-cancel_pp_download"] button:hover,
-    div[class*="st-key-cancel_retry_btn"] button:hover,
-    div[class*="st-key-cancel_analysis_btn"] button:hover,
-    div[class*="st-key-cancel_sync_btn"] button:hover,
-    div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover {
-        background-color: rgba(255, 75, 75, 0.1) !important;
-        background-image: none !important;
-        border-color: #ff4b4b !important;
-        color: #ffffff !important;
-    }
+div[class*="st-key-cancel_download_btn"] button:hover,
+div[class*="st-key-cancel_panopto_btn"] button:hover,
+div[class*="st-key-cancel_pp_download"] button:hover,
+div[class*="st-key-cancel_retry_btn"] button:hover,
+div[class*="st-key-cancel_analysis_btn"] button:hover,
+div[class*="st-key-cancel_sync_btn"] button:hover,
+div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover {
+    background-color: rgba(255, 75, 75, 0.1) !important;
+    background-image: none !important;
+    border-color: #ff4b4b !important;
+    color: #ffffff !important;
+}
 
-    div[class*="st-key-cancel_download_btn"] button:hover::before,
-    div[class*="st-key-cancel_pp_download"] button:hover::before,
-    div[class*="st-key-cancel_retry_btn"] button:hover::before,
-    div[class*="st-key-cancel_analysis_btn"] button:hover::before,
-    div[class*="st-key-cancel_sync_btn"] button:hover::before,
-    div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
-    }
+div[class*="st-key-cancel_download_btn"] button:hover::before,
+div[class*="st-key-cancel_panopto_btn"] button:hover::before,
+div[class*="st-key-cancel_pp_download"] button:hover::before,
+div[class*="st-key-cancel_retry_btn"] button:hover::before,
+div[class*="st-key-cancel_analysis_btn"] button:hover::before,
+div[class*="st-key-cancel_sync_btn"] button:hover::before,
+div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
+}
 
-    </style>
+</style>
