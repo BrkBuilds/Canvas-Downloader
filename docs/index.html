@@ -1056,6 +1056,20 @@
       background: rgba(249, 115, 22, 0.12);
     }
 
+    .panopto-formats .pp-btn.active {
+      border-color: #b89dfe;
+      background: rgba(184, 157, 254, 0.08);
+    }
+
+    .panopto-formats .pp-btn.active:hover {
+      border-color: #b89dfe;
+      background: rgba(184, 157, 254, 0.12);
+    }
+
+    .panopto-formats .pp-btn .check {
+      background: #b89dfe;
+    }
+
     .pp-btn .check {
       position: absolute;
       top: 6px;
@@ -2687,7 +2701,7 @@
               <!-- Actual visible text -->
               <span style="grid-area: 1 / 1;">
                 <span
-                  style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><span
+                  style="color: var(--cyan);"><span
                     id="hero-dynamic-text">Download all your courses in minutes</span></span><span
                   class="hero-cursor">|</span>
               </span>
@@ -3262,6 +3276,99 @@
               <img src="assets/icon_conv_video.png" alt="Video to Audio" />
               <div class="pp-btn-text">
                 <div class="pp-title">Video to Audio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillar 5: Panopto Lecture Recordings -->
+      <div class="pillar-section">
+        <input type="checkbox" id="p5-open" class="pillar-toggle">
+        <div class="pillar-row reveal">
+          <div class="pillar-text">
+            <div class="section-kicker">5. Lecture Recordings</div>
+            <h3>Your lecture recordings, downloaded and transcribed.</h3>
+            <p>Some courses post their lectures as <b>Panopto</b> recordings - slow to rewatch, and impossible to hand
+              to an AI. Canvas Downloader saves them straight to your course folder as <b>video</b> or <b>audio</b> to
+              watch anytime, and turns them into <b>transcripts</b> and <b>subtitles</b> that are instantly
+              AI-ready.<br><br>Video and audio need zero setup. Transcripts run <b>100% on your own computer</b> -
+              private, offline, and free.</p>
+            <label for="p5-open" class="pillar-expander-label desktop-only">See the download options <span
+                class="pex-arrow"></span></label>
+          </div>
+          <div class="pillar-vis aligned-to-title"
+            style="display:flex; align-items:center; justify-content:center; padding:36px 28px; background:radial-gradient(120% 120% at 50% 0%, rgba(184,157,254,0.12), transparent 70%); border:1px solid var(--border); border-radius:var(--rad-l); box-shadow:0 16px 40px rgba(0,0,0,0.2);">
+            <div
+              style="display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:380px;">
+              <div
+                style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
+                <img src="assets/pan_mp4.png" alt="" style="width:30px; height:30px;" /><span
+                  style="color:#fff; font-weight:600; font-size:14px;">Video<br><span
+                    style="color:var(--txt3); font-weight:500; font-size:12px;">MP4</span></span></div>
+              <div
+                style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
+                <img src="assets/pan_mp3.png" alt="" style="width:30px; height:30px;" /><span
+                  style="color:#fff; font-weight:600; font-size:14px;">Audio<br><span
+                    style="color:var(--txt3); font-weight:500; font-size:12px;">MP3</span></span></div>
+              <div
+                style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
+                <img src="assets/pan_txt.png" alt="" style="width:30px; height:30px;" /><span
+                  style="color:#fff; font-weight:600; font-size:14px;">Transcript<br><span
+                    style="color:var(--txt3); font-weight:500; font-size:12px;">.txt</span></span></div>
+              <div
+                style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
+                <img src="assets/pan_srt.png" alt="" style="width:30px; height:30px;" /><span
+                  style="color:#fff; font-weight:600; font-size:14px;">Subtitles<br><span
+                    style="color:var(--txt3); font-weight:500; font-size:12px;">.srt</span></span></div>
+            </div>
+          </div>
+        </div>
+        <label for="p5-open" class="pillar-expander-label mobile-only"
+          style="display: flex; width: fit-content; margin: 24px auto 0;">See the download options <span
+            class="pex-arrow"></span></label>
+        <div class="pillar-expand-content">
+          <div class="expand-section-label">Lecture Recording: Download Options</div>
+          <p class="expand-intro">Choose any combination for each lecture. <b>Video and audio download with no
+            setup.</b> Transcripts and subtitles are optional - they're generated locally with on-device speech
+            recognition (faster-whisper), so nothing is uploaded, and just need a one-time transcription model. The
+            <a href="guide.html#transcription-setup" style="color:var(--cyan);text-decoration:none;">transcription
+            setup guide</a> walks you through it step by step.</p>
+          <div class="pp-grid panopto-formats">
+            <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
+              <img src="assets/pan_mp4.png" alt="Video MP4" />
+              <div class="pp-btn-text">
+                <div class="pp-title">Video (MP4)</div>
+              </div>
+            </div>
+            <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
+              <img src="assets/pan_mp3.png" alt="Audio MP3" />
+              <div class="pp-btn-text">
+                <div class="pp-title">Audio (MP3)</div>
+              </div>
+            </div>
+            <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
+              <img src="assets/pan_txt.png" alt="Transcript" />
+              <div class="pp-btn-text">
+                <div class="pp-title">Transcript (.txt)</div>
+              </div>
+            </div>
+            <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
+              <img src="assets/pan_srt.png" alt="Subtitles" />
+              <div class="pp-btn-text">
+                <div class="pp-title">Subtitles (.srt)</div>
               </div>
             </div>
           </div>
@@ -3908,6 +4015,13 @@
           <p>In Sync Mode, the app detects the update. If you haven't edited the file, it replaces it. If you've
             annotated it, the new version is saved as <em>filename_NewVersion</em> next to yours - your work is never
             lost.</p>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Can it download lecture recordings (Panopto)?</summary>
+          <p>Yes. Canvas Downloader automatically finds <strong>Panopto</strong> lecture recordings linked in your
+            courses and saves them in the course folder as video (MP4), audio (MP3), or a written transcript (.txt) and
+            subtitles (.srt). Transcription runs entirely on your own computer - nothing is uploaded - and works in both
+            download and Sync modes. See the <a href="guide.html#panopto">Panopto guide</a> to set it up.</p>
         </details>
         <details class="faq-item reveal">
           <summary>The security warning scared me - is it safe?</summary>

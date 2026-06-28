@@ -119,6 +119,10 @@ a = Analysis(
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
               'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
               'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
+              # OpenCV (~99 MB) pulled transitively via moviepy's optional video
+              # effects; this app only does audio extraction / mp4 remux and never
+              # imports cv2. Pure dead-weight removal, no functionality loss.
+              'cv2', 'opencv', 'opencv-python',
               'win32com', 'win32com.client', 'pythoncom', 'pywintypes',
               'webview.platforms.winforms', 'webview.platforms.edgechromium', 'webview.platforms.qt', 'webview.platforms.gtk',
               'win11toast', 'winsound', 'streamlit.external.langchain'],

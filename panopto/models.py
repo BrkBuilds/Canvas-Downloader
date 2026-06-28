@@ -354,8 +354,36 @@ def start_download(model_id: str) -> bool:
     return True
 
 
+def _stream_file(url: str, dest: Path, model_id: str, done_before: int) -> int:
+    """Stream *url* into *dest* in chunks, honouring the cancel flag between every
+    chunk and advancing the global byte counter. Returns the bytes written.
+
+    Unlike a single blocking ``hf_hub_download`` (which can't be interrupted while
+    the large ``model.bin`` transfers - the root cause of the dead Cancel button),
+    this checks ``_cancel_requested`` ~every 256 KB, so Cancel takes effect almost
+    immediately even mid-file.
+    """
+    import requests
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    got = 0
+    headers = {"User-Agent": "CanvasDownloader"}
+    with requests.get(url, stream=True, timeout=60, headers=headers) as resp:
+        resp.raise_for_status()
+        with open(dest, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=1024 * 256):
+                if _cancel_requested(model_id):
+                    raise ModelDownloadCancelled()
+                if not chunk:
+                    continue
+                f.write(chunk)
+                got += len(chunk)
+                _set_state(model_id, downloaded_bytes=done_before + got)
+    return got
+
+
 def _download_worker(model_id: str, entry: dict) -> None:
-    from huggingface_hub import HfApi, hf_hub_download
+    from huggingface_hub import HfApi, hf_hub_url
 
     repo = entry["repo"]
     target = model_dir(model_id)
@@ -370,30 +398,19 @@ def _download_worker(model_id: str, entry: dict) -> None:
         ]
         if not wanted:
             raise RuntimeError("No model files found in the Hugging Face repo.")
-        # Download the big model.bin last so cancel-between-files is useful.
+        # Download the big model.bin last so a cancel between files is fast.
         wanted.sort(key=lambda f: (f.endswith("model.bin"), f))
         _set_state(model_id, total_files=len(wanted))
 
-        # Background size poller so the bar moves *within* the large file too.
-        stop_poll = threading.Event()
-
-        def _poll():
-            while not stop_poll.is_set():
-                _set_state(model_id, downloaded_bytes=dir_size_bytes(target))
-                stop_poll.wait(0.4)
-
-        poller = threading.Thread(target=_poll, daemon=True)
-        poller.start()
-
-        try:
-            for i, fname in enumerate(wanted):
-                if _cancel_requested(model_id):
-                    raise ModelDownloadCancelled()
-                hf_hub_download(repo_id=repo, filename=fname, local_dir=str(target), token=False)
-                _set_state(model_id, files_done=i + 1,
-                           downloaded_bytes=dir_size_bytes(target))
-        finally:
-            stop_poll.set()
+        # Stream each file ourselves so cancel is honoured mid-transfer (the big
+        # model.bin would otherwise block uninterruptibly inside hf_hub_download).
+        done_before = 0
+        for i, fname in enumerate(wanted):
+            if _cancel_requested(model_id):
+                raise ModelDownloadCancelled()
+            url = hf_hub_url(repo_id=repo, filename=fname)
+            done_before += _stream_file(url, target / fname, model_id, done_before)
+            _set_state(model_id, files_done=i + 1, downloaded_bytes=done_before)
 
         if _cancel_requested(model_id):
             raise ModelDownloadCancelled()

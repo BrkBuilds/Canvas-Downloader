@@ -35,19 +35,20 @@ _SUPPORTED_KINDS = ("mp4", "mp3", "txt", "srt")
 _TRANSCRIPT_KINDS = ("txt", "srt")
 
 
-def wanted_kinds(settings: dict, *, model_ready: bool = True) -> list[str]:
+def wanted_kinds(settings: dict) -> list[str]:
     """Configured output kinds, ordered mp4, mp3, txt, srt.
 
-    Transcript kinds (txt/srt) are dropped when ``model_ready`` is False: the
-    engine/model can't produce them, so counting them as "missing" would mark
-    every recording perpetually out-of-date. The runner makes the same call
-    (``model_ready``) before planning transcription work.
+    model_ready is IGNORED here — classification always considers every
+    configured kind so that previously-produced txt/srt files that have been
+    deleted locally still appear in the "Deleted Locally" review bucket, and
+    new recordings with txt/srt configured still appear in "New Files".
+
+    The runner is responsible for gating actual production on model readiness
+    (via v_model_ready per recording). The sync review notice warns the user
+    when the model is missing so they can install it before syncing.
     """
     active = set(active_outputs(settings))
-    out = [k for k in _SUPPORTED_KINDS if k in active]
-    if not model_ready:
-        out = [k for k in out if k not in _TRANSCRIPT_KINDS]
-    return out
+    return [k for k in _SUPPORTED_KINDS if k in active]
 
 
 @dataclass
@@ -99,9 +100,23 @@ class PanoptoChange:
 
     @property
     def download_kinds(self) -> list:
-        """The output kinds this recording will actually produce on the next sync
-        (deleted ones for a restore, otherwise the missing ones)."""
-        return list(self.deleted_kinds or self.missing_kinds)
+        """The output kinds this recording will actually produce on the next sync.
+
+        This is simply ``missing_kinds`` - every configured output not currently
+        on disk. For a pure 'restore' (all missing kinds were previously produced)
+        this equals ``deleted_kinds`` anyway; for a 'partial' recording it is the
+        full set of gaps (a previously-deleted output AND a never-produced one).
+
+        It must NOT collapse to only the deleted kinds: that would silently drop a
+        configured-but-never-produced output (e.g. a txt/srt that couldn't be made
+        at first download because the transcription engine was unavailable) when
+        the recording also has a deleted output to restore. The runner gates actual
+        transcription on live engine readiness (``v_model_ready``) independently, so
+        returning every missing kind here is safe even while the engine is down -
+        the audio is re-downloaded and txt/srt are simply skipped until the model
+        is installed, after which they reappear here and get transcribed.
+        """
+        return list(self.missing_kinds)
 
     def size_for(self, kinds) -> int:
         """Sum of known byte sizes (real or estimated) for *kinds*."""
@@ -136,8 +151,7 @@ def _video_base_path(cm, video, course_root: Path, settings: dict,
 
 
 def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
-                    manifest: dict, *, model_ready: bool = True,
-                    ignored_ids=None, durations=None) -> list[PanoptoChange]:
+                    manifest: dict, *, ignored_ids=None, durations=None) -> list[PanoptoChange]:
     """Classify each discovered recording against disk + the panopto manifest.
 
     Args:
@@ -148,7 +162,6 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
         settings: Panopto settings dict (output_* / layout / model / device).
         manifest: ``{video_id: {kind: rel_path}}`` from
             ``SyncManager.get_panopto_manifest()``.
-        model_ready: whether transcription can run (gates txt/srt as wanted).
         ignored_ids: iterable of video_ids the user has permanently ignored; these
             are flagged ``state='ignored'`` (kept out of the actionable buckets)
             while still carrying their classification + sizes for the Ignored UI.
@@ -159,7 +172,7 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
     degrades that recording to a best-effort 'new' entry rather than aborting.
     """
     course_root = Path(course_root)
-    wanted = wanted_kinds(settings, model_ready=model_ready)
+    wanted = wanted_kinds(settings)
     ignored = {str(i) for i in (ignored_ids or [])}
     changes: list[PanoptoChange] = []
 

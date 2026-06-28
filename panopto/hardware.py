@@ -100,15 +100,19 @@ def _ct2_cuda_device_count() -> int:
 
 
 def _cuda_compute_libs_loadable() -> bool:
-    """Crash-safe check that the CUDA compute library inference NEEDS (cuBLAS)
-    actually loads on this machine.
+    """Crash-safe check that BOTH compute libraries inference NEEDS - cuBLAS AND
+    cuDNN - actually load on this machine.
 
     This is the critical distinction: ``get_cuda_device_count()`` only proves the
-    CUDA *driver* is present (it counts devices). The math library cuBLAS is
-    SEPARATE and is what the first transcription call uses - if it's missing
-    (e.g. it was only ever provided by a since-removed PyTorch), the model loads
-    on the GPU but inference dies with "Library cublas64_12.dll is not found".
-    Loading the DLL with ctypes just maps it (or raises a catchable OSError) - it
+    CUDA *driver* is present (it counts devices). The math libraries cuBLAS and
+    cuDNN are SEPARATE and are what the first transcription call uses - if either
+    is missing (e.g. it was only ever provided by a since-removed PyTorch), the
+    model loads on the GPU but inference dies with "Library cublas64_12.dll is
+    not found" (or an uncatchable native crash from a missing/mismatched cuDNN).
+    Both are gated here because a machine can easily have one but not the other
+    (cuBLAS present, cuDNN missing -> falsely "gpu_ready" -> crash); the app's
+    provision step installs both, so requiring both keeps the offered fix honest.
+    Loading a DLL with ctypes just maps it (or raises a catchable OSError) - it
     never runs CUDA kernels, so it cannot trigger the native crash that real
     inference would.
     """
@@ -117,14 +121,21 @@ def _cuda_compute_libs_loadable() -> bool:
         # don't over-gate - the runtime CPU fallback covers a missing lib there.
         return True
     import ctypes
-    # CTranslate2 4.x is built against CUDA 12 -> cublas64_12.dll.
-    for name in ("cublas64_12.dll", "cublasLt64_12.dll"):
-        try:
-            ctypes.WinDLL(name)
-            return True
-        except Exception:
-            continue
-    return False
+
+    def _any_loadable(names: tuple[str, ...]) -> bool:
+        for name in names:
+            try:
+                ctypes.WinDLL(name)
+                return True
+            except Exception:
+                continue
+        return False
+
+    # CTranslate2 4.x is built against CUDA 12 (cublas64_12.dll) and cuDNN 9
+    # (cudnn64_9.dll). Require one DLL from EACH family to load.
+    cublas_ok = _any_loadable(("cublas64_12.dll", "cublasLt64_12.dll"))
+    cudnn_ok = _any_loadable(("cudnn64_9.dll", "cudnn_ops64_9.dll", "cudnn_cnn64_9.dll"))
+    return cublas_ok and cudnn_ok
 
 
 def _cpu_name() -> str | None:

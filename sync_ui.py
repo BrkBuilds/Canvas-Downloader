@@ -122,6 +122,7 @@ _SYNC_HELP_TEXT = (
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "<b style='color: #ffffff;'>Courses inherit their original download settings.</b>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;margin-bottom: 8px;'>If you initially downloaded a course with AI Optimization settings enabled, the sync engine will automatically apply those same conversions to any new files that you sync &amp; download.<br>"
+    "The same applies to <b style='color: #ffffff;'>Panopto lecture recordings</b>: a folder remembers which recording formats (video / audio / transcript / subtitles) it was set up with, and new lectures are fetched in that exact configuration on every sync.<br>"
     "Want to change these settings? Just re-download the course into a new folder with your preferred configuration."
     "</div>"
     "</div>"
@@ -354,7 +355,7 @@ _SYNC_HELP_TEXT = (
     "<ul style='margin-top: 6px; margin-bottom: 0; padding-left: 18px;'>"
     "<li><b style='color: #ffffff;'>View All:</b> Shows every sync run across all your courses chronologically.</li>"
     "<li><b style='color: #ffffff;'>By Course:</b> Select a course from the dropdown to only see sync logs for that specific course.</li>"
-    "<li><b style='color: #ffffff;'>Clear History:</b> Deletes all history entries permanently. Don't worry, it asks for confirmation first to prevent accidental clicks!</li>"
+    "<li><b style='color: #ffffff;'>Clear History:</b> Deletes all history entries permanently.</li>"
     "</ul>"
     "</div>"
     "</div>"
@@ -1154,12 +1155,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     _init_sync_session_state()
     _load_persistent_pairs()
 
-    # Host the transcription engine-setup dialog on this page so the sync-list
-    # "Set up transcription" notice button can open it here (and persist its
-    # model-download auto-rerun loop).
-    if st.session_state.get('_pan_dialog_open'):
-        from ui.panopto_page import render_transcription_dialog
-        render_transcription_dialog()
+    # NOTE: The transcription engine-setup dialog is hosted centrally in app.py;
+    # the sync-list "Set up transcription" notice button opens it by setting
+    # st.session_state['_pan_dialog_open'] = True + an app-scoped rerun.
 
     # Inject Google Material Symbols font once per render (M-24).
     from ui_shared import inject_material_icons_font
@@ -1725,10 +1723,26 @@ def _render_sync_history():
         }
         /* Ghost Danger style for clear history button */
         div.st-key-btn_sync_hist_clear button {
-            min-height: 0 !important;
+            border-radius: 10px !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+            color: rgba(255, 255, 255, 0.88) !important;
+            min-height: 38px !important;
             height: 38px !important;
-            padding: 4px 12px !important;
+            padding: 0 12px !important;
             transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        div.st-key-btn_sync_hist_clear button > div,
+        div.st-key-btn_sync_hist_clear button > div > span,
+        div.st-key-btn_sync_hist_clear button div[data-testid="stMarkdownContainer"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            align-self: center !important;
+            width: 100% !important;
         }
         div.st-key-btn_sync_hist_clear button:hover {
             border-color: #ff4b4b !important;
@@ -1968,27 +1982,14 @@ def _render_sync_history():
                                 st.selectbox("Select Course", courses_list, index=idx, label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
             
                 with col2:
-                    if st.session_state.get('confirm_clear_history'):
-                        cc1, cc2 = st.columns(2)
-                        with cc1:
-                            if st.button("No", use_container_width=True):
-                                st.session_state.confirm_clear_history = False
-                                st.rerun()
-                        with cc2:
-                            if st.button("Yes", type="primary", use_container_width=True):
-                                if history_mgr is not None:
-                                    history_mgr.clear_history()
-                                # Invalidate the cached history so the now-empty
-                                # state is re-read from disk on the next render.
-                                st.session_state.pop('_sync_history_cache', None)
-                                st.session_state.pop('confirm_clear_history', None)
-                                st.rerun()
-                        from ui.amber_notice import render_amber_notice
-                        render_amber_notice("Are you sure you want to delete all sync history?", detail="This cannot be undone.")
-                    else:
-                        if st.button("Clear History", key="btn_sync_hist_clear", use_container_width=True):
-                            st.session_state.confirm_clear_history = True
-                            st.rerun()
+                    if st.button("Clear History", key="btn_sync_hist_clear", use_container_width=True):
+                        if history_mgr is not None:
+                            history_mgr.clear_history()
+                        # Invalidate the cached history so the now-empty
+                        # state is re-read from disk on the next render.
+                        st.session_state.pop('_sync_history_cache', None)
+                        st.session_state.pop('confirm_clear_history', None)
+                        st.rerun()
 
                 # Divider between action toolbar and list - extend to the box's
                 # inner edges (-20px == the box's horizontal padding).
@@ -2615,7 +2616,7 @@ def _run_sync_panopto():
     )
     import theme as _theme
     from panopto.settings import compose_settings as _pan_compose
-    from panopto.runner import run_panopto_batch, make_recorder
+    from panopto.runner import run_panopto_batch, make_recorder, make_ignorer
     from sync_manager import SyncManager
     from ui_helpers import esc as _esc, render_sync_wizard as _wizard
 
@@ -2753,6 +2754,19 @@ def _run_sync_panopto():
                     dq.append(log_line('success', kw.get('title', ''), icon=file_icon_svg('x.mp3'),
                                        detail='audio'))
                 _render()
+            elif kind == 'size_skipped':
+                # Recording exceeded the skip-large-files limit: skipped + ignored
+                # before any download. Drop it from the phase denominator and
+                # surface it on the completion screen with the size-skipped files.
+                _pan['dl_total'] = max(0, _pan['dl_total'] - 1)
+                _sz_mb = (kw.get('size', 0) or 0) / (1024 * 1024)
+                if 'size_skipped_files' not in st.session_state:
+                    st.session_state['size_skipped_files'] = []
+                st.session_state['size_skipped_files'].append(
+                    f"{kw.get('title', '')} (~{_sz_mb:.0f} MB)")
+                dq.append(log_line(
+                    'skip', kw.get('title', ''), icon=file_icon_svg('x.mp4'),
+                    detail=f"Skipped - exceeds filesize limit · ~{_sz_mb:.0f} MB")); _render()
             elif kind == 'download_tick':
                 # Heartbeat during concurrent downloads - repaint so the
                 # elapsed/speed metrics keep ticking between 'downloaded' events.
@@ -2888,21 +2902,50 @@ def _run_sync_panopto():
             'local_folder': str(local_folder),
         }
         _total_selected += len(selected_ids)
+        # Per-recording allowed output kinds from the analysis.  Lets the runner
+        # honour what the Review screen promised per recording (e.g. a restore of
+        # a deleted mp4 should not also produce txt for the first time just because
+        # settings have output_txt=True).
+        _per_video_kinds = {
+            str(c.video_id).lower(): set(c.download_kinds)
+            for c in (pan_payload.get('changes') or [])
+            if getattr(c, 'is_actionable', False)
+        }
+        # Per-folder manifest so the runner re-downloads/restores to the EXACT
+        # recorded path (collision suffixes included), matching what analysis
+        # classified - never diverging to a fresh "Title (1)".
+        try:
+            _pan_manifest = sm.get_panopto_manifest() if sm is not None else None
+        except Exception:
+            _pan_manifest = None
         _targets.append({
             'course': course, 'course_root': str(local_folder),
             'download_mode': dmode, 'record_fn': _rec_wrap,
+            'ignore_fn': make_ignorer(sm) if sm is not None else None,
             'videos': pan_payload.get('videos'),     # pre-discovered (may be None)
             'selected_ids': selected_ids,            # allowlist of video_id
             'settings': _pan_settings,               # this folder's output/layout contract
+            'per_video_kinds': _per_video_kinds,     # analysis-derived per-recording kinds
+            'manifest': _pan_manifest,               # path resolution parity with analysis
         })
 
     # Honest scan denominator (some sels may have been skipped above).
     _pan['courses_total'] = len(_targets)
 
+    # Skip-large-files Setting: gate Panopto recordings by the same limit as
+    # Canvas files in sync (consistent with execution.py's per-file size gate).
+    # Over-limit recordings are skipped + ignored mid-download. 0/None disables.
+    if st.session_state.get('max_file_size_enabled', False):
+        _pan_size_mb = int(st.session_state.get('max_file_size_mb', 0) or 0)
+        _pan_max_bytes = _pan_size_mb * 1024 * 1024 if _pan_size_mb > 0 else None
+    else:
+        _pan_max_bytes = None
+
     try:
         _summary = run_panopto_batch(
             cm, _targets, settings=pan,
             progress=progress, is_cancelled=is_sync_cancelled,
+            max_file_size_bytes=_pan_max_bytes,
         )
         # Carry the analysis-derived "already up to date" count + the selected
         # count so the completion card reads honestly (no misleading "Skipped").

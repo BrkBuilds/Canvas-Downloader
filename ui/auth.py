@@ -1481,6 +1481,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
     _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
+    _stg_i_caption = _stg_ico("M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z")
 
     # Clear all staged (unsaved) settings state on dismissal. Save and Cancel
     # already pop '_temp_default_path', but a backdrop/ESC dismiss runs neither -
@@ -1624,6 +1625,20 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             background-size: contain; background-repeat: no-repeat;
             margin-right: 7px; vertical-align: middle;
         }
+
+        /* ── Panopto transcription "Configure" button (purple accent) ── */
+        div[data-testid="stDialog"] div.st-key-stg_btn_pan button {
+            background: rgba(176,157,254,0.10) !important;
+            border: 1px solid rgba(176,157,254,0.35) !important;
+            color: #d8caff !important;
+            min-height: unset !important; height: auto !important;
+            padding-top: 6px !important; padding-bottom: 6px !important;
+            font-size: 0.82rem !important; font-weight: 600 !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_pan button:hover {
+            background: rgba(176,157,254,0.18) !important;
+            border-color: #b89dfe !important; color: #ffffff !important;
+        }
         </style>""")
 
         st.markdown("""
@@ -1735,6 +1750,38 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     value=int(st.session_state.get('sync_history_retention', 50)),
                     key="temp_sync_history_retention",
                 )
+
+            # ── PANOPTO TRANSCRIPTION ─────────────────────────────────
+            # The transcription engine (model / language / compute device) is a
+            # GLOBAL, persisted config - per-download output formats live in
+            # Section 4 of the download settings, not here. Exposing the engine
+            # dialog from Settings lets users configure it without first starting
+            # a download or sync. Streamlit forbids nested dialogs, so the button
+            # closes Settings, opens the transcription dialog (hosted in app.py),
+            # and returns here when done (_pan_return_to_settings).
+            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PANOPTO TRANSCRIPTION</span></div>""")
+
+            from ui_helpers import esc
+            try:
+                from panopto.models import transcription_status as _tx_status
+                _tx = _tx_status()
+            except Exception:
+                _tx = {"ready": False, "model_id": "small",
+                       "reason": "the local transcription engine isn't available yet"}
+
+            if _tx.get("ready"):
+                _tx_dot, _tx_txt = "#22c55e", (
+                    f"Ready &middot; active model: <b>{esc(str(_tx.get('model_id', '')))}</b>")
+            else:
+                _tx_dot, _tx_txt = "#f59e0b", esc(
+                    (_tx.get("reason") or "not set up yet").capitalize())
+
+            with st.container(border=True, key="stg_card_pan"):
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_caption}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Transcription engine</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Configure the local model, language, and compute device used to transcribe Panopto recordings into <b>Transcripts</b> &amp; <b>Subtitles</b>. These settings are shared across every download and sync - nothing is uploaded.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_tx_dot};flex-shrink:0;"></span><span>{_tx_txt}</span></div></div>""")
+                if st.button("Configure transcription", key="stg_btn_pan", use_container_width=True):
+                    st.session_state['_pan_dialog_open'] = True
+                    st.session_state['_pan_return_to_settings'] = True
+                    st.rerun(scope="app")
 
         # ── Sticky footer ─────────────────────────────────────────────
         st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
