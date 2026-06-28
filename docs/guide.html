@@ -276,7 +276,7 @@
     .info-card p, .info-card ul { font-size: 13px; color: var(--txt2); line-height: 1.7; }
     .info-card ul { padding-left: 18px; margin-top: 6px; }
     .info-card ul li { margin-bottom: 4px; }
-    .info-card ul li strong { color: var(--txt); }
+    .info-card strong { color: var(--txt); }
 
     /* ---- PRESET LIST ---- */
     .preset-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 24px; }
@@ -427,6 +427,9 @@
     .info-card ul.icon-list { padding-left: 0; list-style: none; }
     .info-card ul.icon-list li { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
     .info-card ul.icon-list li .li-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
+    .info-card ol.guide-steps { padding-left: 22px; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+    .info-card ol.guide-steps li { font-size: 13px; color: var(--txt2); line-height: 1.7; padding-left: 4px; }
+    .info-card ol.guide-steps li::marker { color: var(--cyan); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -494,6 +497,8 @@
       <a href="#card1" class="sub">File Filter &amp; Structure</a>
       <a href="#card2" class="sub">Canvas Content</a>
       <a href="#card3" class="sub">AI Optimization</a>
+      <a href="#panopto" class="sub">Panopto Recordings</a>
+      <a href="#transcription-setup" class="sub">Setting up Transcription</a>
       <a href="#presets" class="sub">Presets</a>
       <a href="#sync-mode">Sync Mode</a>
       <a href="#course-pairs" class="sub">Course Pairs</a>
@@ -574,7 +579,7 @@
       <section class="guide-section" id="quick-download">
         <div class="sh reveal">
           <div class="label">Fastest Way to Start</div>
-          <div class="icon-h2"><img src="assets/icon_quick_download.png" alt="" /><h2>Quick Download</h2></div>
+          <div class="icon-h2"><img src="assets/icon_sync_quick.png" alt="" /><h2>Quick Download</h2></div>
           <p>Pick a ready-made preset and start downloading in seconds. No manual configuration needed - each preset is tuned for a specific use case.</p>
         </div>
 
@@ -589,21 +594,21 @@
             <img src="assets/icon_quick_dl_complete.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Complete Canvas Download</strong>
-              <span>All course files and every Canvas web page - assignments, syllabus, announcements, discussions, quizzes, and submissions - organized by module.</span>
+              <span>All course files and every Canvas web page - assignments, syllabus, announcements, discussions, quizzes, and submissions - organized by module, plus full Panopto lecture videos.</span>
             </div>
           </div>
           <div class="preset-row">
             <img src="assets/icon_quick_dl_ai_optimized.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>AI Study Pack</strong>
-              <span>Same as Complete, plus PowerPoint and Word files are automatically converted to PDF. Designed for uploading your whole course to an AI tool.</span>
+              <span>Same as Complete, plus PowerPoint and Word files are automatically converted to PDF, and Panopto lecture video &amp; audio are saved. Designed for uploading your whole course to an AI tool.</span>
             </div>
           </div>
           <div class="preset-row">
             <img src="assets/icon_quick_dl_notebook.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>NotebookLM Ready</strong>
-              <span>All files in a single flat folder with all conversions enabled (PPTX, Word, Excel, code files, web pages, videos). Optimized for NotebookLM and similar AI tools. Folder layout is locked to flat.</span>
+              <span>All files in a single flat folder with all conversions enabled (PPTX, Word, Excel, code files, web pages, videos), plus Panopto lecture audio in a separate Recordings folder. Optimized for NotebookLM and similar AI tools. Folder layout is locked to flat.</span>
             </div>
           </div>
           <div class="preset-row">
@@ -617,9 +622,13 @@
             <img src="assets/icon_quick_dl_all_files.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Files Only</strong>
-              <span>All course files organized by module. Skips Canvas-only web content (assignments, syllabus, etc.). ZIP archives are unpacked automatically.</span>
+              <span>All course files organized by module. Skips Canvas-only web content (assignments, syllabus, etc.) and Panopto recordings. ZIP archives are unpacked automatically.</span>
             </div>
           </div>
+        </div>
+
+        <div class="callout reveal">
+          <strong>Lecture recordings included:</strong> the first three presets also fetch <strong>Panopto lecture recordings</strong> automatically (video and/or audio - the configuration preview on the page shows exactly which). For transcripts and subtitles, or to fine-tune video vs. audio, use <a href="#panopto" style="color:var(--cyan)">Custom Download &rarr; Panopto</a>.
         </div>
 
         <h3 class="sub-title reveal" id="quick-org">Folder Organisation</h3>
@@ -730,6 +739,75 @@
 
         <div class="callout warn reveal">
           <strong>Required software:</strong> PowerPoint, Word, and Excel &#8594; PDF conversions require the matching Microsoft Office desktop app (PowerPoint, Word, Excel). If the required app is not installed, that conversion is skipped and your original file is kept untouched.
+        </div>
+
+        <!-- Card 4: Panopto -->
+        <h3 class="sub-title reveal" id="panopto"><img src="assets/pan_icon.png" alt="" class="sub-icon" />Section 4 - Panopto Lecture Recordings</h3>
+        <p class="body-text reveal">
+          Optional. Some courses record their lectures and attach them in Canvas as <strong>Panopto</strong> links. They're useful - but watching back hours of video is slow, and the recordings aren't in a format you can hand to an AI study tool. Canvas Downloader solves both: it automatically finds those Panopto links and saves each recording right inside your course folder, as <strong>video or audio</strong> you can watch or listen to whenever you want, plus <strong>locally-generated transcripts and subtitles</strong> that make every lecture AI-ready.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>What you can save for each lecture</h4>
+          <ul class="icon-list">
+            <li><img src="assets/pan_mp4.png" alt="" class="li-icon" /><span><strong>Video (MP4)</strong> - the full lecture video (combined screen + camera). Best for watching offline; can be large. No setup needed.</span></li>
+            <li><img src="assets/pan_mp3.png" alt="" class="li-icon" /><span><strong>Audio (MP3)</strong> - just the audio track, far smaller than video - great for re-listening or feeding to AI tools. No setup needed.</span></li>
+            <li><img src="assets/pan_txt.png" alt="" class="li-icon" /><span><strong>Transcript (.txt)</strong> - a written transcript of the spoken lecture, perfect for AI tools. Needs a transcription model (see below).</span></li>
+            <li><img src="assets/pan_srt.png" alt="" class="li-icon" /><span><strong>Subtitles (.srt)</strong> - timestamped captions you can load alongside the video. Needs a transcription model (see below).</span></li>
+          </ul>
+        </div>
+
+        <div class="callout reveal">
+          <strong>Video &amp; audio work out of the box.</strong> Downloading and syncing the lecture video and audio needs <strong>no setup at all</strong> - just tick the formats you want. Transcripts (.txt) and subtitles (.srt) are the only part that needs a one-time <strong>transcription model</strong>, because they're generated by on-device speech recognition. Everything stays <strong>100% on your own computer</strong> - your lectures are never uploaded anywhere.
+        </div>
+
+        <div class="compare-grid reveal">
+          <div class="compare-card">
+            <h4><img src="assets/pan_matching.png" alt="" class="card-icon" />Match Course Folder structure</h4>
+            <p>Saves each recording alongside your course files - in its module subfolder (subfolder mode) or the course root (flat mode).</p>
+          </div>
+          <div class="compare-card">
+            <h4><img src="assets/pan_separate_folders.png" alt="" class="card-icon" />In Separate Folders</h4>
+            <p>Groups all lectures into a dedicated &ldquo;Panopto Recordings&rdquo; folder inside the course, one subfolder per recording.</p>
+          </div>
+        </div>
+
+        <p class="body-text reveal">
+          Recordings are fetched in three clear phases you'll see on the progress screen: <strong>discover</strong> every lecture, <strong>download</strong> the media, then <strong>transcribe</strong> each one. They are also fully supported in <a href="#sync-mode" style="color:var(--cyan)">Sync Mode</a> - new lectures show up in your sync like any other file, and a recording you've deleted locally is respected and never re-downloaded unless you ask.
+        </p>
+
+        <!-- Transcription setup walkthrough -->
+        <h3 class="sub-title reveal" id="transcription-setup"><img src="assets/pan_icon.png" alt="" class="sub-icon" />Setting up transcription (.txt &amp; .srt)</h3>
+        <p class="body-text reveal">
+          To turn lectures into transcripts and subtitles, you download a small <strong>speech-recognition model</strong> once - it then lives on your computer and works offline forever. You only need this if you want .txt or .srt; video and audio never require it. Here's the whole flow:
+        </p>
+
+        <div class="info-card reveal">
+          <h4>Step by step</h4>
+          <ol class="guide-steps">
+            <li><strong>Open the setup dialog.</strong> In <strong>Custom Download &rarr; Section 4</strong>, tick Transcript and/or Subtitles, then click <strong>Set up transcription</strong>. (The same button also appears in <a href="#sync-review" style="color:var(--cyan)">Sync Review</a> whenever a recording is set to be transcribed but no model is installed yet.)</li>
+            <li><strong>Pick the spoken language.</strong> Choose the language spoken in your lectures (Danish, English, German, and more), or leave it on Auto-detect. Picking the exact language is a little more accurate than auto-detect.</li>
+            <li><strong>Choose the compute device.</strong> CPU works on every computer. GPU is far faster but is only available on Windows PCs with an NVIDIA graphics card - on a Mac, transcription always uses the CPU (which is plenty fast on Apple Silicon). The dialog shows a <strong>Detected Hardware</strong> panel so you can see exactly what was found.</li>
+            <li><strong>(Windows + NVIDIA only) Enable GPU acceleration.</strong> If your GPU is detected but its CUDA libraries are missing, the dialog offers a one-click <strong>Download CUDA libraries &amp; enable GPU</strong> button (about 1.3 GB, one time, no admin rights needed). If your graphics driver is too old, it tells you to update it first.</li>
+            <li><strong>Download a model.</strong> In the Available Models list, click <strong>Download</strong> next to a model. <strong>Small</strong> is the recommended choice on CPU; <strong>Large v3 Turbo</strong> is recommended if you have a GPU. Bigger models are more accurate but slower and larger on disk.</li>
+            <li><strong>Activate it &amp; close.</strong> Once downloaded, click <strong>Activate</strong> (the active model shows a green Active badge), then <strong>Done</strong>. That's it - the setup is saved.</li>
+          </ol>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>Which model should I pick?</h4>
+          <ul class="icon-list">
+            <li><span><strong>Tiny / Base</strong> - fastest, lowest accuracy. Good for a quick test or very slow machines.</span></li>
+            <li><span><strong>Small</strong> - the balanced, recommended choice on CPU. Great accuracy for its speed.</span></li>
+            <li><span><strong>Medium</strong> - more accurate, noticeably slower on CPU.</span></li>
+            <li><span><strong>Large v3</strong> - the most accurate (best for languages like Danish), but really wants a GPU.</span></li>
+            <li><span><strong>Large v3 Turbo</strong> - near-Large accuracy, much faster. The recommended pick when you have a GPU.</span></li>
+          </ul>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>Where it runs</h4>
+          <p>Transcription happens entirely on your machine using faster-whisper - no internet needed after the model is downloaded, and nothing is ever uploaded. Once a model is set up, any recording configured for .txt/.srt is transcribed automatically on your next download or sync. Already downloaded lectures without transcripts? Just install a model and they'll be picked up and transcribed on the next sync.</p>
         </div>
 
         <!-- Presets -->
@@ -929,6 +1007,10 @@
             <span class="shield">-</span>
             <p><strong>Never touches files outside your course folder</strong> - only operates inside folders you explicitly link.</p>
           </div>
+          <div class="safety-item">
+            <span class="shield">-</span>
+            <p><strong>Treats lecture recordings the same way</strong> - <a href="#panopto" style="color:var(--cyan)">Panopto recordings</a> sync like any other file: new lectures are added, ones you deleted locally are left alone, and any you ignore stay hidden.</p>
+          </div>
         </div>
       </section>
 
@@ -1014,6 +1096,7 @@
           <ul>
             <li><strong>Smart Select (by filetype)</strong> - Tag buttons group every file by extension (e.g. .pdf, .docx). Click a tag to instantly toggle all files of that type across all courses.</li>
             <li><strong>Select All / Deselect All</strong> - One-click bulk actions to check or uncheck every visible file.</li>
+            <li><strong>Select All / Deselect All here</strong> - Scoped actions at the top of each category to check or uncheck only the files within that specific category of a course.</li>
             <li><strong>The Ignore Icon</strong> - Hover over any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</li>
             <li><strong>Move deselected to Ignored</strong> - Sits at the top of every category. Click it to sweep every unchecked file in that list into your permanent Ignored bucket.</li>
             <li><strong>Restore Icons</strong> - Inside the Ignored Files category, click the restore arrow next to a file, or use "Restore All" to bring them back into active sync.</li>
@@ -1025,7 +1108,7 @@
           <ul>
             <li><strong>1. Review Categories</strong> - Expand the file categories to see which files are new, updated, or deleted.</li>
             <li><strong>2. Smart Select</strong> - Use the filetype filters to instantly check or uncheck entire types (e.g. all PDFs, no MP4s).</li>
-            <li><strong>3. Customize</strong> - Manually check specific files you want, uncheck those you don't need right now.</li>
+            <li><strong>3. Customize</strong> - Manually check specific files, use "Select All here" / "Deselect All here" for category-wide toggles, or uncheck those you don't need right now.</li>
             <li><strong>4. Clean Up (Optional)</strong> - Click "Move deselected files to Ignored" to permanently skip files you left unchecked.</li>
             <li><strong>5. Confirm &amp; Download</strong> - Click the primary button at the bottom to execute your choices.</li>
           </ul>

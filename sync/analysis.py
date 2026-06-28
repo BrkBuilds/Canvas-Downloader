@@ -293,8 +293,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             _pan_ignored = set(sync_mgr.get_ignored_panopto().keys())
             _pan_changes = classify_videos(
                 cm, _pan_videos, local_folder, _pan_dmode, _pan,
-                _pan_manifest, model_ready=_model_ready,
-                ignored_ids=_pan_ignored,
+                _pan_manifest, ignored_ids=_pan_ignored,
             )
             # Size the recordings whose outputs aren't on disk yet (new/restore/
             # ignored): fetch durations only for those, then estimate. Best-effort -
@@ -632,6 +631,30 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # design and tallied separately as qs_skipped.)
             total_filter_skipped += (len(result.new_files) - len(actionable_new))
             total_filter_skipped += (len(result.updated_clean_files) - len(actionable_updated_clean))
+
+            # Files a non-'all' filter drops are intentional skips, not pending
+            # work - but left alone they reappear as "new" on EVERY future sync.
+            # Register the dropped NEW files as ignored (mirroring the
+            # max-file-size gate) so they land in the Ignored bucket and stop
+            # resurfacing; the user can restore them from the Sync Hub anytime.
+            # Only brand-new (undownloaded) files are ignored - clean-update
+            # files already exist on disk and merely have a pending update.
+            if current_filter != 'all':
+                _kept_ids = {id(x) for x in actionable_new}
+                _dropped_new = [
+                    f for f in result.new_files
+                    if id(f) not in _kept_ids and getattr(f, 'id', 0)
+                ]
+                if _dropped_new:
+                    try:
+                        res_data['sync_manager'].bulk_ignore_files([
+                            (f.id,
+                             getattr(f, 'filename', '') or getattr(f, 'display_name', ''),
+                             getattr(f, 'size', 0) or 0)
+                            for f in _dropped_new
+                        ])
+                    except Exception:
+                        pass  # Non-fatal: never block a sync for a DB write
 
             # Debug: log Quick Sync auto-selection per course
             if st.session_state.get('debug_mode'):

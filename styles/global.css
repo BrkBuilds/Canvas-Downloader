@@ -1092,6 +1092,7 @@ div.st-key-page_nav_sync_review_back button:hover {
        ═══════════════════════════════════════════════ */
 div[class*="st-key-cancel_download_btn"] button,
 div[class*="st-key-cancel_panopto_btn"] button,
+div[class*="st-key-cancel_panopto_sync_btn"] button,
 div[class*="st-key-cancel_pp_download"] button,
 div[class*="st-key-cancel_retry_btn"] button,
 div[class*="st-key-cancel_analysis_btn"] button,
@@ -1113,6 +1114,7 @@ div[class*="st-key-cancel_pp_btn_sync_phase3"] button {
 
 div[class*="st-key-cancel_download_btn"] button::before,
 div[class*="st-key-cancel_panopto_btn"] button::before,
+div[class*="st-key-cancel_panopto_sync_btn"] button::before,
 div[class*="st-key-cancel_pp_download"] button::before,
 div[class*="st-key-cancel_retry_btn"] button::before,
 div[class*="st-key-cancel_analysis_btn"] button::before,
@@ -1133,6 +1135,7 @@ div[class*="st-key-cancel_pp_btn_sync_phase3"] button::before {
 
 div[class*="st-key-cancel_download_btn"] button:hover,
 div[class*="st-key-cancel_panopto_btn"] button:hover,
+div[class*="st-key-cancel_panopto_sync_btn"] button:hover,
 div[class*="st-key-cancel_pp_download"] button:hover,
 div[class*="st-key-cancel_retry_btn"] button:hover,
 div[class*="st-key-cancel_analysis_btn"] button:hover,
@@ -1146,6 +1149,7 @@ div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover {
 
 div[class*="st-key-cancel_download_btn"] button:hover::before,
 div[class*="st-key-cancel_panopto_btn"] button:hover::before,
+div[class*="st-key-cancel_panopto_sync_btn"] button:hover::before,
 div[class*="st-key-cancel_pp_download"] button:hover::before,
 div[class*="st-key-cancel_retry_btn"] button:hover::before,
 div[class*="st-key-cancel_analysis_btn"] button:hover::before,

@@ -121,6 +121,11 @@ a = Analysis(
               'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
               'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
               'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
+              # OpenCV (~99 MB) is pulled transitively via moviepy's optional video
+              # effects (resize/blur/crop), which this app never calls - it only does
+              # audio extraction / mp4 remux. Verified: nothing imports cv2. Excluding
+              # it is a pure dead-weight removal with no functionality loss.
+              'cv2', 'opencv', 'opencv-python',
               # More unused Streamlit features
               'streamlit.external.langchain'],
     noarchive=False,

@@ -241,6 +241,25 @@ def ensure_sync_state() -> None:
 # Cleanup Functions
 # ═══════════════════════════════════════════════
 
+# Per-run download CONFIGURATION keys (scalar) reset to their DOWNLOAD_DEFAULTS
+# value at the end of a run. The per-toggle sub-key lists (SECONDARY_CONTENT_KEYS,
+# NOTEBOOK_SUB_KEYS, PANOPTO_OUTPUT_KEYS) are reset to False alongside these.
+DOWNLOAD_CONFIG_KEYS = [
+    'file_filter', 'download_mode',
+    'dl_isolate_secondary', 'dl_secondary_master',
+    'notebooklm_master', 'pan_master', 'pan_layout',
+    'card2_expanded', 'card3_expanded', 'card_panopto_expanded',
+]
+
+
+def _reset_download_config() -> None:
+    """Reset per-run download configuration to defaults for a fresh next run."""
+    for key in DOWNLOAD_CONFIG_KEYS:
+        st.session_state[key] = copy.deepcopy(DOWNLOAD_DEFAULTS[key])
+    for key in (*SECONDARY_CONTENT_KEYS, *NOTEBOOK_SUB_KEYS, *PANOPTO_OUTPUT_KEYS):
+        st.session_state[key] = False
+
+
 def cleanup_download_state() -> None:
     """Remove all transient download keys and reset cancel flags.
 
@@ -275,6 +294,16 @@ def cleanup_download_state() -> None:
     for key in list(st.session_state.keys()):
         if key.startswith('dl_chk_'):
             del st.session_state[key]
+
+    # Reset the per-run DOWNLOAD CONFIGURATION back to defaults so the next
+    # download (Quick or Custom) starts fresh. These are plain config keys (not
+    # in DOWNLOAD_TRANSIENT_KEYS), so without this they would silently persist
+    # from one download to the next - e.g. running a Quick Download preset and
+    # then opening Custom Download would show the previous run's settings already
+    # applied. The ONLY intended carry-over is Quick Download's "Customize this
+    # configuration in Custom Download" path, which navigates directly without a
+    # completed download and therefore never reaches this cleanup.
+    _reset_download_config()
 
     st.session_state['step'] = 1
 
