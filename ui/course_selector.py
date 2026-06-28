@@ -216,8 +216,8 @@ def _course_search_field_css(key: str, prefix: str = "") -> str:
         left: 11px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        width: 20px !important;
-        height: 20px !important;
+        width: 16px !important;
+        height: 16px !important;
         background-image: url("{_SEARCH_ICON}") !important;
         background-size: contain !important;
         background-repeat: no-repeat !important;

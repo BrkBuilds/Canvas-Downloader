@@ -170,7 +170,7 @@
     - **PyInstaller Path Resolution**: Updated `ui/presets.py` to use `get_base64_image` instead of a local loader, ensuring preset icons resolve correctly against `sys._MEIPASS` when compiled.
     - **Presets UI Standardization**: Changed the preset configuration expander summary to `⚙️ See Configuration` to match the Sync Hub styling, reducing visual noise.
     - **Settings Styling**: Corrected the "Saved Path" text color in the configuration summary to full white (`#ffffff`) to match core settings headers.
-    - **Streamlit Key TypeError Fix**: Removed the unsupported `key` argument from `st.markdown` in `ui/amber_notice.py`, resolving crashes when adding courses to folders in the Sync Page.
+    - **Streamlit Key TypeError Fix**: Removed the unsupported `key` argument from `st.markdown` in `ui/amber_notice.py`, Finding crashes when adding courses to folders in the Sync Page.
 15: - **Session 2026-04-30: Sync UI Hardening - Proactive Guardrails & Amber Notices**
     - **Amber Notice Component**: Created `ui/amber_notice.py` - a reusable, styled amber/gold notification card for non-fatal warnings. Matches the "Physical Volume" aesthetic with dark amber background, gold text, and configurable icon/detail parameters.
     - **Button State Hardening (Step 1)**: Extended Analyze & Quick Sync button disabling beyond just empty pairs. Now also blocks when any sync pair has a missing/unreachable folder. Added dynamic `help=` tooltips explaining exactly why buttons are disabled in student-friendly language.
@@ -213,7 +213,7 @@
         - Done: **S5 (CSS Scoping)**: Scoped global button height CSS to specific Analyze/Quick Sync keys to prevent cross-page layout bleed.
     - **UI Bleed & Isolation (Category 4):**
         - Done: **B1 (Chevron Scaling Bug)**: Resolved the full-screen chevron expansion issue by implementing a session-state flag (`_inject_sync_review_css`) in `cleanup_sync_state()`. This prevents the `sync_review.css` from re-injecting into the front-page DOM where it lacks proper scoping (sync_ui.py).
-        - Done: **B2 (Shadow-Root Isolation)**: Converted all `st.markdown` CSS injections to `st.html` to move styles into shadow DOM isolation, resolving "Ghost Box" 1rem margin gaps and preventing cross-page leakage.
+        - Done: **B2 (Shadow-Root Isolation)**: Converted all `st.markdown` CSS injections to `st.html` to move styles into shadow DOM isolation, Finding "Ghost Box" 1rem margin gaps and preventing cross-page leakage.
         - Done: **S5/B2 (Shadow Spacing)**: Standardized using internal `padding` in `st.html` containers to inflate height inside shadow roots where `margin` is collapsed.
     - **Fragment Integration (Category 3):**
         - Done: **F1-F3**: Successfully implemented fragment boundaries for Course Selection, Sync List management, and Sync Review categories to ensure a fluid, non-jittery UX.
@@ -400,7 +400,7 @@
     - Deferred `CONFIG_FILE` path evaluation in `ui/auth.py` to minimize import-time footprint.
     - Purged dead code helper functions (`resolve_path`, `get_base64_image`, `_get_chevron_base64`) from `app.py`.
 
-## Recent Changes (Session 2026-04-04 - Monolith Teardown Completion: Phases 0–7)
+## Recent Changes (Session 2026-04-04 - Monolith Teardown Completion: Phases 0-7)
 - **Phase 0: CSS Extraction (`styles/`)**:
     - Decoupled ~1,800 lines of inline CSS from both `app.py` and `sync_ui.py` into dedicated `.css` files.
     - Implemented `inject_css` and `inject_css_template` strategies.
@@ -927,7 +927,7 @@
 - **Tab State Synchronization**: Refactored the `_saved_groups_hub_dialog` tab navigation ("View All", "Groups", "Pairs") avoiding conditional `if st.button:` logic. Implemented a `set_view_mode` `on_click` callback to guarantee session state updates *before* the Streamlit dialog layout is evaluated. This solves the double-click state-lag bug where active tab styling failed to update instantly.
 - **Expander CSS Restoration**: Re-wired CSS selectors to use the updated `st-key-hub_group_item_` key to restore lost styling on group expander titles and unordered list alignment (1.5rem padding, bullet point nudging).
 - **Pair Course Text Layout**: Transformed the single pair display from `🎓 {course_name}` to `Course: {course_name}` encapsulated in a highly-targetable `<div class='pair-course-subtitle'>`. Styled the text to directly match the group expander summaries and appended `margin-bottom: 8px` formatting for breathing room.
-- **UI Element Polish**: Replaced "Back to Groups" button text with "Back to overview". Injected direct key-targeting CSS (`[class*="st-key-hub_add_"]`) bypassing the generic Streamlit `stTooltipHoverTarget` class to force disabled/tooltipped buttons to scale cleanly to a uniform `40px` min-height, resolving a layout drift bug.
+- **UI Element Polish**: Replaced "Back to Groups" button text with "Back to overview". Injected direct key-targeting CSS (`[class*="st-key-hub_add_"]`) bypassing the generic Streamlit `stTooltipHoverTarget` class to force disabled/tooltipped buttons to scale cleanly to a uniform `40px` min-height, Finding a layout drift bug.
 
 ## Recent Changes (Session 2026-03-08 - Saved Groups UI Polish & Card Layout)
 - **Layer 2 Pair Card Layout Restructure**: Fixed a persistent visual clipping bug caused by Streamlit's native nested column containers `st.columns` conflicting with border-bottom padding. Reverted the `c_title, c_save` layout to a pure sequential Markdown rendering flow, preserving the card's native vertical flexbox rhythm.

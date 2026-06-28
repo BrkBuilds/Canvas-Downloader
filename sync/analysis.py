@@ -267,7 +267,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             def _pan_scan(kind, **kw):
                 try:
                     if kind == 'stage':
-                        progress_hook(0, 1, f"Scanning Panopto — {kw.get('name', '')}…")
+                        progress_hook(0, 1, f"Scanning Panopto - {kw.get('name', '')}…")
                     elif kind == 'video':
                         progress_hook(0, 1, f"Found recording: {kw.get('title', '')}")
                 except Exception:

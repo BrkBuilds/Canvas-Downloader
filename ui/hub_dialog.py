@@ -1006,7 +1006,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             )
                             _save_disabled = not has_changes or is_hub_dup_edit
                             _save_help = (
-                                "This pair already exists in this group — cancel to go back."
+                                "This pair already exists in this group - cancel to go back."
                                 if is_hub_dup_edit else
                                 None if has_changes else "Change the course or folder to save"
                             )
@@ -1467,13 +1467,15 @@ def render_hub_config(pair: dict):
         raw_contract = sm._load_metadata('sync_contract')
         raw_mode = sm._load_metadata('download_mode') # Load download_mode directly
         raw_secondary = sm._load_metadata('secondary_content_contract')
-        
+        raw_panopto = sm._load_metadata('panopto_contract')
+
         if not raw_contract:
             from ui.amber_notice import render_amber_notice
             render_amber_notice("No configuration was found. Run a sync to restore it.", margin="0")
             return
         contract = _json.loads(raw_contract)
         secondary = _json.loads(raw_secondary) if raw_secondary else {}
+        panopto = _json.loads(raw_panopto) if raw_panopto else {}
     except Exception:
         from ui.amber_notice import render_amber_notice
         render_amber_notice("Could not read configuration.", margin="0")
@@ -1494,7 +1496,12 @@ def render_hub_config(pair: dict):
     for key, value in contract.items():
         if key.startswith('convert_'):
             normalized_settings[key] = value
-            
+
+    # Panopto (Section 4): map the stored contract to the badge UI keys so the
+    # shared renderer shows the recordings pills (single source of mapping).
+    from panopto.settings import contract_to_ui_keys
+    normalized_settings.update(contract_to_ui_keys(panopto))
+
     st.markdown(render_config_summary_badges(normalized_settings, show_path=False), unsafe_allow_html=True)
 
 def reset_hub_state():

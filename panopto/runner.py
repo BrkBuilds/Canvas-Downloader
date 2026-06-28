@@ -468,109 +468,128 @@ def run_panopto_batch(
         return summary
 
     # ═══ Phase 2: Download every recording's media (video and/or audio) ═══
+    # Downloads run CONCURRENTLY. Each recording is an independent ffmpeg
+    # subprocess (dominated by the network transfer of the combined stream, plus
+    # a light MP3 transcode), so overlapping a handful of them collapses N
+    # sequential downloads toward N/workers wall-clock time. The heavy work
+    # (delivery resolve + ffmpeg) runs on worker threads; every progress(...) call
+    # is funnelled back to THIS thread because Streamlit rendering is not
+    # thread-safe. Workers only push a live 'video_start' onto a queue and return
+    # a structured result the orchestrator turns into produced/downloaded events
+    # and summary mutations (all task/summary state stays single-threaded here).
     dl_tasks = [t for t in tasks if t.need_video or t.need_audio]
     if dl_tasks:
-        logger.info("Download phase: %d recording(s) (%d video, %d audio).",
-                    len(dl_tasks),
-                    sum(1 for t in dl_tasks if t.need_video),
-                    sum(1 for t in dl_tasks if t.need_audio))
+        import concurrent.futures as _cf
+        import queue as _queue
+        import time as _time
+
+        max_workers = _download_concurrency(settings, len(dl_tasks))
+        logger.info(
+            "Download phase: %d recording(s) (%d video, %d audio); %d concurrent worker(s).",
+            len(dl_tasks),
+            sum(1 for t in dl_tasks if t.need_video),
+            sum(1 for t in dl_tasks if t.need_audio),
+            max_workers)
         progress("download_phase", total=len(dl_tasks))
         _ok = 0
-        for t in dl_tasks:
-            if is_cancelled():
-                break
-            v = t.video
-            progress("video_start", title=v.title)
-            if t.session is None or t.panopto_base is None:
-                progress("error", error=DownloadError(
-                    t.course_name, v.title, "Auth Error",
-                    "Could not authenticate to Panopto (LTI handshake failed)."))
-                summary["failed"] += 1
-                t.failed = True
-                continue
+        ev_q: _queue.Queue = _queue.Queue()
 
-            # Resolve the Delivery node ONCE (with a per-video LTI fallback), then
-            # pull whichever media this recording needs from that single response.
-            session, panopto_base, delivery, derr = _resolve_delivery(
-                t.session, t.panopto_base, v, t.canvas_token)
-            if not delivery:
-                logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",
-                               v.title, v.video_id, derr or "no delivery")
-                progress("error", error=DownloadError(
-                    t.course_name, v.title, "Download Error",
-                    derr or "No stream found for this recording.",
-                    context={"video_id": v.video_id}))
-                summary["failed"] += 1
-                t.failed = True
-                continue
+        def _drain_events():
+            """Emit any live worker events (video_start) on the main thread."""
+            try:
+                while True:
+                    kind, kw = ev_q.get_nowait()
+                    progress(kind, **kw)
+            except _queue.Empty:
+                pass
 
-            # Video first (the big file), then audio. The 'keep' flag marks whether
-            # the file is a kept artifact (vs an audio-only transcription source).
-            plan = []
-            if t.need_video:
-                plan.append(("video", t.mp4_path, t.want_mp4))
-            if t.need_audio:
-                plan.append(("audio", t.mp3_path, t.want_mp3))
+        # Best-effort: hand the worker threads the active Streamlit script-run
+        # context so the cancel checker's session_state fallback doesn't spam
+        # "missing ScriptRunContext!" warnings. The threading.Event is the real
+        # cancel signal; this only silences the benign off-thread fallback read.
+        # Guarded so the runner still works when driven outside Streamlit.
+        _worker_init = None
+        try:
+            from streamlit.runtime.scriptrunner import (
+                get_script_run_ctx as _gsrc, add_script_run_ctx as _asrc)
+            _srctx = _gsrc()
+            if _srctx is not None:
+                import threading as _threading
 
-            total_bytes = 0
-            primary_path = None     # first KEPT file (drives the log icon)
-            kept_any = False
-            rec_failed = False
-            cancelled = False
-            for kind, out_path, keep in plan:
+                def _worker_init():
+                    try:
+                        _asrc(_threading.current_thread(), _srctx)
+                    except Exception:
+                        pass
+        except Exception:
+            _worker_init = None
+
+        with _cf.ThreadPoolExecutor(max_workers=max_workers,
+                                    thread_name_prefix="pan-dl",
+                                    initializer=_worker_init) as ex:
+            futures = [ex.submit(_run_download_task, t, is_cancelled, ev_q)
+                       for t in dl_tasks]
+            remaining = set(futures)
+            _last_tick = 0.0
+            while remaining:
+                _drain_events()
+                done, remaining = _cf.wait(
+                    remaining, timeout=0.15, return_when=_cf.FIRST_COMPLETED)
+                for fut in done:
+                    try:
+                        res = fut.result()
+                    except Exception as e:
+                        logger.error("Panopto download worker crashed: %s", e, exc_info=True)
+                        continue
+                    t = res.task
+                    v = t.video
+                    for err in res.errors:
+                        progress("error", error=err)
+                    if res.cancelled:
+                        continue
+                    # Apply kept artifacts here (task mutation on the main thread).
+                    for p in res.produced_kept:
+                        t.produced.append(p)
+                        progress("produced", title=v.title, path=p, course=t.course_name)
+                    if res.total_bytes == 0:
+                        # Nothing came down (every media failed) -> a failure; don't
+                        # advance the "downloaded" tally.
+                        if res.rec_failed:
+                            summary["failed"] += 1
+                            t.failed = True
+                        continue
+                    t.downloaded = True
+                    _ok += 1
+                    if res.kept_any:
+                        # "Downloaded" counts recordings with a kept media file
+                        # (mp4/mp3), mirroring the per-recording dashboard counter.
+                        summary["downloaded"] += 1
+                    # One 'downloaded' event per recording (aggregated bytes) keeps
+                    # the dashboard's recording counter aligned with the phase
+                    # total. It's 'intermediate' only when nothing was kept (audio
+                    # pulled purely to feed transcription).
+                    progress("downloaded", title=v.title,
+                             path=res.primary_path or str(t.mp3_path),
+                             size=res.total_bytes, course=t.course_name,
+                             intermediate=(not res.kept_any))
+                # Keep the dashboard alive (elapsed/speed) during the gaps between
+                # completions: with concurrency several seconds can pass with no
+                # 'downloaded' event - notably the initial delivery-resolve
+                # handshake before any bytes flow - which would otherwise look
+                # frozen. Throttled to ~2 Hz so it's cheap.
+                _now = _time.time()
+                if _now - _last_tick >= 0.5:
+                    _last_tick = _now
+                    progress("download_tick")
                 if is_cancelled():
-                    cancelled = True
+                    # Stop promptly: drop not-yet-started downloads; in-flight
+                    # ffmpeg workers see is_cancelled() and bail on their own.
+                    for f in remaining:
+                        f.cancel()
+                    logger.info("Panopto download cancelled (%d not started).",
+                                len(remaining))
                     break
-                ok, err = _download_media(
-                    session, panopto_base, delivery, kind, out_path, is_cancelled)
-                if not ok:
-                    if err == "cancelled":
-                        cancelled = True
-                        break
-                    logger.warning("Panopto %s download failed for '%s' (id=%s): %s",
-                                   kind, v.title, v.video_id, err or "Unknown error")
-                    progress("error", error=DownloadError(
-                        t.course_name, v.title, "Download Error", err or "Unknown error",
-                        context={"video_id": v.video_id}))
-                    rec_failed = True
-                    continue
-                try:
-                    sz = out_path.stat().st_size
-                except OSError:
-                    sz = 0
-                total_bytes += sz
-                if keep:
-                    kept_any = True
-                    primary_path = primary_path or str(out_path)
-                    t.produced.append(str(out_path))
-                    progress("produced", title=v.title, path=str(out_path),
-                             course=t.course_name)
-
-            if cancelled:
-                logger.info("Panopto download cancelled at '%s'.", v.title)
-                break
-            if total_bytes == 0:
-                # Nothing came down for this recording (every media failed) -> a
-                # failure; don't advance the "downloaded" tally.
-                if rec_failed:
-                    summary["failed"] += 1
-                    t.failed = True
-                continue
-
-            t.downloaded = True
-            _ok += 1
-            if kept_any:
-                # "Downloaded" stat counts recordings with a kept media file
-                # (mp4/mp3), mirroring the per-recording dashboard counter.
-                summary["downloaded"] += 1
-            # One 'downloaded' event per recording (aggregated bytes) keeps the
-            # dashboard's recording counter aligned with the phase total. It's an
-            # 'intermediate' only when nothing was kept (audio pulled purely to
-            # feed transcription).
-            progress("downloaded", title=v.title,
-                     path=primary_path or str(t.mp3_path),
-                     size=total_bytes, course=t.course_name,
-                     intermediate=(not kept_any))
+            _drain_events()
         progress("download_done", total=len(dl_tasks), ok=_ok)
 
     if is_cancelled():
@@ -788,3 +807,122 @@ def _download_media(session, panopto_base, delivery, kind, out_path, is_cancelle
         return False, "No audio stream available for this recording."
     return download_audio_mp3(session, panopto_base, url, out_path,
                               is_cancelled=is_cancelled)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Concurrent download worker (Phase 2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class _DLResult:
+    """Outcome of one recording's concurrent download.
+
+    Produced on a worker thread, consumed on the main thread - which owns ALL
+    progress(...) calls and summary/task-flag mutations (Streamlit rendering and
+    shared counters must stay single-threaded)."""
+    task: object
+    cancelled: bool = False
+    rec_failed: bool = False
+    total_bytes: int = 0
+    kept_any: bool = False
+    primary_path: object = None       # first KEPT file (drives the log icon)
+    produced_kept: list = field(default_factory=list)  # paths of kept artifacts
+    errors: list = field(default_factory=list)         # DownloadError(s) to emit
+
+
+def _download_concurrency(settings: dict, n_tasks: int) -> int:
+    """How many recordings to download in parallel.
+
+    Downloads are network-bound (the combined stream transfer) plus a light audio
+    transcode, so a few in flight overlap the per-file connection/transfer latency
+    without saturating the link. Tunable via ``settings['download_concurrency']``;
+    defaults to 4, and never exceeds the number of pending downloads.
+    """
+    try:
+        c = int((settings or {}).get("download_concurrency", 0) or 0)
+    except (TypeError, ValueError):
+        c = 0
+    if c <= 0:
+        c = 4
+    return max(1, min(c, max(1, n_tasks)))
+
+
+def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
+    """Download one recording's media on a worker thread.
+
+    Pushes a live 'video_start' event so the dashboard's active-file panel moves
+    as each download begins, but otherwise NEVER calls progress() - that stays on
+    the main thread. Returns a :class:`_DLResult` the orchestrator turns into
+    produced/downloaded events and summary updates.
+    """
+    from canvas_logic import DownloadError
+
+    v = t.video
+    res = _DLResult(task=t)
+    # Early-out so a task that only STARTS after a cancel (e.g. a worker the pool
+    # spins up during shutdown) bails before its delivery-resolve HTTP call,
+    # keeping cancellation snappy no matter which thread observed it first.
+    if is_cancelled():
+        res.cancelled = True
+        return res
+    try:
+        ev_q.put(("video_start", {"title": v.title}))
+    except Exception:
+        pass
+
+    if t.session is None or t.panopto_base is None:
+        res.errors.append(DownloadError(
+            t.course_name, v.title, "Auth Error",
+            "Could not authenticate to Panopto (LTI handshake failed)."))
+        res.rec_failed = True
+        return res
+
+    # Resolve the Delivery node ONCE (with a per-video LTI fallback), then pull
+    # whichever media this recording needs from that single response.
+    session, panopto_base, delivery, derr = _resolve_delivery(
+        t.session, t.panopto_base, v, t.canvas_token)
+    if not delivery:
+        logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",
+                       v.title, v.video_id, derr or "no delivery")
+        res.errors.append(DownloadError(
+            t.course_name, v.title, "Download Error",
+            derr or "No stream found for this recording.",
+            context={"video_id": v.video_id}))
+        res.rec_failed = True
+        return res
+
+    # Video first (the big file), then audio. The 'keep' flag marks whether the
+    # file is a kept artifact (vs an audio-only transcription source).
+    plan = []
+    if t.need_video:
+        plan.append(("video", t.mp4_path, t.want_mp4))
+    if t.need_audio:
+        plan.append(("audio", t.mp3_path, t.want_mp3))
+
+    for kind, out_path, keep in plan:
+        if is_cancelled():
+            res.cancelled = True
+            break
+        ok, err = _download_media(
+            session, panopto_base, delivery, kind, out_path, is_cancelled)
+        if not ok:
+            if err == "cancelled":
+                res.cancelled = True
+                break
+            logger.warning("Panopto %s download failed for '%s' (id=%s): %s",
+                           kind, v.title, v.video_id, err or "Unknown error")
+            res.errors.append(DownloadError(
+                t.course_name, v.title, "Download Error", err or "Unknown error",
+                context={"video_id": v.video_id}))
+            res.rec_failed = True
+            continue
+        try:
+            sz = out_path.stat().st_size
+        except OSError:
+            sz = 0
+        res.total_bytes += sz
+        if keep:
+            res.kept_any = True
+            res.primary_path = res.primary_path or str(out_path)
+            res.produced_kept.append(str(out_path))
+    return res

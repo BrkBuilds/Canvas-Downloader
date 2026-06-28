@@ -10,7 +10,7 @@ import streamlit as st
 
 from ui_helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
 from ui_shared import render_help_card, HELP_ICONS
-from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS
+from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS, PANOPTO_OUTPUT_KEYS
 
 
 # ---------------------------------------------------------------------------
@@ -33,6 +33,9 @@ _QUICK_PRESETS = [
             'convert_zip': True,  'convert_pptx': False, 'convert_word': False,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
+            # Panopto: full video, saved alongside course files (modules).
+            'pan_out_mp4': True, 'pan_out_mp3': False,
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
     {
@@ -50,6 +53,9 @@ _QUICK_PRESETS = [
             'convert_zip': True,  'convert_pptx': True,  'convert_word': True,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
+            # Panopto: video + audio, saved alongside course files (modules).
+            'pan_out_mp4': True, 'pan_out_mp3': True,
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
     {
@@ -67,6 +73,9 @@ _QUICK_PRESETS = [
             'convert_zip': True,  'convert_pptx': True,  'convert_word': True,
             'convert_excel': True, 'convert_html': True, 'convert_code': True,
             'convert_urls': True,  'convert_video': True,
+            # Panopto: audio only, in a separate "Panopto Recordings" folder.
+            'pan_out_mp4': False, 'pan_out_mp3': True,
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'separate',
         },
     },
     {
@@ -84,6 +93,9 @@ _QUICK_PRESETS = [
             'convert_zip': False, 'convert_pptx': False, 'convert_word': False,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
+            # Panopto: none.
+            'pan_out_mp4': False, 'pan_out_mp3': False,
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
     {
@@ -101,6 +113,9 @@ _QUICK_PRESETS = [
             'convert_zip': False,  'convert_pptx': False, 'convert_word': False,
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
+            # Panopto: full video, saved alongside course files (modules).
+            'pan_out_mp4': True, 'pan_out_mp3': False,
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
 ]
@@ -1050,8 +1065,18 @@ div.st-key-page_nav_quick_start button:active {{
                         _v = _s.get(_k, False)
                         st.session_state[_k] = _v
                         st.session_state[f'persistent_{_k}'] = _v
+                    # Panopto (Section 4): carry output formats + layout so Custom
+                    # Download's Section 4 reflects the preset's recordings choice.
+                    for _k in PANOPTO_OUTPUT_KEYS:
+                        _v = _s.get(_k, False)
+                        st.session_state[_k] = _v
+                        st.session_state[f'persistent_{_k}'] = _v
+                    _pl = _s.get('pan_layout', 'match')
+                    st.session_state['pan_layout'] = _pl
+                    st.session_state['persistent_pan_layout'] = _pl
                     st.session_state['card2_expanded'] = any(st.session_state.get(_k, False) for _k in SECONDARY_CONTENT_KEYS)
                     st.session_state['card3_expanded'] = any(st.session_state.get(_k, False) for _k in NOTEBOOK_SUB_KEYS)
+                    st.session_state['card_panopto_expanded'] = any(st.session_state.get(_k, False) for _k in PANOPTO_OUTPUT_KEYS)
                     st.session_state['quick_download_mode'] = False
                     st.session_state['came_from_quick_dl'] = True
                     st.rerun()
@@ -1122,6 +1147,9 @@ div.st-key-page_nav_quick_start button:active {{
                 st.session_state[k] = settings.get(k, False)
             for k in NOTEBOOK_SUB_KEYS:
                 st.session_state[k] = settings.get(k, False)
+            for k in PANOPTO_OUTPUT_KEYS:
+                st.session_state[k] = settings.get(k, False)
+            st.session_state['pan_layout'] = settings.get('pan_layout', 'match')
 
             for _stale in [
                 'download_file_details', 'download_errors_list', 'failed_items',
@@ -1152,6 +1180,11 @@ div.st-key-page_nav_quick_start button:active {{
             for k in SECONDARY_CONTENT_KEYS:
                 st.session_state[f'persistent_{k}'] = settings.get(k, False)
             st.session_state['persistent_dl_isolate_secondary'] = settings.get('dl_isolate_secondary', False)
+            # Panopto (Section 4) per-run contract: the terminal Panopto phase
+            # reads these persistent_pan_* keys via _panopto_run_contract().
+            for k in PANOPTO_OUTPUT_KEYS:
+                st.session_state[f'persistent_{k}'] = settings.get(k, False)
+            st.session_state['persistent_pan_layout'] = settings.get('pan_layout', 'match')
 
             st.session_state['download_status'] = 'scanning'
             st.session_state['step']            = 3
