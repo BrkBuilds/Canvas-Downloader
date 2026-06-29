@@ -238,6 +238,13 @@ def render_sidebar(fetch_courses_fn):
     if not st.session_state.get('is_authenticated'):
         return
 
+    # Kick off the once-per-launch update check on a daemon thread (non-blocking).
+    try:
+        from ui.update_banner import ensure_update_check
+        ensure_update_check()
+    except Exception:
+        pass
+
     from ui_helpers import get_base64_image
     icon_b64    = get_base64_image("assets/icon.png")
     icon_dl_b64 = get_base64_image("assets/icon_download.png")
@@ -1894,6 +1901,14 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
         if st.session_state.pop('_stg_saved_toast', False):
             st.toast("✅ Settings saved")
+
+        # Update-available banner (renders only when a newer release exists).
+        # Sits below the Settings section, above the user/logout section.
+        try:
+            from ui.update_banner import render_update_banner
+            render_update_banner()
+        except Exception:
+            pass
 
         # Separator
         st.html("<hr style='margin: 8px 0 16px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.08);' />")
