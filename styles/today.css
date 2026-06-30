@@ -66,7 +66,7 @@ div[class*="st-key-today_toggle_card"] {
     background: #1A1D27;
     border: 1px solid #2D3248;
     border-radius: 12px;
-    padding: 14px 18px !important;
+    padding: 16px 18px 20px 18px !important;
 }
 div[class*="st-key-today_toggle_card"] [data-testid="stWidgetLabel"] p,
 div[class*="st-key-today_toggle_card"] label p {
@@ -78,7 +78,8 @@ div[class*="st-key-today_toggle_card"] label p {
     color: #8A91A6;
     font-size: 0.83rem;
     line-height: 1.5;
-    margin-top: 4px;
+    margin-top: -12px !important;
+    margin-bottom: 0px !important;
 }
 
 /* ── Daily-sync list: outlined box wrapping the pair cards ─ */
@@ -98,22 +99,51 @@ div[class*="st-key-today_pair_card_"] {
     background: linear-gradient(180deg, #252830 0%, #32363f 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
     border-radius: 8px !important;
-    padding: 8px 14px 12px 14px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-    gap: 3px !important;
+    /* Thin, symmetric padding above/below the text block to the card border. */
+    padding: 8px 14px !important;
+    /* The card holds a single markdown element-container; centre it vertically
+       so the two lines sit in the middle of the card. */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
 }
-/* Course title (rendered as bold markdown, like the sync card) */
-div[class*="st-key-today_pair_card_"] div[data-testid="stMarkdownContainer"] p {
+
+/* Streamlit gives the markdown container a margin-bottom: -16px. Inside our
+   flex card (margins don't collapse in flex) that negative margin shrinks the
+   card's box below its content, so the folder row spills out the bottom. Zero
+   it so the card grows to exactly content + the 8px symmetric padding. */
+div[class*="st-key-today_pair_card_"] .stMarkdown,
+div[class*="st-key-today_pair_card_"] [data-testid="stMarkdownContainer"] {
     margin-bottom: 0 !important;
 }
+
+/* Inner stack: the two text lines, 5px apart, never overlapping. */
+.today-pair-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Course title (mirrors the sync card's bold white title). Tight line-height
+   so the line-box hugs the glyphs - otherwise ~1.2 leading adds ~4px of empty
+   space below the title that reads as a big gap above the folder row. */
+.today-pair-title {
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 1rem;
+    line-height: 1.1;
+}
+
 .today-pair-folder {
     display: flex;
     align-items: center;
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.85em;
-    margin-top: 2px;
+    margin: 0;
+    padding: 0;
     word-break: break-all;
-    line-height: 1.4;
+    line-height: 1.1;
 }
 /* Match the sync-list card: folder glyph rendered at 15px */
 div[class*="st-key-today_pair_card_"] .today-pair-folder svg {
@@ -122,17 +152,72 @@ div[class*="st-key-today_pair_card_"] .today-pair-folder svg {
     flex-shrink: 0;
 }
 
-/* Remove buttons - compact, red on hover (app's destructive convention) */
+/* Remove button - EXACT match to the Sync UI 'Remove' button (remove_pair_):
+   light-grey resting state, trash icon left of the label, red border + red
+   icon on hover. Mirrors the rules injected in sync_ui.py. The trash glyph is
+   the same asset (assets/Icon_Trash.svg) inlined here as a URL-encoded mask so
+   the static stylesheet needs no runtime base64. */
 div[class*="st-key-today_remove_"] button {
-    min-height: 34px !important;
-    height: 34px !important;
-    padding: 2px 8px !important;
-    font-size: 0.85rem !important;
+    border-radius: 10px !important;
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+    transition: all 0.2s ease !important;
+    padding: 0 12px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
+
+/* Inner wrapper: force vertical centering (immune to Streamlit overriding the
+   button's own align-items). */
+div[class*="st-key-today_remove_"] button > div,
+div[class*="st-key-today_remove_"] button > div > span,
+div[class*="st-key-today_remove_"] button div[data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    width: 100% !important;
+}
+
+/* p is the icon+text row - inline-flex so ::before sits beside the text. */
+div[class*="st-key-today_remove_"] button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 9px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    width: 100% !important;
+}
+
+/* Trash icon ::before (white at rest, red on hover). */
+div[class*="st-key-today_remove_"] button p::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.88);
+    transition: background-color 0.2s ease;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 17px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 17px;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+}
+
 div[class*="st-key-today_remove_"] button:hover {
-    border-color: #ff4b4b !important;
-    color: #ff4b4b !important;
-    background-color: rgba(255, 75, 75, 0.1) !important;
+    border-color: rgba(255, 75, 75, 0.7) !important;
+    background-color: rgba(255, 75, 75, 0.08) !important;
+}
+div[class*="st-key-today_remove_"] button:hover p::before {
+    background-color: #ff4b4b;
 }
 
 /* Quick Sync now: keep full height even while disabled (the brand colours and
@@ -174,24 +259,102 @@ div.st-key-today_sync_now_btn button {
 }
 .today-empty-sub b { color: #b9c0d0; }
 
-/* ── Import dialog (cards mirror the hub 1:1; light-grey theme) ──────────── */
+/* ── Import dialog: whole-card toggle buttons ──────────────────────────────
+   Mirrors the "Canvas Content" card-toggle pattern in ui/download_settings.py
+   (btn_dl_* buttons): the entire card is a native st.button, left icon via
+   background-image, title in the button's own <p>, description via ::after,
+   a "Pair"/"Group" tag via p::after (top-right) and a checkbox via ::before
+   that fills with a checkmark when selected.
+
+   This stylesheet ONLY carries geometry/layout (position, size, font,
+   transitions). Every stateful property (background-color, border, the
+   checkbox fill, and all generated `content` text) is set per-card from
+   Python (today_dashboard.py) instead - for both idle, hover and selected
+   states - because this file's `div[data-testid="stDialog"] ...` selector is
+   MORE specific than the simpler `div.st-key-{btn_key} ...` selector Python
+   emits. A static default declared here for the same property would always
+   win the cascade and the per-card override would never visibly apply (see
+   CLAUDE.md "Specificity ordering for multiple container scopes"). Keep this
+   file free of background-color/border/content for these selectors. */
+div[data-testid="stDialog"] div[class*="st-key-today_import_scroll"] {
+    gap: 6px !important;
+}
 div[data-testid="stDialog"] div[class*="st-key-today_import_item_"] {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
-    border-radius: 10px;
-    padding: 12px 16px !important;
-    margin-bottom: 10px;
+    margin-bottom: 0 !important;
 }
-/* Selection checkbox styled like the app's content checkboxes */
-div[data-testid="stDialog"] div[class*="st-key-today_imp_chk_"] label[data-baseweb="checkbox"] {
-    align-items: center !important;
-    cursor: pointer !important;
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 64px !important;
+    height: auto !important;
+    padding: 12px 56px 12px 54px !important;
+    background-repeat: no-repeat !important;
+    background-position: 16px center !important;
+    background-size: 26px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    text-align: left !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
-div[data-testid="stDialog"] div[class*="st-key-today_imp_chk_"] label[data-baseweb="checkbox"] p {
-    font-size: 0.92rem !important;
-    font-weight: 500 !important;
-    color: #c8cedb !important;
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button > div,
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button div[data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+}
+/* Title (the button's own label text) */
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p {
     margin: 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding-right: 50px !important;
+}
+/* Description line (course name / course count) */
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button::after {
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    font-size: 0.82rem !important;
+    font-weight: 400 !important;
+    color: #9aa1b2 !important;
+    margin-top: 3px !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+}
+/* "Pair" / "Group" tag - top-right, above the checkbox */
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p::after {
+    position: absolute !important;
+    top: 12px !important;
+    right: 16px !important;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    white-space: nowrap !important;
+}
+/* Checkbox - vertically centred, far right, a bit below the Pair/Group tag */
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 16px !important;
+    transform: translateY(-50%) !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 5px !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    transition: all 0.15s ease-in-out !important;
+    box-sizing: border-box !important;
 }
 div[data-testid="stDialog"] div.st-key-today_import_done button {
     min-height: 3em !important;
