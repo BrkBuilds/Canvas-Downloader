@@ -1381,9 +1381,18 @@ def render_course_selector(fetch_courses_fn):
         """)
 
     # --- Fetch (spinner above is visible during cache miss) ---
-    all_courses = fetch_courses_fn(
-        st.session_state['api_token'],
-        st.session_state['api_url'])
+    # A token that expired/was revoked mid-session surfaces here as an Unauthorized
+    # error. Route to the clean reconnect flow instead of crashing the page.
+    try:
+        all_courses = fetch_courses_fn(
+            st.session_state['api_token'],
+            st.session_state['api_url'])
+    except Exception as _fetch_err:
+        from canvas_logic import is_auth_error
+        if is_auth_error(_fetch_err):
+            from ui.auth import force_reauth
+            force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
+        raise
     courses = [c for c in all_courses if c.is_favorite] if favorites_only else all_courses
 
     if not courses:

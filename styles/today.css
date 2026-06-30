@@ -1,0 +1,205 @@
+/* ============================================================
+   Today dashboard - static structural styling.
+   Injected via styles.inject_css('today.css') at the top of
+   render_today_dashboard(). Scoped to .today-* classes and the
+   page's st-key containers so nothing leaks elsewhere.
+   ============================================================ */
+
+/* ── Header ─────────────────────────────────────────────── */
+.today-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 2px;
+}
+.today-subtitle {
+    color: #8A91A6;
+    font-size: 0.95rem;
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+/* ── How-it-works explainer (flat - no gradients) ───────── */
+.today-explainer {
+    background: #1A1D27;
+    border: 1px solid #2D3248;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 4px 0 6px 0;
+}
+.today-explainer-head {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+}
+.today-explainer-body {
+    color: #b9c0d0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 12px;
+}
+.today-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.today-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #c8cedb;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+.today-step b { color: #FFFFFF; font-weight: 600; }
+.today-step-num {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(77, 168, 218, 0.15);
+    border: 1px solid rgba(77, 168, 218, 0.4);
+    color: #4DA8DA;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+/* ── Section labels ─────────────────────────────────────── */
+.today-section-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 22px 0 2px 0;
+}
+.today-section-sub {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+/* ── Auto-sync toggle card ──────────────────────────────── */
+div[class*="st-key-today_toggle_card"] {
+    background: #1A1D27;
+    border: 1px solid #2D3248;
+    border-radius: 12px;
+    padding: 14px 18px !important;
+    margin: 16px 0 4px 0;
+}
+div[class*="st-key-today_toggle_card"] [data-testid="stWidgetLabel"] p,
+div[class*="st-key-today_toggle_card"] label p {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #FFFFFF !important;
+}
+.today-toggle-desc {
+    color: #8A91A6;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+/* ── Daily pair cards (native bordered container) ───────── */
+div[class*="st-key-today_pair_card_"] {
+    padding: 10px 14px !important;
+    margin-bottom: 8px;
+}
+.today-pair-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.3;
+}
+.today-pair-folder {
+    color: #8A91A6;
+    font-size: 0.8rem;
+    margin-top: 2px;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+/* Remove buttons - compact, red on hover (app's destructive convention) */
+div[class*="st-key-today_remove_"] button {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 2px 8px !important;
+    font-size: 0.85rem !important;
+}
+div[class*="st-key-today_remove_"] button:hover {
+    border-color: #ff4b4b !important;
+    color: #ff4b4b !important;
+    background-color: rgba(255, 75, 75, 0.1) !important;
+}
+
+/* Quick Sync now: keep full height even while disabled (the brand colours and
+   icon are injected inline alongside the base64 asset). */
+div.st-key-today_sync_now_btn button {
+    min-height: 3em !important;
+    height: auto !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    width: 100% !important;
+}
+.today-qs-note {
+    color: #888;
+    font-size: 0.8rem;
+    text-align: center;
+    margin: 8px 0 0 0;
+}
+.today-qs-note b { color: #b9c0d0; }
+
+/* ── Empty states ───────────────────────────────────────── */
+.today-empty {
+    background: #1A1D27;
+    border: 1px solid #2D3248;
+    border-radius: 10px;
+    padding: 24px 22px;
+    text-align: center;
+    color: #8A91A6;
+    line-height: 1.6;
+}
+.today-empty-icon {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: center;
+}
+.today-empty-sub {
+    font-size: 0.85rem;
+    color: #6f7689;
+    margin-top: 2px;
+}
+.today-empty-sub b { color: #b9c0d0; }
+
+/* ── Import dialog (cards mirror the hub 1:1; light-grey theme) ──────────── */
+div[data-testid="stDialog"] div[class*="st-key-today_import_item_"] {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 10px;
+    padding: 12px 16px !important;
+    margin-bottom: 10px;
+}
+/* Selection checkbox styled like the app's content checkboxes */
+div[data-testid="stDialog"] div[class*="st-key-today_imp_chk_"] label[data-baseweb="checkbox"] {
+    align-items: center !important;
+    cursor: pointer !important;
+}
+div[data-testid="stDialog"] div[class*="st-key-today_imp_chk_"] label[data-baseweb="checkbox"] p {
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+    color: #c8cedb !important;
+    margin: 0 !important;
+}
+div[data-testid="stDialog"] div.st-key-today_import_done button {
+    min-height: 3em !important;
+    height: auto !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    width: 100% !important;
+}
