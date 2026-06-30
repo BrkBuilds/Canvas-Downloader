@@ -9,8 +9,11 @@
 ## Next Steps
 - **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
-
 ## Recent Activity
+
+- **Session 2026-06-29: Settings Dialog Default Path Clear Reopen Fix**
+    - **Fixed Settings Dialog Auto-Closing**: Set `st.session_state['_stg_reopen_dialog'] = True` inside the "Clear" button action callback in [auth.py](file:///c:/Users/birkl/Desktop/Canvas%20Downloader%20WORKSPACE/ui/auth.py#L1728-L1732). This matches the folder-picking callback behavior, keeping the settings dialog open and updating its displayed path instantly without forcing the user to reopen the dialog manually.
+
 - **Session 2026-06-28: Clear History Button Styling and Confirmation Removal**
     - **Removed delete confirmation**: Allowed immediate history deletion on the first click, bypassing the Yes/No buttons and amber notice warning.
     - **Aligned default styling**: Made the resting state of the "Clear History" button identical to the list action buttons (Open Folder, Edit, etc.) in `sync_ui.py`, centering its text and icon while retaining its customized red danger hover styling.
