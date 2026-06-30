@@ -1718,6 +1718,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
     _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
     _stg_i_caption = _stg_ico("M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z")
+    _stg_i_history = "data:image/svg+xml;base64," + base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>').decode()
 
     # Clear all staged (unsaved) settings state on dismissal. Save and Cancel
     # already pop '_temp_default_path', but a backdrop/ESC dismiss runs neither -
@@ -1982,7 +1983,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             # L-13: Sync history retention - exposed so power users who sync
             # multiple times daily can extend beyond the default 50 entries.
             with st.container(border=True, key="stg_card_history"):
-                st.html("""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_history}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
                 temp_history_retention = st.number_input(
                     "Keep last N syncs", min_value=10, max_value=500, step=10,
                     value=int(st.session_state.get('sync_history_retention', 50)),

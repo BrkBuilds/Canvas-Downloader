@@ -26,7 +26,7 @@ import streamlit as st
 import theme
 from styles import inject_css
 from ui_helpers import esc, friendly_course_name, get_base64_image, get_config_dir
-from ui_shared import SVG_FOLDER_YELLOW
+from ui_shared import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
 
 
 # Lucide calendar glyph (matches the sidebar "Today" nav icon).
@@ -51,6 +51,94 @@ _SVG_CAUGHT_UP = (
     "stroke='#4ade80' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' "
     "style='width:1.9rem;height:1.9rem;'>"
     "<path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>"
+)
+
+
+# ── Built-in help card (replaces the inline 1-2-3 explainer) ────────────────
+
+_TODAY_HELP_TITLE = "How the Today page works"
+_TODAY_HELP_TEXT = (
+    # -- Introduction --------------------------------------------------------
+    "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
+    f"The <b style='color: #ffffff;'>Today</b> page is your daily home for keeping the courses you care about up to date - new slides, readings and lecture recordings are downloaded straight into their folders, ready whenever you need them. <br>"
+    f"Set it up once: pick which of your saved course folders should be kept current, then either let <b style='color: #ffffff;'>Daily auto-sync</b> handle it for you every morning, or run <b style='color: #3fd9ff;'>{HELP_ICONS['bolt']} Quick Sync now</b> whenever you like."
+    "</div>"
+    "<hr>"
+
+    # -- Getting set up ------------------------------------------------------
+    "<details style='margin-top: 4px;' open>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['folder']} Setting up your daily sync</summary>"
+    "<div style='margin-top: 6px; padding-left: 12px;'>"
+    "<div style='display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px;'>"
+
+    "<div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['sync_pair']} 1. Save your course pairs</div>"
+    "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
+    "In <b style='color: #ffffff;'>Sync Course Folders</b> (Sync mode), link each course to a folder on your computer and save it as a <b style='color: #ffffff;'>Pair</b>, or save several together as a <b style='color: #ffffff;'>Group</b> (e.g. <em>Semester 1</em>). These live in your Saved Groups &amp; Pairs hub."
+    "</div></div>"
+
+    "<div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['sync_hub']} 2. Add them to your daily sync</div>"
+    "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
+    "Click <b style='color: #ffffff;'>Add courses</b> below and tick the saved pairs and groups you want kept up to date. Your choice is saved and editable - come back any time to add or remove courses with <b style='color: #ffffff;'>Add courses</b> or the <b style='color: #ffffff;'>Remove</b> button on each card."
+    "</div></div>"
+
+    "<div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['bolt']} 3. Let it run</div>"
+    "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
+    "Turn on <b style='color: #ffffff;'>Daily auto-sync</b> to have the app sync your chosen courses automatically the first time you open it each day (after 4 AM), or press <b style='color: #ffffff;'>Quick Sync now</b> to catch up on demand."
+    "</div></div>"
+
+    "</div>"
+    "</div>"
+    "</details>"
+    "<hr>"
+
+    # -- Auto-sync vs Quick Sync ---------------------------------------------
+    "<details style='margin-top: 4px;'>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['compare']} Daily auto-sync vs Quick Sync now</summary>"
+    "<div style='margin-top: 6px; padding-left: 12px;'>"
+    "<div style='display: flex; gap: 16px; margin-bottom: 8px;'>"
+    "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['calendar']} Daily auto-sync</div>"
+    "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
+    "Runs by itself the first time you open Canvas Downloader each day (after 4 AM), over the courses listed below. Switch it on and forget about it - your folders are quietly kept current in the background."
+    "</div></div>"
+    "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['bolt']} Quick Sync now</div>"
+    "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
+    "Runs the exact same <b style='color: #ffffff;'>Quick Sync</b> as Sync Course Folders, but only over your daily courses - on demand, the moment you click it. Great for a mid-day catch-up between lectures."
+    "</div></div>"
+    "</div>"
+    "<div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.5;'>"
+    "Both grab new files and safe updates automatically and skip anything you've edited, deleted or ignored - the same safe behaviour as Quick Sync in Sync mode."
+    "</div>"
+    "</div>"
+    "</details>"
+    "<hr>"
+
+    # -- Today's files -------------------------------------------------------
+    "<details style='margin-top: 4px;'>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['download']} Today's files</summary>"
+    "<div style='margin-top: 6px; padding-left: 12px;'>"
+    "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;'>"
+    "Everything downloaded today is listed at the bottom of the page, grouped by course. Click a course to expand it and see the individual files, or use <b style='color: #ffffff;'>Open Folder</b> to jump straight to it. <br>"
+    "If you've already got everything, you'll see a friendly “all caught up” message instead."
+    "</div>"
+    "</div>"
+    "</details>"
+    "<hr>"
+
+    # -- Managing pairs ------------------------------------------------------
+    "<details style='margin-top: 4px;'>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['wrench']} Managing &amp; fixing your courses</summary>"
+    "<div style='margin-top: 6px; padding-left: 12px;'>"
+    "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;'>"
+    "The courses on this page come from your Saved Groups &amp; Pairs. To rename a course, change its folder, or fix a folder that was moved or deleted, head to <b style='color: #ffffff;'>Sync mode → Saved Groups &amp; Pairs</b>. <br>"
+    "If a course's folder can't be found, it's automatically hidden from the list here and skipped during sync so it never gets in your way - re-link it in the hub to bring it back."
+    "</div>"
+    "</div>"
+    "</details>"
 )
 
 
@@ -233,18 +321,49 @@ def _import_courses_dialog():
         (p["course_id"], p["local_folder"]) for p in load_today_config()["pairs"]
     }
 
+    # Proactively hide any saved pair/group with a missing or moved folder so the
+    # user only picks from healthy entries; they're told once, below, where to fix it.
+    selectable, hidden_count = [], 0
+    for g_idx, group in enumerate(groups):
+        any_missing = any(
+            p.get("local_folder") and not Path(p["local_folder"]).exists()
+            for p in (group.get("pairs", []) or [])
+        )
+        if any_missing:
+            hidden_count += 1
+        else:
+            selectable.append((g_idx, group))
+
+    if hidden_count:
+        _noun = "saved pair/group" if hidden_count == 1 else "saved pairs/groups"
+        _verb = "is" if hidden_count == 1 else "are"
+        render_amber_notice(
+            f"{hidden_count} {_noun} {_verb} hidden because a folder is missing or "
+            f"was moved.",
+            detail="Fix the folder in Sync mode → Saved Groups & Pairs to make it "
+                   "available here again.",
+            margin="0 0 12px 0",
+        )
+
+    if not selectable:
+        render_info_notice(
+            "No saved pairs or groups are available to add right now.",
+            detail="Every saved entry currently has a missing folder. Re-link them "
+                   "in Sync mode → Saved Groups & Pairs.",
+        )
+        if st.button("Close", type="secondary", use_container_width=True,
+                     key="today_import_done"):
+            st.rerun(scope="app")
+        return
+
     with st.container(height=460, border=False):
-        for g_idx, group in enumerate(groups):
+        for g_idx, group in selectable:
             is_sp = group.get("is_single_pair", False)
             pairs = group.get("pairs", []) or []
             gid = group.get("group_id", str(g_idx))
             chk_key = f"today_imp_chk_{gid}"
             fully = bool(pairs) and all(
                 (p.get("course_id"), p.get("local_folder")) in daily_sigs
-                for p in pairs
-            )
-            any_missing = any(
-                p.get("local_folder") and not Path(p["local_folder"]).exists()
                 for p in pairs
             )
 
@@ -292,14 +411,6 @@ def _import_courses_dialog():
                             f"- {friendly_course_name(p.get('course_name', 'Unknown'))}"
                             for p in pairs
                         ) or "*No courses in this group*")
-
-                if any_missing:
-                    render_amber_notice(
-                        "One or more folders are missing or moved.",
-                        detail="Those courses are skipped during sync. Re-link the "
-                               "folder in Sync Course Folders to fix it.",
-                        margin="0 0 10px 0",
-                    )
 
                 if chk_key not in st.session_state:
                     st.checkbox("Add to daily sync", value=fully, key=chk_key,
@@ -353,37 +464,32 @@ def render_today_dashboard(fetch_courses_fn=None):
     cfg = load_today_config()
     daily_pairs = cfg["pairs"]
 
-    # ── Header ──────────────────────────────────────────────────────────────
+    # ── Header (title + built-in help button) ───────────────────────────────
+    with st.container(key="today_title_help_row"):
+        _c_title, _c_help = st.columns([1, 10], vertical_alignment="center")
+        with _c_title:
+            st.markdown(
+                f"<div class='today-title'>{_SVG_TITLE}<span>Today</span></div>",  # audit-ignore: static SVG constant
+                unsafe_allow_html=True,
+            )
+        with _c_help:
+            render_help_card(
+                key_prefix="today_help",
+                title=_TODAY_HELP_TITLE,
+                text_html=_TODAY_HELP_TEXT,
+                mode="button",
+            )
     st.markdown(
-        f"<div class='today-title'>{_SVG_TITLE}<span>Today</span></div>"  # audit-ignore: static SVG constant
-        f"<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
+        "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
         unsafe_allow_html=True,
     )
 
-    # ── How it works ────────────────────────────────────────────────────────
-    st.markdown(
-        """
-        <div class="today-explainer">
-            <div class="today-explainer-head">Set it once, stay caught up</div>
-            <div class="today-explainer-body">
-                Today keeps your chosen courses up to date for you - new slides,
-                readings and recordings are downloaded into their folders, ready
-                whenever you need them.
-            </div>
-            <div class="today-steps">
-                <div class="today-step"><span class="today-step-num">1</span>
-                    <span>In <b>Sync Course Folders</b>, pair your courses with folders and
-                    save them as a <b>Pair</b> or <b>Group</b>.</span></div>
-                <div class="today-step"><span class="today-step-num">2</span>
-                    <span>Use <b>Add courses</b> below to import those into your daily sync
-                    - your choice is saved and editable.</span></div>
-                <div class="today-step"><span class="today-step-num">3</span>
-                    <span>Turn on <b>Daily auto-sync</b>, or run <b>Quick Sync now</b>
-                    whenever you like.</span></div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    # Help card body (renders below the header when opened).
+    render_help_card(
+        key_prefix="today_help",
+        title=_TODAY_HELP_TITLE,
+        text_html=_TODAY_HELP_TEXT,
+        mode="card",
     )
 
     # ── Daily auto-sync toggle ──────────────────────────────────────────────
@@ -416,7 +522,15 @@ def render_today_dashboard(fetch_courses_fn=None):
         unsafe_allow_html=True,
     )
 
-    if not daily_pairs:
+    # Pairs whose folder is missing/moved are proactively hidden from the list so
+    # they never get in the way. No notice here - the user can only add courses via
+    # the import dialog, which already explains any hidden (issue) entries there.
+    visible_pairs = [
+        p for p in daily_pairs
+        if p.get("local_folder") and Path(p["local_folder"]).exists()
+    ]
+
+    if not visible_pairs:
         st.markdown(
             f"<div class='today-empty'>"
             f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
@@ -426,40 +540,28 @@ def render_today_dashboard(fetch_courses_fn=None):
             unsafe_allow_html=True,
         )
     else:
-        any_missing = False
-        for i, pair in enumerate(daily_pairs):
-            folder = pair.get("local_folder", "")
-            name = friendly_course_name(pair.get("course_name") or "Course")
-            exists = bool(folder) and Path(folder).exists()
-            if not exists:
-                any_missing = True
-            with st.container(border=True, key=f"today_pair_card_{i}"):
-                col_info, col_rm = st.columns([0.84, 0.16],
+        with st.container(border=True, key="today_list_outline"):
+            for i, pair in enumerate(visible_pairs):
+                folder = pair.get("local_folder", "")
+                name = friendly_course_name(pair.get("course_name") or "Course")
+                col_card, col_rm = st.columns([0.84, 0.16],
                                               vertical_alignment="center")
-                with col_info:
-                    st.markdown(
-                        f"<div class='today-pair-name'>{esc(name)}</div>"
-                        f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
-                        f"{esc(folder)}</div>",  # audit-ignore: folder is a local path
-                        unsafe_allow_html=True,
-                    )
+                with col_card:
+                    with st.container(border=True, key=f"today_pair_card_{i}"):
+                        st.markdown(f"**Course:  {name}**")
+                        st.markdown(
+                            f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
+                            f"{esc(folder)}</div>",  # audit-ignore: folder is a local path
+                            unsafe_allow_html=True,
+                        )
                 with col_rm:
                     st.button(
                         "Remove", key=f"today_remove_{i}", use_container_width=True,
                         on_click=_remove_daily_pair_cb,
                         args=(pair.get("course_id"), folder, name),
                     )
-        if any_missing:
-            from ui.amber_notice import render_amber_notice
-            render_amber_notice(
-                "Some folders are missing or were moved.",
-                detail="Those courses are skipped during sync. Remove them here, or "
-                       "re-link the folder in Sync Course Folders.",
-                margin="10px 0 4px 0",
-            )
 
     # ── Add courses + Quick Sync now ────────────────────────────────────────
-    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     col_add, col_sync = st.columns([1, 1])
     with col_add:
         if st.button("Add courses", use_container_width=True,
