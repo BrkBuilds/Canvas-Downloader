@@ -1958,6 +1958,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     if st.button("Clear", key="stg_btn_clear", use_container_width=True,
                                  disabled=not st.session_state['_temp_default_path']):
                         st.session_state['_temp_default_path'] = ''
+                        st.session_state['_stg_reopen_dialog'] = True
                         st.rerun(scope="app")
 
             # ── PREFERENCES ───────────────────────────────────────────
