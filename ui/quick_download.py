@@ -165,7 +165,7 @@ def render_quick_download(fetch_courses_fn) -> None:
     active_idx    = next((i for i, p in enumerate(_QUICK_PRESETS) if p['id'] == selected_id), None)
     active_preset = _QUICK_PRESETS[active_idx] if active_idx is not None else None
     active_org_key = 'subfolders' if selected_org == 'modules' else 'flat'
-    org_is_locked  = selected_id == 'quick_notebooklm'
+    org_is_locked  = selected_id in ('quick_notebooklm', 'quick_full')
 
     # ── Load base64 icons ────────────────────────────────────────────────
     b64_preset_full = get_base64_image("assets/icon_quick_dl_complete.png")
@@ -784,7 +784,7 @@ div.st-key-page_nav_quick_start button:active {{
             "Want transcripts or subtitles too, or finer control over video vs. audio? Switch to <b>Custom Download</b>, where Section 4 lets you pick formats and set up on-device transcription."
             f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['folder']} Organization Styles</div>"
             "You can choose between <b>With Subfolders</b> (mirrors Canvas Modules exactly) or <b>All in One Folder</b> (flattens directories by placing all files in one single folder). <br>"
-            "<i>Note: The NotebookLM preset locks this choice to All in One Folder to ensure compatibility with NotebookLM's subfolder limitations.</i>"
+            "<i>Note: The Complete Canvas Download preset locks this choice to With Subfolders to preserve the layout, and the NotebookLM preset locks it to All in One Folder to ensure compatibility with NotebookLM's subfolder limitations.</i>"
             f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['package']} Batch Processing</div>"
             "The preset and organization style you choose will be applied to <b>ALL</b> courses you selected in the previous step. "
             "You can review your selected courses in the dropdown at the bottom of the page."
@@ -801,9 +801,11 @@ div.st-key-page_nav_quick_start button:active {{
             "Presets are pre-configured to be simple and quick. If you need to tweak specific options (like keeping original slides instead of converting to PDF, or choosing which Canvas-native content to download), click the <b>Go to Custom Download →</b> button in the top right corner where you have full control over every single toggle."
             "</div></details>"
             "<details style='margin-top: 8px; cursor: pointer;'>"
-            "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why is the folder option locked on the NotebookLM preset?</summary>"
+            "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why is the folder option locked on some presets?</summary>"
             "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-            "NotebookLM does not support folders when importing. To guarantee seamless compatibility, the NotebookLM preset enforces a 'Flat' structure (All files in One Folder) so you can easily select all files and upload them in one go."
+            "Some presets enforce a specific folder structure to guarantee compatibility or correctness:<br>"
+            "• <b>Complete Canvas Download (1:1)</b> locks organization to <b>With Subfolders</b> to preserve the exact Canvas modules and layout.<br>"
+            "• <b>100% AI & NotebookLM Ready</b> locks organization to <b>All in One Folder</b> because NotebookLM does not support subfolders when importing, ensuring all files can be selected and uploaded seamlessly."
             "</div></details>"
             "<details style='margin-top: 8px; cursor: pointer;'>"
             "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do the file conversions (like PPTX to PDF) delete my original files?</summary>"
