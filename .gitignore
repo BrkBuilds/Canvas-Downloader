@@ -47,3 +47,6 @@ Thumbs.db
 panopto_models/*
 PANOPTO DOWNLOADER CODE/*
 cuda_libs/*
+
+#today
+today_dashboard.json

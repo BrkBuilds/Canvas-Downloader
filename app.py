@@ -450,13 +450,13 @@ def _restore_nav_from_query_params() -> None:
     try:
         raw_mode = st.query_params.get('mode', '')
         raw_step = st.query_params.get('step', '')
-        if raw_mode not in ('download', 'sync'):
+        if raw_mode not in ('download', 'sync', 'today'):
             return
         step = int(raw_step) if isinstance(raw_step, str) and raw_step.isdigit() else 1
         if raw_mode == 'download':
             step = min(step, 2)   # steps 3+ need a live download session
         else:
-            step = 1              # sync step 4 needs live sync state; step 1 is always safe
+            step = 1              # sync/today step 4 need live state; step 1 is always safe
         st.session_state['current_mode'] = raw_mode
         st.session_state['step'] = step
         if raw_mode == 'sync':
@@ -619,6 +619,23 @@ if not st.session_state['is_authenticated']:
     render_login_page(fetch_courses)
     st.stop()
 
+# --- Daily Auto-Sync Launch Hook (Today dashboard) ---
+# Runs at most once per Streamlit session: the first time the app is opened on a
+# new logical day (day rolls at 4am), if the user enabled daily auto-sync and
+# curated at least one course, kick off a headless Quick Sync over that set. The
+# run surfaces on the Today page as a slim progress bar (see core.auto_sync).
+if not st.session_state.get('_auto_sync_checked'):
+    st.session_state['_auto_sync_checked'] = True
+    # Only on a clean entry point - never interrupt an in-progress download/sync
+    # that a query-param restore may have landed us in.
+    if not st.session_state.get('download_status'):
+        try:
+            from core.auto_sync import should_auto_sync, start_today_sync
+            if should_auto_sync():
+                start_today_sync()  # sets state + st.rerun(); never falls through
+        except Exception:
+            logger.warning("Daily auto-sync launch check failed", exc_info=True)
+
 # --- Panopto transcription-config dialog: centralized host ---
 # Rendered once at the top script level (not inside a fragment or any single
 # page) so it can be opened from ANY page OR from the global Settings dialog in
@@ -647,8 +664,13 @@ with _main_content.container():
     # STEP 1: Different UI based on mode
     if st.session_state['step'] == 1:
 
+        # ========== TODAY DASHBOARD - STEP 1 ==========
+        if st.session_state['current_mode'] == 'today':
+            from ui.today_dashboard import render_today_dashboard
+            render_today_dashboard(fetch_courses)
+
         # ========== SYNC MODE - STEP 1 ==========
-        if st.session_state['current_mode'] == 'sync':
+        elif st.session_state['current_mode'] == 'sync':
             render_sync_step1(fetch_courses, _main_content)
 
         
@@ -1117,6 +1139,7 @@ with _main_content.container():
 
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
+                cm.numbering_enabled = st.session_state.get('numbering_enabled', False)
                 # Build the Sync Contract - all settings for this download
                 _pp_settings = {
                     'file_filter': st.session_state.get('file_filter', 'all'),
@@ -1496,7 +1519,8 @@ with _main_content.container():
 
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
             cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-            
+            cm.numbering_enabled = st.session_state.get('numbering_enabled', False)
+
             if 'retry_mb_tracker' not in st.session_state:
                 st.session_state['retry_mb_tracker'] = {'bytes_downloaded': 0}
             

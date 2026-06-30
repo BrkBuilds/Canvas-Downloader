@@ -3687,27 +3687,22 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
             <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
-              <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">How to find
-                it</strong>
-              <ol
-                style="margin: 0; padding-left: 18px; color: var(--txt2); font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">How to find it</strong>
+              <ol style="margin: 0; padding-left: 18px; color: var(--txt2); font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
                 <li>Log in to Canvas in your browser.</li>
-                <li>Look at the address bar <strong>after</strong> logging in.</li>
-                <li>Copy the base URL (usually ends in <code
-                    style="background:var(--surf2);padding:2px 4px;border-radius:4px;color:var(--txt);">.instructure.com</code>).
+                <li>Examine the address bar <strong>after</strong> logging in (most schools use one of two formats):
+                  <ul style="margin: 4px 0 0 0; padding-left: 14px; list-style-type: disc; display: flex; flex-direction: column; gap: 4px;">
+                    <li><strong>Format 1:</strong> <code style="background:var(--cyan-bg);padding:2px 4px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;">canvas.[university].edu</code> (e.g., canvas.schoolname.edu)</li>
+                    <li><strong>Format 2:</strong> <code style="background:var(--cyan-bg);padding:2px 4px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;">[university].instructure.com</code> (e.g., schoolname.instructure.com)</li>
+                  </ul>
                 </li>
               </ol>
             </div>
             <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
-              <strong
-                style="color: var(--orange); display: block; margin-bottom: 12px; font-size: 14px;">Important</strong>
+              <strong style="color: var(--orange); display: block; margin-bottom: 12px; font-size: 14px;">Important</strong>
               <p style="margin: 0; color: var(--txt2); font-size: 14px; line-height: 1.6;">While your university's URL
-                (e.g. <code
-                  style="color:var(--txt);font-family:monospace;background:transparent;padding:0;">canvas.school.edu</code>)
-                might be accepted by our algorithms, finding and using the <strong>actual base Canvas URL</strong>
-                (ending in <code
-                  style="color:var(--txt);font-family:monospace;background:transparent;padding:0;">.instructure.com</code>)
-                is the best and most reliable option.</p>
+                (like canvas.schoolname.edu)
+                might be accepted, pasting the <strong>real base Canvas URL</strong> (ending in .instructure.com) is always the best and most reliable option to prevent login issues.</p>
             </div>
           </div>
         </div>
