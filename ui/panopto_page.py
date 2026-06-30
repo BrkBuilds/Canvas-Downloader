@@ -901,10 +901,12 @@ def render_transcription_dialog() -> None:
 
     if not pmodels.whisper_available():
         from ui.amber_notice import render_info_notice
+        import sys
+        dev_note = " (or after `pip install faster-whisper` in dev)" if not getattr(sys, 'frozen', False) else ""
         render_info_notice(
             "The transcription engine (faster-whisper) isn't installed yet. "
-            "You can still download models and configure settings; transcription runs "
-            "once the engine is bundled (or after `pip install faster-whisper` in dev).",
+            f"You can still download models and configure settings; transcription runs "
+            f"once the engine is bundled{dev_note}.",
             allow_html=True,
         )
 
