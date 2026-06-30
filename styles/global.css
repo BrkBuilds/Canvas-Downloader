@@ -1158,4 +1158,67 @@ div[class*="st-key-cancel_pp_btn_sync_phase3"] button:hover::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E") !important;
 }
 
+/* ─────────────────────────────────────────────────────────────────────
+   Login: "Open my Canvas token settings page" button (ui/auth.py).
+   Styled as the blue pill that mirrors the verified-state anchor link.
+   Used for the unverified state (clickable, runs a reachability check on
+   click) and the disabled state (no URL entered yet, greyed + tooltip).
+   ───────────────────────────────────────────────────────────────────── */
+div[class*="st-key-open_token_settings_btn"] button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    background: #1f77b4 !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 5px 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 6px !important;
+    transition: background 0.15s ease-in-out !important;
+}
+div[class*="st-key-open_token_settings_btn"] button:hover:not(:disabled) {
+    background: #2a86c9 !important;
+    color: #ffffff !important;
+}
+/* Centre the label block (the button's real flex child) so the icon and
+   text share one centred baseline. */
+div[class*="st-key-open_token_settings_btn"] button [data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+}
+div[class*="st-key-open_token_settings_btn"] button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    color: inherit !important;
+}
+/* External-link glyph drawn as a currentColor mask so it follows the
+   button's enabled (white) / disabled (grey) text colour. */
+div[class*="st-key-open_token_settings_btn"] button p::before {
+    content: "" !important;
+    display: inline-block !important;
+    width: 15px !important;
+    height: 15px !important;
+    flex-shrink: 0 !important;
+    background-color: currentColor !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E") no-repeat center / contain !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E") no-repeat center / contain !important;
+}
+/* Disabled (no URL entered yet): greyed, not-allowed cursor. The native
+   help= tooltip explains why it's disabled. */
+div[class*="st-key-open_token_settings_btn"] button:disabled {
+    background: #283139 !important;
+    color: #5b6775 !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
+
 </style>

@@ -2453,6 +2453,17 @@ def render_sync_step4( main_placeholder=None):
         st.session_state['download_status'] = 'sync_complete'
         status = 'sync_complete'
 
+    # Daily auto-sync (Today dashboard): the sync ran with a slim progress bar and
+    # has now finished. Skip the full sync-complete screen and route back to the
+    # Today page, which shows "today's files" per course from sync history (already
+    # written during run_sync). cleanup_sync_state() clears transient sync state.
+    if st.session_state.get('today_sync_active') and status == 'sync_complete':
+        from core.state_registry import cleanup_sync_state
+        st.session_state.pop('today_sync_active', None)
+        cleanup_sync_state()  # sets step = 1, clears transient sync keys
+        st.session_state['current_mode'] = 'today'
+        st.rerun()
+
     if status == 'analyzing':
         current_pass = st.session_state.get('analysis_pass', 1)
 
