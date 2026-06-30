@@ -508,6 +508,11 @@
       <a href="#sync-review">Sync Review</a>
       <a href="#file-categories" class="sub">The 7 File Categories</a>
       <a href="#review-tools" class="sub">Review Tools</a>
+      <a href="#settings">Settings</a>
+      <a href="#settings-download" class="sub">Download Options</a>
+      <a href="#settings-save" class="sub">Default Save Location</a>
+      <a href="#settings-prefs" class="sub">Preferences</a>
+      <a href="#settings-panopto" class="sub">Transcription Engine</a>
       <a href="#faq">FAQ</a>
     </aside>
 
@@ -533,10 +538,11 @@
           <h4>How to find your Canvas URL</h4>
           <p>
             <strong>1.</strong> Log in to Canvas in your web browser.<br/>
-            <strong>2.</strong> Examine the address bar <strong>after</strong> logging in.<br/>
-            <strong>3.</strong> It often looks like <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">https://schoolname.instructure.com</code> (even if you typed <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">canvas.school.edu</code> to get there).<br/>
-            <strong>4.</strong> Copy the base portion of the URL (<code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">https://schoolname.instructure.com</code>) and paste it into the app.<br/><br/>
-            <strong>Important:</strong> While your university's URL (e.g., <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">canvas.school.edu</code>) may be accepted by our auto-resolver, pasting the <strong>real Canvas URL</strong> (ending in <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">.instructure.com</code>) is always the best and most reliable option.
+            <strong>2.</strong> Examine the address bar <strong>after</strong> logging in (most schools use one of two formats):<br/>
+            &bull; <strong>Format 1:</strong> <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">canvas.[university].edu</code> (e.g., canvas.schoolname.edu)<br/>
+            &bull; <strong>Format 2:</strong> <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">[university].instructure.com</code> (e.g., schoolname.instructure.com)<br/>
+            <strong>3.</strong> Copy the base portion of the URL (including the `https://`, e.g., <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://canvas.schoolname.edu</code> or <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://schoolname.instructure.com</code>) and paste it into the app.<br/><br/>
+            <strong>Important:</strong> While your university's URL (like canvas.schoolname.edu) may be accepted, pasting the <strong>real Canvas URL</strong> (ending in .instructure.com) is always the best and most reliable option to prevent login issues.
           </p>
         </div>
 
@@ -1116,7 +1122,118 @@
       </section>
 
       <!-- ============================================================ -->
-      <!-- SECTION 6: FAQ                                                -->
+      <!-- SECTION 6: SETTINGS                                           -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="settings">
+        <div class="sh reveal">
+          <div class="label">Application-Wide</div>
+          <div class="icon-h2">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <h2>Settings</h2>
+          </div>
+          <p>Fine-tune how the app behaves - download speed, file size limits, where things are saved, notifications, and more.</p>
+        </div>
+
+        <p class="body-text reveal">
+          Open <strong>Settings</strong> from the button at the bottom of the sidebar. Everything here is <strong>application-wide</strong>: any setting you change applies to <strong>every activity in the app</strong> - all Quick and Custom downloads, and every sync - not just your next one. Each option can be freely toggled on or off (or adjusted) at any time, and your choices are saved and remembered between sessions. Settings are sensible by default, so you can ignore this screen entirely until you want to change something.
+        </p>
+
+        <div class="callout info reveal">
+          <strong>Locked during work.</strong> The Settings button is disabled while a download or sync is running, so your configuration can't change mid-operation. Finish or cancel the current run to make changes.
+        </div>
+
+        <!-- Download -->
+        <h3 class="sub-title reveal" id="settings-download">Download Options</h3>
+        <p class="body-text reveal">These three settings shape how files are fetched - for both downloads and syncs.</p>
+
+        <div class="preset-list reveal">
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+            <div class="preset-row-body">
+              <strong>Simultaneous downloads</strong>
+              <span>Sets how many files are fetched in parallel (1-15, default 5). Raising it can noticeably speed up large batches on a fast connection. Lowering it is the first thing to try if downloads stall, time out, or Canvas starts rejecting requests - fewer parallel connections is gentler on flaky networks.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"/></svg>
+            <div class="preset-row-body">
+              <strong>Skip large files</strong>
+              <span>Turn on the limit and set a ceiling in MB (default 500) to automatically skip any file bigger than that - keeping batches fast and stopping a single huge video or dataset from bloating your drive. Skipped files are recorded as <em>ignored</em>, so future syncs won't keep re-listing them as new. You can restore them anytime from the Sync Hub's ignored list (even after raising the limit), then sync to pull them down.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z"/></svg>
+            <div class="preset-row-body">
+              <strong>Error log file</strong>
+              <span>Writes a <code style="background:var(--cyan-bg);padding:1px 5px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-size:0.92em;">download_errors.txt</code> into each output folder, summarising any files that failed to download or convert - handy for spotting exactly what didn't come through after a big batch. This card also houses <strong>Save debug log</strong>, a verbose <code style="background:var(--cyan-bg);padding:1px 5px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-size:0.92em;">debug_log.txt</code> meant only for troubleshooting; leave it off for normal use.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save folder -->
+        <h3 class="sub-title reveal" id="settings-save">
+          <svg class="sub-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>Default Save Location
+        </h3>
+        <p class="body-text reveal">
+          Sets the folder that's pre-filled as the output location for every new download, so you don't have to pick it manually each time. Leave it blank to fall back to your system's <strong>Downloads</strong> folder. You can still change the destination on any individual download - this just sets the starting point.
+        </p>
+
+        <!-- Preferences -->
+        <h3 class="sub-title reveal" id="settings-prefs">Preferences</h3>
+        <p class="body-text reveal">Smaller quality-of-life options that affect how the app looks, notifies you, and organises your files.</p>
+
+        <div class="preset-list reveal">
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <div class="preset-row-body">
+              <strong>Notifications</strong>
+              <span>Plays a sound and shows a native desktop notification the moment a download or sync finishes - so you can switch to other work and get pulled back when it's done, instead of watching a progress bar. On by default.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+            <div class="preset-row-body">
+              <strong>CBS filters</strong>
+              <span>Adds Copenhagen Business School-specific filters (course type, semester, and year) to every course list, making it easier to find the right courses when your enrolment names follow CBS conventions. Niche - leave off unless you're a CBS student.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            <div class="preset-row-body">
+              <strong>Time format</strong>
+              <span>Switches every time shown in the app (sync history, timestamps, completion summaries) to a 12-hour AM/PM clock instead of the default 24-hour format. Purely cosmetic - it changes nothing about how files are downloaded.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+            <div class="preset-row-body">
+              <strong>Sync history</strong>
+              <span>Controls how many past sync operations are kept in the history panel (10-500, default 50). Raise it if you sync often and want a longer record of what changed and when; higher values use a little more disk. Entries beyond the limit are automatically trimmed, oldest first.</span>
+            </div>
+          </div>
+          <div class="preset-row">
+            <svg class="preset-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            <div class="preset-row-body">
+              <strong>Number folders &amp; files</strong>
+              <span>Prefixes every folder and file with a hierarchical number that mirrors your course's order on Canvas (1, 1.1, 1.2.4 ...), so your file explorer sorts everything in the exact sequence the instructor laid it out - instead of alphabetically. Applies to new downloads and syncs; files you already have keep their current names.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panopto transcription -->
+        <h3 class="sub-title reveal" id="settings-panopto">
+          <svg class="sub-icon" viewBox="0 0 24 24" fill="#a0aec0" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>Transcription Engine
+        </h3>
+        <p class="body-text reveal">
+          Opens the configuration for the local engine that turns Panopto recordings into <strong>Transcripts</strong> (.txt) and <strong>Subtitles</strong> (.srt) - the model size, the spoken language, and the compute device (CPU or GPU). These choices are shared across every download and sync, and everything runs entirely on your own machine: nothing is ever uploaded. Configuring it here is just a shortcut so you can set it up without starting a download first.
+        </p>
+        <div class="callout reveal">
+          <strong>Engine vs. output:</strong> this only sets up <em>how</em> transcription runs. The decision of <em>whether</em> to actually produce transcripts or subtitles for a given batch lives in <a href="#panopto" style="color:var(--cyan)">Custom Download &rarr; Panopto</a>, alongside the video/audio output choices.
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 7: FAQ                                                -->
       <!-- ============================================================ -->
       <section class="guide-section" id="faq">
         <div class="sh reveal">

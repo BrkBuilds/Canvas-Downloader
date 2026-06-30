@@ -331,10 +331,18 @@ def run_sync():
             except Exception:
                 pass
 
-    # Step wizard
-    render_sync_wizard(st, 3)
+    # Daily auto-sync (Today dashboard) requests a SLIM progress view: only a
+    # progress bar + status line, no wizard / metrics / terminal log. The proven
+    # async loop is untouched - it just writes its metrics/active-file/log into a
+    # hidden container (see placeholder creation below).
+    _today_minimal = st.session_state.get('today_sync_active', False)
 
-    st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
+    # Step wizard
+    if not _today_minimal:
+        render_sync_wizard(st, 3)
+        st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
+    else:
+        st.markdown('<h2 class="step-header">Daily sync in progress…</h2>', unsafe_allow_html=True)
 
     # First-run macOS permission batch is in flight: tell the user the upcoming
     # system dialogs are expected and one-time (mirrors the download flow).
@@ -359,9 +367,23 @@ def run_sync():
 
     status_text = st.empty()
     progress_container = st.empty()
-    metrics_dashboard = st.empty()
-    active_file_placeholder = st.empty()
-    log_container = st.empty()
+    if _today_minimal:
+        # Keep only the status line + progress bar visible. The metrics/active-file/
+        # log placeholders still exist (the async loop writes to them) but live in a
+        # hidden container so the Today page stays a single clean progress bar.
+        _today_hidden = st.container(key="today_hidden_sync_ui")
+        with _today_hidden:
+            metrics_dashboard = st.empty()
+            active_file_placeholder = st.empty()
+            log_container = st.empty()
+        st.markdown(
+            '<style>div[class*="st-key-today_hidden_sync_ui"]{display:none !important;}</style>',
+            unsafe_allow_html=True,
+        )
+    else:
+        metrics_dashboard = st.empty()
+        active_file_placeholder = st.empty()
+        log_container = st.empty()
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()

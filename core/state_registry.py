@@ -49,6 +49,7 @@ TOTAL_PANOPTO_OUTPUTS = len(PANOPTO_OUTPUT_KEYS)
 DOWNLOAD_DEFAULTS = {
     'api_token': '',
     'api_url': '',
+    'url_verified': False,
     'is_authenticated': False,
     'download_path': str(Path.home() / "Downloads"),
     'selected_course_ids': [],
@@ -113,6 +114,11 @@ DOWNLOAD_DEFAULTS = {
     'quick_org_mode': 'modules',
     # L-13: Sync history retention - number of past operations to keep.
     'sync_history_retention': 50,
+    # Numbering prefix (Settings dialog, default OFF): when on, module folders and
+    # their files get a hierarchical dotted prefix (1, 1.1, 1.2…) derived from
+    # Canvas's own module/item order, to preserve course order in the file
+    # explorer. Frozen at download time (see canvas_logic._number_prefix).
+    'numbering_enabled': False,
     # ── Panopto (premium hidden feature) ──
     # Master visibility flag for the sidebar entry + whether Panopto runs are
     # included in download/sync. Loaded from the persisted panopto settings on

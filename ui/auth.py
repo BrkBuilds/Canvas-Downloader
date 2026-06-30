@@ -226,6 +226,89 @@ def _delete_fallback_token(username: str) -> None:
         logger.warning(f"Failed to delete fallback token: {e}")
 
 
+def normalize_canvas_url(raw: str) -> str:
+    """Best-effort normalize a user-entered Canvas URL.
+
+    - strips whitespace and trailing slashes
+    - bare shorthand with no dot (e.g. ``cbscanvas``) → ``https://cbscanvas.instructure.com``
+    - adds ``https://`` when no scheme is present
+    - strips any path, keeping only ``scheme://host``
+
+    Returns ``''`` for empty input. Non-destructive: the resolved URL is shown to
+    the user and the original field is never silently rewritten without feedback.
+    """
+    import re as _re
+    s = (raw or '').strip().rstrip('/')
+    if not s:
+        return ''
+    has_scheme = s.lower().startswith(('http://', 'https://'))
+    body = s.split('://', 1)[1] if has_scheme else s
+    # Bare subdomain shorthand: no dot, no slash, no space → expand to instructure.com
+    if '.' not in body and '/' not in body and ' ' not in body:
+        return f"https://{body}.instructure.com"
+    if not has_scheme:
+        s = 'https://' + s
+    m = _re.match(r'(https?://[^/]+)', s)
+    return m.group(1) if m else s
+
+
+def _canvas_url_reachable(base_url: str, timeout: float = 5.0) -> bool:
+    """Best-effort reachability check for a Canvas base URL.
+
+    Returns True if the host returns ANY HTTP response (even 401/403 or a
+    redirect) - we only care that the address resolves and answers, not the
+    status code. Returns False on DNS failure, refused connection, or timeout.
+
+    Used by the "Open my Canvas token settings page" helper to avoid sending a
+    first-time user to a dead browser tab when they typed a wrong URL (the #1
+    first-run mistake). If ``requests`` is somehow unavailable we degrade to
+    True so the link is never blocked by our own inability to check.
+    """
+    if not base_url:
+        return False
+    try:
+        import requests
+    except Exception:
+        return True
+    try:
+        requests.get(base_url, timeout=timeout, allow_redirects=True)
+        return True
+    except Exception:
+        return False
+
+
+def force_reauth(reason: str = "") -> None:
+    """Clear the stored credential and route back to the login page.
+
+    Bulletproof reconnect: every keyring/fallback clear is watchdog-guarded
+    (``_safe_keyring_delete``) and wrapped, so a hung credential backend can
+    never block the route back to login. Pre-fills the known Canvas URL so the
+    user only needs to paste a fresh token. Idempotent within a rerun.
+    """
+    keyring_user = st.session_state.get('api_url') or 'default'
+    try:
+        _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
+    except Exception:
+        pass
+    try:
+        _delete_fallback_token(keyring_user)
+    except Exception:
+        pass
+    st.session_state['api_token'] = ''
+    st.session_state['is_authenticated'] = False
+    # Skip the login page's one-shot token auto-load so we don't immediately
+    # re-read a token we just deleted; keep the URL handy for a quick reconnect.
+    st.session_state['token_loaded'] = True
+    if st.session_state.get('api_url'):
+        st.session_state['url_input'] = st.session_state['api_url']
+        # The URL we're reconnecting to was already verified by a prior login,
+        # so the token-settings link can point at it directly (no re-check).
+        st.session_state['url_verified'] = True
+    if reason:
+        st.session_state['reauth_reason'] = reason
+    st.rerun(scope="app")
+
+
 def render_sidebar(fetch_courses_fn):
     """Render the full sidebar: navigation, settings, logout.
 
@@ -308,6 +391,9 @@ div[class*="st-key-nav_btn_"]:not([class*="logout"]) button p::before {{
 }}
 
 /* ── Asset bindings ── */
+div.st-key-nav_btn_today button p::before {{
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+}}
 div.st-key-nav_btn_download button p::before {{
     background-image: url("data:image/png;base64,{icon_dl_b64}");
 }}
@@ -434,6 +520,11 @@ def render_login_page(fetch_courses_fn):
                 with open(CONFIG_FILE, "r", encoding='utf-8') as f:
                     config = json.load(f)
                     st.session_state['api_url'] = config.get('api_url', '')
+                    # A URL only gets persisted to config after a successful
+                    # login, so a saved api_url is implicitly verified. This is
+                    # why the token-settings link works on launch with a blank
+                    # input field.
+                    st.session_state['url_verified'] = bool(st.session_state['api_url'])
 
                     if 'concurrent_downloads' in config:
                         st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
@@ -459,6 +550,9 @@ def render_login_page(fetch_courses_fn):
 
                     if 'use_12h_format' in config:
                         st.session_state['use_12h_format'] = config.get('use_12h_format', False)
+
+                    if 'numbering_enabled' in config:
+                        st.session_state['numbering_enabled'] = config.get('numbering_enabled', False)
 
                     if 'default_download_path' in config:
                         saved_default = config.get('default_download_path', '') or ''
@@ -961,6 +1055,23 @@ def render_login_page(fetch_courses_fn):
         color: #ffffff !important;
     }
 
+    /* Reset Streamlit flex block gap inside the help expanders for precise spacing control */
+    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
+        gap: 0px !important;
+    }
+
+    /* Style inline code blocks to look like soft, non-nerdy badges/pills */
+    div[class*="st-key-login_help_expanders"] code {
+        color: #93c5fd !important;
+        background-color: rgba(147, 197, 253, 0.1) !important;
+        border: 1px solid rgba(147, 197, 253, 0.25) !important;
+        padding: 2px 5px !important;
+        border-radius: 4px !important;
+        font-family: inherit !important;
+        font-size: 0.9em !important;
+        font-weight: 600 !important;
+    }
+
     /* Reset Streamlit flex block gap inside the footer container for precise spacing control */
     div[class*="st-key-login_footer_container"] div[data-testid="stVerticalBlock"] {
         gap: 0px !important;
@@ -1178,13 +1289,31 @@ def render_login_page(fetch_courses_fn):
         """, unsafe_allow_html=True)
 
         with st.container(key="login_card_wrapper"):
+            # Re-auth banner: shown when the app cleared an expired/revoked token
+            # and routed the user back here (see force_reauth). Persists across
+            # failed re-login attempts; cleared only on a successful reconnect.
+            _reauth_reason = st.session_state.get('reauth_reason')
+            if _reauth_reason:
+                st.markdown(
+                    "<div style='display:flex; align-items:flex-start; gap:10px; "
+                    "background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35); "
+                    "border-radius:8px; padding:12px 14px; margin-bottom:16px;'>"
+                    "<svg viewBox='0 0 24 24' width='18' height='18' style='flex-shrink:0; margin-top:1px;' "
+                    "fill='none' stroke='#f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                    "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
+                    "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+                    f"<span style='color:#fcd9b6; font-size:0.9rem; line-height:1.5;'>{_he(str(_reauth_reason))}</span>"  # audit-ignore: already html-escaped via _he
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+
             st.markdown('<div class="login-form-title">Log in to Canvas Downloader</div>', unsafe_allow_html=True)
-            
+
             with st.form("auth_form", clear_on_submit=False, border=False):
                 st.text_input(
                     'Your Canvas URL',
                     key="url_input",
-                    placeholder="https://your-school.instructure.com"
+                    placeholder="https://schoolname.instructure.com"
                 )
 
                 st.text_input(
@@ -1202,11 +1331,18 @@ def render_login_page(fetch_courses_fn):
                 submitted = st.form_submit_button('Log In', type="primary", use_container_width=True, key="login_submit_btn")
 
             if submitted:
-                input_url = st.session_state.url_input.strip()
+                # Normalize the URL (accepts 'cbscanvas' shorthand, missing scheme,
+                # trailing paths/slashes) before validating - reduces the #1 first-run
+                # login failure: a slightly-wrong Canvas URL.
+                input_url = normalize_canvas_url(st.session_state.url_input)
                 input_token = st.session_state.token_input.strip()
 
                 st.session_state['api_url'] = input_url
                 st.session_state['api_token'] = input_token
+                # Optimistically un-verify: this URL is only "trusted" once the
+                # token validates against it below. A failed attempt must not
+                # leave a stale verified flag pointing at the wrong URL.
+                st.session_state['url_verified'] = False
 
                 manager = CanvasManager(input_token, input_url)
                 is_valid, message = manager.validate_token()
@@ -1214,8 +1350,11 @@ def render_login_page(fetch_courses_fn):
                 if is_valid:
                     st.session_state['api_token'] = input_token
                     st.session_state['api_url'] = manager.api_url
+                    st.session_state['url_verified'] = True
                     st.session_state['is_authenticated'] = True
                     st.session_state['user_name'] = message.split(": ", 1)[1] if ": " in message else message
+                    # Successful reconnect clears any "your connection expired" banner.
+                    st.session_state.pop('reauth_reason', None)
 
                     # Setup base config data
                     config_data = {}
@@ -1283,7 +1422,7 @@ def render_login_page(fetch_courses_fn):
                     if any(kw in err_text_lower for kw in ["missing schema", "no connection adapters", "invalid url"]):
                         render_amber_notice(
                             "Invalid URL Format",
-                            detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://schoolname.instructure.com)."
+                            detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://canvas.schoolname.edu or https://schoolname.instructure.com)."
                         )
                     elif any(kw in err_text_lower for kw in ["revoked", "invalid token", "unauthorized", "401"]):
                         render_amber_notice(
@@ -1313,7 +1452,7 @@ def render_login_page(fetch_courses_fn):
                     elif any(kw in err_text_lower for kw in ["url", "not found", "404", "connection", "timeout", "max retries", "name or service not known"]):
                         render_amber_notice(
                             "Connection Failed",
-                            detail="We couldn't connect to your Canvas URL. Please verify that the URL is typed correctly (e.g., https://schoolname.instructure.com) and that you are connected to the internet."
+                            detail="We couldn't connect to your Canvas URL. Please verify that the URL is typed correctly (e.g., https://canvas.schoolname.edu or https://schoolname.instructure.com) and that you are connected to the internet."
                         )
                     else:
                         render_amber_notice(
@@ -1329,20 +1468,98 @@ def render_login_page(fetch_courses_fn):
             with st.expander('How to find your Canvas URL?'):
                 st.markdown(
                     "1. Log in to Canvas in your web browser.\n"
-                    "2. Examine the address bar **after** logging in.\n"
-                    "3. It often looks like `https://schoolname.instructure.com` (even if you typed `canvas.school.edu` to get there).\n"
-                    "4. Copy the base portion of the URL (`https://schoolname.instructure.com`) and paste it here.\n\n"
-                    "**Important:** While your university's URL (like `canvas.school.edu`) may be accepted, pasting the **real Canvas URL** (ending in `.instructure.com`) is always the best and most reliable option to prevent login issues.\n"
+                    "2. Examine the address bar **after** logging in (most schools use one of two formats):\n"
+                    "   * **Format 1:** `canvas.[university].edu` (e.g., canvas.schoolname.edu)\n"
+                    "   * **Format 2:** `[university].instructure.com` (e.g., schoolname.instructure.com)\n"
+                    "3. Copy the base portion of the URL (including the `https://`, e.g., `https://canvas.schoolname.edu` or `https://schoolname.instructure.com`) and paste it here.\n\n"
+                    "**Important:** While your university's URL (like canvas.schoolname.edu) may be accepted, pasting the **real Canvas URL** (ending in `.instructure.com`) is always the best and most reliable option to prevent login issues.\n"
                 )
 
             with st.expander('How to get a Canvas Access Token?'):
+                # Direct link to the user's own Canvas token settings page. Canvas
+                # has no deep-link to the token generator itself, so the settings
+                # page (with the Approved Integrations section) is the closest we
+                # can get. The link is only trustworthy when its target URL is
+                # known-good, so we distinguish three states:
+                #   - trusted  → a previously verified URL (saved config / prior
+                #                login) OR a typed URL we just reachability-checked
+                #                → render the real <a> link (one-click open).
+                #   - pending  → a typed-but-unverified URL → a button that runs a
+                #                one-shot reachability check on click, then either
+                #                reveals the link or shows an amber notice.
+                #   - none     → no URL anywhere → greyed button + tooltip.
+                # The reachability check only ever runs on click (never on every
+                # rerun), so there's no constant pinging.
+                def _render_settings_link(_url: str) -> None:
+                    _href = _he(_url + '/profile/settings')
+                    st.markdown(
+                        "<a href='" + _href + "' target='_blank' style='"
+                        "display:inline-flex; align-items:center; gap:8px; text-decoration:none; "
+                        "background:#1f77b4; color:#ffffff; font-weight:600; font-size:0.88rem; "
+                        "padding:5px 12px; border-radius:6px; margin-bottom:6px;'>"
+                        "<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' "
+                        "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                        "<path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/>"
+                        "<polyline points='15 3 21 3 21 9'/><line x1='10' y1='14' x2='21' y2='3'/></svg>"
+                        "Open my Canvas token settings page</a>",
+                        unsafe_allow_html=True,
+                    )
+
+                _verified_url = (
+                    st.session_state.get('api_url', '')
+                    if st.session_state.get('url_verified') else ''
+                )
+                _typed_url = normalize_canvas_url(st.session_state.get('url_input', ''))
+
+                if _typed_url and _typed_url != _verified_url:
+                    # User is entering a (new) URL we haven't confirmed yet.
+                    _pending_url, _trusted_url = _typed_url, ''
+                    if st.session_state.get('_token_link_ready') == _typed_url:
+                        _trusted_url = _typed_url  # just passed the check this run
+                else:
+                    # Blank input, or input matches the already-verified URL.
+                    _pending_url, _trusted_url = '', _verified_url
+
+                if _trusted_url:
+                    _render_settings_link(_trusted_url)
+                elif _pending_url:
+                    if st.button(
+                        'Open my Canvas token settings page',
+                        key='open_token_settings_btn',
+                        use_container_width=False,
+                    ):
+                        if _canvas_url_reachable(_pending_url):
+                            st.session_state['_token_link_ready'] = _pending_url
+                            st.session_state.pop('_token_link_error', None)
+                        else:
+                            st.session_state['_token_link_error'] = _pending_url
+                            st.session_state.pop('_token_link_ready', None)
+                        st.rerun(scope="app")
+                    if st.session_state.get('_token_link_error') == _pending_url:
+                        from ui.amber_notice import render_amber_notice
+                        render_amber_notice(
+                            "We couldn't reach that Canvas address",
+                            detail=(
+                                "Double-check your Canvas URL above (e.g. "
+                                "https://schoolname.instructure.com) and that you're "
+                                "online, then try again."
+                            ),
+                            margin="4px 0 6px 0",
+                        )
+                else:
+                    st.button(
+                        'Open my Canvas token settings page',
+                        key='open_token_settings_btn',
+                        disabled=True,
+                        help="Enter your Canvas URL above first.",
+                        use_container_width=False,
+                    )
                 st.markdown(
-                    "1. Log into Canvas and click on your **Account** in the left navigation.\n"
-                    "2. Select **Settings** from the account menu.\n"
-                    "3. Scroll down to the **Approved Integrations** section.\n"
-                    "4. Click the button labeled **+ New Access Token**.\n"
-                    "5. Set a purpose (e.g., 'Canvas Downloader') and click **Generate Token**.\n"
-                    "6. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
+                    "1. Open the link above (or in Canvas: **Account → Settings**).\n"
+                    "2. Scroll down to the **Approved Integrations** section.\n"
+                    "3. Click the button labeled **+ New Access Token**.\n"
+                    "4. Set a purpose (e.g., 'Canvas Downloader') and click **Generate Token**.\n"
+                    "5. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
                 )
 
         st.markdown(
@@ -1430,7 +1647,7 @@ def _render_authenticated_nav_top():
     st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
 
     # Active-state CSS is dynamic (depends on session state) - inject separately
-    if mode in ['download', 'sync', 'panopto']:
+    if mode in ['download', 'sync', 'panopto', 'today']:
         active_key = f"st-key-nav_btn_{mode}"
         st.html(f"""<style>
         section[data-testid="stSidebar"] div.{active_key} button {{ background-color: rgba(255, 255, 255, 0.10) !important; }}
@@ -1440,6 +1657,18 @@ def _render_authenticated_nav_top():
         section[data-testid="stSidebar"] div.{active_key} button:hover {{ background-color: rgba(255, 255, 255, 0.10) !important; cursor: default !important; }}
         section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
         </style>""")
+
+    # Today dashboard button - the daily home (auto-sync + today's files).
+    if st.button('Today', use_container_width=True, key="nav_btn_today"):
+        if mode != 'today' or step != 1:
+            from core.state_registry import cleanup_sync_state
+            cleanup_sync_state()
+            st.session_state['current_mode'] = 'today'
+            st.session_state['step'] = 1
+            st.session_state['sync_mode'] = False
+            st.session_state['sync_pairs'] = []
+            st.session_state.pop('sync_pairs_loaded', None)
+            st.rerun()
 
     # Download mode button - always navigates to download step 1.
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
@@ -1500,7 +1729,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                    'temp_max_downloads', 'temp_max_size_enabled', 'temp_max_size_mb',
                    'temp_error_log_enabled', 'temp_debug_mode',
                    'temp_notifications_enabled', 'temp_cbs_filters',
-                   'temp_use_12h_format', 'temp_sync_history_retention'):
+                   'temp_use_12h_format', 'temp_sync_history_retention',
+                   'temp_numbering_enabled'):
             st.session_state.pop(_k, None)
 
     @st.dialog("\u200b", width="large", on_dismiss=_stg_dismiss_cleanup)
@@ -1758,6 +1988,14 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     key="temp_sync_history_retention",
                 )
 
+            st.html("""<div style='padding: 8px 0 0 0;'></div>""")
+            # File numbering - prefix folders & files with Canvas's own order so the
+            # file explorer mirrors the course structure (1, 1.1, 1.2…). Frozen at
+            # download time; turning it on does not renumber already-downloaded files.
+            with st.container(border=True, key="stg_card_numbering"):
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Number folders &amp; files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Prefix every folder and file with a hierarchical number (1, 1.1, 1.2.4…) following your course's order on Canvas, so everything sorts correctly in your file explorer. Applies to new downloads &amp; syncs; existing files keep their names.</div></div>""")
+                temp_numbering = st.toggle("Number folders & files", value=st.session_state.get('numbering_enabled', False), key="temp_numbering_enabled")
+
             # ── PANOPTO TRANSCRIPTION ─────────────────────────────────
             # The transcription engine (model / language / compute device) is a
             # GLOBAL, persisted config - per-download output formats live in
@@ -1814,6 +2052,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                     or int(temp_history_retention) != int(st.session_state.get('sync_history_retention', 50))
+                    or bool(temp_numbering) != bool(st.session_state.get('numbering_enabled', False))
                 )
 
                 st.session_state['concurrent_downloads'] = temp_max
@@ -1826,6 +2065,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
                 st.session_state['sync_history_retention'] = int(temp_history_retention)
+                st.session_state['numbering_enabled'] = bool(temp_numbering)
 
                 from pathlib import Path as _Path
                 _downloads_default = str(_Path.home() / "Downloads")
@@ -1854,6 +2094,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
                 config_data['sync_history_retention'] = int(temp_history_retention)
+                config_data['numbering_enabled'] = bool(temp_numbering)
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'
