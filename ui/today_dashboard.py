@@ -250,10 +250,46 @@ def _todays_groups() -> list[dict]:
 
 # ── Import-from-hub dialog ──────────────────────────────────────────────────
 
-def _toggle_import_cb(chk_key: str, pairs: list[dict]):
-    """Add/remove a saved pair or group's pairs from the daily set on toggle."""
+def _css_escape_content(text: str) -> str:
+    """Escape a string for safe use inside a CSS quoted string (content: "...")."""
+    return text.replace('\\', '\\\\').replace('"', '\\"')
+
+
+# White checkmark badge - mirrors the Card 2/3 "active checkbox" pattern in
+# ui/download_settings.py, recoloured to a neutral white/grey theme (matches
+# the Saved Groups & Pairs hub cards) instead of a brand accent colour.
+_IMPORT_CHECK_SVG = (
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+    "viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' "
+    "height='24' fill='white'/%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' "
+    "stroke='black' stroke-width='4' stroke-linecap='round' "
+    "stroke-linejoin='round'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' "
+    "height='24' rx='5' fill='%23ffffff' mask='url(%23m)'/%3E%3C/svg%3E\")"
+)
+
+# White-overlay ladder (idle -> hover -> selected -> selected+hover), the same
+# "darkgrey to white" technique the Saved Groups & Pairs hub cards use
+# (styles/sync_hub.css `hub_pair_card_`: rgba(255,255,255,0.05) on a dark
+# background reads as dark grey; raising the alpha reads as progressively
+# lighter/whiter without introducing a separate accent colour).
+_CARD_IDLE_BG = "rgba(255, 255, 255, 0.05)"
+_CARD_IDLE_BORDER = "rgba(255, 255, 255, 0.15)"
+_CARD_IDLE_HOVER_BG = "rgba(255, 255, 255, 0.10)"
+_CARD_IDLE_HOVER_BORDER = "rgba(255, 255, 255, 0.32)"
+_CARD_SEL_BG = "rgba(255, 255, 255, 0.16)"
+_CARD_SEL_BORDER = "rgba(255, 255, 255, 0.48)"
+_CARD_SEL_HOVER_BG = "rgba(255, 255, 255, 0.24)"
+_CARD_SEL_HOVER_BORDER = "rgba(255, 255, 255, 0.65)"
+_CHECK_IDLE_BORDER = "2px solid rgba(255, 255, 255, 0.35)"
+_CHECK_HOVER_BORDER = "rgba(255, 255, 255, 0.65)"
+
+
+def _toggle_import_btn(sel_key: str, pairs: list[dict]):
+    """Flip a saved pair/group's daily-sync membership when its card is clicked."""
     from core.today_store import add_today_pairs, remove_today_pair
-    if st.session_state.get(chk_key):
+    new_state = not st.session_state.get(sel_key, False)
+    st.session_state[sel_key] = new_state
+    if new_state:
         add_today_pairs([
             {
                 "course_id": p.get("course_id"),
@@ -271,8 +307,10 @@ def _toggle_import_cb(chk_key: str, pairs: list[dict]):
 def _import_courses_dialog():
     """Pick saved groups & pairs from the hub to keep in the daily sync set.
 
-    Card styling mirrors the Saved Groups & Pairs hub 1:1; the lower action area
-    is replaced by a single checkbox that toggles membership in the daily sync.
+    Each card is a native st.button styled as a whole-card toggle (mirrors the
+    "Canvas Content" card pattern in ui/download_settings.py): clicking
+    anywhere on the card toggles its membership in the daily sync, with a
+    checkbox indicator that fills in with a checkmark when selected.
     """
     from sync_manager import SavedGroupsManager
     from core.today_store import load_today_config
@@ -356,68 +394,81 @@ def _import_courses_dialog():
             st.rerun(scope="app")
         return
 
-    with st.container(height=460, border=False):
+    with st.container(height=460, border=False, key="today_import_scroll"):
+        css_blocks = []
         for g_idx, group in selectable:
             is_sp = group.get("is_single_pair", False)
             pairs = group.get("pairs", []) or []
             gid = group.get("group_id", str(g_idx))
-            chk_key = f"today_imp_chk_{gid}"
-            fully = bool(pairs) and all(
-                (p.get("course_id"), p.get("local_folder")) in daily_sigs
-                for p in pairs
+            sel_key = f"today_imp_sel_{gid}"
+            btn_key = f"today_imp_btn_{gid}"
+
+            if sel_key not in st.session_state:
+                st.session_state[sel_key] = bool(pairs) and all(
+                    (p.get("course_id"), p.get("local_folder")) in daily_sigs
+                    for p in pairs
+                )
+            selected = st.session_state[sel_key]
+
+            if is_sp:
+                pair = pairs[0] if pairs else {}
+                display_name = friendly_course_name(
+                    pair.get("course_name", group["group_name"]))
+                desc_text = f"Course: {display_name}"
+                icon_b64 = b64_pairs
+                tag_text = "Pair"
+            else:
+                n = len(pairs)
+                desc_text = f"{n} course{'s' if n != 1 else ''}"
+                icon_b64 = b64_groups
+                tag_text = "Group"
+
+            bg, border = (
+                (_CARD_SEL_BG, _CARD_SEL_BORDER) if selected
+                else (_CARD_IDLE_BG, _CARD_IDLE_BORDER)
             )
+            hover_bg, hover_border = (
+                (_CARD_SEL_HOVER_BG, _CARD_SEL_HOVER_BORDER) if selected
+                else (_CARD_IDLE_HOVER_BG, _CARD_IDLE_HOVER_BORDER)
+            )
+            check_border = "none" if selected else _CHECK_IDLE_BORDER
+            check_img_rule = (
+                f"background-image: {_IMPORT_CHECK_SVG} !important;"
+                if selected else ""
+            )
+            check_hover_border = "transparent" if selected else _CHECK_HOVER_BORDER
 
-            with st.container(border=True, key=f"today_import_item_{g_idx}"):
-                if is_sp:
-                    pair = pairs[0] if pairs else {}
-                    display_name = friendly_course_name(
-                        pair.get("course_name", group["group_name"]))
-                    title_html = (
-                        f"<img src='data:image/png;base64,{b64_pairs}' "
-                        f"style='width:24px;height:24px;vertical-align:middle;"
-                        f"margin-right:8px;margin-top:-4px;' />{esc(group['group_name'])}"
-                    )
-                    st.markdown(
-                        f"<div style='margin-bottom:10px;'>"
-                        f"<div style='display:flex; justify-content:space-between; "
-                        f"align-items:flex-start; margin-bottom:6px;'>"
-                        f"<div style='font-size:1.25rem; font-weight:600; "
-                        f"color:{theme.WHITE}; line-height:1.2;'>{title_html}</div>"
-                        f"<div style='font-size:0.75rem; color:rgba(255,255,255,0.5); "
-                        f"font-weight:500; letter-spacing:0.5px;'>Pair</div></div>"
-                        f"<div style='color:#a3a8b8; font-size:0.9rem;'>"
-                        f"Course: {esc(display_name)}</div></div>",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    n = len(pairs)
-                    title_html = (
-                        f"<img src='data:image/png;base64,{b64_groups}' "
-                        f"style='width:24px;height:24px;vertical-align:middle;"
-                        f"margin-right:8px;margin-top:-4px;' />{esc(group['group_name'])}"
-                    )
-                    st.markdown(
-                        f"<div style='margin-bottom:10px;'>"
-                        f"<div style='display:flex; justify-content:space-between; "
-                        f"align-items:flex-start;'>"
-                        f"<div style='font-size:1.25rem; font-weight:600; "
-                        f"color:{theme.WHITE}; line-height:1.2;'>{title_html}</div>"
-                        f"<div style='font-size:0.75rem; color:rgba(255,255,255,0.5); "
-                        f"font-weight:500; letter-spacing:0.5px;'>Group</div></div></div>",
-                        unsafe_allow_html=True,
-                    )
-                    with st.expander(f"{n} course{'s' if n != 1 else ''}"):
-                        st.markdown("\n".join(
-                            f"- {friendly_course_name(p.get('course_name', 'Unknown'))}"
-                            for p in pairs
-                        ) or "*No courses in this group*")
+            css_blocks.append(f"""
+            div.st-key-{btn_key} button {{
+                background-image: url('data:image/png;base64,{icon_b64}') !important;
+                background-color: {bg} !important;
+                border: 1px solid {border} !important;
+            }}
+            div.st-key-{btn_key} button:hover {{
+                background-color: {hover_bg} !important;
+                border-color: {hover_border} !important;
+            }}
+            div.st-key-{btn_key} button::after {{
+                content: "{_css_escape_content(desc_text)}" !important;
+            }}
+            div.st-key-{btn_key} button p::after {{
+                content: "{_css_escape_content(tag_text)}" !important;
+            }}
+            div.st-key-{btn_key} button::before {{
+                border: {check_border} !important;
+                background-color: transparent !important;
+                {check_img_rule}
+            }}
+            div.st-key-{btn_key} button:hover::before {{
+                border-color: {check_hover_border} !important;
+            }}
+            """)
 
-                if chk_key not in st.session_state:
-                    st.checkbox("Add to daily sync", value=fully, key=chk_key,
-                                on_change=_toggle_import_cb, args=(chk_key, pairs))
-                else:
-                    st.checkbox("Add to daily sync", key=chk_key,
-                                on_change=_toggle_import_cb, args=(chk_key, pairs))
+            with st.container(key=f"today_import_item_{g_idx}"):
+                st.button(group["group_name"], key=btn_key, use_container_width=True,
+                          on_click=_toggle_import_btn, args=(sel_key, pairs))
+
+        st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)
 
     if st.button("Done", type="primary", use_container_width=True,
                  key="today_import_done"):
@@ -426,12 +477,13 @@ def _import_courses_dialog():
 
 
 def _open_import_dialog():
-    """Clear stale checkbox state, then open the import dialog.
+    """Clear stale selection state, then open the import dialog.
 
-    Clearing ``today_imp_chk_*`` ensures every open reflects current membership
-    (Streamlit ignores a widget's ``value=`` once its key is in session_state).
+    Clearing ``today_imp_sel_*`` ensures every open recomputes membership fresh
+    from the current daily-sync set (e.g. after a card was removed via the
+    main page's "Remove" button while the dialog was closed).
     """
-    for k in [k for k in st.session_state if k.startswith("today_imp_chk_")]:
+    for k in [k for k in st.session_state if k.startswith("today_imp_sel_")]:
         st.session_state.pop(k, None)
     _import_courses_dialog()
 
@@ -547,11 +599,19 @@ def render_today_dashboard(fetch_courses_fn=None):
                 col_card, col_rm = st.columns([0.84, 0.16],
                                               vertical_alignment="center")
                 with col_card:
-                    with st.container(border=True, key=f"today_pair_card_{i}"):
-                        st.markdown(f"**Course:  {name}**")
+                    with st.container(key=f"today_pair_card_{i}"):
+                        # Title + folder rendered as ONE markdown block (single
+                        # element-container) so the two lines stack via the inner
+                        # flex `gap` and can never overlap, regardless of how
+                        # Streamlit wraps separate elements. (CLAUDE.md: combine
+                        # title + subtitle into one st.markdown call.)
                         st.markdown(
+                            f"<div class='today-pair-inner'>"
+                            f"<div class='today-pair-title'>Course:&nbsp;&nbsp;"
+                            f"{esc(name)}</div>"
                             f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
-                            f"{esc(folder)}</div>",  # audit-ignore: folder is a local path
+                            f"{esc(folder)}</div>"  # audit-ignore: folder is a local path
+                            f"</div>",
                             unsafe_allow_html=True,
                         )
                 with col_rm:
