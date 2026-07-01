@@ -52,6 +52,16 @@ _SVG_CAUGHT_UP = (
     "style='width:1.9rem;height:1.9rem;'>"
     "<path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>"
 )
+# Solid book/reader glyph - a filled silhouette with its text lines *subtracted*
+# (fill-rule evenodd punches the inner rects into holes), tinted light-grey via
+# CSS. The icon for each course chip in the collapsed daily-sync summary.
+_SVG_COURSE = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+    "fill='currentColor' class='tcs-pill-ico'>"
+    "<path fill-rule='evenodd' d='M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6"
+    "A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z"
+    "M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z'/></svg>"
+)
 
 
 # ── Built-in help card (replaces the inline 1-2-3 explainer) ────────────────
@@ -396,6 +406,7 @@ def _import_courses_dialog():
 
     with st.container(height=460, border=False, key="today_import_scroll"):
         css_blocks = []
+        cards_data = []
         for g_idx, group in selectable:
             is_sp = group.get("is_single_pair", False)
             pairs = group.get("pairs", []) or []
@@ -412,16 +423,18 @@ def _import_courses_dialog():
 
             if is_sp:
                 pair = pairs[0] if pairs else {}
-                display_name = friendly_course_name(
-                    pair.get("course_name", group["group_name"]))
-                desc_text = f"Course: {display_name}"
+                pill_names = [friendly_course_name(pair.get("course_name", group["group_name"]))]
                 icon_b64 = b64_pairs
                 tag_text = "Pair"
             else:
-                n = len(pairs)
-                desc_text = f"{n} course{'s' if n != 1 else ''}"
+                pill_names = [
+                    friendly_course_name(p.get("course_name", ""))
+                    for p in pairs if p.get("course_name")
+                ]
                 icon_b64 = b64_groups
                 tag_text = "Group"
+
+            cards_data.append({"key": btn_key, "pills": pill_names, "selected": selected})
 
             bg, border = (
                 (_CARD_SEL_BG, _CARD_SEL_BORDER) if selected
@@ -448,9 +461,6 @@ def _import_courses_dialog():
                 background-color: {hover_bg} !important;
                 border-color: {hover_border} !important;
             }}
-            div.st-key-{btn_key} button::after {{
-                content: "{_css_escape_content(desc_text)}" !important;
-            }}
             div.st-key-{btn_key} button p::after {{
                 content: "{_css_escape_content(tag_text)}" !important;
             }}
@@ -469,11 +479,84 @@ def _import_courses_dialog():
                           on_click=_toggle_import_btn, args=(sel_key, pairs))
 
         st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)
+        _inject_import_pills_bridge(cards_data)
 
     if st.button("Done", type="primary", use_container_width=True,
                  key="today_import_done"):
         st.session_state["today_toast"] = "Daily sync updated."
         st.rerun(scope="app")
+
+
+def _inject_import_pills_bridge(cards_data: list[dict]) -> None:
+    """Inject pill <span> DOM elements for course names into each import card button.
+
+    CSS ::after can only render plain text, so actual pill styling (background,
+    border, border-radius) requires real DOM elements. This bridge reaches into
+    window.parent.document (same-origin) and appends a flex row of pill spans
+    inside each card's <button>. Re-binding on every rerun is intentional - see
+    CLAUDE.md JS bridge rules.
+    """
+    import json
+    import streamlit.components.v1 as components
+
+    cards_json = json.dumps(cards_data)
+    components.html(f"""<script>
+(function() {{
+    var doc = window.parent.document;
+    var cards = {cards_json};
+    var CLS = 'today-imp-pill-row';
+    var PILL_BASE = [
+        'display:inline-block',
+        'border-radius:4px',
+        'padding:0px 5px',
+        'font-size:0.75rem',
+        'font-weight:400',
+        'color:rgba(255,255,255,0.78)',
+        'white-space:nowrap',
+        'pointer-events:none',
+        'font-family:inherit',
+    ].join(';');
+    var PILL_IDLE = PILL_BASE + ';background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18)';
+    var PILL_SEL  = PILL_BASE + ';background:rgba(0,0,0,0.30);border:1px solid rgba(255,255,255,0.30)';
+    var ROW = [
+        'display:flex',
+        'flex-wrap:wrap',
+        'gap:4px',
+        'margin-top:4px',
+        'pointer-events:none',
+        'width:100%',
+    ].join(';');
+
+    function inject() {{
+        cards.forEach(function(card) {{
+            var btn = doc.querySelector('div.st-key-' + card.key + ' button');
+            if (!btn) return;
+            var old = btn.querySelector('.' + CLS);
+            if (old) old.remove();
+            if (!card.pills || !card.pills.length) return;
+            var row = doc.createElement('div');
+            row.className = CLS;
+            row.setAttribute('style', ROW);
+            var label = doc.createElement('span');
+            label.setAttribute('style', 'font-size:0.75rem;font-weight:400;color:rgba(255,255,255,0.78);white-space:nowrap;pointer-events:none;font-family:inherit;align-self:center');
+            label.textContent = card.pills.length === 1 ? 'Course:' : 'Courses:';
+            row.appendChild(label);
+            var pillStyle = card.selected ? PILL_SEL : PILL_IDLE;
+            card.pills.forEach(function(name) {{
+                var pill = doc.createElement('span');
+                pill.setAttribute('style', pillStyle);
+                pill.textContent = name;
+                row.appendChild(pill);
+            }});
+            btn.appendChild(row);
+        }});
+    }}
+
+    inject();
+    setTimeout(inject, 80);
+    setTimeout(inject, 280);
+}})();
+</script>""", height=0)
 
 
 def _open_import_dialog():
@@ -494,6 +577,29 @@ def _remove_daily_pair_cb(course_id, local_folder, name):
     from core.today_store import remove_today_pair
     remove_today_pair(course_id, local_folder)
     st.session_state["today_toast"] = f"Removed '{name}' from your daily sync."
+
+
+def _render_course_chips(pairs: list[dict]) -> None:
+    """Render the daily-sync courses as a compact, read-only chip summary.
+
+    This is the everyday (collapsed) view: the daily-sync set is a
+    whole-semester setup that rarely changes, so the main page shows just these
+    glanceable chips instead of the full editable list. Each chip carries the
+    course's folder path as a hover ``title`` for a quick reminder without
+    cluttering the view; all editing lives behind the "Manage" toggle.
+    """
+    chips = []
+    for p in pairs:
+        name = friendly_course_name(p.get("course_name") or "Course")
+        folder = p.get("local_folder", "")
+        chips.append(
+            f"<span class='tcs-pill' title='{esc(folder)}'>"  # audit-ignore: folder is a local path
+            f"{_SVG_COURSE}<span>{esc(name)}</span></span>"  # audit-ignore: static SVG constant
+        )
+    st.markdown(
+        f"<div class='today-courses-summary'>{''.join(chips)}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 # ── Page ────────────────────────────────────────────────────────────────────
@@ -567,13 +673,13 @@ def render_today_dashboard(fetch_courses_fn=None):
         )
 
     # ── Courses in your daily sync ──────────────────────────────────────────
-    st.markdown(
-        "<div class='today-section-label'>Courses in your daily sync</div>"
-        "<div class='today-section-sub'>Kept up to date automatically. Imported "
-        "from your Saved Groups &amp; Pairs.</div>",
-        unsafe_allow_html=True,
-    )
-
+    # Day-to-day this list never changes (it's a whole-semester setup), so the
+    # main view shows only a compact, read-only chip summary of the courses.
+    # The full management UI - the editable list with Remove + the Add courses
+    # dialog - lives "a layer deeper", revealed inline by the "Manage" toggle.
+    # Add courses stays a dialog opened from the revealed layer, so it's never
+    # nested inside another dialog (which would crash Streamlit).
+    #
     # Pairs whose folder is missing/moved are proactively hidden from the list so
     # they never get in the way. No notice here - the user can only add courses via
     # the import dialog, which already explains any hidden (issue) entries there.
@@ -581,8 +687,43 @@ def render_today_dashboard(fetch_courses_fn=None):
         p for p in daily_pairs
         if p.get("local_folder") and Path(p["local_folder"]).exists()
     ]
+    has_courses = bool(visible_pairs)
+    manage_open = st.session_state.get("today_manage_open", False)
 
-    if not visible_pairs:
+    # Header row: section label (+ live count) ........ Manage / Done toggle.
+    # The toggle is a compact, right-aligned control (content-sized, not a full
+    # bar) styled like the Sync UI "Edit" action button, so it reads as *the*
+    # control for the courses list below it.
+    with st.container(key="today_courses_head"):
+        c_lbl, c_btn = st.columns([0.7, 0.3], vertical_alignment="center")
+        with c_lbl:
+            count_badge = (
+                f"<span class='tcs-count'>{len(visible_pairs)}</span>"
+                if has_courses else ""
+            )
+            st.markdown(
+                f"<div class='today-section-label'>Courses in your daily sync"
+                f"{count_badge}</div>"  # audit-ignore: static HTML wrapping an int count
+                f"<div class='today-section-sub'>Kept up to date automatically. "
+                f"Imported from your Saved Groups &amp; Pairs.</div>",
+                unsafe_allow_html=True,
+            )
+        with c_btn:
+            # The toggle only makes sense when there's a summary to collapse into.
+            if has_courses and not manage_open:
+                if st.button("Manage", key="today_manage_btn",
+                             use_container_width=False):
+                    st.session_state["today_manage_open"] = True
+                    st.rerun()
+            elif has_courses and manage_open:
+                if st.button("Done", key="today_manage_done_btn",
+                             use_container_width=False):
+                    st.session_state["today_manage_open"] = False
+                    st.rerun()
+
+    if not has_courses:
+        # No courses yet - skip the summary/collapse and offer a direct CTA so
+        # first-time setup is a single click away.
         st.markdown(
             f"<div class='today-empty'>"
             f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
@@ -591,7 +732,14 @@ def render_today_dashboard(fetch_courses_fn=None):
             f"pairs or groups.</div></div>",
             unsafe_allow_html=True,
         )
+        if st.button("Add courses", use_container_width=True,
+                     key="today_add_courses_btn"):
+            _open_import_dialog()
+    elif not manage_open:
+        # COLLAPSED (the day-to-day view) - elegant, glanceable read-only chips.
+        _render_course_chips(visible_pairs)
     else:
+        # EXPANDED (the management layer) - editable list + Add courses dialog.
         with st.container(border=True, key="today_list_outline"):
             for i, pair in enumerate(visible_pairs):
                 folder = pair.get("local_folder", "")
@@ -620,22 +768,30 @@ def render_today_dashboard(fetch_courses_fn=None):
                         on_click=_remove_daily_pair_cb,
                         args=(pair.get("course_id"), folder, name),
                     )
-
-    # ── Add courses + Quick Sync now ────────────────────────────────────────
-    col_add, col_sync = st.columns([1, 1])
-    with col_add:
         if st.button("Add courses", use_container_width=True,
                      key="today_add_courses_btn"):
             _open_import_dialog()
-    with col_sync:
-        runnable = resolve_today_pairs()
+
+    # ── Quick Sync now - an optional, on-demand manual run ──────────────────
+    # Auto-sync (toggle above) is the primary, hands-off path, so this is framed
+    # and sized as a secondary "run it yourself now" choice: a lead-in line sets
+    # the expectation, and the button is deliberately narrower + centred rather
+    # than a full-bleed primary action.
+    st.markdown(
+        "<div class='today-qs-lead'>Auto-sync keeps these up to date for you "
+        "each morning &mdash; or run it yourself right now:</div>",
+        unsafe_allow_html=True,
+    )
+    runnable = resolve_today_pairs()
+    _qs_l, _qs_c, _qs_r = st.columns([2, 3, 2])
+    with _qs_c:
         if st.button("Quick Sync now", type="primary", use_container_width=True,
                      key="today_sync_now_btn", disabled=not runnable):
             start_today_sync(runnable)  # sets state + st.rerun()
 
     st.markdown(
         "<div class='today-qs-note'>Runs the same <b>Quick Sync</b> as "
-        "\"Sync Course Folders\", over just your daily courses.</div>",
+        "\"Sync Course Folders\", on demand &ndash; over just your daily courses.</div>",
         unsafe_allow_html=True,
     )
 
