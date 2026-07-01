@@ -337,12 +337,12 @@ def run_sync():
     # hidden container (see placeholder creation below).
     _today_minimal = st.session_state.get('today_sync_active', False)
 
-    # Step wizard
+    # Step wizard. In Today mode the surrounding in-page card already shows the
+    # "Running daily sync / Quick Sync" title + phase description, so no wizard or
+    # duplicate step-header here - just the slim status line + progress bar below.
     if not _today_minimal:
         render_sync_wizard(st, 3)
         st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
-    else:
-        st.markdown('<h2 class="step-header">Daily sync in progress…</h2>', unsafe_allow_html=True)
 
     # First-run macOS permission batch is in flight: tell the user the upcoming
     # system dialogs are expected and one-time (mirrors the download flow).
@@ -396,7 +396,12 @@ def run_sync():
         st.session_state.pop('sync_worker_result', None)
 
         # Smart routing:
-        if st.session_state.get('qs_cancel_route', False):
+        if _today_minimal:
+            # Today dashboard run: hand back to render_sync_step4's today handler
+            # (status == 'sync_cancelled'), which cleans up and returns to the
+            # idle Today page. Keep step==4 so that handler is reached.
+            st.session_state['download_status'] = 'sync_cancelled'
+        elif st.session_state.get('qs_cancel_route', False):
             st.session_state['step'] = 1
             st.session_state['download_status'] = 'select'
             st.session_state.pop('qs_cancel_route', None)
@@ -405,7 +410,7 @@ def run_sync():
             # sub-states).  Previous code sent users to step=2 which is
             # the Download Settings page - wrong mode entirely.
             st.session_state['download_status'] = 'sync_cancelled'
-            
+
         st.rerun()
 
     # --- Inject red hover CSS for cancel buttons (dynamic - requires theme vars) ---
