@@ -350,8 +350,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # cleanup_sync_state(), preventing silent self-abort on the first check.
     reset_sync_cancel()
 
+    # Today dashboard hosts this inside its own titled progress card, so skip the
+    # full step wizard (the card + its slim bar are the only chrome there).
+    _today_minimal = st.session_state.get('today_sync_active', False)
+
     # Step wizard
-    render_sync_wizard(st, 2)
+    if not _today_minimal:
+        render_sync_wizard(st, 2)
 
     # Check if only syncing a single pair
     # L-2: Rename filtered subset to pairs_to_analyze so subsequent code
@@ -467,6 +472,25 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 if is_sync_cancelled():
                     return
                 percent = int((current / total) * 100) if total > 0 else 0
+                if _today_minimal:
+                    # Today dashboard: the surrounding card already shows the
+                    # title + phase description, so render only a slim course
+                    # line + an animated bar (the analysis sub-steps mostly
+                    # report total=1, so an indeterminate sweep reads better
+                    # than a bar frozen near 0%).
+                    from engine.progress_dashboard import build_progress_bar_html
+                    _course_line = (
+                        f"Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b>"
+                        if total_pairs > 1 else f"<b>{esc(_display_name)}</b>"
+                    )
+                    analysis_ui_placeholder.markdown(
+                        f"<div style='color:{theme.TEXT_SECONDARY};font-size:0.85rem;"
+                        f"margin-bottom:8px;'>{_course_line} &middot; {esc(status_text)}</div>"
+                        + build_progress_bar_html(0, indeterminate=True, label="Analyzing…"),
+                        unsafe_allow_html=True,
+                    )
+                    time.sleep(0.05)
+                    return
                 analysis_ui_placeholder.markdown(f"""
                 <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
                     <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>

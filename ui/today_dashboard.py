@@ -10,10 +10,13 @@ A daily home that:
   5. shows "today's files" downloaded, grouped per course (reusing the same
      interactive folder-card component as the sync-complete screen).
 
-The actual syncing reuses the existing Quick Sync engine via core.auto_sync; this
-module only renders the dashboard and kicks the wrapper off. While a daily sync is
-running the app is on step 4 (render_sync_step4) showing a slim progress bar - the
-user is routed back here on completion.
+The actual syncing reuses the existing Quick Sync engine via core.auto_sync. While
+a daily/Quick Sync is running the app is on step 4, but it stays IN-PAGE: this
+module re-renders the header + toggle and hosts the sync engine
+(render_sync_step4) inside a slim "Running daily sync / Quick Sync" progress card
+below the toggle (see ``_render_today_running_sync``), rather than the engine
+taking over the whole screen. The engine, seeing ``today_sync_active``, renders a
+slimmed view and routes back to this idle dashboard on completion / cancel.
 """
 
 from __future__ import annotations
@@ -602,16 +605,81 @@ def _render_course_chips(pairs: list[dict]) -> None:
     )
 
 
+# ── Running sync (in-page progress card) ────────────────────────────────────
+
+# Lucide refresh-cw glyph - the animated spinner in the running-sync card head.
+_SVG_RUN_SPINNER = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='#3fd9ff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' "
+    "class='today-run-spin'>"
+    "<path d='M21 12a9 9 0 1 1-6.219-8.56'/></svg>"
+)
+
+# Phase → (heading verb, one-line description) shown in the running-sync card.
+# Keyed by download_status so the card narrates what the engine is doing.
+_RUN_PHASE_DESC = {
+    "analyzing": "Checking your courses for new files…",
+    "analyzed":  "Reviewing changes…",
+    "pre_sync":  "Getting your download ready…",
+    "syncing":   "Downloading new files…",
+    "sync_panopto": "Fetching lecture recordings…",
+}
+
+
+def _render_today_running_sync() -> None:
+    """Render the in-page sync progress card and drive the sync engine inside it.
+
+    The card owns the title + phase description; the engine (render_sync_step4)
+    is called *inside* the card container so every progress bar / cancel button
+    it emits lands here rather than taking over the page. The engine, seeing
+    ``today_sync_active``, renders a slimmed view (no wizard, no metrics/log, no
+    full-screen "Analyzing…" blocks) and routes back to the idle dashboard when
+    the run completes or is cancelled.
+    """
+    from sync_ui import render_sync_step4
+
+    is_auto = st.session_state.get("today_sync_is_auto", False)
+    status = st.session_state.get("download_status", "")
+    title = "Running daily sync" if is_auto else "Running Quick Sync"
+    desc = _RUN_PHASE_DESC.get(status, "Working…")
+
+    with st.container(key="today_running_card"):
+        st.markdown(
+            f"<div class='today-run-head'>{_SVG_RUN_SPINNER}"  # audit-ignore: static SVG constant
+            f"<span class='today-run-title'>{esc(title)}</span></div>"
+            f"<div class='today-run-desc'>{esc(desc)}</div>",
+            unsafe_allow_html=True,
+        )
+        # Drive the shared sync engine; its slim (today) UI renders below.
+        render_sync_step4()
+
+
 # ── Page ────────────────────────────────────────────────────────────────────
 
 def render_today_dashboard(fetch_courses_fn=None):
-    """Render the Today dashboard page (current_mode == 'today', step == 1)."""
+    """Render the Today dashboard page.
+
+    Two states:
+      * idle (step 1)      - the full dashboard (toggle, courses, Quick Sync,
+                             today's files).
+      * running (step 4)   - a daily/Quick Sync is in flight; the page renders
+                             the header + toggle, then an in-page progress card
+                             that hosts the sync engine (see
+                             ``_render_today_running_sync``). The rest of the
+                             dashboard is hidden until the run finishes.
+    """
     from core.today_store import load_today_config, set_auto_sync_enabled
     from core.auto_sync import resolve_today_pairs, start_today_sync
 
-    # We're on the dashboard, so any prior daily run (incl. a cancelled one that
-    # routed back via qs_cancel_route) is over - clear the slim-UI marker.
-    st.session_state.pop("today_sync_active", None)
+    # A daily/Quick Sync launched from this page routes back here at step==4 with
+    # today_sync_active set, so the run can surface IN-PAGE. Any other entry means
+    # a prior run (incl. a cancelled one) is over - clear the slim-UI marker.
+    sync_running = bool(
+        st.session_state.get("today_sync_active")
+        and st.session_state.get("step") == 4
+    )
+    if not sync_running:
+        st.session_state.pop("today_sync_active", None)
 
     inject_css("today.css")
     _inject_dynamic_css()
@@ -671,6 +739,15 @@ def render_today_dashboard(fetch_courses_fn=None):
             "first time you open Canvas Downloader each day (after 4 AM).</div>",
             unsafe_allow_html=True,
         )
+
+    # ── Running sync (in-page) ──────────────────────────────────────────────
+    # A daily/Quick Sync is in flight: surface it as a slim progress card right
+    # here, below the toggle, instead of the sync engine taking over the whole
+    # screen. The rest of the dashboard is hidden until the run finishes (the
+    # engine routes back to the idle view on completion / cancel).
+    if sync_running:
+        _render_today_running_sync()
+        return
 
     # ── Courses in your daily sync ──────────────────────────────────────────
     # Day-to-day this list never changes (it's a whole-semester setup), so the

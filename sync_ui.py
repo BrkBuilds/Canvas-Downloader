@@ -2454,12 +2454,14 @@ def render_sync_step4( main_placeholder=None):
         status = 'sync_complete'
 
     # Daily auto-sync (Today dashboard): the sync ran with a slim progress bar and
-    # has now finished. Skip the full sync-complete screen and route back to the
-    # Today page, which shows "today's files" per course from sync history (already
-    # written during run_sync). cleanup_sync_state() clears transient sync state.
-    if st.session_state.get('today_sync_active') and status == 'sync_complete':
+    # has now finished (or was cancelled). Skip the full sync-complete/cancelled
+    # screen and route back to the Today page, which shows "today's files" per
+    # course from sync history (already written during run_sync).
+    # cleanup_sync_state() clears transient sync state and sets step = 1.
+    if st.session_state.get('today_sync_active') and status in ('sync_complete', 'sync_cancelled'):
         from core.state_registry import cleanup_sync_state
         st.session_state.pop('today_sync_active', None)
+        st.session_state.pop('today_sync_is_auto', None)
         cleanup_sync_state()  # sets step = 1, clears transient sync keys
         st.session_state['current_mode'] = 'today'
         st.rerun()
@@ -2468,6 +2470,25 @@ def render_sync_step4( main_placeholder=None):
         current_pass = st.session_state.get('analysis_pass', 1)
 
         if current_pass == 1:
+            if st.session_state.get('today_sync_active'):
+                # Today dashboard hosts this inside its own titled card: draw a
+                # slim animated bar, then advance DETERMINISTICALLY on the server
+                # (a short sleep flushes the paint, then st.rerun). We never rely
+                # on a browser JS click here - on a cold first-open (exactly when
+                # the daily auto-sync fires) that click can silently never run,
+                # stranding the page on this screen with no way forward.
+                import time as _time
+                from engine.progress_dashboard import build_progress_bar_html
+                st.markdown(
+                    build_progress_bar_html(0, indeterminate=True, label="Preparing…"),
+                    unsafe_allow_html=True,
+                )
+                _time.sleep(0.35)
+                st.session_state['analysis_pass'] = 2
+                st.session_state.pop('analysis_pass1_started_at', None)
+                st.rerun()
+
+            # ── Regular sync (full-page) - proven two-pass paint dance ──────────
             # M-7: Server-side fallback - if JS click never fires (CSP, iframe
             # sandbox, screen-reader nav), force-advance to pass 2 after 5s.
             import time as _time
@@ -2477,6 +2498,14 @@ def render_sync_step4( main_placeholder=None):
                 st.session_state['analysis_pass'] = 2
                 st.session_state.pop('analysis_pass1_started_at', None)
                 st.rerun()
+            # Hide the auto-advance trigger button from the FIRST paint (no flash)
+            # by keyed CSS, injected before the button renders. Previously the
+            # button was only hidden by JS *after* paint, so it flickered visibly
+            # for a frame on every analysis run.
+            st.markdown(
+                '<style>div.st-key-hidden_pass2_trigger{display:none !important;}</style>',
+                unsafe_allow_html=True,
+            )
             # 1. ALWAYS DRAW THE BASE UI FIRST
             st.markdown(f"""
             <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
@@ -2487,13 +2516,13 @@ def render_sync_step4( main_placeholder=None):
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # The target button
+
+            # The target button (visually hidden above; still clickable via JS)
             if st.button("START_PASS_2_NOW", key="hidden_pass2_trigger"):
                 st.session_state['analysis_pass'] = 2
                 st.rerun()
-                
-            # JS Auto-hider and clicker
+
+            # JS auto-clicker (after a brief paint delay)
             import streamlit.components.v1 as components
             components.html("""
             <script>
@@ -2501,11 +2530,8 @@ def render_sync_step4( main_placeholder=None):
             var buttons = Array.from(doc.querySelectorAll('button'));
             var target = buttons.find(b => b.innerText.includes('START_PASS_2_NOW'));
             if(target) {
-                // Find Streamlit's outer button wrapper and hide it instantly
                 var wrapper = target.closest('div[data-testid="stButton"]');
                 if(wrapper) { wrapper.style.display = 'none'; }
-                
-                // Click after a brief paint delay
                 setTimeout(() => target.click(), 100);
             }
             </script>
@@ -2525,6 +2551,24 @@ def render_sync_step4( main_placeholder=None):
     elif status == 'analyzed':
         _show_analysis_review()
     elif status == 'pre_sync':
+        if st.session_state.get('today_sync_active'):
+            # Today dashboard hosts this inside its own titled card: slim bar +
+            # deterministic server-side advance (no dependency on a browser JS
+            # click, which can silently fail on a cold first-open). The short
+            # sleep also flushes the paint. There is no confirmation dialog to
+            # tear down in the Today Quick Sync path.
+            import time as _ps_time
+            from engine.progress_dashboard import build_progress_bar_html
+            st.markdown(
+                build_progress_bar_html(0, indeterminate=True, label="Getting ready…"),
+                unsafe_allow_html=True,
+            )
+            _ps_time.sleep(0.35)
+            st.session_state.pop('pre_sync_started_at', None)
+            st.session_state['download_status'] = 'syncing'
+            st.rerun()
+
+        # ── Regular sync (full-page) ────────────────────────────────────────
         # Server-side fallback (parity with the analysis pass-1 fix): if the
         # JS auto-click below never fires (CSP, iframe sandbox, screen-reader
         # nav), force-advance to 'syncing' after 5s instead of stranding the
@@ -2536,6 +2580,14 @@ def render_sync_step4( main_placeholder=None):
             st.session_state.pop('pre_sync_started_at', None)
             st.session_state['download_status'] = 'syncing'
             st.rerun()
+        # Hide the auto-advance trigger button from the first paint (no flash) via
+        # keyed CSS. (The old `display:none` wrapper <div>s never actually
+        # contained the button - Streamlit renders it in its own element-container -
+        # so it flickered for a frame.)
+        st.markdown(
+            '<style>div.st-key-hidden_trigger_sync{display:none !important;}</style>',
+            unsafe_allow_html=True,
+        )
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
         # We must let this render loop FINISH completely so the frontend can tear down the `st.dialog` DOM elements.
         # Otherwise, if we immediately string together long-running tasks or `st.rerun()`, the Streamlit backend
@@ -2554,14 +2606,12 @@ def render_sync_step4( main_placeholder=None):
         }, 200);
         </script>
         """, height=0)
-        
-        # Hidden button to catch the JS click
-        st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
+
+        # Hidden button to catch the JS click (visually hidden by CSS above).
         if st.button("START_SYNC_ROUTINE_NOW", key="hidden_trigger_sync"):
             st.session_state.pop('pre_sync_started_at', None)
             st.session_state['download_status'] = 'syncing'
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     elif status == 'syncing':
         _run_sync()
@@ -2637,8 +2687,11 @@ def _run_sync_panopto():
     pan = _pan_compose(None)
     sels = st.session_state.get('sync_selections') or []
 
-    _wizard(st, 3)
-    st.markdown('<h2 class="step-header">Panopto Recordings</h2>', unsafe_allow_html=True)
+    # Today dashboard hosts this inside its own titled progress card, so drop the
+    # step wizard + big "Panopto Recordings" header (the card narrates the phase).
+    if not st.session_state.get('today_sync_active'):
+        _wizard(st, 3)
+        st.markdown('<h2 class="step-header">Panopto Recordings</h2>', unsafe_allow_html=True)
 
     # Cancel re-entry guard (a cancel raises RerunException at a render call).
     if is_sync_cancelled():
