@@ -180,7 +180,9 @@ SYNC_TRANSIENT_KEYS = {
     'sync_cancelled_file_count', 'sync_errors', 'sync_quick_mode',
     'sync_single_pair_idx', 'sync_confirm_count', 'sync_confirm_size',
     'sync_confirm_folders', 'is_post_processing',
-    'retry_selections', 'analysis_pass',
+    'retry_selections', 'analysis_pass', 'analysis_pass1_started_at',
+    # Today dashboard (in-page daily/Quick Sync) run markers.
+    'today_sync_active', 'today_sync_is_auto',
     'size_skipped_files', 'sync_has_ignored_files',
     # sync_failed recovery keys
     'sync_worker_error', 'qs_cancel_route', 'qs_skipped',

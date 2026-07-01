@@ -108,6 +108,9 @@ div.st-key-today_manage_done_btn button {
     font-size: 0.98rem !important;
     font-weight: 600 !important;
     transition: all 0.2s ease !important;
+    /* Vertically centre the label block within the fixed-height button. */
+    align-items: center !important;
+    justify-content: center !important;
 }
 div.st-key-today_manage_btn button:hover,
 div.st-key-today_manage_done_btn button:hover {
@@ -115,7 +118,16 @@ div.st-key-today_manage_done_btn button:hover {
     background-color: rgba(59, 130, 246, 0.08) !important;
     color: #ffffff !important;
 }
-/* Icon + label on one centred line. */
+/* The markdown container is the button's real flex child - centre it too, else
+   the icon+label sit slightly high of the button's vertical middle. */
+div.st-key-today_manage_btn button div[data-testid="stMarkdownContainer"],
+div.st-key-today_manage_done_btn button div[data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+/* Icon + label on one centred line. (No line-height:1 - it shrinks the line box
+   below the glyph height and reads as mis-centred; leave the default leading.) */
 div.st-key-today_manage_btn button p,
 div.st-key-today_manage_done_btn button p {
     display: inline-flex !important;
@@ -123,7 +135,6 @@ div.st-key-today_manage_done_btn button p {
     justify-content: center !important;
     gap: 9px !important;
     margin: 0 !important;
-    line-height: 1 !important;
 }
 /* Pencil glyph for "Manage", check glyph for "Done" - masked so they sit at a
    neutral light-grey at rest and turn blue on hover (matches the Edit button). */
@@ -211,6 +222,62 @@ div[class*="st-key-today_toggle_card"] label p {
     line-height: 1.5;
     margin-top: -12px !important;
     margin-bottom: 0px !important;
+}
+
+/* ── Running-sync card (in-page daily/Quick Sync progress) ───────────────────
+   Rendered below the toggle while a sync is in flight. Hosts the shared sync
+   engine's slim output (progress bar + cancel), fronted by a title + phase
+   description this card owns. Matches the toggle card's surface. */
+div[class*="st-key-today_running_card"] {
+    background: #1A1D27;
+    border: 1px solid #2D3248;
+    border-radius: 12px;
+    padding: 18px 20px 20px 20px !important;
+    margin-top: 14px;
+}
+.today-run-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.today-run-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #FFFFFF;
+}
+.today-run-spin {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    animation: today-run-spin 0.9s linear infinite;
+    transform-origin: 50% 50%;
+}
+@keyframes today-run-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.today-run-desc {
+    color: #9aa1b3;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 14px 0;
+}
+/* Cancel button inside the card: compact, content-sized, secondary.
+   (The engine's status header + progress bar render via st.html() shadow roots,
+   so they carry their own inline styles and are not reachable from here.) */
+div[class*="st-key-today_running_card"] div[class*="st-key-cancel_"] {
+    display: flex !important;
+    justify-content: flex-start !important;
+}
+div[class*="st-key-today_running_card"] div[class*="st-key-cancel_"] button {
+    width: auto !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 9px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
 }
 
 /* ── Daily-sync list: outlined box wrapping the pair cards ─ */
@@ -359,6 +426,22 @@ div.st-key-today_sync_now_btn button {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     width: 100% !important;
+    /* Vertically centre the icon + label (see the icon+text recipe in CLAUDE.md:
+       flex the whole chain button -> markdown container -> p, else the content
+       sits above the button's true middle). */
+    align-items: center !important;
+    justify-content: center !important;
+}
+div.st-key-today_sync_now_btn button div[data-testid="stMarkdownContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+div.st-key-today_sync_now_btn button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
 }
 /* Lead-in above Quick Sync - frames it as the optional "run it yourself" path
    (auto-sync being the primary, hands-off one). */
