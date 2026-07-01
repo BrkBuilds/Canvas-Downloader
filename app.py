@@ -632,7 +632,7 @@ if not st.session_state.get('_auto_sync_checked'):
         try:
             from core.auto_sync import should_auto_sync, start_today_sync
             if should_auto_sync():
-                start_today_sync()  # sets state + st.rerun(); never falls through
+                start_today_sync(is_auto=True)  # sets state + st.rerun(); never falls through
         except Exception:
             logger.warning("Daily auto-sync launch check failed", exc_info=True)
 
@@ -2314,4 +2314,12 @@ with _main_content.container():
 
     # STEP 4: SYNC ANALYSIS (Only shown when current_mode is 'sync')
     elif st.session_state['step'] == 4:
-        render_sync_step4()
+        # Daily/Quick Sync launched from the Today page runs IN-PAGE: the Today
+        # dashboard hosts the run as a slim progress card below the auto-sync
+        # toggle, instead of the sync engine taking over the whole screen. It
+        # drives the very same engine (render_sync_step4) inside that card.
+        if st.session_state.get('today_sync_active'):
+            from ui.today_dashboard import render_today_dashboard
+            render_today_dashboard(fetch_courses)
+        else:
+            render_sync_step4()

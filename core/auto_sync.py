@@ -53,9 +53,13 @@ def should_auto_sync() -> bool:
     return bool(resolve_today_pairs())
 
 
-def start_today_sync(pairs: list[dict] | None = None) -> None:
+def start_today_sync(pairs: list[dict] | None = None, is_auto: bool = False) -> None:
     """Kick off a headless Quick Sync over *pairs* and route to the slim Today
     progress view. Calls ``st.rerun()`` so it never falls through.
+
+    ``is_auto`` distinguishes the hands-off daily auto-sync (launch hook) from a
+    user-initiated "Quick Sync now" click, purely so the in-page progress card can
+    title itself "Running daily sync" vs "Running Quick Sync".
 
     Marks today's logical date IMMEDIATELY (before the run) so a crash or a
     window-close mid-sync can never re-trigger the daily run again the same day.
@@ -74,6 +78,7 @@ def start_today_sync(pairs: list[dict] | None = None) -> None:
     st.session_state["sync_pairs_loaded"] = True
     st.session_state["sync_mode"] = True
     st.session_state["today_sync_active"] = True
+    st.session_state["today_sync_is_auto"] = bool(is_auto)
     # Keep the Today nav highlighted during the run; step==4 dispatch in app.py is
     # mode-independent, so render_sync_step4 still drives the sync engine.
     st.session_state["current_mode"] = "today"
