@@ -628,6 +628,15 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
     if not has_files:
         return
 
+    # This card's markup (folder header, filetype pills, per-file icons) is
+    # styled entirely by completion.css. On the completion/sync screens it is
+    # already injected by render_completion_card/render_download_stats, but the
+    # Today page calls render_folder_cards standalone - so inject it here to make
+    # the component self-sufficient. Without this, .ft-icon has no width/height
+    # rule and every filetype icon renders at natural (full-width) size.
+    from styles import inject_css
+    inject_css('completion.css')
+
     if file_records:
         inject_file_action_css()
 

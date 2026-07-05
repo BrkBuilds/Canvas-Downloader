@@ -58,6 +58,47 @@ def cancel_sync() -> None:
 
 
 # ═══════════════════════════════════════════════
+# In-Progress Detection (used to lock navigation)
+# ═══════════════════════════════════════════════
+
+# ``download_status`` values that represent an ACTIVE, uninterruptible run. The
+# field is shared between the download and sync flows; the two value-sets are
+# disjoint so a single membership test is unambiguous.
+#   download: scanning → running → (isolated_retry) → (panopto) → done/cancelled
+#   sync:     analyzing → (pre_sync) → syncing → (sync_panopto) → sync_complete/…
+# Interstitial decision screens are deliberately EXCLUDED so the user is never
+# trapped on them: 'analyzed' (the sync review screen) and 'done'/'cancelled'/
+# 'sync_complete'/'sync_cancelled' (terminal screens).
+_IN_PROGRESS_DOWNLOAD_STATUSES = {'scanning', 'running', 'isolated_retry', 'panopto'}
+_IN_PROGRESS_SYNC_STATUSES = {'analyzing', 'pre_sync', 'syncing', 'sync_panopto'}
+IN_PROGRESS_STATUSES = _IN_PROGRESS_DOWNLOAD_STATUSES | _IN_PROGRESS_SYNC_STATUSES
+
+
+def is_operation_in_progress() -> bool:
+    """True while a download or sync is actively running (execution or post-processing).
+
+    The app is single-operation: during a run the script thread is blocked in the
+    download loop or the sync heartbeat loop, and a background worker may be
+    writing files to disk. Switching modes, opening Settings, or logging out
+    mid-run would orphan that worker and silently discard all progress (see the
+    ``cleanup_download_state``/``cleanup_sync_state`` calls in the sidebar nav).
+    This predicate lets the sidebar lock every navigation control for the duration
+    of the run, leaving the operation's own Cancel button as the single, deliberate
+    way out.
+
+    Terminal and review screens are excluded (see ``IN_PROGRESS_STATUSES``) so the
+    user is never trapped after a run finishes. A browser refresh also clears the
+    lock: ``download_status`` is transient and is never restored from query params.
+    """
+    try:
+        if st.session_state.get('download_status') in IN_PROGRESS_STATUSES:
+            return True
+        return bool(st.session_state.get('is_post_processing'))
+    except Exception:
+        return False
+
+
+# ═══════════════════════════════════════════════
 # Cancellation Checkers (polled during execution)
 # ═══════════════════════════════════════════════
 

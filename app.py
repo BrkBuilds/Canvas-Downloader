@@ -256,6 +256,7 @@ components.html("""<script>
     // overlay does NOT flash on every checkbox or card expand.
     var NAV_SEL=[
         'div[class*="st-key-page_nav_"]',         // Continue, Back, Yes Start Sync, Go to front page (all variants)
+        'div[class*="st-key-nav_btn_today"]',     // sidebar: Today dashboard
         'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
         'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Course Folders
         'div[class*="st-key-nav_btn_panopto"]',   // sidebar: Panopto Recordings
@@ -278,12 +279,12 @@ components.html("""<script>
             
             // Sidebar nav buttons: skip overlay when already at the target mode's
             // step 1 (clicking would cause a no-op rerun with no page change).
-            if(btn.matches('div[class*="st-key-nav_btn_download"]')||btn.matches('div[class*="st-key-nav_btn_sync"]')){
+            if(btn.matches('div[class*="st-key-nav_btn_download"]')||btn.matches('div[class*="st-key-nav_btn_sync"]')||btn.matches('div[class*="st-key-nav_btn_today"]')){
                 var stEl=doc.getElementById('cdp_nav_state');
                 if(stEl){
                     var curMode=stEl.getAttribute('data-mode')||'';
                     var curStep=parseInt(stEl.getAttribute('data-step')||'0',10);
-                    var tMode=btn.matches('div[class*="st-key-nav_btn_download"]')?'download':'sync';
+                    var tMode=btn.matches('div[class*="st-key-nav_btn_download"]')?'download':(btn.matches('div[class*="st-key-nav_btn_sync"]')?'sync':'today');
                     if(curMode===tMode&&curStep===1)return;
                 }
             }
