@@ -261,6 +261,75 @@ def _todays_groups() -> list[dict]:
     return out
 
 
+# Collapse chevron for the per-course cards (rotates 90deg when open). Matches
+# the Sync History run cards exactly.
+_TODAY_FILES_CHEVRON = (
+    "<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' "
+    "fill='none' stroke='#8b949e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>"
+    "<polyline points='9 6 15 12 9 18'/></svg>"
+)
+
+
+def _render_today_files(groups: list[dict]) -> None:
+    """Render today's synced files as one collapsible card PER COURSE.
+
+    Reuses the Sync History "fake-expander" card shell verbatim: the shared
+    ``sync_history_cards.css`` styles any container keyed ``shist_run_*`` /
+    ``shist_body_*``, and the body is the same interactive per-file breakdown
+    (filetype icon + name + Open/Reveal + destination chip) used on the sync
+    completion and sync-history screens. This is the sync-history layout,
+    grouped by course and trimmed for the Today page (no run timestamps, a file
+    count badge instead of a run status, and the destination folder on line 2).
+    """
+    from styles import inject_css
+    from ui_helpers import short_path
+    from ui_shared import inject_file_action_css, render_course_file_breakdown
+
+    inject_file_action_css()
+    inject_css("sync_history_cards.css")
+
+    for idx, grp in enumerate(groups):
+        files = grp.get("files") or []
+        if not files:
+            continue
+        course_name = friendly_course_name(grp.get("course_name", "") or "Course")
+        local_folder = grp.get("local_folder", "") or ""
+        count = len(files)
+        count_label = f"{count} file" if count == 1 else f"{count} files"
+        dest = short_path(local_folder) if local_folder else "Course folder"
+
+        open_key = f"today_files_open_{idx}"
+        is_open = st.session_state.get(open_key, True)
+
+        header_html = (
+            "<div class='shist-card'>"
+            f"<div class='shist-chev' style='transform:rotate({90 if is_open else 0}deg);'>"
+            f"{_TODAY_FILES_CHEVRON}</div>"  # audit-ignore: static SVG constant
+            "<div class='shist-info'>"
+            "<div class='shist-l1'>"
+            f"<span class='shist-title'>{esc(course_name)}</span>"
+            "<span class='shist-badge' style='color:#34d399;background:rgba(52,211,153,0.1);"
+            f"border-color:rgba(52,211,153,0.2);'>{esc(count_label)}</span>"
+            "</div>"
+            "<div class='shist-l2'>"
+            f"<span class='shist-mode'>{SVG_FOLDER_YELLOW} {esc(dest)}</span>"  # audit-ignore: static SVG constant
+            "</div>"
+            "</div>"
+            "</div>"
+        )
+
+        with st.container(border=True, key=f"shist_run_today_{idx}"):
+            if st.button("​", key=f"shist_btn_today_{idx}", use_container_width=True):
+                st.session_state[open_key] = not is_open
+                st.rerun()
+            st.markdown(header_html, unsafe_allow_html=True)
+            if is_open:
+                with st.container(border=True, key=f"shist_body_today_{idx}"):
+                    render_course_file_breakdown(
+                        files, local_folder, key_scope=f"today_{idx}",
+                    )
+
+
 # ── Import-from-hub dialog ──────────────────────────────────────────────────
 
 def _css_escape_content(text: str) -> str:
@@ -892,20 +961,4 @@ def render_today_dashboard(fetch_courses_fn=None):
         )
         return
 
-    from ui_shared import render_folder_cards
-    file_details: dict = {}
-    folder_paths: dict = {}
-    file_records: dict = {}
-    for idx, grp in enumerate(groups):
-        # Unique key per course (suffix the index so duplicate display names
-        # across folders never collide).
-        f_key = f"{friendly_course_name(grp['course_name'])} ({idx})"
-        file_details[f_key] = [r.get("name", "") for r in grp["files"]]
-        folder_paths[f_key] = grp["local_folder"]
-        file_records[f_key] = grp["files"]
-
-    render_folder_cards(
-        file_details, folder_paths,
-        key_prefix="today", show_files_expander=True,
-        file_records=file_records,
-    )
+    _render_today_files(groups)

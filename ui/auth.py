@@ -1643,6 +1643,13 @@ def _render_authenticated_nav_top():
     mode = st.session_state.get('current_mode', 'download')
     step = st.session_state.get('step', 1)
 
+    # Lock all mode switching while a download/sync is actively running. The app
+    # is single-operation: switching modes mid-run would fire cleanup_*_state()
+    # (below), orphaning the background worker and wiping the live progress card.
+    # The running operation's own Cancel button stays the one deliberate exit.
+    from core.cancellation import is_operation_in_progress
+    _locked = is_operation_in_progress()
+
     # Expose current mode+step for the JS overlay logic (read via doc.getElementById).
     st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
 
@@ -1658,8 +1665,48 @@ def _render_authenticated_nav_top():
         section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
         </style>""")
 
+    # Disabled-state CSS (only while a run is in progress): dim the inactive nav
+    # buttons and kill their hover feedback so it's visually clear they can't be
+    # used mid-run. The CURRENT (running) mode's button is excluded from the
+    # dimming so it keeps its highlight - "you are here, and it's running".
+    if _locked:
+        _keep = f":not(.st-key-nav_btn_{mode})" if mode in ['download', 'sync', 'today'] else ""
+        st.html(f"""<style>
+        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]){_keep} button:disabled {{
+            opacity: 0.4 !important;
+        }}
+        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled {{
+            cursor: not-allowed !important;
+        }}
+        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover {{
+            background-color: transparent !important;
+        }}
+        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p {{
+            color: #9ca3af !important;
+        }}
+        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p::before {{
+            filter: brightness(0) invert(0.65) !important;
+        }}
+        /* The running mode keeps its highlight (never dimmed) but shows a plain cursor. */
+        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled {{
+            opacity: 1 !important; cursor: default !important;
+        }}
+        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover {{
+            background-color: rgba(255, 255, 255, 0.10) !important;
+        }}
+        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p {{
+            color: #ffffff !important;
+        }}
+        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p::before {{
+            filter: brightness(0) invert(1) !important;
+        }}
+        </style>""")
+
     # Today dashboard button - the daily home (auto-sync + today's files).
-    if st.button('Today', use_container_width=True, key="nav_btn_today"):
+    # `disabled=_locked` blocks the click in the browser; the extra `not _locked`
+    # guard is defense-in-depth so a click queued in the instant before the run
+    # began can never fire cleanup_*_state() and abandon the in-flight operation.
+    if st.button('Today', use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
         if mode != 'today' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
@@ -1671,7 +1718,7 @@ def _render_authenticated_nav_top():
             st.rerun()
 
     # Download mode button - always navigates to download step 1.
-    if st.button('Download Courses', use_container_width=True, key="nav_btn_download"):
+    if st.button('Download Courses', use_container_width=True, key="nav_btn_download", disabled=_locked) and not _locked:
         if mode != 'download' or step != 1:
             from core.state_registry import cleanup_download_state
             cleanup_download_state()
@@ -1682,7 +1729,7 @@ def _render_authenticated_nav_top():
             st.rerun()
 
     # Sync mode button - always navigates to sync step 1.
-    if st.button('Sync Course Folders', use_container_width=True, key="nav_btn_sync"):
+    if st.button('Sync Course Folders', use_container_width=True, key="nav_btn_sync", disabled=_locked) and not _locked:
         if mode != 'sync' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
@@ -2123,11 +2170,10 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     user_name = st.session_state.get('user_name', '')
     display_user = user_name.replace("Logged in as:", "").replace("Logged in as", "").strip()
 
-    _active_exec_statuses = {'scanning', 'running', 'isolated_retry', 'analyzing', 'syncing', 'pre_sync'}
-    _is_executing = (
-        st.session_state.get('download_status') in _active_exec_statuses
-        or bool(st.session_state.get('is_post_processing'))
-    )
+    # Single source of truth for "a run is active" - shared with the nav buttons
+    # above (see is_operation_in_progress). Locks Settings + Logout during a run.
+    from core.cancellation import is_operation_in_progress
+    _is_executing = is_operation_in_progress()
 
     with st.container(border=False, key="sidebar_bottom_block"):
         # Settings button - also auto-reopens after native folder picker closes the dialog
@@ -2137,7 +2183,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             key="nav_btn_settings",
             disabled=_is_executing,
             help="Settings are unavailable while a download or sync is running" if _is_executing else None,
-        ):
+        ) and not _is_executing:
             _global_settings_dialog()
         elif not _is_executing and st.session_state.pop('_stg_reopen_dialog', False):
             _global_settings_dialog()
@@ -2177,7 +2223,24 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
     <div style="color: #9ca3af; font-size: 0.75rem; padding-bottom: 3px;">Logged in as</div>
     <div style="display: inline-block; color: #f3f4f6; font-size: 0.9rem; font-weight: 500; padding: 2px 6px; margin-top: 3px; margin-left: 0px;margin-bottom: 15px; background-color: rgba(255, 255, 255, 0.06); border-radius: 4px;">{safe_first_name}</div>
 </div>""")
-            if st.button('\u200b', use_container_width=False, key="nav_btn_logout"):
+            # Logout is locked mid-run too: clearing the token + resetting state
+            # would orphan the background worker and abandon the live progress.
+            if _is_executing:
+                st.html("""<style>
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled {
+    opacity: 0.35 !important; cursor: not-allowed !important;
+}
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled:hover {
+    background-color: transparent !important;
+}
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled:hover::before {
+    filter: brightness(0) invert(0.65) !important;
+}
+section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled::after {
+    content: 'Unavailable while running' !important;
+}
+</style>""")
+            if st.button('\u200b', use_container_width=False, key="nav_btn_logout", disabled=_is_executing) and not _is_executing:
                 try:
                     keyring_user = st.session_state.get('api_url', '') or 'default'
                     _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
