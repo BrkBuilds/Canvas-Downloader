@@ -207,7 +207,7 @@ def inject_material_icons_font() -> None:
     """No-op - Material Symbols font replaced by inline SVGs (issue 2 fix)."""
     pass
 
-def _mat(icon_name: str, color: str = '#38BDF8', size: int = 18) -> str:
+def _mat(icon_name: str, color: str = '#bac2cc', size: int = 18) -> str:
     """Return an inline SVG icon. Replaces the Google Material Symbols font approach."""
     inner = _MAT_SVG_INNER.get(icon_name, _MAT_SVG_INNER['help'])
     adj = size + 4
@@ -385,11 +385,11 @@ def render_completion_card(synced_count: int, error_count: int,
         return
 
     # Stats grid
-    file_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>"
-    error_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>"
-    size_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='12' cy='5' rx='9' ry='3'></ellipse><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'></path><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'></path></svg>"
+    file_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>"
+    error_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>"
+    size_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><ellipse cx='12' cy='5' rx='9' ry='3'></ellipse><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'></path><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'></path></svg>"
     # Slash-circle icon for unresolvable files
-    slash_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='4.93' y1='4.93' x2='19.07' y2='19.07'></line></svg>"
+    slash_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><circle cx='12' cy='12' r='10'></circle><line x1='4.93' y1='4.93' x2='19.07' y2='19.07'></line></svg>"
     
     size_parts = format_file_size(total_bytes).split(" ", 1)
     size_val = size_parts[0]
@@ -401,7 +401,7 @@ def render_completion_card(synced_count: int, error_count: int,
 '<div class="completion-stats-grid">'
     )
     if courses_count > 0:
-        course_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>"
+        course_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>"
         stats_html += (
 '<div class="stat-card">'
 f'<div class="stat-icon-wrapper">{course_icon}</div>'
@@ -429,7 +429,7 @@ f'<div class="stat-label">{size_unit} Downloaded</div>'
     )
 
     # Conditional error stat cards - split by retriable vs unresolvable vs app-level
-    _warning_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path><line x1='12' y1='9' x2='12' y2='13'></line><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
+    _warning_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path><line x1='12' y1='9' x2='12' y2='13'></line><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
     if retriable_count > 0 or unresolvable_count > 0 or app_error_count > 0:
         # Show separate cards when split counts are provided
         if retriable_count > 0:
@@ -1569,20 +1569,23 @@ def render_panopto_summary(summary: dict | None) -> None:
 
     _dl_icon = (
         "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
-        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+        "style='width:18px;height:18px;flex-shrink:0;'>"
         "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/>"
         "<polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/></svg>"
     )
     _tx_icon = (
         "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
-        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+        "style='width:18px;height:18px;flex-shrink:0;'>"
         "<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/>"
         "<polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/>"
         "<line x1='16' y1='17' x2='8' y2='17'/><line x1='10' y1='9' x2='8' y2='9'/></svg>"
     )
     _skip_icon = (
         "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
-        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+        "style='width:18px;height:18px;flex-shrink:0;'>"
         "<circle cx='12' cy='12' r='10'/><line x1='8' y1='12' x2='16' y2='12'/></svg>"
     )
 

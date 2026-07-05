@@ -1,4 +1,22 @@
 ## Latest Updates
+- [x] **Today Page Sync UI Element Leak Fix** (2026-07-06):
+    - [x] **If-Else Control Flow**: Wrapped the idle Today dashboard content in an `else` block matching the `if sync_running` condition in `ui/today_dashboard.py`. This replaces the early `return` check which triggered a Streamlit diffing quirk where elements following the returned block were not correctly pruned, successfully hiding the "Quick Sync now" button, divider, and Today's files from the page while the sync is running.
+
+- [x] **Helper Card Icon Polish & SVG Color Standardisation** (2026-07-05):
+    - [x] **Today Page Helper Card**: Removed the crossed-off icons (folder icon for "Setting up your daily sync", bullet icons 1, 2, 3, compare icon for "Daily auto-sync vs Quick Sync now", download icon for "Today's files", and wrench icon for "Managing & fixing your courses") in `ui/today_dashboard.py`.
+    - [x] **Sync UI Frontpage Helper Card**: Removed the crossed-off icons (folder icon for "Sync mode fundamentals & getting started", refresh icon for "The Sync process flow", and compare icon for "Quick Sync vs Analyze & Review & Sync") in `sync_ui.py`.
+    - [x] **Course Selector Helper Card**: Removed the crossed-off package icon next to "Batch Downloading" in `ui/course_selector.py`.
+    - [x] **Quick Download Helper Card**: Removed the crossed-off icons next to "How it works", "Picking the right Preset", and "Batch Processing" in `ui/quick_download.py`.
+    - [x] **SVG Color Standardisation**: Updated `_mat` default color to `#bac2cc` in `ui_shared.py`, making all blue SVG icons across all helper cards consistently render in a sleek light grey instead.
+    - [x] **Terminology Renames**: Renamed "Section 4" references describing Panopto recordings settings to "Card 4" across user-facing texts and documentation (`ui/quick_download.py`, `ui/download_settings.py`, and `docs/guide.html`) to maintain layout name consistency.
+
+- [x] **Today Page Managing "Add courses" Button Positioning & Height** (2026-07-05):
+    - [x] **Moved Button Inside Box**: Moved the "Add or manage courses" button inside the `today_list_outline` container under the managing mode layout so it renders inside the list box below the daily courses.
+    - [x] **Updated Button Label**: Changed the button label in managing mode to "Add or manage courses".
+    - [x] **Reduced Button Height in Managing Mode**: Added a specific CSS override targeting `div.st-key-today_list_outline div.st-key-today_add_courses_btn button` to reduce the height to `32px` (2/3 of its original 48px height) for a more compact and aligned look.
+    - [x] **Wrapped Empty State Card**: Wrapped the empty state layout inside a `today_empty_container` container, positioning the "Add courses" button inside the empty state card itself (keeping its 48px height and adding padding around it to the box borders).
+
+
 - [x] **Clear History Button Styling and Confirmation Removal** (2026-06-28):
     - [x] **Removed delete confirmation**: Allowed immediate history deletion on the first click, bypassing the Yes/No buttons and amber notice warning.
     - [x] **Aligned default styling**: Made the resting state of the "Clear History" button identical to the list action buttons (Open Folder, Edit, etc.) in `sync_ui.py`, while retaining its customized red danger hover styling.

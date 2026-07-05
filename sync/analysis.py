@@ -369,11 +369,6 @@ def run_analysis(sync_pairs, main_placeholder=None):
         pairs_to_analyze = sync_pairs
 
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-    # Numbering (Settings, default OFF): the analyzer numbers module folders +
-    # files via the discovery layer (get_course_files_metadata) so the manifest
-    # and on-disk paths stay consistent. Matching is by canvas_file_id, so a later
-    # position change never re-downloads an existing file (freeze-at-download).
-    cm.numbering_enabled = st.session_state.get('numbering_enabled', False)
     all_results = []
     total_pairs = len(pairs_to_analyze)
 

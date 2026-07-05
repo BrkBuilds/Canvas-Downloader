@@ -50,3 +50,6 @@ cuda_libs/*
 
 #today
 today_dashboard.json
+
+# Local dev tooling (never ship): fabricates fake sync DBs for manual testing
+fake_quick_sync_setup.py
