@@ -132,9 +132,12 @@ components.html("""<script>
         // Re-attach if Streamlit hot-reload replaced document.body while we were detached
         if(!p.el.isConnected)doc.body.appendChild(p.el);
         p.el.style.display='flex'; p.vis=true;
-        // Safety valve: force-hide after 8 s so a hung rerun can't trap the overlay
+        // Safety valve: force-hide after 8 s so a hung rerun can't trap the overlay.
+        // Also kill any pending poll timer - otherwise the stabilization loop keeps
+        // running as a zombie AFTER the overlay is hidden and later fires its
+        // scroll-to-top, yanking the user back up while they read a settled page.
         if(p.safeT)clearTimeout(p.safeT);
-        p.safeT=setTimeout(function(){p.el.style.display='none';p.vis=false;p.safeT=null;},8000);
+        p.safeT=setTimeout(function(){p.el.style.display='none';p.vis=false;p.safeT=null;if(p.hT){clearTimeout(p.hT);p.hT=null;}},8000);
     }
 
     // Streamlit injects [data-testid="stStatusWidget"] while the Python script
@@ -167,6 +170,9 @@ components.html("""<script>
             // Poll every 150 ms until stStatusWidget is removed from the DOM.
             // The 8 s safety valve guarantees we can never poll forever.
             function waitForReady(){
+                // Overlay already hidden (safety valve or a prior hide): stop the
+                // loop so it can never fire scroll/side-effects after teardown.
+                if(!p.vis){p.hT=null;return;}
                 if(!isStReady()){
                     p.hT=setTimeout(waitForReady,150);
                     return;
@@ -191,6 +197,9 @@ components.html("""<script>
                 var lastFP='';
                 var stableCount=0;
                 function pollStable(){
+                    // Overlay already hidden (safety valve or a prior hide): abort so
+                    // a stale loop can never yank scroll after the overlay is gone.
+                    if(!p.vis){p.hT=null;return;}
                     // If a new rerun started (e.g. st.query_params.update() on the
                     // previous rerun triggered a second server round-trip), go back
                     // to Phase 2 so we wait for it to finish before counting stability.
@@ -208,15 +217,6 @@ components.html("""<script>
                             if(stableCount>=6){
                                 // Layout stable for ~1200 ms.  Attempt hide.
                                 p.awaitChange=false;p.preFP=null;
-                                // Scroll to top - Streamlit uses internal scroll
-                                // containers, not the window.  Hit all candidates.
-                                win.scrollTo(0,0);
-                                var sc=doc.querySelectorAll(
-                                    '[data-testid="stMain"],'
-                                    +'[data-testid="stAppViewContainer"],'
-                                    +'[data-testid="stVerticalBlock"]'
-                                );
-                                for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
                                 // Capture the stable fingerprint for the rAF guard.
                                 var commitFP=lastFP;
                                 requestAnimationFrame(function(){
@@ -231,6 +231,21 @@ components.html("""<script>
                                         p.hT=setTimeout(pollStable,200);
                                         return;
                                     }
+                                    // Confirmed stable AND still the active navigation
+                                    // overlay (pollStable aborts at the top once p.vis is
+                                    // false, so we can't reach here from a stale loop).
+                                    // Scroll to top as the LAST act before hiding, so it
+                                    // fires exactly once per navigation - never early,
+                                    // never repeatedly, and never while the user reads a
+                                    // settled page.  Streamlit uses internal scroll
+                                    // containers, not the window - hit all candidates.
+                                    win.scrollTo(0,0);
+                                    var sc=doc.querySelectorAll(
+                                        '[data-testid="stMain"],'
+                                        +'[data-testid="stAppViewContainer"],'
+                                        +'[data-testid="stVerticalBlock"]'
+                                    );
+                                    for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
                                     if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
                                     p.el.style.display='none';p.vis=false;p.hT=null;
                                 });
@@ -1140,7 +1155,6 @@ with _main_content.container():
 
                 cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
                 cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-                cm.numbering_enabled = st.session_state.get('numbering_enabled', False)
                 # Build the Sync Contract - all settings for this download
                 _pp_settings = {
                     'file_filter': st.session_state.get('file_filter', 'all'),
@@ -1520,7 +1534,6 @@ with _main_content.container():
 
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
             cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-            cm.numbering_enabled = st.session_state.get('numbering_enabled', False)
 
             if 'retry_mb_tracker' not in st.session_state:
                 st.session_state['retry_mb_tracker'] = {'bytes_downloaded': 0}

@@ -416,51 +416,6 @@ class CanvasManager:
         self.user = None
         self._logged_error_sigs = set()  # Dedup cache: prevents same error being logged twice in one run
         self.error_log_enabled = False    # Toggled via Settings; when False, download_errors.txt is not created
-        # Numbering prefix (Settings dialog, default OFF). When True, module folders
-        # and their files are prefixed with a hierarchical dotted number (1, 1.1…)
-        # derived from Canvas's module/item position. See _number_prefix().
-        self.numbering_enabled = False
-
-    def _number_prefix(self, parts) -> str:
-        """Return a hierarchical dotted numbering prefix like ``"1.2 "`` for the
-        given 1-based position *parts* (e.g. ``(module_pos, item_pos)``), or ``""``
-        when numbering is disabled. Self-gating so callers can prepend it
-        unconditionally. A trailing space separates the number from the name.
-        """
-        if not self.numbering_enabled:
-            return ""
-        try:
-            return ".".join(str(int(p)) for p in parts) + " "
-        except Exception:
-            return ""
-
-    def _numbered_folder_path(self, folder_id, fobj: dict):
-        """Return ``(numbered_display_path, dotted_chain)`` for a Canvas folder,
-        relative to the course root, numbering each path segment by its Canvas
-        ``position`` (1-based). Used by files-mode download numbering so nested
-        folders read as ``1 Lectures/1.2 Week 1`` and their files can extend the
-        chain (``1.2.3 lecture.pdf``).
-
-        ``fobj`` maps folder_id -> Canvas folder object. The root "course files"
-        folder (``parent_folder_id is None``) is excluded. Cycle-guarded.
-        """
-        disp, chain, seen = [], [], set()
-        cur = fobj.get(folder_id)
-        while cur is not None:
-            cid = getattr(cur, 'id', None)
-            if cid in seen:
-                break
-            seen.add(cid)
-            parent = getattr(cur, 'parent_folder_id', None)
-            if parent is None:
-                break  # the root "course files" folder - not part of the rel path
-            pos = getattr(cur, 'position', None) or 1
-            disp.append(f"{pos} " + self._sanitize_filename(getattr(cur, 'name', '')))
-            chain.append(str(pos))
-            cur = fobj.get(parent)
-        disp.reverse()
-        chain.reverse()
-        return '/'.join(disp), '.'.join(chain)
 
     def __repr__(self):
         """Redacted repr - never expose the Canvas Access Token in tracebacks or log output."""
@@ -532,7 +487,6 @@ class CanvasManager:
         
         all_files_map = {} # ID -> CanvasFileInfo
         module_map = {}  # content_id (int) -> sanitized module folder name (str)
-        file_num_map = {}  # content_id (int) -> "M.N " numbering prefix (numbering ON only)
 
         # --- Phase 1: Bulk Fetch (get_files) ---
         try:
@@ -571,7 +525,7 @@ class CanvasManager:
             # already have metadata for - eliminating an N+1 API pattern on
             # every sync analysis / scanning pass (the module_map entry is
             # still recorded for path routing).
-            module_files, module_map, file_num_map = self._get_files_from_modules(course, progress_callback=progress_callback,
+            module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
                                                                     secondary_content_settings=secondary_content_settings,
                                                                     known_file_ids=set(all_files_map.keys()))
             module_only_count = 0
@@ -610,19 +564,6 @@ class CanvasManager:
                 logger.error(f"Error fetching secondary content metadata: {e}")
                 if progress_callback:
                     progress_callback(f"Secondary content scan failed - some items may be missing: {e}", progress_type='log')
-
-        # Numbering (Settings dialog, default OFF): prepend the hierarchical dotted
-        # "M.N " prefix to each module-linked File's name. Applied HERE - after the
-        # bulk + module merge - so files found via the bulk get_files() pass (which
-        # has no module/position context) are numbered identically to module-scan
-        # files. The numbered filename flows into the manifest + analyzer calc_path,
-        # so sync stays self-consistent; matching is by canvas_file_id so a later
-        # position change never re-downloads an existing file (freeze).
-        if self.numbering_enabled and file_num_map:
-            for _fid, _prefix in file_num_map.items():
-                _fi = all_files_map.get(_fid)
-                if _fi is not None and _prefix and not str(_fi.filename).startswith(_prefix):
-                    _fi.filename = f"{_prefix}{_fi.filename}"
 
         return list(all_files_map.values()), secondary_fetch_success, module_map
     
@@ -666,42 +607,29 @@ class CanvasManager:
 
         files = []
         module_map = {}
-        # content_id -> "M.N " numbering prefix (only populated when numbering ON).
-        # Returned to get_course_files_metadata, which applies it to the merged
-        # filenames (covering bulk-fetched files that have no module context here).
-        file_num_map = {}
         try:
             modules = list(course.get_modules())
         except Exception as e:
             logger.warning(f"Could not fetch module list for course {getattr(course, 'id', '?')}: {e}")
             if progress_callback:
                 progress_callback(f"Could not fetch modules: {e}", progress_type='log')
-            return files, module_map, file_num_map
+            return files, module_map
         total_modules = len(modules)
         for idx, module in enumerate(modules):
             if progress_callback:
                 progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
 
-            # Module number from Canvas's own position (1-based); enumerate is a
-            # stable fallback when the API omits `position`. Numbering self-gates
-            # via _number_prefix (returns "" when the Settings toggle is OFF).
-            _mpos = getattr(module, 'position', None) or (idx + 1)
-            clean_module_name = self._number_prefix((_mpos,)) + self._sanitize_filename(module.name)
+            clean_module_name = self._sanitize_filename(module.name)
             try:
                 items = list(module.get_module_items())
             except Exception as e:
                 logger.warning(f"Could not fetch items for module '{getattr(module, 'name', '?')}': {e}")
                 continue
-            for _item_idx, item in enumerate(items):
-                _ipos = getattr(item, 'position', None) or (_item_idx + 1)
+            for item in items:
                 if item.type == 'File':
                     if not hasattr(item, 'content_id') or not item.content_id:
                         continue
                     module_map[item.content_id] = clean_module_name
-                    # Record the file's "M.N " prefix (empty when numbering OFF).
-                    _fpref = self._number_prefix((_mpos, _ipos))
-                    if _fpref:
-                        file_num_map[item.content_id] = _fpref
                     if known_file_ids and item.content_id in known_file_ids:
                         # Already in the bulk get_files() result - the
                         # module_map entry above is all this item needed.
@@ -843,7 +771,7 @@ class CanvasManager:
                             f"Could not process Discussion item '{getattr(item, 'title', '?')}' "
                             f"in module '{getattr(module, 'name', '?')}': {_item_err}"
                         )
-        return files, module_map, file_num_map
+        return files, module_map
 
     def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False,
                                        module_map=None):
@@ -1664,25 +1592,20 @@ class CanvasManager:
                             else:
                                 raise e
 
-                    for _mod_idx, module in enumerate(modules):
+                    for module in modules:
                         if check_cancellation and check_cancellation(): break
 
                         try:
                             log_debug(f"Processing Module: {module.name} (ID: {module.id})", debug_file)
-                            # Numbering (Settings, default OFF): prefix the module folder
-                            # with its Canvas position (1, 2…). _number_prefix returns ""
-                            # when numbering is disabled, so this is a no-op by default.
-                            _mpos = getattr(module, 'position', None) or (_mod_idx + 1)
-                            module_name = self._number_prefix((_mpos,)) + self._sanitize_filename(module.name)
+                            module_name = self._sanitize_filename(module.name)
                             target_path = base_path / module_name
                             target_path.mkdir(parents=True, exist_ok=True)
 
                             items = list(module.get_module_items())
                             log_debug(f"Found {len(items)} items in module '{module.name}'", debug_file)
-                            for _item_idx, item in enumerate(items):
+                            for item in items:
                                 if check_cancellation and check_cancellation(): break
-                                _ipos = getattr(item, 'position', None) or (_item_idx + 1)
-                                
+
                                 log_debug(f"  - Item: {getattr(item, 'title', 'unknown')} (Type: {getattr(item, 'type', 'unknown')})", debug_file)
                                 
                                 try:
@@ -1702,10 +1625,7 @@ class CanvasManager:
                                         downloaded_file_ids.add(file_obj.id)
                                         
                                         # Synchronous conflict resolution to prevent data loss.
-                                        # Numbering (default OFF) prepends "M.N " from the
-                                        # module/item Canvas position; _number_prefix returns
-                                        # "" when disabled, leaving the name unchanged.
-                                        base_filename = self._number_prefix((_mpos, _ipos)) + self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                                        base_filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
                                         filepath = target_path / base_filename
                                         target_key = str(filepath).lower()
 
@@ -1967,7 +1887,6 @@ class CanvasManager:
                     # reconstruction on every loop iteration.
                     _downloaded_ids = {int(i) for i in downloaded_file_ids}
                     _module_ids = {int(i) for i in module_file_ids}
-                    _catchall_idx = 0  # Numbering (default OFF): root loose files
 
                     for file in all_files_paginator:
                         if check_cancellation and check_cancellation(): break
@@ -1977,10 +1896,7 @@ class CanvasManager:
                             continue # Already downloaded in a module
 
                         # Synchronous conflict resolution to prevent data loss.
-                        # Loose files land at the course root, so they get a bare
-                        # sequential number (no folder chain). No-op when OFF.
-                        _catchall_idx += 1
-                        base_filename = self._number_prefix((_catchall_idx,)) + self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                        base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
                         filepath = base_path / base_filename
                         target_key = str(filepath).lower()
 
@@ -2369,11 +2285,6 @@ class CanvasManager:
         tasks = []
         downloaded = []
         folder_map = {}
-        # Numbering (Settings, default OFF): folder objects by id + per-folder file
-        # counters, so files-mode downloads get hierarchical numbers (1 Folder/
-        # 1.2 Sub/1.2.3 file.pdf). All no-ops when numbering is disabled.
-        _fobj = {}
-        _folder_file_counter = {}
         log_debug(f"Starting Folders Download for {course.name}", debug_file)
 
         # 1. Fetch Folders
@@ -2387,7 +2298,6 @@ class CanvasManager:
                 else:
                     rel_path = full_name
                 folder_map[folder.id] = rel_path
-                _fobj[getattr(folder, 'id', None)] = folder
             log_debug(f"Mapped {len(folder_map)} folders.", debug_file)
         except Exception as e:
             err = DownloadError(course.name, "Folder Structure", "Fetch Error", f"Could not fetch folders: {e}", raw_error=e, is_app_error=True)
@@ -2406,29 +2316,6 @@ class CanvasManager:
                 try:
                     # Calculate path
                     folder_id = getattr(file, 'folder_id', None)
-                    if self.numbering_enabled:
-                        # Numbered folder segments + a hierarchical "chain.idx " file
-                        # prefix (folder dotted-chain extended by the file's 1-based
-                        # position within its folder). Root files get a bare index.
-                        _disp_path, _chain = self._numbered_folder_path(folder_id, _fobj)
-                        target_path = base_path
-                        for part in [p for p in _disp_path.split('/') if p]:
-                            target_path = target_path / part
-                        Path(make_long_path(target_path)).mkdir(parents=True, exist_ok=True)
-                        _idx = _folder_file_counter.get(folder_id, 0) + 1
-                        _folder_file_counter[folder_id] = _idx
-                        _num = ".".join(([_chain] if _chain else []) + [str(_idx)])
-                        _numbered_name = f"{_num} " + self._sanitize_filename(getattr(file, 'filename', 'unknown'))
-                        task = asyncio.create_task(self._download_file_async(
-                            sem, session, file, target_path, progress_callback, mb_tracker, file_filter,
-                            error_root_path=error_root_path, course_name=course.name, debug_file=debug_file,
-                            sync_manager=sync_manager, course_base_path=base_path,
-                            explicit_filepath=target_path / _numbered_name,
-                            check_cancellation=check_cancellation
-                        ))
-                        tasks.append(task)
-                        continue
-
                     rel_folder_path = folder_map.get(folder_id, "")
                     path_parts = [self._sanitize_filename(p) for p in rel_folder_path.split('/') if p]
                     target_path = base_path
@@ -2489,7 +2376,6 @@ class CanvasManager:
 
             downloaded_ids = set()
             seen_flat_paths = set()  # Path-based dedup for flat mode
-            _flat_idx = 0  # Numbering (default OFF): sequential 1-based file number
             # Wrap iteration separately: course.get_files() returns a lazy PaginatedList with no
             # network I/O, so the retry loop above never actually tests connectivity.  The first
             # real HTTP request fires here when the iterator is consumed.  Without this inner
@@ -2501,11 +2387,7 @@ class CanvasManager:
                         downloaded_ids.add(file.id)
 
                     # Synchronous conflict resolution to prevent data loss.
-                    # Numbering (default OFF): a flat folder has no hierarchy, so
-                    # files just get a sequential 1-based number. _number_prefix
-                    # returns "" when disabled, leaving names unchanged.
-                    _flat_idx += 1
-                    base_filename = self._number_prefix((_flat_idx,)) + self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                    base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
                     filepath = base_path / base_filename
                     target_key = str(filepath).lower()
 

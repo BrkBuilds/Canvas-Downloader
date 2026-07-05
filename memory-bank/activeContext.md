@@ -11,6 +11,42 @@
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
 ## Recent Activity
 
+- **Session 2026-07-06: Today Page Sync UI Element Leak Fix**
+    - **Replaced Early Return with If-Else Control Flow**: Modified `render_today_dashboard` in [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py) to wrap the idle dashboard elements inside an `else` block matching the `if sync_running` condition. This resolves a Streamlit rendering bug where early-return functions fail to trigger DOM-clearing of subsequent elements, ensuring the "Quick Sync now" button, divider, and Today's files are completely hidden from the page during live sync execution.
+
+- **Session 2026-07-05: Today Page Toggle Dependent Content Dimming & Copy Polish**
+    - **Created Content Area Container**: Wrapped the Today dashboard layout below the Daily auto-sync toggle card in a single container `st.container(key="today_content_area")` within [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py).
+    - **Implemented Dynamic Dimming CSS**: Updated `_inject_dynamic_css` in [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py) to accept `auto_sync_enabled` and append a styling rule to `div.st-key-today_content_area` with `opacity: 0.45` and `filter: grayscale(100%) brightness(0.85)` when disabled.
+    - **Added Smooth Transitions**: Added transition property `transition: opacity 0.3s ease, filter 0.3s ease !important;` to `div.st-key-today_content_area` inside [today.css](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/styles/today.css) for a premium, polished feel when toggling the setting on/off.
+    - **Shortened Toggle Description**: Changed the Daily auto-sync description to "Automatically downloads new files from selected courses every morning."
+    - **Removed Quick Sync Technical Note**: Removed the small note text under the "Quick Sync now" button to simplify the user interface.
+    - **Reordered Dashboard Layout**: Moved the Quick Sync section to the bottom of the page, placing a divider line between "Today's files" and the Quick Sync block. Removed the early exit on empty today's files to keep Quick Sync always accessible.
+    - **Adjusted Vertical Spacing**: Reduced space between the auto-sync toggle card and the "Courses in your daily sync" header (`margin-top: -6px !important` on `today_courses_head`), and increased vertical padding above "Today's files" (`margin-top: 24px !important` on `today_files_head` wrapper container).
+
+- **Session 2026-07-05: Today Page Auto-Sync Toggle Padding Reduction**
+    - **Reduced Padding and Margin**: Adjusted the top and bottom padding of `div[class*="st-key-today_toggle_card"]` from `16px 18px 20px 18px` to `10px 18px 14px 18px`. Added `margin-top: -4px !important;` to the toggle card, and decreased `.today-subtitle`'s `margin-bottom` from `14px` to `6px` to pull the toggle card up and reduce the padding/margin above the toggle row.
+
+- **Session 2026-07-05: Quick Sync Notice Chip Icon Styling**
+    - **Replaced 'x' Count Prefix with File SVG Icon**: Substituted the `&times;{_cnt}` prefix with a small, inline, fully filled file SVG icon next to the download count within the quick sync completion notification chips in `ui/today_dashboard.py`. Used a split-path structure to guarantee the folded corner is fully rendered and filled with the same green color, separated by a crisp diagonal gap.
+
+- **Session 2026-07-05: Today Page Layout Width Adjustment**
+    - **Centered Today Page Layout**: Wrapped the Today dashboard layout in `ui/today_dashboard.py` within centering columns `st.columns([1, 2.4, 1])` to align its content width exactly with the Quick Download page.
+    - **Adjusted Quick Sync Button Columns**: Changed the "Quick Sync now" button columns from `[0.15, 0.85]` to `[0.28, 0.72]` to maintain its physical width on screen.
+
+- **Session 2026-07-05: Helper Card Icon Polish & SVG Color Standardisation**
+    - **Removed Crossed-off Icons in Today Dashboard**: Cleaned up the helper card in `ui/today_dashboard.py` by removing icons that were crossed out in user request (setting up sync, numbered steps, comparison, download, and managing).
+    - **Removed Crossed-off Icons in Sync UI**: Cleaned up `sync_ui.py`'s `_SYNC_HELP_TEXT` by removing the folder, refresh, and comparison icons from the expanders' summary headers.
+    - **Removed Crossed-off Icons in Course Selector & Quick Download**: Removed the package icon from "Batch Downloading" in `ui/course_selector.py`, and the gear, save, and package icons next to "How it works", "Picking the right Preset", and "Batch Processing" in `ui/quick_download.py`.
+    - **Standardised SVG Icon Colors to Light Grey**: Modified the default color parameter in `_mat` in `ui_shared.py` from `#38BDF8` (blue) to `#bac2cc` (light grey). This ensures all blue inline SVGs used across all helper cards consistently render in light grey.
+    - **Renamed Section 4 to Card 4 for Panopto Recordings**: Renamed "Section 4" references to "Card 4" across all user-facing helper card text and website documentation (`ui/quick_download.py`, `ui/download_settings.py`, and `docs/guide.html`) to ensure layout name parity (Cards 1-4).
+
+- **Session 2026-07-05: Today Page Managing "Add courses" Button Styling and Position**
+    - **Moved "Add courses" Button Inside the Outline Box**: Relocated the "Add courses" button to be inside the daily sync courses outline container `st.container(border=True, key="today_list_outline")` under the managing mode layout in `ui/today_dashboard.py` and updated its label to "Add or manage courses".
+    - **Reduced Button Height**: Added a specific CSS override inside `styles/today.css` targeting `div.st-key-today_list_outline div.st-key-today_add_courses_btn button` to reduce the height to `32px` (2/3 of its original 48px height) for a more aligned layout.
+    - **Wrapped Empty State Card**: Wrapped the empty state layout in a `today_empty_container` and positioned the "Add courses" button inside it (keeping its original 48px height and adding padding around it to the box borders).
+    - **Fixed Empty Today Page Courses List Bug**: Reverted `has_courses = False` (which was hardcoded to test the empty state styling) back to the dynamic check `has_courses = bool(visible_pairs)`. This resolves the issue where the Today page courses list was erroneously shown as empty even when courses were configured and their folders existed on disk.
+
+
 - **Session 2026-06-29: Settings Dialog Default Path Clear Reopen Fix**
     - **Fixed Settings Dialog Auto-Closing**: Set `st.session_state['_stg_reopen_dialog'] = True` inside the "Clear" button action callback in [auth.py](file:///c:/Users/birkl/Desktop/Canvas%20Downloader%20WORKSPACE/ui/auth.py#L1728-L1732). This matches the folder-picking callback behavior, keeping the settings dialog open and updating its displayed path instantly without forcing the user to reopen the dialog manually.
 

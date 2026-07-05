@@ -181,17 +181,46 @@ def delivery_duration(delivery: dict) -> float:
         return 0.0
 
 
+def _cookie_domain_matches(cookie_domain: str, host: str) -> bool:
+    """True when a cookie with *cookie_domain* would be sent to *host*.
+
+    Implements the RFC 6265 domain-match: the host equals the cookie domain, or
+    the host is a subdomain of it (a leading dot on the stored domain is
+    normalisation noise). Falls back to the historical "panopto" substring test
+    when *host* is unavailable, so a failed URL parse can never end up sending
+    ZERO cookies (which would 403 every download).
+    """
+    d = (cookie_domain or "").lstrip(".").lower()
+    if not d:
+        return False
+    if not host:
+        return "panopto" in d
+    return host == d or host.endswith("." + d)
+
+
 def _cookie_header(session, panopto_base: str) -> str:
     """Snapshot the Panopto auth cookies into a single ``Cookie:`` header value.
 
     Returns a plain string so callers can capture it ONCE (under a lock, on the
     main/owning thread) and hand it to ffmpeg, instead of having concurrent
     download workers iterate the shared (non-thread-safe) session cookie jar.
+
+    Cookies are selected by domain-matching against the host of *panopto_base*
+    (not by looking for a literal "panopto" in the domain): institutions can
+    front Panopto with a vanity CNAME like ``video.university.edu``, whose
+    session cookies a substring test would silently drop - every ffmpeg
+    download would then 403 while discovery still worked.
     """
+    from urllib.parse import urlparse
+
+    try:
+        host = (urlparse(panopto_base).hostname or "").lower()
+    except (ValueError, AttributeError):
+        host = ""
     return "; ".join(
         f"{c.name}={c.value}"
         for c in session.cookies
-        if "panopto" in c.domain.lower()
+        if _cookie_domain_matches(c.domain, host)
     )
 
 
@@ -217,7 +246,17 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     Shared by the audio (MP3) and video (MP4) downloaders: launches ffmpeg
     headless, polls *is_cancelled* (terminating + cleaning up on abort), drains
     stderr so a failure carries the real reason, and validates a non-empty file.
+
+    stderr is drained CONCURRENTLY on a daemon thread, never after-the-fact: a
+    chatty remux (HLS `-c copy` sources emit per-packet warnings like
+    "Non-monotonous DTS" at exactly our `-loglevel warning`) can otherwise fill
+    the ~64KB pipe buffer, ffmpeg blocks on its own stderr write, and the
+    download stalls forever while the poll loop sleeps. Only the last few lines
+    are kept (bounded memory) - that tail is the actionable part of any failure.
     """
+    import collections
+    import threading
+
     creationflags = 0
     if sys.platform == "win32":
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -233,6 +272,26 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     except Exception as e:
         logger.warning("Panopto ffmpeg launch failed for %s: %s", os.path.basename(out_path), e)
         return False, f"ffmpeg launch failed: {e}"
+
+    # Rolling tail of stderr lines. The reader thread is the ONLY writer while
+    # ffmpeg runs; the main thread reads it only after join(), so no lock needed.
+    stderr_tail: collections.deque = collections.deque(maxlen=40)
+
+    def _drain_stderr() -> None:
+        try:
+            # Binary iteration (no TextIOWrapper): readline() returns b"" only
+            # at EOF, i.e. when ffmpeg exits or closes its stderr.
+            for raw in iter(proc.stderr.readline, b""):
+                line = raw.decode("utf-8", "replace").rstrip()
+                if line:
+                    stderr_tail.append(line)
+        except Exception:
+            pass  # a broken pipe on teardown is fine - the tail keeps what it has
+
+    _stderr_thread = threading.Thread(
+        target=_drain_stderr, name="panopto-ffmpeg-stderr", daemon=True,
+    )
+    _stderr_thread.start()
 
     stderr_text = ""
     try:
@@ -253,14 +312,11 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
             time.sleep(0.25)
         rc = proc.returncode
     finally:
-        # Drain ffmpeg's stderr - this is WHERE the real reason for a failed
-        # download lives (HTTP 403, connection reset, codec error, ...). Without
-        # it a failure was an opaque "exited with code N".
-        try:
-            if proc.stderr:
-                stderr_text = proc.stderr.read().decode("utf-8", "replace").strip()
-        except Exception:
-            pass
+        # Let the reader finish consuming whatever ffmpeg wrote on the way out.
+        # Short join: the process has exited (or been killed), so EOF is
+        # imminent; never block teardown on a wedged pipe.
+        _stderr_thread.join(timeout=5)
+        stderr_text = "\n".join(stderr_tail).strip()
 
     try:
         size = os.path.getsize(out_path) if os.path.exists(out_path) else 0

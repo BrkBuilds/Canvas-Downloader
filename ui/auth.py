@@ -330,8 +330,6 @@ def render_sidebar(fetch_courses_fn):
 
     from ui_helpers import get_base64_image
     icon_b64    = get_base64_image("assets/icon.png")
-    icon_dl_b64 = get_base64_image("assets/icon_download.png")
-    icon_sync_b64 = get_base64_image("assets/icon_sync.png")
 
     # ── Single consolidated CSS block for all sidebar nav elements ──────
     st.html(f"""
@@ -390,18 +388,18 @@ div[class*="st-key-nav_btn_"]:not([class*="logout"]) button p::before {{
     transition: filter 0.2s ease-in-out;
 }}
 
-/* ── Asset bindings ── */
+/* ── Asset bindings (Lucide icon set, standardized across all three modes) ── */
 div.st-key-nav_btn_today button p::before {{
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 18 4 4 4-4'/%3E%3Cpath d='M16 2v4'/%3E%3Cpath d='M18 14v8'/%3E%3Cpath d='M21 11.354V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7.343'/%3E%3Cpath d='M3 10h18'/%3E%3Cpath d='M8 2v4'/%3E%3C/svg%3E");
 }}
 div.st-key-nav_btn_download button p::before {{
-    background-image: url("data:image/png;base64,{icon_dl_b64}");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V3'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
 }}
 div.st-key-nav_btn_sync button p::before {{
-    background-image: url("data:image/png;base64,{icon_sync_b64}");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3Cpath d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/%3E%3Cpath d='M8 16H3v5'/%3E%3C/svg%3E");
 }}
 div.st-key-nav_btn_settings button p::before {{
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'%3E%3C/path%3E%3Ccircle cx='12' cy='12' r='3'%3E%3C/circle%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'%3E%3C/path%3E%3Ccircle cx='12' cy='12' r='3'%3E%3C/circle%3E%3C/svg%3E");
 }}
 
 /* ── Hover ── */
@@ -550,9 +548,6 @@ def render_login_page(fetch_courses_fn):
 
                     if 'use_12h_format' in config:
                         st.session_state['use_12h_format'] = config.get('use_12h_format', False)
-
-                    if 'numbering_enabled' in config:
-                        st.session_state['numbering_enabled'] = config.get('numbering_enabled', False)
 
                     if 'default_download_path' in config:
                         saved_default = config.get('default_download_path', '') or ''
@@ -1702,21 +1697,6 @@ def _render_authenticated_nav_top():
         }}
         </style>""")
 
-    # Today dashboard button - the daily home (auto-sync + today's files).
-    # `disabled=_locked` blocks the click in the browser; the extra `not _locked`
-    # guard is defense-in-depth so a click queued in the instant before the run
-    # began can never fire cleanup_*_state() and abandon the in-flight operation.
-    if st.button('Today', use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
-        if mode != 'today' or step != 1:
-            from core.state_registry import cleanup_sync_state
-            cleanup_sync_state()
-            st.session_state['current_mode'] = 'today'
-            st.session_state['step'] = 1
-            st.session_state['sync_mode'] = False
-            st.session_state['sync_pairs'] = []
-            st.session_state.pop('sync_pairs_loaded', None)
-            st.rerun()
-
     # Download mode button - always navigates to download step 1.
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download", disabled=_locked) and not _locked:
         if mode != 'download' or step != 1:
@@ -1736,6 +1716,21 @@ def _render_authenticated_nav_top():
             st.session_state['current_mode'] = 'sync'
             st.session_state['step'] = 1
             st.session_state['sync_mode'] = True
+            st.session_state['sync_pairs'] = []
+            st.session_state.pop('sync_pairs_loaded', None)
+            st.rerun()
+
+    # Today dashboard button - the daily home (auto-sync + today's files).
+    # `disabled=_locked` blocks the click in the browser; the extra `not _locked`
+    # guard is defense-in-depth so a click queued in the instant before the run
+    # began can never fire cleanup_*_state() and abandon the in-flight operation.
+    if st.button('Today', use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
+        if mode != 'today' or step != 1:
+            from core.state_registry import cleanup_sync_state
+            cleanup_sync_state()
+            st.session_state['current_mode'] = 'today'
+            st.session_state['step'] = 1
+            st.session_state['sync_mode'] = False
             st.session_state['sync_pairs'] = []
             st.session_state.pop('sync_pairs_loaded', None)
             st.rerun()
@@ -1777,12 +1772,21 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                    'temp_max_downloads', 'temp_max_size_enabled', 'temp_max_size_mb',
                    'temp_error_log_enabled', 'temp_debug_mode',
                    'temp_notifications_enabled', 'temp_cbs_filters',
-                   'temp_use_12h_format', 'temp_sync_history_retention',
-                   'temp_numbering_enabled'):
+                   'temp_use_12h_format', 'temp_sync_history_retention'):
             st.session_state.pop(_k, None)
 
     @st.dialog("\u200b", width="large", on_dismiss=_stg_dismiss_cleanup)
     def _global_settings_dialog():
+        # Warm the transcription hardware probe in the background the moment
+        # Settings opens, so "Configure transcription" (which imports the heavy
+        # faster-whisper/ctranslate2 backend on first use) opens promptly instead
+        # of blocking for a beat. Idempotent + non-blocking; safe on every rerun.
+        try:
+            from panopto.hardware import warm_compute_hardware_async
+            warm_compute_hardware_async()
+        except Exception:
+            pass
+
         st.html("""<style>
         div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }
 
@@ -2037,14 +2041,6 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     key="temp_sync_history_retention",
                 )
 
-            st.html("""<div style='padding: 8px 0 0 0;'></div>""")
-            # File numbering - prefix folders & files with Canvas's own order so the
-            # file explorer mirrors the course structure (1, 1.1, 1.2…). Frozen at
-            # download time; turning it on does not renumber already-downloaded files.
-            with st.container(border=True, key="stg_card_numbering"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Number folders &amp; files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Prefix every folder and file with a hierarchical number (1, 1.1, 1.2.4…) following your course's order on Canvas, so everything sorts correctly in your file explorer. Applies to new downloads &amp; syncs; existing files keep their names.</div></div>""")
-                temp_numbering = st.toggle("Number folders & files", value=st.session_state.get('numbering_enabled', False), key="temp_numbering_enabled")
-
             # ── PANOPTO TRANSCRIPTION ─────────────────────────────────
             # The transcription engine (model / language / compute device) is a
             # GLOBAL, persisted config - per-download output formats live in
@@ -2101,7 +2097,6 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                     or int(temp_history_retention) != int(st.session_state.get('sync_history_retention', 50))
-                    or bool(temp_numbering) != bool(st.session_state.get('numbering_enabled', False))
                 )
 
                 st.session_state['concurrent_downloads'] = temp_max
@@ -2114,7 +2109,6 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
                 st.session_state['sync_history_retention'] = int(temp_history_retention)
-                st.session_state['numbering_enabled'] = bool(temp_numbering)
 
                 from pathlib import Path as _Path
                 _downloads_default = str(_Path.home() / "Downloads")
@@ -2143,7 +2137,6 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
                 config_data['sync_history_retention'] = int(temp_history_retention)
-                config_data['numbering_enabled'] = bool(temp_numbering)
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'

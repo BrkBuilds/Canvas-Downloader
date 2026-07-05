@@ -213,7 +213,7 @@ if __name__ == "__main__":
             _logo_html = '<img src="data:image/png;base64,' + _icon_b64 + '" style="width: 36px; height: 36px;" />'
     except Exception:
         _logo_html = """<svg viewBox="0 0 24 24" fill="none" stroke="#0072CE" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
+         stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
       <polyline points="7 10 12 15 17 10"/>
       <line x1="12" y1="15" x2="12" y2="3"/>

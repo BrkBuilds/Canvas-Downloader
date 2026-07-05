@@ -1124,7 +1124,7 @@ def render_course_selector(fetch_courses_fn):
     _cs_help_title = "How Course Selection Works"
     _cs_help_text = (
         "<b>Select the courses you want to download, then press either of the download buttons.</b>"
-        f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['package']} Batch Downloading</div>"
+        "<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>Batch Downloading</div>"
         f"You can download as many courses as you want at once. The application will process them one after another.<br> "
         f"All selected courses will be downloaded into your output folder as separate folders (e.g., Programming 101, History 201)."
         f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['star']} Favorites vs All Courses</div>"

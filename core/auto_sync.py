@@ -53,6 +53,50 @@ def should_auto_sync() -> bool:
     return bool(resolve_today_pairs())
 
 
+def build_today_sync_notice() -> dict:
+    """Snapshot the just-finished Today run's outcome for the dismissible
+    success notice on the Today page (and the daily-sync native notification).
+
+    MUST be called from the today completion handler BEFORE
+    ``cleanup_sync_state()`` - the source keys (``synced_groups``,
+    ``synced_count``, ``sync_errors``) are transient and popped by cleanup.
+
+    ``synced_groups`` already includes Panopto recordings when the run had a
+    Panopto pass (the pass merges its produced files into the groups and bumps
+    ``synced_count`` per artifact), so no separate recording tally is needed -
+    and adding one would double-count.
+    """
+    from datetime import datetime
+    from ui_helpers import friendly_course_name
+
+    courses = []
+    files_in_groups = 0
+    for grp in st.session_state.get("synced_groups") or []:
+        files = grp.get("files") or []
+        if not files:
+            continue
+        courses.append({
+            "name": friendly_course_name(grp.get("course_name", "") or "Course"),
+            "count": len(files),
+        })
+        files_in_groups += len(files)
+
+    total = st.session_state.get("synced_count")
+    if not isinstance(total, int) or total < 0:
+        total = 0
+    # Group-building is best-effort (falls back to [] on failure) while
+    # synced_count is the engine's own tally - trust whichever saw more.
+    total = max(total, files_in_groups)
+
+    return {
+        "is_auto": bool(st.session_state.get("today_sync_is_auto")),
+        "completed_at": datetime.now().strftime("%H:%M"),
+        "total_files": total,
+        "courses": courses,
+        "errors": len(st.session_state.get("sync_errors") or []),
+    }
+
+
 def start_today_sync(pairs: list[dict] | None = None, is_auto: bool = False) -> None:
     """Kick off a headless Quick Sync over *pairs* and route to the slim Today
     progress view. Calls ``st.rerun()`` so it never falls through.
@@ -72,6 +116,11 @@ def start_today_sync(pairs: list[dict] | None = None, is_auto: bool = False) -> 
         return
 
     mark_auto_synced(logical_today())
+
+    # A fresh run makes the previous run's success notice stale - drop it now so
+    # the dashboard never shows an outdated "N new files" card next to (or after)
+    # the live progress card.
+    st.session_state.pop("today_sync_notice", None)
 
     st.session_state["sync_pairs"] = list(pairs)
     # Prevent load_persistent_pairs() from overwriting our curated subset.
