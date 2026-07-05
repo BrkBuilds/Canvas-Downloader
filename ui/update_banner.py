@@ -40,15 +40,27 @@ _lock = threading.Lock()
 _started = False
 
 
-def _parse_version(v: str):
-    """Best-effort version parse. Prefers packaging.Version; falls back to a
-    numeric tuple so a missing dependency never breaks the comparison."""
+def _numeric_tuple(v: str) -> tuple:
+    """Dumb-but-total version key: every digit run in order, e.g.
+    ``"2.1.0-beta3"`` -> ``(2, 1, 0, 3)``. Never raises."""
+    nums = re.findall(r"\d+", v or "")
+    return tuple(int(n) for n in nums) if nums else (0,)
+
+
+def _is_newer(remote: str, local: str) -> bool:
+    """True when *remote* is a strictly newer version than *local*.
+
+    Both strings are parsed through the SAME scheme: ``packaging.Version`` for
+    both, else numeric tuples for both. Parsing them independently (the old
+    behaviour) could yield a ``Version`` on one side and a ``tuple`` on the
+    other - e.g. a well-formed GitHub tag vs. a malformed local dev version -
+    and ``Version > tuple`` raises ``TypeError``, silently killing the banner.
+    """
     try:
         from packaging.version import Version
-        return Version(v)
+        return Version(remote) > Version(local)  # both or neither
     except Exception:
-        nums = re.findall(r"\d+", v or "")
-        return tuple(int(n) for n in nums) if nums else (0,)
+        return _numeric_tuple(remote) > _numeric_tuple(local)
 
 
 def _worker() -> None:
@@ -69,7 +81,7 @@ def _worker() -> None:
             # dev build whose local version is ahead of the last release) shows
             # nothing - this is exactly why a naive equality/inequality check
             # would mis-fire while local is 2.0.0 and the newest release is 1.0.0.
-            result["update_available"] = _parse_version(tag) > _parse_version(__version__)
+            result["update_available"] = _is_newer(tag, __version__)
     except Exception as e:  # noqa: BLE001 - any failure = silently no banner
         logger.info(f"Update check skipped: {e}")
     with _lock:

@@ -114,11 +114,6 @@ DOWNLOAD_DEFAULTS = {
     'quick_org_mode': 'modules',
     # L-13: Sync history retention - number of past operations to keep.
     'sync_history_retention': 50,
-    # Numbering prefix (Settings dialog, default OFF): when on, module folders and
-    # their files get a hierarchical dotted prefix (1, 1.1, 1.2…) derived from
-    # Canvas's own module/item order, to preserve course order in the file
-    # explorer. Frozen at download time (see canvas_logic._number_prefix).
-    'numbering_enabled': False,
     # ── Panopto (premium hidden feature) ──
     # Master visibility flag for the sidebar entry + whether Panopto runs are
     # included in download/sync. Loaded from the persisted panopto settings on
@@ -180,7 +175,7 @@ SYNC_TRANSIENT_KEYS = {
     'sync_cancelled_file_count', 'sync_errors', 'sync_quick_mode',
     'sync_single_pair_idx', 'sync_confirm_count', 'sync_confirm_size',
     'sync_confirm_folders', 'is_post_processing',
-    'retry_selections', 'analysis_pass', 'analysis_pass1_started_at',
+    'retry_selections', 'analysis_pass',
     # Today dashboard (in-page daily/Quick Sync) run markers.
     'today_sync_active', 'today_sync_is_auto',
     'size_skipped_files', 'sync_has_ignored_files',
@@ -189,8 +184,11 @@ SYNC_TRANSIENT_KEYS = {
     # Re-attachable sync worker (H-2 heartbeat pattern) - future/pool refs
     # and the cached batch outcome must never leak into the next sync run.
     'sync_worker_future', 'sync_worker_pool', 'sync_worker_result',
-    'pre_sync_started_at',
     'synced_details', 'synced_groups', 'pp_failure_count', 'pp_success_count',
+    # NOTE: 'today_sync_notice' is deliberately NOT transient - the dismissible
+    # Today success card must survive cleanup_sync_state() (which runs the
+    # moment the run finishes) until the user closes it or the next run
+    # replaces it (start_today_sync pops the stale one).
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'completion_beep_fired',
     # Panopto sync-pass trackers (mirror the download-mode transient keys).

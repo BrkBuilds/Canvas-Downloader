@@ -212,24 +212,9 @@ div[class*="st-key-preset_tab_"] button[kind="primary"]:active {
     outline: none !important;
 }
 
-/* Settings2 SVG icon on all dialog expanders (preset_card_ rules below override this) */
-div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p {
-    display: flex !important;
-    align-items: center !important;
-}
+/* Settings icon is applied per-container below (preset_card_ and hub_pair_card_),
+   NOT globally across all dialog expanders — that was causing icon leakage. */
 
-div[data-testid="stDialog"] div[data-testid="stExpander"] details summary p::before {
-    content: "";
-    display: inline-block;
-    width: 17px;
-    height: 17px;
-    min-width: 17px;
-    margin-right: 6px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 17H5'/%3E%3Cpath d='M19 7h-9'/%3E%3Ccircle cx='17' cy='17' r='3'/%3E%3Ccircle cx='7' cy='7' r='3'/%3E%3C/svg%3E");
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-}
 
 /* Expanders - Custom closed state for Preset cards */
 div[class*="st-key-preset_card_"] div[data-testid="stExpander"] {

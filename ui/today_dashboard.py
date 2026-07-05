@@ -60,10 +60,27 @@ _SVG_CAUGHT_UP = (
 # CSS. The icon for each course chip in the collapsed daily-sync summary.
 _SVG_COURSE = (
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
-    "fill='currentColor' class='tcs-pill-ico'>"
+    "fill='currentColor' class='tcs-pill-ico' "
+    # Inline size is REQUIRED, not just cosmetic: when navigating Today -> Download,
+    # Streamlit briefly leaves this chip markup in the DOM while today.css (which
+    # sizes .tcs-pill-ico) is no longer injected, so an unsized SVG balloons to its
+    # huge default replaced-element size on the download loading screen.
+    "style='width:16px;height:16px;flex-shrink:0;'>"
     "<path fill-rule='evenodd' d='M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6"
     "A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z"
     "M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z'/></svg>"
+)
+# Solid file glyph with a transparent corner fold gap - small, colored
+# currentColor (inherits parent font color), used inside the completed sync
+# course chips. Both the file body and the folded corner are separate path elements
+# to guarantee they render as filled shapes.
+_SVG_FILE_MINI = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' "
+    "style='width:0.95em;height:0.95em;vertical-align:-0.15em;margin-right:2px;"
+    "display:inline-block;flex-shrink:0;'>"
+    "<path d='M6 22h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z'/>"
+    "<path d='M13 4l5 5h-5V4z'/>"
+    "</svg>"
 )
 
 
@@ -80,24 +97,24 @@ _TODAY_HELP_TEXT = (
 
     # -- Getting set up ------------------------------------------------------
     "<details style='margin-top: 4px;' open>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['folder']} Setting up your daily sync</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Setting up your daily sync</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px;'>"
 
     "<div>"
-    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['sync_pair']} 1. Save your course pairs</div>"
+    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>1. Save your course pairs</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "In <b style='color: #ffffff;'>Sync Course Folders</b> (Sync mode), link each course to a folder on your computer and save it as a <b style='color: #ffffff;'>Pair</b>, or save several together as a <b style='color: #ffffff;'>Group</b> (e.g. <em>Semester 1</em>). These live in your Saved Groups &amp; Pairs hub."
     "</div></div>"
 
     "<div>"
-    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['sync_hub']} 2. Add them to your daily sync</div>"
+    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>2. Add them to your daily sync</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "Click <b style='color: #ffffff;'>Add courses</b> below and tick the saved pairs and groups you want kept up to date. Your choice is saved and editable - come back any time to add or remove courses with <b style='color: #ffffff;'>Add courses</b> or the <b style='color: #ffffff;'>Remove</b> button on each card."
     "</div></div>"
 
     "<div>"
-    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>{HELP_ICONS['bolt']} 3. Let it run</div>"
+    "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>3. Let it run</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
     "Turn on <b style='color: #ffffff;'>Daily auto-sync</b> to have the app sync your chosen courses automatically the first time you open it each day (after 4 AM), or press <b style='color: #ffffff;'>Quick Sync now</b> to catch up on demand."
     "</div></div>"
@@ -109,7 +126,7 @@ _TODAY_HELP_TEXT = (
 
     # -- Auto-sync vs Quick Sync ---------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['compare']} Daily auto-sync vs Quick Sync now</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Daily auto-sync vs Quick Sync now</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='display: flex; gap: 16px; margin-bottom: 8px;'>"
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
@@ -132,7 +149,7 @@ _TODAY_HELP_TEXT = (
 
     # -- Today's files -------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['download']} Today's files</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Today's files</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;'>"
     "Everything downloaded today is listed at the bottom of the page, grouped by course. Click a course to expand it and see the individual files, or use <b style='color: #ffffff;'>Open Folder</b> to jump straight to it. <br>"
@@ -144,7 +161,7 @@ _TODAY_HELP_TEXT = (
 
     # -- Managing pairs ------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['wrench']} Managing &amp; fixing your courses</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Managing &amp; fixing your courses</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65;'>"
     "The courses on this page come from your Saved Groups &amp; Pairs. To rename a course, change its folder, or fix a folder that was moved or deleted, head to <b style='color: #ffffff;'>Sync mode → Saved Groups &amp; Pairs</b>. <br>"
@@ -155,18 +172,28 @@ _TODAY_HELP_TEXT = (
 )
 
 
-def _inject_dynamic_css() -> None:
+def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> None:
     """Button-icon + Quick-Sync brand styling (depends on base64 assets, so inline)."""
     b64_add = get_base64_image("assets/icon_add.png")
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
+    
+    dimming_css = ""
+    if not auto_sync_enabled or sync_running:
+        dimming_css = """
+    div.st-key-today_content_area {
+        opacity: 0.45 !important;
+        filter: grayscale(100%) brightness(0.85) !important;
+        pointer-events: none !important;
+    }
+        """
+
     st.markdown(f"""<style>
-    /* Add-courses button: custom add glyph (matches the hub's add buttons) */
     div.st-key-today_add_courses_btn button p::before {{
         content: "" !important;
         display: inline-block !important;
         position: relative !important;
-        top: 2px !important;
-        width: 16px !important; height: 16px !important;
+        top: 1px !important;
+        width: 12px !important; height: 12px !important;
         margin-right: 6px !important;
         background-image: url("data:image/png;base64,{b64_add}") !important;
         background-repeat: no-repeat !important;
@@ -206,6 +233,7 @@ def _inject_dynamic_css() -> None:
     div.st-key-today_sync_now_btn button:disabled p::before {{
         filter: grayscale(100%) opacity(0.4) !important;
     }}
+    {dimming_css}
     </style>""", unsafe_allow_html=True)
 
 
@@ -240,6 +268,7 @@ def _todays_groups() -> list[dict]:
             agg = merged.setdefault(
                 key,
                 {
+                    "course_id": grp.get("course_id"),
                     "course_name": grp.get("course_name", ""),
                     "local_folder": grp.get("local_folder", ""),
                     "files": [],
@@ -270,6 +299,24 @@ _TODAY_FILES_CHEVRON = (
 )
 
 
+def _group_widget_id(grp: dict) -> str:
+    """Stable, key-safe identity for a today-files course group.
+
+    Cards were previously keyed by their position in the list, so if the set of
+    courses with files changed between reruns (e.g. a second sync completed
+    mid-session and inserted a course), every card's expand/collapse state -
+    and its per-file action-button keys - silently shifted to a NEIGHBOURING
+    course. Deriving the key from (course_id, local_folder) pins state to the
+    course it belongs to no matter how the list reorders. Hex-digest suffix
+    keeps arbitrary folder paths out of Streamlit keys / CSS classes.
+    """
+    import hashlib
+    cid = grp.get("course_id")
+    folder = grp.get("local_folder", "") or ""
+    folder_h = hashlib.md5(folder.encode("utf-8", "replace")).hexdigest()[:8]
+    return f"{cid if cid is not None else 'x'}_{folder_h}"
+
+
 def _render_today_files(groups: list[dict]) -> None:
     """Render today's synced files as one collapsible card PER COURSE.
 
@@ -288,7 +335,7 @@ def _render_today_files(groups: list[dict]) -> None:
     inject_file_action_css()
     inject_css("sync_history_cards.css")
 
-    for idx, grp in enumerate(groups):
+    for grp in groups:
         files = grp.get("files") or []
         if not files:
             continue
@@ -298,7 +345,8 @@ def _render_today_files(groups: list[dict]) -> None:
         count_label = f"{count} file" if count == 1 else f"{count} files"
         dest = short_path(local_folder) if local_folder else "Course folder"
 
-        open_key = f"today_files_open_{idx}"
+        gid = _group_widget_id(grp)
+        open_key = f"today_files_open_{gid}"
         is_open = st.session_state.get(open_key, True)
 
         header_html = (
@@ -318,15 +366,15 @@ def _render_today_files(groups: list[dict]) -> None:
             "</div>"
         )
 
-        with st.container(border=True, key=f"shist_run_today_{idx}"):
-            if st.button("​", key=f"shist_btn_today_{idx}", use_container_width=True):
+        with st.container(border=True, key=f"shist_run_today_{gid}"):
+            if st.button("​", key=f"shist_btn_today_{gid}", use_container_width=True):
                 st.session_state[open_key] = not is_open
                 st.rerun()
             st.markdown(header_html, unsafe_allow_html=True)
             if is_open:
-                with st.container(border=True, key=f"shist_body_today_{idx}"):
+                with st.container(border=True, key=f"shist_body_today_{gid}"):
                     render_course_file_breakdown(
-                        files, local_folder, key_scope=f"today_{idx}",
+                        files, local_folder, key_scope=f"today_{gid}",
                     )
 
 
@@ -335,6 +383,17 @@ def _render_today_files(groups: list[dict]) -> None:
 def _css_escape_content(text: str) -> str:
     """Escape a string for safe use inside a CSS quoted string (content: "...")."""
     return text.replace('\\', '\\\\').replace('"', '\\"')
+
+
+def _css_content_safe(text: str) -> str:
+    """Escape *user* text for a CSS ``content:"…"`` value inside a ``<style>``.
+
+    Extends ``_css_escape_content`` by unicode-escaping ``<`` so a stray
+    ``</style>`` in a user-typed group name can't break out of the injected
+    style element (the HTML parser scans the raw text for the literal
+    ``</style``; ``\\3C`` renders as ``<`` for display but isn't a literal ``<``).
+    """
+    return _css_escape_content(text).replace('<', '\\00003c ')
 
 
 # White checkmark badge - mirrors the Card 2/3 "active checkbox" pattern in
@@ -364,25 +423,126 @@ _CARD_SEL_HOVER_BG = "rgba(255, 255, 255, 0.24)"
 _CARD_SEL_HOVER_BORDER = "rgba(255, 255, 255, 0.65)"
 _CHECK_IDLE_BORDER = "2px solid rgba(255, 255, 255, 0.35)"
 _CHECK_HOVER_BORDER = "rgba(255, 255, 255, 0.65)"
+# "Absorbed" pair: a standalone pair whose course is already covered by a
+# selected group. Shown locked (dashed border, dimmed, non-interactive) with an
+# "Included in <group>" tag, so the group⊃pair relationship is explicit and the
+# same course can never be double-counted while its group is on.
+_CARD_ABSORBED_BG = "rgba(255, 255, 255, 0.035)"
+_CARD_ABSORBED_BORDER = "rgba(255, 255, 255, 0.12)"
 
 
-def _toggle_import_btn(sel_key: str, pairs: list[dict]):
-    """Flip a saved pair/group's daily-sync membership when its card is clicked."""
-    from core.today_store import add_today_pairs, remove_today_pair
-    new_state = not st.session_state.get(sel_key, False)
-    st.session_state[sel_key] = new_state
-    if new_state:
-        add_today_pairs([
-            {
-                "course_id": p.get("course_id"),
-                "course_name": p.get("course_name", ""),
-                "local_folder": p.get("local_folder"),
-            }
-            for p in pairs
-        ])
-    else:
-        for p in pairs:
-            remove_today_pair(p.get("course_id"), p.get("local_folder"))
+def _toggle_import_btn(sel_key: str):
+    """Flip a saved pair/group's *local* selection in the import dialog.
+
+    Selection is local-only now: the daily-sync set is (re)computed as the union
+    of every selected entity's courses when the user confirms (see
+    ``_commit_import_selection``). The old per-click add/remove could silently
+    drop a course that another still-selected entity also owned (e.g. unticking a
+    group nuked a standalone pair that shared one of its courses).
+    """
+    st.session_state[sel_key] = not st.session_state.get(sel_key, False)
+
+
+def _import_card_css(btn_key: str, icon_b64: str, tag_text: str,
+                     selected: bool) -> str:
+    """Per-card CSS for a normal (tickable) import card - idle/selected + hover."""
+    bg, border = (
+        (_CARD_SEL_BG, _CARD_SEL_BORDER) if selected
+        else (_CARD_IDLE_BG, _CARD_IDLE_BORDER)
+    )
+    hover_bg, hover_border = (
+        (_CARD_SEL_HOVER_BG, _CARD_SEL_HOVER_BORDER) if selected
+        else (_CARD_IDLE_HOVER_BG, _CARD_IDLE_HOVER_BORDER)
+    )
+    check_border = "none" if selected else _CHECK_IDLE_BORDER
+    check_img_rule = (
+        f"background-image: {_IMPORT_CHECK_SVG} !important;" if selected else ""
+    )
+    check_hover_border = "transparent" if selected else _CHECK_HOVER_BORDER
+    return f"""
+    div.st-key-{btn_key} button {{
+        background-image: url('data:image/png;base64,{icon_b64}') !important;
+        background-color: {bg} !important;
+        border: 1px solid {border} !important;
+    }}
+    div.st-key-{btn_key} button:hover {{
+        background-color: {hover_bg} !important;
+        border-color: {hover_border} !important;
+    }}
+    div.st-key-{btn_key} button p::after {{
+        content: "{_css_escape_content(tag_text)}" !important;
+    }}
+    div.st-key-{btn_key} button::before {{
+        border: {check_border} !important;
+        background-color: transparent !important;
+        {check_img_rule}
+    }}
+    div.st-key-{btn_key} button:hover::before {{
+        border-color: {check_hover_border} !important;
+    }}
+    """
+
+
+def _import_card_css_absorbed(btn_key: str, icon_b64: str, tag_text: str) -> str:
+    """Per-card CSS for an *absorbed* pair - locked, dimmed, muted check.
+
+    The whole-card ``opacity`` dims the title/icon/pills/check together. The
+    "Included in <group>" tag is set on a stDialog-scoped selector so it BEATS
+    today.css's higher-specificity grey ``p::after`` colour and stays legible
+    (a soft cyan) instead of fading into the dim card.
+    """
+    _tag = _css_content_safe(tag_text)
+    return f"""
+    div.st-key-{btn_key} button {{
+        background-image: url('data:image/png;base64,{icon_b64}') !important;
+        background-color: {_CARD_ABSORBED_BG} !important;
+        border: 1px dashed {_CARD_ABSORBED_BORDER} !important;
+        opacity: 0.7 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+    }}
+    div[data-testid="stDialog"] div[class*="st-key-{btn_key}"] button p::after {{
+        content: "{_tag}" !important;
+        color: rgba(125, 211, 252, 0.92) !important;
+        font-weight: 600 !important;
+    }}
+    div.st-key-{btn_key} button::before {{
+        border: none !important;
+        background-color: transparent !important;
+        background-image: {_IMPORT_CHECK_SVG} !important;
+    }}
+    """
+
+
+def _commit_import_selection(selectable: list) -> None:
+    """Persist the daily-sync set as the union of the selected entities' courses.
+
+    Preserves any daily course NOT represented by a currently selectable entity
+    (its saved group was deleted, or its folder is missing so the entity is
+    hidden here) so managing courses in this dialog never silently drops those.
+    """
+    from core.today_store import load_today_config, set_today_pairs
+
+    dialog_sigs: set = set()
+    resolved: dict = {}
+    for g_idx, group in selectable:
+        gid = group.get("group_id", str(g_idx))
+        selected = st.session_state.get(f"today_imp_sel_{gid}", False)
+        for p in group.get("pairs", []) or []:
+            sig = (p.get("course_id"), p.get("local_folder"))
+            dialog_sigs.add(sig)
+            if selected:
+                resolved.setdefault(sig, {
+                    "course_id": p.get("course_id"),
+                    "course_name": p.get("course_name", ""),
+                    "local_folder": p.get("local_folder"),
+                })
+    existing = load_today_config()["pairs"]
+    keep = [
+        p for p in existing
+        if (p.get("course_id"), p.get("local_folder")) not in dialog_sigs
+    ]
+    set_today_pairs(keep + list(resolved.values()))
 
 
 @st.dialog("​", width="large")
@@ -437,9 +597,11 @@ def _import_courses_dialog():
             st.rerun(scope="app")
         return
 
-    daily_sigs = {
-        (p["course_id"], p["local_folder"]) for p in load_today_config()["pairs"]
-    }
+    _daily_pairs = load_today_config()["pairs"]
+    daily_sigs = {(p["course_id"], p["local_folder"]) for p in _daily_pairs}
+    # First-time setup (empty daily list) vs managing an existing one - drives
+    # the confirm-button label ("Add N courses" vs "Save changes").
+    is_first_time = not _daily_pairs
 
     # Proactively hide any saved pair/group with a missing or moved folder so the
     # user only picks from healthy entries; they're told once, below, where to fix it.
@@ -476,85 +638,154 @@ def _import_courses_dialog():
             st.rerun(scope="app")
         return
 
-    with st.container(height=460, border=False, key="today_import_scroll"):
-        css_blocks = []
-        cards_data = []
-        for g_idx, group in selectable:
-            is_sp = group.get("is_single_pair", False)
-            pairs = group.get("pairs", []) or []
-            gid = group.get("group_id", str(g_idx))
-            sel_key = f"today_imp_sel_{gid}"
-            btn_key = f"today_imp_btn_{gid}"
+    # ── Seed local selection (group-preferred, minimal) ─────────────────────
+    # Selection is LOCAL until the user confirms; the daily set is then the UNION
+    # of every selected entity's courses (see _commit_import_selection). Seed a
+    # GROUP if all its courses are already in the daily set; seed a standalone
+    # PAIR only if its course is in the set AND not already covered by a seeded
+    # group. Minimal (non-redundant) seeding means unticking a group cleanly
+    # clears its courses instead of leaving orphaned pair ticks behind.
+    def _sig(p) -> tuple:
+        return (p.get("course_id"), p.get("local_folder"))
 
-            if sel_key not in st.session_state:
-                st.session_state[sel_key] = bool(pairs) and all(
-                    (p.get("course_id"), p.get("local_folder")) in daily_sigs
-                    for p in pairs
-                )
-            selected = st.session_state[sel_key]
+    for g_idx, group in selectable:            # groups first
+        if group.get("is_single_pair", False):
+            continue
+        sel_key = f"today_imp_sel_{group.get('group_id', str(g_idx))}"
+        if sel_key not in st.session_state:
+            gpairs = group.get("pairs", []) or []
+            st.session_state[sel_key] = bool(gpairs) and all(
+                _sig(p) in daily_sigs for p in gpairs
+            )
+    _seeded_grp_cover = {
+        _sig(p)
+        for g_idx, group in selectable
+        if not group.get("is_single_pair", False)
+        and st.session_state.get(f"today_imp_sel_{group.get('group_id', str(g_idx))}")
+        for p in (group.get("pairs", []) or [])
+    }
+    for g_idx, group in selectable:            # then standalone pairs
+        if not group.get("is_single_pair", False):
+            continue
+        sel_key = f"today_imp_sel_{group.get('group_id', str(g_idx))}"
+        if sel_key not in st.session_state:
+            gp = (group.get("pairs", []) or [{}])[0]
+            s = _sig(gp)
+            st.session_state[sel_key] = s in daily_sigs and s not in _seeded_grp_cover
 
+    # Resolve coverage from the CURRENT selection, split by entity type so it
+    # works both ways:
+    #   grp_cover : sig → selected GROUP name  → locks a matching standalone pair
+    #               ("Included in <group>").
+    #   pair_cover: sig → selected PAIR name   → covers a matching group
+    #               ("Covered by <pairs>") - the symmetric case.
+    grp_cover: dict = {}
+    pair_cover: dict = {}
+    resolved_sigs: set = set()
+    for g_idx, group in selectable:
+        gid = group.get("group_id", str(g_idx))
+        if not st.session_state.get(f"today_imp_sel_{gid}"):
+            continue
+        is_sp = group.get("is_single_pair", False)
+        for p in group.get("pairs", []) or []:
+            s = _sig(p)
+            resolved_sigs.add(s)
             if is_sp:
-                pair = pairs[0] if pairs else {}
-                pill_names = [friendly_course_name(pair.get("course_name", group["group_name"]))]
-                icon_b64 = b64_pairs
-                tag_text = "Pair"
+                pair_cover.setdefault(s, group.get("group_name", "a pair"))
             else:
-                pill_names = [
-                    friendly_course_name(p.get("course_name", ""))
-                    for p in pairs if p.get("course_name")
-                ]
-                icon_b64 = b64_groups
-                tag_text = "Group"
+                grp_cover.setdefault(s, group.get("group_name", "a group"))
+    sel_count = len(resolved_sigs)
 
-            cards_data.append({"key": btn_key, "pills": pill_names, "selected": selected})
+    # ── Pre-compute every card's CSS + pill data BEFORE any button renders ──
+    # Building all per-card <style> first and injecting it at dialog top level
+    # (below, ahead of the scroll container) means each card paints already-styled
+    # on the dialog's first frame - instead of first flashing as a plain Streamlit
+    # button and then "popping" into a card once the style block arrived at the end
+    # of the loop (the visible step-by-step restyle the user saw on open).
+    css_blocks = []
+    cards_data = []
+    render_list = []  # (g_idx, group_name, btn_key, sel_key, locked)
+    for g_idx, group in selectable:
+        is_sp = group.get("is_single_pair", False)
+        pairs = group.get("pairs", []) or []
+        gid = group.get("group_id", str(g_idx))
+        sel_key = f"today_imp_sel_{gid}"
+        btn_key = f"today_imp_btn_{gid}"
+        selected = st.session_state[sel_key]
 
-            bg, border = (
-                (_CARD_SEL_BG, _CARD_SEL_BORDER) if selected
-                else (_CARD_IDLE_BG, _CARD_IDLE_BORDER)
+        sigs = [_sig(p) for p in pairs]
+        # "Checked" is COVERAGE, not the raw flag: an entity reads as ticked
+        # whenever all its courses are in the resolved set (from ANY selected
+        # entity). This is what makes two ticked pairs auto-tick their group.
+        covered = bool(sigs) and all(s in resolved_sigs for s in sigs)
+
+        locked, tag_text = False, "Pair" if is_sp else "Group"
+        if is_sp:
+            icon_b64 = b64_pairs
+            pill_names = [friendly_course_name(
+                (pairs[0] if pairs else {}).get("course_name", group["group_name"]))]
+            # Absorbed: a selected GROUP already covers this pair's course.
+            if sigs and sigs[0] in grp_cover:
+                locked = True
+                tag_text = f'Included in "{grp_cover[sigs[0]]}"'
+        else:
+            icon_b64 = b64_groups
+            pill_names = [
+                friendly_course_name(p.get("course_name", ""))
+                for p in pairs if p.get("course_name")
+            ]
+            # Covered: all this group's courses come from selected pairs while
+            # the group itself isn't the (user-)selected owner.
+            if not selected and covered:
+                locked = True
+                names = []
+                for s in sigs:
+                    nm = pair_cover.get(s)
+                    if nm and nm not in names:
+                        names.append(nm)
+                if not names:
+                    tag_text = "Already covered"
+                elif len(names) <= 2:
+                    tag_text = "Covered by " + ", ".join(f'"{n}"' for n in names)
+                else:
+                    tag_text = f"Covered by {len(names)} pairs"
+
+        cards_data.append({
+            "key": btn_key, "pills": pill_names,
+            "selected": covered, "absorbed": locked,
+        })
+
+        if locked:
+            css_blocks.append(
+                _import_card_css_absorbed(btn_key, icon_b64, tag_text)
             )
-            hover_bg, hover_border = (
-                (_CARD_SEL_HOVER_BG, _CARD_SEL_HOVER_BORDER) if selected
-                else (_CARD_IDLE_HOVER_BG, _CARD_IDLE_HOVER_BORDER)
+        else:
+            css_blocks.append(
+                _import_card_css(btn_key, icon_b64, tag_text, covered)
             )
-            check_border = "none" if selected else _CHECK_IDLE_BORDER
-            check_img_rule = (
-                f"background-image: {_IMPORT_CHECK_SVG} !important;"
-                if selected else ""
-            )
-            check_hover_border = "transparent" if selected else _CHECK_HOVER_BORDER
+        render_list.append((g_idx, group["group_name"], btn_key, sel_key, locked))
 
-            css_blocks.append(f"""
-            div.st-key-{btn_key} button {{
-                background-image: url('data:image/png;base64,{icon_b64}') !important;
-                background-color: {bg} !important;
-                border: 1px solid {border} !important;
-            }}
-            div.st-key-{btn_key} button:hover {{
-                background-color: {hover_bg} !important;
-                border-color: {hover_border} !important;
-            }}
-            div.st-key-{btn_key} button p::after {{
-                content: "{_css_escape_content(tag_text)}" !important;
-            }}
-            div.st-key-{btn_key} button::before {{
-                border: {check_border} !important;
-                background-color: transparent !important;
-                {check_img_rule}
-            }}
-            div.st-key-{btn_key} button:hover::before {{
-                border-color: {check_hover_border} !important;
-            }}
-            """)
+    # Hoisted to dialog top level so global.css collapses its ghost box (no gap
+    # slot) and the rules land in the DOM before the buttons mount.
+    st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)
 
+    with st.container(height=460, border=False, key="today_import_scroll"):
+        for g_idx, group_name, btn_key, sel_key, locked in render_list:
             with st.container(key=f"today_import_item_{g_idx}"):
-                st.button(group["group_name"], key=btn_key, use_container_width=True,
-                          on_click=_toggle_import_btn, args=(sel_key, pairs))
-
-        st.markdown(f"<style>{''.join(css_blocks)}</style>", unsafe_allow_html=True)
+                st.button(group_name, key=btn_key, use_container_width=True,
+                          disabled=locked,
+                          on_click=_toggle_import_btn, args=(sel_key,))
         _inject_import_pills_bridge(cards_data)
 
-    if st.button("Done", type="primary", use_container_width=True,
+    # Live-count confirm: "Add N courses" first-time, "Save changes" when managing.
+    if is_first_time:
+        _plural = "" if sel_count == 1 else "s"
+        confirm_label = f"Add {sel_count} course{_plural}" if sel_count else "Add courses"
+    else:
+        confirm_label = "Save changes"
+    if st.button(confirm_label, type="primary", use_container_width=True,
                  key="today_import_done"):
+        _commit_import_selection(selectable)
         st.session_state["today_toast"] = "Daily sync updated."
         st.rerun(scope="app")
 
@@ -651,6 +882,102 @@ def _remove_daily_pair_cb(course_id, local_folder, name):
     st.session_state["today_toast"] = f"Removed '{name}' from your daily sync."
 
 
+def _dismiss_sync_notice() -> None:
+    """on_click for the notice's close button - idempotent pop, no dangling flag."""
+    st.session_state.pop("today_sync_notice", None)
+
+
+# ── Last-run success notice (dismissible) ───────────────────────────────────
+
+# Lucide check-circle glyph - green, sized inline (see _SVG_COURSE for why the
+# inline size is required, not cosmetic).
+_SVG_NOTICE_CHECK = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='#34d399' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' "
+    "style='width:19px;height:19px;flex-shrink:0;'>"
+    "<path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>"
+)
+
+_NOTICE_MAX_COURSE_CHIPS = 4
+
+
+def _render_sync_notice(notice: dict) -> None:
+    """Render the dismissible "sync finished" card below the auto-sync toggle.
+
+    Shown on the idle dashboard after a daily auto-sync or a manual "Quick Sync
+    now" completes (written by the today completion handler in sync_ui.py;
+    survives page navigation until dismissed or replaced by the next run).
+    The whole card is one st.markdown block (CLAUDE.md: single call, no
+    inter-element gap) beside a compact masked-icon close button.
+    """
+    from ui_helpers import format_time_display
+
+    if not isinstance(notice, dict):
+        st.session_state.pop("today_sync_notice", None)
+        return
+
+    total = notice.get("total_files")
+    total = total if isinstance(total, int) and total > 0 else 0
+    errors = notice.get("errors")
+    errors = errors if isinstance(errors, int) and errors > 0 else 0
+    courses = [c for c in (notice.get("courses") or []) if isinstance(c, dict)]
+
+    title = "Daily sync complete" if notice.get("is_auto") else "Quick Sync complete"
+    when = str(notice.get("completed_at") or "")
+    when_html = (
+        f"<span class='today-notice-when'>at {esc(format_time_display(when))}</span>"
+        if when else ""
+    )
+
+    if total > 0:
+        headline = f"{total} new file{'s' if total != 1 else ''} downloaded."
+    else:
+        headline = "No new files &ndash; you were already up to date."
+
+    chips_html = ""
+    if total > 0 and courses:
+        chips = []
+        for c in courses[:_NOTICE_MAX_COURSE_CHIPS]:
+            _cnt = c.get("count")
+            _cnt = _cnt if isinstance(_cnt, int) and _cnt > 0 else 0
+            chips.append(
+                f"<span class='today-notice-chip'>{esc(str(c.get('name') or 'Course'))}"
+                f"<b>{_SVG_FILE_MINI}{_cnt}</b></span>"  # audit-ignore: int count in static wrapper
+            )
+        overflow = len(courses) - _NOTICE_MAX_COURSE_CHIPS
+        if overflow > 0:
+            chips.append(f"<span class='today-notice-chip'>+{overflow} more</span>")
+        chips_html = f"<div class='today-notice-chips'>{''.join(chips)}</div>"
+
+    errors_html = ""
+    if errors:
+        errors_html = (
+            f"<div class='today-notice-errors'>{errors} file"
+            f"{'s' if errors != 1 else ''} couldn't be downloaded &ndash; "
+            f"details in Sync mode &rarr; Sync History.</div>"
+        )
+
+    with st.container(key="today_sync_notice_card"):
+        c_body, c_close = st.columns([0.95, 0.05], vertical_alignment="center")
+        with c_body:
+            st.markdown(
+                f"<div class='today-notice-inner'>"
+                f"<div class='today-notice-head'>{_SVG_NOTICE_CHECK}"  # audit-ignore: static SVG constant
+                f"<span class='today-notice-title'>{esc(title)}</span>{when_html}</div>"
+                f"<div class='today-notice-desc'>{headline}</div>"
+                f"{chips_html}{errors_html}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        with c_close:
+            # No help= tooltip: it wraps the <button> in a stTooltipHoverTarget,
+            # which breaks the fixed 32px sizing CSS (see CLAUDE.md).
+            st.button(
+                "​", key="today_notice_close_btn",
+                on_click=_dismiss_sync_notice,
+            )
+
+
 def _render_course_chips(pairs: list[dict]) -> None:
     """Render the daily-sync courses as a compact, read-only chip summary.
 
@@ -680,7 +1007,9 @@ def _render_course_chips(pairs: list[dict]) -> None:
 _SVG_RUN_SPINNER = (
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
     "stroke='#3fd9ff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' "
-    "class='today-run-spin'>"
+    # Inline size (matches today.css .today-run-spin) so it can't balloon if
+    # today.css unmounts during a page transition - see _SVG_COURSE above.
+    "class='today-run-spin' style='width:20px;height:20px;flex-shrink:0;'>"
     "<path d='M21 12a9 9 0 1 1-6.219-8.56'/></svg>"
 )
 
@@ -696,11 +1025,13 @@ _RUN_PHASE_DESC = {
 
 
 def _render_today_running_sync() -> None:
-    """Render the in-page sync progress card and drive the sync engine inside it.
+    """Render the in-page sync progress content and drive the sync engine.
 
-    The card owns the title + phase description; the engine (render_sync_step4)
-    is called *inside* the card container so every progress bar / cancel button
-    it emits lands here rather than taking over the page. The engine, seeing
+    The caller owns the ``today_running_card`` container (kept in the tree even
+    when idle for DOM-node stability - see render_today_dashboard); this fills it
+    with the title + phase description and then calls the engine
+    (render_sync_step4) so every progress bar / cancel button it emits lands
+    inside that card rather than taking over the page. The engine, seeing
     ``today_sync_active``, renders a slimmed view (no wizard, no metrics/log, no
     full-screen "Analyzing…" blocks) and routes back to the idle dashboard when
     the run completes or is cancelled.
@@ -712,15 +1043,14 @@ def _render_today_running_sync() -> None:
     title = "Running daily sync" if is_auto else "Running Quick Sync"
     desc = _RUN_PHASE_DESC.get(status, "Working…")
 
-    with st.container(key="today_running_card"):
-        st.markdown(
-            f"<div class='today-run-head'>{_SVG_RUN_SPINNER}"  # audit-ignore: static SVG constant
-            f"<span class='today-run-title'>{esc(title)}</span></div>"
-            f"<div class='today-run-desc'>{esc(desc)}</div>",
-            unsafe_allow_html=True,
-        )
-        # Drive the shared sync engine; its slim (today) UI renders below.
-        render_sync_step4()
+    st.markdown(
+        f"<div class='today-run-head'>{_SVG_RUN_SPINNER}"  # audit-ignore: static SVG constant
+        f"<span class='today-run-title'>{esc(title)}</span></div>"
+        f"<div class='today-run-desc'>{esc(desc)}</div>",
+        unsafe_allow_html=True,
+    )
+    # Drive the shared sync engine; its slim (today) UI renders below.
+    render_sync_step4()
 
 
 # ── Page ────────────────────────────────────────────────────────────────────
@@ -750,215 +1080,242 @@ def render_today_dashboard(fetch_courses_fn=None):
     if not sync_running:
         st.session_state.pop("today_sync_active", None)
 
-    inject_css("today.css")
-    _inject_dynamic_css()
+    cfg = load_today_config()
+    inject_css("today.css")  # Force reload CSS changes v2
+    _inject_dynamic_css(cfg["auto_sync_enabled"], sync_running)
 
     if "today_toast" in st.session_state:
         st.toast(st.session_state.pop("today_toast"))
 
-    cfg = load_today_config()
     daily_pairs = cfg["pairs"]
 
-    # ── Header (title + built-in help button) ───────────────────────────────
-    with st.container(key="today_title_help_row"):
-        _c_title, _c_help = st.columns([1, 10], vertical_alignment="center")
-        with _c_title:
-            st.markdown(
-                f"<div class='today-title'>{_SVG_TITLE}<span>Today</span></div>",  # audit-ignore: static SVG constant
-                unsafe_allow_html=True,
-            )
-        with _c_help:
-            render_help_card(
-                key_prefix="today_help",
-                title=_TODAY_HELP_TITLE,
-                text_html=_TODAY_HELP_TEXT,
-                mode="button",
-            )
-    st.markdown(
-        "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
-        unsafe_allow_html=True,
-    )
-
-    # Help card body (renders below the header when opened).
-    render_help_card(
-        key_prefix="today_help",
-        title=_TODAY_HELP_TITLE,
-        text_html=_TODAY_HELP_TEXT,
-        mode="card",
-    )
-
-    # ── Daily auto-sync toggle ──────────────────────────────────────────────
     def _on_toggle():
         set_auto_sync_enabled(st.session_state.get("today_auto_toggle", False))
 
-    with st.container(key="today_toggle_card"):
-        st.toggle(
-            "Daily auto-sync",
-            value=cfg["auto_sync_enabled"],
-            key="today_auto_toggle",
-            on_change=_on_toggle,
-            help=(
-                "When on, the app automatically syncs your selected courses the first "
-                "time you open it each day (after 4am). New lecture files are waiting "
-                "for you - no clicks needed."
-            ),
-        )
+    # ── Main Layout Centering ────────────────────────────────────────────
+    _, main_col, _ = st.columns([1, 2.4, 1])
+
+    with main_col:
+        # ── Header (title + built-in help button) ───────────────────────────────
+        with st.container(key="today_title_help_row"):
+            _c_title, _c_help = st.columns([1, 10], vertical_alignment="center")
+            with _c_title:
+                st.markdown(
+                    f"<div class='today-title'><span>Auto-download today's new files</span></div>",
+                    unsafe_allow_html=True,
+                )
+            with _c_help:
+                render_help_card(
+                    key_prefix="today_help",
+                    title=_TODAY_HELP_TITLE,
+                    text_html=_TODAY_HELP_TEXT,
+                    mode="button",
+                )
         st.markdown(
-            "<div class='today-toggle-desc'>Syncs the courses below automatically the "
-            "first time you open Canvas Downloader each day (after 4 AM).</div>",
+            "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
             unsafe_allow_html=True,
         )
 
-    # ── Running sync (in-page) ──────────────────────────────────────────────
-    # A daily/Quick Sync is in flight: surface it as a slim progress card right
-    # here, below the toggle, instead of the sync engine taking over the whole
-    # screen. The rest of the dashboard is hidden until the run finishes (the
-    # engine routes back to the idle view on completion / cancel).
-    if sync_running:
-        _render_today_running_sync()
-        return
+        # Help card body (renders below the header when opened).
+        render_help_card(
+            key_prefix="today_help",
+            title=_TODAY_HELP_TITLE,
+            text_html=_TODAY_HELP_TEXT,
+            mode="card",
+        )
 
-    # ── Courses in your daily sync ──────────────────────────────────────────
-    # Day-to-day this list never changes (it's a whole-semester setup), so the
-    # main view shows only a compact, read-only chip summary of the courses.
-    # The full management UI - the editable list with Remove + the Add courses
-    # dialog - lives "a layer deeper", revealed inline by the "Manage" toggle.
-    # Add courses stays a dialog opened from the revealed layer, so it's never
-    # nested inside another dialog (which would crash Streamlit).
-    #
-    # Pairs whose folder is missing/moved are proactively hidden from the list so
-    # they never get in the way. No notice here - the user can only add courses via
-    # the import dialog, which already explains any hidden (issue) entries there.
-    visible_pairs = [
-        p for p in daily_pairs
-        if p.get("local_folder") and Path(p["local_folder"]).exists()
-    ]
-    has_courses = bool(visible_pairs)
-    manage_open = st.session_state.get("today_manage_open", False)
-
-    # Header row: section label (+ live count) ........ Manage / Done toggle.
-    # The toggle is a compact, right-aligned control (content-sized, not a full
-    # bar) styled like the Sync UI "Edit" action button, so it reads as *the*
-    # control for the courses list below it.
-    with st.container(key="today_courses_head"):
-        c_lbl, c_btn = st.columns([0.7, 0.3], vertical_alignment="center")
-        with c_lbl:
-            count_badge = (
-                f"<span class='tcs-count'>{len(visible_pairs)}</span>"
-                if has_courses else ""
+        # ── Daily auto-sync toggle ──────────────────────────────────────────────
+        with st.container(key="today_toggle_card"):
+            st.toggle(
+                "Daily auto-sync",
+                value=cfg["auto_sync_enabled"],
+                key="today_auto_toggle",
+                on_change=_on_toggle,
+                disabled=sync_running,
+                help=(
+                    "When on, the app automatically syncs your selected courses the first "
+                    "time you open it each day (after 4am). New lecture files are waiting "
+                    "for you - no clicks needed."
+                ),
             )
             st.markdown(
-                f"<div class='today-section-label'>Courses in your daily sync"
-                f"{count_badge}</div>"  # audit-ignore: static HTML wrapping an int count
-                f"<div class='today-section-sub'>Kept up to date automatically. "
-                f"Imported from your Saved Groups &amp; Pairs.</div>",
+                "<div class='today-toggle-desc'>Automatically downloads new files from selected courses every morning.</div>",
                 unsafe_allow_html=True,
             )
-        with c_btn:
-            # The toggle only makes sense when there's a summary to collapse into.
-            if has_courses and not manage_open:
-                if st.button("Manage", key="today_manage_btn",
-                             use_container_width=False):
-                    st.session_state["today_manage_open"] = True
-                    st.rerun()
-            elif has_courses and manage_open:
-                if st.button("Done", key="today_manage_done_btn",
-                             use_container_width=False):
-                    st.session_state["today_manage_open"] = False
-                    st.rerun()
 
-    if not has_courses:
-        # No courses yet - skip the summary/collapse and offer a direct CTA so
-        # first-time setup is a single click away.
-        st.markdown(
-            f"<div class='today-empty'>"
-            f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
-            f"<div>No courses in your daily sync yet.</div>"
-            f"<div class='today-empty-sub'>Use <b>Add courses</b> to import saved "
-            f"pairs or groups.</div></div>",
-            unsafe_allow_html=True,
-        )
-        if st.button("Add courses", use_container_width=True,
-                     key="today_add_courses_btn"):
-            _open_import_dialog()
-    elif not manage_open:
-        # COLLAPSED (the day-to-day view) - elegant, glanceable read-only chips.
-        _render_course_chips(visible_pairs)
-    else:
-        # EXPANDED (the management layer) - editable list + Add courses dialog.
-        with st.container(border=True, key="today_list_outline"):
-            for i, pair in enumerate(visible_pairs):
-                folder = pair.get("local_folder", "")
-                name = friendly_course_name(pair.get("course_name") or "Course")
-                col_card, col_rm = st.columns([0.84, 0.16],
-                                              vertical_alignment="center")
-                with col_card:
-                    with st.container(key=f"today_pair_card_{i}"):
-                        # Title + folder rendered as ONE markdown block (single
-                        # element-container) so the two lines stack via the inner
-                        # flex `gap` and can never overlap, regardless of how
-                        # Streamlit wraps separate elements. (CLAUDE.md: combine
-                        # title + subtitle into one st.markdown call.)
-                        st.markdown(
-                            f"<div class='today-pair-inner'>"
-                            f"<div class='today-pair-title'>Course:&nbsp;&nbsp;"
-                            f"{esc(name)}</div>"
-                            f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
-                            f"{esc(folder)}</div>"  # audit-ignore: folder is a local path
-                            f"</div>",
-                            unsafe_allow_html=True,
-                        )
-                with col_rm:
-                    st.button(
-                        "Remove", key=f"today_remove_{i}", use_container_width=True,
-                        on_click=_remove_daily_pair_cb,
-                        args=(pair.get("course_id"), folder, name),
+        # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
+        # A daily/Quick Sync is in flight: surface it as a slim progress card right
+        # here, below the toggle, instead of the sync engine taking over the whole
+        # screen. The rest of the dashboard stays below, dimmed (see the
+        # today_content_area dimming in _inject_dynamic_css).
+        #
+        # CRITICAL: this keyed container is emitted UNCONDITIONALLY (even when
+        # idle) so React always keeps it as its OWN DOM node. If it were only
+        # rendered while syncing, then on the idle→syncing frame React would
+        # repurpose the *content-area's* node for this card (both are adjacent
+        # stVerticalBlocks), orphaning the content area's trailing children -
+        # the whole "Today's files" list - INSIDE this card's bordered box. That
+        # is the "content swallowed by the syncing card" bug. When idle the slot
+        # holds only a hidden anchor (keeps the node alive) and CSS collapses it
+        # to nothing (div[...today_running_card]:not(:has(.today-run-head))).
+        with st.container(key="today_running_card"):
+            st.markdown(
+                "<div class='today-run-anchor'></div>",  # audit-ignore: static node-anchor
+                unsafe_allow_html=True,
+            )
+            if sync_running:
+                _render_today_running_sync()
+
+        with st.container(key="today_content_area"):
+            # ── Last-run success notice ─────────────────────────────────────────────
+            # Written by the today completion handler (sync_ui.render_sync_step4) when a
+            # daily/Quick Sync finishes. Dismissible; survives navigation until closed
+            # or replaced by the next run. Idle view only - a run in flight returns
+            # above, so a stale notice can never sit beside the live progress card.
+            _sync_notice = st.session_state.get("today_sync_notice")
+            if _sync_notice:
+                _render_sync_notice(_sync_notice)
+
+            # ── Courses in your daily sync ──────────────────────────────────────────
+            # Day-to-day this list never changes (it's a whole-semester setup), so the
+            # main view shows only a compact, read-only chip summary of the courses.
+            # The full management UI - the editable list with Remove + the Add courses
+            # dialog - lives "a layer deeper", revealed inline by the "Manage" toggle.
+            # Add courses stays a dialog opened from the revealed layer, so it's never
+            # nested inside another dialog (which would crash Streamlit).
+            #
+            # Pairs whose folder is missing/moved are proactively hidden from the list so
+            # they never get in the way. No notice here - the user can only add courses via
+            # the import dialog, which already explains any hidden (issue) entries there.
+            visible_pairs = [
+                p for p in daily_pairs
+                if p.get("local_folder") and Path(p["local_folder"]).exists()
+            ]
+            has_courses = bool(visible_pairs)
+            manage_open = st.session_state.get("today_manage_open", False)
+
+            # Header row: section label (+ live count) ........ Manage / Done toggle.
+            # The toggle is a compact, right-aligned control (content-sized, not a full
+            # bar) styled like the Sync UI "Edit" action button, so it reads as *the*
+            # control for the courses list below it.
+            with st.container(key="today_courses_head"):
+                c_lbl, c_btn = st.columns([0.7, 0.3], vertical_alignment="center")
+                with c_lbl:
+                    count_badge = (
+                        f"<span class='tcs-count'>{len(visible_pairs)}</span>"
+                        if has_courses else ""
                     )
-        if st.button("Add courses", use_container_width=True,
-                     key="today_add_courses_btn"):
-            _open_import_dialog()
+                    st.markdown(
+                        f"<div class='today-section-label'>Courses in your daily sync"
+                        f"{count_badge}</div>",  # audit-ignore: static HTML wrapping an int count
+                        unsafe_allow_html=True,
+                    )
+                with c_btn:
+                    # The toggle only makes sense when there's a summary to collapse into.
+                    if has_courses and not manage_open:
+                        if st.button("Manage", key="today_manage_btn",
+                                     use_container_width=True, disabled=sync_running):
+                            st.session_state["today_manage_open"] = True
+                            st.rerun()
+                    elif has_courses and manage_open:
+                        if st.button("Done", key="today_manage_done_btn",
+                                     use_container_width=True, disabled=sync_running):
+                            st.session_state["today_manage_open"] = False
+                            st.rerun()
 
-    # ── Quick Sync now - an optional, on-demand manual run ──────────────────
-    # Auto-sync (toggle above) is the primary, hands-off path, so this is framed
-    # and sized as a secondary "run it yourself now" choice: a lead-in line sets
-    # the expectation, and the button is deliberately narrower + centred rather
-    # than a full-bleed primary action.
-    st.markdown(
-        "<div class='today-qs-lead'>Auto-sync keeps these up to date for you "
-        "each morning &mdash; or run it yourself right now:</div>",
-        unsafe_allow_html=True,
-    )
-    runnable = resolve_today_pairs()
-    _qs_l, _qs_c, _qs_r = st.columns([2, 3, 2])
-    with _qs_c:
-        if st.button("Quick Sync now", type="primary", use_container_width=True,
-                     key="today_sync_now_btn", disabled=not runnable):
-            start_today_sync(runnable)  # sets state + st.rerun()
+            if not has_courses:
+                # No courses yet - skip the summary/collapse and offer a direct CTA so
+                # first-time setup is a single click away.
+                with st.container(border=True, key="today_empty_container"):
+                    st.markdown(
+                        f"<div class='today-empty-inner'>"
+                        f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
+                        f"<div>No courses in your daily sync yet.</div>"
+                        f"<div class='today-empty-sub'>Use <b>Add courses</b> to import saved "
+                        f"pairs or groups.</div></div>",
+                        unsafe_allow_html=True,
+                    )
+                    if st.button("Add courses", use_container_width=True,
+                                 key="today_add_courses_btn", disabled=sync_running):
+                        _open_import_dialog()
+            elif not manage_open:
+                # COLLAPSED (the day-to-day view) - elegant, glanceable read-only chips.
+                _render_course_chips(visible_pairs)
+            else:
+                # EXPANDED (the management layer) - editable list + Add courses dialog.
+                with st.container(border=True, key="today_list_outline"):
+                    for i, pair in enumerate(visible_pairs):
+                        folder = pair.get("local_folder", "")
+                        name = friendly_course_name(pair.get("course_name") or "Course")
+                        col_card, col_rm = st.columns([0.84, 0.16],
+                                                      vertical_alignment="center")
+                        with col_card:
+                            with st.container(key=f"today_pair_card_{i}"):
+                                # Title + folder rendered as ONE markdown block (single
+                                # element-container) so the two lines stack via the inner
+                                # flex `gap` and can never overlap, regardless of how
+                                # Streamlit wraps separate elements. (CLAUDE.md: combine
+                                # title + subtitle into one st.markdown call.)
+                                st.markdown(
+                                    f"<div class='today-pair-inner'>"
+                                    f"<div class='today-pair-title'>Course:&nbsp;&nbsp;"
+                                    f"{esc(name)}</div>"
+                                    f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
+                                    f"{esc(folder)}</div>"  # audit-ignore: folder is a local path
+                                    f"</div>",
+                                    unsafe_allow_html=True,
+                                )
+                        with col_rm:
+                            st.button(
+                                "Remove", key=f"today_remove_{i}", use_container_width=True,
+                                on_click=_remove_daily_pair_cb,
+                                args=(pair.get("course_id"), folder, name),
+                                disabled=sync_running,
+                            )
+                    if st.button("Add or manage courses", use_container_width=True,
+                                 key="today_add_courses_btn", disabled=sync_running):
+                        _open_import_dialog()
 
-    st.markdown(
-        "<div class='today-qs-note'>Runs the same <b>Quick Sync</b> as "
-        "\"Sync Course Folders\", on demand &ndash; over just your daily courses.</div>",
-        unsafe_allow_html=True,
-    )
+            # ── Today's files (per course) ──────────────────────────────────────────
+            with st.container(key="today_files_head"):
+                st.markdown(
+                    f"<div class='today-section-label'>Today's files</div>"
+                    f"<div class='today-section-sub'>Everything downloaded today, grouped by "
+                    f"course.</div>",
+                    unsafe_allow_html=True,
+                )
 
-    # ── Today's files (per course) ──────────────────────────────────────────
-    st.markdown(
-        f"<hr style='border:none; border-top:1px solid {theme.BG_CARD}; "
-        f"margin:26px 0 14px 0;'>"
-        f"<div class='today-section-label'>Today's files</div>"
-        f"<div class='today-section-sub'>Everything downloaded today, grouped by "
-        f"course.</div>",
-        unsafe_allow_html=True,
-    )
+            groups = _todays_groups()
+            if not groups:
+                st.markdown(
+                    f"<div class='today-empty'>"
+                    f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
+                    f"<div>No new files today - you're all caught up.</div></div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                _render_today_files(groups)
 
-    groups = _todays_groups()
-    if not groups:
-        st.markdown(
-            f"<div class='today-empty'>"
-            f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
-            f"<div>No new files today - you're all caught up.</div></div>",
-            unsafe_allow_html=True,
-        )
-        return
+            # ── Divider/Separator ──────────────────────────────────────────────────
+            st.markdown(
+                f"<hr style='border:none; border-top:1px solid {theme.BG_CARD}; "
+                f"margin:26px 0 14px 0;'>",
+                unsafe_allow_html=True,
+            )
 
-    _render_today_files(groups)
+            # ── Quick Sync now - an optional, on-demand manual run ──────────────────
+            # Auto-sync (toggle above) is the primary, hands-off path, so this is framed
+            # and sized as a secondary "run it yourself now" choice: a lead-in line sets
+            # the expectation, and the button is deliberately narrower + centred rather
+            # than a full-bleed primary action.
+            st.markdown(
+                "<div class='today-qs-lead'>Auto-sync keeps these up to date for you "
+                "each morning &mdash; or run it yourself right now:</div>",
+                unsafe_allow_html=True,
+            )
+            runnable = resolve_today_pairs()
+            _qs_btn, _qs_empty = st.columns([0.28, 0.72])
+            with _qs_btn:
+                if st.button("Quick Sync now", type="primary", use_container_width=True,
+                             key="today_sync_now_btn", disabled=not runnable or sync_running):
+                    start_today_sync(runnable)  # sets state + st.rerun()
