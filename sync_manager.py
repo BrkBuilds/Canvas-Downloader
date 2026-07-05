@@ -12,11 +12,21 @@ import sqlite3
 import time
 import uuid
 import difflib
+from contextlib import closing
 from pathlib import Path
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional, Callable
 import threading
+
+# SQLite connection pattern used throughout this module:
+#     with closing(sqlite3.connect(...)) as conn, conn:
+# The inner `conn` context manager keeps sqlite3's transaction semantics
+# (commit on success, rollback on exception - identical to the previous bare
+# `with sqlite3.connect(...) as conn:`), while the outer closing() guarantees
+# the handle is CLOSED on exit instead of lingering until garbage collection.
+# On Windows a lingering handle transiently locks the .canvas_sync.db file,
+# which can break folder moves/deletes and external tools between operations.
 
 # Module-level logger
 logger = logging.getLogger(__name__)
@@ -211,7 +221,7 @@ class SyncManager:
             row = None
             for attempt in range(3):
                 try:
-                    with sqlite3.connect(make_long_path(db_path), timeout=10.0) as conn:
+                    with closing(sqlite3.connect(make_long_path(db_path), timeout=10.0)) as conn, conn:
                         cursor = conn.execute(
                             'SELECT value FROM sync_metadata WHERE key = ?', ('course_id',)
                         )
@@ -247,7 +257,7 @@ class SyncManager:
             row = None
             for attempt in range(3):
                 try:
-                    with sqlite3.connect(make_long_path(db_path), timeout=10.0) as conn:
+                    with closing(sqlite3.connect(make_long_path(db_path), timeout=10.0)) as conn, conn:
                         cursor = conn.execute(
                             'SELECT value FROM sync_metadata WHERE key = ?', ('course_name',)
                         )
@@ -281,7 +291,7 @@ class SyncManager:
             
             for attempt in range(3):
                 try:
-                    with sqlite3.connect(make_long_path(db_path), timeout=30.0) as conn:
+                    with closing(sqlite3.connect(make_long_path(db_path), timeout=30.0)) as conn, conn:
                         conn.execute('DELETE FROM sync_manifest')
                         conn.execute('DELETE FROM sync_metadata')
                         conn.commit()
@@ -305,7 +315,7 @@ class SyncManager:
         try:
             for attempt in range(3):
                 try:
-                    with sqlite3.connect(make_long_path(db_path), timeout=5.0) as conn:
+                    with closing(sqlite3.connect(make_long_path(db_path), timeout=5.0)) as conn, conn:
                         cursor = conn.execute("SELECT value FROM sync_metadata WHERE key = 'last_synced'")
                         row = cursor.fetchone()
                         return row[0] if row else None
@@ -348,7 +358,7 @@ class SyncManager:
             self._windows_unhide_file(self.db_path)
         
         try:
-            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+            with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                 cursor = conn.cursor()
                 
                 # Enable WAL mode for better concurrency and synchronous=NORMAL for speed/safety
@@ -481,7 +491,7 @@ class SyncManager:
         
         for attempt in range(max_retries):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     cursor = conn.cursor()
                     cursor.execute('SELECT canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5 FROM sync_manifest')
                     for row in cursor.fetchall():
@@ -533,7 +543,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
 
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     cursor = conn.cursor()
                     # Use plain local-time string so format_relative_date() can parse it
                     # without special-casing UTC ISO format (C-5 fix).
@@ -1187,7 +1197,7 @@ class SyncManager:
         """Save a key-value pair to the sync_metadata table."""
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.execute(
                         'INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)',
                         (key, value)
@@ -1208,7 +1218,7 @@ class SyncManager:
     def _load_metadata(self, key: str) -> str | None:
         """Load a value from the sync_metadata table. Returns None if not found."""
         try:
-            with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+            with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                 cursor = conn.execute(
                     'SELECT value FROM sync_metadata WHERE key = ?', (key,)
                 )
@@ -1290,7 +1300,7 @@ class SyncManager:
         # is_ignored / timestamps / other columns.
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.executemany(
                         'UPDATE sync_manifest SET original_md5 = ? WHERE canvas_file_id = ?',
                         pending,
@@ -1358,7 +1368,7 @@ class SyncManager:
         try:
             for attempt in range(3):
                 try:
-                    with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+                    with closing(sqlite3.connect(make_long_path(self.db_path), timeout=10.0)) as conn, conn:
                         conn.execute(
                             '''INSERT OR REPLACE INTO panopto_manifest
                                (video_id, kind, local_path, title, downloaded_at)
@@ -1382,7 +1392,7 @@ class SyncManager:
         """Return {video_id: {kind: local_path}} for all tracked Panopto files."""
         out: dict = {}
         try:
-            with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+            with closing(sqlite3.connect(make_long_path(self.db_path), timeout=10.0)) as conn, conn:
                 rows = conn.execute(
                     'SELECT video_id, kind, local_path FROM panopto_manifest'
                 ).fetchall()
@@ -1400,7 +1410,7 @@ class SyncManager:
         """
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.execute(
                         '''INSERT INTO panopto_ignored (video_id, title, ignored_at)
                            VALUES (?, ?, ?)
@@ -1431,7 +1441,7 @@ class SyncManager:
         rows = [(str(v),) for v in video_ids]
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.executemany(
                         'DELETE FROM panopto_ignored WHERE video_id = ?', rows)
                     conn.commit()
@@ -1450,7 +1460,7 @@ class SyncManager:
         """Return {video_id: title} for all ignored Panopto recordings."""
         out: dict = {}
         try:
-            with sqlite3.connect(make_long_path(self.db_path), timeout=10.0) as conn:
+            with closing(sqlite3.connect(make_long_path(self.db_path), timeout=10.0)) as conn, conn:
                 rows = conn.execute(
                     'SELECT video_id, title FROM panopto_ignored'
                 ).fetchall()
@@ -1615,7 +1625,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
                     
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     cursor = conn.cursor()
                     cursor.execute('''
                         INSERT INTO sync_manifest 
@@ -1671,7 +1681,7 @@ class SyncManager:
         for attempt in range(max_retries):
             try:
                 
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.execute(
                         '''UPDATE sync_manifest 
                            SET local_path = ?, original_size = ?, original_md5 = ?
@@ -1714,7 +1724,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.execute(
                         '''INSERT INTO sync_manifest
                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
@@ -1747,7 +1757,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     # Delete stub rows (nothing was ever downloaded)
                     conn.execute(
                         """DELETE FROM sync_manifest
@@ -1796,7 +1806,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.executemany(
                         '''INSERT INTO sync_manifest
                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
@@ -1827,7 +1837,7 @@ class SyncManager:
         success = False
         for attempt in range(3):
             try:
-                with sqlite3.connect(make_long_path(self.db_path), timeout=30.0) as conn:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     conn.executemany(
                         'UPDATE sync_manifest SET is_ignored = 0 WHERE canvas_file_id = ?', 
                         [(fid,) for fid in file_ids]

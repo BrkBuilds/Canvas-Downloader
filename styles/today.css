@@ -20,10 +20,13 @@
     color: #8A91A6;
     font-size: 0.95rem;
     margin-top: 0;
-    margin-bottom: 14px;
+    margin-bottom: 6px;
 }
 
 /* ── Title + built-in Help button row ───────────────────── */
+div.st-key-today_title_help_row {
+    margin-top: -40px !important;
+}
 /* Collapse the [1,10] columns to content-size so the Help button
    sits immediately after the title (same pattern as sync_ui.py /
    quick_download.py). Without width:auto the columns keep their
@@ -62,6 +65,14 @@ div.st-key-today_title_help_row div[class*="st-key-today_help_explainer_help_btn
 }
 
 /* ── Courses summary: header row (label + count + Manage/Done toggle) ───── */
+div.st-key-today_courses_head {
+    margin-top: -6px !important;
+}
+
+/* ── Today's files header row ───────────────────────────── */
+div.st-key-today_files_head {
+    margin-top: 12px !important;
+}
 /* Keep the toggle button vertically centred against the 2-line label block. */
 div.st-key-today_courses_head [data-testid="stHorizontalBlock"] {
     align-items: center !important;
@@ -94,10 +105,11 @@ div.st-key-today_manage_btn,
 div.st-key-today_manage_done_btn {
     display: flex !important;
     justify-content: flex-end !important;
+    transform: translateY(14px) !important;
 }
 div.st-key-today_manage_btn button,
 div.st-key-today_manage_done_btn button {
-    width: auto !important;
+    width: 100% !important;
     border-radius: 10px !important;
     background-color: rgba(255, 255, 255, 0.07) !important;
     border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
@@ -112,10 +124,14 @@ div.st-key-today_manage_done_btn button {
     align-items: center !important;
     justify-content: center !important;
 }
-div.st-key-today_manage_btn button:hover,
-div.st-key-today_manage_done_btn button:hover {
+div.st-key-today_manage_btn button:hover {
     border-color: rgba(59, 130, 246, 0.7) !important;
     background-color: rgba(59, 130, 246, 0.08) !important;
+    color: #ffffff !important;
+}
+div.st-key-today_manage_done_btn button:hover {
+    border-color: rgba(74, 222, 128, 0.7) !important;
+    background-color: rgba(74, 222, 128, 0.08) !important;
     color: #ffffff !important;
 }
 /* The markdown container is the button's real flex child - centre it too, else
@@ -154,9 +170,11 @@ div.st-key-today_manage_done_btn button p::before {
     mask-position: center;
     mask-size: 18px;
 }
-div.st-key-today_manage_btn button:hover p::before,
+div.st-key-today_manage_btn button:hover p::before {
+    background-color: #93c5fd !important;
+}
 div.st-key-today_manage_done_btn button:hover p::before {
-    background-color: #93c5fd;
+    background-color: #4ade80 !important;
 }
 div.st-key-today_manage_btn button p::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
@@ -176,6 +194,7 @@ div.st-key-today_manage_done_btn button p::before {
     border: 1px solid #2D3248;
     border-radius: 12px;
     padding: 12px 14px;
+    margin-top: -2px !important;
 }
 .tcs-pill {
     display: inline-flex;
@@ -208,7 +227,15 @@ div[class*="st-key-today_toggle_card"] {
     background: #1A1D27;
     border: 1px solid #2D3248;
     border-radius: 12px;
-    padding: 16px 18px 20px 18px !important;
+    padding: 18px 18px 16px 18px !important;
+}
+
+/* ── Today Content Area ─────────────────────────────────── */
+div.st-key-today_content_area {
+    transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+div[class*="st-key-today_toggle_card"] div[data-testid="stCheckbox"] {
+    margin-top: -8px !important;
 }
 div[class*="st-key-today_toggle_card"] [data-testid="stWidgetLabel"] p,
 div[class*="st-key-today_toggle_card"] label p {
@@ -227,8 +254,18 @@ div[class*="st-key-today_toggle_card"] label p {
 /* ── Running-sync card (in-page daily/Quick Sync progress) ───────────────────
    Rendered below the toggle while a sync is in flight. Hosts the shared sync
    engine's slim output (progress bar + cancel), fronted by a title + phase
-   description this card owns. Matches the toggle card's surface. */
-div[class*="st-key-today_running_card"] {
+   description this card owns. Matches the toggle card's surface.
+
+   The container is ALWAYS emitted (even when idle) so React keeps it as its own
+   DOM node and never repurposes the content-area's node for it - see the "STABLE
+   SLOT" note in today_dashboard.py. So the visible card box is gated on the card
+   actually holding its head (:has(.today-run-head)); the idle slot holds only a
+   hidden anchor and is collapsed to nothing below. */
+div[class*="st-key-today_running_card"]:not(:has(.today-run-head)) {
+    display: none !important;
+}
+.today-run-anchor { display: none !important; }
+div[class*="st-key-today_running_card"]:has(.today-run-head) {
     background: #1A1D27;
     border: 1px solid #2D3248;
     border-radius: 12px;
@@ -301,12 +338,132 @@ div[class*="st-key-today_running_card"] div[class*="st-key-cancel_"] button {
     font-weight: 600 !important;
 }
 
+/* ── Last-run success notice (dismissible card below the toggle) ─────────────
+   Written after a daily/Quick Sync completes; closed via the masked-icon
+   button on the right. Green-tinted variant of the toggle/running cards. */
+div.st-key-today_sync_notice_card {
+    background: rgba(52, 211, 153, 0.05);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    border-radius: 12px;
+    padding: 13px 14px 13px 18px !important;
+    margin-top: 14px;
+}
+/* Keep the [body, close] columns vertically centred against multi-line bodies. */
+div.st-key-today_sync_notice_card [data-testid="stHorizontalBlock"] {
+    align-items: center !important;
+}
+/* The body is a single markdown block; zero the element-container's built-in
+   negative bottom margin so the card's box hugs the content symmetrically
+   (same fix as today_pair_card_ / today_running_card). */
+div.st-key-today_sync_notice_card [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+.today-notice-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.today-notice-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.today-notice-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+.today-notice-when {
+    color: #7c8496;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.today-notice-desc {
+    color: #c7ccd9;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.today-notice-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+.today-notice-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    padding: 3px 9px;
+    font-size: 0.8rem;
+    color: #d4d8e2;
+    white-space: nowrap;
+}
+.today-notice-chip b {
+    color: #34d399;
+    font-weight: 700;
+}
+.today-notice-errors {
+    color: #fbbf24;
+    font-size: 0.82rem;
+    margin-top: 2px;
+}
+/* Close button: compact ghost square with a masked X glyph (zero-width-space
+   label, so the glyph is pure CSS - mirrors the trash/pencil mask pattern). */
+div.st-key-today_notice_close_btn button {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+}
+div.st-key-today_notice_close_btn button:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+div.st-key-today_notice_close_btn button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+div.st-key-today_notice_close_btn button p::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.55);
+    transition: background-color 0.15s ease;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 14px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 14px;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+}
+div.st-key-today_notice_close_btn button:hover p::before {
+    background-color: #ffffff;
+}
+
 /* ── Daily-sync list: outlined box wrapping the pair cards ─ */
 div.st-key-today_list_outline {
     background: transparent !important;
     border: 1px solid #2D3248 !important;
     border-radius: 12px !important;
     padding: 10px 12px !important;
+    margin-top: -2px !important;
     /* Space between the stacked pair rows (key class is on the flex block
        itself in Streamlit 1.51, so gap here targets the immediate rows). */
     gap: 8px !important;
@@ -467,15 +624,15 @@ div.st-key-today_sync_now_btn button p {
 /* Lead-in above Quick Sync - frames it as the optional "run it yourself" path
    (auto-sync being the primary, hands-off one). */
 .today-qs-lead {
-    color: #9aa1b3;
-    font-size: 0.9rem;
-    text-align: center;
-    margin: 14px 0 9px 0;
+    color: #888;
+    font-size: 0.8rem;
+    text-align: left;
+    margin: 14px 0 10px 0;
 }
 .today-qs-note {
     color: #888;
     font-size: 0.8rem;
-    text-align: center;
+    text-align: left;
     margin: 8px 0 0 0;
 }
 .today-qs-note b { color: #b9c0d0; }
@@ -484,27 +641,44 @@ div.st-key-today_sync_now_btn button p {
 /* Only shown in the management layer (below the editable list) and in the empty
    state, so it should read as part of the list, not a stray default button. */
 div.st-key-today_add_courses_btn button {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    border: 1.5px dashed rgba(255, 255, 255, 0.24) !important;
-    border-radius: 10px !important;
-    color: rgba(255, 255, 255, 0.82) !important;
+    background-color: #1f77b4 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
     min-height: 48px !important;
     height: auto !important;
     font-weight: 600 !important;
-    transition: all 0.18s ease !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
 }
 div.st-key-today_add_courses_btn button:hover {
-    background-color: rgba(255, 255, 255, 0.07) !important;
-    border-color: rgba(255, 255, 255, 0.46) !important;
+    background-color: #2b8cbe !important;
+    border: none !important;
     color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
 }
 
+/* Less tall (2/3 of current: 48px * 2/3 = 32px) when inside the list box in managing mode */
+div.st-key-today_list_outline div.st-key-today_add_courses_btn button {
+    min-height: 32px !important;
+}
+
+
 /* ── Empty states ───────────────────────────────────────── */
-.today-empty {
-    background: #1A1D27;
-    border: 1px solid #2D3248;
-    border-radius: 10px;
-    padding: 24px 22px;
+div.st-key-today_empty_container {
+    background: #1A1D27 !important;
+    border: 1px solid #2D3248 !important;
+    border-radius: 10px !important;
+    padding: 24px 22px 20px 22px !important;
+    text-align: center !important;
+    color: #8A91A6 !important;
+    line-height: 1.6 !important;
+}
+div.st-key-today_empty_container div.st-key-today_add_courses_btn {
+    margin-top: 18px !important;
+}
+.today-empty-inner {
     text-align: center;
     color: #8A91A6;
     line-height: 1.6;

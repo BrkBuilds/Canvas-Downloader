@@ -91,7 +91,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Sync Mode Fundamentals & Getting Started ----------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['folder']} Sync mode fundamentals &amp; getting started</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Sync mode fundamentals &amp; getting started</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     
     # Introduction & How to add
@@ -189,7 +189,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Workflow ------------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['refresh']} The Sync process flow</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>The Sync process flow</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
 
     # Workflow container
@@ -297,7 +297,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Quick Sync vs Analyze -----------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['compare']} Quick Sync vs Analyze &amp; Review &amp; Sync</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Quick Sync vs Analyze &amp; Review &amp; Sync</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: #e6e6e6; margin-bottom: 10px;'>Both modes scan Canvas - the difference is the use case, and how much control you have over what gets downloaded.</div>"
     "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
@@ -341,7 +341,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Sync History --------------------------------------------------------
     "<details style='margin-top: 4px;'>"
-    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['calendar']} Tracking &amp; viewing your Sync History</summary>"
+    f"<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>{HELP_ICONS['calendar']} Sync History</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.88); line-height: 1.65; margin-bottom: 14px;'>"
     "The <b style='color: #ffffff;'>Sync History</b> expander at the bottom of the page keeps a rolling log of your 15 most recent sync runs. "
@@ -2354,6 +2354,45 @@ def render_sync_step4( main_placeholder=None):
     # cleanup_sync_state() clears transient sync state and sets step = 1.
     if st.session_state.get('today_sync_active') and status in ('sync_complete', 'sync_cancelled'):
         from core.state_registry import cleanup_sync_state
+
+        if status == 'sync_complete':
+            # Snapshot the outcome BEFORE cleanup pops the source keys. The
+            # notice key itself is deliberately NOT in SYNC_TRANSIENT_KEYS: it
+            # must survive cleanup_sync_state() so the idle Today page can show
+            # a dismissible "N new files" card until the user closes it (or the
+            # next run replaces it - start_today_sync drops the stale one).
+            from core.auto_sync import build_today_sync_notice
+            _notice = build_today_sync_notice()
+            st.session_state['today_sync_notice'] = _notice
+
+            # Native notification for the hands-off daily run only: auto-sync
+            # fires on launch while the user may be looking elsewhere, so the OS
+            # toast is the signal that new files landed. A manual "Quick Sync
+            # now" click is watched live and gets the in-page notice instead.
+            # Same gating as every other completion toast (settings toggle +
+            # the one-shot sentinel; cleanup_sync_state re-arms the sentinel).
+            if (
+                _notice.get('is_auto')
+                and st.session_state.get('notifications_enabled', True)
+                and not st.session_state.get('completion_beep_fired', False)
+            ):
+                st.session_state['completion_beep_fired'] = True
+                from engine.notifications import play_completion_beep
+                _n_total = _notice.get('total_files', 0)
+                _n_courses = _notice.get('courses') or []
+                if _n_total <= 0:
+                    play_completion_beep(
+                        mode='daily_sync_uptodate',
+                        summary='All files are up to date - nothing new today.',
+                    )
+                else:
+                    _files_part = f"{_n_total} new file{'s' if _n_total != 1 else ''}"
+                    if len(_n_courses) == 1:
+                        _summary = f"{_files_part} in {_n_courses[0]['name']}."
+                    else:
+                        _summary = f"{_files_part} across {len(_n_courses)} courses."
+                    play_completion_beep(mode='daily_sync', summary=_summary)
+
         st.session_state.pop('today_sync_active', None)
         st.session_state.pop('today_sync_is_auto', None)
         cleanup_sync_state()  # sets step = 1, clears transient sync keys
@@ -2379,28 +2418,20 @@ def render_sync_step4( main_placeholder=None):
                 )
                 _time.sleep(0.35)
                 st.session_state['analysis_pass'] = 2
-                st.session_state.pop('analysis_pass1_started_at', None)
                 st.rerun()
 
-            # ── Regular sync (full-page) - proven two-pass paint dance ──────────
-            # M-7: Server-side fallback - if JS click never fires (CSP, iframe
-            # sandbox, screen-reader nav), force-advance to pass 2 after 5s.
+            # ── Regular sync (full-page): two-pass paint dance, advanced
+            # DETERMINISTICALLY on the server - the exact mechanism the Today
+            # branch above proved out. Pass 1 draws the "Analyzing…" shell,
+            # sleeps briefly so Streamlit flushes the paint to the browser,
+            # then reruns straight into pass 2 where the heavy blocking
+            # analysis runs (the painted shell stays on screen meanwhile).
+            # Replaces the old hidden-button + components.html auto-click
+            # bridge, which could silently never fire (CSP, iframe sandbox,
+            # cold first-open, screen-reader nav) and whose 5s server-side
+            # watchdog only ticked if something ELSE happened to rerun the
+            # script - a dead bridge otherwise stranded the user here.
             import time as _time
-            if 'analysis_pass1_started_at' not in st.session_state:
-                st.session_state['analysis_pass1_started_at'] = _time.time()
-            elif _time.time() - st.session_state['analysis_pass1_started_at'] > 5:
-                st.session_state['analysis_pass'] = 2
-                st.session_state.pop('analysis_pass1_started_at', None)
-                st.rerun()
-            # Hide the auto-advance trigger button from the FIRST paint (no flash)
-            # by keyed CSS, injected before the button renders. Previously the
-            # button was only hidden by JS *after* paint, so it flickered visibly
-            # for a frame on every analysis run.
-            st.markdown(
-                '<style>div.st-key-hidden_pass2_trigger{display:none !important;}</style>',
-                unsafe_allow_html=True,
-            )
-            # 1. ALWAYS DRAW THE BASE UI FIRST
             st.markdown(f"""
             <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
                 <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
@@ -2410,30 +2441,12 @@ def render_sync_step4( main_placeholder=None):
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-            # The target button (visually hidden above; still clickable via JS)
-            if st.button("START_PASS_2_NOW", key="hidden_pass2_trigger"):
-                st.session_state['analysis_pass'] = 2
-                st.rerun()
-
-            # JS auto-clicker (after a brief paint delay)
-            import streamlit.components.v1 as components
-            components.html("""
-            <script>
-            var doc = window.parent.document;
-            var buttons = Array.from(doc.querySelectorAll('button'));
-            var target = buttons.find(b => b.innerText.includes('START_PASS_2_NOW'));
-            if(target) {
-                var wrapper = target.closest('div[data-testid="stButton"]');
-                if(wrapper) { wrapper.style.display = 'none'; }
-                setTimeout(() => target.click(), 100);
-            }
-            </script>
-            """, height=0)
+            _time.sleep(0.35)
+            st.session_state['analysis_pass'] = 2
+            st.rerun()
         else:
             # Pass 2: The browser has successfully painted the clean UI.
             # Safe to lock the main thread with heavy synchronous work.
-            st.session_state.pop('analysis_pass1_started_at', None)
             _run_analysis(sync_pairs, main_placeholder)
             
             # Optional: cleanup the flag when done
@@ -2458,54 +2471,25 @@ def render_sync_step4( main_placeholder=None):
                 unsafe_allow_html=True,
             )
             _ps_time.sleep(0.35)
-            st.session_state.pop('pre_sync_started_at', None)
             st.session_state['download_status'] = 'syncing'
             st.rerun()
 
-        # ── Regular sync (full-page) ────────────────────────────────────────
-        # Server-side fallback (parity with the analysis pass-1 fix): if the
-        # JS auto-click below never fires (CSP, iframe sandbox, screen-reader
-        # nav), force-advance to 'syncing' after 5s instead of stranding the
-        # user on this screen forever.
+        # ── Regular sync (full-page): deterministic server-side advance ─────
+        # Draw the "Initializing…" shell, sleep briefly so the paint flushes,
+        # then let THIS run end via st.rerun(). Ending the run without
+        # re-rendering the confirmation dialog is what makes React tear the
+        # modal down before the heavy sync run starts - the same mechanism
+        # every modal Close button uses (st.rerun(scope="app"), CLAUDE.md).
+        # The next run enters 'syncing' with the modal already gone, so it can
+        # never get stuck floating over the progress bars. Replaces the old
+        # hidden-button + components.html auto-click bridge, which could
+        # silently never fire (CSP, iframe sandbox, cold first-open) and whose
+        # 5s watchdog only ticked if something else happened to rerun the app.
         import time as _ps_time
-        if 'pre_sync_started_at' not in st.session_state:
-            st.session_state['pre_sync_started_at'] = _ps_time.time()
-        elif _ps_time.time() - st.session_state['pre_sync_started_at'] > 5:
-            st.session_state.pop('pre_sync_started_at', None)
-            st.session_state['download_status'] = 'syncing'
-            st.rerun()
-        # Hide the auto-advance trigger button from the first paint (no flash) via
-        # keyed CSS. (The old `display:none` wrapper <div>s never actually
-        # contained the button - Streamlit renders it in its own element-container -
-        # so it flickered for a frame.)
-        st.markdown(
-            '<style>div.st-key-hidden_trigger_sync{display:none !important;}</style>',
-            unsafe_allow_html=True,
-        )
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
-        # We must let this render loop FINISH completely so the frontend can tear down the `st.dialog` DOM elements.
-        # Otherwise, if we immediately string together long-running tasks or `st.rerun()`, the Streamlit backend
-        # never yields to the WebSocket, and the modal gets permanently stuck on screen visually over the progress bars.
-        # We inject a tiny JS script that waits 100ms for React to unmount the modal, then clicks a hidden button to start the actual sync loop.
-        import streamlit.components.v1 as components
-        components.html("""
-        <script>
-        setTimeout(function() {
-            var doc = window.parent.document;
-            var buttons = Array.from(doc.querySelectorAll('button'));
-            var target = buttons.find(b => b.innerText.includes('START_SYNC_ROUTINE_NOW'));
-            if(target) {
-                target.click();
-            }
-        }, 200);
-        </script>
-        """, height=0)
-
-        # Hidden button to catch the JS click (visually hidden by CSS above).
-        if st.button("START_SYNC_ROUTINE_NOW", key="hidden_trigger_sync"):
-            st.session_state.pop('pre_sync_started_at', None)
-            st.session_state['download_status'] = 'syncing'
-            st.rerun()
+        _ps_time.sleep(0.35)
+        st.session_state['download_status'] = 'syncing'
+        st.rerun()
 
     elif status == 'syncing':
         _run_sync()

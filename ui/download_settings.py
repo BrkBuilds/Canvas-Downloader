@@ -358,7 +358,7 @@ def render_download_settings(fetch_courses_fn):
         "</div>"
         "<div style='margin: 6px 0; padding: 9px 12px 9px 14px; background: rgba(184,157,254,0.05); border-radius: 6px; border-left: 3px solid rgba(184,157,254,0.55);'>"
         "<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 4px;'>"
-        "<span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Section 4</span>"
+        "<span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;'>Card 4</span>"
         "<b style='color: #e2e8f0; font-size: 0.85rem;'>Panopto Lecture Recordings</b>"
         "</div>"
         "<div style='color: rgba(255,255,255,0.7); font-size: 0.85rem;'>Optional. Finds Panopto lecture recordings linked in your courses and saves them inside the course folder. Choose any combination of <b>Video (MP4)</b>, <b>Audio (MP3)</b>, <b>Transcript (.txt)</b> and <b>Subtitles (.srt)</b>. Video &amp; audio download and sync with no setup; <b>transcripts &amp; subtitles need a one-time transcription model</b> - they're generated locally on your machine (nothing is uploaded). Click <b>Set up transcription</b> to download one.</div>"
@@ -440,7 +440,7 @@ def render_download_settings(fetch_courses_fn):
 
         # ── Section 4: Panopto ─────────────────────────────────────────────────
         "<details style='margin: 4px 0 8px 0; border: 1px solid rgba(184,157,254,0.25); border-radius: 7px; overflow: hidden;'>"
-        "<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>Panopto Lecture Recordings</span><span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;'>Section 4</span></summary>"
+        "<summary style='padding: 10px 14px; cursor: pointer; background: rgba(255,255,255,0.08); user-select: none;'><span style='color: #ffffff; font-weight: 600; font-size: 0.87rem;'>Panopto Lecture Recordings</span><span style='color: #b89dfe; background: rgba(184,157,254,0.18); padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700; margin-left: 8px; vertical-align: middle;'>Card 4</span></summary>"
         "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
         "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>The app scans each course for embedded <b>Panopto</b> lecture links and saves the recordings inside the course folder. Pick any mix of the four outputs below - each is written per recording. Click an item to read more.</p>"
         "<details style='margin: 5px 0; border-radius: 5px; overflow: hidden;'><summary style='padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #e2e8f0; background: rgba(255,255,255,0.08); border: 1px solid rgba(184,157,254,0.4); border-radius: 5px; user-select: none; list-style: none;'>Video (MP4)</summary>"

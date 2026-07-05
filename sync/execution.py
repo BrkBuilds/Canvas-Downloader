@@ -1460,8 +1460,12 @@ def run_sync():
                 # a bulk sync leaves the manifest in the WAL rather than the DB.
                 try:
                     import sqlite3 as _sqlite3
+                    from contextlib import closing as _closing
                     from ui_helpers import make_long_path as _mlp
-                    with _sqlite3.connect(_mlp(str(sync_mgr.db_path)), timeout=10.0) as _ckpt_conn:
+                    # closing() so the handle is released immediately (a handle
+                    # lingering until GC transiently locks the .db on Windows);
+                    # the inner `_ckpt_conn` CM keeps commit-on-exit semantics.
+                    with _closing(_sqlite3.connect(_mlp(str(sync_mgr.db_path)), timeout=10.0)) as _ckpt_conn, _ckpt_conn:
                         _ckpt_conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
                 except Exception as _ckpt_err:
                     logger.warning(f"WAL checkpoint failed for {sync_mgr.db_path}: {_ckpt_err}")

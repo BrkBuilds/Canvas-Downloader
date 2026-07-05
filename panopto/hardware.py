@@ -26,11 +26,16 @@ import os
 import platform
 import subprocess
 import sys
+import threading
 
 logger = logging.getLogger(__name__)
 
 # Cached snapshot (hardware doesn't change within a process run).
 _CACHE: dict | None = None
+
+# One-shot guard for the background warm-up thread (see warm_compute_hardware_async).
+_WARM_LOCK = threading.Lock()
+_WARM_STARTED = False
 
 # Preference order for the CTranslate2 compute type per device. The first entry
 # that CT2 reports as supported on this machine wins. float16 is the modern-GPU
@@ -188,6 +193,35 @@ def _best_compute_type(device: str, supported: set | None = None) -> str:
 def best_compute_type(device: str) -> str:
     """Public helper for the transcription engine to pick a supported precision."""
     return _best_compute_type(device)
+
+
+def warm_compute_hardware_async() -> None:
+    """Populate the hardware cache in a daemon thread, once per process.
+
+    ``detect_compute_hardware()`` performs the heavy first-time import of the
+    transcription backend (faster-whisper -> ctranslate2) plus a CUDA probe,
+    which otherwise blocks the FIRST open of the transcription-config dialog for
+    a noticeable beat. Kicking it off in the background (e.g. when the Settings
+    dialog opens) means the cache is usually already populated by the time the
+    user reaches that dialog, so it opens promptly.
+
+    Idempotent: no-op if already warmed or a warm-up is already in flight. Never
+    raises into the caller (the worker swallows everything; a failed probe just
+    leaves the cache empty for the normal on-demand path to fill).
+    """
+    global _WARM_STARTED
+    with _WARM_LOCK:
+        if _WARM_STARTED or _CACHE is not None:
+            return
+        _WARM_STARTED = True
+
+    def _worker() -> None:
+        try:
+            detect_compute_hardware()
+        except Exception:
+            logger.debug("Background compute-hardware warm-up failed", exc_info=True)
+
+    threading.Thread(target=_worker, name="warm-compute-hw", daemon=True).start()
 
 
 def detect_compute_hardware(force: bool = False) -> dict:

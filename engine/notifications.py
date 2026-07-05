@@ -664,13 +664,19 @@ def play_completion_beep(
         title = 'Sync done! All files up to date'
     elif mode == 'quick_sync_uptodate':
         title = 'Quick Sync done! All files up to date'
+    elif mode == 'daily_sync':
+        title = 'Daily Sync Complete'
+    elif mode == 'daily_sync_uptodate':
+        title = 'Daily sync done! All files up to date'
     else:
         title = 'Download Complete'
 
     body = summary or (
         'Your files are ready.' if mode == 'download'
         else 'Your courses are up to date.' if mode == 'sync'
-        else 'All files are already synced - nothing to download.' if mode in ('sync_uptodate', 'quick_sync_uptodate')
+        else 'New course files are ready in your folders.' if mode == 'daily_sync'
+        else 'All files are already synced - nothing to download.'
+        if mode in ('sync_uptodate', 'quick_sync_uptodate', 'daily_sync_uptodate')
         else 'Course analysis completed. Waiting for your review.'
     )
 
