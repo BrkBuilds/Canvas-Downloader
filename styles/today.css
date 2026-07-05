@@ -234,6 +234,27 @@ div[class*="st-key-today_running_card"] {
     border-radius: 12px;
     padding: 18px 20px 20px 20px !important;
     margin-top: 14px;
+    /* The shared sync engine (sync/execution.py) renders many style-only /
+       hidden st.markdown & st.html elements while driven inside this card
+       (hover-CSS injections, the hidden metrics container, sync_progress.css,
+       the end-of-step marker div). One container deep, the global ghost-box
+       purge doesn't reliably collapse them (CLAUDE.md "Ghost-box-inside-
+       container"), so each still claimed a full flex-gap slot, stacking up
+       as large empty bands between the title/description, the progress bar
+       and the Cancel button. Zero the card's own gap and rely on the visible
+       elements' own margins (today-run-head/-desc, the engine's 15px spacer
+       div) for real spacing. */
+    gap: 0 !important;
+}
+/* Streamlit gives every markdown element-container a built-in
+   margin-bottom: -16px (see the identical note on today_pair_card_ above).
+   With the card's gap zeroed, that -16px was silently eating the *visible*
+   elements' own intentional margins too (today-run-desc's margin-bottom,
+   the engine's 15px spacer div before Cancel), leaving the description
+   flush against the progress bar and the Cancel button overlapping it.
+   Zero it so every element's own margin renders at its real value. */
+div[class*="st-key-today_running_card"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
 }
 .today-run-head {
     display: flex;
@@ -261,7 +282,7 @@ div[class*="st-key-today_running_card"] {
     color: #9aa1b3;
     font-size: 0.9rem;
     line-height: 1.5;
-    margin: 0 0 14px 0;
+    margin: 0 0 5px 0;
 }
 /* Cancel button inside the card: compact, content-sized, secondary.
    (The engine's status header + progress bar render via st.html() shadow roots,
