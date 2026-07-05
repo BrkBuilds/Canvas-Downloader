@@ -2076,122 +2076,16 @@ def _render_sync_history():
                         margin-top: -16px !important;
                     }
                     div.st-key-synchist_runs { border: none !important; padding: 0 !important; background: transparent !important; }
-
-                    /* ---- Per-run "fake expander" --------------------------- *
-                     * A real st.expander can't show this rich two-line header
-                     * while COLLAPSED (Streamlit strips HTML from labels), yet we
-                     * still need native Open/Reveal buttons in the body. So each
-                     * run is a card whose header is a full-width invisible button
-                     * (the click target) with the rich HTML painted on top via a
-                     * pointer-events:none overlay. The body renders below it.
-                     *
-                     * The CARD background is the DARK body/content colour; the
-                     * lighter HEADER colour lives on the button, so (a) the body
-                     * is visibly darker than the title, and (b) hover lightens
-                     * ONLY the header (the button), never the content. */
-                    div[class*="st-key-shist_run_"] {
-                        position: relative !important;
-                        border: 1px solid rgba(255,255,255,0.08) !important;
-                        border-radius: 8px !important;
-                        background: #15181e !important;            /* dark CONTENT bg */
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
-                        padding: 0 !important;
-                        margin-bottom: 7px !important;
-                        overflow: hidden !important;
-                    }
-                    /* Flush header(button) <-> body. Collapse EVERY vertical-block
-                       gap inside the run to 0 (descendant selector - this is the
-                       form that reliably matches Streamlit 1.51's wrapper depth),
-                       then re-expand the body's section spacing and the file-row
-                       spacing further below. At equal specificity later source
-                       order wins, so each block ends up with the gap we want:
-                         - run's own block (button|overlay|body) -> 0  (flush)
-                         - body content sections                 -> 9px
-                         - file rows                             -> 4px  */
-                    div[class*="st-key-shist_run_"] [data-testid="stVerticalBlock"] { gap: 0 !important; }
-                    /* The full-width click target = the header bar (carries the
-                       lighter header colour + the ONLY hover state on the card). */
-                    div[class*="st-key-shist_run_"] [data-testid="stButton"] { margin: 0 !important; }
-                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button {
-                        height: 60px !important; min-height: 60px !important; width: 100% !important;
-                        background: #21252e !important; border: none !important;
-                        box-shadow: none !important; padding: 0 !important;
-                        transition: background 0.15s ease !important;
-                    }
-                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:hover {
-                        background: #272c37 !important;
-                    }
-                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:focus,
-                    div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:active {
-                        box-shadow: none !important; color: inherit !important;
-                    }
-                    /* The rich header painted on top of the button. */
-                    div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-card) {
-                        position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
-                        height: 60px !important; margin: 0 !important;
-                        pointer-events: none !important; z-index: 3 !important;
-                    }
-                    .shist-card { display: flex; align-items: center; gap: 13px; height: 60px; padding: 0 18px; }
-                    .shist-chev { display: flex; align-items: center; flex-shrink: 0; transition: transform 0.2s ease; }
-                    .shist-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
-                    .shist-l1 { display: flex; align-items: center; gap: 9px; min-width: 0; }
-                    .shist-l1 .shist-title { font-weight: 700; font-size: 0.97rem; color: #fff;
-                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                    /* Smaller status pill - same text size, tighter padding. */
-                    .shist-badge { font-size: 0.7rem; font-weight: 600; padding: 1px 6px; border-radius: 4px;
-                        line-height: 1.35; border: 1px solid; white-space: nowrap; flex-shrink: 0; }
-                    .shist-l2 { display: flex; align-items: center; gap: 8px; color: #c9d1d9; font-size: 0.82rem; }
-                    .shist-l2 .shist-dot { color: #5c6269; }
-                    .shist-l2 .shist-mode { display: inline-flex; align-items: center; gap: 5px; }
-                    .shist-time { display: flex; align-items: center; gap: 5px; color: #8b949e;
-                        font-size: 0.82rem; flex-shrink: 0; margin-left: 12px; }
-                    /* Kill the hollow bordered box entirely. Streamlit wraps a
-                       border=True container in a stVerticalBlockBorderWrapper that
-                       carries a stock 1px border + ~1rem padding; THAT is the
-                       "empty box that boxes in emptiness". We don't rely on knowing
-                       whether the key lands on the wrapper or the inner block - we
-                       strip border / shadow / radius / padding / bg from BOTH, then
-                       re-apply the indent + bottom padding once on the keyed block.
-                       NO divider - the darker body bg already separates it from the
-                       (lighter) header, and the content sits flush under it. */
-                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_),
-                    div[class*="st-key-shist_body_"] {
-                        border: none !important; box-shadow: none !important;
-                        border-radius: 0 !important; background: transparent !important;
-                        margin: 0 !important;
-                    }
-                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_) {
-                        padding: 0 !important;
-                    }
-                    div[class*="st-key-shist_body_"] {
-                        /* flush top (content pulled up under header), comfy bottom
-                           (+5px breathing room from the card border), left indent
-                           lines the content up with the header title. */
-                        padding: 6px 18px 23px 44px !important;
-                    }
-                    /* Comfortable spacing between the body's content SECTIONS
-                       (category headers + their file lists). The tight file rows
-                       keep their own small gap - re-asserted LAST so it wins at
-                       equal specificity. */
-                    div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"] { gap: 9px !important; }
-                    div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] { gap: 4px !important; }
-                    /* Categories within a course are separated by the divider line
-                       (see render_course_file_breakdown / the legacy loop below), so
-                       collapse the 9px gap between the category containers themselves
-                       - the divider owns that 5px-above/5px-below spacing. Course
-                       name headers keep their own margins. */
-                    div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"]:has(> div[class*="st-key-fileactlist_"]) { gap: 0 !important; }
-                    /* The shared .cat-section-sep rule is asymmetric (6px padding
-                       above the line, 12px margin below) - tuned for the completion
-                       screen, where the category gap is NOT collapsed so the extra
-                       space above the line comes for free. Here we collapse that gap
-                       to 0 (above), so the divider's 6px alone leaves it almost flush
-                       against the file row above it. Bump the divider's own top
-                       spacing to match its 12px bottom so it sits symmetrically. */
-                    div[class*="st-key-shist_body_"] .cat-section-sep { padding-top: 18px !important; }
                     </style>""",
                     unsafe_allow_html=True,
                 )
+                # The per-run card SHELL (fake-expander header + collapsible body)
+                # lives in a shared static stylesheet so the Today page's
+                # "Today's files" cards - which reuse the same st-key-shist_run_ /
+                # st-key-shist_body_ prefixes - look pixel-identical. Edit the look
+                # in sync_history_cards.css, not here.
+                from styles import inject_css
+                inject_css('sync_history_cards.css')
 
                 # Resolve each course's CURRENT folder so a moved folder still opens.
                 current_folders = {}

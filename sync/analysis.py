@@ -433,7 +433,18 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
     # Clean progress display - no stale cards
     analysis_ui_placeholder = st.empty()
-    
+
+    if _today_minimal:
+        # The Today running-sync card sets its own flex `gap: 0` (see
+        # today.css) to collapse the many hidden/style-only ghost elements the
+        # shared sync engine renders while embedded in that card. That also
+        # zeroes the ambient spacing that used to sit between this analysis
+        # placeholder and the Cancel button below it, so without a real
+        # spacer div here the button visually overlaps the progress bar's
+        # negative-margin markdown container. Mirrors the identical spacer
+        # already used before the Cancel button in sync/execution.py.
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
     # RENDER GLOBAL CANCEL ABOVE THE ANALYSIS LOOP
     cancel_analysis_placeholder = st.empty()
     if cancel_analysis_placeholder.button('Cancel Sync', type="secondary", key="cancel_analysis_btn"):
