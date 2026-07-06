@@ -132,9 +132,10 @@ class WordToPDF:
             return self._convert_applescript(s_src, s_dst, "Word", script)
 
     # ── conversion ─────────────────────────────────────────────────
-    def convert(self, doc_path: str | Path) -> str | None:
+    def convert(self, doc_path: str | Path, dst: str | Path | None = None) -> str | None:
         abs_doc_path = Path(doc_path)
-        abs_pdf_path = abs_doc_path.with_suffix('.pdf')
+        # H-7: honour an explicit target (ownership-resolved by the caller).
+        abs_pdf_path = Path(dst) if dst is not None else abs_doc_path.with_suffix('.pdf')
 
         # Do not convert if it's already a modern .docx
         if str(abs_doc_path).lower().endswith('.docx'):
@@ -158,7 +159,7 @@ class WordToPDF:
 
         _COM_TIMEOUT_SECONDS = 180
 
-        with office_safe_path(abs_doc_path) as (safe_src, safe_pdf, true_pdf):
+        with office_safe_path(abs_doc_path, dst=abs_pdf_path) as (safe_src, safe_pdf, true_pdf):
             abs_doc = str(safe_src.resolve().absolute())
             abs_pdf = str(safe_pdf.resolve().absolute())
 

@@ -1523,7 +1523,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.session_state['analysis_pass'] = 1
             st.session_state.pop('sync_quick_mode', None)
             st.session_state.pop('qs_cancel_route', None)
-            st.session_state.pop('sync_single_pair_idx', None)
             if main_placeholder:
                 main_placeholder.empty()
             st.rerun()
@@ -1550,7 +1549,6 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.session_state['sync_quick_mode'] = True
             st.session_state['qs_cancel_route'] = True
             st.session_state['analysis_pass'] = 1
-            st.session_state.pop('sync_single_pair_idx', None)
             if main_placeholder:
                 main_placeholder.empty()
             st.rerun()

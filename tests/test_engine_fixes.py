@@ -1,0 +1,346 @@
+"""Regression tests for the 2026-07 engine audit fixes.
+
+Covers the manifest/analyzer-level fixes that run fully offline:
+  H-1  content-signature update detection for secondary entities
+  H-4  atomic .part pattern for Panopto ffmpeg downloads
+  H-7  ownership-aware conversion targets
+  M-3  auto-discovery never claims an already-tracked local file
+  M-4  weakest-tier discovery stores an empty md5 baseline
+  M-6  teacher re-upload respects the user's local deletion
+       + phantom-row pruning after the replacement is tracked
+  M-12 fresh-byte downloads clear a stale is_ignored flag
+  naming: preferred_disk_name display-name preference
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+import pytest
+
+from sync_manager import (
+    CanvasFileInfo, SyncManager, make_secondary_id, preferred_disk_name,
+    secondary_content_sig,
+)
+
+
+@pytest.fixture()
+def course_dir(tmp_path):
+    d = tmp_path / "Algorithms 101"
+    d.mkdir()
+    return d
+
+
+@pytest.fixture()
+def sm(course_dir):
+    return SyncManager(course_dir, course_id=4242, course_name="Algorithms 101")
+
+
+def _write_local(course_dir, rel, content=b"hello world"):
+    p = course_dir / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(content)
+    return p
+
+
+def _cfile(id, filename, size=11, display_name=None, md5=None, sig="",
+           modified="2026-07-01T10:00:00Z"):
+    return CanvasFileInfo(
+        id=id, filename=filename,
+        display_name=display_name if display_name is not None else filename,
+        size=size, modified_at=modified, url="https://x/f", md5=md5,
+        content_sig=sig,
+    )
+
+
+# ── naming: preferred_disk_name ──────────────────────────────────────────────
+
+def test_preferred_disk_name_prefers_display_name():
+    f = _cfile(1, "final_v3_REAL2.pdf", display_name="Lecture 1 Slides")
+    assert preferred_disk_name(f) == "Lecture 1 Slides.pdf"
+
+
+def test_preferred_disk_name_locked_and_synthetic_keep_filename():
+    locked = _cfile(9, "Assignment: A - doc.pdf", display_name="doc.pdf")
+    locked.name_locked = True
+    assert preferred_disk_name(locked) == "Assignment: A - doc.pdf"
+    synth = _cfile(-5, "Page: X.html", display_name="X.html")
+    assert preferred_disk_name(synth) == "Page: X.html"
+
+
+def test_preferred_disk_name_appends_missing_extension():
+    f = _cfile(2, "notes_v2.pdf", display_name="Week 1 Notes")
+    assert preferred_disk_name(f) == "Week 1 Notes.pdf"
+
+
+# ── H-1: content signatures ──────────────────────────────────────────────────
+
+def test_content_sig_roundtrip_and_update_detection(sm, course_dir):
+    syn_id = make_secondary_id("assignment", 42)
+    _write_local(course_dir, "Assignments/Essay.html", b"<html>v1</html>")
+    sm.record_downloaded_file(
+        canvas_file_id=syn_id, canvas_filename="Essay.html",
+        local_path="Assignments/Essay.html", canvas_updated_at="",
+        original_size=0, content_sig=secondary_content_sig("assignment", "Essay", "v1"),
+    )
+    entry = sm.load_manifest()["files"][str(syn_id)]
+    assert entry["content_sig"] == secondary_content_sig("assignment", "Essay", "v1")
+
+    # Same signature → NOT newer (no phantom updates from timestamps)
+    same = _cfile(syn_id, "Assignments/Essay.html", size=0,
+                  sig=secondary_content_sig("assignment", "Essay", "v1"),
+                  modified="2026-12-31T10:00:00Z")  # timestamp churn is ignored
+    assert sm._is_canvas_newer(same, entry) is False
+
+    # Changed signature → newer (real content change detected)
+    changed = _cfile(syn_id, "Assignments/Essay.html", size=0,
+                     sig=secondary_content_sig("assignment", "Essay", "v2"))
+    assert sm._is_canvas_newer(changed, entry) is True
+
+    # Missing signature on either side → stable (never a phantom update)
+    unknown = _cfile(syn_id, "Assignments/Essay.html", size=0, sig="")
+    assert sm._is_canvas_newer(unknown, entry) is False
+
+
+def test_empty_sig_never_clobbers_stored_sig(sm, course_dir):
+    syn_id = make_secondary_id("quiz", 7)
+    _write_local(course_dir, "Quizzes/Q1.html")
+    sm.record_downloaded_file(syn_id, "Q1.html", "Quizzes/Q1.html", "", 0,
+                              content_sig="realsig")
+    # A later record WITHOUT a sig (e.g. a legacy code path) must not wipe it
+    sm.record_downloaded_file(syn_id, "Q1.html", "Quizzes/Q1.html", "", 0)
+    assert sm.load_manifest()["files"][str(syn_id)]["content_sig"] == "realsig"
+
+    # save_manifest with a stale in-memory (empty-sig) entry must not wipe either
+    manifest = sm.load_manifest()
+    manifest["files"][str(syn_id)]["content_sig"] = ""
+    sm.save_manifest(manifest)
+    assert sm.load_manifest()["files"][str(syn_id)]["content_sig"] == "realsig"
+
+
+# ── M-12: is_ignored lifecycle ───────────────────────────────────────────────
+
+def test_fresh_download_clears_stale_ignore(sm, course_dir):
+    sm.ignore_file(55, "big.mp4", 999)
+    assert sm.load_manifest()["files"]["55"]["is_ignored"] is True
+    _write_local(course_dir, "big.mp4", b"x" * 10)
+    # Fresh-byte download (clear_ignored=True) → flag cleared
+    sm.record_downloaded_file(55, "big.mp4", "big.mp4", "", 10, clear_ignored=True)
+    assert sm.load_manifest()["files"]["55"]["is_ignored"] is False
+
+
+def test_skip_existing_rerecord_still_preserves_ignore(sm, course_dir):
+    _write_local(course_dir, "keep.pdf")
+    sm.record_downloaded_file(66, "keep.pdf", "keep.pdf", "", 11)
+    sm.ignore_file(66, "keep.pdf", 11)
+    # skip-existing path re-records WITHOUT clear_ignored → preserved
+    sm.record_downloaded_file(66, "keep.pdf", "keep.pdf", "", 11)
+    assert sm.load_manifest()["files"]["66"]["is_ignored"] is True
+
+
+# ── M-3: discovery never claims a tracked file ───────────────────────────────
+
+def test_discovery_skips_already_tracked_paths(sm, course_dir):
+    _write_local(course_dir, "notes.pdf", b"a" * 20)
+    sm.record_downloaded_file(1, "notes.pdf", "notes.pdf", "2026-01-01T00:00:00Z", 20)
+    manifest = sm.load_manifest()
+
+    canvas_files = [
+        _cfile(1, "notes.pdf", size=20),           # the tracked file
+        _cfile(3, "notes.pdf", size=20),           # NEW id, same name+size
+    ]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+    # id=3 must NOT be "discovered" onto the file id=1 already owns - it is new.
+    new_ids = {f.id for f in result.new_files}
+    assert 3 in new_ids
+    up_ids = {c.id for c, _ in result.uptodate_files}
+    assert 1 in up_ids
+
+
+# ── M-4: weakest-tier discovery stores an EMPTY baseline ─────────────────────
+
+def test_size_ext_discovery_stores_empty_baseline(sm, course_dir):
+    # No manifest rows. One local pdf; canvas file has same size+ext but a
+    # DIFFERENT name and no md5 → only the size+ext tier can match.
+    _write_local(course_dir, "myrenamed.pdf", b"b" * 33)
+    manifest = sm.load_manifest()
+    canvas_files = [_cfile(9, "original_name.pdf", size=33)]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+    up_ids = {c.id for c, _ in result.uptodate_files}
+    assert 9 in up_ids
+    entry = manifest["files"]["9"]
+    assert entry["original_md5"] == ""  # bias to preserve on next update
+
+
+def test_name_match_discovery_keeps_real_baseline(sm, course_dir):
+    _write_local(course_dir, "slides.pdf", b"c" * 15)
+    manifest = sm.load_manifest()
+    canvas_files = [_cfile(4, "slides.pdf", size=15)]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+    assert {c.id for c, _ in result.uptodate_files} == {4}
+    assert manifest["files"]["4"]["original_md5"] != ""
+
+
+# ── M-6: teacher re-upload respects local deletion + phantom pruning ────────
+
+def test_reupload_routes_to_locally_deleted(sm, course_dir):
+    # User downloaded a.pdf (id=1), then deleted it locally. Teacher deleted
+    # the Canvas file and re-uploaded the same name under id=2.
+    sm.record_downloaded_file(1, "a.pdf", "a.pdf", "2026-01-01T00:00:00Z", 11)
+    manifest = sm.load_manifest()
+    canvas_files = [_cfile(2, "a.pdf", size=11)]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+
+    assert result.new_files == []                      # not offered as new
+    assert result.updated_clean_files == []            # NOT auto-resurrected
+    assert len(result.locally_deleted_files) == 1      # respected deletion
+    del_info = result.locally_deleted_files[0]
+    assert del_info.canvas_file_id == 1
+    # The NEW canvas object rides along for a user-selected redownload
+    assert getattr(del_info, "_reupload_new_file").id == 2
+
+
+def test_reupload_with_local_file_present_keeps_both(sm, course_dir):
+    # The user still HAS the old file → the same-named new file is genuinely new.
+    _write_local(course_dir, "a.pdf", b"x" * 11)
+    sm.record_downloaded_file(1, "a.pdf", "a.pdf", "2026-01-01T00:00:00Z", 11)
+    manifest = sm.load_manifest()
+    canvas_files = [
+        _cfile(1, "a.pdf", size=11),
+        _cfile(2, "a.pdf", size=999),  # different size → no discovery-claim
+    ]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+    assert {f.id for f in result.new_files} == {2}
+    assert result.locally_deleted_files == []
+
+
+def test_phantom_row_pruned_after_replacement_tracked(sm, course_dir):
+    # Old id=1 row: gone from Canvas, gone from disk. Replacement id=2 row:
+    # tracked, file on disk, still on Canvas. The stale row must be pruned
+    # instead of resurfacing as "Deleted Locally" forever.
+    sm.record_downloaded_file(1, "a.pdf", "a.pdf", "2026-01-01T00:00:00Z", 11)
+    _write_local(course_dir, "a.pdf", b"y" * 11)
+    sm.record_downloaded_file(2, "a.pdf", "a.pdf", "2026-02-01T00:00:00Z", 11)
+    manifest = sm.load_manifest()
+    canvas_files = [_cfile(2, "a.pdf", size=11)]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+
+    assert result.locally_deleted_files == []
+    assert "1" not in sm.load_manifest()["files"]      # row hard-deleted
+    assert "2" in sm.load_manifest()["files"]
+
+
+# ── H-7: ownership-aware conversion targets ──────────────────────────────────
+
+def test_conversion_target_diverts_from_foreign_pdf(sm, course_dir):
+    from post_processing import _resolve_conversion_target
+    src = _write_local(course_dir, "Week1.pptx", b"pptx")
+    sm.record_downloaded_file(10, "Week1.pptx", "Week1.pptx", "", 4)
+    # A teacher-provided PDF with the same stem already exists
+    _write_local(course_dir, "Week1.pdf", b"teacher pdf")
+
+    target = _resolve_conversion_target(sm, src, ".pdf")
+    assert target.name == "Week1 (1).pdf"              # never clobbered
+
+
+def test_conversion_target_overwrites_own_product(sm, course_dir):
+    from post_processing import _resolve_conversion_target
+    src = _write_local(course_dir, "Deck.pptx", b"pptx")
+    sm.record_downloaded_file(11, "Deck.pptx", "Deck.pptx", "", 4)
+
+    # First conversion: no collision → default target
+    t1 = _resolve_conversion_target(sm, src, ".pdf")
+    assert t1.name == "Deck.pdf"
+    _write_local(course_dir, "Deck.pdf", b"converted v1")
+    assert sm.update_converted_file(11, "Deck.pdf") is True
+
+    # Update flow: sync re-downloaded Deck.pptx and re-pointed the row at it
+    sm.record_downloaded_file(11, "Deck.pptx", "Deck.pptx", "", 4)
+    src2 = _write_local(course_dir, "Deck.pptx", b"pptx v2")
+    # Re-conversion may overwrite its OWN product in place
+    t2 = _resolve_conversion_target(sm, src2, ".pdf")
+    assert t2.name == "Deck.pdf"
+
+
+def test_conversion_diverted_name_stays_stable(sm, course_dir):
+    from post_processing import _resolve_conversion_target
+    src = _write_local(course_dir, "X.pptx", b"pptx")
+    sm.record_downloaded_file(12, "X.pptx", "X.pptx", "", 4)
+    _write_local(course_dir, "X.pdf", b"teacher pdf")
+
+    t1 = _resolve_conversion_target(sm, src, ".pdf")
+    assert t1.name == "X (1).pdf"
+    _write_local(course_dir, "X (1).pdf", b"our product")
+    assert sm.update_converted_file(12, "X (1).pdf") is True
+
+    # Next update: row re-pointed at the fresh source again
+    sm.record_downloaded_file(12, "X.pptx", "X.pptx", "", 4)
+    t2 = _resolve_conversion_target(sm, src, ".pdf")
+    assert t2.name == "X (1).pdf"                      # stable, no X (2).pdf
+
+
+# ── H-4: Panopto ffmpeg .part pattern ────────────────────────────────────────
+
+def _fake_ffmpeg_cmd(behavior: str, out_path: str) -> list[str]:
+    """Build a command whose last arg is the output path (like real ffmpeg).
+
+    behavior 'ok'      → writes bytes to the target and exits 0
+             'fail'    → writes PARTIAL bytes to the target and exits 1
+             'empty'   → writes nothing and exits 0
+    """
+    script = (
+        "import sys\n"
+        "mode, out = sys.argv[1], sys.argv[2]\n"
+        "if mode in ('ok', 'fail'):\n"
+        "    open(out, 'wb').write(b'MEDIA' * 100)\n"
+        "sys.exit(0 if mode in ('ok', 'empty') else 1)\n"
+    )
+    return [sys.executable, "-c", script, behavior, out_path]
+
+
+def test_ffmpeg_part_pattern_success(tmp_path):
+    from panopto.stream import _run_ffmpeg_download
+    out = tmp_path / "Lecture.mp3"
+    ok, err = _run_ffmpeg_download(_fake_ffmpeg_cmd("ok", str(out)), str(out))
+    assert ok is True and err is None
+    assert out.exists() and out.stat().st_size > 0
+    assert not (tmp_path / "Lecture.part.mp3").exists()
+
+
+def test_ffmpeg_part_pattern_failure_leaves_no_partial(tmp_path):
+    from panopto.stream import _run_ffmpeg_download
+    out = tmp_path / "Lecture.mp3"
+    ok, err = _run_ffmpeg_download(_fake_ffmpeg_cmd("fail", str(out)), str(out))
+    assert ok is False and err
+    # THE fix: neither a truncated final file nor a stray .part remains,
+    # so classification can never mistake a failed download for a complete one.
+    assert not out.exists()
+    assert not (tmp_path / "Lecture.part.mp3").exists()
+
+
+def test_ffmpeg_empty_output_is_failure(tmp_path):
+    from panopto.stream import _run_ffmpeg_download
+    out = tmp_path / "Lecture.mp4"
+    ok, err = _run_ffmpeg_download(_fake_ffmpeg_cmd("empty", str(out)), str(out))
+    assert ok is False
+    assert not out.exists()
+
+
+# ── misc: partial artifacts invisible to the analyzer ────────────────────────
+
+def test_part_artifacts_ignored_by_analyzer(sm, course_dir):
+    _write_local(course_dir, "Lecture.part.mp3", b"partial")
+    _write_local(course_dir, "doc.pdf.part", b"partial")
+    manifest = sm.load_manifest()
+    result = sm.analyze_course([], manifest, cm=None, download_mode="flat")
+    assert result.untracked_shortcuts == 0
+
+
+def test_delete_manifest_rows(sm, course_dir):
+    _write_local(course_dir, "z.pdf")
+    sm.record_downloaded_file(77, "z.pdf", "z.pdf", "", 11)
+    assert "77" in sm.load_manifest()["files"]
+    assert sm.delete_manifest_rows([77]) is True
+    assert "77" not in sm.load_manifest()["files"]

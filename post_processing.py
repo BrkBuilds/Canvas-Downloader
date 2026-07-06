@@ -162,6 +162,58 @@ def _show_active_file(ui: UIBridge, filename: str):
 # Database & Error Helpers
 # ─────────────────────────────────────────────────────
 
+def _resolve_conversion_target(sm, src_path, target_ext: str):
+    """Pick the OUTPUT path for converting *src_path* (H-7 collision guard).
+
+    Default target is ``<stem><target_ext>`` beside the source. If that file
+    already exists, overwriting is allowed ONLY when the manifest proves it is
+    this entry's OWN previous conversion product (recorded by
+    ``update_converted_file``); anything else - a teacher-provided X.pdf next
+    to X.pptx, an X.xlsx whose PDF would collide with X.pptx's, the user's own
+    file - diverts to the first free ``<stem> (n)<target_ext>``. The recorded
+    product makes the diverted name STABLE across future updates (the next
+    re-conversion overwrites its own ``X (1).pdf`` instead of minting X (2)).
+    """
+    src = Path(src_path)
+    default = src.with_suffix(target_ext)
+
+    if sm is not None:
+        try:
+            src_rel = str(src.relative_to(sm.local_path)).replace('\\', '/')
+        except (ValueError, AttributeError):
+            src_rel = None
+        if src_rel is not None:
+            try:
+                manifest = sm.load_manifest()
+                row_id = None
+                for fid, info in manifest.get('files', {}).items():
+                    if info.get('local_path', '') == src_rel:
+                        row_id = fid
+                        break
+                if row_id is not None:
+                    prod_rel = sm.get_conversion_products().get(str(row_id), '')
+                    if prod_rel:
+                        prod_path = sm.local_path / prod_rel
+                        if (prod_path.suffix.lower() == target_ext.lower()
+                                and prod_path.parent == src.parent):
+                            return prod_path  # own product → overwrite in place
+            except Exception as e:
+                logger.debug(f"_resolve_conversion_target ownership lookup failed: {e}")
+
+    if not default.exists():
+        return default
+    n = 1
+    while True:
+        cand = default.parent / f"{default.stem} ({n}){default.suffix}"
+        if not cand.exists():
+            logger.info(
+                f"Conversion target '{default.name}' exists and is not this file's "
+                f"own product - diverting to '{cand.name}' (H-7)."
+            )
+            return cand
+        n += 1
+
+
 def _update_manifest_path(sm, original_file: Path, converted_path: Path):
     """Update the sync manifest to point from the original file to the converted file.
 
@@ -312,7 +364,8 @@ def run_pptx_conversion(files, ui: UIBridge):
                 old_name = pptx_file.name
                 _show_active_file(ui, old_name)
 
-                pdf_path_str = converter.convert(pptx_file)
+                pdf_path_str = converter.convert(
+                    pptx_file, dst=_resolve_conversion_target(sm, pptx_file, '.pdf'))
 
                 if pdf_path_str:
                     pdf_path = Path(pdf_path_str)
@@ -359,7 +412,8 @@ def run_html_conversion(files, ui: UIBridge):
         old_name = html_file.name
         _show_active_file(ui, old_name)
 
-        md_path = convert_html_to_md(html_file)
+        md_path = convert_html_to_md(
+            html_file, dst=_resolve_conversion_target(sm, html_file, '.md'))
 
         if md_path:
             _update_manifest_path(sm, html_file, md_path)
@@ -419,7 +473,7 @@ def run_code_conversion(files, ui: UIBridge):
     ui.active_file_placeholder.empty()
 
 
-def run_url_compilation(folders, ui: UIBridge, sm=None):
+def run_url_compilation(folders, ui: UIBridge):
     """Compile .url shortcuts into a NotebookLM text file.
 
     folders: list of (course_folder_path: Path, course_name: str)
@@ -491,7 +545,8 @@ def run_word_conversion(files, ui: UIBridge):
                 old_name = word_file.name
                 _show_active_file(ui, old_name)
 
-                pdf_path_str = converter.convert(word_file)
+                pdf_path_str = converter.convert(
+                    word_file, dst=_resolve_conversion_target(sm, word_file, '.pdf'))
 
                 if pdf_path_str:
                     pdf_path = Path(pdf_path_str)
@@ -602,7 +657,8 @@ def run_excel_conversion(files, ui: UIBridge):
                 _show_active_file(ui, old_name)
 
                 abs_path = str(excel_file.absolute())
-                new_pdf_path, excel_error_msg = converter.convert(abs_path)
+                new_pdf_path, excel_error_msg = converter.convert(
+                    abs_path, dst=_resolve_conversion_target(sm, excel_file, '.pdf'))
 
                 if new_pdf_path:
                     pdf_path = Path(new_pdf_path)
@@ -650,7 +706,8 @@ def run_video_conversion(files, ui: UIBridge):
         old_name = video_file.name
         _show_active_file(ui, old_name)
 
-        mp3_path_str = convert_video_to_mp3(video_file)
+        mp3_path_str = convert_video_to_mp3(
+            video_file, dst=_resolve_conversion_target(sm, video_file, '.mp3'))
 
         if mp3_path_str:
             mp3_path = Path(mp3_path_str)
@@ -694,6 +751,7 @@ def _glob_files(course_folder: Path, extensions: set, explicit_files: list = Non
         and "__MACOSX" not in f.parts
         and not _PACKAGE_DIRS.intersection(f.parts)
         and f.suffix.lower() in extensions
+        and not ('.part.' in f.name.lower() or f.name.lower().endswith('.part'))
         and (not explicit_set or f.resolve() in explicit_set)
     ]
 
@@ -746,9 +804,9 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
              # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
              has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc'} for p in explicit_files)
              if has_shortcut:
-                 run_url_compilation([(course_folder, course_name)], ui, sm=sm)
+                 run_url_compilation([(course_folder, course_name)], ui)
         else:
-             run_url_compilation([(course_folder, course_name)], ui, sm=sm)
+             run_url_compilation([(course_folder, course_name)], ui)
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):

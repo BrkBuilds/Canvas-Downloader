@@ -143,5 +143,4 @@ def start_today_sync(pairs: list[dict] | None = None, is_auto: bool = False) -> 
     st.session_state["sync_quick_mode"] = True
     st.session_state["qs_cancel_route"] = True
     st.session_state["analysis_pass"] = 1
-    st.session_state.pop("sync_single_pair_idx", None)
     st.rerun()
