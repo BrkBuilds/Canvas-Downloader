@@ -88,9 +88,11 @@ def _safe_close(clip, label="clip"):
             pool.shutdown(wait=False)
 
 
-def convert_video_to_mp3(video_path: str | Path) -> str | None:
+def convert_video_to_mp3(video_path: str | Path, dst: str | Path | None = None) -> str | None:
     abs_video = str(Path(video_path).resolve().absolute())
-    abs_mp3 = str(Path(video_path).with_suffix('.mp3').resolve().absolute())
+    # H-7: honour an explicit target (ownership-resolved by the caller).
+    _mp3_target = Path(dst) if dst is not None else Path(video_path).with_suffix('.mp3')
+    abs_mp3 = str(_mp3_target.resolve().absolute())
     
     video_clip = None
     conversion_success = False

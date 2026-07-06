@@ -145,7 +145,6 @@ def show_sync_complete():
     sync_errors = st.session_state.get('sync_errors', [])
     synced_details = st.session_state.get('synced_details', {})
     sync_selections = st.session_state.get('sync_selections', [])
-    sync_pairs = st.session_state.get('sync_pairs', [])
 
     # Summary card logic
     total_bytes = st.session_state.get('synced_bytes', 0)
@@ -342,10 +341,14 @@ def show_sync_complete():
     if sync_selections:
         for sel in sync_selections:
             pair_idx = sel['pair_idx']
-            if pair_idx >= len(sync_pairs):
+            # H-6: read the pair from the selection itself. Indexing the global
+            # sync_pairs list with pair_idx attributed files to the WRONG course
+            # card whenever analysis had skipped a pair (missing folder / error)
+            # and the indexes drifted apart.
+            pair = sel.get('res_data', {}).get('pair', {})
+            if not pair.get('local_folder'):
                 continue
-            pair = sync_pairs[pair_idx]
-            display_name = friendly_course_name(pair['course_name'])
+            display_name = friendly_course_name(pair.get('course_name', ''))
 
             f_key = f"{display_name} ({pair_idx})"
             file_dropdown_details[f_key] = synced_details.get(pair_idx, [])
