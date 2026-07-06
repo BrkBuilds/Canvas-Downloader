@@ -41,7 +41,7 @@ import pathlib
 import subprocess
 import sys
 
-ROOT = pathlib.Path(__file__).parent.resolve()
+ROOT = pathlib.Path(__file__).parent.parent.resolve()
 MSIX_DIR = ROOT / "msix"
 BUILD_DIR = MSIX_DIR / "build"
 ASSETS_OUT = BUILD_DIR / "Assets"

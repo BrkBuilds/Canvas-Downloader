@@ -1,7 +1,7 @@
 """
 engine.applescript_bridge - Shared AppleScript execution utility for macOS.
 
-Extracted from excel_converter.py, word_converter.py, pdf_converter.py
+Extracted from converters/excel.py, converters/word.py, converters/pdf.py
 (Phase 3 remediation - F-08) to eliminate triple-duplicated code.
 
 Provides a single, robust ``run_applescript()`` function that all Office
@@ -832,7 +832,7 @@ _PERMISSION_RECORD_FILE = 'macos_permission_setup.json'
 
 
 def _permission_record_path() -> Path:
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     return Path(get_config_dir()) / _PERMISSION_RECORD_FILE
 
 

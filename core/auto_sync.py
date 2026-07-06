@@ -67,7 +67,7 @@ def build_today_sync_notice() -> dict:
     and adding one would double-count.
     """
     from datetime import datetime
-    from ui_helpers import friendly_course_name
+    from shared.helpers import friendly_course_name
 
     courses = []
     files_in_groups = 0

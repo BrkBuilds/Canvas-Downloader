@@ -44,7 +44,7 @@ PANOPTO_DEFAULTS: dict = {
 
 def _config_path() -> Path:
     """Resolve the shared settings JSON path (lazy import of get_config_dir)."""
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     return Path(get_config_dir()) / "canvas_downloader_settings.json"
 
 

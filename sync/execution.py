@@ -32,19 +32,19 @@ import aiofiles
 import aiohttp
 import streamlit as st
 
-import theme
-from canvas_logic import CanvasManager
+from shared import theme
+from core.canvas_logic import CanvasManager
 from core.cancellation import cancel_sync, is_sync_cancelled
 # NOTE: never re-import these names *locally* inside a function in this
-# module - a local `from sync_manager import secondary_id_type` makes the
+# module - a local `from core.sync_manager import secondary_id_type` makes the
 # name function-local for the ENTIRE enclosing function scope, so earlier
 # uses raise UnboundLocalError ("cannot access local variable
 # 'secondary_id_type'"). This bit the sync download loop on 2026-06-11.
-from sync_manager import (
+from core.sync_manager import (
     SyncFileInfo, SyncHistoryManager, CanvasFileInfo,
     secondary_id_type, SECONDARY_ID_OFFSETS,
 )
-from ui_helpers import (
+from shared.helpers import (
     esc,
     render_progress_bar,
     render_sync_wizard,
@@ -57,7 +57,7 @@ from engine.progress_dashboard import (
     build_metrics_html, build_terminal_html, render_active_file,
     log_line, log_meta, file_icon_svg,
 )
-from canvas_debug import log_debug
+from core.canvas_debug import log_debug
 
 logger = logging.getLogger(__name__)
 
@@ -477,12 +477,12 @@ def run_sync():
         import threading as _threading
         from streamlit.runtime.scriptrunner import add_script_run_ctx as _add_ctx
         _add_ctx(_threading.current_thread(), _script_ctx)
-        from canvas_logic import safe_thread_wrapper
+        from core.canvas_logic import safe_thread_wrapper
         current_ctx = _script_ctx  # captured on script thread above
 
         cm = CanvasManager(sync_api_token, sync_api_url)
         cm.error_log_enabled = st.session_state.get('error_log_enabled', False)
-        from canvas_debug import log_debug
+        from core.canvas_debug import log_debug
         _sync_debug_mode = st.session_state.get('debug_mode', False)
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
 
@@ -528,9 +528,9 @@ def run_sync():
         # certifi-backed SSL context: frozen macOS builds have no OpenSSL default
         # CA paths, so aiohttp must be pointed at certifi explicitly (see
         # canvas_logic.get_ssl_context).
-        from canvas_logic import get_ssl_context
-        from sync_manager import preferred_disk_name as _pref_name
-        from sync_manager import compute_local_md5 as _compute_md5
+        from core.canvas_logic import get_ssl_context
+        from core.sync_manager import preferred_disk_name as _pref_name
+        from core.sync_manager import compute_local_md5 as _compute_md5
         import hashlib as _hashlib
         _sync_connector = aiohttp.TCPConnector(
             limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context()
@@ -626,7 +626,7 @@ def run_sync():
                 if _debug_file:
                     # Register for the logging bridge (mirrors all app-module
                     # logger output, incl. post-processing, into this file).
-                    from canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
+                    from core.canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
                     _set_dbg(_debug_file)
                     if pair_idx == 0:
                         _dbg_header(_debug_file, context=f"Sync execution | {total_pairs} pair(s)")
@@ -664,7 +664,7 @@ def run_sync():
                         terminal_log.append(log_line('error', f"Reconnection failed: {course_name}", detail=str(e)))
                         log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                         if _debug_file:
-                            from canvas_debug import log_debug_exc
+                            from core.canvas_debug import log_debug_exc
                             log_debug_exc(f"✗ Reconnection failed: {course_name}: {e}", _debug_file, exc=e)
                         failed_files_for_pair.extend(sel.get('new', []))
                         continue
@@ -1064,7 +1064,7 @@ def run_sync():
                         terminal_log.append(log_line('error', display_file_name, icon=file_icon_svg(display_file_name), detail=str(e)))
                         _paint_metrics()
                         if _debug_file:
-                            from canvas_debug import log_debug_exc
+                            from core.canvas_debug import log_debug_exc
                             log_debug_exc(f"✗ Exception: {display_file_name}: {e}", _debug_file, exc=e)
                     finally:
                         files_done += 1
@@ -1317,7 +1317,7 @@ def run_sync():
                                     # bypass the `file.id < 0` branch and enter the standard
                                     # HTTP download path with full retry + cancellation support.
                                     if sec_attachments:
-                                        from sync_manager import (
+                                        from core.sync_manager import (
                                             CanvasFileInfo as _CFI,
                                             make_secondary_id as _make_sec_id,
                                         )
@@ -1534,7 +1534,7 @@ def run_sync():
                         if _debug_file:
                             # Full traceback: this broad handler catches genuine
                             # code bugs, and str(e) alone doesn't say WHERE.
-                            from canvas_debug import log_debug_exc
+                            from core.canvas_debug import log_debug_exc
                             log_debug_exc(f"✗ Exception: {display_file_name}: {e}", _debug_file, exc=e)
 
                 # H-3: wait for this pair's concurrent downloads to finish before
@@ -1632,7 +1632,7 @@ def run_sync():
                 try:
                     import sqlite3 as _sqlite3
                     from contextlib import closing as _closing
-                    from ui_helpers import make_long_path as _mlp
+                    from shared.helpers import make_long_path as _mlp
                     # closing() so the handle is released immediately (a handle
                     # lingering until GC transiently locks the .db on Windows);
                     # the inner `_ckpt_conn` CM keeps commit-on-exit semantics.
@@ -1664,7 +1664,7 @@ def run_sync():
                             lf.write(f"\n{'='*60}\n")
                             lf.write(f" ☁️ CANVAS DOWNLOADER: SYNC REPORT \n")
                             lf.write(f" Course: {course_name}\n")
-                            from ui_helpers import format_time_display
+                            from shared.helpers import format_time_display
                             lf.write(f" Date:   {nice_date} at {format_time_display(now.strftime('%H:%M'))}\n")
                             lf.write(f"{'='*60}\n\n")
 
@@ -1829,7 +1829,7 @@ def run_sync():
     # ==========================================
     # POST-PROCESSING PIPELINE (Shared Module)
     # ==========================================
-    from post_processing import (
+    from converters.post_processing import (
         UIBridge, run_archive_extraction, run_pptx_conversion,
         run_html_conversion, run_code_conversion, run_url_compilation,
         run_word_conversion, run_excel_data_conversion, run_excel_conversion,
@@ -1944,7 +1944,7 @@ def run_sync():
     )
 
     # Code -> TXT
-    from code_converter import CODE_EXTENSIONS
+    from converters.code import CODE_EXTENSIONS
     run_code_conversion(
         get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code'), pp_ui
     )
@@ -2102,7 +2102,7 @@ def run_sync():
     # so the user can see in the Hub that a sync was attempted and failed.
     if synced_counter[0] > 0 or error_list:
         try:
-            from ui_helpers import get_config_dir
+            from shared.helpers import get_config_dir
             history_mgr = SyncHistoryManager(get_config_dir())
             
             import unicodedata as _ud_hist

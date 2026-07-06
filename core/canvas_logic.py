@@ -17,16 +17,16 @@ import aiohttp
 import types
 import threading
 import aiofiles
-from canvas_debug import log_debug
+from core.canvas_debug import log_debug
 import logging
 import requests
 from requests.adapters import HTTPAdapter
 
-from sync_manager import (
+from core.sync_manager import (
     SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo,
     preferred_disk_name, secondary_content_sig,
 )
-from ui_helpers import make_long_path, _err_log_lock
+from shared.helpers import make_long_path, _err_log_lock
 
 logger = logging.getLogger(__name__)
 
@@ -559,7 +559,7 @@ class CanvasManager:
               - Secondary fetch success status dict
               - Module map: content_id (int) → sanitized module folder name (str)
         """
-        from sync_manager import CanvasFileInfo
+        from core.sync_manager import CanvasFileInfo
         
         all_files_map = {} # ID -> CanvasFileInfo
         module_map = {}  # content_id (int) -> sanitized module folder name (str)
@@ -699,7 +699,7 @@ class CanvasManager:
               - Module map: ID (int, positive or synthetic-negative) →
                 sanitized module folder name (str)
         """
-        from sync_manager import CanvasFileInfo
+        from core.sync_manager import CanvasFileInfo
 
         # Determine secondary-content layout mode once. Mode A (isolate=False)
         # needs filenames carrying the routing prefix so the analyzer's
@@ -944,7 +944,7 @@ class CanvasManager:
             succeeded.  The sync engine uses this to guard against false
             deletions when a fetch times out.
         """
-        from sync_manager import CanvasFileInfo
+        from core.sync_manager import CanvasFileInfo
 
         if module_map is None:
             module_map = {}
@@ -2563,7 +2563,7 @@ class CanvasManager:
                     # to prevent FileNotFoundError during aiofiles.open writes
                     Path(make_long_path(filepath.parent)).mkdir(parents=True, exist_ok=True)
                     
-                    from sync_manager import secondary_id_type as _retry_sec_type
+                    from core.sync_manager import secondary_id_type as _retry_sec_type
                     _retry_etype = _retry_sec_type(file_obj.id) if file_obj.id < 0 else None
                     if file_obj.id < 0 and _retry_etype != 'attachment':
                         # Synthetic entity - Route differently.
@@ -2679,7 +2679,7 @@ class CanvasManager:
                         try:
                             fetch_id = file_obj.id
                             if fetch_id < 0:
-                                from sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
+                                from core.sync_manager import secondary_id_type, SECONDARY_ID_OFFSETS
                                 if secondary_id_type(fetch_id) == 'attachment':
                                     fetch_id = abs(fetch_id) - SECONDARY_ID_OFFSETS['attachment']
                             
@@ -3115,7 +3115,7 @@ class CanvasManager:
                                 _baseline = await asyncio.to_thread(
                                     sync_manager.get_manifest_baseline, file_obj.id)
                                 if _baseline and _baseline[0]:
-                                    from sync_manager import compute_local_md5 as _cmd5
+                                    from core.sync_manager import compute_local_md5 as _cmd5
                                     _local_hash = await asyncio.to_thread(_cmd5, filepath)
                                     _pristine = bool(_local_hash) and _local_hash == _baseline[0]
                             except Exception:
@@ -3879,7 +3879,7 @@ class CanvasManager:
         ``id``, ``url``, ``filename``, ``size``) - only populated for assignments.
         """
         # Local imports to prevent circular dependency with sync_manager
-        from sync_manager import (
+        from core.sync_manager import (
             SECONDARY_ID_OFFSETS, is_secondary_id, secondary_id_type,
         )
 
@@ -4250,8 +4250,8 @@ class CanvasManager:
     def _build_discussion_replies_html_sync(self, topic, debug_file=None):
         """Fetch and format discussion/announcement replies synchronously."""
         from canvasapi.exceptions import Unauthorized, ResourceDoesNotExist
-        from ui_helpers import esc
-        from canvas_debug import log_debug
+        from shared.helpers import esc
+        from core.canvas_debug import log_debug
         
         try:
             entries = list(topic.get_topic_entries())
@@ -4308,7 +4308,7 @@ class CanvasManager:
             return "<hr style='margin-top: 30px; border: 0; border-top: 1px solid #e4e4e7;'><p style='color: #71717a;'><em>Replies could not be accessed.</em></p>"
         except Exception as e:
             if debug_file:
-                from canvas_debug import log_debug
+                from core.canvas_debug import log_debug
                 log_debug(f"Error fetching replies: {e}", debug_file)
             return ""
 
@@ -4324,7 +4324,7 @@ class CanvasManager:
         ― they are queued for async download using their *true positive*
         ``file.id``, just like any normal course file.
         """
-        from sync_manager import make_secondary_id
+        from core.sync_manager import make_secondary_id
         isolate = settings.get('isolate_secondary_content', True)
         log_debug("Secondary: Fetching assignments...", debug_file)
 
@@ -4566,7 +4566,7 @@ class CanvasManager:
         Attachments on announcements are real Canvas File objects and are
         queued for download using their true positive IDs.
         """
-        from sync_manager import make_secondary_id
+        from core.sync_manager import make_secondary_id
         isolate = settings.get('isolate_secondary_content', True)
         log_debug("Secondary: Fetching announcements...", debug_file)
 
@@ -5291,7 +5291,7 @@ class CanvasManager:
         # exceptions surfaced as bare one-liners in the UI and the debug log
         # had no record of WHERE they came from.
         try:
-            from canvas_debug import log_debug_exc, get_active_debug_file
+            from core.canvas_debug import log_debug_exc, get_active_debug_file
             _dbg_file = get_active_debug_file()
             if _dbg_file:
                 if isinstance(error, DownloadError):

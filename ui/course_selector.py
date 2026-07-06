@@ -16,8 +16,8 @@ import re
 
 import streamlit as st
 
-import theme
-from ui_helpers import (
+from shared import theme
+from shared.helpers import (
     get_course_display_parts,
     parse_cbs_metadata,
     render_download_wizard,
@@ -33,7 +33,7 @@ def _css_escape_content(text: str) -> str:
     require escaping backslashes and the enclosing quote character.
     """
     return text.replace('\\', '\\\\').replace('"', '\\"')
-from ui_shared import render_help_card, HELP_ICONS
+from shared.components import render_help_card, HELP_ICONS
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1388,7 +1388,7 @@ def render_course_selector(fetch_courses_fn):
             st.session_state['api_token'],
             st.session_state['api_url'])
     except Exception as _fetch_err:
-        from canvas_logic import is_auth_error
+        from core.canvas_logic import is_auth_error
         if is_auth_error(_fetch_err):
             from ui.auth import force_reauth
             force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")

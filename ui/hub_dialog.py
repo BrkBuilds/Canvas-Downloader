@@ -18,15 +18,15 @@ from pathlib import Path
 
 import streamlit as st
 
-import theme
-from sync_manager import SyncManager, SavedGroupsManager
-from ui_helpers import (
+from shared import theme
+from core.sync_manager import SyncManager, SavedGroupsManager
+from shared.helpers import (
     esc,
     friendly_course_name,
     open_folder,
 )
 from styles import inject_css
-from ui_shared import SVG_FOLDER_YELLOW, SVG_EDIT_WHITE, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
+from shared.components import SVG_FOLDER_YELLOW, SVG_EDIT_WHITE, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
 
 
 # Lazy imports to avoid circular dependency with sync_ui.py
@@ -102,7 +102,7 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
         if st.button("Save", type="primary", use_container_width=True,
                      key="save_group_create"):
             if item_name and item_name.strip():
-                from ui_helpers import get_config_dir
+                from shared.helpers import get_config_dir
                 mgr = SavedGroupsManager(get_config_dir())
                 if is_pair and pair_data:
                     mgr.save_group(item_name.strip(), [pair_data], is_single_pair=True)
@@ -122,7 +122,7 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
 
 def hub_select_folder():
     """Open native folder picker for the Hub dialog (isolated state)."""
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_temp_folder') or None)
     if folder_path:
         st.session_state['hub_temp_folder'] = folder_path
@@ -130,7 +130,7 @@ def hub_select_folder():
 
 def rescue_select_folder(pair_idx: int):
     """Open native folder picker for rescue mode (isolated per-pair state)."""
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     current = (st.session_state.get('rescue_paths') or {}).get(pair_idx) or None
     folder_path = native_folder_picker(initial_dir=current)
     if folder_path:
@@ -194,7 +194,7 @@ def hub_pick_folder_cb():
     Also auto-detects the bound course from the .canvas_sync.db manifest
     in the selected folder, pre-populating the course fields.
     """
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_edit_temp_folder') or None)
     if folder_path:
         st.session_state['hub_edit_temp_folder'] = folder_path
@@ -266,7 +266,7 @@ def confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
 
 def saved_groups_hub_dialog_inner(courses, course_names):
     """3-layered SPA dialog for managing saved sync groups."""
-    from ui_helpers import get_config_dir, get_base64_image
+    from shared.helpers import get_config_dir, get_base64_image
 
     mgr = SavedGroupsManager(get_config_dir())
     layer = st.session_state.get('hub_layer', 'layer_1')
@@ -1492,7 +1492,7 @@ def render_hub_config(pair: dict):
         render_amber_notice("Could not read configuration.", margin="0")
         return
 
-    from ui_shared import render_config_summary_badges
+    from shared.components import render_config_summary_badges
 
     normalized_settings = {}
     normalized_settings['download_mode'] = raw_mode
@@ -1542,7 +1542,7 @@ def hub_cleanup():
 # ===================================================================
 def inject_hub_global_css():
     """Inject Hub Dialog styling: static CSS from file + dynamic theme overrides."""
-    from ui_helpers import get_base64_image
+    from shared.helpers import get_base64_image
     b64_hub_icon = get_base64_image("assets/icon_sync_hub.png")
 
     # Static CSS (extracted to styles/sync_hub.css)

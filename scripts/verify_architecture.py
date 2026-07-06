@@ -38,7 +38,7 @@ from typing import Optional
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Directories to scan recursively
-SCAN_DIRS = ["ui", "sync", "engine", "core"]
+SCAN_DIRS = ["ui", "sync", "engine", "core", "converters", "shared"]
 
 # Extra individual root-level .py files (or all root .py files)
 SCAN_ROOT_PY = True  # scan all *.py in PROJECT_ROOT (non-recursive)

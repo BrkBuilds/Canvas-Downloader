@@ -13,13 +13,13 @@ from types import SimpleNamespace
 
 import pytest
 
-import ui_helpers
+from shared import helpers
 from core import auto_sync, today_store
 
 
 @pytest.fixture()
 def config_dir(tmp_path, monkeypatch):
-    monkeypatch.setattr(ui_helpers, "get_config_dir", lambda: str(tmp_path))
+    monkeypatch.setattr(helpers, "get_config_dir", lambda: str(tmp_path))
     return tmp_path
 
 

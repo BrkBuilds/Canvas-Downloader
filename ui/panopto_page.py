@@ -884,7 +884,7 @@ def render_transcription_dialog() -> None:
     # the way up into the reserved slot itself.
     _hdr_mt = "-10px" if _from_settings else "-70px"
 
-    from ui_helpers import get_base64_image
+    from shared.helpers import get_base64_image
     b64_pan_icon = get_base64_image("assets/pan_icon.png")
     st.html(
         f"""

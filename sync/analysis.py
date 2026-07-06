@@ -22,12 +22,12 @@ from pathlib import Path
 
 import streamlit as st
 
-import theme
-from canvas_logic import CanvasManager, safe_thread_wrapper
+from shared import theme
+from core.canvas_logic import CanvasManager, safe_thread_wrapper
 from core.cancellation import cancel_sync, is_sync_cancelled, reset_sync_cancel
 from core.state_registry import NOTEBOOK_SUB_KEYS
-from sync_manager import SyncManager
-from ui_helpers import render_sync_wizard, friendly_course_name, esc
+from core.sync_manager import SyncManager
+from shared.helpers import render_sync_wizard, friendly_course_name, esc
 from engine.notifications import play_completion_beep
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         Tuple of (course, sync_mgr, manifest, canvas_files, result, detected)
         - all data needed by the caller, with no side effects.
     """
-    from canvas_debug import log_debug, clear_debug_log, set_active_debug_file, log_session_header
+    from core.canvas_debug import log_debug, clear_debug_log, set_active_debug_file, log_session_header
     _dbg = st.session_state.get('debug_mode', False)
     debug_file = str(Path(local_folder) / 'debug_log.txt') if _dbg else None
     if debug_file:
@@ -428,7 +428,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             if not local_folder or not Path(local_folder).exists():
                 continue  # downstream loop handles missing folder
             bound_id = SyncManager.peek_bound_course_id(local_folder)
-            from sync_manager import DB_UNREADABLE
+            from core.sync_manager import DB_UNREADABLE
             if bound_id == DB_UNREADABLE:
                 # M-6: DB exists but couldn't be read - treat as a mismatch so
                 # the user is warned rather than silently syncing against a corrupt DB.
@@ -731,7 +731,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
             # Debug: log Quick Sync auto-selection per course
             if st.session_state.get('debug_mode'):
-                from canvas_debug import log_debug as _qs_log
+                from core.canvas_debug import log_debug as _qs_log
                 _qs_dbg = str(Path(res_data['pair']['local_folder']) / 'debug_log.txt')
                 _qs_log(f"--- Quick Sync Auto-Selection: {res_data['pair']['course_name']} ---", _qs_dbg)
                 _qs_log(
@@ -839,7 +839,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
 
         if st.session_state.get('debug_mode'):
-            from canvas_debug import log_debug as _qs_final_log
+            from core.canvas_debug import log_debug as _qs_final_log
             _qs_route = 'sync_complete (nothing to do)' if total_count == 0 else f'pre_sync ({total_count} files queued)'
             for _res in all_results:
                 _qs_f = str(Path(_res['pair']['local_folder']) / 'debug_log.txt')
@@ -900,7 +900,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         total_changes = total_new + total_updated + total_local_del + total_panopto
 
         if st.session_state.get('debug_mode'):
-            from canvas_debug import log_debug as _rv_log
+            from core.canvas_debug import log_debug as _rv_log
             _rv_route = 'sync_complete (all up to date)' if total_changes == 0 else 'review screen (user selects files)'
             for _res_d in all_results:
                 _rv_dbg = str(Path(_res_d['pair']['local_folder']) / 'debug_log.txt')

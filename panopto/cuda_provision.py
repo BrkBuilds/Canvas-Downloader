@@ -51,7 +51,7 @@ _SENTINEL_DLL = "cublas64_12.dll"
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 def cuda_libs_dir() -> Path:
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     return Path(get_config_dir()) / "cuda_libs"
 
 
