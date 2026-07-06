@@ -94,7 +94,7 @@ def get_model(model_id: str) -> dict | None:
 
 
 def models_dir() -> Path:
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     d = Path(get_config_dir()) / "panopto_models"
     try:
         d.mkdir(parents=True, exist_ok=True)

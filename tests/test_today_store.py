@@ -12,7 +12,7 @@ from datetime import datetime
 
 import pytest
 
-import ui_helpers
+from shared import helpers
 from core import today_store
 
 
@@ -20,11 +20,11 @@ from core import today_store
 def config_dir(tmp_path, monkeypatch):
     """Point the store at an isolated temp config dir.
 
-    today_store resolves the path via ``ui_helpers.get_config_dir()`` at call
-    time (function-local import), so patching the attribute on ui_helpers is
-    sufficient and leaks nothing across tests.
+    today_store resolves the path via ``shared.helpers.get_config_dir()`` at
+    call time (function-local import), so patching the attribute on
+    shared.helpers is sufficient and leaks nothing across tests.
     """
-    monkeypatch.setattr(ui_helpers, "get_config_dir", lambda: str(tmp_path))
+    monkeypatch.setattr(helpers, "get_config_dir", lambda: str(tmp_path))
     return tmp_path
 
 

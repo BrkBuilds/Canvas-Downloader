@@ -1,8 +1,8 @@
 """Shared test bootstrap for Canvas Downloader.
 
-The project uses a flat layout (modules import each other by top-level name:
-``import ui_helpers``, ``from core.today_store import ...``), so the repo root
-must be on ``sys.path`` before any test module imports application code.
+The project's modules import each other by package-qualified name
+(``from shared.helpers import ...``, ``from core.today_store import ...``), so the
+repo root must be on ``sys.path`` before any test module imports application code.
 
 Run the suite from the repo root with:  python -m pytest
 """

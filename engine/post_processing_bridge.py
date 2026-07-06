@@ -31,8 +31,8 @@ from engine.progress_dashboard import DashboardPlaceholders
 logger = logging.getLogger(__name__)
 
 # Intentionally lazy-imported at call time to avoid circular imports:
-#   from post_processing import run_all_conversions, UIBridge
-#   from sync_manager import SyncManager
+#   from converters.post_processing import run_all_conversions, UIBridge
+#   from core.sync_manager import SyncManager
 
 
 # ═══════════════════════════════════════════════
@@ -93,8 +93,8 @@ def invoke_post_processing(
         as this function accumulates into that key on each invocation.
     """
     # Lazy imports to avoid circular dependency chains
-    from post_processing import run_all_conversions, UIBridge
-    from sync_manager import SyncManager
+    from converters.post_processing import run_all_conversions, UIBridge
+    from core.sync_manager import SyncManager
 
     if contract is None:
         contract = build_conversion_contract()

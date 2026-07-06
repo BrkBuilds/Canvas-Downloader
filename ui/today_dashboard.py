@@ -26,10 +26,10 @@ from pathlib import Path
 
 import streamlit as st
 
-import theme
+from shared import theme
 from styles import inject_css
-from ui_helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path
-from ui_shared import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
+from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path
+from shared.components import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
 
 
 # Lucide calendar glyph (matches the sidebar "Today" nav icon).
@@ -253,7 +253,7 @@ def _todays_groups() -> list[dict]:
     on-disk relative path. Returns a list of
     ``{course_name, local_folder, files:[{name, rel, category}]}``.
     """
-    from sync_manager import SyncHistoryManager
+    from core.sync_manager import SyncHistoryManager
     from core.today_store import logical_today
 
     today = logical_today()
@@ -329,8 +329,8 @@ def _render_today_files(groups: list[dict]) -> None:
     count badge instead of a run status, and the destination folder on line 2).
     """
     from styles import inject_css
-    from ui_helpers import short_path
-    from ui_shared import inject_file_action_css, render_course_file_breakdown
+    from shared.helpers import short_path
+    from shared.components import inject_file_action_css, render_course_file_breakdown
 
     inject_file_action_css()
     inject_css("sync_history_cards.css")
@@ -554,7 +554,7 @@ def _import_courses_dialog():
     anywhere on the card toggles its membership in the daily sync, with a
     checkbox indicator that fills in with a checkmark when selected.
     """
-    from sync_manager import SavedGroupsManager
+    from core.sync_manager import SavedGroupsManager
     from core.today_store import load_today_config
     from ui.amber_notice import render_amber_notice, render_info_notice
 
@@ -910,7 +910,7 @@ def _render_sync_notice(notice: dict) -> None:
     The whole card is one st.markdown block (CLAUDE.md: single call, no
     inter-element gap) beside a compact masked-icon close button.
     """
-    from ui_helpers import format_time_display
+    from shared.helpers import format_time_display
 
     if not isinstance(notice, dict):
         st.session_state.pop("today_sync_notice", None)

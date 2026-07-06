@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from canvas_logic import CanvasManager, DownloadError
+from core.canvas_logic import CanvasManager, DownloadError
 import asyncio
 import collections
 import os
@@ -9,20 +9,20 @@ import sys
 import time
 from datetime import datetime
 
-import theme
+from shared import theme
 import version
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
-from ui_helpers import esc, render_download_wizard
-from ui_shared import (
+from shared.helpers import esc, render_download_wizard
+from shared.components import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
     error_log_dialog, render_panopto_summary,
 )
 from styles import inject_css
-from ui_shared import inject_material_icons_font
+from shared.components import inject_material_icons_font
 from core.state_registry import (
     ensure_download_state,
 )
@@ -537,7 +537,7 @@ if st.session_state.get('download_status', '') not in _active_dl_statuses:
 if '_debug_log_cleared' not in st.session_state:
     st.session_state['_debug_log_cleared'] = True
     if st.session_state.get('debug_mode', False):
-        from canvas_debug import clear_debug_log as _clear_debug_log
+        from core.canvas_debug import clear_debug_log as _clear_debug_log
         from pathlib import Path as _Path
         _dbg = _Path(st.session_state.get('download_path', str(_Path.home() / 'Downloads'))) / 'debug_log.txt'
         _clear_debug_log(str(_dbg))
@@ -545,14 +545,14 @@ if '_debug_log_cleared' not in st.session_state:
 # --- Helper Functions ---
 
 def select_folder():
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('download_path') or None)
     if folder_path:
         st.session_state['download_path'] = folder_path
 
 def select_sync_folder():
     """Open folder picker for sync mode and store in pending_sync_folder."""
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
@@ -1179,8 +1179,8 @@ with _main_content.container():
                     'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
                 }
                 if st.session_state.get('debug_mode', False):
-                    from canvas_debug import log_debug as _app_log
-                    from canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
+                    from core.canvas_debug import log_debug as _app_log
+                    from core.canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
                     _dl_dbg = str(Path(st.session_state['download_path']) / 'debug_log.txt')
                     # Register for the logging bridge: from here on, every
                     # logger.info/error from any app module (converters,
@@ -1304,7 +1304,7 @@ with _main_content.container():
                             explicit_files=_run_files,
                         )
                     if debug_file:
-                        from canvas_debug import log_debug as _pp_fin_log
+                        from core.canvas_debug import log_debug as _pp_fin_log
                         _pp_active_done = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
                         _dl_count_done = len(st.session_state.get('download_file_details', {}).get(course.name, []))
                         _err_count_done = len(st.session_state.get('download_errors_list', []))
@@ -2013,7 +2013,7 @@ with _main_content.container():
                 _pan_ign = None
                 try:
                     import json as _json
-                    from sync_manager import SyncManager as _PanSM
+                    from core.sync_manager import SyncManager as _PanSM
                     from panopto.runner import (
                         make_recorder as _make_rec, make_ignorer as _make_ign)
                     _pan_course_folder = Path(st.session_state['download_path']) / cm._sanitize_filename(course.name)

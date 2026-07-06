@@ -17,8 +17,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-import theme
-from ui_helpers import esc
+from shared import theme
+from shared.helpers import esc
 from engine.progress_dashboard import (
     render_active_file, build_terminal_html,
     log_line, log_divider, log_meta, file_icon_svg,
@@ -264,7 +264,7 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
     if error_log_path is None:
         return
     from datetime import datetime
-    from ui_helpers import _err_log_lock
+    from shared.helpers import _err_log_lock
     err_file = error_log_path / "download_errors.txt"
     try:
         error_log_path.mkdir(parents=True, exist_ok=True)
@@ -323,7 +323,7 @@ def run_archive_extraction(files, ui: UIBridge):
     if not files:
         return
     try:
-        from archive_extractor import extract_archive
+        from converters.archive import extract_archive
     except ImportError as _imp_err:
         logger.error(f"archive_extractor unavailable: {_imp_err}")
         _emit(ui, 'error', "Archive extraction unavailable: module not found", detail=str(_imp_err))
@@ -363,7 +363,7 @@ def run_pptx_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from pdf_converter import PowerPointToPDF
+        from converters.pdf import PowerPointToPDF
     except ImportError as _imp_err:
         logger.error(f"pdf_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "PowerPoint conversion unavailable: module not found", detail=str(_imp_err))
@@ -421,7 +421,7 @@ def run_html_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from md_converter import convert_html_to_md
+        from converters.md import convert_html_to_md
     except ImportError as _imp_err:
         logger.error(f"md_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "HTML→Markdown conversion unavailable: module not found", detail=str(_imp_err))
@@ -463,7 +463,7 @@ def run_code_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from code_converter import convert_code_to_txt
+        from converters.code import convert_code_to_txt
     except ImportError as _imp_err:
         logger.error(f"code_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "Code→TXT conversion unavailable: module not found", detail=str(_imp_err))
@@ -508,7 +508,7 @@ def run_url_compilation(folders, ui: UIBridge):
     if not folders:
         return
     try:
-        from url_compiler import compile_urls_to_txt
+        from converters.url import compile_urls_to_txt
     except ImportError as _imp_err:
         logger.error(f"url_compiler unavailable: {_imp_err}")
         _emit(ui, 'error', "URL compilation unavailable: module not found", detail=str(_imp_err))
@@ -549,7 +549,7 @@ def run_word_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from word_converter import WordToPDF
+        from converters.word import WordToPDF
     except ImportError as _imp_err:
         logger.error(f"word_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "Word→PDF conversion unavailable: module not found", detail=str(_imp_err))
@@ -609,7 +609,7 @@ def run_excel_data_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from excel_converter import ExcelToData
+        from converters.excel import ExcelToData
     except ImportError as _imp_err:
         logger.error(f"excel_converter (ExcelToData) unavailable: {_imp_err}")
         _emit(ui, 'error', "Excel data extraction unavailable: module not found", detail=str(_imp_err))
@@ -660,7 +660,7 @@ def run_excel_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from excel_converter import ExcelToPDF
+        from converters.excel import ExcelToPDF
     except ImportError as _imp_err:
         logger.error(f"excel_converter (ExcelToPDF) unavailable: {_imp_err}")
         _emit(ui, 'error', "Excel→PDF conversion unavailable: module not found", detail=str(_imp_err))
@@ -715,7 +715,7 @@ def run_video_conversion(files, ui: UIBridge):
     if not files:
         return
     try:
-        from video_converter import convert_video_to_mp3
+        from converters.video import convert_video_to_mp3
     except ImportError as _imp_err:
         logger.error(f"video_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "Video→MP3 conversion unavailable: module not found", detail=str(_imp_err))
@@ -820,7 +820,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # Code → TXT
     if contract.get('convert_code', False):
-        from code_converter import CODE_EXTENSIONS
+        from converters.code import CODE_EXTENSIONS
         code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
         if code_files:
             run_code_conversion([(f, sm, course_name) for f in code_files], ui)

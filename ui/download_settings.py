@@ -21,8 +21,8 @@ from pathlib import Path
 
 import streamlit as st
 
-import theme
-from ui_helpers import (
+from shared import theme
+from shared.helpers import (
     esc,
     get_course_display_parts,
     render_download_wizard,
@@ -35,7 +35,7 @@ from core.state_registry import (
     TOTAL_SECONDARY_SUBS,
     PANOPTO_OUTPUT_KEYS,
 )
-from ui_shared import render_help_card, HELP_ICONS, SVG_SAVE_COLORFUL
+from shared.components import render_help_card, HELP_ICONS, SVG_SAVE_COLORFUL
 
 
 def _resolve_path(path):
@@ -2519,7 +2519,7 @@ div.st-key-review_browse_folder button:hover {
 
                     # Clear debug log once at session start (subsequent courses append)
                     if st.session_state.get('debug_mode', False):
-                        from canvas_debug import clear_debug_log
+                        from core.canvas_debug import clear_debug_log
                         clear_debug_log(Path(st.session_state['download_path']) / "debug_log.txt")
 
                     from core.cancellation import reset_download_cancel, reset_sync_cancel

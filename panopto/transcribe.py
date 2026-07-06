@@ -295,7 +295,8 @@ def transcribe_in_subprocess(
     if sys.platform == "win32":
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     # dev: cwd must be the project root so `-m panopto.transcribe_worker` and its
-    # `import ui_helpers` resolve. frozen: imports come from the bundle, not cwd.
+    # package imports (e.g. `from shared.helpers import ...`) resolve. frozen:
+    # imports come from the bundle, not cwd.
     cwd = None if getattr(sys, "frozen", False) else \
         _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 

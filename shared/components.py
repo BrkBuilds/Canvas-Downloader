@@ -4,9 +4,9 @@ Extracted to ensure perfect visual parity between both modes.
 """
 import streamlit as st
 from pathlib import Path
-from ui_helpers import open_folder, open_file, reveal_in_folder, esc, short_path
-from sync_manager import format_file_size
-from preset_manager import PresetManager
+from shared.helpers import open_folder, open_file, reveal_in_folder, esc, short_path
+from core.sync_manager import format_file_size
+from core.preset_manager import PresetManager
 
 
 # --- Professional inline SVG icons for help card section headers ---
@@ -220,7 +220,7 @@ def _mat(icon_name: str, color: str = '#bac2cc', size: int = 18) -> str:
     )
 
 def _img(filename, size=18):
-    from ui_helpers import get_base64_image
+    from shared.helpers import get_base64_image
     b64 = get_base64_image(f"assets/{filename}")
     mime = "image/svg+xml" if filename.lower().endswith('.svg') else "image/png"
     return f'<img src="data:{mime};base64,{b64}" width="{size}" height="{size}" style="{_ICON_STYLE} top: -2px;" />'
@@ -1561,7 +1561,7 @@ def render_panopto_summary(summary: dict | None) -> None:
     from styles import inject_css
     inject_css('completion.css')
 
-    import theme as _theme
+    from shared import theme as _theme
     downloaded = int(summary.get('downloaded', 0) or 0)
     transcribed = int(summary.get('transcribed', 0) or 0)
     failed = int(summary.get('failed', 0) or 0)
@@ -1940,7 +1940,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
         mode: "auto" (default), "button" (only trigger), or "card" (only expanded content).
     """
     import base64
-    from ui_helpers import esc
+    from shared.helpers import esc
     
     state_key = f"show_help_card_{key_prefix}"
     if state_key not in st.session_state:

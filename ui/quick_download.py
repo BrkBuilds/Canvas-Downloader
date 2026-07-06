@@ -8,8 +8,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from ui_helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
-from ui_shared import render_help_card, HELP_ICONS
+from shared.helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
+from shared.components import render_help_card, HELP_ICONS
 from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS, PANOPTO_OUTPUT_KEYS
 
 
@@ -149,8 +149,8 @@ def _select_folder_cb() -> None:
 
 def render_quick_download(fetch_courses_fn) -> None:
     """Render the Quick Download page (Step 2 lite)."""
-    from ui_shared import render_config_summary_badges
-    from ui_helpers import get_course_display_parts
+    from shared.components import render_config_summary_badges
+    from shared.helpers import get_course_display_parts
 
     render_download_wizard(st, 2)
 
