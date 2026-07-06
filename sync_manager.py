@@ -66,6 +66,63 @@ class CanvasFileInfo:
     md5: Optional[str] = None
     content_type: str = ""
     folder_id: Optional[int] = None  # Canvas folder ID for structure mapping
+    # Signature of the SOURCE content for secondary entities (assignments,
+    # announcements, ...): an md5 over the raw Canvas-side fields, computed
+    # during analysis. Update detection compares it against the manifest's
+    # stored content_sig, making it immune to Canvas timestamp churn AND to
+    # local post-processing (HTML→MD renames the file and changes its bytes,
+    # but never touches the source signature). Empty = unknown/not computed.
+    content_sig: str = ""
+    # True when ``filename`` is an app-CONSTRUCTED on-disk name (Mode A
+    # attachment prefixes like "Assignment: X - file.pdf", category paths,
+    # ...) that must be used verbatim. Blocks the display_name preference in
+    # preferred_disk_name().
+    name_locked: bool = False
+
+
+def preferred_disk_name(c_file) -> str:
+    """The name a REGULAR Canvas file should carry on disk.
+
+    Canvas exposes two names per file: the raw upload ``filename`` (often
+    ``final_v3_REAL2.pdf``) and the teacher-curated ``display_name`` (what
+    students actually see in Canvas). All other content types (pages,
+    assignments, Panopto) already save under their human title, so regular
+    files prefer ``display_name`` too - with guards:
+
+      - synthetic/secondary entities (negative id) keep their constructed name;
+      - ``name_locked`` names (Mode A attachment prefixes) are used verbatim;
+      - a blank display_name falls back to ``filename``;
+      - when display_name lacks the real extension, ``filename``'s extension
+        is appended so the file still opens correctly.
+
+    Sanitization is the caller's job (``CanvasManager._sanitize_filename``),
+    exactly as it was for the raw filename.
+    """
+    raw = getattr(c_file, 'filename', '') or ''
+    if getattr(c_file, 'id', 0) <= 0 or getattr(c_file, 'name_locked', False):
+        return raw
+    disp = (getattr(c_file, 'display_name', '') or '').strip()
+    if not disp:
+        return raw
+    f_ext = Path(raw).suffix
+    if f_ext and not disp.lower().endswith(f_ext.lower()):
+        disp += f_ext
+    return disp
+
+
+def secondary_content_sig(*parts) -> str:
+    """Stable md5 signature over the raw source fields of a secondary entity.
+
+    Fed ONLY Canvas-side values (title, raw body HTML, due/points/...) - never
+    locally rendered output - so the signature is independent of the HTML
+    template, date formatting preferences, and post-processing conversions.
+    ``None`` and missing values normalize to '' so absent fields hash stably.
+    """
+    h = hashlib.md5()
+    for p in parts:
+        h.update(str(p if p is not None else '').encode('utf-8', 'replace'))
+        h.update(b'\x1f')  # unit separator so ('ab','c') != ('a','bc')
+    return h.hexdigest()
 
 
 @dataclass
@@ -151,6 +208,15 @@ SECONDARY_ID_OFFSETS = {
 # convert_zip is enabled (mirrors the URL Compiler bypass pattern).
 _ARCHIVE_EXTS = {'.zip', '.tar', '.gz'}
 
+def _is_partial_artifact(filename: str) -> bool:
+    """True for in-flight/crashed atomic-write artifacts (``x.ext.part`` from
+    the file engines, ``x.part.ext`` from the Panopto ffmpeg downloader).
+    These must never be healed onto a missing entry, auto-discovered, counted
+    as untracked study material, or picked up by post-processing."""
+    low = filename.lower()
+    return low.endswith('.part') or '.part.' in low
+
+
 def _is_archive_path(path_str: str) -> bool:
     """Check if a path string represents an archive file, including compound .tar.gz."""
     lower = path_str.lower()
@@ -199,16 +265,24 @@ def secondary_id_type(canvas_file_id: int) -> str:
     return 'module_item'
 
 
+# Sentinel returned by peek_bound_course_id when a DB exists but could not be
+# read (corruption / persistent lock). A dedicated constant (instead of a bare
+# magic string) keeps the tri-state contract explicit at every call site:
+#   int  -> bound course id     None -> no DB yet     DB_UNREADABLE -> warn user
+DB_UNREADABLE = 'unreadable'
+
+
 class SyncManager:
     """Manages synchronization between Canvas and local files using a SQLite database."""
 
     @staticmethod
-    def peek_bound_course_id(local_path: str) -> int | None:
+    def peek_bound_course_id(local_path: str) -> "int | None | str":
         """Read the course_id this folder's manifest is bound to, without
         instantiating SyncManager (which would write the metadata row).
 
-        Returns the bound Canvas course_id as an int, or None if no DB
-        exists yet, the binding row is missing, or the value is unparseable.
+        Returns the bound Canvas course_id as an int, None if no DB exists
+        yet / the binding row is missing, or the module-level ``DB_UNREADABLE``
+        sentinel when a DB exists but could not be read.
 
         Used by the analysis pipeline to detect course/folder mismatches
         before any sync work runs against the wrong manifest.
@@ -240,7 +314,7 @@ class SyncManager:
             # M-6: Return a sentinel so callers can distinguish "no DB yet"
             # (None → accept the pair) from "DB exists but is unreadable"
             # (sentinel → warn and block the sync until the user acts).
-            return 'unreadable'
+            return DB_UNREADABLE
 
     @staticmethod
     def peek_bound_course_name(local_path: str) -> str | None:
@@ -294,6 +368,16 @@ class SyncManager:
                     with closing(sqlite3.connect(make_long_path(db_path), timeout=30.0)) as conn, conn:
                         conn.execute('DELETE FROM sync_manifest')
                         conn.execute('DELETE FROM sync_metadata')
+                        # Panopto records are course-specific too: keeping them
+                        # after a re-bind would leak the OLD course's recording
+                        # manifest + ignore list into the new course's syncs.
+                        # Each in its own try: the tables may not exist in DBs
+                        # created before the Panopto feature.
+                        for _pan_table in ('panopto_manifest', 'panopto_ignored'):
+                            try:
+                                conn.execute(f'DELETE FROM {_pan_table}')
+                            except sqlite3.OperationalError:
+                                pass  # table absent (pre-Panopto DB)
                         conn.commit()
                     break
                 except sqlite3.OperationalError as e:
@@ -379,12 +463,22 @@ class SyncManager:
                         downloaded_at TEXT,
                         original_size INTEGER,
                         is_ignored INTEGER DEFAULT 0,
-                        original_md5 TEXT DEFAULT ""
+                        original_md5 TEXT DEFAULT "",
+                        content_sig TEXT DEFAULT ""
                     )
                 ''')
                 # Handle migration for existing DBs to add original_md5
                 try:
                     cursor.execute('ALTER TABLE sync_manifest ADD COLUMN original_md5 TEXT DEFAULT ""')
+                except sqlite3.OperationalError:
+                    pass  # Column already exists
+                # Migration: content signature for secondary-entity update
+                # detection (see CanvasFileInfo.content_sig). Empty on legacy
+                # rows - the analyzer treats an empty sig as "unknown" and
+                # never flags an update from it, so old folders stay stable
+                # until the first regenerate stamps a real signature.
+                try:
+                    cursor.execute('ALTER TABLE sync_manifest ADD COLUMN content_sig TEXT DEFAULT ""')
                 except sqlite3.OperationalError:
                     pass  # Column already exists
                 cursor.execute('''
@@ -464,9 +558,14 @@ class SyncManager:
             # Re-init with a clean slate (already holding lock, so call locked variant directly)
             self._init_db_locked(attempt=attempt + 1)
             return
-            
+
         if os.name == 'nt':
             self._windows_hide_file(self.db_path)
+            # WAL mode creates sibling journal files next to the DB; hide them
+            # too so users never see mystery ".canvas_sync.db-wal" files in
+            # their course folder while the app is running.
+            for _suffix in ('-wal', '-shm'):
+                self._windows_hide_file(self.db_path.with_name(self.db_path.name + _suffix))
     
     # --- Manifest Operations ---
     
@@ -493,7 +592,7 @@ class SyncManager:
             try:
                 with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     cursor = conn.cursor()
-                    cursor.execute('SELECT canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5 FROM sync_manifest')
+                    cursor.execute('SELECT canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5, content_sig FROM sync_manifest')
                     for row in cursor.fetchall():
                         file_id_str = str(row[0])
                         manifest['files'][file_id_str] = {
@@ -504,7 +603,8 @@ class SyncManager:
                             'downloaded_at': row[4],
                             'original_size': row[5],
                             'is_ignored': bool(row[6]),
-                            'original_md5': row[7] if row[7] is not None else ""
+                            'original_md5': row[7] if row[7] is not None else "",
+                            'content_sig': row[8] if row[8] is not None else ""
                         }
                 break  # Success
             except sqlite3.OperationalError as e:
@@ -554,16 +654,20 @@ class SyncManager:
                     # Atomic upsert: INSERT ON CONFLICT per row (preserves is_ignored)
                     for file_id_str, info in manifest.get('files', {}).items():
                         cursor.execute('''
-                            INSERT INTO sync_manifest 
-                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            INSERT INTO sync_manifest
+                            (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5, content_sig)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ON CONFLICT(canvas_file_id) DO UPDATE SET
                                 canvas_filename = excluded.canvas_filename,
                                 local_path = excluded.local_path,
                                 canvas_updated_at = excluded.canvas_updated_at,
                                 downloaded_at = excluded.downloaded_at,
                                 original_size = excluded.original_size,
-                                original_md5 = excluded.original_md5
+                                original_md5 = excluded.original_md5,
+                                content_sig = CASE
+                                    WHEN excluded.content_sig != '' THEN excluded.content_sig
+                                    ELSE content_sig
+                                END
                         ''', (
                             info.get('canvas_file_id', int(file_id_str)),
                             info.get('canvas_filename', ''),
@@ -572,7 +676,8 @@ class SyncManager:
                             info.get('downloaded_at', now_plain),
                             info.get('original_size', 0),
                             1 if info.get('is_ignored') else 0,
-                            info.get('original_md5', '')
+                            info.get('original_md5', ''),
+                            info.get('content_sig', '')
                         ))
                     conn.commit()
                     
@@ -672,7 +777,8 @@ class SyncManager:
             for filename in files:
                 if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
                         or filename in _APP_GENERATED_FILES
-                        or filename.startswith('.canvas_sync')):
+                        or filename.startswith('.canvas_sync')
+                        or _is_partial_artifact(filename)):
                     continue
                 filepath = Path(root) / filename
                 norm_str = os.path.normpath(str(filepath))
@@ -694,7 +800,13 @@ class SyncManager:
             
         # 3. Resolve matches (Heuristic Engine)
         for file_id, missing_info in missing_entries.items():
-            orig_name = missing_info.get('canvas_filename', '')
+            # The LAST on-disk name is the basename of local_path (it reflects
+            # display-name preference, conflict suffixes like " (1)", and any
+            # post-processing rename such as .pptx→.pdf). It is what a moved
+            # file is actually called, so it drives the name tiers; the raw
+            # canvas_filename is only a fallback for legacy rows.
+            orig_name = (Path(missing_info.get('local_path', '')).name
+                         or missing_info.get('canvas_filename', ''))
             orig_norm_name = _match_key(orig_name)
             orig_size = missing_info.get('original_size', -1)
             orig_md5 = missing_info.get('original_md5', '')
@@ -816,7 +928,9 @@ class SyncManager:
                     items = module.get_module_items()
                     for item in items:
                         if item.type == 'File' and hasattr(item, 'content_id') and item.content_id:
-                            target_paths[item.content_id] = clean_module_name
+                            # M-5: FIRST linking module wins (parity with the
+                            # download engine and the pre-built module_map).
+                            target_paths.setdefault(item.content_id, clean_module_name)
             except Exception as e:
                 logger.warning(f"Failed to fetch module map in analyze_course: {e}")
                 result.structural_errors += 1
@@ -835,7 +949,8 @@ class SyncManager:
             for filename in files:
                 if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
                         or filename in _APP_GENERATED_FILES
-                        or filename.startswith('.')):
+                        or filename.startswith('.')
+                        or _is_partial_artifact(filename)):
                     continue
                 filepath = Path(root) / filename
                 try:
@@ -861,6 +976,20 @@ class SyncManager:
                 return ''
             return _candidate_md5(cand)
 
+        def _claim_key(p) -> str:
+            """Canonical key for the claimed-paths set (case/sep-insensitive on
+            Windows so a manifest-recorded path always matches its os.walk form)."""
+            return os.path.normcase(os.path.normpath(str(p)))
+
+        # M-3 hardening: a local file that already backs a manifest entry must
+        # never be auto-discovered as the body of a SECOND canvas id (that
+        # would silently "up-to-date" a genuinely new file without downloading
+        # it). Seed the claimed set with every tracked path up-front.
+        for _entry in files_section.values():
+            _lp = _entry.get('local_path', '')
+            if _lp:
+                claimed_paths.add(_claim_key(self.local_path / Path(_lp)))
+
         seen_ids = set()
 
         # Temporary sets/lists for deduplication
@@ -883,11 +1012,16 @@ class SyncManager:
             # scan in canvas_logic._get_files_from_modules).  This is what
             # lets Mode A inline secondary content land in the right module
             # subfolder during sync.
+            #
+            # The path component uses preferred_disk_name (display-name
+            # preference for regular files) so the analyzer's expected layout
+            # matches what the download engine actually writes to disk.
             subfolder = target_paths.get(c_file.id, "")
+            _disk_name = preferred_disk_name(c_file)
             if subfolder:
-                calc_path = f"{subfolder}/{c_file.filename}"
+                calc_path = f"{subfolder}/{_disk_name}"
             else:
-                calc_path = c_file.filename
+                calc_path = _disk_name
 
             if file_id not in seen_file_ids:
                 seen_file_ids.add(file_id)
@@ -905,17 +1039,31 @@ class SyncManager:
                 #       file was renamed - the key win for student-built folders,
                 #   (c) unambiguous size+extension fallback when md5 is absent or
                 #       the file is too large to hash interactively.
-                match_key = _match_key(c_file.filename)
+                #
+                # Name tier checks BOTH the display-derived on-disk name and
+                # the raw Canvas filename: new downloads write the display
+                # name, while folders downloaded by older versions (or built
+                # by the student from Canvas's raw names) carry the filename.
+                _name_keys = []
+                for _nm in (preferred_disk_name(c_file), c_file.filename):
+                    _k = _match_key(_nm)
+                    if _k and _k not in _name_keys:
+                        _name_keys.append(_k)
                 matched_cand = None
+                _matched_tier = ''
 
                 # (a) Name match
-                for cand in local_by_name.get(match_key, []):
-                    if str(cand['path']) in claimed_paths:
-                        continue
-                    # Synthetic secondary entities are stored with size=0 but the
-                    # HTML on disk has content - match negatives on name alone.
-                    if c_file.id < 0 or cand['size'] == c_file.size:
-                        matched_cand = cand
+                for _nk in _name_keys:
+                    for cand in local_by_name.get(_nk, []):
+                        if _claim_key(cand['path']) in claimed_paths:
+                            continue
+                        # Synthetic secondary entities are stored with size=0 but the
+                        # HTML on disk has content - match negatives on name alone.
+                        if c_file.id < 0 or cand['size'] == c_file.size:
+                            matched_cand = cand
+                            _matched_tier = 'name'
+                            break
+                    if matched_cand is not None:
                         break
 
                 # (b)/(c) Content / size+ext match - real files only (synthetic
@@ -923,7 +1071,7 @@ class SyncManager:
                 if matched_cand is None and c_file.id >= 0:
                     size_pool = [
                         cand for cand in local_by_size.get(c_file.size, [])
-                        if str(cand['path']) not in claimed_paths
+                        if _claim_key(cand['path']) not in claimed_paths
                     ]
                     c_md5 = getattr(c_file, 'md5', None)
                     c_ext = Path(c_file.filename).suffix.lower()
@@ -931,6 +1079,7 @@ class SyncManager:
                         for cand in size_pool:
                             if _candidate_md5(cand) == c_md5:
                                 matched_cand = cand
+                                _matched_tier = 'md5'
                                 break
                     if matched_cand is None and c_ext:
                         # Exactly one same-size, same-extension orphan is almost
@@ -942,12 +1091,21 @@ class SyncManager:
                         ]
                         if len(ext_pool) == 1:
                             matched_cand = ext_pool[0]
+                            _matched_tier = 'size_ext'
 
                 if matched_cand is not None:
                     # Auto-discover the file and count it as up-to-date.
                     try:
                         local_path = matched_cand['path']
                         rel_path = local_path.relative_to(self.local_path)
+                        # Baseline md5: tier (c) is the weakest heuristic - if
+                        # its binding is ever wrong, a stored hash would later
+                        # green-light a clean in-place OVERWRITE of the user's
+                        # unrelated file. Store an empty baseline instead so a
+                        # future update forks to _NewVersion (preserving the
+                        # local copy) - the safe default. Tiers (a)/(b) carry
+                        # strong evidence (name+size / content) and keep the
+                        # real hash for precise clean-vs-edited routing.
                         entry = {
                             'canvas_file_id': c_file.id,
                             'canvas_filename': c_file.filename,
@@ -956,10 +1114,12 @@ class SyncManager:
                             'downloaded_at': datetime.now(timezone.utc).isoformat(),
                             'original_size': c_file.size,
                             'is_ignored': False,
-                            'original_md5': _discovery_md5(matched_cand),
+                            'original_md5': ('' if _matched_tier == 'size_ext'
+                                             else _discovery_md5(matched_cand)),
+                            'content_sig': getattr(c_file, 'content_sig', '') or '',
                         }
                         files_section[file_id] = entry
-                        claimed_paths.add(str(local_path))
+                        claimed_paths.add(_claim_key(local_path))
                         sync_info = self._dict_to_sync_info(file_id, entry, c_file)
                         sync_info.target_local_path = calc_path
                         result.uptodate_files.append((c_file, sync_info))
@@ -1041,6 +1201,15 @@ class SyncManager:
                     raw_new_files.append(c_file)
                         
         # 5. Check deletions (in manifest but not in canvas)
+        # Path-ownership map for the case-B phantom prune below: which rows
+        # currently claim each on-disk path.
+        _path_owner_map: dict = {}
+        for _own_fid, _own_entry in files_section.items():
+            _own_lp = _own_entry.get('local_path', '') or ''
+            if _own_lp:
+                _path_owner_map.setdefault(os.path.normcase(_own_lp), set()).add(_own_fid)
+        _superseded_candel_ids: list = []
+
         for file_id, entry in files_section.items():
             if file_id not in seen_ids:
                 if not entry.get('is_ignored', False):
@@ -1081,19 +1250,50 @@ class SyncManager:
                     if int_id < 0:
                         continue
                         
-                    # 4. Standard file deleted on canvas
+                    # 4. Standard file deleted on canvas.
+                    #    Phantom-prune (case B of the re-upload cleanup): when
+                    #    the file at this row's path is ALSO owned by a
+                    #    DIFFERENT row whose id is live on Canvas, this row is
+                    #    the superseded half of a teacher delete-and-re-upload
+                    #    that was already re-downloaded - listing it as
+                    #    "Deleted on Canvas" forever is pure noise (the bytes
+                    #    on disk ARE current, under the new id). Prune the row.
+                    _lp_norm = os.path.normcase(entry.get('local_path', '') or '')
+                    if _lp_norm:
+                        _owners = _path_owner_map.get(_lp_norm, set()) - {file_id}
+                        if any(_o in seen_ids for _o in _owners):
+                            _superseded_candel_ids.append(int_id)
+                            continue
                     result.deleted_on_canvas.append(sync_info)
-                    
+
+        # Case-B phantom rows detected above: hard-delete them (gone from
+        # Canvas + their path is owned by a live replacement row).
+        if _superseded_candel_ids:
+            logger.info(f"Pruning {len(_superseded_candel_ids)} superseded manifest row(s) "
+                        f"(re-upload already re-downloaded): {_superseded_candel_ids}")
+            for _pid in _superseded_candel_ids:
+                files_section.pop(str(_pid), None)
+            self.delete_manifest_rows(_superseded_candel_ids)
+
         # --- Backend Deduplication (The Teacher Re-upload Scenario) ---
-        # When a teacher deletes a Canvas file and immediately re-uploads one
-        # with the same name (new ID), naively it looks like Delete+New.
-        # Treat it as an UPDATE instead so the student keeps the same mental
-        # model. The old local file does not exist (locally_deleted branch),
-        # so the update is always 'clean' - no risk of overwriting edits.
+        # When a teacher deletes a Canvas file and re-uploads one with the same
+        # name (new ID), naively it looks like Delete+New. Two cases:
+        #
+        #   - The user still HAS the old file (it went through the entry branch
+        #     as uptodate/updated): the new same-named file is genuinely new
+        #     and both stay as they are.
+        #   - The user DELETED the old file locally AND the old id is gone from
+        #     Canvas: this is the true re-upload shape. M-6 policy: the user's
+        #     deletion is RESPECTED - the pair routes to "Deleted Locally"
+        #     (unchecked by default, skipped by Quick Sync) instead of a
+        #     default-checked clean update that would silently resurrect a file
+        #     they deliberately removed. The NEW canvas file rides along on the
+        #     SyncFileInfo so a user-selected redownload fetches the live
+        #     re-uploaded object directly.
         #
         # Secondary content (negative IDs - assignments, quizzes, pages, etc.)
         # is excluded from the name-based dedup because:
-        #   (a) The teacher re-upload loop already skips negative IDs (line below).
+        #   (a) The re-upload loop below skips negative IDs.
         #   (b) Two assignments with the same sanitized name are distinct entities
         #       and must both sync.  We add a (1)/(2)/... suffix to the local path
         #       of the later duplicate so they land as separate files on disk.
@@ -1109,7 +1309,15 @@ class SyncManager:
                 _tp = Path(getattr(nf, '_target_local_path', nf.filename))
                 nf._target_local_path = str(_tp.with_stem(f"{_tp.stem} ({count})"))
 
-        new_name_map = {_match_key(nf.filename): nf for nf in regular_new_files}
+        # Key new files by BOTH the raw canvas filename and the display-derived
+        # on-disk name, so a re-upload matches regardless of which form the
+        # (possibly legacy) manifest row recorded.
+        new_name_map = {}
+        for nf in regular_new_files:
+            for _nm in (nf.filename, preferred_disk_name(nf)):
+                _k = _match_key(_nm)
+                if _k:
+                    new_name_map.setdefault(_k, nf)
 
         # Check locally deleted files against re-uploads
         final_locally_deleted = []
@@ -1132,15 +1340,86 @@ class SyncManager:
             # ----------------------------------------
 
             missing_norm = _match_key(del_info.canvas_filename)
-            if missing_norm in new_name_map:
+            _is_true_reupload = raw_id_str not in seen_ids  # old id gone from Canvas
+            if _is_true_reupload and missing_norm in new_name_map:
                 matching_new_cfile = new_name_map[missing_norm]
-                result.updated_clean_files.append((matching_new_cfile, del_info))
-                del new_name_map[missing_norm]
+                # Remove ALL keys pointing at this new file (raw + display form)
+                for _k in [k for k, v in new_name_map.items() if v is matching_new_cfile]:
+                    del new_name_map[_k]
+                # Respect the deletion: ride the new file on the SyncFileInfo
+                # and adopt its canonical target so a user-selected redownload
+                # lands where the new file belongs.
+                del_info._reupload_new_file = matching_new_cfile
+                _new_target = getattr(matching_new_cfile, '_target_local_path', '')
+                if _new_target:
+                    del_info.target_local_path = _new_target
+                final_locally_deleted.append(del_info)
             else:
                 final_locally_deleted.append(del_info)
 
+        # Deduplicate new files that were registered under two name keys
+        _new_seen_ids: set = set()
+        _unique_new = []
+        for nf in new_name_map.values():
+            if id(nf) not in _new_seen_ids:
+                _new_seen_ids.add(id(nf))
+                _unique_new.append(nf)
+
+        # --- Phantom-row pruning (post re-upload cleanup) ---
+        # Once a re-upload has been downloaded under its NEW id, the OLD id's
+        # manifest row lingers: not on Canvas, no local file - it would
+        # resurface as "Deleted Locally" on EVERY future sync even though its
+        # replacement is tracked and present on disk. Detect exactly that
+        # shape (canvas-gone + locally-gone + a same-named DIFFERENT tracked
+        # entry whose file exists) and delete the stale row. Entries whose id
+        # is still live on Canvas are genuine local deletions and never pruned.
+        _prunable = [d for d in final_locally_deleted
+                     if str(d.canvas_file_id) not in seen_ids and d.canvas_file_id > 0]
+        _prunable_obj_ids = {id(d) for d in _prunable}
+        if _prunable:
+            _live_name_keys: dict = {}
+            for _fid2, _e2 in files_section.items():
+                _lp2 = _e2.get('local_path', '')
+                if not _lp2:
+                    continue
+                try:
+                    if not (self.local_path / _lp2).exists():
+                        continue
+                except OSError:
+                    continue
+                for _nm2 in (Path(_lp2).name, _e2.get('canvas_filename', '')):
+                    _k2 = _match_key(_nm2)
+                    if _k2:
+                        _live_name_keys.setdefault(_k2, set()).add(str(_fid2))
+
+            _pruned_ids = []
+            _kept = []
+            for del_info in final_locally_deleted:
+                if id(del_info) not in _prunable_obj_ids:
+                    _kept.append(del_info)
+                    continue
+                _did = str(del_info.canvas_file_id)
+                _keys = {
+                    _match_key(Path(del_info.local_path).name) if del_info.local_path else '',
+                    _match_key(del_info.canvas_filename),
+                }
+                _superseded = any(
+                    (_live_name_keys.get(_k3, set()) - {_did})
+                    for _k3 in _keys if _k3
+                )
+                if _superseded:
+                    _pruned_ids.append(del_info.canvas_file_id)
+                    files_section.pop(_did, None)
+                else:
+                    _kept.append(del_info)
+            final_locally_deleted = _kept
+            if _pruned_ids:
+                logger.info(f"Pruning {len(_pruned_ids)} superseded manifest row(s) "
+                            f"(teacher re-upload cleanup): {_pruned_ids}")
+                self.delete_manifest_rows(_pruned_ids)
+
         # Reconstruct the remaining new files that were not duplicates
-        result.new_files = list(new_name_map.values()) + secondary_new_files
+        result.new_files = _unique_new + secondary_new_files
         result.locally_deleted_files = final_locally_deleted
         
         # Count ALL untracked local files so they reflect in the "up to date" UI
@@ -1225,6 +1504,27 @@ class SyncManager:
                 row = cursor.fetchone()
                 return row[0] if row else None
         except sqlite3.Error:
+            return None
+
+    def get_manifest_baseline(self, canvas_file_id: int) -> tuple[str, str] | None:
+        """Return ``(original_md5, local_path)`` for one manifest row, or None.
+
+        Lightweight single-row read used by the DOWNLOAD engine's overwrite
+        guard: before replacing an on-disk file whose size no longer matches
+        Canvas, the engine checks whether the local bytes still equal the
+        original download (safe to overwrite) or were edited by the user
+        (must be preserved as a ``_NewVersion`` sibling). Never raises.
+        """
+        try:
+            with closing(sqlite3.connect(make_long_path(self.db_path), timeout=10.0)) as conn, conn:
+                row = conn.execute(
+                    'SELECT original_md5, local_path FROM sync_manifest WHERE canvas_file_id = ?',
+                    (int(canvas_file_id),)
+                ).fetchone()
+            if row is None:
+                return None
+            return (row[0] or '', row[1] or '')
+        except (sqlite3.Error, ValueError, TypeError):
             return None
 
     def backfill_baseline_md5(self, manifest: dict,
@@ -1320,16 +1620,28 @@ class SyncManager:
 
     def record_downloaded_file(self, canvas_file_id: int, canvas_filename: str,
                                 local_path: str, canvas_updated_at: str,
-                                original_size: int, local_md5: str = "") -> bool:
+                                original_size: int, local_md5: str = "",
+                                content_sig: str = "",
+                                clear_ignored: bool = False) -> bool:
         """Record a single downloaded file directly to the SQLite DB.
-        
+
         This is the 'Sync Run #0' entry point - called from the Download engine
         immediately after each successful file write. Bypasses the in-memory
         manifest dict entirely to avoid race conditions in async/concurrent code.
-        
+
         Uses INSERT OR REPLACE so re-downloads of the same file_id are idempotent.
         The is_ignored flag is preserved via a sub-query to avoid overwriting
         user ignore decisions from a prior partial download.
+
+        ``content_sig`` (secondary entities only): signature of the raw Canvas
+        source fields - stored so the analyzer can detect real content changes
+        without relying on churn-prone timestamps.
+
+        ``clear_ignored=True`` is passed ONLY by fresh-byte download paths (a
+        file the user explicitly chose to download again): the stale is_ignored
+        flag is cleared so the file doesn't sit in the Ignored bucket while
+        being freshly present on disk. Skip-existing re-records keep the
+        default (False) and continue to preserve user ignore choices.
 
         MD5 baseline: the sync engine's modification detection ("never overwrite
         your edits"), clean-vs-edited update routing, and content-based rename
@@ -1352,9 +1664,10 @@ class SyncManager:
             'downloaded_at': datetime.now(timezone.utc).isoformat(),
             'original_size': original_size,
             'is_ignored': False,
-            'original_md5': local_md5
+            'original_md5': local_md5,
+            'content_sig': content_sig or ''
         }
-        return self._save_single_file_to_db(info)
+        return self._save_single_file_to_db(info, clear_ignored=clear_ignored)
 
     # ── Panopto manifest (dedicated, decoupled from sync_manifest) ──
     def record_panopto_file(self, video_id: str, kind: str, local_path: str,
@@ -1473,16 +1786,21 @@ class SyncManager:
     def _is_canvas_newer(self, canvas_file: CanvasFileInfo, manifest_entry: dict) -> bool:
         """Check if Canvas version is strictly newer than manifest entry.
 
-        For ALL synthetic entities with negative IDs we return False.
-        Legacy module-item synthetics (Pages, External URLs) have no
-        reliable ``updated_at`` timestamp. New secondary-content
-        entities (Assignments, Quizzes …) are regenerated from the live
-        Canvas API on every sync download, so timestamp-based diffing
-        is unnecessary - local existence is sufficient.
+        Secondary entities (negative IDs, non-attachment) are compared by
+        CONTENT SIGNATURE, never by timestamp: Canvas bumps ``updated_at`` on
+        events that don't change the body (grade postings, publish toggles,
+        course-level churn for the syllabus), and local post-processing
+        (HTML→MD) renames the file - both made timestamp diffing produce
+        endless phantom updates. The signature is an md5 over the raw
+        Canvas-side source fields, computed during analysis and stored at
+        save time, so it only moves when the actual content changed. When
+        either side lacks a signature (legacy rows, restricted fetches) we
+        return False - stability over false positives; the signature is
+        stamped on the next regenerate and detection self-heals from there.
 
-        MD5 short-circuit: if both Canvas and the manifest expose the same
-        md5 hash, the file content is byte-identical regardless of what the
-        timestamp says. Teachers frequently "touch" files (permission
+        MD5 short-circuit (real files): if both Canvas and the manifest expose
+        the same md5 hash, the file content is byte-identical regardless of
+        what the timestamp says. Teachers frequently "touch" files (permission
         changes, metadata edits) without altering content, so comparing
         timestamps alone produces phantom updates. Trust the hash when we
         have it on both sides.
@@ -1491,9 +1809,12 @@ class SyncManager:
             # Attachment-range synthetic IDs are REAL Canvas files (Mode B):
             # let them flow through the normal md5/timestamp/size logic below
             # so a teacher replacing an attachment's bytes is detected as an
-            # update. All OTHER synthetic entities are regenerated from the
-            # live API on every sync, so timestamp diffing stays disabled.
+            # update. All OTHER synthetic entities use the content signature.
             if secondary_id_type(canvas_file.id) != 'attachment':
+                fresh_sig = getattr(canvas_file, 'content_sig', '') or ''
+                stored_sig = manifest_entry.get('content_sig', '') or ''
+                if fresh_sig and stored_sig:
+                    return fresh_sig != stored_sig
                 return False
 
         canvas_md5 = getattr(canvas_file, 'md5', None)
@@ -1583,11 +1904,20 @@ class SyncManager:
     
     # --- Manifest Update Helpers ---
     
-    def add_file_to_manifest(self, manifest: dict, canvas_file: CanvasFileInfo, 
+    def add_file_to_manifest(self, manifest: dict, canvas_file: CanvasFileInfo,
                              local_path: str, local_md5: str = "") -> dict:
-        """Add or update a file entry in the manifest after successful download and save immediately to DB."""
+        """Add or update a file entry in the manifest after successful download and save immediately to DB.
+
+        Callers on the fresh-download path hash the bytes inline and pass
+        ``local_md5`` (avoids a second full read of the file); when omitted the
+        hash is computed from disk here so the baseline is never dropped.
+
+        This is always a fresh-byte download (the sync engine only calls it
+        after a successful atomic write), so a stale is_ignored flag is
+        cleared - the user explicitly chose to download this file again.
+        """
         file_id = str(canvas_file.id)
-        
+
         # If no MD5 is provided but file exists, compute it.
         # compute_local_md5 returns None on PermissionError - coerce to "" so
         # the DB always gets a string (NULL causes type ambiguity on read-back).
@@ -1595,7 +1925,7 @@ class SyncManager:
             full_path = self.local_path / local_path
             if full_path.exists():
                 local_md5 = SyncManager.compute_local_md5(full_path) or ""
-                
+
         entry = {
             'canvas_file_id': int(file_id),
             'canvas_filename': canvas_file.filename,
@@ -1604,40 +1934,52 @@ class SyncManager:
             'downloaded_at': datetime.now(timezone.utc).isoformat(),
             'original_size': canvas_file.size,
             'is_ignored': False,
-            'original_md5': local_md5
+            'original_md5': local_md5,
+            'content_sig': getattr(canvas_file, 'content_sig', '') or ''
         }
         manifest['files'][file_id] = entry
-        
+
         # Per-file DB commit
-        self._save_single_file_to_db(entry)
-        
+        self._save_single_file_to_db(entry, clear_ignored=True)
+
         return manifest
         
-    def _save_single_file_to_db(self, info: dict) -> bool:
+    def _save_single_file_to_db(self, info: dict, clear_ignored: bool = False) -> bool:
         """Save a single file entry to the SQLite DB.
-        
+
         Uses INSERT ... ON CONFLICT to preserve is_ignored flag.
         The UPDATE clause deliberately omits is_ignored so that
         re-downloads and sync-run-0 writes never wipe user choices.
+
+        ``clear_ignored=True`` (fresh-byte downloads only) additionally resets
+        is_ignored to 0 on conflict: a file the user explicitly downloaded
+        again must not linger in the Ignored bucket. content_sig uses a CASE
+        guard so an empty (unknown) signature never clobbers a stored one.
         """
         max_retries = 3
-        
+
+        _ignore_clause = ",\n                            is_ignored = 0" if clear_ignored else ""
+
         for attempt in range(max_retries):
             try:
-                    
+
                 with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                     cursor = conn.cursor()
-                    cursor.execute('''
-                        INSERT INTO sync_manifest 
-                        (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    cursor.execute(f'''
+                        INSERT INTO sync_manifest
+                        (canvas_file_id, canvas_filename, local_path, canvas_updated_at, downloaded_at, original_size, is_ignored, original_md5, content_sig)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT(canvas_file_id) DO UPDATE SET
                             canvas_filename = excluded.canvas_filename,
                             local_path = excluded.local_path,
                             canvas_updated_at = excluded.canvas_updated_at,
                             downloaded_at = excluded.downloaded_at,
                             original_size = excluded.original_size,
-                            original_md5 = excluded.original_md5
+                            original_md5 = excluded.original_md5,
+                            content_sig = CASE
+                                WHEN excluded.content_sig != '' THEN excluded.content_sig
+                                ELSE content_sig
+                            END{_ignore_clause}
                     ''', (
                         info.get('canvas_file_id'),
                         info.get('canvas_filename', ''),
@@ -1646,10 +1988,11 @@ class SyncManager:
                         info.get('downloaded_at', ''),
                         info.get('original_size', 0),
                         1 if info.get('is_ignored') else 0,
-                        info.get('original_md5', '')
+                        info.get('original_md5', ''),
+                        info.get('content_sig', '')
                     ))
                     conn.commit()
-                    
+
                 return True
             except sqlite3.OperationalError as e:
                 if 'database is locked' in str(e) and attempt < max_retries - 1:
@@ -1690,6 +2033,18 @@ class SyncManager:
                     )
                     conn.commit()
                 
+                # H-7: remember which file this entry's conversion PRODUCED.
+                # The ownership rule "a converter may overwrite an existing
+                # target only if it is this entry's own previous product" is
+                # what protects teacher-provided X.pdf (and the user's own
+                # files) from being clobbered by an X.pptx→X.pdf conversion,
+                # while still letting the NEXT update of the same source
+                # overwrite its own product in place (no ' (1)' churn).
+                try:
+                    self._record_conversion_product(canvas_file_id, new_file_path)
+                except Exception as _prod_err:
+                    logger.debug(f"conversion-product record failed: {_prod_err}")
+
                 logger.info(f"Updated manifest entry {canvas_file_id} to new file: {new_file_path}")
                 return True
             except sqlite3.OperationalError as e:
@@ -1702,6 +2057,24 @@ class SyncManager:
                 logger.warning(f"Error updating converted file in DB: {e}")
                 return False
         return False
+
+    _CONVERSION_PRODUCTS_KEY = 'conversion_products'
+
+    def get_conversion_products(self) -> dict:
+        """Return {str(canvas_file_id): rel_product_path} for every entry whose
+        downloaded file was post-processed into another file (H-7)."""
+        try:
+            raw = self._load_metadata(self._CONVERSION_PRODUCTS_KEY)
+            data = json.loads(raw) if raw else {}
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+
+    def _record_conversion_product(self, canvas_file_id: int, rel_path: str) -> None:
+        """Merge one entry's conversion-product path into the metadata map."""
+        products = self.get_conversion_products()
+        products[str(canvas_file_id)] = rel_path
+        self._save_metadata(self._CONVERSION_PRODUCTS_KEY, json.dumps(products))
 
     def get_ignored_files(self) -> list[SyncFileInfo]:
         """Return a list of all files currently marked as ignored in the DB."""
@@ -1784,6 +2157,35 @@ class SyncManager:
                 break
 
         return success
+
+    def delete_manifest_rows(self, canvas_file_ids: list[int]) -> bool:
+        """Hard-delete manifest rows (used by phantom-row pruning after a
+        teacher re-upload has been superseded by its replacement entry).
+
+        Deliberately NOT exposed in any UI path - the analyzer calls it only
+        for rows that are simultaneously gone from Canvas, gone from disk, and
+        superseded by a same-named tracked file. Never raises.
+        """
+        if not canvas_file_ids:
+            return True
+        rows = [(int(fid),) for fid in canvas_file_ids]
+        for attempt in range(3):
+            try:
+                with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
+                    conn.executemany(
+                        'DELETE FROM sync_manifest WHERE canvas_file_id = ?', rows)
+                    conn.commit()
+                return True
+            except sqlite3.OperationalError as e:
+                if 'locked' in str(e).lower() and attempt < 2:
+                    time.sleep(0.5)
+                    continue
+                logger.warning(f"delete_manifest_rows failed: {e}")
+                break
+            except sqlite3.Error as e:
+                logger.warning(f"delete_manifest_rows failed: {e}")
+                break
+        return False
 
     def bulk_ignore_files(self, file_ids_and_names: list) -> bool:
         """Mark multiple files as ignored in the SQLite DB using UPSERT.

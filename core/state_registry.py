@@ -173,7 +173,7 @@ SYNC_TRANSIENT_KEYS = {
     'download_status', 'sync_analysis_results', 'sync_selections',
     'synced_count', 'synced_bytes', 'sync_cancel_requested',
     'sync_cancelled_file_count', 'sync_errors', 'sync_quick_mode',
-    'sync_single_pair_idx', 'sync_confirm_count', 'sync_confirm_size',
+    'sync_confirm_count', 'sync_confirm_size',
     'sync_confirm_folders', 'is_post_processing',
     'retry_selections', 'analysis_pass',
     # Today dashboard (in-page daily/Quick Sync) run markers.

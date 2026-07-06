@@ -1271,15 +1271,38 @@ with _main_content.container():
                             )
                         except Exception as _prime_err:
                             logger.warning(f"Failed to prime Office automation: {_prime_err}")
-                    invoke_post_processing(
-                        course_folder=course_folder,
-                        course_id=course.id,
-                        course_name=course.name,
-                        placeholders=_dp,
-                        log_deque=log_deque,
-                        error_log_path=Path(st.session_state['download_path']) if st.session_state.get('error_log_enabled', False) else None,
-                        mode='download',
-                    )
+                    # H-9: scope conversions to THIS RUN's files (the ledger of
+                    # everything downloaded / skipped-as-existing this course).
+                    # Without this, run_all_conversions globbed the ENTIRE
+                    # course folder - so a re-download into an existing folder
+                    # converted (and deleted the originals of) files from
+                    # previous runs, kept Panopto MP4s, and any media/Office
+                    # files the user had placed there themselves.
+                    _run_files = []
+                    for _lf in st.session_state.get('download_file_details', {}).get(course.name, []):
+                        try:
+                            _lp = Path(_lf)
+                            if not _lp.is_absolute():
+                                _lp = course_folder / _lp
+                            if _lp.exists():
+                                _run_files.append(str(_lp))
+                        except (OSError, ValueError):
+                            continue
+                    # Empty ledger (nothing downloaded or skipped this course)
+                    # → nothing to convert. Skipping outright matters: the
+                    # bridge treats a falsy explicit_files as "no scoping" and
+                    # would glob the whole folder again.
+                    if _run_files:
+                        invoke_post_processing(
+                            course_folder=course_folder,
+                            course_id=course.id,
+                            course_name=course.name,
+                            placeholders=_dp,
+                            log_deque=log_deque,
+                            error_log_path=Path(st.session_state['download_path']) if st.session_state.get('error_log_enabled', False) else None,
+                            mode='download',
+                            explicit_files=_run_files,
+                        )
                     if debug_file:
                         from canvas_debug import log_debug as _pp_fin_log
                         _pp_active_done = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]

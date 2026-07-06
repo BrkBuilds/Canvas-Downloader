@@ -108,13 +108,50 @@ def estimate_kind_size(kind: str, duration_sec: float) -> int | None:
     return None
 
 
+def _delivery_info_via_cookies(cookie_header: str, panopto_base: str, video_id: str):
+    """Thread-safe DeliveryInfo lookup using a pre-snapshotted cookie string.
+
+    Unlike :func:`get_delivery_info` this never touches a shared
+    ``requests.Session`` (whose cookie jar is NOT thread-safe) - each call is a
+    standalone ``requests.post`` carrying the auth cookies explicitly, so any
+    number of worker threads can run it concurrently. Returns
+    ``(delivery_dict, error_str)``.
+    """
+    import requests as _requests
+
+    url = f"{panopto_base}/Panopto/Pages/Viewer/DeliveryInfo.aspx"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Origin": panopto_base,
+        "Referer": f"{panopto_base}/Panopto/Pages/Viewer.aspx?id={video_id}",
+    }
+    if cookie_header:
+        headers["Cookie"] = cookie_header
+    body = f"deliveryId={video_id}&isEmbed=true&responseType=json"
+    try:
+        r = _requests.post(url, data=body, headers=headers, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.debug("Panopto DeliveryInfo (cookie mode) failed for %s: %s", video_id, e)
+        return None, str(e)
+    if data.get("ErrorCode"):
+        return None, data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}")
+    return data.get("Delivery", {}) or {}, None
+
+
 def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> dict:
     """Return {video_id: duration_seconds} for *videos*, fetched concurrently.
 
-    Authenticates to Panopto ONCE (one LTI handshake, reused for every lookup),
-    then pulls each recording's DeliveryInfo in a small thread pool. Best-effort:
-    a recording whose duration can't be resolved is simply absent from the result
-    (its size is then shown as unknown rather than estimated). Never raises.
+    Authenticates to Panopto ONCE (one LTI handshake), snapshots the session's
+    auth cookies into a plain string ON THIS THREAD, then pulls each
+    recording's DeliveryInfo in a small thread pool via standalone requests
+    (H-5: ``requests.Session`` is not thread-safe - the pool must never share
+    one; the runner's download path already follows this cookie-snapshot rule).
+    Best-effort: a recording whose duration can't be resolved is simply absent
+    from the result (its size is then shown as unknown rather than estimated).
+    Never raises.
     """
     from panopto.auth import lti_launch
 
@@ -137,13 +174,16 @@ def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> 
         logger.info("Panopto duration probe skipped: no authenticated session.")
         return out
 
+    # Snapshot the auth cookies ONCE, on this thread, before any worker runs.
+    cookie_header = _cookie_header(session, panopto_base)
+
     import concurrent.futures as _cf
 
     def _one(v):
         if is_cancelled and is_cancelled():
             return v.video_id, None
         try:
-            delivery, _err = get_delivery_info(session, panopto_base, v.video_id)
+            delivery, _err = _delivery_info_via_cookies(cookie_header, panopto_base, v.video_id)
             if delivery:
                 d = delivery_duration(delivery)
                 if d > 0:
@@ -247,6 +287,14 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     headless, polls *is_cancelled* (terminating + cleaning up on abort), drains
     stderr so a failure carries the real reason, and validates a non-empty file.
 
+    H-4 Atomic ``.part`` pattern: ffmpeg writes to ``<out>.part`` and the file
+    is os.replace'd into place ONLY on a clean exit with bytes on disk. The
+    planning/classification layers treat "file exists" as "recording complete",
+    so writing to the final path directly meant a failed run / crash / power
+    loss left a TRUNCATED recording that every future sync considered done -
+    permanently. Any non-success path now deletes the .part; the final path is
+    either absent or a verified complete file, never a partial.
+
     stderr is drained CONCURRENTLY on a daemon thread, never after-the-fact: a
     chatty remux (HLS `-c copy` sources emit per-packet warnings like
     "Non-monotonous DTS" at exactly our `-loglevel warning`) can otherwise fill
@@ -256,6 +304,29 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     """
     import collections
     import threading
+
+    # The caller's cmd ends with the intended FINAL path; swap in the .part
+    # target for the actual ffmpeg run. The marker goes BEFORE the media
+    # extension ("Lecture.part.mp3") because ffmpeg infers the output muxer
+    # from the final extension - a trailing ".part" would abort with "unable
+    # to find a suitable output format".
+    _op = os.path.splitext(out_path)
+    part_path = f"{_op[0]}.part{_op[1]}"
+    cmd = list(cmd[:-1]) + [part_path]
+    # A stale .part from a previous crashed run would trip ffmpeg's overwrite
+    # prompt suppression into appending oddly on some muxers - clear it.
+    try:
+        if os.path.exists(part_path):
+            os.remove(part_path)
+    except OSError:
+        pass
+
+    def _cleanup_part() -> None:
+        try:
+            if os.path.exists(part_path):
+                os.remove(part_path)
+        except OSError:
+            pass
 
     creationflags = 0
     if sys.platform == "win32":
@@ -271,6 +342,7 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
         )
     except Exception as e:
         logger.warning("Panopto ffmpeg launch failed for %s: %s", os.path.basename(out_path), e)
+        _cleanup_part()
         return False, f"ffmpeg launch failed: {e}"
 
     # Rolling tail of stderr lines. The reader thread is the ONLY writer while
@@ -303,11 +375,7 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
                 except Exception:
                     proc.kill()
                 # Clean up the partial file.
-                try:
-                    if os.path.exists(out_path):
-                        os.remove(out_path)
-                except OSError:
-                    pass
+                _cleanup_part()
                 return False, "cancelled"
             time.sleep(0.25)
         rc = proc.returncode
@@ -319,7 +387,7 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
         stderr_text = "\n".join(stderr_tail).strip()
 
     try:
-        size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
+        size = os.path.getsize(part_path) if os.path.exists(part_path) else 0
     except OSError:
         size = 0
 
@@ -332,13 +400,18 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
         if tail:
             detail += f" - {tail}"
         logger.warning("Panopto download failed (%s): %s", os.path.basename(out_path), detail)
-        # Remove the empty/partial artifact so it isn't mistaken for a good file.
-        try:
-            if os.path.exists(out_path) and size == 0:
-                os.remove(out_path)
-        except OSError:
-            pass
+        # Remove the partial artifact so it can never be mistaken for a
+        # complete recording by planning/classification (H-4).
+        _cleanup_part()
         return False, detail
+
+    # Verified complete → atomic promote to the final path.
+    try:
+        os.replace(part_path, out_path)
+    except OSError as e:
+        logger.warning("Panopto download rename failed (%s): %s", os.path.basename(out_path), e)
+        _cleanup_part()
+        return False, f"could not finalize file: {e}"
 
     logger.info(
         "Panopto downloaded %s (%.1f MB in %.1fs)",

@@ -74,8 +74,11 @@ _MAX_PATH_THRESHOLD = 240  # 15-char safety margin below Win32 MAX_PATH (255)
 
 
 @contextmanager
-def office_safe_path(original_path: Path):
+def office_safe_path(original_path: Path, dst: Path | None = None):
     """Shadow long Windows paths into a temp dir for Office COM APIs.
+
+    ``dst`` (H-7): explicit final PDF target. When omitted, defaults to the
+    source path with a .pdf suffix (the historical behavior).
 
     Win32 COM APIs (PowerPoint, Word, Excel) hard-crash when given file
     paths >= 255 characters.  This context manager transparently copies
@@ -91,7 +94,7 @@ def office_safe_path(original_path: Path):
           long-path destination where the PDF ultimately belongs.
     """
     resolved = original_path.resolve()
-    original_pdf = original_path.with_suffix('.pdf')
+    original_pdf = Path(dst) if dst is not None else original_path.with_suffix('.pdf')
 
     # macOS/Linux: MAX_PATH is not a concern - always pass-through.
     # This context manager exists exclusively for Win32 COM API limitations.

@@ -7,7 +7,6 @@ import shutil
 import hashlib
 import html
 import urllib.parse
-import traceback
 import unicodedata
 from pathlib import Path
 from datetime import datetime, timezone
@@ -18,12 +17,15 @@ import aiohttp
 import types
 import threading
 import aiofiles
-from canvas_debug import log_debug, clear_debug_log
+from canvas_debug import log_debug
 import logging
 import requests
 from requests.adapters import HTTPAdapter
 
-from sync_manager import SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo
+from sync_manager import (
+    SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo,
+    preferred_disk_name, secondary_content_sig,
+)
 from ui_helpers import make_long_path, _err_log_lock
 
 logger = logging.getLogger(__name__)
@@ -204,6 +206,80 @@ _ENTITY_ROUTING = {
     'page':         {'folder': 'Pages',         'prefix': 'Page'},
     'link':         {'folder': 'Links',         'prefix': 'Link'},
 }
+
+def compute_entity_content_sig(entity_type: str, obj) -> str:
+    """Content signature for a fetched secondary entity (H-1 update detection).
+
+    THE single source of truth for which raw Canvas-side fields define an
+    entity's content. The SAME function runs on both sides of the pipeline:
+
+      - analysis (``get_secondary_content_metadata``) computes the fresh sig
+        that ``_is_canvas_newer`` compares against the manifest, and
+      - the save path (``_save_secondary_entity`` callers) stamps the sig
+        into the manifest after writing the file,
+
+    so a mismatch can only mean the source content actually changed. Fields
+    are chosen to EXCLUDE anything locally rendered (HTML template, date
+    formatting, 12h/24h preference) and anything Canvas churns without a
+    content change (course-level ``updated_at``, grade events):
+
+      assignment   name, description, due_at, points, submission types
+      quiz         title, description, points, due_at, time limit, attempts,
+                   question_count (question edits usually change the count or
+                   the description; per-question bodies are NOT fetched - too
+                   expensive for analysis)
+      discussion   title, message, last_reply_at, reply count
+      announcement title, message, posted_at, last_reply_at, reply count
+      syllabus     body only
+      page         title + the page's own updated_at (bodies are not fetched
+                   during analysis; page-level updated_at only moves on edits)
+      link         title + target URL
+      rubric       title + updated_at
+
+    Returns '' when *obj* is None (unknown → the analyzer treats it as
+    "cannot verify" and never flags an update from it).
+    """
+    if obj is None:
+        return ''
+    g = lambda attr: getattr(obj, attr, None)  # noqa: E731 - tiny local accessor
+    if entity_type == 'assignment':
+        return secondary_content_sig(
+            'assignment', g('name'), g('description'), g('due_at'),
+            g('points_possible'), ','.join(g('submission_types') or []),
+        )
+    if entity_type == 'quiz':
+        return secondary_content_sig(
+            'quiz', g('title'), g('description'), g('points_possible'),
+            g('due_at'), g('time_limit'), g('allowed_attempts'),
+            g('question_count'),
+        )
+    if entity_type == 'discussion':
+        return secondary_content_sig(
+            'discussion', g('title'), g('message'), g('last_reply_at'),
+            g('discussion_subentry_count'),
+        )
+    if entity_type == 'announcement':
+        return secondary_content_sig(
+            'announcement', g('title'), g('message'), g('posted_at'),
+            g('last_reply_at'), g('discussion_subentry_count'),
+        )
+    if entity_type == 'syllabus':
+        # obj is the syllabus body string itself (callers pass it directly -
+        # course-level updated_at churns on unrelated changes and must never
+        # participate in the signature).
+        return secondary_content_sig('syllabus', obj)
+    if entity_type == 'page':
+        return secondary_content_sig('page', g('title'), g('updated_at'))
+    if entity_type == 'rubric':
+        return secondary_content_sig('rubric', g('title'), g('updated_at'))
+    return ''
+
+
+def link_content_sig(title: str, url: str) -> str:
+    """Signature for an ExternalUrl/ExternalTool shortcut: a changed target
+    URL (or renamed link) re-syncs the .url/.webloc file."""
+    return secondary_content_sig('link', title, url)
+
 
 # Feature flag: rubric fetching is temporarily disabled.
 # The Canvas course-level rubrics endpoint (GET /courses/:id/rubrics) requires
@@ -518,6 +594,24 @@ class CanvasManager:
             logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")
             # We do NOT raise here. We continue to Phase 2 to supplement what we found.
             
+        # --- Page metadata (one paginated call) ---
+        # Page CONTENT signatures require each page's own updated_at + title,
+        # which module items don't carry and per-page fetches would make N+1.
+        # One course.get_pages() list call yields stubs with page_url, title
+        # and updated_at for every page - enough to sign without bodies.
+        # Skipped during the lightweight course-scanning phase.
+        page_meta: dict = {}
+        if not is_scanning_phase:
+            try:
+                for _pg in course.get_pages():
+                    _slug = getattr(_pg, 'url', '') or ''
+                    if _slug:
+                        page_meta[_slug] = _pg
+            except (Unauthorized, ResourceDoesNotExist, CanvasException):
+                logger.debug(f"Pages list not accessible for course {getattr(course, 'id', '?')}")
+            except Exception as e:
+                logger.debug(f"Page metadata fetch failed: {e}")
+
         # --- Phase 2: Module Scan (Supplement) ---
         try:
             # Pass the IDs already gathered by the bulk fetch so the module
@@ -527,7 +621,8 @@ class CanvasManager:
             # still recorded for path routing).
             module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
                                                                     secondary_content_settings=secondary_content_settings,
-                                                                    known_file_ids=set(all_files_map.keys()))
+                                                                    known_file_ids=set(all_files_map.keys()),
+                                                                    page_meta=page_meta)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -558,23 +653,33 @@ class CanvasManager:
                     module_map=module_map,
                 )
                 for s_info in secondary_items:
-                    if s_info.id not in all_files_map:
-                        all_files_map[s_info.id] = s_info
+                    # Phase-3 items are AUTHORITATIVE for secondary entities:
+                    # they carry the full bodies and therefore the content
+                    # signatures update detection depends on, while the
+                    # module-scan stubs (Phase 2) have neither. Overwrite -
+                    # the module_map placement entries recorded in Phase 2
+                    # live in a separate dict and are unaffected.
+                    all_files_map[s_info.id] = s_info
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
                 if progress_callback:
                     progress_callback(f"Secondary content scan failed - some items may be missing: {e}", progress_type='log')
 
         return list(all_files_map.values()), secondary_fetch_success, module_map
-    
+
     def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None,
-                                known_file_ids=None):
+                                known_file_ids=None, page_meta=None):
         """Fallback: Get files by iterating through modules.
 
         ``known_file_ids`` (set[int] | None): file IDs already fetched by the
         bulk ``get_files()`` pass. Module items matching these IDs skip the
         per-item ``course.get_file()`` HTTP call (their module_map entry is
         still recorded), avoiding an N+1 request pattern on large courses.
+
+        ``page_meta`` ({page_url_slug: page_stub} | None): page stubs from a
+        single course.get_pages() call, used to compute Page content
+        signatures (title + the page's own updated_at) without per-page
+        fetches. None/missing slugs simply leave the signature empty.
 
         Also emits mock CanvasFileInfo for secondary entity types
         (Assignment, Quiz, Discussion, Page, ExternalUrl) when
@@ -629,7 +734,10 @@ class CanvasManager:
                 if item.type == 'File':
                     if not hasattr(item, 'content_id') or not item.content_id:
                         continue
-                    module_map[item.content_id] = clean_module_name
+                    # M-5: FIRST linking module wins (matches the download
+                    # engine, which saves one physical copy into the first
+                    # module that links the file).
+                    module_map.setdefault(item.content_id, clean_module_name)
                     if known_file_ids and item.content_id in known_file_ids:
                         # Already in the bulk get_files() result - the
                         # module_map entry above is all this item needed.
@@ -662,18 +770,44 @@ class CanvasManager:
                             )
                 elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
                     try:
+                        # M-1 parity: Pages and links are MODULE ITEMS, written
+                        # by the download engine into the module folder with the
+                        # "Page: " prefix for pages, REGARDLESS of the secondary
+                        # content isolate mode. The analyzer must expect the
+                        # exact same shape, or every already-downloaded page
+                        # looks "new" and freshly-synced ones land at the root.
                         ext = ".html" if item.type == 'Page' else (".webloc" if platform.system() == 'Darwin' else ".url")
-                        safe_base = self._sanitize_filename(getattr(item, 'title', 'Untitled'))
-                        if isolate or item.type != 'Page':
-                            emitted_filename = safe_base + ext
-                        else:
+
+                        _sig = ''
+                        _page_stub = None
+                        if item.type == 'Page' and page_meta:
+                            _page_stub = page_meta.get(getattr(item, 'page_url', '') or '')
+
+                        # Prefer the page's OWN title (what the downloader
+                        # names the file after) over the module item title.
+                        _title = (getattr(_page_stub, 'title', None)
+                                  or getattr(item, 'title', 'Untitled'))
+                        safe_base = self._sanitize_filename(_title)
+                        if item.type == 'Page':
                             routing = _ENTITY_ROUTING['page']
                             emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
+                            if _page_stub is not None:
+                                _sig = compute_entity_content_sig('page', _page_stub)
+                        else:
+                            emitted_filename = safe_base + ext
 
                         actual_url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None) or getattr(item, 'url', '')
+                        if item.type != 'Page':
+                            # Link signature: a renamed link or changed target
+                            # URL re-syncs the .url/.webloc shortcut.
+                            _sig = link_content_sig(getattr(item, 'title', 'Untitled'),
+                                                    getattr(item, 'external_url', None)
+                                                    or getattr(item, 'html_url', '') or '')
                         syn_id = -int(item.id) if hasattr(item, 'id') else 0
-                        if syn_id and not isolate:
-                            module_map[syn_id] = clean_module_name
+                        if syn_id:
+                            # Always register placement: these items live in
+                            # their module folder in BOTH isolate modes.
+                            module_map.setdefault(syn_id, clean_module_name)
 
                         mock_info = CanvasFileInfo(
                             id=syn_id,
@@ -682,8 +816,17 @@ class CanvasManager:
                             size=0,
                             modified_at=getattr(item, 'updated_at', datetime.now(timezone.utc).isoformat()),
                             url=actual_url,
-                            content_type="text/html" if item.type == 'Page' else "application/x-url"
+                            content_type="text/html" if item.type == 'Page' else "application/x-url",
+                            content_sig=_sig,
+                            name_locked=True,
                         )
+                        if item.type == 'Page':
+                            # Stash the page slug so the sync engine can fetch
+                            # the REAL page body (offline HTML parity with the
+                            # download engine) instead of writing a redirect
+                            # stub that requires a Canvas login to be useful.
+                            mock_info._page_slug = getattr(item, 'page_url', '') or ''
+                            mock_info._page_title = _title
                         files.append(mock_info)
                     except Exception as _item_err:
                         logger.warning(
@@ -699,7 +842,8 @@ class CanvasManager:
                         content_id = getattr(item, 'content_id', 0) or 0
                         syn_id = make_secondary_id('assignment', content_id)
                         if not isolate:
-                            module_map[syn_id] = clean_module_name
+                            # First linking module wins (M-5 parity).
+                            module_map.setdefault(syn_id, clean_module_name)
                         if isolate:
                             emitted_filename = safe_base + '.html'
                         else:
@@ -725,7 +869,8 @@ class CanvasManager:
                         content_id = getattr(item, 'content_id', 0) or 0
                         syn_id = make_secondary_id('quiz', content_id)
                         if not isolate:
-                            module_map[syn_id] = clean_module_name
+                            # First linking module wins (M-5 parity).
+                            module_map.setdefault(syn_id, clean_module_name)
                         if isolate:
                             emitted_filename = safe_base + '.html'
                         else:
@@ -751,7 +896,8 @@ class CanvasManager:
                         content_id = getattr(item, 'content_id', 0) or 0
                         syn_id = make_secondary_id('discussion', content_id)
                         if not isolate:
-                            module_map[syn_id] = clean_module_name
+                            # First linking module wins (M-5 parity).
+                            module_map.setdefault(syn_id, clean_module_name)
                         if isolate:
                             emitted_filename = safe_base + '.html'
                         else:
@@ -827,6 +973,9 @@ class CanvasManager:
                         modified_at=getattr(full_course, 'updated_at', ''),
                         url='',
                         content_type='text/html',
+                        content_sig=compute_entity_content_sig(
+                            'syllabus', getattr(full_course, 'syllabus_body', '') or ''),
+                        name_locked=True,
                     ))
                 fetch_success['syllabus'] = True
             except Exception as e:
@@ -907,6 +1056,8 @@ class CanvasManager:
                         modified_at=getattr(topic, 'posted_at', ''),
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
+                        content_sig=compute_entity_content_sig('announcement', topic),
+                        name_locked=True,
                     ))
                     
                     for att in attachments:
@@ -934,6 +1085,7 @@ class CanvasManager:
                             modified_at=att.get('modified_at', getattr(topic, 'posted_at', '')),
                             url=att.get('url', ''),
                             content_type=att.get('content-type', ''),
+                            name_locked=True,
                         ))
                 fetch_success['announcement'] = True
             except Exception as e:
@@ -1024,6 +1176,9 @@ class CanvasManager:
                         modified_at=a_updated,
                         url=getattr(assignment, 'html_url', ''),
                         content_type='text/html',
+                        content_sig=compute_entity_content_sig(
+                            'assignment', full_assignment or assignment),
+                        name_locked=True,
                     ))
 
                     # 2) Yield each attachment as a true CanvasFileInfo
@@ -1064,6 +1219,7 @@ class CanvasManager:
                             modified_at=att.get('modified_at', a_updated),
                             url=att.get('url', ''),
                             content_type=att.get('content-type', ''),
+                            name_locked=True,
                         ))
 
                 fetch_success['assignment'] = True
@@ -1135,6 +1291,8 @@ class CanvasManager:
                         modified_at=getattr(topic, 'updated_at', ''),
                         url=getattr(topic, 'html_url', ''),
                         content_type='text/html',
+                        content_sig=compute_entity_content_sig('discussion', topic),
+                        name_locked=True,
                     ))
 
                     parent_module = module_map.get(parent_syn_id, "")
@@ -1163,6 +1321,7 @@ class CanvasManager:
                             modified_at=att.get('modified_at', getattr(topic, 'updated_at', '')),
                             url=att.get('url', ''),
                             content_type=att.get('content-type', ''),
+                            name_locked=True,
                         ))
                 fetch_success['discussion'] = True
             except Exception as e:
@@ -1231,6 +1390,8 @@ class CanvasManager:
                         modified_at=getattr(quiz, 'updated_at', ''),
                         url=getattr(quiz, 'html_url', ''),
                         content_type='text/html',
+                        content_sig=compute_entity_content_sig('quiz', quiz),
+                        name_locked=True,
                     ))
 
                     parent_module = module_map.get(parent_syn_id, "")
@@ -1259,6 +1420,7 @@ class CanvasManager:
                             modified_at=att.get('modified_at', getattr(quiz, 'updated_at', '')),
                             url=att.get('url', ''),
                             content_type=att.get('content-type', ''),
+                            name_locked=True,
                         ))
                 fetch_success['quiz'] = True
             except (Unauthorized, ResourceDoesNotExist, CanvasException):
@@ -1289,6 +1451,8 @@ class CanvasManager:
                         modified_at=getattr(rubric, 'updated_at', ''),
                         url='',
                         content_type='text/markdown',
+                        content_sig=compute_entity_content_sig('rubric', rubric),
+                        name_locked=True,
                     ))
                 fetch_success['rubric'] = True
             except (Unauthorized, ResourceDoesNotExist, CanvasException):
@@ -1367,9 +1531,16 @@ class CanvasManager:
                     items = module.get_module_items()
                     for item in items:
                         if item.type == 'File':
-                            if hasattr(item, 'content_id'):
-                                module_file_ids.add(item.content_id)
-                            
+                            # M-5: one physical copy per file - a duplicate
+                            # module link is skipped by the download loop, so
+                            # counting it would leave the progress bar short
+                            # of 100% at completion.
+                            _cid = getattr(item, 'content_id', None)
+                            if _cid is not None and _cid in module_file_ids:
+                                continue
+                            if _cid is not None:
+                                module_file_ids.add(_cid)
+
                             if file_filter != 'study':
                                 # Study mode can't verify extension without a slow file fetch;
                                 # count is derived from the catch-all section below instead.
@@ -1610,22 +1781,35 @@ class CanvasManager:
                                 
                                 try:
                                     if item.type == 'File':
-                                        if hasattr(item, 'content_id'):
-                                            module_file_ids.add(item.content_id)
                                         if not hasattr(item, 'content_id') or not item.content_id:
                                             # Create Error
                                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Content ID", f"Item {getattr(item, 'title', 'unknown')} missing content_id")
                                             if progress_callback: progress_callback(err, progress_type='error')
                                             self._log_error(save_dir, err)
                                             continue
-                                        
+                                        # M-5: one physical copy per Canvas file - FIRST
+                                        # linking module wins. A module link is a
+                                        # reference to one file, not a second file;
+                                        # duplicating per module left every extra copy
+                                        # permanently untracked by the sync manifest
+                                        # (manifest rows are keyed by canvas_file_id),
+                                        # so teacher updates only ever reached one copy.
+                                        if item.content_id in module_file_ids:
+                                            log_debug(
+                                                f"  Duplicate module link skipped (already saved in an earlier module): "
+                                                f"{getattr(item, 'title', item.content_id)}", debug_file)
+                                            continue
+                                        module_file_ids.add(item.content_id)
+
                                         file_obj = course.get_file(item.content_id)
-                                        # Track the ID for the catch-all phase, but DO NOT skip it here 
-                                        # so files appearing in multiple modules get their respective copies.
+                                        # Track the ID for the catch-all phase.
                                         downloaded_file_ids.add(file_obj.id)
-                                        
+
                                         # Synchronous conflict resolution to prevent data loss.
-                                        base_filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                                        # Regular files save under the teacher-curated
+                                        # display name (what students see in Canvas),
+                                        # falling back to the raw upload filename.
+                                        base_filename = self._sanitize_filename(preferred_disk_name(file_obj) or 'unknown')
                                         filepath = target_path / base_filename
                                         target_key = str(filepath).lower()
 
@@ -1665,7 +1849,8 @@ class CanvasManager:
                                             base_path, course_base_path=base_path, sync_manager=sync_manager,
                                             canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                             progress_callback=progress_callback, debug_file=debug_file, error_root_path=Path(save_dir) if 'save_dir' in locals() else None,
-                                            course_name=course.name, module_path=target_path, isolate=False, has_attachments=False, metadata_pairs=[]
+                                            course_name=course.name, module_path=target_path, isolate=False, has_attachments=False, metadata_pairs=[],
+                                            content_sig=compute_entity_content_sig('page', page_obj)
                                         )
                                         if filepath and filepath.exists():
                                             info = CanvasFileInfo(
@@ -1758,6 +1943,7 @@ class CanvasManager:
                                                         module_path=module_target, isolate=isolate,
                                                         has_attachments=bool(attachments),
                                                         metadata_pairs=metadata,
+                                                        content_sig=compute_entity_content_sig('assignment', assignment),
                                                     )
                                                     module_handled_ids.add(a_id)
                                                 except Exception as ae:
@@ -1795,6 +1981,7 @@ class CanvasManager:
                                                         module_path=module_target, isolate=isolate,
                                                         has_attachments=False,
                                                         metadata_pairs=metadata,
+                                                        content_sig=compute_entity_content_sig('quiz', quiz),
                                                     )
                                                     module_handled_ids.add(q_id)
                                                 except Exception as qe:
@@ -1834,6 +2021,7 @@ class CanvasManager:
                                                         module_path=module_target, isolate=isolate,
                                                         has_attachments=False,
                                                         metadata_pairs=metadata,
+                                                        content_sig=compute_entity_content_sig('discussion', topic),
                                                     )
                                                     module_handled_ids.add(t_id)
                                                 except Exception as de:
@@ -1896,7 +2084,7 @@ class CanvasManager:
                             continue # Already downloaded in a module
 
                         # Synchronous conflict resolution to prevent data loss.
-                        base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                        base_filename = self._sanitize_filename(preferred_disk_name(file) or 'unknown')
                         filepath = base_path / base_filename
                         target_key = str(filepath).lower()
 
@@ -2387,7 +2575,7 @@ class CanvasManager:
                         downloaded_ids.add(file.id)
 
                     # Synchronous conflict resolution to prevent data loss.
-                    base_filename = self._sanitize_filename(getattr(file, 'filename', 'unknown'))
+                    base_filename = self._sanitize_filename(preferred_disk_name(file) or 'unknown')
                     filepath = base_path / base_filename
                     target_key = str(filepath).lower()
 
@@ -2451,7 +2639,7 @@ class CanvasManager:
                                 if not hasattr(item, 'content_id') or not item.content_id: continue
                                 file_obj = course.get_file(item.content_id)
                                 # Synchronous conflict resolution to prevent data loss
-                                base_filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+                                base_filename = self._sanitize_filename(preferred_disk_name(file_obj) or 'unknown')
                                 filepath = base_path / base_filename
                                 target_key = str(filepath).lower()
 
@@ -2483,7 +2671,8 @@ class CanvasManager:
                                     base_path, course_base_path=base_path, sync_manager=sync_manager,
                                     canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                     progress_callback=progress_callback, debug_file=debug_file, error_root_path=error_root_path,
-                                    course_name=course.name, module_path=base_path, isolate=False, has_attachments=False, metadata_pairs=[]
+                                    course_name=course.name, module_path=base_path, isolate=False, has_attachments=False, metadata_pairs=[],
+                                    content_sig=compute_entity_content_sig('page', page_obj)
                                 )
                                 if filepath and filepath.exists():
                                     info = CanvasFileInfo(
@@ -2548,7 +2737,7 @@ class CanvasManager:
             filepath = explicit_filepath
             filename = filepath.name
         else:
-            filename = self._sanitize_filename(getattr(file_obj, 'filename', 'unknown'))
+            filename = self._sanitize_filename(preferred_disk_name(file_obj) or 'unknown')
             filepath = folder_path / filename
 
         if file_filter == 'study':
@@ -2657,7 +2846,44 @@ class CanvasManager:
                             ), filepath
                         ) # Skip
                     else:
-                        log_debug(f"File exists but size mismatch. Canvas: {file_size_bytes}, Local: {filepath.stat().st_size}. Re-downloading.", debug_file)
+                        # H-10: size mismatch means EITHER Canvas updated the
+                        # file OR the user edited their local copy. Mirror the
+                        # sync engine's "never overwrite your edits" guarantee:
+                        # overwrite in place ONLY when the local bytes provably
+                        # equal the original download (manifest md5 baseline).
+                        # Edited or unverifiable copies are preserved - the
+                        # fresh Canvas version lands as a _NewVersion sibling.
+                        _pristine = False
+                        if sync_manager is not None:
+                            try:
+                                _baseline = await asyncio.to_thread(
+                                    sync_manager.get_manifest_baseline, file_obj.id)
+                                if _baseline and _baseline[0]:
+                                    from sync_manager import compute_local_md5 as _cmd5
+                                    _local_hash = await asyncio.to_thread(_cmd5, filepath)
+                                    _pristine = bool(_local_hash) and _local_hash == _baseline[0]
+                            except Exception:
+                                _pristine = False
+                        if _pristine:
+                            log_debug(
+                                f"File exists but size mismatch (local copy is the pristine "
+                                f"original). Canvas: {file_size_bytes}, Local: "
+                                f"{filepath.stat().st_size}. Overwriting in place.", debug_file)
+                        else:
+                            _diverted = self._handle_conflict(
+                                filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}")
+                            log_debug(
+                                f"File exists with size mismatch and local edits (or no "
+                                f"baseline to verify against). Preserving the local copy; "
+                                f"downloading new version as: {_diverted.name}", debug_file)
+                            if progress_callback:
+                                progress_callback(
+                                    f"'{filename}' was changed locally - new Canvas version "
+                                    f"saved as '{_diverted.name}'",
+                                    progress_type='log',
+                                )
+                            filepath = _diverted
+                            filename = filepath.name
                 except Exception:
                     pass
 
@@ -2833,7 +3059,12 @@ class CanvasManager:
                                             local_path=rel_path,
                                             canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
                                             original_size=getattr(file_obj, 'size', 0),
-                                            local_md5=_dl_hasher.hexdigest()
+                                            local_md5=_dl_hasher.hexdigest(),
+                                            content_sig=getattr(file_obj, 'content_sig', '') or '',
+                                            # Fresh bytes on disk: a stale is_ignored flag from a
+                                            # past filter/size gate must not keep this file in the
+                                            # Ignored bucket (skip-existing records preserve it).
+                                            clear_ignored=True,
                                         )
                                     except Exception as db_err:
                                         log_debug(f"Warning: DB record failed for {filename}: {db_err}", debug_file)
@@ -3206,21 +3437,54 @@ class CanvasManager:
                                error_root_path=None, course_name="Unknown",
                                module_path=None, isolate=True,
                                has_attachments=False, metadata_pairs=None,
-                               file_extension=".html", raw_body=False):
+                               file_extension=".html", raw_body=False,
+                               content_sig="", explicit_dir=None,
+                               preserve_existing=False):
         """Unified save-to-disk + DB-record logic for all secondary entities.
 
         ``raw_body=True`` writes *body_html* verbatim (used for Markdown
         rubrics) instead of wrapping it in the HTML document template.
 
+        ``content_sig`` (H-1): signature of the raw source fields, stamped
+        into the manifest row so the analyzer can detect real content changes.
+
+        ``explicit_dir`` (H-2): write into THIS directory instead of the
+        canonical category/module layout - used by the sync update path to
+        respect the folder the user moved the entity's file into.
+
+        ``preserve_existing`` (H-1 + never-overwrite-edits): when True and the
+        target exists, the fresh render is written as a ``_NewVersion``
+        sibling instead of replacing the file - used for updates of entities
+        whose local copy the user edited.
+
         Returns
         -------
         ``(filepath, synthetic_id, canvas_updated_at)`` on success, ``(None, None, None)`` on failure.
         """
-        target_dir, display_name = self._resolve_secondary_path(
-            entity_type, entity_name, base_path,
-            module_path=module_path, isolate=isolate,
-            has_attachments=has_attachments,
-        )
+        if explicit_dir is not None:
+            # H-2: honour the directory the user's copy actually lives in.
+            # The filename shape (bare name in Mode B, "Type: name" in Mode A)
+            # is derived directly so the canonical category/module folders are
+            # NOT created as a side effect. Falls back to the canonical layout
+            # only if the explicit directory cannot be created.
+            _routing = _ENTITY_ROUTING[entity_type]
+            _safe = self._sanitize_filename(entity_name)
+            display_name = _safe if isolate else f"{_routing['prefix']}: {_safe}"
+            target_dir = Path(explicit_dir)
+            try:
+                target_dir.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                target_dir, display_name = self._resolve_secondary_path(
+                    entity_type, entity_name, base_path,
+                    module_path=module_path, isolate=isolate,
+                    has_attachments=has_attachments,
+                )
+        else:
+            target_dir, display_name = self._resolve_secondary_path(
+                entity_type, entity_name, base_path,
+                module_path=module_path, isolate=isolate,
+                has_attachments=has_attachments,
+            )
 
         filename = self._sanitize_filename(display_name) + file_extension
         filepath = target_dir / filename
@@ -3238,10 +3502,17 @@ class CanvasManager:
                 filepath = self._handle_conflict(filepath)
             _registry[str(filepath).lower()] = (entity_type, canvas_entity_id)
 
-        # Secondary entities are always regenerated from the Canvas API,
-        # so overwrite in-place instead of creating (1) conflict copies.
-        # This mirrors the clean-overwrite logic for regular file redownloads.
-        if filepath.exists():
+        if preserve_existing and filepath.exists():
+            # The user edited their local copy: never touch it. The fresh
+            # render lands alongside as a _NewVersion sibling (mirroring the
+            # regular-file modified-update routing).
+            filepath = self._handle_conflict(
+                filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}"
+            )
+        elif filepath.exists():
+            # Secondary entities are always regenerated from the Canvas API,
+            # so overwrite in-place instead of creating (1) conflict copies.
+            # This mirrors the clean-overwrite logic for regular file redownloads.
             try:
                 filepath.unlink()
             except OSError:
@@ -3294,6 +3565,8 @@ class CanvasManager:
                     local_path=rel_path,
                     canvas_updated_at=canvas_updated_at or '',
                     original_size=0,
+                    content_sig=content_sig or '',
+                    clear_ignored=True,  # fresh bytes were just written
                 )
             except Exception as _db_err:
                 log_debug(f"DB record failed for {entity_type} '{entity_name}': {_db_err}", debug_file)
@@ -3310,7 +3583,8 @@ class CanvasManager:
                                    sync_manager, secondary_content_settings,
                                    progress_callback=None, debug_file=None,
                                    error_root_path=None, course_name="Unknown",
-                                   module_path=None):
+                                   module_path=None, explicit_dir=None,
+                                   preserve_existing=False):
         """Fetch a single secondary entity from Canvas and save it to disk.
 
         This is the UNIVERSAL entry point used by both:
@@ -3335,6 +3609,12 @@ class CanvasManager:
             the module folder where the entity should be written. The sync
             engine derives this from the analyzer's ``target_local_path``.
             Mode B (``isolate=True``) ignores this argument entirely.
+        explicit_dir : Path | None
+            H-2: when set, write into THIS directory (where the user's copy
+            lives) instead of the canonical category/module layout.
+        preserve_existing : bool
+            H-1: when True and the target exists (user-edited local copy),
+            the regenerated entity is written as a ``_NewVersion`` sibling.
 
         Returns
         -------
@@ -3429,6 +3709,9 @@ class CanvasManager:
                     module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
+                    content_sig=compute_entity_content_sig('assignment', assignment),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, attachments or None, canvas_updated
 
@@ -3493,6 +3776,9 @@ class CanvasManager:
                     module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
+                    content_sig=compute_entity_content_sig('quiz', quiz),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, attachments or None, canvas_updated
 
@@ -3559,6 +3845,9 @@ class CanvasManager:
                     module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
+                    content_sig=compute_entity_content_sig('discussion', topic),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, attachments or None, canvas_updated
 
@@ -3635,6 +3924,9 @@ class CanvasManager:
                     module_path=module_path,
                     has_attachments=bool(attachments),
                     metadata_pairs=metadata,
+                    content_sig=compute_entity_content_sig('announcement', topic),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, attachments or None, canvas_updated
 
@@ -3658,6 +3950,9 @@ class CanvasManager:
                     module_path=module_path,
                     has_attachments=False,
                     metadata_pairs=None,
+                    content_sig=compute_entity_content_sig('syllabus', body),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, None, canvas_updated
 
@@ -3680,6 +3975,9 @@ class CanvasManager:
                     metadata_pairs=None,
                     file_extension='.md',
                     raw_body=True,
+                    content_sig=compute_entity_content_sig('rubric', rubric),
+                    explicit_dir=explicit_dir,
+                    preserve_existing=preserve_existing,
                 )
                 return filepath, syn_id, None, canvas_updated
 
@@ -3795,6 +4093,10 @@ class CanvasManager:
                 description = getattr(assignment, 'description', '') or ''
                 updated_at = getattr(assignment, 'updated_at', '') or ''
 
+                # Signature source: prefer the richer individually-fetched
+                # object; the list stub is the fallback when the refetch fails.
+                _sig_obj = assignment
+
                 # Check for file attachments
                 # IMPORTANT: course.get_assignments() (list endpoint) does NOT
                 # return the `attachments` field. We must refetch each
@@ -3803,6 +4105,7 @@ class CanvasManager:
                 attachments = []
                 try:
                     full_assignment = course.get_assignment(a_id)
+                    _sig_obj = full_assignment
                     # Update description/updated_at from the richer individual response
                     description = getattr(full_assignment, 'description', '') or description
                     updated_at = getattr(full_assignment, 'updated_at', '') or updated_at
@@ -3860,6 +4163,7 @@ class CanvasManager:
                     course_name=course.name, isolate=isolate,
                     has_attachments=has_attachments,
                     metadata_pairs=metadata,
+                    content_sig=compute_entity_content_sig('assignment', _sig_obj),
                 )
 
                 # CRITICAL: Save the parent HTML file to the database manifest
@@ -3905,6 +4209,7 @@ class CanvasManager:
                             md5=None,
                             content_type=att.get('content-type', ''),
                             folder_id=None,
+                            name_locked=True,
                         )
 
                         att_filepath = attach_dir / self._sanitize_filename(att_filename)
@@ -3962,6 +4267,7 @@ class CanvasManager:
                 debug_file=debug_file,
                 error_root_path=error_root_path,
                 course_name=course.name, isolate=isolate,
+                content_sig=compute_entity_content_sig('syllabus', syllabus_body),
                 has_attachments=False,
                 metadata_pairs=[
                     ('Course', getattr(course, 'name', '')),
@@ -4080,6 +4386,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course.name, isolate=isolate,
+                    content_sig=compute_entity_content_sig('announcement', topic),
                     has_attachments=has_attachments,
                     metadata_pairs=[
                         ('Posted', posted_at),
@@ -4130,6 +4437,7 @@ class CanvasManager:
                             md5=None,
                             content_type=att.get('content-type', ''),
                             folder_id=None,
+                            name_locked=True,
                         )
 
                         att_filepath = attach_dir / self._sanitize_filename(att_filename)
@@ -4201,6 +4509,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course.name, isolate=isolate,
+                    content_sig=compute_entity_content_sig('discussion', topic),
                     has_attachments=False,
                     metadata_pairs=[
                         ('Posted', getattr(topic, 'posted_at', None)),
@@ -4379,6 +4688,7 @@ class CanvasManager:
                     debug_file=debug_file,
                     error_root_path=error_root_path,
                     course_name=course.name, isolate=isolate,
+                    content_sig=compute_entity_content_sig('quiz', quiz),
                     has_attachments=False,
                     metadata_pairs=[
                         ('Points', getattr(quiz, 'points_possible', None)),
@@ -4450,6 +4760,7 @@ class CanvasManager:
                     metadata_pairs=None,
                     file_extension='.md',
                     raw_body=True,
+                    content_sig=compute_entity_content_sig('rubric', rubric),
                 )
 
         except (Unauthorized, ResourceDoesNotExist, CanvasException) as e:
@@ -4616,7 +4927,9 @@ class CanvasManager:
                         canvas_filename=filepath.name,
                         local_path=rel_path,
                         canvas_updated_at=datetime.now(timezone.utc).isoformat(),
-                        original_size=0
+                        original_size=0,
+                        content_sig=link_content_sig(title, url),
+                        clear_ignored=True,
                     )
                 except Exception:
                     pass  # Non-fatal
