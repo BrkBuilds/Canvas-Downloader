@@ -21,10 +21,10 @@ from pathlib import Path
 import streamlit as st
 from collections import defaultdict
 
-import theme
-from ui_shared import SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL
-from sync_manager import SyncManager, SavedGroupsManager
-from ui_helpers import (
+from shared import theme
+from shared.components import SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL
+from core.sync_manager import SyncManager, SavedGroupsManager
+from shared.helpers import (
     esc,
     open_folder,
     render_sync_wizard,
@@ -53,8 +53,8 @@ from sync.completion import (
     show_sync_complete as _show_sync_complete_impl,
     show_sync_errors as _show_sync_errors_impl,
 )
-from ui_shared import error_log_dialog as _view_error_log_dialog_impl
-from ui_shared import render_help_card, HELP_ICONS
+from shared.components import error_log_dialog as _view_error_log_dialog_impl
+from shared.components import render_help_card, HELP_ICONS
 
 logger = logging.getLogger(__name__)
 
@@ -550,7 +550,7 @@ def _update_last_synced_batch(updates_list):
 
 def _select_sync_folder():
     """Open native folder picker and store result in pending_sync_folder."""
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
@@ -692,7 +692,7 @@ def _sync_pairs_section(courses, course_names, course_options):
     _deferred_ignored = None     # Will hold (course_name, course_id, course_data) if "Ignored Files" is clicked
 
     # Pre-compute set of already-saved (course_id, local_folder) tuples for inline Save button
-    from ui_helpers import get_config_dir as _get_config_dir
+    from shared.helpers import get_config_dir as _get_config_dir
     _saved_mgr = SavedGroupsManager(_get_config_dir())
     _all_saved_groups = _saved_mgr.load_groups()
     _saved_pair_sigs = set()
@@ -1160,7 +1160,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # st.session_state['_pan_dialog_open'] = True + an app-scoped rerun.
 
     # Inject Google Material Symbols font once per render (M-24).
-    from ui_shared import inject_material_icons_font
+    from shared.components import inject_material_icons_font
     inject_material_icons_font()
 
     # Step wizard - must be rendered BEFORE any inject_css() calls.
@@ -1400,7 +1400,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # Panopto Transcripts/Subtitles but the transcription engine/model isn't ready
     # (e.g. the model was deleted after setup). Offers one-click setup; clears the
     # instant a model is installed. Shared renderer with the sync-review notice.
-    from ui_shared import render_transcription_setup_notice
+    from shared.components import render_transcription_setup_notice
     render_transcription_setup_notice(
         _sync_pairs_want_transcription(sync_pairs),
         key="sync_list_setup_tx",
@@ -1575,8 +1575,8 @@ def _render_sync_history():
     """Render sync history in an expander at the bottom of step 1."""
     history_mgr = None
     try:
-        from ui_helpers import get_config_dir
-        from sync_manager import SyncHistoryManager
+        from shared.helpers import get_config_dir
+        from core.sync_manager import SyncHistoryManager
         # Always construct the manager (cheap) so it's available to the
         # "Clear History" handler below. Binding it only inside the cache-miss
         # branch caused an UnboundLocalError on the clear-history rerun, because
@@ -1598,7 +1598,7 @@ def _render_sync_history():
         # buttons "lose" their styling after clicking a tab. The st.html() block
         # further down is reserved ONLY for the #sync-history-marker div, whose
         # sibling selectors need the un-wrapped DOM that st.html() provides.
-        from ui_shared import inject_file_action_css
+        from shared.components import inject_file_action_css
         inject_file_action_css()
         from styles import inject_css
         inject_css('sync_history_cards.css')
@@ -1961,8 +1961,8 @@ def _render_sync_history():
             with st.container(border=True, key="synchist_box"):
                 from collections import defaultdict
                 from datetime import datetime
-                from ui_helpers import friendly_course_name
-                import theme
+                from shared.helpers import friendly_course_name
+                from shared import theme
             
                 # Action line at top of expander
                 st.session_state.setdefault('sync_history_filter', 'all')
@@ -2081,7 +2081,7 @@ def _render_sync_history():
                 # (Native widgets are required for working buttons, so each run is a
                 # styled st.container - NOT a nested st.expander, which Streamlit
                 # forbids inside the outer 'Sync History' expander.)
-                from ui_shared import (
+                from shared.components import (
                     _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT,
                     render_course_file_breakdown,
                 )
@@ -2547,18 +2547,18 @@ def _run_sync_panopto():
     from pathlib import Path
     from types import SimpleNamespace
 
-    from canvas_logic import CanvasManager
+    from core.canvas_logic import CanvasManager
     from core.cancellation import cancel_sync, is_sync_cancelled
     from engine.progress_dashboard import (
         DashboardPlaceholders, render_progress_header, render_progress_bar,
         render_custom_metrics, render_terminal_log, render_active_file,
         PHASE_BAR_COLOR, log_line, log_divider, log_meta, file_icon_svg,
     )
-    import theme as _theme
+    from shared import theme as _theme
     from panopto.settings import compose_settings as _pan_compose
     from panopto.runner import run_panopto_batch, make_recorder, make_ignorer
-    from sync_manager import SyncManager
-    from ui_helpers import esc as _esc, render_sync_wizard as _wizard
+    from core.sync_manager import SyncManager
+    from shared.helpers import esc as _esc, render_sync_wizard as _wizard
 
     # Batch-level settings carry only the global engine config (model/device/
     # language); each target supplies its own output/layout contract, so the
@@ -2947,8 +2947,8 @@ def _run_sync_panopto():
         # this, recordings never show up in Sync History.
         try:
             from datetime import datetime as _dt
-            from ui_helpers import get_config_dir
-            from sync_manager import SyncHistoryManager
+            from shared.helpers import get_config_dir
+            from core.sync_manager import SyncHistoryManager
             _h_new, _h_restored, _h_names = [], [], []
             for _pi, _items in _pan_produced.items():
                 _bmap = _pan_bucket.get(_pi, {})

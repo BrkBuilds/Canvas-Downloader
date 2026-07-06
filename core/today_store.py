@@ -43,7 +43,7 @@ def logical_today() -> str:
 
 
 def _path() -> Path:
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     return Path(get_config_dir()) / _FILENAME
 
 

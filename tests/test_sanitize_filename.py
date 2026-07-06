@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from canvas_logic import CanvasManager
+from core.canvas_logic import CanvasManager
 
 
 @pytest.fixture(scope="module")

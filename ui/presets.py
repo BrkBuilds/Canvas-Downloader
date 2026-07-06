@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import streamlit as st
 
-from preset_manager import PresetManager
-from ui_helpers import esc
-from ui_shared import render_config_summary_badges, SVG_FOLDER_YELLOW_SMALL, SVG_EDIT_WHITE_SMALL, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
+from core.preset_manager import PresetManager
+from shared.helpers import esc
+from shared.components import render_config_summary_badges, SVG_FOLDER_YELLOW_SMALL, SVG_EDIT_WHITE_SMALL, SVG_SAVE_COLORFUL, SVG_SAVE_COLORFUL_SMALL, live_enable_button
 
 
 def _build_preset_summary(settings):
@@ -121,7 +121,7 @@ def _render_preset_card(mgr, preset, is_builtin=False, b64_icon_builtin="", b64_
 
 @st.dialog("\u200b")
 def _save_config_dialog():
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     mgr = PresetManager(get_config_dir())
 
     # Custom Dialog Header replacing the native one (Zero-Width Space Hack)
@@ -195,7 +195,7 @@ def _save_config_dialog():
 
 @st.dialog("\u200b", width="large")
 def _presets_hub_dialog():
-    from ui_helpers import get_config_dir, get_base64_image
+    from shared.helpers import get_config_dir, get_base64_image
     mgr = PresetManager(get_config_dir())
 
     _b64_user = get_base64_image("assets/icon_preset_user.png")

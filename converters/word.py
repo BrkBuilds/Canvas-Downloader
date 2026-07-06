@@ -154,7 +154,7 @@ class WordToPDF:
             return None
 
         import threading as _th
-        from ui_helpers import office_safe_path
+        from shared.helpers import office_safe_path
         from engine.office_pid import kill_office_pid
 
         _COM_TIMEOUT_SECONDS = 180

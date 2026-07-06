@@ -24,7 +24,7 @@ import subprocess
 import sys
 import textwrap
 
-ROOT = pathlib.Path(__file__).parent.resolve()
+ROOT = pathlib.Path(__file__).parent.parent.resolve()
 
 
 # ── Step 1: Read version ──────────────────────────────────────────

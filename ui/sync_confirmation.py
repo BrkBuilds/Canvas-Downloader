@@ -16,14 +16,14 @@ import os
 import urllib.parse
 import streamlit as st
 
-import theme
-from sync_manager import SyncManager
-from ui_helpers import (
+from shared import theme
+from core.sync_manager import SyncManager
+from shared.helpers import (
     friendly_course_name,
     format_file_size,
     esc,
 )
-from ui_shared import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
+from shared.components import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
 
 _PAN_FMT_LABELS = {
     "mp3": "Audio Track",

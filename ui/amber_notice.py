@@ -17,7 +17,7 @@ Usage:
 from __future__ import annotations
 
 import streamlit as st
-from ui_helpers import esc
+from shared.helpers import esc
 
 
 def render_amber_notice(

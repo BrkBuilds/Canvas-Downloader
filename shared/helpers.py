@@ -24,7 +24,7 @@ import urllib.parse
 import base64
 import unicodedata
 
-from sync_manager import format_file_size  # re-exported for ui.sync_review / ui.sync_confirmation  # noqa: F401
+from core.sync_manager import format_file_size  # re-exported for ui.sync_review / ui.sync_confirmation  # noqa: F401
 
 _sync_pairs_lock = threading.RLock()
 _err_log_lock = threading.Lock()
@@ -818,7 +818,7 @@ def render_progress_bar(container, current: int, total: int,
         mb_total: Total MB to download (for 'mb' mode)
         custom_text: Optional override for the status text (e.g. for complete mode)
     """
-    import theme
+    from shared import theme
 
     if mode == 'complete':
         progress_pct = 100

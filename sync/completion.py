@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import streamlit as st
 
-import theme
-from sync_manager import SyncManager
-from ui_helpers import (
+from shared import theme
+from core.sync_manager import SyncManager
+from shared.helpers import (
     render_sync_wizard,
     friendly_course_name,
 )
-from ui_shared import (
+from shared.components import (
     render_completion_card, render_folder_cards,
     render_pp_warning, render_error_section,
     error_log_dialog,
@@ -218,7 +218,7 @@ def show_sync_complete():
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
 
         # Panopto recordings summary (if the terminal Panopto pass ran)
-        from ui_shared import render_panopto_summary
+        from shared.components import render_panopto_summary
         render_panopto_summary(st.session_state.get('panopto_summary'))
 
         # L-12: Warn user when Office watchdog did a broad /IM kill (may have

@@ -21,10 +21,10 @@ from pathlib import Path
 
 import streamlit as st
 
-import theme
-from ui_shared import SVG_FOLDER_YELLOW
-from sync_manager import SyncHistoryManager, SyncManager
-from ui_helpers import (
+from shared import theme
+from shared.components import SVG_FOLDER_YELLOW
+from core.sync_manager import SyncHistoryManager, SyncManager
+from shared.helpers import (
     esc,
     friendly_course_name,
 )
@@ -43,7 +43,7 @@ _PAN_REC_SVG = (
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _select_sync_folder_lazy():
     """Open native folder picker, store result, and auto-detect bound course."""
-    from ui_helpers import native_folder_picker
+    from shared.helpers import native_folder_picker
     import streamlit as st
     folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
     if folder_path:
@@ -177,8 +177,8 @@ def show_course_ignored_files(course_name, course_id, course_data):
     Uses the Zero-Width Space Hack for a custom dialog header with Base64 icon.
     Implements the same tag-button filetype selector as the Sync Review page.
     """
-    from sync_manager import format_file_size
-    from ui_helpers import get_base64_image
+    from core.sync_manager import format_file_size
+    from shared.helpers import get_base64_image
 
     # on_dismiss="rerun": restoring files is an on_click callback that mutates
     # the manifest and invalidates _ignored_files_cache via a fragment rerun, so

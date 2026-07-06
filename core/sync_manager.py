@@ -48,7 +48,7 @@ def _match_key(name: str) -> str:
     analyzer's view and the on-disk reality always compare equal. Used by both
     auto-discovery (``analyze_course``) and ``heal_manifest``.
     """
-    from ui_helpers import robust_filename_normalize
+    from shared.helpers import robust_filename_normalize
     return _FS_UNSAFE_RE.sub('', robust_filename_normalize(name))
 
 

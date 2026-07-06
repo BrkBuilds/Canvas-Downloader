@@ -20,7 +20,7 @@ from html import escape as _he
 
 import streamlit as st
 
-from canvas_logic import CanvasManager
+from core.canvas_logic import CanvasManager
 from version import __version__
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 def _get_config_path() -> str:
     """Return the path to the persistent config JSON file (lazy import)."""
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     return os.path.join(get_config_dir(), 'canvas_downloader_settings.json')
 
 # Evaluated once at first render (not at import-time of the module).
@@ -123,7 +123,7 @@ def _safe_keyring_delete(service: str, username: str) -> bool:
         return False
 
 def _get_fallback_path() -> Path:
-    from ui_helpers import get_config_dir
+    from shared.helpers import get_config_dir
     from pathlib import Path
     return Path(get_config_dir()) / ".token_fallback"
 
@@ -328,7 +328,7 @@ def render_sidebar(fetch_courses_fn):
     except Exception:
         pass
 
-    from ui_helpers import get_base64_image
+    from shared.helpers import get_base64_image
     icon_b64    = get_base64_image("assets/icon.png")
 
     # ── Single consolidated CSS block for all sidebar nav elements ──────
@@ -616,7 +616,7 @@ def render_login_page(fetch_courses_fn):
             except Exception:
                 pass
 
-    from ui_helpers import get_base64_image
+    from shared.helpers import get_base64_image
 
     icon_b64 = get_base64_image("assets/icon.png")
 
@@ -2000,7 +2000,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 _pc1, _pc2 = st.columns([3, 1])
                 with _pc1:
                     if st.button("Choose Folder", key="stg_btn_pick", use_container_width=True):
-                        from ui_helpers import native_folder_picker
+                        from shared.helpers import native_folder_picker
                         picked = native_folder_picker(initial_dir=st.session_state.get('_temp_default_path') or None)
                         if picked:
                             st.session_state['_temp_default_path'] = picked
@@ -2051,7 +2051,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             # and returns here when done (_pan_return_to_settings).
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PANOPTO TRANSCRIPTION</span></div>""")
 
-            from ui_helpers import esc
+            from shared.helpers import esc
             try:
                 from panopto.models import transcription_status as _tx_status
                 _tx = _tx_status()
