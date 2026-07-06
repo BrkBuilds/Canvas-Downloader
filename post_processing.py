@@ -73,10 +73,37 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         accent = _COLOR_MAP.get(task_name, theme.SUCCESS)
         pct = min(100, int((current / total) * 100) if total > 0 else 0)
 
+        # Map internal task names to detailed from → to descriptions for headers and metric cards
+        display_name_map = {
+            'Archives':           'ZIP/TAR archives to folders',
+            'PowerPoint files':   'PowerPoint (PPTX/PPT) to PDF',
+            'HTML files':         'HTML Pages to Markdown',
+            'Code files':         'Code/Data files to .TXT',
+            'Legacy Word files':  'Word (DOC) to PDF',
+            'Excel data files':   'Excel (XLSX) to AI Data (TXT)',
+            'Excel files':        'Excel (XLSX/XLS) to PDF',
+            'Video files':        'Video to Audio (MP3)',
+        }
+        
+        type_name_map = {
+            'Archives':           'ZIP/TAR → Folders',
+            'PowerPoint files':   'PPTX/PPT → PDF',
+            'HTML files':         'HTML → MD',
+            'Code files':         'Code/Data → TXT',
+            'Legacy Word files':  'DOC/RTF → PDF',
+            'Excel data files':   'XLSX → AI Data',
+            'Excel files':        'XLSX/XLS → PDF',
+            'Video files':        'Video → MP3',
+        }
+
+        display_name = display_name_map.get(task_name, task_name)
+        type_name = type_name_map.get(task_name, task_name)
+        action_verb = 'Extracting' if task_name in ('Archives', 'Excel data files') else 'Converting'
+
         ui.header_placeholder.markdown(f'''
         <div style="margin-bottom: 0.5rem;">
             <p style="margin: 0; font-size: 0.8rem; color: {theme.TEXT_SECONDARY}; text-transform: uppercase;">Post-Processing</p>
-            <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">Converting {esc(task_name)}</h3>
+            <h3 style="margin: 0; padding-top: 0.1rem; color: {theme.TEXT_PRIMARY};">{action_verb} {esc(display_name)}</h3>
         </div>
         ''', unsafe_allow_html=True)
 
@@ -97,7 +124,7 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{esc(task_name)}</span>
+                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{esc(type_name)}</span>
             </div>
         </div>
         ''', unsafe_allow_html=True)

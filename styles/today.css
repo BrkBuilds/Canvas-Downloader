@@ -666,7 +666,8 @@ div.st-key-today_list_outline div.st-key-today_add_courses_btn button {
 
 
 /* ── Empty states ───────────────────────────────────────── */
-div.st-key-today_empty_container {
+div.st-key-today_empty_container,
+div.st-key-today_files_empty_container {
     background: #1A1D27 !important;
     border: 1px solid #2D3248 !important;
     border-radius: 10px !important;
@@ -694,6 +695,15 @@ div.st-key-today_empty_container div.st-key-today_add_courses_btn {
     margin-top: 2px;
 }
 .today-empty-sub b { color: #b9c0d0; }
+
+/* Overrides for today_files_empty_container to make top and bottom spacing symmetric */
+div.st-key-today_files_empty_container {
+    padding: 24px 22px 24px 22px !important;
+}
+div.st-key-today_files_empty_container .stMarkdown,
+div.st-key-today_files_empty_container [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
 
 /* ── Import dialog: whole-card toggle buttons ──────────────────────────────
    Mirrors the "Canvas Content" card-toggle pattern in ui/download_settings.py

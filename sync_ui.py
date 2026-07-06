@@ -1598,6 +1598,10 @@ def _render_sync_history():
         # buttons "lose" their styling after clicking a tab. The st.html() block
         # further down is reserved ONLY for the #sync-history-marker div, whose
         # sibling selectors need the un-wrapped DOM that st.html() provides.
+        from ui_shared import inject_file_action_css
+        inject_file_action_css()
+        from styles import inject_css
+        inject_css('sync_history_cards.css')
         st.markdown("""
         <style>
         div[class*="st-key-sync_hist_tab_"] button {
@@ -1773,6 +1777,30 @@ def _render_sync_history():
         .sync-history-details[open] .sync-history-chevron {
             transform: rotate(90deg) !important;
         }
+        /* Collapse style-only element containers inside Sync History box to avoid vertical layout gaps */
+        div.st-key-synchist_box div[data-testid="stElementContainer"]:has(style, #sync-history-toolbar) {
+            display: none !important;
+        }
+        /* The panel hangs directly off the bottom of the toggle
+           button (no top border/radius, pulled up to be flush) so
+           it reads as that button's body / dropdown content. */
+        div.st-key-synchist_box {
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            border-top: none !important;
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+            border-bottom-left-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+            background: #0f1318 !important;
+            padding: 16px 20px 18px 20px !important;
+            margin-top: -16px !important;
+        }
+        div.st-key-synchist_runs {
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            margin-top: -10px !important;
+        }
         </style>
         """, unsafe_allow_html=True)
 
@@ -1941,7 +1969,7 @@ def _render_sync_history():
                 st.session_state.setdefault('sync_history_course', None)
 
                 st.html('<div id="sync-history-toolbar" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>')
-                col1, col2 = st.columns([3, 1])
+                col1, col2 = st.columns([7, 1])
                 with col1:
                     # View all / By course
                     c1, c2, c3 = st.columns([1, 1, 2])
@@ -1970,14 +1998,14 @@ def _render_sync_history():
                             courses_list = sorted(all_courses, key=lambda s: s.lower())
                             if courses_list:
                                 # Pre-select if previously selected
-                                idx = 0
+                                idx = None
                                 if st.session_state.sync_history_course in courses_list:
                                     idx = courses_list.index(st.session_state.sync_history_course)
                             
                                 def on_course_change():
                                     st.session_state.sync_history_course = st.session_state.sync_hist_course_select
                             
-                                st.selectbox("Select Course", courses_list, index=idx, label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
+                                st.selectbox("Select Course", courses_list, index=idx, placeholder="Select Course...", label_visibility="collapsed", key="sync_hist_course_select", on_change=on_course_change)
             
                 with col2:
                     if st.button("Clear History", key="btn_sync_hist_clear", use_container_width=True):
@@ -2000,6 +2028,11 @@ def _render_sync_history():
                         margin-bottom: -20px;
                     "></div>
                 """)
+
+                if st.session_state.sync_history_filter == 'course' and not st.session_state.get('sync_history_course'):
+                    from ui.amber_notice import render_info_notice
+                    render_info_notice("Select a course from the dropdown above to filter the sync history.")
+                    return
 
                 # Filter history. Skip any non-dict entry up front so the whole
                 # downstream pipeline (grouping + rendering) can assume dicts.
@@ -2050,40 +2083,10 @@ def _render_sync_history():
                 # forbids inside the outer 'Sync History' expander.)
                 from ui_shared import (
                     _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT,
-                    inject_file_action_css, render_course_file_breakdown,
+                    render_course_file_breakdown,
                 )
                 import os as _os
                 from collections import defaultdict as _dd
-
-                inject_file_action_css()
-                # Style the dropdown panel + the per-run "fake expander" cards.
-                st.markdown(
-                    """<style>
-                    /* The panel hangs directly off the bottom of the toggle
-                       button (no top border/radius, pulled up to be flush) so
-                       it reads as that button's body / dropdown content. */
-                    div.st-key-synchist_box {
-                        border: 1px solid rgba(255,255,255,0.08) !important;
-                        border-top: none !important;
-                        border-top-left-radius: 0 !important;
-                        border-top-right-radius: 0 !important;
-                        border-bottom-left-radius: 8px !important;
-                        border-bottom-right-radius: 8px !important;
-                        background: #0f1318 !important;
-                        padding: 16px 20px 18px 20px !important;
-                        margin-top: -16px !important;
-                    }
-                    div.st-key-synchist_runs { border: none !important; padding: 0 !important; background: transparent !important; }
-                    </style>""",
-                    unsafe_allow_html=True,
-                )
-                # The per-run card SHELL (fake-expander header + collapsible body)
-                # lives in a shared static stylesheet so the Today page's
-                # "Today's files" cards - which reuse the same st-key-shist_run_ /
-                # st-key-shist_body_ prefixes - look pixel-identical. Edit the look
-                # in sync_history_cards.css, not here.
-                from styles import inject_css
-                inject_css('sync_history_cards.css')
 
                 # Resolve each course's CURRENT folder so a moved folder still opens.
                 current_folders = {}

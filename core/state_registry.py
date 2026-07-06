@@ -199,6 +199,8 @@ SYNC_TRANSIENT_KEYS = {
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
     '_office_primed', '_office_quit_fired', '_tcc_batch_active',
+    # Sync history filters
+    'sync_history_course', 'sync_hist_course_select', 'sync_history_filter',
 }
 
 

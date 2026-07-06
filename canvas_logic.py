@@ -663,7 +663,7 @@ class CanvasManager:
             except Exception as e:
                 logger.error(f"Error fetching secondary content metadata: {e}")
                 if progress_callback:
-                    progress_callback(f"Secondary content scan failed - some items may be missing: {e}", progress_type='log')
+                    progress_callback(f"Canvas Content scan failed - some items may be missing: {e}", progress_type='log')
 
         return list(all_files_map.values()), secondary_fetch_success, module_map
 
@@ -1718,11 +1718,11 @@ class CanvasManager:
                 ]
                 _iso = secondary_content_settings.get('isolate_secondary_content', True)
                 log_debug(
-                    f"Secondary content: [{', '.join(_sec_en) or 'none'}] | isolate={'yes' if _iso else 'no'}",
+                    f"Canvas Content: [{', '.join(_sec_en) or 'none'}] | isolate={'yes' if _iso else 'no'}",
                     debug_file,
                 )
             else:
-                log_debug("Secondary content: disabled", debug_file)
+                log_debug("Canvas Content: disabled", debug_file)
             if post_processing_settings:
                 _pp_en = [
                     k.replace('convert_', '') for k, v in post_processing_settings.items()
@@ -1918,21 +1918,54 @@ class CanvasManager:
                                                     description = getattr(assignment, 'description', '') or ''
                                                     updated_at = getattr(assignment, 'updated_at', '') or ''
 
+                                                    # API attachments
                                                     attachments = []
                                                     try:
                                                         raw_att = getattr(assignment, 'attachments', None)
                                                         if raw_att and isinstance(raw_att, list):
                                                             attachments = raw_att
+                                                            log_debug(f"  Module Assignment '{a_name}': found {len(attachments)} API attachment(s)", debug_file)
                                                     except Exception:
                                                         pass
+
+                                                    # ── Inline-link extraction (HTML body) ──
+                                                    existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                                                    for link_info in _extract_canvas_file_links(description):
+                                                        fid = link_info['file_id']
+                                                        if fid in existing_att_ids:
+                                                            continue
+                                                        log_debug(f"    Inline link: fetching metadata for file {fid} ('{link_info['link_text']}')...", debug_file)
+                                                        try:
+                                                            canvas_file = course.get_file(fid)
+                                                            attachments.append({
+                                                                'id': canvas_file.id,
+                                                                'url': canvas_file.url,
+                                                                'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                                                'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                                                'size': getattr(canvas_file, 'size', 0),
+                                                                'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                                                'content-type': getattr(canvas_file, 'content_type', ''),
+                                                            })
+                                                            existing_att_ids.add(canvas_file.id)
+                                                        except (Unauthorized, ResourceDoesNotExist):
+                                                            log_debug(f"    Inline link: file {fid} is inaccessible or deleted - skipping", debug_file)
+                                                        except Exception as e:
+                                                            log_debug(f"    Inline link: error fetching file {fid}: {e}", debug_file)
+
+                                                    has_attachments = bool(attachments)
+                                                    if has_attachments:
+                                                        log_debug(f"  Module Assignment '{a_name}': {len(attachments)} total attachment(s) (API + inline)", debug_file)
 
                                                     metadata = [
                                                         ('Due', getattr(assignment, 'due_at', None)),
                                                         ('Points', getattr(assignment, 'points_possible', None)),
+                                                        ('Submission Types', ', '.join(
+                                                            getattr(assignment, 'submission_types', []) or []
+                                                        )),
                                                         ('URL', getattr(assignment, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
-                                                    self._save_secondary_entity(
+                                                    filepath, syn_id, canvas_updated = self._save_secondary_entity(
                                                         'assignment', a_name, description, base_path,
                                                         course_base_path=base_path, sync_manager=sync_manager,
                                                         canvas_entity_id=a_id, canvas_updated_at=updated_at,
@@ -1941,10 +1974,69 @@ class CanvasManager:
                                                         error_root_path=Path(save_dir),
                                                         course_name=course.name,
                                                         module_path=module_target, isolate=isolate,
-                                                        has_attachments=bool(attachments),
+                                                        has_attachments=has_attachments,
                                                         metadata_pairs=metadata,
                                                         content_sig=compute_entity_content_sig('assignment', assignment),
                                                     )
+
+                                                    # Record parent HTML to DB manifest
+                                                    if filepath and sync_manager:
+                                                        try:
+                                                            rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                                                            sync_manager.record_downloaded_file(
+                                                                canvas_file_id=syn_id,
+                                                                canvas_filename=Path(filepath).name,
+                                                                local_path=rel_path,
+                                                                canvas_updated_at=canvas_updated,
+                                                                original_size=0,
+                                                            )
+                                                        except Exception as db_err:
+                                                            log_debug(f"DB record error for module assignment '{a_name}': {db_err}", debug_file)
+
+                                                    # Queue attachment downloads
+                                                    if filepath and attachments:
+                                                        attach_dir = filepath.parent
+                                                        for att in attachments:
+                                                            raw_id = att.get('id')
+                                                            att_url = att.get('url', '')
+                                                            att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                                            if not att_url or not raw_id:
+                                                                continue
+
+                                                            att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
+
+                                                            if not isolate:
+                                                                routing = _ENTITY_ROUTING['assignment']
+                                                                att_filename = f"{routing['prefix']}: {self._sanitize_filename(a_name)} - {att_filename}"
+
+                                                            att_file_obj = types.SimpleNamespace(
+                                                                id=att_id,
+                                                                url=att_url,
+                                                                filename=att_filename,
+                                                                display_name=att.get('display_name', att_filename),
+                                                                size=att.get('size', 0),
+                                                                modified_at=att.get('modified_at', updated_at),
+                                                                md5=None,
+                                                                content_type=att.get('content-type', ''),
+                                                                folder_id=None,
+                                                                name_locked=True,
+                                                            )
+
+                                                            att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                                                            if progress_callback:
+                                                                progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
+
+                                                            task = asyncio.create_task(self._download_file_async(
+                                                                sem, session, att_file_obj, attach_dir,
+                                                                progress_callback, mb_tracker, 'attachment',
+                                                                error_root_path=Path(save_dir),
+                                                                course_name=course.name, debug_file=debug_file,
+                                                                sync_manager=sync_manager,
+                                                                course_base_path=base_path,
+                                                                explicit_filepath=att_filepath,
+                                                            ))
+                                                            tasks.append(task)
+
                                                     module_handled_ids.add(a_id)
                                                 except Exception as ae:
                                                     log_debug(f"Module Assignment dispatch error: {ae}", debug_file)
@@ -1964,13 +2056,47 @@ class CanvasManager:
                                                     q_desc = getattr(quiz, 'description', '') or ''
                                                     updated_at = getattr(quiz, 'updated_at', '') or ''
 
+                                                    # API attachments
+                                                    attachments = []
+                                                    try:
+                                                        raw_att = getattr(quiz, 'attachments', None)
+                                                        if raw_att and isinstance(raw_att, list):
+                                                            attachments = raw_att
+                                                    except Exception:
+                                                        pass
+
+                                                    # ── Inline-link extraction (HTML body) ──
+                                                    existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                                                    for link_info in _extract_canvas_file_links(q_desc):
+                                                        fid = link_info['file_id']
+                                                        if fid in existing_att_ids:
+                                                            continue
+                                                        try:
+                                                            canvas_file = course.get_file(fid)
+                                                            attachments.append({
+                                                                'id': canvas_file.id,
+                                                                'url': canvas_file.url,
+                                                                'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                                                'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                                                'size': getattr(canvas_file, 'size', 0),
+                                                                'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                                                'content-type': getattr(canvas_file, 'content_type', ''),
+                                                            })
+                                                            existing_att_ids.add(canvas_file.id)
+                                                        except (Unauthorized, ResourceDoesNotExist):
+                                                            pass
+                                                        except Exception:
+                                                            pass
+
+                                                    has_attachments = bool(attachments)
+
                                                     metadata = [
                                                         ('Points', getattr(quiz, 'points_possible', None)),
                                                         ('Due', getattr(quiz, 'due_at', None)),
                                                         ('URL', getattr(quiz, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
-                                                    self._save_secondary_entity(
+                                                    filepath, syn_id, canvas_updated = self._save_secondary_entity(
                                                         'quiz', q_title, q_desc, base_path,
                                                         course_base_path=base_path, sync_manager=sync_manager,
                                                         canvas_entity_id=q_id, canvas_updated_at=updated_at,
@@ -1979,10 +2105,58 @@ class CanvasManager:
                                                         error_root_path=Path(save_dir),
                                                         course_name=course.name,
                                                         module_path=module_target, isolate=isolate,
-                                                        has_attachments=False,
+                                                        has_attachments=has_attachments,
                                                         metadata_pairs=metadata,
                                                         content_sig=compute_entity_content_sig('quiz', quiz),
                                                     )
+
+                                                    # Record parent HTML to DB manifest
+                                                    if filepath and sync_manager:
+                                                        try:
+                                                            rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                                                            sync_manager.record_downloaded_file(
+                                                                canvas_file_id=syn_id,
+                                                                canvas_filename=Path(filepath).name,
+                                                                local_path=rel_path,
+                                                                canvas_updated_at=canvas_updated,
+                                                                original_size=0,
+                                                            )
+                                                        except Exception:
+                                                            pass
+
+                                                    # Queue attachment downloads
+                                                    if filepath and attachments:
+                                                        attach_dir = filepath.parent
+                                                        for att in attachments:
+                                                            raw_id = att.get('id')
+                                                            att_url = att.get('url', '')
+                                                            att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                                            if not att_url or not raw_id:
+                                                                continue
+                                                            att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
+                                                            if not isolate:
+                                                                routing = _ENTITY_ROUTING['quiz']
+                                                                att_filename = f"{routing['prefix']}: {self._sanitize_filename(q_title)} - {att_filename}"
+                                                            att_file_obj = types.SimpleNamespace(
+                                                                id=att_id, url=att_url, filename=att_filename,
+                                                                display_name=att.get('display_name', att_filename),
+                                                                size=att.get('size', 0), modified_at=att.get('modified_at', updated_at),
+                                                                md5=None, content_type=att.get('content-type', ''),
+                                                                folder_id=None, name_locked=True,
+                                                            )
+                                                            att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                                                            if progress_callback:
+                                                                progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
+                                                            task = asyncio.create_task(self._download_file_async(
+                                                                sem, session, att_file_obj, attach_dir,
+                                                                progress_callback, mb_tracker, 'attachment',
+                                                                error_root_path=Path(save_dir),
+                                                                course_name=course.name, debug_file=debug_file,
+                                                                sync_manager=sync_manager, course_base_path=base_path,
+                                                                explicit_filepath=att_filepath,
+                                                            ))
+                                                            tasks.append(task)
+
                                                     module_handled_ids.add(q_id)
                                                 except Exception as qe:
                                                     log_debug(f"Module Quiz dispatch error: {qe}", debug_file)
@@ -2004,13 +2178,47 @@ class CanvasManager:
                                                     updated_at = (getattr(topic, 'last_reply_at', '')
                                                                   or getattr(topic, 'updated_at', '') or '')
 
+                                                    # API attachments
+                                                    attachments = []
+                                                    try:
+                                                        raw_att = getattr(topic, 'attachments', None)
+                                                        if raw_att and isinstance(raw_att, list):
+                                                            attachments = raw_att
+                                                    except Exception:
+                                                        pass
+
+                                                    # ── Inline-link extraction (HTML body) ──
+                                                    existing_att_ids = {a.get('id') for a in attachments if isinstance(a, dict)}
+                                                    for link_info in _extract_canvas_file_links(message):
+                                                        fid = link_info['file_id']
+                                                        if fid in existing_att_ids:
+                                                            continue
+                                                        try:
+                                                            canvas_file = course.get_file(fid)
+                                                            attachments.append({
+                                                                'id': canvas_file.id,
+                                                                'url': canvas_file.url,
+                                                                'filename': getattr(canvas_file, 'filename', link_info['link_text']),
+                                                                'display_name': getattr(canvas_file, 'display_name', link_info['link_text']),
+                                                                'size': getattr(canvas_file, 'size', 0),
+                                                                'modified_at': getattr(canvas_file, 'modified_at', ''),
+                                                                'content-type': getattr(canvas_file, 'content_type', ''),
+                                                            })
+                                                            existing_att_ids.add(canvas_file.id)
+                                                        except (Unauthorized, ResourceDoesNotExist):
+                                                            pass
+                                                        except Exception:
+                                                            pass
+
+                                                    has_attachments = bool(attachments)
+
                                                     metadata = [
                                                         ('Posted', getattr(topic, 'posted_at', None)),
                                                         ('Replies', getattr(topic, 'discussion_subentry_count', None)),
                                                         ('URL', getattr(topic, 'html_url', None)),
                                                     ]
                                                     module_target = target_path if not isolate else None
-                                                    self._save_secondary_entity(
+                                                    filepath, syn_id, canvas_updated = self._save_secondary_entity(
                                                         'discussion', title, message, base_path,
                                                         course_base_path=base_path, sync_manager=sync_manager,
                                                         canvas_entity_id=t_id, canvas_updated_at=updated_at,
@@ -2019,10 +2227,58 @@ class CanvasManager:
                                                         error_root_path=Path(save_dir),
                                                         course_name=course.name,
                                                         module_path=module_target, isolate=isolate,
-                                                        has_attachments=False,
+                                                        has_attachments=has_attachments,
                                                         metadata_pairs=metadata,
                                                         content_sig=compute_entity_content_sig('discussion', topic),
                                                     )
+
+                                                    # Record parent HTML to DB manifest
+                                                    if filepath and sync_manager:
+                                                        try:
+                                                            rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                                                            sync_manager.record_downloaded_file(
+                                                                canvas_file_id=syn_id,
+                                                                canvas_filename=Path(filepath).name,
+                                                                local_path=rel_path,
+                                                                canvas_updated_at=canvas_updated,
+                                                                original_size=0,
+                                                            )
+                                                        except Exception:
+                                                            pass
+
+                                                    # Queue attachment downloads
+                                                    if filepath and attachments:
+                                                        attach_dir = filepath.parent
+                                                        for att in attachments:
+                                                            raw_id = att.get('id')
+                                                            att_url = att.get('url', '')
+                                                            att_filename = att.get('filename', att.get('display_name', 'attachment'))
+                                                            if not att_url or not raw_id:
+                                                                continue
+                                                            att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
+                                                            if not isolate:
+                                                                routing = _ENTITY_ROUTING['discussion']
+                                                                att_filename = f"{routing['prefix']}: {self._sanitize_filename(title)} - {att_filename}"
+                                                            att_file_obj = types.SimpleNamespace(
+                                                                id=att_id, url=att_url, filename=att_filename,
+                                                                display_name=att.get('display_name', att_filename),
+                                                                size=att.get('size', 0), modified_at=att.get('modified_at', updated_at),
+                                                                md5=None, content_type=att.get('content-type', ''),
+                                                                folder_id=None, name_locked=True,
+                                                            )
+                                                            att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                                                            if progress_callback:
+                                                                progress_callback(att_filename, progress_type='attachment_discovered', size=att.get('size', 0))
+                                                            task = asyncio.create_task(self._download_file_async(
+                                                                sem, session, att_file_obj, attach_dir,
+                                                                progress_callback, mb_tracker, 'attachment',
+                                                                error_root_path=Path(save_dir),
+                                                                course_name=course.name, debug_file=debug_file,
+                                                                sync_manager=sync_manager, course_base_path=base_path,
+                                                                explicit_filepath=att_filepath,
+                                                            ))
+                                                            tasks.append(task)
+
                                                     module_handled_ids.add(t_id)
                                                 except Exception as de:
                                                     log_debug(f"Module Discussion dispatch error: {de}", debug_file)
@@ -2150,7 +2406,7 @@ class CanvasManager:
                             k.replace('download_', '') for k, v in secondary_content_settings.items()
                             if v and k.startswith('download_')
                         ]
-                        log_debug(f"--- Secondary Content Phase: [{', '.join(_sec_active)}] ---", debug_file)
+                        log_debug(f"--- Canvas Content Phase: [{', '.join(_sec_active)}] ---", debug_file)
                     try:
                         await self._download_secondary_content(
                             course, base_path, sem, session,
@@ -2160,8 +2416,8 @@ class CanvasManager:
                         )
                     except Exception as sec_e:
                         err = DownloadError(
-                            course.name, "Secondary Content",
-                            "Secondary Content Error", str(sec_e),
+                            course.name, "Canvas Content",
+                            "Canvas Content Error", str(sec_e),
                             raw_error=sec_e,
                             is_app_error=True,
                         )
@@ -2415,7 +2671,7 @@ class CanvasManager:
                                         tasks.append(att_task)
 
                             except Exception as sec_e:
-                                err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "Secondary Retry Error", str(sec_e), raw_error=sec_e)
+                                err = DownloadError(course.name, getattr(file_obj, 'filename', 'unknown'), "Canvas Content Retry Error", str(sec_e), raw_error=sec_e)
                                 if progress_callback: progress_callback(err, progress_type='error')
                                 self._log_error(save_dir, err)
                     else:
@@ -4231,7 +4487,7 @@ class CanvasManager:
             log_debug(f"Assignments not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Assignments", "Secondary Content Error",
+                course.name, "Assignments", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4293,7 +4549,7 @@ class CanvasManager:
             log_debug(f"Syllabus not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Syllabus", "Secondary Content Error",
+                course.name, "Syllabus", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4459,7 +4715,7 @@ class CanvasManager:
             log_debug(f"Announcements not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Announcements", "Secondary Content Error",
+                course.name, "Announcements", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4537,7 +4793,7 @@ class CanvasManager:
             log_debug(f"Discussions not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Discussions", "Secondary Content Error",
+                course.name, "Discussions", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4718,7 +4974,7 @@ class CanvasManager:
             log_debug(f"Quizzes not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Quizzes", "Secondary Content Error",
+                course.name, "Quizzes", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4767,7 +5023,7 @@ class CanvasManager:
             log_debug(f"Rubrics not accessible: {e}", debug_file)
         except Exception as e:
             err = DownloadError(
-                course.name, "Rubrics", "Secondary Content Error",
+                course.name, "Rubrics", "Canvas Content Error",
                 str(e), raw_error=e,
             )
             if progress_callback:
@@ -4792,13 +5048,13 @@ class CanvasManager:
         """
         if not settings:
             return
-        log_debug("=== Starting Secondary Content Download ===", debug_file)
+        log_debug("=== Starting Canvas Content Download ===", debug_file)
 
         if progress_callback:
             progress_callback(
                 'Downloading Course Pages & Assignments...',
                 progress_type='phase',
-                phase_name='Secondary Content',
+                phase_name='Canvas Content',
             )
 
         download_tasks = []  # Async tasks for attachment downloads
@@ -4868,7 +5124,7 @@ class CanvasManager:
                         progress_callback(err, progress_type='error')
                     self._log_error(error_root_path, err)
 
-        log_debug("=== Secondary Content Download Complete ===", debug_file)
+        log_debug("=== Canvas Content Download Complete ===", debug_file)
 
     def _create_link(self, title, url, folder_path, progress_callback, error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, canvas_item_id=0, seen_paths=None):
         """Write a .url/.webloc shortcut for an external link.
