@@ -9,7 +9,34 @@
 ## Next Steps
 - **Production Packaging**: Test the final single-job macOS GitHub Action build with the BYOB architecture.
 - **Cross-Platform QA**: Conduct end-to-end validation on live Canvas instances across both OSes.
+
 ## Recent Activity
+
+- **Session 2026-07-06: Sync History Course Filtering State Overhaul**
+    - **Dropdown Reset & Placeholder**: Configured `st.selectbox` for course selection to start in an unselected state (`index=None`) with a placeholder `"Select Course..."`.
+    - **Informative Filtering Notice**: Added an early check and a `render_info_notice` instruction if no course is selected in the "By Course" view, preventing display of the unfiltered history list when unselected.
+    - **Tab Navigation Retention**: Preserved selection states across "View All" and "By Course" tab button clicks, so changing views inside the session does not drop the selected course filter.
+    - **Landing Page Clean Reset**: Added history filter session keys (`sync_history_course`, `sync_hist_course_select`, `sync_history_filter`) to `SYNC_TRANSIENT_KEYS` in `core/state_registry.py` to ensure that navigating away from the Sync page or executing a full cleanup resets the selectbox and list back to the unselected state cleanly.
+
+- **Session 2026-07-06: Sync History Toolbar Polish & Whitespace Reduction**
+    - **Reduced Column Width**: Changed the columns layout in [sync_ui.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/sync_ui.py) from `[3, 1]` to `[7, 1]`. This narrows the second column containing the "Clear History" button from 25% of the total width to 12.5% (exactly 50% of its current width).
+    - **Optimized Layout**: The first column expands from 75% to 87.5%, giving more horizontal room for the "View All", "By Course" tabs, and the "Select Course" dropdown (preventing course name truncation), while keeping the "Clear History" button right-aligned and perfectly proportioned.
+    - **Eliminated Layout Whitespace Gap**: Moved the CSS stylesheet injections (`inject_file_action_css()` and `inject_css('sync_history_cards.css')`) out of the middle of the `synchist_box` markup to the top level. Added custom CSS rules to target and collapse style-only Streamlit containers (`div.st-key-synchist_box div[data-testid="element-container"]:has(style) { display: none !important; }`) and pull up the runs list container via `margin-top: -10px !important;` on `div.st-key-synchist_runs`, successfully eliminating the empty vertical space while leaving comfortable breathing room.
+    - **Symmetric Spacing**: Collapsed the Streamlit container for the `#sync-history-toolbar` marker element using the CSS selector `div.st-key-synchist_box div[data-testid="element-container"]:has(#sync-history-toolbar) { display: none !important; }`. This removes the extra vertical gap above the buttons row, making the top padding space above the buttons exactly equal to the bottom gap space below the buttons (symmetrical alignment).
+
+- **Session 2026-07-06: Module-Level Secondary Dispatch Attachment Download Fix**
+    - **Root Cause**: The module-level Assignment/Quiz/Discussion dispatch in `download_course_async` in [canvas_logic.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/canvas_logic.py) saved the entity HTML body but (1) did not call `_extract_canvas_file_links()` to discover inline PDF/file links embedded in the description HTML, and (2) did not queue any discovered attachments for async download. Because the dispatch marked the entity in `module_handled_ids`, the catch-all `_fetch_and_save_assignments` (which does handle both) skipped it entirely.
+    - **Fix (Assignment dispatch)**: Added inline-link extraction from the description HTML, DB manifest recording of the parent HTML file, and async download task queuing for all discovered attachments (API + inline), mirroring the catch-all `_fetch_and_save_assignments` pattern exactly.
+    - **Fix (Quiz dispatch)**: Added the same inline-link extraction, DB recording, and attachment download queuing.
+    - **Fix (Discussion dispatch)**: Added the same inline-link extraction from the message body, DB recording, and attachment download queuing.
+    - **Impact**: Fixes a bug where PDF attachments embedded in Canvas assignment descriptions were silently dropped during initial course download but appeared as "new files" during the first sync.
+
+- **Session 2026-07-06: Sidebar Navigation "Today's files" Renaming & Icon Update**
+    - **Renamed Button**: Renamed the sidebar navigation button from `'Today'` to `"Today's files"` in [auth.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/auth.py).
+    - **Calendar Sync Icon**: Mirrored the Today button SVG icon in [auth.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/auth.py) horizontally.
+
+- **Session 2026-07-06: Today Page Daily Sync Management Folder Display Fix**
+    - **Display Short Path**: Updated [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py) to display the short folder path (using `short_path(folder)`) in the "Courses in your daily sync" list in manage mode, matching the representation in the main Sync list.
 
 - **Session 2026-07-06: Today Page Sync UI Element Leak Fix**
     - **Replaced Early Return with If-Else Control Flow**: Modified `render_today_dashboard` in [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py) to wrap the idle dashboard elements inside an `else` block matching the `if sync_running` condition. This resolves a Streamlit rendering bug where early-return functions fail to trigger DOM-clearing of subsequent elements, ensuring the "Quick Sync now" button, divider, and Today's files are completely hidden from the page during live sync execution.
@@ -807,6 +834,11 @@
 - **Universal Attachment Offloading (`canvas_logic.py`, `sync_ui.py`)**: Modified the architecture of `download_secondary_entity()` to return a 3-tuple `(filepath, synthetic_id, attachments)`. This extracts inner Canvas files (e.g. Assignment attachments) and allows `sync_ui.py` to mint real, positive ID `CanvasFileInfo` objects containing direct URLs, dynamically appending them to the active `all_files` sync iteration queue. This allows attachments to inherently benefit from the main async loop's retries, `.part` atomicity, and cancellation monitoring.
 - **Canvas API Timestamp Drift Tolerance (`sync_manager.py`)**: Solved the False Positive "Updates Available" bug affecting synthetic entities by injecting a 60-second tolerance window into `_is_canvas_newer()` strictly for IDs matching the secondary content negative registry ranges (`id <= -10000000`).
 - **Sync Review Tuple Crash (`sync_ui.py`)**: Resolved a `TypeError: 'CanvasFileInfo' object is not subscriptable` in `_show_analysis_review()` layout logic by correctly referencing `f.size` instead of `f[0].size` after the variables had already been destructured from the initial payload tuples.
+
+## Recent Changes (Session 2026-07-06 - Live Log & Error Translations Refactor)
+- **Rename Secondary Content to Canvas Content (`canvas_logic.py`, `ui_shared.py`)**: Renamed the user-facing phase name `'Secondary Content'` to `'Canvas Content'` so that the live log divider displays `"CANVAS CONTENT"` instead of `"SECONDARY CONTENT"`. Also aligned all relevant internal error names, log statements, debug labels, and error translation keys (`Secondary Content Error` and `Secondary Retry Error` to `Canvas Content Error` and `Canvas Content Retry Error`) to provide a consistent, user-friendly vocabulary of "Canvas Content" in both success logs and error screens.
+- **Friendly Post-Processing Metric Card Names (`post_processing.py`)**: Enhanced the post-processing progress dashboard with precise detailed task maps showing exactly what conversion is running (e.g. from PowerPoint/Word/Excel/ZIP/Video to PDF/MD/TXT/Folders/MP3) in the header (e.g. `"Converting PowerPoint (PPTX/PPT) to PDF"`) and in the metric card Type indicator (e.g. `"PPTX/PPT → PDF"`), removing ambiguity between different Excel conversion pipelines.
+- **Durable Sync Timestamp for Up-to-Date Courses (`sync/analysis.py`)**: Changed `_persist_discovered_entries` to save manifests with `update_last_synced=True` (the default) on zero-change paths (both in Quick Sync and Analyze & Review flows). This guarantees the Sync List overview card updates to show the correct relative check time (e.g., `"Last synced: Just now"`) instead of remaining stuck on `"Never synced"`.
 
 ## Recent Changes (Session 2026-03-19 - Metric Card UI Hotfix)
 - **Inactive Metric Card Styling (`sync_ui.py`)**: Resolved a CSS parsing bug where literal Python f-string brackets (`"{theme.SUCCESS_ALT}"`) were inadvertently passed directly to the `_render_metric_card` function rather than being evaluated. This generated invalid CSS (e.g. `linear-gradient(..., {theme.SUCCESS_ALT}1A)`), causing modern browsers to silently drop the background and border properties for zero-value sync counters. Removed the string wrappers, allowing proper hex resolution and restoring the intended muted/dimmed aesthetic for inactive file type metrics.

@@ -1,4 +1,17 @@
 ## Latest Updates
+- [x] **Sync History Toolbar Polish & Whitespace Reduction** (2026-07-06):
+    - [x] **Narrows Clear History Column**: Changed columns layout in `sync_ui.py` from `[3, 1]` to `[7, 1]`, shrinking the button container to exactly 50% of its former width (12.5% of total width instead of 25%).
+    - [x] **Expanded Filter Controls Column**: Allowed the left controls column to expand to 87.5% of total width, offering more layout space to prevent long course names in the "By Course" dropdown from being truncated.
+    - [x] **Eliminated Vertical Spacing**: Moved the file actions and history card stylesheet injections out of the middle of the layout markup to the top level, targeted empty style-injecting element containers inside `synchist_box` to collapse them completely via CSS, and applied a negative top margin to `synchist_runs` (adjusted to `-10px` to leave comfortable breathing room below the divider).
+    - [x] **Symmetric Spacing**: Collapsed the container for the `#sync-history-toolbar` marker element using a `:has(#sync-history-toolbar)` CSS rule to eliminate the extra vertical gap above the buttons row, achieving perfect vertical symmetry.
+
+- [x] **Sidebar Navigation "Today's files" Renaming & Icon Update** (2026-07-06):
+    - [x] **Renamed Navigation Button**: Changed the sidebar button label from `'Today'` to `"Today's files"` in `ui/auth.py`.
+    - [x] **Calendar Sync Icon**: Mirrored the Today button SVG icon in `ui/auth.py` horizontally (left-to-right) so the arrow circle moves to the left and the spine to the right.
+
+- [x] **Today Page Daily Sync Management Folder Display Fix** (2026-07-06):
+    - [x] **Display Short Path**: Updated `ui/today_dashboard.py` to display the short folder path (using `short_path(folder)`) in the "Courses in your daily sync" list in manage mode, matching the representation in the main Sync list.
+
 - [x] **Today Page Sync UI Element Leak Fix** (2026-07-06):
     - [x] **If-Else Control Flow**: Wrapped the idle Today dashboard content in an `else` block matching the `if sync_running` condition in `ui/today_dashboard.py`. This replaces the early `return` check which triggered a Streamlit diffing quirk where elements following the returned block were not correctly pruned, successfully hiding the "Quick Sync now" button, divider, and Today's files from the page while the sync is running.
 

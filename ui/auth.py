@@ -390,7 +390,7 @@ div[class*="st-key-nav_btn_"]:not([class*="logout"]) button p::before {{
 
 /* ── Asset bindings (Lucide icon set, standardized across all three modes) ── */
 div.st-key-nav_btn_today button p::before {{
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 18 4 4 4-4'/%3E%3Cpath d='M16 2v4'/%3E%3Cpath d='M18 14v8'/%3E%3Cpath d='M21 11.354V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7.343'/%3E%3Cpath d='M3 10h18'/%3E%3Cpath d='M8 2v4'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(24, 0) scale(-1, 1)'%3E%3Cpath d='M11 10v4h4'/%3E%3Cpath d='m11 14 1.535-1.605a5 5 0 0 1 8 1.5'/%3E%3Cpath d='M16 2v4'/%3E%3Cpath d='m21 18-1.535 1.605a5 5 0 0 1-8-1.5'/%3E%3Cpath d='M21 22v-4h-4'/%3E%3Cpath d='M21 8.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4.3'/%3E%3Cpath d='M3 10h4'/%3E%3Cpath d='M8 2v4'/%3E%3C/g%3E%3C/svg%3E");
 }}
 div.st-key-nav_btn_download button p::before {{
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V3'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
@@ -1724,7 +1724,7 @@ def _render_authenticated_nav_top():
     # `disabled=_locked` blocks the click in the browser; the extra `not _locked`
     # guard is defense-in-depth so a click queued in the instant before the run
     # began can never fire cleanup_*_state() and abandon the in-flight operation.
-    if st.button('Today', use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
+    if st.button("Today's files", use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
         if mode != 'today' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
