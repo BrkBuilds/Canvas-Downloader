@@ -186,7 +186,7 @@ class PowerPointToPDF:
             return None
 
         import threading as _th
-        from ui_helpers import office_safe_path
+        from shared.helpers import office_safe_path
 
         with office_safe_path(pptx_path, dst=pdf_path) as (safe_src, safe_pdf, true_pdf):
             abs_pptx = str(safe_src.resolve().absolute())
@@ -297,7 +297,7 @@ def _log_conversion_error(error_log_path: Path | None, filename: str, message: s
     error_log_path = Path(error_log_path)
     error_file = error_log_path / "download_errors.txt"
 
-    from ui_helpers import _err_log_lock
+    from shared.helpers import _err_log_lock
     try:
         error_log_path.mkdir(parents=True, exist_ok=True)
         with _err_log_lock:

@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass
 from html import escape as _html_escape
 
-import theme
+from shared import theme
 
 # ═══════════════════════════════════════════════
 # SVG Icon Constants (inline, no emoji)

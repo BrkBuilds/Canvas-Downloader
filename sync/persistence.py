@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import streamlit as st
 from pathlib import Path
-from ui_helpers import load_sync_pairs, atomic_update_sync_pairs
+from shared.helpers import load_sync_pairs, atomic_update_sync_pairs
 
 
 # M-10: Roots that should never be used as a sync folder.

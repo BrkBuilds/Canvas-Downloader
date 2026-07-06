@@ -67,7 +67,7 @@ def _log_engine_diagnostics() -> None:
     ctranslate2 import that faster-whisper relies on).
     """
     try:
-        from canvas_debug import get_active_debug_file, log_debug
+        from core.canvas_debug import get_active_debug_file, log_debug
         diag = pmodels.engine_diagnostics()
         lines = ["=== Panopto transcription engine diagnostics ==="]
         for k, v in diag.items():
@@ -299,7 +299,7 @@ def run_panopto_batch(
     Returns a summary dict:
         {found, downloaded, transcribed, skipped, failed, courses}.
     """
-    from canvas_logic import DownloadError
+    from core.canvas_logic import DownloadError
 
     progress = progress or _noop
     is_cancelled = is_cancelled or (lambda: False)
@@ -980,7 +980,7 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
     the main thread. Returns a :class:`_DLResult` the orchestrator turns into
     produced/downloaded events and summary updates.
     """
-    from canvas_logic import DownloadError
+    from core.canvas_logic import DownloadError
 
     v = t.video
     res = _DLResult(task=t)

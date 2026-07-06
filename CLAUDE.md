@@ -21,6 +21,10 @@ ui/
 core/
   state_registry.py         # Single source of truth for session state keys & defaults
   cancellation.py           # Global cancel flags + polling logic
+  canvas_logic.py           # Canvas API wrapper, sanitization, async download engine
+  sync_manager.py           # SQLite manifest engine (Levenshtein collision resolution)
+  preset_manager.py         # Preset persistence engine
+  canvas_debug.py           # Debug logging helpers
 engine/
   progress_dashboard.py     # Shared terminal log + visual dashboard UI
   post_processing_bridge.py # Unified post-processing init (sync + download)
@@ -34,13 +38,20 @@ styles/
   global.css                # Static structural CSS
   preset_dialogs.css        # Preset/hub dialog CSS
   __init__.py               # inject_css() via st.html() (no caching to allow dev hot-reloads)
-canvas_logic.py             # Canvas API wrapper, sanitization, async download engine
-sync_manager.py             # SQLite manifest engine (Levenshtein collision resolution)
-post_processing.py          # Unified conversion pipeline runner
-theme.py                    # Centralized design tokens / CSS variables
-ui_helpers.py               # esc(), get_base64_image(), path utils, disk check
-ui_shared.py                # Shared dialogs (error_log_dialog), render_config_summary_badges
-version.py                  # __version__
+converters/                 # File conversion pipeline + per-format converters
+  post_processing.py        # Unified conversion pipeline runner
+  pdf.py / word.py / excel.py                       # Office → PDF/data (Win COM, mac osascript)
+  code.py / md.py / url.py / video.py / archive.py  # code→txt, html→md, url→txt, video→mp3, zip extract
+shared/                     # Cross-cutting UI utilities (import-safe from anywhere)
+  helpers.py                # esc(), get_base64_image(), path utils, disk check (was ui_helpers.py)
+  components.py             # Shared dialogs (error_log_dialog), render_config_summary_badges (was ui_shared.py)
+  theme.py                  # Centralized design tokens / CSS variables
+scripts/                    # Build & maintenance tooling (NOT bundled in the app)
+  build_windows.py          # Windows release build (version_info → PyInstaller → Inno)
+  build_msix.py             # Microsoft Store MSIX packaging
+  patch_streamlit_webkit.py # Strips lookbehind regex for old WebKit (loaded by both specs)
+  verify_architecture.py    # Architecture rule audit
+version.py                  # __version__ (stays at repo root; read by CI + build specs)
 ```
 
 ### Key Data Files (runtime)

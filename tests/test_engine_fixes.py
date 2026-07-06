@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from sync_manager import (
+from core.sync_manager import (
     CanvasFileInfo, SyncManager, make_secondary_id, preferred_disk_name,
     secondary_content_sig,
 )
@@ -235,7 +235,7 @@ def test_phantom_row_pruned_after_replacement_tracked(sm, course_dir):
 # ── H-7: ownership-aware conversion targets ──────────────────────────────────
 
 def test_conversion_target_diverts_from_foreign_pdf(sm, course_dir):
-    from post_processing import _resolve_conversion_target
+    from converters.post_processing import _resolve_conversion_target
     src = _write_local(course_dir, "Week1.pptx", b"pptx")
     sm.record_downloaded_file(10, "Week1.pptx", "Week1.pptx", "", 4)
     # A teacher-provided PDF with the same stem already exists
@@ -246,7 +246,7 @@ def test_conversion_target_diverts_from_foreign_pdf(sm, course_dir):
 
 
 def test_conversion_target_overwrites_own_product(sm, course_dir):
-    from post_processing import _resolve_conversion_target
+    from converters.post_processing import _resolve_conversion_target
     src = _write_local(course_dir, "Deck.pptx", b"pptx")
     sm.record_downloaded_file(11, "Deck.pptx", "Deck.pptx", "", 4)
 
@@ -265,7 +265,7 @@ def test_conversion_target_overwrites_own_product(sm, course_dir):
 
 
 def test_conversion_diverted_name_stays_stable(sm, course_dir):
-    from post_processing import _resolve_conversion_target
+    from converters.post_processing import _resolve_conversion_target
     src = _write_local(course_dir, "X.pptx", b"pptx")
     sm.record_downloaded_file(12, "X.pptx", "X.pptx", "", 4)
     _write_local(course_dir, "X.pdf", b"teacher pdf")

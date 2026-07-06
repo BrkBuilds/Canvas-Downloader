@@ -15,28 +15,14 @@ _APP_VERSION = _ver_mod.__version__
 
 datas = [
     ('app.py', '.'),
-    ('canvas_logic.py', '.'),
-    ('canvas_debug.py', '.'),
-    ('sync_manager.py', '.'),
     ('sync_ui.py', '.'),
-    ('ui_helpers.py', '.'),
-    ('ui_shared.py', '.'),
-    ('preset_manager.py', '.'),
-    ('code_converter.py', '.'),
-    ('md_converter.py', '.'),
-    ('pdf_converter.py', '.'),
-    ('word_converter.py', '.'),
-    ('excel_converter.py', '.'),
-    ('video_converter.py', '.'),
-    ('archive_extractor.py', '.'),
-    ('post_processing.py', '.'),
-    ('url_compiler.py', '.'),
     ('version.py', '.'),
-    ('theme.py', '.'),
     ('assets', 'assets'),
     ('.streamlit', '.streamlit'),
     ('core', 'core'),
+    ('converters', 'converters'),
     ('engine', 'engine'),
+    ('shared', 'shared'),
     ('sync', 'sync'),
     ('panopto', 'panopto'),   # Panopto recording downloader (premium feature)
     ('ui', 'ui'),
@@ -78,7 +64,7 @@ if _tn_bin and os.path.isfile(_tn_bin):
 # lookbehind assertions from the bundled JS BEFORE collecting them.
 _patch_spec = _ilu.spec_from_file_location(
     "patch_streamlit_webkit",
-    os.path.join(os.path.dirname(os.path.abspath(SPEC)), "patch_streamlit_webkit.py"),
+    os.path.join(os.path.dirname(os.path.abspath(SPEC)), "scripts", "patch_streamlit_webkit.py"),
 )
 _patch_mod = _ilu.module_from_spec(_patch_spec)
 _patch_spec.loader.exec_module(_patch_mod)

@@ -182,7 +182,7 @@ class ExcelToPDF:
             return None, "Excel COM application could not be initialized."
 
         import threading as _th
-        from ui_helpers import office_safe_path
+        from shared.helpers import office_safe_path
         from engine.office_pid import kill_office_pid
 
         _COM_TIMEOUT_SECONDS = 180
@@ -433,7 +433,7 @@ class ExcelToData:
         except ImportError:
             return None, "openpyxl is not installed (run: pip install openpyxl)"
 
-        from ui_helpers import office_safe_path
+        from shared.helpers import office_safe_path
 
         src = Path(excel_path).resolve()
         dst = src.with_name(src.stem + "_Data.txt")

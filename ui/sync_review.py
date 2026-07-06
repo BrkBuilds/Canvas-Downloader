@@ -17,9 +17,9 @@ from urllib.parse import unquote_plus
 
 import streamlit as st
 
-import theme
-from ui_shared import SVG_FOLDER_YELLOW
-from ui_helpers import (
+from shared import theme
+from shared.components import SVG_FOLDER_YELLOW
+from shared.helpers import (
     render_sync_wizard,
     friendly_course_name,
     format_file_size,
@@ -42,7 +42,7 @@ def _checkbox_default(key: str) -> bool:
         return False
     return True
 from core.state_registry import cleanup_sync_state
-from ui_shared import HELP_ICONS
+from shared.components import HELP_ICONS
 
 
 
@@ -254,7 +254,7 @@ def _render_transcription_setup_notice(results):
         f"{'are' if total_tx != 1 else 'is'} set to produce Transcript or Subtitle files."
     )
 
-    from ui_shared import render_transcription_setup_notice
+    from shared.components import render_transcription_setup_notice
     render_transcription_setup_notice(
         True,
         key="sync_review_setup_tx",
@@ -270,7 +270,7 @@ def show_analysis_review(on_confirm_sync):
     # the "Set up transcription" notice button (and Section 4's) opens it by
     # setting st.session_state['_pan_dialog_open'] = True + an app-scoped rerun.
 
-    from ui_shared import render_help_card
+    from shared.components import render_help_card
 
     st.html("""
         <style>
@@ -322,7 +322,7 @@ def show_analysis_review(on_confirm_sync):
 
     st.markdown("<div style='color: rgba(255, 255, 255, 0.6); font-size: 0.95rem; margin-top: -15px; margin-bottom: 25px;'>Select the files you want to sync, and ignore the ones you don't need.</div>", unsafe_allow_html=True)
 
-    from sync_manager import SyncFileInfo, SyncManager
+    from core.sync_manager import SyncFileInfo, SyncManager
 
     def handle_ignore(pair_idx, canvas_file_id, source_list_name, item):
         pair_data = st.session_state['sync_analysis_results'][pair_idx]
@@ -2156,7 +2156,7 @@ def inject_dynamic_sync_review_css():
     Must be called at the top of the orchestrator to prevent DOM flashing.
     """
     import streamlit as st
-    import theme
+    from shared import theme
     all_results = st.session_state.get('sync_analysis_results', [])
     if not all_results:
         return

@@ -14,7 +14,7 @@ import os
 
 import pytest
 
-from sync_manager import SyncHistoryManager, SyncManager
+from core.sync_manager import SyncHistoryManager, SyncManager
 
 
 @pytest.fixture()
