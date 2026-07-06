@@ -273,12 +273,58 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 except Exception:
                     pass
 
-            _pan_videos = discover_course_videos(
-                cm.api_url, cm.api_key, course_id,
-                include_folder_sessions=True,
-                is_cancelled=is_sync_cancelled,
-                on_event=_pan_scan,
-            )
+            # ── M-11: discovery cache for the FAST sync modes ──
+            # Discovery is the slowest part of analysis (per-recording LTI
+            # handshakes). Quick Sync and the Today daily auto-sync reuse a
+            # scan younger than 24h stored in this folder's DB; the deliberate
+            # "Analyze, Review & Sync" flow ALWAYS re-scans so the review is
+            # 100% fresh. Every fresh scan (any mode) refreshes the cache.
+            from panopto.discovery import PanoptoVideo as _PanVideo
+            _PAN_CACHE_KEY = 'panopto_discovery_cache'
+            _PAN_CACHE_TTL_SEC = 24 * 3600
+            _is_fast_mode = bool(st.session_state.get('sync_quick_mode')
+                                 or st.session_state.get('today_sync_active'))
+            _pan_videos = None
+            if _is_fast_mode:
+                try:
+                    _raw_cache = sync_mgr._load_metadata(_PAN_CACHE_KEY)
+                    if _raw_cache:
+                        _cache = json.loads(_raw_cache)
+                        from datetime import datetime as _dt, timezone as _tz
+                        _ts = _dt.fromisoformat(_cache.get('ts', ''))
+                        _age = (_dt.now(_tz.utc) - _ts).total_seconds()
+                        if 0 <= _age < _PAN_CACHE_TTL_SEC:
+                            _pan_videos = [_PanVideo(**v) for v in _cache.get('videos', [])]
+                            progress_hook(0, 1, "Using recent Panopto scan…")
+                            if debug_file:
+                                log_debug(
+                                    f"Panopto: reusing cached discovery "
+                                    f"({len(_pan_videos)} recording(s), {_age / 3600:.1f}h old)",
+                                    debug_file,
+                                )
+                except Exception as _cache_err:
+                    logger.debug(f"Panopto discovery cache unusable: {_cache_err}")
+                    _pan_videos = None
+
+            if _pan_videos is None:
+                _pan_videos = discover_course_videos(
+                    cm.api_url, cm.api_key, course_id,
+                    include_folder_sessions=True,
+                    is_cancelled=is_sync_cancelled,
+                    on_event=_pan_scan,
+                )
+                # Refresh the cache (best-effort; skip if the scan was cancelled
+                # mid-way - a truncated list must never masquerade as complete).
+                if not is_sync_cancelled():
+                    try:
+                        from dataclasses import asdict as _asdict
+                        from datetime import datetime as _dt, timezone as _tz
+                        sync_mgr._save_metadata(_PAN_CACHE_KEY, json.dumps({
+                            'ts': _dt.now(_tz.utc).isoformat(),
+                            'videos': [_asdict(v) for v in _pan_videos],
+                        }))
+                    except Exception as _cache_err:
+                        logger.debug(f"Panopto discovery cache write failed: {_cache_err}")
 
             _model_id = _pan.get('model', 'small')
             _model_ready = bool(
@@ -358,15 +404,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
     if not _today_minimal:
         render_sync_wizard(st, 2)
 
-    # Check if only syncing a single pair
-    # L-2: Rename filtered subset to pairs_to_analyze so subsequent code
-    # clearly operates on the (potentially single-item) working list,
-    # not the full sync_pairs session state.
-    single_idx = st.session_state.get('sync_single_pair_idx')
-    if single_idx is not None:
-        pairs_to_analyze = [sync_pairs[single_idx]]
-    else:
-        pairs_to_analyze = sync_pairs
+    # (The old sync_single_pair_idx single-pair filter was dead code - nothing
+    # in the app ever set the key - and has been removed.)
+    pairs_to_analyze = sync_pairs
 
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
     all_results = []
@@ -387,13 +427,14 @@ def run_analysis(sync_pairs, main_placeholder=None):
             if not local_folder or not Path(local_folder).exists():
                 continue  # downstream loop handles missing folder
             bound_id = SyncManager.peek_bound_course_id(local_folder)
-            if bound_id == 'unreadable':
+            from sync_manager import DB_UNREADABLE
+            if bound_id == DB_UNREADABLE:
                 # M-6: DB exists but couldn't be read - treat as a mismatch so
                 # the user is warned rather than silently syncing against a corrupt DB.
                 mismatched.append({
                     'pair_idx': pair_idx,
                     'pair': pair,
-                    'bound_course_id': 'unreadable',
+                    'bound_course_id': DB_UNREADABLE,
                     'bound_course_name': 'an unreadable database',
                     'requested_course_id': requested_id,
                     'requested_course_name': pair.get('course_name', f"course #{requested_id}"),
@@ -531,7 +572,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     sync_progress_hook,
                 )
 
-            _fut = _analysis_pool.submit(asyncio.run, _run_course_analysis())
+            # Submit a CALLABLE that builds + runs the coroutine INSIDE the
+            # worker: constructing the coroutine here and cancelling the future
+            # before it started used to leave a never-awaited coroutine behind
+            # (RuntimeWarning + skipped cleanup).
+            _fut = _analysis_pool.submit(
+                lambda _coro_fn=_run_course_analysis: asyncio.run(_coro_fn())
+            )
             # Poll with a short timeout so the cancel flag is honoured even
             # while the background thread is blocked on Canvas API calls.
             # The heartbeat is a script-thread st.* yield point: Streamlit
@@ -546,7 +593,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 try:
                     _analysis_result = _fut.result(timeout=0.3)
                     break
-                except __import__('concurrent.futures', fromlist=['TimeoutError']).TimeoutError:
+                except _cf.TimeoutError:
                     _analysis_heartbeat.markdown("")
                     continue
             _analysis_heartbeat.empty()
@@ -593,8 +640,15 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
     # Clean up the UI when all courses are done analyzing
     analysis_ui_placeholder.empty()
-    
+
     st.session_state['sync_analysis_results'] = all_results
+
+    # Arm the completion screen's "some files were ignored" note (it reads
+    # this flag; previously nothing ever set it, so the notice was dead code).
+    st.session_state['sync_has_ignored_files'] = any(
+        isinstance(_r, dict) and bool(getattr(_r.get('result'), 'ignored_files', None))
+        for _r in all_results
+    )
 
     # Reset locally-deleted + Panopto checkbox state so they always start at their
     # defaults in the review (locdel/restore deselected, new-panopto reselected).
@@ -667,29 +721,12 @@ def run_analysis(sync_pairs, main_placeholder=None):
             total_filter_skipped += (len(result.new_files) - len(actionable_new))
             total_filter_skipped += (len(result.updated_clean_files) - len(actionable_updated_clean))
 
-            # Files a non-'all' filter drops are intentional skips, not pending
-            # work - but left alone they reappear as "new" on EVERY future sync.
-            # Register the dropped NEW files as ignored (mirroring the
-            # max-file-size gate) so they land in the Ignored bucket and stop
-            # resurfacing; the user can restore them from the Sync Hub anytime.
-            # Only brand-new (undownloaded) files are ignored - clean-update
-            # files already exist on disk and merely have a pending update.
-            if current_filter != 'all':
-                _kept_ids = {id(x) for x in actionable_new}
-                _dropped_new = [
-                    f for f in result.new_files
-                    if id(f) not in _kept_ids and getattr(f, 'id', 0)
-                ]
-                if _dropped_new:
-                    try:
-                        res_data['sync_manager'].bulk_ignore_files([
-                            (f.id,
-                             getattr(f, 'filename', '') or getattr(f, 'display_name', ''),
-                             getattr(f, 'size', 0) or 0)
-                            for f in _dropped_new
-                        ])
-                    except Exception:
-                        pass  # Non-fatal: never block a sync for a DB write
+            # M-12: files a non-'all' filter drops are SKIPPED, not ignored.
+            # They were previously swept into the permanent Ignored bucket as a
+            # side effect of the filter - surprising, invisible, and sticky
+            # (the flag survived even a later successful download). Skipping is
+            # cheap: the same filter drops them again next run, and the
+            # completion notice reports the count so nothing happens silently.
 
             # Debug: log Quick Sync auto-selection per course
             if st.session_state.get('debug_mode'):

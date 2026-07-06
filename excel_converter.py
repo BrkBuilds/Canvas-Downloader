@@ -156,12 +156,14 @@ class ExcelToPDF:
             return self._convert_applescript(s_src, s_dst, "Excel", script)
 
     # ── conversion ─────────────────────────────────────────────────
-    def convert(self, excel_path: str | Path) -> tuple[str | None, str]:
+    def convert(self, excel_path: str | Path, dst: str | Path | None = None) -> tuple[str | None, str]:
         """Convert *excel_path* to PDF.  Returns ``(pdf_path, "")`` on
         success or ``(None, error_string)`` on failure."""
 
         src = Path(excel_path).resolve()
-        dst = src.with_suffix(".pdf")
+        from pathlib import Path as _P
+        # H-7: honour an explicit target (ownership-resolved by the caller).
+        dst = _P(dst) if dst is not None else src.with_suffix(".pdf")
 
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
@@ -185,7 +187,7 @@ class ExcelToPDF:
 
         _COM_TIMEOUT_SECONDS = 180
 
-        with office_safe_path(src) as (safe_src, safe_pdf, true_pdf):
+        with office_safe_path(src, dst=dst) as (safe_src, safe_pdf, true_pdf):
             abs_excel = str(safe_src)
             abs_pdf = str(safe_pdf)
             wb = None

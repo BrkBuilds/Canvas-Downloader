@@ -157,9 +157,11 @@ class PowerPointToPDF:
             '''
             return self._convert_applescript(s_src, s_dst, "PowerPoint", script)
 
-    def convert(self, pptx_path: str | Path) -> str | None:
+    def convert(self, pptx_path: str | Path, dst: str | Path | None = None) -> str | None:
         pptx_path = Path(pptx_path)
-        pdf_path = pptx_path.with_suffix('.pdf')
+        # H-7: honour an explicit target (ownership-resolved by the caller);
+        # default keeps the historical same-stem behavior.
+        pdf_path = Path(dst) if dst is not None else pptx_path.with_suffix('.pdf')
 
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
@@ -186,7 +188,7 @@ class PowerPointToPDF:
         import threading as _th
         from ui_helpers import office_safe_path
 
-        with office_safe_path(pptx_path) as (safe_src, safe_pdf, true_pdf):
+        with office_safe_path(pptx_path, dst=pdf_path) as (safe_src, safe_pdf, true_pdf):
             abs_pptx = str(safe_src.resolve().absolute())
             abs_pdf = str(safe_pdf.resolve().absolute())
 
