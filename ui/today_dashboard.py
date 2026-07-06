@@ -28,7 +28,7 @@ import streamlit as st
 
 import theme
 from styles import inject_css
-from ui_helpers import esc, friendly_course_name, get_base64_image, get_config_dir
+from ui_helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path
 from ui_shared import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
 
 
@@ -573,7 +573,7 @@ def _import_courses_dialog():
         f"""
         <div style="display:flex; align-items:center; gap:12px; margin-top:-70px; margin-bottom:0;">
             <img src="data:image/png;base64,{b64_hub}" style="width:36px; height:36px;" />
-            <div style="font-size:1.75rem; font-weight:600; color:white;">Add to your daily sync</div>
+            <div style="font-size:1.75rem; font-weight:600; color:white;">Manage daily sync courses</div>
         </div>
         <p style="color:#aaa; font-size:0.9rem; margin:6px 0 12px 0;">
             Tick the saved pairs and groups you want kept up to date automatically.
@@ -1261,7 +1261,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                                     f"<div class='today-pair-title'>Course:&nbsp;&nbsp;"
                                     f"{esc(name)}</div>"
                                     f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
-                                    f"{esc(folder)}</div>"  # audit-ignore: folder is a local path
+                                    f"{esc(short_path(folder))}</div>"  # audit-ignore: folder is a local path
                                     f"</div>",
                                     unsafe_allow_html=True,
                                 )
@@ -1287,12 +1287,13 @@ def render_today_dashboard(fetch_courses_fn=None):
 
             groups = _todays_groups()
             if not groups:
-                st.markdown(
-                    f"<div class='today-empty'>"
-                    f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
-                    f"<div>No new files today - you're all caught up.</div></div>",
-                    unsafe_allow_html=True,
-                )
+                with st.container(border=True, key="today_files_empty_container"):
+                    st.markdown(
+                        f"<div class='today-empty-inner'>"
+                        f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
+                        f"<div>No new files today - you're all caught up.</div></div>",
+                        unsafe_allow_html=True,
+                    )
             else:
                 _render_today_files(groups)
 

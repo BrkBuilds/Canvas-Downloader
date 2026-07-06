@@ -35,13 +35,14 @@ logger = logging.getLogger(__name__)
 
 def _persist_discovered_entries(all_results) -> None:
     """Durably record auto-discovered / healed manifest rows for every analyzed
-    pair WITHOUT stamping ``last_synced``.
+    pair and stamp ``last_synced`` to the current time.
 
     Used on the zero-change fast paths (nothing to download) so a fully
     up-to-date folder - especially a student-built one that was just recognized
     via content/size matching - builds its sync "memory" once, instead of
     re-walking and re-hashing the entire tree on every future sync. Passing
-    ``update_last_synced=False`` ensures we never imply a sync actually ran.
+    ``update_last_synced=True`` (the default) ensures the sync overview list
+    correctly shows when the course was last checked/synced.
     """
     for _res in all_results or []:
         if not isinstance(_res, dict):
@@ -51,7 +52,7 @@ def _persist_discovered_entries(all_results) -> None:
         if _sm is None or _mf is None:
             continue
         try:
-            _sm.save_manifest(_mf, update_last_synced=False)
+            _sm.save_manifest(_mf, update_last_synced=True)
         except Exception as _persist_err:
             logger.warning(f"Failed to persist discovered manifest entries: {_persist_err}")
 
