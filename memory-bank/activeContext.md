@@ -12,6 +12,26 @@
 
 ## Recent Activity
 
+- **Session 2026-07-07: Today Page Layout Simplifications & Button Border Fixes**
+    - **Header Layout Restructuring**: Placed the auto-sync toggle card on the same row as the main title `Auto-download today's new files` (using `st.columns([0.46, 0.54])`). Removed the "Daily auto-sync" text labels and description from the card entirely.
+    - **Header Row Stretch**: Wrapped the header row in `today_header_row` and used flex columns auto-stretching in CSS (`flex: 1 1 auto`) to make the card stretch to fill the remaining space on the right, starting exactly where the title ends and closing the gap.
+    - **Inline Status Badges**: Added modern status pills inside the toggle card container next to the toggle switch, displaying **Active** (with green Lucide check-circle SVG) or **Not Activated** (with grey Lucide x-circle SVG) depending on toggle state.
+    - **Toggle Card Sizing & Centering**: Styled the toggle card with `width: 100%` and centered content inside. Targeted `stVerticalBlock` inside columns to force vertical alignment centering of the checkbox toggle and the status badge.
+    - **Help Icon Relocation**: Moved the Circular `?` Help card button down to sit inline to the right of the subtitle text, collapsing columns (`today_subtitle_help_row`) so they sit snugly next to each other. Styled the button to a compact `22px` height with a tight `6px` gap and relative positioning `top: 10px` to nudge it down.
+    - **50/50 Split Action Buttons**: Overrode key names in `ui/today_dashboard.py` to `open_folder_today_` and `open_all_today_` to allow them to inherit default action-button styles (including borders) and support yellow/blue hover outlines. Adjusted column widths to a 50/50 split and vertical alignment parameters.
+    - **Specificity Restructure**: Fixed a button styling override bug in `sync_history_cards.css` by scoping the header click target rule to `shist_btn_` buttons specifically, preventing it from wiping out the borders and custom heights of inner action buttons.
+    - **Button Padding Symmetry & Margins**: Applied `-8px` top margin (adding padding above) and `17px` bottom margin (removing half below) to the action button block. Handled the `44px` (left) vs `18px` (right) padding asymmetry in the course expander by setting `margin-left: -26px; width: calc(100% + 26px)` to equalize spacing to borders perfectly on both sides.
+
+- **Session 2026-07-06: Course Selection Warning Spacing & Dismissal Tweak**
+    - **Notice Spacing Adjustment**: Tuned the margin parameter of `render_amber_notice` for the course selection warning in [course_selector.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/course_selector.py) to pull it up closer to the course list container divider.
+    - **Dynamic Notice Dismissal**: Integrated warning visibility state tracking via `st.session_state['course_selection_warning_shown']`. When the `_course_list_section` fragment updates the selection count to >0, the warning state is immediately set to `False` and a full page rerun (`st.rerun()`) is triggered, instantly clearing the amber warning notice. Popped the visibility key in `cleanup_download_state()` in [state_registry.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/core/state_registry.py).
+
+- **Session 2026-07-06: Canvas Content, AI Tools & Panopto Toggles CSS Grid Synchronization**
+    - **CSS Grid Height Synchronization**: Replaced Python columns with flat list rendering loops inside [download_settings.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/download_settings.py) and applied CSS Grid rules with `grid-auto-rows: 1fr` and `height: 100% !important` to Canvas Content (`secondary_cards_grid`), AI Optimization Tools (`conversion_cards_grid`), and Panopto Options (`panopto_outputs_grid`) grids.
+    - **Direct Container Targeting**: Scoped the grid styles directly onto their respective keyed containers (`secondary_cards_grid`, `conversion_cards_grid`, `panopto_outputs_grid`) rather than nested descendant wrappers, matching Streamlit 1.51+ where the containers act as vertical layout roots.
+    - **Visible Tooltip Tree Height Stretching**: Targeted the visible tooltip child elements (`div:first-child`, `stTooltipIcon`, and `stTooltipHoverTarget`) specifically under `stButton` for height-stretching, avoiding the hidden baseline metric buttons rendered by Streamlit and solving the PowerPoint/Word/Excel height mismatches and layout overlaps.
+    - **Responsive Uniform height Layouts**: Ensures every button card within each grid stretches to match the height of the tallest card in that grid under any zoom level or screen size, while keeping the original positions and layouts. Added media queries to wrap cards to 2 columns or 1 column dynamically while maintaining equal heights.
+
 - **Session 2026-07-06: Sync History Course Filtering State Overhaul**
     - **Dropdown Reset & Placeholder**: Configured `st.selectbox` for course selection to start in an unselected state (`index=None`) with a placeholder `"Select Course..."`.
     - **Informative Filtering Notice**: Added an early check and a `render_info_notice` instruction if no course is selected in the "By Course" view, preventing display of the unfiltered history list when unselected.

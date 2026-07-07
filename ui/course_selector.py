@@ -1105,6 +1105,11 @@ def _course_list_section(
     sel_count = len(st.session_state.get('selected_course_ids', []))
     st.html(f"<div id='cdp_selected_courses_count' data-count='{sel_count}' style='display:none;'></div>")
 
+    # Clear the warning notice immediately when a course is selected.
+    if sel_count > 0 and st.session_state.get('course_selection_warning_shown', False):
+        st.session_state['course_selection_warning_shown'] = False
+        st.rerun()
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # Download Mode - Step 1: Select Courses
@@ -1521,9 +1526,10 @@ def render_course_selector(fetch_courses_fn):
 
     if quick_clicked or advanced_clicked:
         if not st.session_state['selected_course_ids']:
+            st.session_state['course_selection_warning_shown'] = True
             with error_container.container():
                 from ui.amber_notice import render_amber_notice
-                render_amber_notice('Please select at least one course.', margin="-16px 0 16px 0")
+                render_amber_notice('Please select at least one course.', margin="-45px 0 20px 0")
         else:
             if quick_clicked:
                 # Always start Quick Download with no preset selected.
