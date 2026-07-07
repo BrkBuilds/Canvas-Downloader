@@ -28,7 +28,7 @@ import streamlit as st
 
 from shared import theme
 from styles import inject_css
-from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path
+from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file
 from shared.components import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
 
 
@@ -176,6 +176,18 @@ def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> 
     """Button-icon + Quick-Sync brand styling (depends on base64 assets, so inline)."""
     b64_add = get_base64_image("assets/icon_add.png")
     b64_quick = get_base64_image("assets/icon_sync_quick.png")
+    b64_folder = get_base64_image("assets/Icon_Folder.svg")
+    
+    import base64
+    open_all_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" '
+        'fill="none" stroke="black" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>'
+        '<path d="m21 3-9 9"/>'
+        '<path d="M15 3h6v6"/>'
+        '</svg>'
+    )
+    b64_open_all = base64.b64encode(open_all_svg.encode('utf-8')).decode('utf-8')
     
     dimming_css = ""
     if not auto_sync_enabled or sync_running:
@@ -233,6 +245,135 @@ def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> 
     div.st-key-today_sync_now_btn button:disabled p::before {{
         filter: grayscale(100%) opacity(0.4) !important;
     }}
+    
+    /* Today Action Buttons (Open Folder, Open All Files) resting state */
+    div[class*="st-key-open_folder_today_"] button,
+    div[class*="st-key-open_all_today_"] button {{
+        border-radius: 10px !important;
+        background-color: rgba(255, 255, 255, 0.07) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+        color: rgba(255, 255, 255, 0.88) !important;
+        transition: all 0.2s ease !important;
+        padding: 0 12px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+
+    /* Space the button row above the files list: -5px less spacing above, +20px spacing below, and symmetrical margins */
+    div[class*="st-key-shist_body_today_"] [data-testid="stHorizontalBlock"] {{
+        margin-top: -8px !important;
+        margin-bottom: 15px !important;
+        margin-left: 0px !important;
+        width: calc(100% - 26px) !important;
+        max-width: calc(100% - 26px) !important;
+    }}
+
+    /* Inner wrapper: force vertical centering */
+    div[class*="st-key-open_folder_today_"] button > div,
+    div[class*="st-key-open_all_today_"] button > div,
+    div[class*="st-key-open_folder_today_"] button > div > span,
+    div[class*="st-key-open_all_today_"] button > div > span,
+    div[class*="st-key-open_folder_today_"] button div[data-testid="stMarkdownContainer"],
+    div[class*="st-key-open_all_today_"] button div[data-testid="stMarkdownContainer"] {{
+        display: flex !important;
+        align-items: center !important;
+        align-self: center !important;
+        width: 100% !important;
+    }}
+
+    /* p is the icon+text row - inline-flex so ::before sits beside text */
+    div[class*="st-key-open_folder_today_"] button p,
+    div[class*="st-key-open_all_today_"] button p {{
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 9px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        width: 100% !important;
+    }}
+
+    /* Base icon: inline-block ::before */
+    div[class*="st-key-open_folder_today_"] button p::before,
+    div[class*="st-key-open_all_today_"] button p::before {{
+        content: '' !important;
+        display: inline-block !important;
+        width: 20px !important;
+        height: 20px !important;
+        flex-shrink: 0 !important;
+        -webkit-mask-repeat: no-repeat !important;
+        -webkit-mask-position: center !important;
+        transition: background-color 0.2s ease !important;
+    }}
+
+    /* Mask images and sizes */
+    div[class*="st-key-open_folder_today_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{b64_folder}') !important;
+        -webkit-mask-size: 18px !important;
+        background-color: rgba(255, 255, 255, 0.88) !important;
+    }}
+    div[class*="st-key-open_all_today_"] button p::before {{
+        -webkit-mask-image: url('data:image/svg+xml;base64,{b64_open_all}') !important;
+        -webkit-mask-size: 18px !important;
+        background-color: rgba(255, 255, 255, 0.88) !important;
+    }}
+
+    /* HOVER STATES */
+    /* Open Folder -> Yellow (#facc15) */
+    div[class*="st-key-open_folder_today_"] button:hover {{
+        border-color: rgba(250, 204, 21, 0.7) !important;
+        background-color: rgba(250, 204, 21, 0.08) !important;
+        color: #ffffff !important;
+    }}
+    div[class*="st-key-open_folder_today_"] button:hover p::before {{
+        background-color: #facc15 !important;
+    }}
+
+    /* Open All Files -> Blue (#93c5fd) */
+    div[class*="st-key-open_all_today_"] button:hover {{
+        border-color: rgba(59, 130, 246, 0.7) !important;
+        background-color: rgba(59, 130, 246, 0.08) !important;
+        color: #ffffff !important;
+    }}
+    div[class*="st-key-open_all_today_"] button:hover p::before {{
+        background-color: #93c5fd !important;
+    }}
+
+    /* Disabled states */
+    div[class*="st-key-open_folder_today_"] button:disabled,
+    div[class*="st-key-open_all_today_"] button:disabled {{
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }}
+
+    /* ── Today-page collapsible header: compact 44px (single-line, no folder) ── */
+    /* Double attribute selector on the run container boosts specificity above the
+       generic shist_run_ 60px rule in sync_history_cards.css. */
+    div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] div[class*="st-key-shist_btn_today_"] button {{
+        height: 44px !important;
+        min-height: 44px !important;
+    }}
+    div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] [data-testid="stElementContainer"]:has(.shist-card) {{
+        height: 44px !important;
+    }}
+    div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] .shist-card {{
+        height: 44px !important;
+    }}
+
+    /* ── Toggle card: zero the column gap Streamlit injects between toggle and badge ── */
+    /* Needs to be inline because Streamlit emotion CSS (loaded after today.css) overrides it */
+    div[class*="st-key-today_toggle_card"] [data-testid="stColumn"] {{
+        padding: 0 !important;
+    }}
+    div[class*="st-key-today_toggle_card"] [data-testid="stColumn"]:first-child {{
+        padding-right: 0 !important;
+    }}
+
+
     {dimming_css}
     </style>""", unsafe_allow_html=True)
 
@@ -359,9 +500,6 @@ def _render_today_files(groups: list[dict]) -> None:
             "<span class='shist-badge' style='color:#34d399;background:rgba(52,211,153,0.1);"
             f"border-color:rgba(52,211,153,0.2);'>{esc(count_label)}</span>"
             "</div>"
-            "<div class='shist-l2'>"
-            f"<span class='shist-mode'>{SVG_FOLDER_YELLOW} {esc(dest)}</span>"  # audit-ignore: static SVG constant
-            "</div>"
             "</div>"
             "</div>"
         )
@@ -373,6 +511,16 @@ def _render_today_files(groups: list[dict]) -> None:
             st.markdown(header_html, unsafe_allow_html=True)
             if is_open:
                 with st.container(border=True, key=f"shist_body_today_{gid}"):
+                    folder_exists = local_folder and Path(local_folder).exists()
+                    col_btn_open, col_btn_all = st.columns(2)
+                    with col_btn_open:
+                        if st.button("Open Folder", key=f"open_folder_today_{gid}", use_container_width=True, disabled=not folder_exists):
+                            open_folder(local_folder)
+                    with col_btn_all:
+                        if st.button("Open All Files", key=f"open_all_today_{gid}", use_container_width=True, disabled=not folder_exists or not files):
+                            for f_info in files:
+                                f_path = Path(local_folder) / (f_info.get("rel") or f_info.get("name") or "")
+                                open_file(str(f_path))
                     render_course_file_breakdown(
                         files, local_folder, key_scope=f"today_{gid}",
                     )
@@ -1093,28 +1241,60 @@ def render_today_dashboard(fetch_courses_fn=None):
         set_auto_sync_enabled(st.session_state.get("today_auto_toggle", False))
 
     # ── Main Layout Centering ────────────────────────────────────────────
-    _, main_col, _ = st.columns([1, 2.4, 1])
+    _, main_col, _ = st.columns([0.4, 3.6, 0.4])
 
     with main_col:
-        # ── Header (title + built-in help button) ───────────────────────────────
-        with st.container(key="today_title_help_row"):
-            _c_title, _c_help = st.columns([1, 10], vertical_alignment="center")
-            with _c_title:
+        # ── Header (title + auto-sync toggle card on the same row) ───────────────────────────────
+        with st.container(key="today_header_row"):
+            col_left, col_right = st.columns([0.46, 0.54], vertical_alignment="center")
+            with col_left:
                 st.markdown(
                     f"<div class='today-title'><span>Auto-download today's new files</span></div>",
                     unsafe_allow_html=True,
                 )
-            with _c_help:
+            with col_right:
+                with st.container(key="today_toggle_card"):
+                    c_toggle, c_status = st.columns([0.08, 0.92], vertical_alignment="center")
+                    with c_toggle:
+                        st.toggle(
+                            "Daily auto-sync",
+                            value=cfg["auto_sync_enabled"],
+                            key="today_auto_toggle",
+                            on_change=_on_toggle,
+                            disabled=sync_running,
+                            label_visibility="collapsed",
+                        )
+                    with c_status:
+                        if cfg["auto_sync_enabled"]:
+                            st.html(
+                                "<div class='today-status-badge active'>"
+                                "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#10b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-circle-check'><circle cx='12' cy='12' r='10'/><path d='m9 12 2 2 4-4'/></svg>"
+                                "<span>Active</span>"
+                                "</div>"
+                            )
+                        else:
+                            st.html(
+                                "<div class='today-status-badge inactive'>"
+                                "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#8A91A6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-circle-x'><circle cx='12' cy='12' r='10'/><path d='m15 9-6 6'/><path d='m9 9 6 6'/></svg>"
+                                "<span>Not Activated</span>"
+                                "</div>"
+                            )
+
+        # Subtitle (title description) + help button
+        with st.container(key="today_subtitle_help_row"):
+            col_sub, col_help = st.columns([0.94, 0.06], vertical_alignment="center")
+            with col_sub:
+                st.markdown(
+                    "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
+                    unsafe_allow_html=True,
+                )
+            with col_help:
                 render_help_card(
                     key_prefix="today_help",
                     title=_TODAY_HELP_TITLE,
                     text_html=_TODAY_HELP_TEXT,
                     mode="button",
                 )
-        st.markdown(
-            "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
-            unsafe_allow_html=True,
-        )
 
         # Help card body (renders below the header when opened).
         render_help_card(
@@ -1123,25 +1303,6 @@ def render_today_dashboard(fetch_courses_fn=None):
             text_html=_TODAY_HELP_TEXT,
             mode="card",
         )
-
-        # ── Daily auto-sync toggle ──────────────────────────────────────────────
-        with st.container(key="today_toggle_card"):
-            st.toggle(
-                "Daily auto-sync",
-                value=cfg["auto_sync_enabled"],
-                key="today_auto_toggle",
-                on_change=_on_toggle,
-                disabled=sync_running,
-                help=(
-                    "When on, the app automatically syncs your selected courses the first "
-                    "time you open it each day (after 4am). New lecture files are waiting "
-                    "for you - no clicks needed."
-                ),
-            )
-            st.markdown(
-                "<div class='today-toggle-desc'>Automatically downloads new files from selected courses every morning.</div>",
-                unsafe_allow_html=True,
-            )
 
         # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
         # A daily/Quick Sync is in flight: surface it as a slim progress card right
@@ -1315,7 +1476,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                 unsafe_allow_html=True,
             )
             runnable = resolve_today_pairs()
-            _qs_btn, _qs_empty = st.columns([0.28, 0.72])
+            _qs_btn, _qs_empty = st.columns([0.19, 0.81])
             with _qs_btn:
                 if st.button("Quick Sync now", type="primary", use_container_width=True,
                              key="today_sync_now_btn", disabled=not runnable or sync_running):

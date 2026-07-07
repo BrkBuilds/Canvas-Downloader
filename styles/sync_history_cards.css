@@ -46,17 +46,17 @@ div[class*="st-key-shist_run_"] [data-testid="stVerticalBlock"] { gap: 0 !import
 /* The full-width click target = the header bar (carries the
    lighter header colour + the ONLY hover state on the card). */
 div[class*="st-key-shist_run_"] [data-testid="stButton"] { margin: 0 !important; }
-div[class*="st-key-shist_run_"] [data-testid="stButton"] > button {
+div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button {
     height: 60px !important; min-height: 60px !important; width: 100% !important;
     background: #21252e !important; border: none !important;
     box-shadow: none !important; padding: 0 !important;
     transition: background 0.15s ease !important;
 }
-div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:hover {
+div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:hover {
     background: #272c37 !important;
 }
-div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:focus,
-div[class*="st-key-shist_run_"] [data-testid="stButton"] > button:active {
+div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:focus,
+div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:active {
     box-shadow: none !important; color: inherit !important;
 }
 /* The rich header painted on top of the button. */

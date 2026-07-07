@@ -275,6 +275,7 @@ def cleanup_download_state() -> None:
     """
     for key in DOWNLOAD_TRANSIENT_KEYS:
         st.session_state.pop(key, None)
+    st.session_state.pop('course_selection_warning_shown', None)
 
     # Nuclear reset: clear threading.Event + session_state cancel flags
     from core.cancellation import reset_download_cancel

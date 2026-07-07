@@ -1425,17 +1425,38 @@ def render_download_settings(fetch_courses_fn):
                 # Button data
                 button_defs = [
                     ('dl_assignments', 'Assignments', 'Includes assignment descriptions and any attached files.', 'icon_assignments.png'),
-                    ('dl_syllabus', 'Syllabus', 'Save the course syllabus page as HTML.', 'icon_syllabus.png'),
                     ('dl_announcements', 'Announcements', 'Save course announcements and any attached files.', 'icon_announcements.png'),
-                    ('dl_discussions', 'Discussions', 'Save discussion threads as HTML.', 'icon_discussions.png'),
                     ('dl_quizzes', 'Quizzes', 'Save quiz questions and answers as HTML.', 'icon_quizzes.png'),
-                    # ('dl_rubrics', 'Rubrics', 'Save rubric criteria to text files.', 'icon_rubrics.png'),  # temporarily disabled - see RUBRICS_ENABLED in canvas_logic.py
+                    ('dl_syllabus', 'Syllabus', 'Save the course syllabus page as HTML.', 'icon_syllabus.png'),
+                    ('dl_discussions', 'Discussions', 'Save discussion threads as HTML.', 'icon_discussions.png'),
                     ('dl_submissions', 'Submissions (Results)', 'Save feedback & grades from your submissions.', 'icon_submissions.png')
                 ]
 
                 css_blocks.append('''
-                div.st-key-secondary_cards_grid [data-testid="stHorizontalBlock"] {
+                div[class*="st-key-secondary_cards_grid"] {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    grid-auto-rows: 1fr !important;
                     gap: 12px !important;
+                }
+                div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"] {
+                    margin-bottom: 0px !important;
+                    width: 100% !important;
+                }
+                div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"],
+                div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"] div[data-testid="stButton"],
+                div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"] button {
+                    height: 100% !important;
+                }
+                @media (max-width: 900px) {
+                    div[class*="st-key-secondary_cards_grid"] {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                }
+                @media (max-width: 600px) {
+                    div[class*="st-key-secondary_cards_grid"] {
+                        grid-template-columns: 1fr !important;
+                    }
                 }
                 /* Nuke Streamlit's center alignment */
                 div[class*="st-key-btn_dl_"] button > div,
@@ -1458,8 +1479,8 @@ def render_download_settings(fetch_courses_fn):
                     display: block !important;
                 }
                 div[class*="st-key-btn_dl_"] button {
-                    height: 58px !important;
-                    min-height: 0px !important;
+                    min-height: 58px !important;
+                    height: auto !important;
                     padding-top: 10px !important;
                     padding-bottom: 10px !important;
                     padding-right: 10px !important;
@@ -1562,17 +1583,8 @@ def render_download_settings(fetch_courses_fn):
                     st.button("Select All", key="btn_dl_secondary_master", on_click=_toggle_secondary_master, use_container_width=True)
 
                     with st.container(key="secondary_cards_grid"):
-                        c1, c2, c3 = st.columns(3)
-                        # 6 items distributed evenly as a clean 3x2 grid (2 per column).
-                        with c1:
-                            for key, title, _, _ in button_defs[:2]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
-                        with c2:
-                            for key, title, _, _ in button_defs[2:4]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
-                        with c3:
-                            for key, title, _, _ in button_defs[4:]:
-                                st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
+                        for key, title, _, _ in button_defs:
+                            st.button(title, key=f"btn_{key}", on_click=_toggle_secondary_sub, args=(key,), use_container_width=True)
 
                     # --- Section 2: Canvas-Native Content Organization ---
                     # Dim the label if no secondary content is active
@@ -1808,14 +1820,11 @@ def render_download_settings(fetch_courses_fn):
                 st.button("Select All", key="btn_convert_master", on_click=_toggle_conv_master, use_container_width=True)
 
                 with st.container(key="conversion_cards_grid"):
-                    cols = st.columns(4)
-                    for idx, (conv_key, conv_title, _, _, conv_req) in enumerate(conv_button_defs):
-                        col = cols[idx % 4]
-                        with col:
-                            if conv_req:
-                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True, help=conv_req)
-                            else:
-                                st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
+                    for conv_key, conv_title, _, _, conv_req in conv_button_defs:
+                        if conv_req:
+                            st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True, help=conv_req)
+                        else:
+                            st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
         with st.container(border=True, key="card_ai_engine"):
             _render_card3_inner()
@@ -1943,7 +1952,34 @@ def render_download_settings(fetch_courses_fn):
                 # ── Dynamic format-toggle CSS (icons + active states + disabled) ──
                 pan_css = []
                 pan_css.append('''
-                div.st-key-panopto_outputs_grid [data-testid="stHorizontalBlock"] { gap: 12px !important; }
+                div[class*="st-key-panopto_outputs_grid"] {
+                    display: grid !important;
+                    grid-template-columns: repeat(4, 1fr) !important;
+                    grid-auto-rows: 1fr !important;
+                    gap: 12px !important;
+                }
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stElementContainer"] {
+                    margin-bottom: 0px !important;
+                    width: 100% !important;
+                }
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stElementContainer"],
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stButton"],
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stButton"] > div:first-child,
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stTooltipIcon"],
+                div[class*="st-key-panopto_outputs_grid"] [data-testid="stTooltipHoverTarget"],
+                div[class*="st-key-panopto_outputs_grid"] button {
+                    height: 100% !important;
+                }
+                @media (max-width: 1100px) {
+                    div[class*="st-key-panopto_outputs_grid"] {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                }
+                @media (max-width: 600px) {
+                    div[class*="st-key-panopto_outputs_grid"] {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
                 div.st-key-btn_pan_master button > div,
                 div.st-key-btn_pan_master button div[data-testid="stMarkdownContainer"],
                 div[class*="st-key-btn_pan_out_"] button > div,
@@ -1959,7 +1995,7 @@ def render_download_settings(fetch_courses_fn):
                     font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; margin-top: -2px !important; line-height: 1.2 !important;
                 }
                 div[class*="st-key-btn_pan_out_"] button {
-                    height: 58px !important; min-height: 0px !important;
+                    min-height: 58px !important; height: auto !important;
                     padding: 10px 10px 10px 50px !important;
                     background-position: 15px center !important; background-size: 24px !important; background-repeat: no-repeat !important;
                     border-radius: 12px !important; display: flex; flex-direction: column;
@@ -2167,16 +2203,14 @@ def render_download_settings(fetch_courses_fn):
                 )
                 st.button("Select All", key="btn_pan_master", on_click=_toggle_pan_master, use_container_width=True)
                 with st.container(key="panopto_outputs_grid"):
-                    _pan_cols = st.columns(4)
-                    for _i, (key, title, _desc, _icon) in enumerate(PANOPTO_OUTPUT_DEFS):
-                        with _pan_cols[_i]:
-                            _disabled = (key in PANOPTO_TRANSCRIPT_KEYS and not ready)
-                            st.button(
-                                title, key=f"btn_{key}", on_click=_toggle_pan_sub,
-                                args=(key,), use_container_width=True, disabled=_disabled,
-                                help=("Install a transcription model to enable this output."
-                                      if _disabled else None),
-                            )
+                    for key, title, _desc, _icon in PANOPTO_OUTPUT_DEFS:
+                        _disabled = (key in PANOPTO_TRANSCRIPT_KEYS and not ready)
+                        st.button(
+                            title, key=f"btn_{key}", on_click=_toggle_pan_sub,
+                            args=(key,), use_container_width=True, disabled=_disabled,
+                            help=("Install a transcription model to enable this output."
+                                  if _disabled else None),
+                        )
 
                 # ── Element 2: choose how to organize ──
                 # Disabled until at least one output is selected (mirrors Canvas

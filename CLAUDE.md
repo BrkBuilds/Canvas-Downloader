@@ -84,6 +84,41 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - **Side-by-side buttons**: Use `st.columns([1,1])` + `use_container_width=True` in Python. Never use CSS `:has()` flex hacks on `stVerticalBlock` - unreliable and leaks specificity.
 - **Streamlit checkbox gap**: Target `[data-testid="stCheckbox"] label` with `display: flex !important; gap: Xpx !important`. The `label > span` is the visual checkbox; `label > div` is the text wrapper. CSS `gap` cannot go negative - use `margin-left: -Xpx` on the text wrapper div for sub-zero tightness. Fix 1-2px vertical misalignment with `position: relative; top: -1px` on the `span`.
 - **Full-Height Clickable Rows**: When checkboxes are in `st.columns(vertical_alignment="center")`, Streamlit injects `margin: 5px 0` creating unclickable dead zones. Kill the margin (`margin: 0 !important`), force `align-items: stretch` on the `stHorizontalBlock`, and apply a `flex: 1` + `display: flex; flex-direction: column` chain all the way down to the `<label>` to make the hit area 100% of the row height.
+- **CSS Grid Height Synchronization for Uniform Cards/Buttons (Critical)**: When creating a grid of cards or buttons (e.g. `secondary_cards_grid` toggles) where titles or descriptions wrap unpredictably under zoom or narrow screens, do NOT use `st.columns` in Python. Instead, render a flat sequence of buttons inside a single `st.container(key="my_grid")` and style it as a CSS Grid in your CSS.
+  - **For Tooltip-less Grids**: Use direct child selectors (`>`) to keep sizing clean and full-width:
+    ```css
+    div[class*="st-key-my_grid"] {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-auto-rows: 1fr !important;
+        gap: 12px !important;
+    }
+    div[class*="st-key-my_grid"] > div[data-testid="stElementContainer"] {
+        margin-bottom: 0px !important;
+        width: 100% !important;
+    }
+    div[class*="st-key-my_grid"] > div[data-testid="stElementContainer"],
+    div[class*="st-key-my_grid"] > div[data-testid="stElementContainer"] div[data-testid="stButton"],
+    div[class*="st-key-my_grid"] > div[data-testid="stElementContainer"] button {
+        height: 100% !important;
+    }
+    ```
+  - **For Tooltip-enabled Grids (`help="..."`)**: Streamlit renders a hidden measurement baseline button as a sibling of the visible one inside `stButton`. To stretch only the visible tooltip wrapper tree (avoiding overlaps and spacing leaks), target the first-child wrapper, icon, and hover anchor specifically:
+    ```css
+    div[class*="st-key-my_grid"] [data-testid="stElementContainer"] {
+        margin-bottom: 0px !important;
+        width: 100% !important;
+    }
+    div[class*="st-key-my_grid"] [data-testid="stElementContainer"],
+    div[class*="st-key-my_grid"] [data-testid="stButton"],
+    div[class*="st-key-my_grid"] [data-testid="stButton"] > div:first-child,
+    div[class*="st-key-my_grid"] [data-testid="stTooltipIcon"],
+    div[class*="st-key-my_grid"] [data-testid="stTooltipHoverTarget"],
+    div[class*="st-key-my_grid"] button {
+        height: 100% !important;
+    }
+    ```
+  This forces all grid items to stretch to the height of the tallest card dynamically, preventing staggered layouts. Note that in Streamlit 1.51+, the keyed container itself (`div[class*="st-key-my_grid"]`) acts as the grid layout root, so target it directly rather than looking for a nested `stVerticalBlock` descendant.
 
 ### Dialogs (`@st.dialog`)
 - No nested dialogs - Streamlit crashes. Flatten to single-layer modals.
