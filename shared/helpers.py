@@ -31,11 +31,16 @@ _err_log_lock = threading.Lock()
 
 logger = logging.getLogger(__name__)
 
+# Repo root = parent of the shared/ package dir. Assets and the dev-mode config
+# dir live at the project root, so resolve them relative to it regardless of
+# this module's package location (it moved from root into shared/).
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def resolve_path(path):
     """Resolve path for frozen (PyInstaller) vs normal execution."""
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, path)
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+    return os.path.join(_REPO_ROOT, path)
 
 @functools.lru_cache(maxsize=128)
 def _get_base64_image_cached(image_path: str) -> str:
@@ -206,7 +211,7 @@ def get_config_dir() -> str:
         # Other frozen platforms: fall back to executable directory
         return os.path.dirname(sys.executable)
     else:
-        return str(Path(__file__).parent)
+        return _REPO_ROOT
 
 def format_time_display(time_str: str) -> str:
     """Format a 24-hour HH:MM time string respecting the user's 12h/24h preference.
@@ -509,7 +514,7 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
         root.wm_attributes('-topmost', 1)
 
         try:
-            icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
+            icon_path = os.path.join(_REPO_ROOT, 'assets', 'icon.ico')
             if os.path.exists(icon_path):
                 root.iconbitmap(icon_path)
         except Exception:

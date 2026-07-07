@@ -729,9 +729,34 @@ section[data-testid="stSidebar"] div[data-testid="stAlertContainer"] div[data-te
    dramatically - only the active-state coloring + icon URLs and
    active-state checkmark SVGs are still emitted from Python. */
 
-/* Conversion grid horizontal gap */
-div.st-key-conversion_cards_grid [data-testid="stHorizontalBlock"] {
+/* Conversion grid direct grid styling */
+div[class*="st-key-conversion_cards_grid"] {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-auto-rows: 1fr !important;
     gap: 12px !important;
+}
+div[class*="st-key-conversion_cards_grid"] [data-testid="stElementContainer"] {
+    margin-bottom: 0px !important;
+    width: 100% !important;
+}
+div[class*="st-key-conversion_cards_grid"] [data-testid="stElementContainer"],
+div[class*="st-key-conversion_cards_grid"] [data-testid="stButton"],
+div[class*="st-key-conversion_cards_grid"] [data-testid="stButton"] > div:first-child,
+div[class*="st-key-conversion_cards_grid"] [data-testid="stTooltipIcon"],
+div[class*="st-key-conversion_cards_grid"] [data-testid="stTooltipHoverTarget"],
+div[class*="st-key-conversion_cards_grid"] button {
+    height: 100% !important;
+}
+@media (max-width: 1100px) {
+    div[class*="st-key-conversion_cards_grid"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+@media (max-width: 600px) {
+    div[class*="st-key-conversion_cards_grid"] {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 /* Conv button text alignment */

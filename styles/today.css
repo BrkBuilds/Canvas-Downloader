@@ -16,39 +16,58 @@
     margin-bottom: 2px;
     white-space: nowrap;
 }
+
 .today-subtitle {
     color: #8A91A6;
-    font-size: 0.95rem;
-    margin-top: 0;
-    margin-bottom: 6px;
+    font-size: 0.88rem;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.25 !important;
 }
 
-/* ── Title + built-in Help button row ───────────────────── */
-div.st-key-today_title_help_row {
-    margin-top: -40px !important;
+/* ── Subtitle + built-in Help button row ───────────────────── */
+div.st-key-today_subtitle_help_row {
+    margin-top: 0px !important;
+    margin-bottom: 12px !important;
 }
-/* Collapse the [1,10] columns to content-size so the Help button
-   sits immediately after the title (same pattern as sync_ui.py /
-   quick_download.py). Without width:auto the columns keep their
-   fractional widths and push the button far to the right. */
-div.st-key-today_title_help_row [data-testid="stHorizontalBlock"] {
+
+/* Collapse the columns to content-size so the Help button
+   sits immediately after the subtitle text. */
+div.st-key-today_subtitle_help_row [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-end !important;
+    align-items: center !important;
     gap: 6px !important;
     justify-content: flex-start !important;
 }
-div.st-key-today_title_help_row [data-testid="column"],
-div.st-key-today_title_help_row [data-testid="stColumn"] {
+
+div.st-key-today_subtitle_help_row [data-testid="column"],
+div.st-key-today_subtitle_help_row [data-testid="stColumn"] {
     width: auto !important;
     flex: 0 0 auto !important;
     min-width: 0px !important;
     padding: 0 !important;
 }
-div.st-key-today_title_help_row div[class*="st-key-today_help_explainer_help_btn"] {
+
+div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] {
     margin-bottom: 0 !important;
-    margin-top: 25px !important;
+    margin-top: 0 !important;
     margin-left: 0 !important;
+}
+
+div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] button {
+    padding: 2px 8px !important;
+    min-height: 22px !important;
+    height: 22px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    margin: 0 !important;
+    border-radius: 5px !important;
+    position: relative !important;
+    top: 10px !important;
 }
 
 /* ── Section labels ─────────────────────────────────────── */
@@ -58,6 +77,7 @@ div.st-key-today_title_help_row div[class*="st-key-today_help_explainer_help_btn
     color: #FFFFFF;
     margin: 4px 0 2px 0;
 }
+
 .today-section-sub {
     color: #888;
     font-size: 0.85rem;
@@ -73,10 +93,12 @@ div.st-key-today_courses_head {
 div.st-key-today_files_head {
     margin-top: 12px !important;
 }
+
 /* Keep the toggle button vertically centred against the 2-line label block. */
 div.st-key-today_courses_head [data-testid="stHorizontalBlock"] {
     align-items: center !important;
 }
+
 /* Live count badge sitting just after the "Courses in your daily sync" label. */
 .tcs-count {
     display: inline-flex;
@@ -107,6 +129,7 @@ div.st-key-today_manage_done_btn {
     justify-content: flex-end !important;
     transform: translateY(14px) !important;
 }
+
 div.st-key-today_manage_btn button,
 div.st-key-today_manage_done_btn button {
     width: 100% !important;
@@ -124,16 +147,19 @@ div.st-key-today_manage_done_btn button {
     align-items: center !important;
     justify-content: center !important;
 }
+
 div.st-key-today_manage_btn button:hover {
     border-color: rgba(59, 130, 246, 0.7) !important;
     background-color: rgba(59, 130, 246, 0.08) !important;
     color: #ffffff !important;
 }
+
 div.st-key-today_manage_done_btn button:hover {
     border-color: rgba(74, 222, 128, 0.7) !important;
     background-color: rgba(74, 222, 128, 0.08) !important;
     color: #ffffff !important;
 }
+
 /* The markdown container is the button's real flex child - centre it too, else
    the icon+label sit slightly high of the button's vertical middle. */
 div.st-key-today_manage_btn button div[data-testid="stMarkdownContainer"],
@@ -142,6 +168,7 @@ div.st-key-today_manage_done_btn button div[data-testid="stMarkdownContainer"] {
     align-items: center !important;
     justify-content: center !important;
 }
+
 /* Icon + label on one centred line. (No line-height:1 - it shrinks the line box
    below the glyph height and reads as mis-centred; leave the default leading.) */
 div.st-key-today_manage_btn button p,
@@ -152,6 +179,7 @@ div.st-key-today_manage_done_btn button p {
     gap: 9px !important;
     margin: 0 !important;
 }
+
 /* Pencil glyph for "Manage", check glyph for "Done" - masked so they sit at a
    neutral light-grey at rest and turn blue on hover (matches the Edit button). */
 div.st-key-today_manage_btn button p::before,
@@ -170,16 +198,20 @@ div.st-key-today_manage_done_btn button p::before {
     mask-position: center;
     mask-size: 18px;
 }
+
 div.st-key-today_manage_btn button:hover p::before {
     background-color: #93c5fd !important;
 }
+
 div.st-key-today_manage_done_btn button:hover p::before {
     background-color: #4ade80 !important;
 }
+
 div.st-key-today_manage_btn button p::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
 }
+
 div.st-key-today_manage_done_btn button p::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
@@ -195,7 +227,10 @@ div.st-key-today_manage_done_btn button p::before {
     border-radius: 12px;
     padding: 12px 14px;
     margin-top: -2px !important;
+    overflow: hidden; /* prevent overflowing chip from blowing past the border */
+    min-width: 0;
 }
+
 .tcs-pill {
     display: inline-flex;
     align-items: center;
@@ -211,10 +246,23 @@ div.st-key-today_manage_done_btn button p::before {
     white-space: nowrap;
     transition: border-color 0.18s ease;
     cursor: default;
+    /* Truncation: chip never exceeds available row width */
+    max-width: 100%;
+    min-width: 0;
 }
+
+/* Truncate long course names with ellipsis; the title attr carries the full name */
+.tcs-pill > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
 .tcs-pill:hover {
     border-color: rgba(255, 255, 255, 0.34);
 }
+
 .tcs-pill .tcs-pill-ico {
     width: 16px;
     height: 16px;
@@ -227,28 +275,117 @@ div[class*="st-key-today_toggle_card"] {
     background: #1A1D27;
     border: 1px solid #2D3248;
     border-radius: 12px;
-    padding: 18px 18px 16px 18px !important;
+    padding: 6px 12px !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
 }
 
+/* Ensure horizontal block elements inside are vertically centered and left-aligned */
+div[class*="st-key-today_toggle_card"] [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+
+/* Collapse toggle card columns and force vertical alignment centering and left-alignment */
+div[class*="st-key-today_toggle_card"] [data-testid="column"],
+div[class*="st-key-today_toggle_card"] [data-testid="stColumn"] {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 0px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+/* Force vertical block inside columns to vertically center and left-align its items */
+div[class*="st-key-today_toggle_card"] [data-testid="column"] [data-testid="stVerticalBlock"],
+div[class*="st-key-today_toggle_card"] [data-testid="stColumn"] [data-testid="stVerticalBlock"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    height: 100% !important;
+}
+
+/* Clean up Streamlit's checkbox margin and align html blocks vertically centered and left-aligned */
+div[class*="st-key-today_toggle_card"] div[data-testid="stCheckbox"],
+div[class*="st-key-today_toggle_card"] div[data-testid="stHtml"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+
+
+/* ── Auto-sync header row columns auto-stretching ────────── */
+div.st-key-today_header_row [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+div.st-key-today_header_row [data-testid="column"]:first-child,
+div.st-key-today_header_row [data-testid="stColumn"]:first-child {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 0px !important;
+    padding-right: 16px !important;
+}
+
+div.st-key-today_header_row [data-testid="column"]:last-child,
+div.st-key-today_header_row [data-testid="stColumn"]:last-child {
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0px !important;
+}
+
+/* Status Badge (Active / Not Activated) */
+.today-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.today-status-badge.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.1);
+}
+
+.today-status-badge.inactive {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8A91A6;
+}
+
+.today-status-badge svg {
+    flex-shrink: 0;
+}
+
+/* Subtitle + help button row positioning */
 /* ── Today Content Area ─────────────────────────────────── */
 div.st-key-today_content_area {
     transition: opacity 0.3s ease, filter 0.3s ease !important;
-}
-div[class*="st-key-today_toggle_card"] div[data-testid="stCheckbox"] {
-    margin-top: -8px !important;
-}
-div[class*="st-key-today_toggle_card"] [data-testid="stWidgetLabel"] p,
-div[class*="st-key-today_toggle_card"] label p {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: #FFFFFF !important;
-}
-.today-toggle-desc {
-    color: #8A91A6;
-    font-size: 0.83rem;
-    line-height: 1.5;
-    margin-top: -12px !important;
-    margin-bottom: 0px !important;
 }
 
 /* ── Running-sync card (in-page daily/Quick Sync progress) ───────────────────
@@ -264,7 +401,11 @@ div[class*="st-key-today_toggle_card"] label p {
 div[class*="st-key-today_running_card"]:not(:has(.today-run-head)) {
     display: none !important;
 }
-.today-run-anchor { display: none !important; }
+
+.today-run-anchor {
+    display: none !important;
+}
+
 div[class*="st-key-today_running_card"]:has(.today-run-head) {
     background: #1A1D27;
     border: 1px solid #2D3248;
@@ -283,6 +424,7 @@ div[class*="st-key-today_running_card"]:has(.today-run-head) {
        div) for real spacing. */
     gap: 0 !important;
 }
+
 /* Streamlit gives every markdown element-container a built-in
    margin-bottom: -16px (see the identical note on today_pair_card_ above).
    With the card's gap zeroed, that -16px was silently eating the *visible*
@@ -293,17 +435,20 @@ div[class*="st-key-today_running_card"]:has(.today-run-head) {
 div[class*="st-key-today_running_card"] [data-testid="stMarkdownContainer"] {
     margin-bottom: 0 !important;
 }
+
 .today-run-head {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 4px;
 }
+
 .today-run-title {
     font-size: 1.15rem;
     font-weight: 700;
     color: #FFFFFF;
 }
+
 .today-run-spin {
     width: 20px;
     height: 20px;
@@ -311,16 +456,24 @@ div[class*="st-key-today_running_card"] [data-testid="stMarkdownContainer"] {
     animation: today-run-spin 0.9s linear infinite;
     transform-origin: 50% 50%;
 }
+
 @keyframes today-run-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
+
 .today-run-desc {
     color: #9aa1b3;
     font-size: 0.9rem;
     line-height: 1.5;
     margin: 0 0 5px 0;
 }
+
 /* Cancel button inside the card: compact, content-sized, secondary.
    (The engine's status header + progress bar render via st.html() shadow roots,
    so they carry their own inline styles and are not reachable from here.) */
@@ -328,6 +481,7 @@ div[class*="st-key-today_running_card"] div[class*="st-key-cancel_"] {
     display: flex !important;
     justify-content: flex-start !important;
 }
+
 div[class*="st-key-today_running_card"] div[class*="st-key-cancel_"] button {
     width: auto !important;
     min-height: 38px !important;
@@ -348,47 +502,56 @@ div.st-key-today_sync_notice_card {
     padding: 13px 14px 13px 18px !important;
     margin-top: 14px;
 }
+
 /* Keep the [body, close] columns vertically centred against multi-line bodies. */
 div.st-key-today_sync_notice_card [data-testid="stHorizontalBlock"] {
     align-items: center !important;
 }
+
 /* The body is a single markdown block; zero the element-container's built-in
    negative bottom margin so the card's box hugs the content symmetrically
    (same fix as today_pair_card_ / today_running_card). */
 div.st-key-today_sync_notice_card [data-testid="stMarkdownContainer"] {
     margin-bottom: 0 !important;
 }
+
 .today-notice-inner {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
+
 .today-notice-head {
     display: flex;
     align-items: center;
     gap: 9px;
 }
+
 .today-notice-title {
     font-size: 1.02rem;
     font-weight: 700;
     color: #ffffff;
 }
+
 .today-notice-when {
     color: #7c8496;
     font-size: 0.8rem;
     font-weight: 500;
 }
+
 .today-notice-desc {
     color: #c7ccd9;
     font-size: 0.9rem;
     line-height: 1.5;
 }
+
 .today-notice-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 2px;
 }
+
 .today-notice-chip {
     display: inline-flex;
     align-items: center;
@@ -401,15 +564,18 @@ div.st-key-today_sync_notice_card [data-testid="stMarkdownContainer"] {
     color: #d4d8e2;
     white-space: nowrap;
 }
+
 .today-notice-chip b {
     color: #34d399;
     font-weight: 700;
 }
+
 .today-notice-errors {
     color: #fbbf24;
     font-size: 0.82rem;
     margin-top: 2px;
 }
+
 /* Close button: compact ghost square with a masked X glyph (zero-width-space
    label, so the glyph is pure CSS - mirrors the trash/pencil mask pattern). */
 div.st-key-today_notice_close_btn button {
@@ -426,16 +592,19 @@ div.st-key-today_notice_close_btn button {
     justify-content: center !important;
     transition: all 0.15s ease !important;
 }
+
 div.st-key-today_notice_close_btn button:hover {
     background: rgba(255, 255, 255, 0.07) !important;
     border-color: rgba(255, 255, 255, 0.22) !important;
 }
+
 div.st-key-today_notice_close_btn button p {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
 }
+
 div.st-key-today_notice_close_btn button p::before {
     content: '';
     display: inline-block;
@@ -453,6 +622,7 @@ div.st-key-today_notice_close_btn button p::before {
     mask-size: 14px;
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
 }
+
 div.st-key-today_notice_close_btn button:hover p::before {
     background-color: #ffffff;
 }
@@ -521,6 +691,7 @@ div[class*="st-key-today_pair_card_"] [data-testid="stMarkdownContainer"] {
     word-break: break-all;
     line-height: 1.1;
 }
+
 /* Match the sync-list card: folder glyph rendered at 15px */
 div[class*="st-key-today_pair_card_"] .today-pair-folder svg {
     width: 15px !important;
@@ -549,8 +720,8 @@ div[class*="st-key-today_remove_"] button {
 
 /* Inner wrapper: force vertical centering (immune to Streamlit overriding the
    button's own align-items). */
-div[class*="st-key-today_remove_"] button > div,
-div[class*="st-key-today_remove_"] button > div > span,
+div[class*="st-key-today_remove_"] button>div,
+div[class*="st-key-today_remove_"] button>div>span,
 div[class*="st-key-today_remove_"] button div[data-testid="stMarkdownContainer"] {
     display: flex !important;
     align-items: center !important;
@@ -592,6 +763,7 @@ div[class*="st-key-today_remove_"] button:hover {
     border-color: rgba(255, 75, 75, 0.7) !important;
     background-color: rgba(255, 75, 75, 0.08) !important;
 }
+
 div[class*="st-key-today_remove_"] button:hover p::before {
     background-color: #ff4b4b;
 }
@@ -610,17 +782,20 @@ div.st-key-today_sync_now_btn button {
     align-items: center !important;
     justify-content: center !important;
 }
+
 div.st-key-today_sync_now_btn button div[data-testid="stMarkdownContainer"] {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
+
 div.st-key-today_sync_now_btn button p {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
 }
+
 /* Lead-in above Quick Sync - frames it as the optional "run it yourself" path
    (auto-sync being the primary, hands-off one). */
 .today-qs-lead {
@@ -629,28 +804,40 @@ div.st-key-today_sync_now_btn button p {
     text-align: left;
     margin: 14px 0 10px 0;
 }
+
 .today-qs-note {
     color: #888;
     font-size: 0.8rem;
     text-align: left;
     margin: 8px 0 0 0;
 }
-.today-qs-note b { color: #b9c0d0; }
+
+.today-qs-note b {
+    color: #b9c0d0;
+}
 
 /* ── Add courses - a dashed "append to the list" affordance ──────────────── */
 /* Only shown in the management layer (below the editable list) and in the empty
    state, so it should read as part of the list, not a stray default button. */
+div.st-key-today_add_courses_btn {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
 div.st-key-today_add_courses_btn button {
     background-color: #1f77b4 !important;
     border: none !important;
     border-radius: 8px !important;
     color: #ffffff !important;
-    min-height: 48px !important;
-    height: auto !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    width: 33.33% !important;
     font-weight: 600 !important;
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
     transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
 }
+
 div.st-key-today_add_courses_btn button:hover {
     background-color: #2b8cbe !important;
     border: none !important;
@@ -676,30 +863,38 @@ div.st-key-today_files_empty_container {
     color: #8A91A6 !important;
     line-height: 1.6 !important;
 }
+
 div.st-key-today_empty_container div.st-key-today_add_courses_btn {
     margin-top: 18px !important;
 }
+
 .today-empty-inner {
     text-align: center;
     color: #8A91A6;
     line-height: 1.6;
 }
+
 .today-empty-icon {
     margin-bottom: 8px;
     display: flex;
     justify-content: center;
 }
+
 .today-empty-sub {
     font-size: 0.85rem;
     color: #6f7689;
     margin-top: 2px;
 }
-.today-empty-sub b { color: #b9c0d0; }
+
+.today-empty-sub b {
+    color: #b9c0d0;
+}
 
 /* Overrides for today_files_empty_container to make top and bottom spacing symmetric */
 div.st-key-today_files_empty_container {
     padding: 24px 22px 24px 22px !important;
 }
+
 div.st-key-today_files_empty_container .stMarkdown,
 div.st-key-today_files_empty_container [data-testid="stMarkdownContainer"] {
     margin-bottom: 0 !important;
@@ -725,9 +920,11 @@ div.st-key-today_files_empty_container [data-testid="stMarkdownContainer"] {
 div[data-testid="stDialog"] div[class*="st-key-today_import_scroll"] {
     gap: 6px !important;
 }
+
 div[data-testid="stDialog"] div[class*="st-key-today_import_item_"] {
     margin-bottom: 0 !important;
 }
+
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button {
     position: relative !important;
     width: 100% !important;
@@ -745,10 +942,12 @@ div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button {
     text-align: left !important;
     transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
-div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button > div,
+
+div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button>div,
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button div[data-testid="stMarkdownContainer"] {
     width: 100% !important;
 }
+
 /* Title row: title text + inline "Pair"/"Group" tag */
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p {
     margin: 0 !important;
@@ -761,10 +960,12 @@ div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p {
     white-space: nowrap !important;
     overflow: hidden !important;
 }
+
 /* Course pills are injected as DOM elements by _inject_import_pills_bridge. */
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button::after {
     content: none !important;
 }
+
 /* "Pair" / "Group" tag - inline, right of the title text */
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p::after {
     display: inline-block !important;
@@ -777,6 +978,7 @@ div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button p::after 
     color: rgba(255, 255, 255, 0.45) !important;
     white-space: nowrap !important;
 }
+
 /* Checkbox - vertically centred, far right, a bit below the Pair/Group tag */
 div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button::before {
     content: "" !important;
@@ -793,6 +995,7 @@ div[data-testid="stDialog"] div[class*="st-key-today_imp_btn_"] button::before {
     transition: all 0.15s ease-in-out !important;
     box-sizing: border-box !important;
 }
+
 div[data-testid="stDialog"] div.st-key-today_import_done button {
     min-height: 3em !important;
     height: auto !important;
