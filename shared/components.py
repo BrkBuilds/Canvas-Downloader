@@ -1012,7 +1012,7 @@ def render_synced_file_rows(files: list, course_root: str, key_scope: str,
                     "border-radius:6px;box-sizing:border-box;height:22px;padding:0 9px;'>"
                     f'<img src="{_FOLDER_ICON_SVG}" style="width:13px;height:13px;flex-shrink:0;" alt="folder"/>'
                     f"<span style='font-size:0.75rem;color:{chip_color};white-space:nowrap;"
-                    f"overflow:hidden;text-overflow:ellipsis;'>{esc(chip_label)}</span></span></div>"
+                    f"overflow:hidden;text-overflow:ellipsis;' title=\"{esc(chip_label)}\">{esc(chip_label)}</span></span></div>"
                 )
 
             # Column weights are placeholders only - the scoped CSS in

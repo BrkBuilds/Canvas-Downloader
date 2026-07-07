@@ -2,8 +2,8 @@
 # Regenerated on every build from version.py.
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(2, 0, 0, 0),
-    prodvers=(2, 0, 0, 0),
+    filevers=(2, 0, 1, 0),
+    prodvers=(2, 0, 1, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x4,
@@ -17,12 +17,12 @@ VSVersionInfo(
         '040904B0',
         [StringStruct('CompanyName', 'Canvas Downloader'),
          StringStruct('FileDescription', 'Canvas Downloader'),
-         StringStruct('FileVersion', '2.0.0'),
+         StringStruct('FileVersion', '2.0.1'),
          StringStruct('InternalName', 'Canvas Downloader'),
          StringStruct('LegalCopyright', ''),
          StringStruct('OriginalFilename', 'Canvas Downloader.exe'),
          StringStruct('ProductName', 'Canvas Downloader'),
-         StringStruct('ProductVersion', '2.0.0')])
+         StringStruct('ProductVersion', '2.0.1')])
     ]),
     VarFileInfo([VarStruct('Translation', [0x0409, 1200])])
   ]
