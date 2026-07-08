@@ -1399,7 +1399,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                 st.markdown(
                     f"<div class='today-empty-inner today-courses-empty'>"
                     f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
-                    f"<div>No courses in your daily sync yet.</div>"
+                    f"<div class='today-courses-empty-title'>No courses in your daily sync yet.</div>"
                     f"<div class='today-empty-sub'>Use <b>Add courses</b> to import saved "
                     f"pairs or groups.</div></div>",
                     unsafe_allow_html=True,

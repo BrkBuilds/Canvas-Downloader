@@ -1,4 +1,7 @@
 ## Latest Updates
+- [x] **Today Page Empty State "No Courses" Color & Boldness Alignment** (2026-07-08):
+    - [x] **Title Class & CSS Styling**: Added a specific class `.today-courses-empty-title` to the "No courses in your daily sync yet." text in `ui/today_dashboard.py` and styled it in `styles/today.css` with color `#c7ccd9` and font-weight `700`, matching the color and boldness of the "No new files today" empty title (`.today-files-empty-title`).
+
 - [x] **Sync History Toolbar Polish & Whitespace Reduction** (2026-07-06):
     - [x] **Narrows Clear History Column**: Changed columns layout in `sync_ui.py` from `[3, 1]` to `[7, 1]`, shrinking the button container to exactly 50% of its former width (12.5% of total width instead of 25%).
     - [x] **Expanded Filter Controls Column**: Allowed the left controls column to expand to 87.5% of total width, offering more layout space to prevent long course names in the "By Course" dropdown from being truncated.
