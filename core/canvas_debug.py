@@ -141,9 +141,21 @@ def set_active_debug_file(debug_file) -> None:
     global _active_debug_file, _bridge_installed
     with _active_lock:
         _active_debug_file = str(debug_file) if debug_file else None
-        if _active_debug_file and not _bridge_installed:
-            bridge = _DebugFileBridge(level=logging.INFO)
-            logging.getLogger().addHandler(bridge)
+        if _active_debug_file:
+            root = logging.getLogger()
+            # Purge any bridge left on the root logger by a previous install.
+            # Streamlit's file-watcher re-imports this module on edits, which
+            # resets `_bridge_installed` to False and defines a NEW
+            # `_DebugFileBridge` class, while the OLD bridge stays attached to
+            # the process-wide root logger. Without this cleanup those stale
+            # bridges accumulate and every mirrored record is written 2×, 3×,
+            # … per reload. Dedupe by class NAME (not isinstance) so it matches
+            # bridges from earlier module incarnations too, then install exactly
+            # one. Idempotent: safe to call once per run / per course.
+            for _h in list(root.handlers):
+                if type(_h).__name__ == '_DebugFileBridge':
+                    root.removeHandler(_h)
+            root.addHandler(_DebugFileBridge(level=logging.INFO))
             # Named loggers default to the root's WARNING effective level,
             # which would filter INFO records before they ever reach the
             # bridge. Open our own modules up to INFO; third-party loggers

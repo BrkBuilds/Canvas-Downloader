@@ -72,8 +72,8 @@ div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_
 
 /* ── Section labels ─────────────────────────────────────── */
 .today-section-label {
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     color: #FFFFFF;
     margin: 4px 0 2px 0;
 }
@@ -85,8 +85,25 @@ div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_
 }
 
 /* ── Courses summary: header row (label + count + Manage/Done toggle) ───── */
+/* Inside the courses card now, so no negative pull-up - the card owns the padding. */
 div.st-key-today_courses_head {
-    margin-top: -6px !important;
+    margin-top: 0 !important;
+}
+
+/* Title + count badge on ONE centred line - never wrap to 2 lines (which made
+   the label box ~64px tall and left the Manage button misaligned against it). */
+div.st-key-today_courses_head .today-section-label {
+    display: flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Zero the markdown wrapper's default negative bottom margin so the label box
+   hugs its text and centres cleanly against the Manage button in the row. */
+div.st-key-today_courses_head [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
 }
 
 /* ── Today's files header row ───────────────────────────── */
@@ -127,7 +144,6 @@ div.st-key-today_manage_btn,
 div.st-key-today_manage_done_btn {
     display: flex !important;
     justify-content: flex-end !important;
-    transform: translateY(14px) !important;
 }
 
 div.st-key-today_manage_btn button,
@@ -274,11 +290,11 @@ div.st-key-today_manage_done_btn button p::before {
 div[class*="st-key-today_toggle_card"] {
     background: #1A1D27;
     border: 1px solid #2D3248;
-    border-radius: 12px;
-    padding: 6px 12px !important;
+    border-radius: 999px;
+    padding: 6px 14px !important;
     margin-top: 12px !important;
-    width: 100% !important;
-    display: flex !important;
+    width: auto !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
 }
@@ -289,7 +305,7 @@ div[class*="st-key-today_toggle_card"] [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 12px !important;
+    gap: 6px !important;
     width: 100% !important;
 }
 
@@ -313,6 +329,27 @@ div[class*="st-key-today_toggle_card"] [data-testid="stColumn"] [data-testid="st
     justify-content: center !important;
     align-items: flex-start !important;
     height: 100% !important;
+}
+
+/* stElementContainer (between the vertical block above and the checkbox/badge
+   below) is a plain block box, so the vertical block's justify-content:center
+   has nothing to center - the block just stretches to fill and its content
+   sits flush at its own top. Make it a flex container too so its single
+   child (checkbox or badge) actually centers within the full column height. */
+div[class*="st-key-today_toggle_card"] [data-testid="stElementContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+/* Streamlit bakes a 4px top margin onto the toggle's own switch track (meant
+   to visually align it with adjacent label text). The label wrapper's own
+   height is derived from margin-top + track height (not an independent fixed
+   height), so any positive margin here shifts the track exactly margin/2
+   below true center. With label_visibility collapsed there's no text to
+   align to, so drop it to 0 to land dead-center. */
+div[class*="st-key-today_toggle_card"] [data-testid="stCheckbox"] label > div:first-child {
+    margin-top: 0 !important;
 }
 
 /* Clean up Streamlit's checkbox margin and align html blocks vertically centered and left-aligned */
@@ -348,6 +385,17 @@ div.st-key-today_header_row [data-testid="stColumn"]:last-child {
     width: auto !important;
     flex: 1 1 auto !important;
     min-width: 0px !important;
+    align-items: flex-start !important;
+}
+
+/* Streamlit wraps a column's body in TWO more flex layers (an implicit
+   stVerticalBlock, then a stLayoutWrapper) before reaching our own keyed
+   container. Both default to align-items: stretch, which stretches our
+   content-sized toggle card back out to the column's full width unless
+   explicitly stopped at every layer. */
+div.st-key-today_header_row [data-testid="stColumn"]:last-child > [data-testid="stVerticalBlock"],
+div.st-key-today_header_row [data-testid="stColumn"]:last-child > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"] {
+    align-items: flex-start !important;
 }
 
 /* Status Badge (Active / Not Activated) */
@@ -373,31 +421,43 @@ div.st-key-today_header_row [data-testid="stColumn"]:last-child {
 }
 
 .today-status-badge.inactive {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    border: none;
     color: #8A91A6;
 }
 
-.today-status-badge svg {
+/* st.html() sanitizes out raw <svg> tags, so the status icon is a CSS
+   background-image (data URI) on a ::before box instead of inline markup. */
+.today-status-badge::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
 }
 
-/* Subtitle + help button row positioning */
-/* ── Today Content Area ─────────────────────────────────── */
-div.st-key-today_content_area {
-    transition: opacity 0.3s ease, filter 0.3s ease !important;
+.today-status-badge.active::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+}
+
+.today-status-badge.inactive::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A91A6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m15 9-6 6'/%3E%3Cpath d='m9 9 6 6'/%3E%3C/svg%3E");
 }
 
 /* ── Running-sync card (in-page daily/Quick Sync progress) ───────────────────
-   Rendered below the toggle while a sync is in flight. Hosts the shared sync
-   engine's slim output (progress bar + cancel), fronted by a title + phase
-   description this card owns. Matches the toggle card's surface.
+   Rendered directly below the "Courses in your daily sync" card while a sync is
+   in flight. Hosts the shared sync engine's slim output (progress bar + cancel),
+   fronted by a title + phase description this card owns. Matches the toggle
+   card's surface.
 
    The container is ALWAYS emitted (even when idle) so React keeps it as its own
-   DOM node and never repurposes the content-area's node for it - see the "STABLE
-   SLOT" note in today_dashboard.py. So the visible card box is gated on the card
-   actually holding its head (:has(.today-run-head)); the idle slot holds only a
-   hidden anchor and is collapsed to nothing below. */
+   DOM node and never repurposes a neighbouring section's node for it - see the
+   "STABLE SLOT" note in today_dashboard.py. So the visible card box is gated on
+   the card actually holding its head (:has(.today-run-head)); the idle slot holds
+   only a hidden anchor and is collapsed to nothing below. */
 div[class*="st-key-today_running_card"]:not(:has(.today-run-head)) {
     display: none !important;
 }
@@ -474,6 +534,19 @@ div[class*="st-key-today_running_card"] [data-testid="stMarkdownContainer"] {
     margin: 0 0 5px 0;
 }
 
+/* Phase title = the shared sync engine's header <h3> (course name during
+   download, "Converting … to PDF" during post-processing, the Panopto phase
+   name, etc.). Its default browser h3 size is correct in the full Sync/Download
+   dashboard, but oversized inside this slim Today card. Shrink it HERE ONLY -
+   scoped to the running card - so standard mode keeps its large heading while
+   the Today card shows a bold-but-compact phase title that fits the aesthetic. */
+div[class*="st-key-today_running_card"] h3 {
+    font-size: 1.02rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    padding-top: 0 !important;
+}
+
 /* Cancel button inside the card: compact, content-sized, secondary.
    (The engine's status header + progress bar render via st.html() shadow roots,
    so they carry their own inline styles and are not reachable from here.) */
@@ -500,7 +573,11 @@ div.st-key-today_sync_notice_card {
     border: 1px solid rgba(52, 211, 153, 0.28);
     border-radius: 12px;
     padding: 13px 14px 13px 18px !important;
-    margin-top: 14px;
+    /* Sits in the gap BETWEEN the "Courses in your daily sync" card and the
+       "Today's files" hero (a standalone sibling, NOT inside the hero). The
+       flex gap above already over-spaces it vs the hero's own margin-top below,
+       so keep the extra margin-top small so it reads centred in the gap. */
+    margin: 6px 0 0 0 !important;
 }
 
 /* Keep the [body, close] columns vertically centred against multi-line bodies. */
@@ -627,13 +704,16 @@ div.st-key-today_notice_close_btn button:hover p::before {
     background-color: #ffffff;
 }
 
-/* ── Daily-sync list: outlined box wrapping the pair cards ─ */
+/* ── Daily-sync list: outlined box wrapping the pair cards (management layer) ─
+   The bounding box for the editable course list, mirroring the collapsed chip
+   box so the section keeps its box in both views. */
 div.st-key-today_list_outline {
-    background: transparent !important;
-    border: 1px solid #2D3248 !important;
-    border-radius: 12px !important;
+    background: #0e1015 !important;
+    border: 1px solid #262b3a !important;
+    border-radius: 10px !important;
     padding: 10px 12px !important;
-    margin-top: -2px !important;
+    margin-top: 12px !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45) !important;
     /* Space between the stacked pair rows (key class is on the flex block
        itself in Streamlit 1.51, so gap here targets the immediate rows). */
     gap: 8px !important;
@@ -796,24 +876,51 @@ div.st-key-today_sync_now_btn button p {
     margin: 0 !important;
 }
 
-/* Lead-in above Quick Sync - frames it as the optional "run it yourself" path
-   (auto-sync being the primary, hands-off one). */
-.today-qs-lead {
-    color: #888;
-    font-size: 0.8rem;
-    text-align: left;
-    margin: 14px 0 10px 0;
+/* Manual Quick Sync action card: icon badge + explainer laid out as a flex row
+   in the left column (the button lives in the right column). */
+.today-qs-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
-.today-qs-note {
-    color: #888;
-    font-size: 0.8rem;
-    text-align: left;
-    margin: 8px 0 0 0;
+.today-qs-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Neutral light-grey badge - colour is reserved for the Quick Sync button. */
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.today-qs-note b {
-    color: #b9c0d0;
+/* Soft light-grey sync glyph (overrides the constant's white stroke) so the
+   whole badge stays neutral. */
+.today-qs-icon svg {
+    stroke: #c7ccd9 !important;
+}
+
+.today-qs-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.today-qs-title {
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.today-qs-sub {
+    color: #8A91A6;
+    font-size: 0.85rem;
+    line-height: 1.45;
 }
 
 /* ── Add courses - a dashed "append to the list" affordance ──────────────── */
@@ -1002,4 +1109,314 @@ div[data-testid="stDialog"] div.st-key-today_import_done button {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     width: 100% !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   COURSES CARD + CLICKABLE CHIPS + TODAY'S FILES HERO
+   (page restructure: courses boxed in a card, running-sync slot below it, and
+   "Today's files" promoted to the accented hero card that is the page highlight)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── "Courses in your daily sync" card ──────────────────────────────────────
+   Boxes the whole section (header + chips/list) so it reads as distinct from
+   the Today's-files hero below it. */
+div.st-key-today_courses_card {
+    background: linear-gradient(180deg, #1a1e27 0%, #171a22 100%) !important;
+    border: 1px solid #2D3248 !important;
+    border-radius: 14px !important;
+    padding: 14px 16px 16px 16px !important;
+    margin-top: 8px !important;
+    transition: opacity 0.3s ease, filter 0.3s ease !important;
+    /* Deterministic spacing (see the hero card): zero the flex gap and drive
+       inter-element spacing from the children's own margins. */
+    gap: 0 !important;
+}
+
+/* Zero the no-courses empty state's wrapper negative margin so its own padding
+   renders true under the header (see the hero card note above). */
+div.st-key-today_courses_card [data-testid="stElementContainer"]:has(.today-courses-empty),
+div.st-key-today_courses_card [data-testid="stMarkdownContainer"]:has(.today-courses-empty) {
+    margin-bottom: 0 !important;
+}
+
+/* No-courses CTA inside the card: centred empty message + Add courses button. */
+.today-courses-empty {
+    padding: 10px 0 2px 0;
+}
+
+div.st-key-today_courses_card div.st-key-today_add_courses_btn {
+    margin-top: 14px !important;
+}
+
+/* ...but inside the management list the "Add or manage courses" button is just
+   another row, so it takes only the list's 8px gap (no extra top margin) - the
+   gap to the last course matches the gap between courses. */
+div.st-key-today_courses_card div.st-key-today_list_outline div.st-key-today_add_courses_btn {
+    margin-top: 0 !important;
+}
+
+/* ── Clickable course chips (open the course folder) ────────────────────────
+   Native st.buttons laid out as a flex-wrap tag row INSIDE a bounding box (the
+   restored course-list container). The keyed wrapper is both the visible box and
+   the flex container; each button is pinned to its content width via a
+   max-content element-container so the pills flow and wrap like tags. Styling
+   matches the original read-only pills - only now they're clickable. */
+div.st-key-today_courses_summary {
+    display: flex !important;
+    /* Streamlit forces flex-direction: column on stVerticalBlock - override to
+       row so the chips flow horizontally and wrap like tags. */
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    align-items: flex-start !important;
+    /* A darker, recessed "crevasse" the chips float on top of - clearly darker
+       than the outer card so the box reads as inset, not flat. */
+    background: #0e1015 !important;
+    border: 1px solid #262b3a !important;
+    border-radius: 10px !important;
+    padding: 11px 12px !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45) !important;
+}
+
+div.st-key-today_courses_summary > [data-testid="stElementContainer"] {
+    width: max-content !important;
+    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+}
+
+div[class*="st-key-today_chip_"] {
+    width: 100% !important;
+}
+
+div[class*="st-key-today_chip_"] button {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    background: linear-gradient(180deg, #252830 0%, #2e323c 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 9px !important;
+    padding: 7px 12px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22) !important;
+    /* Vertically centre the icon + label (flex the whole chain: button ->
+       markdown container -> p, per CLAUDE.md's icon+text centring recipe). */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: border-color 0.16s ease !important;
+}
+
+div[class*="st-key-today_chip_"] button div[data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Course glyph + name on one centred line. */
+div[class*="st-key-today_chip_"] button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #e8eaf0 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
+/* Book/course glyph (grey), matching the original chip icon - not a folder. */
+div[class*="st-key-today_chip_"] button p::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 15px !important;
+    height: 15px !important;
+    flex-shrink: 0 !important;
+    background-color: #b1bac4 !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z'/%3E%3C/svg%3E") no-repeat center / contain !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z'/%3E%3C/svg%3E") no-repeat center / contain !important;
+}
+
+/* Hover: just brighten the border (same as the original pills - no colour shift). */
+div[class*="st-key-today_chip_"] button:hover {
+    border-color: rgba(255, 255, 255, 0.34) !important;
+}
+
+div[class*="st-key-today_chip_"] button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* ── "Today's files" — the HERO card (the page highlight) ────────────────────
+   A prominent, teal-accented card that owns the section title, an optional
+   notice banner, and either a tall square empty state or the highlighted inner
+   panel of per-course expanders. */
+div.st-key-today_files_hero {
+    position: relative !important;
+    background: #20242e !important;
+    border: 1px solid #3a4055 !important;
+    border-radius: 16px !important;
+    padding: 20px 22px 22px 22px !important;
+    margin-top: 16px !important;
+    /* White glow spreading far out behind the card - the page highlight. */
+    box-shadow: 0 0 80px 20px rgba(255, 255, 255, 0.05),
+                0 0 40px 4px rgba(255, 255, 255, 0.025),
+                0 6px 26px rgba(0, 0, 0, 1) !important;
+    transition: opacity 0.3s ease, filter 0.3s ease !important;
+    /* Deterministic spacing: zero the block's flex gap (a st.html CSS-injection
+       ghost box would otherwise claim a gap slot) and drive all spacing from the
+       children's own margins - the same pattern the running-sync card uses. */
+    gap: 0 !important;
+}
+
+/* Zero the header/empty wrappers' default negative margin (Streamlit puts a
+   ~-16px margin-bottom on markdown wrappers) so their inner divs' margins render
+   true under the gap:0 card. Scoped by :has() to the hero's OWN markdown so the
+   per-file markdown inside the inner panel (shist cards) is untouched. */
+div.st-key-today_files_hero [data-testid="stElementContainer"]:has(.today-files-hero-head),
+div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-hero-head),
+div.st-key-today_files_hero [data-testid="stElementContainer"]:has(.today-files-empty),
+div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-empty) {
+    margin-bottom: 0 !important;
+}
+
+/* Hero header: title/subtitle block. */
+.today-files-hero-head {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.today-files-hero-titles {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.today-files-hero-titlerow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.today-files-hero-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+/* Live total-file-count badge next to the title (neutral grey). */
+.today-files-hero-count {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #c7ccd9;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.today-files-hero-sub {
+    color: #8A91A6;
+    font-size: 0.85rem;
+    margin-top: 2px;
+    line-height: 1.3;
+}
+
+/* Highlighted inner panel that holds the per-course expander cards - a slightly
+   inset, darker surface so the list reads as depth inside the hero. */
+div.st-key-today_files_inner {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 12px !important;
+    padding: 10px 10px 3px 10px !important;
+    /* Gap 0 so the CSS-injection ghost boxes at the top of the panel add no
+       space; the per-course cards space themselves with their own 7px bottom
+       margin (see sync_history_cards.css .st-key-shist_run_). */
+    gap: 0 !important;
+}
+
+/* The per-course file list is rendered inside an @st.fragment, which wraps it in
+   its OWN vertical block carrying Streamlit's default ~1rem flex gap. That gap is
+   NOT the panel's own (zeroed above), so it re-introduced a large empty band above
+   the first course card and oversized gaps between cards. Zero the gap on any
+   block inside the panel that HOLDS the course cards (identified by a descendant
+   shist_run_today_ card). The cards' own inner blocks never contain a
+   shist_run_today_ descendant, so their body/section spacing is untouched. */
+div.st-key-today_files_inner div[data-testid="stVerticalBlock"]:has(div[class*="st-key-shist_run_today_"]) {
+    gap: 0 !important;
+}
+
+/* Tall, square-ish "all caught up" empty state - the calm default. */
+.today-files-empty {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+/* Enlarge the caught-up check for the hero (overrides the constant's inline
+   size, which stays small for other contexts). */
+.today-files-empty .today-empty-icon svg {
+    width: 2.6rem !important;
+    height: 2.6rem !important;
+}
+
+.today-files-empty-title {
+    color: #c7ccd9;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.today-files-empty-sub {
+    color: #6f7689;
+    font-size: 0.9rem;
+}
+
+/* ── Quick Sync section: an integrated "sync on demand" action card ─────────── */
+/* Matches the page's card language (rounded, bordered, dark) with a faint brand
+   teal→blue wash so it reads as the manual action complementing the auto-sync
+   toggle. Dimmable with the rest of the page (see _inject_dynamic_css). */
+div.st-key-today_qs_section {
+    background:
+        linear-gradient(135deg, rgba(30, 58, 138, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%),
+        #171a23;
+    border: 1px solid #2b3346;
+    border-radius: 14px;
+    padding: 15px 20px !important;
+    margin-top: 20px !important;
+    /* Only the page-dimming transition; the card itself has NO hover styling -
+       the button inside is the sole interactive element. */
+    transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+/* Zero the markdown element-container's built-in negative bottom margin so the
+   icon+text block centres cleanly against the button (same fix as the other
+   today cards). */
+div.st-key-today_qs_section [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
 }

@@ -1,16 +1,24 @@
-"""Tests for ui.update_banner's version comparison.
+"""Tests for ui.update_banner's version comparison and dismissal persistence.
 
 The regression this guards: parsing the two version strings through DIFFERENT
 schemes (packaging.Version on one side, numeric tuple on the other) raised
 TypeError on comparison, which was silently swallowed - the update banner
 just never appeared again. ``_is_newer`` must never raise and must compare
 both sides through the same scheme.
+
+The dismissal tests guard the "closeable, reappears on the next version bump"
+contract: dismissing a release must persist to disk (survives a process
+restart) and must only suppress that exact version - a newer tag un-dismisses.
 """
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
+import ui.update_banner as update_banner
+from shared import helpers
 from ui.update_banner import _is_newer, _numeric_tuple
 
 
@@ -75,3 +83,64 @@ def test_mixed_parseability_still_compares_sanely():
 )
 def test_numeric_tuple(raw, expected):
     assert _numeric_tuple(raw) == expected
+
+
+# ── Dismissal persistence ─────────────────────────────────────────────────────
+
+@pytest.fixture()
+def config_dir(tmp_path, monkeypatch):
+    """Point the dismissal file at an isolated temp config dir.
+
+    update_banner resolves the path via ``shared.helpers.get_config_dir()`` at
+    call time (function-local import), so patching the attribute on
+    shared.helpers is sufficient and leaks nothing across tests.
+    """
+    monkeypatch.setattr(helpers, "get_config_dir", lambda: str(tmp_path))
+    return tmp_path
+
+
+@pytest.fixture(autouse=True)
+def _reset_dismiss_globals():
+    """Dismissal state is cached on module globals for the process lifetime
+    (loaded from disk once); reset so tests don't leak into each other."""
+    update_banner._dismissed_loaded = False
+    update_banner._dismissed_version = None
+    yield
+    update_banner._dismissed_loaded = False
+    update_banner._dismissed_version = None
+
+
+def test_not_dismissed_when_no_file_exists(config_dir):
+    assert update_banner._is_dismissed("2.4.0") is False
+
+
+def test_dismiss_then_is_dismissed_for_same_version(config_dir):
+    update_banner._dismiss_version("2.4.0")
+    assert update_banner._is_dismissed("2.4.0") is True
+
+
+def test_newer_version_is_not_dismissed(config_dir):
+    update_banner._dismiss_version("2.4.0")
+    assert update_banner._is_dismissed("2.5.0") is False
+
+
+def test_dismissal_persists_to_disk(config_dir):
+    update_banner._dismiss_version("2.4.0")
+    with open(update_banner._dismiss_state_path(), encoding="utf-8") as f:
+        assert json.load(f) == {"dismissed_version": "2.4.0"}
+    assert not (config_dir / "update_banner_dismissed.json.tmp").exists()
+
+
+def test_dismissal_survives_a_fresh_process(config_dir):
+    """Simulates an app restart: a fresh call re-reads from disk instead of
+    relying on the in-memory cache from the process that wrote it."""
+    update_banner._dismiss_version("2.4.0")
+    update_banner._dismissed_loaded = False
+    update_banner._dismissed_version = None
+    assert update_banner._is_dismissed("2.4.0") is True
+
+
+@pytest.mark.parametrize("garbage", ["{not json", '"a string"', "[1,2,3]", ""])
+def test_corrupt_dismissal_file_degrades_to_not_dismissed(config_dir, garbage):
+    config_dir.joinpath("update_banner_dismissed.json").write_text(garbage, encoding="utf-8")
+    assert update_banner._is_dismissed("2.4.0") is False
