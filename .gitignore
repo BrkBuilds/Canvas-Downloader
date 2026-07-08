@@ -23,7 +23,9 @@ canvas_sync_pairs.json
 .canvas_sync.db
 saved_sync_groups.json
 saved_download_presets.json
+update_banner_dismissed.json
 Streamlit UI Manipulation Guide.md
+.playwright-mcp/*
 
 # UI & Tests
 UI Screenshots/
