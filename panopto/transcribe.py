@@ -214,10 +214,19 @@ _WORKER_FLAG = "--panopto-transcribe-worker"
 
 
 def _worker_command() -> list[str]:
-    """Command that launches one transcription worker (dev vs frozen .exe)."""
+    """Command that launches one transcription worker (dev vs frozen .exe/.app).
+
+    Frozen: re-exec THIS binary. start.py routes the child into worker mode
+    PRIMARILY via the ``CANVAS_DL_TRANSCRIBE_WORKER`` env var (set in
+    transcribe_in_subprocess), because a macOS windowed ``.app`` bundle does not
+    reliably forward custom argv to ``sys.argv`` - its bootloader rebuilds argv
+    from Apple events, silently dropping the flag, which made the child boot the
+    FULL GUI instead of the worker. The flag is still passed as a secondary
+    signal (and for parity with the dev command).
+    Dev: run the worker module directly - argv works normally there.
+    """
     import sys
     if getattr(sys, "frozen", False):
-        # The frozen app re-execs itself; start.py routes this flag to the worker.
         return [sys.executable, _WORKER_FLAG]
     return [sys.executable, "-u", "-m", "panopto.transcribe_worker"]
 
@@ -282,6 +291,15 @@ def transcribe_in_subprocess(
     env = dict(_os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
+    # Route the child into worker mode via the ENVIRONMENT, not just the argv
+    # flag: a macOS windowed .app bundle can silently drop custom argv (its
+    # bootloader rebuilds sys.argv from Apple events), which made the child boot
+    # the full GUI instead of the worker - a second app window opened for every
+    # transcription and the parent blocked until the user closed it. An env var
+    # is inherited verbatim by the execve'd child and is immune to that; start.py
+    # checks it before any webview/streamlit import. Harmless on Windows/dev,
+    # where argv already routes correctly.
+    env["CANVAS_DL_TRANSCRIBE_WORKER"] = "1"
     if device == "cuda":
         try:
             from panopto.cuda_provision import cuda_libs_dir
@@ -302,6 +320,9 @@ def transcribe_in_subprocess(
 
     # Capture stderr to a temp file (not a pipe) so the child can never block on a
     # full stderr pipe while we're busy reading stdout.
+    import time as _time
+    _t0 = _time.time()
+    _basename = _os.path.basename(mp3_path)
     stderr_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     try:
         proc = subprocess.Popen(
@@ -313,6 +334,13 @@ def transcribe_in_subprocess(
     except Exception:
         stderr_f.close()
         raise
+
+    # Spawn breadcrumb: pid ties the parent's view to the worker's own stderr log
+    # (mirrored below on exit). On the macOS argv-drop bug the child booted a GUI
+    # instead of the worker - which shows up here as a spawn with NO matching
+    # "worker start" line in the mirrored stderr, then an abnormal exit.
+    logger.info("Transcribe worker spawned: pid=%s device=%s frozen=%s file=%s",
+                proc.pid, device, bool(getattr(sys, "frozen", False)), _basename)
 
     try:
         proc.stdin.write(json.dumps(job) + "\n")
@@ -336,55 +364,88 @@ def transcribe_in_subprocess(
 
     result = None
     error_msg = None
-    while True:
-        if is_cancelled and is_cancelled():
-            try:
-                proc.kill()
-            except Exception:
-                pass
-            _clean_part_files(mp3_path, want_txt, want_srt)
-            raise PanoptoCancelled()
-        try:
-            line = q.get(timeout=0.3)
-        except queue.Empty:
-            continue
-        if line is None:
-            break  # worker stdout closed (process ending)
-        line = line.strip()
-        if not line or not line.startswith("{"):
-            continue  # ignore any stray (non-protocol) output
-        try:
-            evt = json.loads(line)
-        except Exception:
-            continue
-        kind = evt.get("event")
-        if kind == "progress":
-            if progress:
+    rc = None
+    try:
+        while True:
+            if is_cancelled and is_cancelled():
                 try:
-                    progress(evt.get("pct", 0), evt.get("lang"))
+                    proc.kill()
                 except Exception:
                     pass
-        elif kind == "result":
-            result = {"txt": evt.get("txt"), "srt": evt.get("srt"),
-                      "language": evt.get("language") or "?"}
-        elif kind == "error":
-            error_msg = evt.get("error") or "Transcription failed."
-
-    rc = proc.wait()
+                _clean_part_files(mp3_path, want_txt, want_srt)
+                raise PanoptoCancelled()
+            try:
+                line = q.get(timeout=0.3)
+            except queue.Empty:
+                continue
+            if line is None:
+                break  # worker stdout closed (process ending)
+            line = line.strip()
+            if not line or not line.startswith("{"):
+                continue  # ignore any stray (non-protocol) output
+            try:
+                evt = json.loads(line)
+            except Exception:
+                continue
+            kind = evt.get("event")
+            if kind == "progress":
+                if progress:
+                    try:
+                        progress(evt.get("pct", 0), evt.get("lang"))
+                    except Exception:
+                        pass
+            elif kind == "result":
+                result = {"txt": evt.get("txt"), "srt": evt.get("srt"),
+                          "language": evt.get("language") or "?"}
+            elif kind == "error":
+                error_msg = evt.get("error") or "Transcription failed."
+        rc = proc.wait()
+    finally:
+        # Never leave the worker transcribing in the background when we unwind for
+        # a reason OTHER than a clean finish. The important case is a user Cancel:
+        # the progress callback renders, which is exactly where Streamlit raises a
+        # RerunException to interrupt this (BaseException - it slips past the inner
+        # `except Exception`), tearing down this function with the child still
+        # running. On the normal path the worker has already exited, so poll() is
+        # not None and we skip the kill. (PanoptoCancelled already killed it.)
+        try:
+            if proc.poll() is None:
+                proc.kill()
+        except Exception:
+            pass
+    stderr_full = ""
     try:
         stderr_f.seek(0)
-        stderr_tail = (stderr_f.read() or "")[-2000:]
+        stderr_full = stderr_f.read() or ""
     except Exception:
-        stderr_tail = ""
+        pass
     finally:
         stderr_f.close()
+    stderr_tail = stderr_full[-2000:]
 
+    # Mirror the worker's OWN log (routed to its stderr) into debug_log.txt: the
+    # worker is a separate process with no debug-file bridge, so this is the only
+    # way its internals - "worker start" (confirms routing), model load, audio
+    # duration, segment count, actual device, VAD fallback, "worker done" - reach
+    # the shared log. Capped so a runaway child can't flood the file.
+    if stderr_full.strip():
+        logger.info("Transcribe worker (pid=%s, %s) log:\n%s",
+                    proc.pid, _basename, stderr_full.strip()[-4000:])
+
+    _dur = _time.time() - _t0
     if result is not None:
+        logger.info("Transcribe worker (pid=%s) OK in %.1fs: %s", proc.pid, _dur,
+                    ", ".join(k for k in ("txt", "srt") if result.get(k)) or "no output")
         return result
     if error_msg is not None:
         # Clean failure the worker caught and reported - re-raise for the runner.
+        logger.warning("Transcribe worker (pid=%s) reported error in %.1fs: %s",
+                       proc.pid, _dur, error_msg)
         raise RuntimeError(error_msg)
     # No result and no clean error: the worker died abnormally (native crash).
+    logger.error("Transcribe worker (pid=%s) exited abnormally (exit=%s) in %.1fs "
+                 "with no result - native crash or dropped-flag GUI boot.",
+                 proc.pid, rc, _dur)
     raise TranscriptionEngineCrash(
         f"Transcription worker exited abnormally (exit code {rc}) with no result.",
         exit_code=rc, stderr_tail=stderr_tail,

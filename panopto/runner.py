@@ -39,6 +39,7 @@ progress(kind, **kw) event kinds:
 from __future__ import annotations
 
 import logging
+import os
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -329,10 +330,14 @@ def run_panopto_batch(
     device = settings.get("device", "cpu")
     language = settings.get("language", "auto")
 
+    # pid tags EVERY line of this batch run. If the log shows overlapping batches
+    # with DIFFERENT pids, multiple app instances are running (e.g. the macOS
+    # rogue-GUI bug); the SAME pid restarting a batch means the phase re-entered
+    # (a rerun that wasn't routed to cancelled - the _active_dl_statuses class).
     logger.info(
-        "Panopto batch start: %d target(s) | model=%s device=%s lang=%s | "
+        "Panopto batch start (pid=%s): %d target(s) | model=%s device=%s lang=%s | "
         "engine_ready=%s (outputs + layout resolved per target)",
-        len(targets), model_id, device, language, engine_ready,
+        os.getpid(), len(targets), model_id, device, language, engine_ready,
     )
     # When transcription is configured, dump the engine + hardware diagnostics
     # up front so a broken backend / missing GPU is diagnosable from the log.
@@ -736,6 +741,9 @@ def run_panopto_batch(
             t = tx_tasks[i]
             v = t.video
             progress("transcribe_start", title=v.title, index=i + 1, total=len(tx_tasks))
+            logger.info("Transcribing [%d/%d] '%s' (device=%s, source=%s)...",
+                        i + 1, len(tx_tasks), v.title, active_device,
+                        Path(t.tx_source).name)
             try:
                 # Runs in an isolated child process: a native CUDA crash can no
                 # longer take down the host (the "server closed itself" bug).
@@ -765,6 +773,8 @@ def run_panopto_batch(
                         pass
                 i += 1
             except PanoptoCancelled:
+                logger.info("Transcription cancelled by user at [%d/%d] '%s'.",
+                            i + 1, len(tx_tasks), v.title)
                 break
             except TranscriptionEngineCrash as e:
                 # The child process died NATIVELY (e.g. a CUDA/cuDNN access

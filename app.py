@@ -523,11 +523,16 @@ _write_nav_to_query_params()
 
 # C-3: Guard against stale cancel events left by a prior run that bypassed
 # cleanup_download_state(). Safe to reset whenever no background download
-# thread is running - i.e. when not in any of the active download phases
-# (scanning, running, isolated_retry). Note: the earlier value `'downloading'`
-# was a typo that never matched the real download_status values and caused
-# this branch to fire on every rerun, defeating the guard.
-_active_dl_statuses = {'scanning', 'running', 'isolated_retry'}
+# thread is running - i.e. when not in any of the active download phases.
+# Note: the earlier value `'downloading'` was a typo that never matched the real
+# download_status values and caused this branch to fire on every rerun, defeating
+# the guard. `'panopto'` had the OPPOSITE bug: it was MISSING here, so during the
+# terminal Panopto phase (an active phase with live download/transcription
+# workers) this reset fired on every rerun and NUKED the cancel event the instant
+# on_click set it - so Cancel was silently ignored and the phase restarted its
+# discovery (re-scan) instead of stopping. Must mirror cancellation.py's
+# _IN_PROGRESS_DOWNLOAD_STATUSES exactly.
+_active_dl_statuses = {'scanning', 'running', 'isolated_retry', 'panopto'}
 if st.session_state.get('download_status', '') not in _active_dl_statuses:
     reset_download_cancel()
 
