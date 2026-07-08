@@ -216,7 +216,7 @@ def log_session_header(debug_file, context: str = '') -> None:
             _ca_state = f'unavailable ({e})'
         lines = [
             "=== Session Environment ===",
-            f"  App: Canvas Downloader v{_ver} | frozen={bool(getattr(sys, 'frozen', False))}",
+            f"  App: Canvas Downloader v{_ver} | frozen={bool(getattr(sys, 'frozen', False))} | pid={os.getpid()}",
             f"  OS: {_pf.system()} {_pf.release()} | {_pf.platform()} | arch={_pf.machine()}",
             f"  Python: {_pf.python_version()}",
             f"  CA bundle (certifi): {_ca_state}",
