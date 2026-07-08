@@ -225,6 +225,101 @@ _PAN_REC_SVG = (
 )
 
 
+def inject_sync_shift_select_bridge() -> None:
+    """Enable Shift-click range selection on the sync-review file checkboxes,
+    scoped **per expander/list** (a range never crosses category or course).
+
+    Same premise as ``ui.course_selector.inject_shift_select_bridge``: Streamlit
+    checkboxes are server-side widgets that never expose the Shift modifier to
+    Python, so the range logic lives in JavaScript.  A ``components.html`` iframe
+    reaches into ``window.parent.document`` (same origin) and attaches a delegated
+    ``click`` listener in the capture phase.
+
+    Scoping to a single expander is automatic: every file row is a
+    ``st.container(key="sync_row_<suffix>_<cid>_<id>")`` and every category
+    expander is wrapped in a ``st.container(key="cat_<kind>_<cid>")`` ancestor.
+    On a Shift-click we only look for the anchor and range **inside the clicked
+    row's own ``cat_*`` expander**, so an anchor set in a different category or a
+    different course is simply not found and no range is applied.  Because the
+    whole expander is the group, a range in the New Files / Deleted Locally
+    categories spans both the Canvas file rows and the Panopto-recording rows that
+    share that expander.  Clicks that land on the per-row ignore/eye button are
+    ignored entirely so that gesture keeps its own meaning.
+
+    Reliability mirrors the course-selector bridge: ``components.html`` rebuilds a
+    fresh iframe (and destroys the previous one) on every rerun, so a listener
+    attached from a dead realm silently stops firing.  We therefore re-bind a
+    fresh listener on every injection (removing the previous one first) and keep
+    the mutable anchor/applying state on ``window.parent`` so it survives the
+    re-binds.  In-range checkboxes are toggled with synchronous ``input.click()``
+    calls in one JS tick, so Streamlit batches them into a single fragment rerun.
+    """
+    import streamlit.components.v1 as components
+
+    components.html(
+        """<script>
+(function(){
+    // State lives on window.parent so it survives the iframe being recreated on
+    // every rerun (components.html() makes a fresh iframe each time).
+    var win = window.parent, doc = win.document;
+    var reg = win._cdSyncShift || (win._cdSyncShift = {anchorKey: null, applying: false, handler: null});
+
+    var ROW   = 'div[class*="st-key-sync_row_"]';   // one file/recording row
+    var GROUP = 'div[class*="st-key-cat_"]';        // one category expander (course-scoped)
+    var KEYRE = /st-key-(sync_row_[^ ]+)/;
+
+    function keyOf(row)   { var m = row.className.match(KEYRE); return m ? m[1] : null; }
+    function inputOf(row) { return row.querySelector('input[type="checkbox"]'); }
+
+    // Drop the previous listener (its iframe realm may already be dead) and
+    // re-attach a fresh one from this live realm.
+    if (reg.handler) {
+        try { doc.removeEventListener('click', reg.handler, true); } catch (_e) {}
+    }
+
+    // Capture phase: runs before the native checkbox toggle, so input.checked is
+    // still the OLD value and the post-click ("new") state is its negation.
+    reg.handler = function(e) {
+        if (reg.applying) return;   // ignore the synthetic clicks we dispatch below
+        // Never treat a click on the per-row ignore/eye button as a selection.
+        if (e.target.closest && e.target.closest('[data-testid="stButton"]')) return;
+
+        var row = e.target.closest ? e.target.closest(ROW) : null;
+        if (!row) return;
+        var clicked = inputOf(row);
+        if (!clicked) return;
+
+        var grp = row.closest(GROUP);
+
+        if (e.shiftKey && reg.anchorKey && grp) {
+            // Re-query the live rows WITHIN this list only, so a range can never
+            // cross into another expander or course.
+            var list = Array.prototype.slice.call(grp.querySelectorAll(ROW));
+            var idx = list.indexOf(row), aIdx = -1;
+            for (var i = 0; i < list.length; i++) {
+                if (keyOf(list[i]) === reg.anchorKey) { aIdx = i; break; }
+            }
+            if (aIdx !== -1 && idx !== -1 && aIdx !== idx) {
+                var target = !clicked.checked;   // state the clicked box is about to take
+                var lo = Math.min(aIdx, idx), hi = Math.max(aIdx, idx);
+                reg.applying = true;
+                for (var j = lo; j <= hi; j++) {
+                    if (j === idx) continue;     // the clicked box toggles itself natively
+                    var inp = inputOf(list[j]);
+                    if (inp && inp.checked !== target) inp.click();
+                }
+                reg.applying = false;
+            }
+        }
+        reg.anchorKey = keyOf(row);
+    };
+    doc.addEventListener('click', reg.handler, true);
+})();
+</script>""",
+        height=0,
+    )
+
+
 # ---- Analysis review ----
 
 def _render_transcription_setup_notice(results):
@@ -1927,6 +2022,12 @@ def show_analysis_review(on_confirm_sync):
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+    # Shift-click range selection across each expander's file checkboxes.
+    # Re-injected every rerun (see the function docstring for why re-binding is
+    # required); scopes ranges to a single category expander (never crossing
+    # category or course).
+    inject_sync_shift_select_bridge()
 
     # --- Action buttons (Back left, Sync right) ---
     # "Active" = anything the user could sync (files + Panopto recordings).

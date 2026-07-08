@@ -471,20 +471,7 @@ class CanvasManager:
             
         # Initialize Canvas object
         try:
-            self.canvas = Canvas(self.api_url, self.api_key)
-            # Apply a default timeout to all synchronous canvasapi requests so that
-            # calls like course.get_modules() raise Timeout instead of hanging forever
-            # on slow or cross-continent connections.
-            try:
-                _adapter = _CanvasTimeoutAdapter()
-                self.canvas._Canvas__requester._session.mount('https://', _adapter)
-                self.canvas._Canvas__requester._session.mount('http://', _adapter)
-            except Exception as _e:
-                import logging as _logging
-                _logging.getLogger(__name__).warning(
-                    f"Could not mount timeout adapter on canvasapi session: {_e}. "
-                    "API calls will have no timeout and may hang on slow connections."
-                )
+            self.canvas = self._new_canvas_client(self.api_url, self.api_key)
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
@@ -496,6 +483,30 @@ class CanvasManager:
     def __repr__(self):
         """Redacted repr - never expose the Canvas Access Token in tracebacks or log output."""
         return f"CanvasManager(api_url={self.api_url!r}, api_key='****')"
+
+    @staticmethod
+    def _new_canvas_client(api_url, api_key):
+        """Build a canvasapi ``Canvas`` with the shared request-timeout adapter mounted.
+
+        Each ``Canvas`` owns its own ``requests.Session``.  A dedicated client is
+        required whenever a Canvas call must run **concurrently** with another one
+        (a ``requests.Session`` is not guaranteed safe for concurrent use) - e.g.
+        the parallel page-metadata fetch in ``get_course_files_metadata``.  The
+        timeout adapter makes slow calls raise ``Timeout`` instead of hanging
+        forever on cross-continent connections.
+        """
+        canvas = Canvas(api_url, api_key)
+        try:
+            _adapter = _CanvasTimeoutAdapter()
+            canvas._Canvas__requester._session.mount('https://', _adapter)
+            canvas._Canvas__requester._session.mount('http://', _adapter)
+        except Exception as _e:
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                f"Could not mount timeout adapter on canvasapi session: {_e}. "
+                "API calls will have no timeout and may hang on slow connections."
+            )
+        return canvas
 
     def validate_token(self):
         """Checks if the token is valid by attempting to fetch the current user."""
@@ -541,7 +552,8 @@ class CanvasManager:
                     course_list.append(course)
         return course_list
 
-    def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None, is_scanning_phase=False):
+    def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None,
+                                  is_scanning_phase=False, timings=None):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -553,6 +565,11 @@ class CanvasManager:
         3. Deduplicate by File ID.
         4. Optionally merge metadata for secondary content entities (Assignments, etc.).
         
+        ``timings`` (dict | None): when provided, populated in place with the
+        per-phase wall-clock in ms - ``bulk_files_ms``, ``pages_ms``,
+        ``fetch_parallel_ms`` (wall-clock of the overlapped bulk‖pages block),
+        ``module_scan_ms`` and ``secondary_ms`` - for the analysis debug log.
+
         Returns:
             Tuple of (list[CanvasFileInfo], dict, dict):
               - List of CanvasFileInfo objects (unique by ID)
@@ -560,59 +577,98 @@ class CanvasManager:
               - Module map: content_id (int) → sanitized module folder name (str)
         """
         from core.sync_manager import CanvasFileInfo
-        
+        import time
+
         all_files_map = {} # ID -> CanvasFileInfo
         module_map = {}  # content_id (int) -> sanitized module folder name (str)
 
-        # --- Phase 1: Bulk Fetch (get_files) ---
-        try:
-            # We iterate manually to catch errors during pagination
-            canvas_files = course.get_files()
-            for file in canvas_files:
-                if not getattr(file, 'url', ''):
-                    logger.debug(f"Skipping locked/restricted file: {getattr(file, 'filename', '<unknown>')} in course {getattr(course, 'name', '?')}")
-                    continue
-                try:
-                    f_info = CanvasFileInfo(
-                        id=file.id,
-                        filename=getattr(file, 'filename', ''),
-                        display_name=getattr(file, 'display_name', getattr(file, 'filename', '')),
-                        size=getattr(file, 'size', 0),
-                        modified_at=getattr(file, 'modified_at', None),
-                        md5=getattr(file, 'md5', None),
-                        url=getattr(file, 'url', ''),
-                        content_type=getattr(file, 'content-type', ''),
-                        folder_id=getattr(file, 'folder_id', None),
-                    )
-                    all_files_map[file.id] = f_info
-                except Exception as e:
-                    logger.warning(f"Error parsing file object {getattr(file, 'id', '?')}: {e}")
-        except (Unauthorized, ResourceDoesNotExist, CanvasException):
-            logger.debug(f"Files tab not accessible for course {getattr(course, 'id', '?')} (permission denied - module scan will supplement)")
-            # Expected for courses with restricted Files tabs; Phase 2 module scan recovers the files.
-        except Exception as e:
-            logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")
-            # We do NOT raise here. We continue to Phase 2 to supplement what we found.
-            
-        # --- Page metadata (one paginated call) ---
-        # Page CONTENT signatures require each page's own updated_at + title,
-        # which module items don't carry and per-page fetches would make N+1.
-        # One course.get_pages() list call yields stubs with page_url, title
-        # and updated_at for every page - enough to sign without bodies.
-        # Skipped during the lightweight course-scanning phase.
-        page_meta: dict = {}
-        if not is_scanning_phase:
+        # ── Phase 1 (bulk files) ‖ Page metadata ──────────────────────────────
+        # These two Canvas fetches are mutually independent (the module scan needs
+        # BOTH before it can run), so off the scanning path we overlap them in two
+        # threads.  The bulk fetch keeps using this manager's shared session; the
+        # page fetch runs on a FRESH Canvas client (its own requests.Session) so
+        # the two never touch the same session concurrently.  Neither branch calls
+        # st.* / progress_callback, so no ScriptRunContext is needed on the workers.
+
+        def _fetch_bulk_files():
+            """Phase 1: bulk ``course.get_files()`` → {id: CanvasFileInfo}.
+            Swallows access/pagination errors and keeps whatever it gathered so
+            the module scan can supplement any gaps."""
+            _map = {}
             try:
-                for _pg in course.get_pages():
+                # We iterate manually to catch errors during pagination
+                for file in course.get_files():
+                    if not getattr(file, 'url', ''):
+                        logger.debug(f"Skipping locked/restricted file: {getattr(file, 'filename', '<unknown>')} in course {getattr(course, 'name', '?')}")
+                        continue
+                    try:
+                        _map[file.id] = CanvasFileInfo(
+                            id=file.id,
+                            filename=getattr(file, 'filename', ''),
+                            display_name=getattr(file, 'display_name', getattr(file, 'filename', '')),
+                            size=getattr(file, 'size', 0),
+                            modified_at=getattr(file, 'modified_at', None),
+                            md5=getattr(file, 'md5', None),
+                            url=getattr(file, 'url', ''),
+                            content_type=getattr(file, 'content-type', ''),
+                            folder_id=getattr(file, 'folder_id', None),
+                        )
+                    except Exception as e:
+                        logger.warning(f"Error parsing file object {getattr(file, 'id', '?')}: {e}")
+            except (Unauthorized, ResourceDoesNotExist, CanvasException):
+                logger.debug(f"Files tab not accessible for course {getattr(course, 'id', '?')} (permission denied - module scan will supplement)")
+                # Expected for courses with restricted Files tabs; Phase 2 module scan recovers the files.
+            except Exception as e:
+                logger.warning(f"Error during get_course_files_metadata bulk fetch: {e}")
+                # We do NOT raise here. We continue to Phase 2 to supplement what we found.
+            return _map
+
+        def _fetch_page_meta():
+            """Page CONTENT signatures require each page's own updated_at + title,
+            which module items don't carry and per-page fetches would make N+1.
+            One ``course.get_pages()`` list call yields stubs with page_url, title
+            and updated_at for every page - enough to sign without bodies.  Runs on
+            a fresh Canvas client so it is safe to overlap the bulk fetch.
+            Returns {page_slug: page_stub}."""
+            _meta = {}
+            try:
+                _client = self._new_canvas_client(self.api_url, self.api_key)
+                _course = _client.get_course(course.id)
+                for _pg in _course.get_pages():
                     _slug = getattr(_pg, 'url', '') or ''
                     if _slug:
-                        page_meta[_slug] = _pg
+                        _meta[_slug] = _pg
             except (Unauthorized, ResourceDoesNotExist, CanvasException):
                 logger.debug(f"Pages list not accessible for course {getattr(course, 'id', '?')}")
             except Exception as e:
                 logger.debug(f"Page metadata fetch failed: {e}")
+            return _meta
+
+        def _timed(fn):
+            _s = time.perf_counter()
+            _r = fn()
+            return _r, int((time.perf_counter() - _s) * 1000)
+
+        page_meta: dict = {}
+        _fetch_start = time.perf_counter()
+        if is_scanning_phase:
+            # Scanning phase never fetches pages - run the bulk fetch inline.
+            all_files_map, _bulk_ms = _timed(_fetch_bulk_files)
+            _pages_ms = 0
+        else:
+            import concurrent.futures as _cf
+            with _cf.ThreadPoolExecutor(max_workers=2, thread_name_prefix="canvas-meta") as _ex:
+                _fut_files = _ex.submit(_timed, _fetch_bulk_files)
+                _fut_pages = _ex.submit(_timed, _fetch_page_meta)
+                all_files_map, _bulk_ms = _fut_files.result()
+                page_meta, _pages_ms = _fut_pages.result()
+        if timings is not None:
+            timings['bulk_files_ms'] = _bulk_ms
+            timings['pages_ms'] = _pages_ms
+            timings['fetch_parallel_ms'] = int((time.perf_counter() - _fetch_start) * 1000)
 
         # --- Phase 2: Module Scan (Supplement) ---
+        _module_scan_start = time.perf_counter()
         try:
             # Pass the IDs already gathered by the bulk fetch so the module
             # scan can skip its per-item course.get_file() call for files we
@@ -640,10 +696,13 @@ class CanvasManager:
             logger.error(f"Error during module scan fallback: {e}")
             if progress_callback:
                 progress_callback(f"Module scan failed - some files may be missing: {e}", progress_type='log')
+        if timings is not None:
+            timings['module_scan_ms'] = int((time.perf_counter() - _module_scan_start) * 1000)
 
         # --- Phase 3: Secondary Content Metadata ---
         # Pass the module map so attachments of module-linked entities can
         # inherit their parent's module folder (Mode A path routing).
+        _secondary_start = time.perf_counter()
         secondary_fetch_success = {}
         if secondary_content_settings:
             try:
@@ -664,6 +723,8 @@ class CanvasManager:
                 logger.error(f"Error fetching secondary content metadata: {e}")
                 if progress_callback:
                     progress_callback(f"Canvas Content scan failed - some items may be missing: {e}", progress_type='log')
+        if timings is not None:
+            timings['secondary_ms'] = int((time.perf_counter() - _secondary_start) * 1000)
 
         return list(all_files_map.values()), secondary_fetch_success, module_map
 
@@ -674,7 +735,10 @@ class CanvasManager:
         ``known_file_ids`` (set[int] | None): file IDs already fetched by the
         bulk ``get_files()`` pass. Module items matching these IDs skip the
         per-item ``course.get_file()`` HTTP call (their module_map entry is
-        still recorded), avoiding an N+1 request pattern on large courses.
+        still recorded), avoiding an N+1 request pattern on large courses. Any
+        remaining File items (common when the Files tab is restricted, so the
+        bulk pass returned nothing) are resolved AFTER the module walk with a
+        parallel ``get_file()`` fan-out - each worker on its own Canvas session.
 
         ``page_meta`` ({page_url_slug: page_stub} | None): page stubs from a
         single course.get_pages() call, used to compute Page content
@@ -712,6 +776,15 @@ class CanvasManager:
 
         files = []
         module_map = {}
+        # content_id → first-linking module name, for File items whose metadata
+        # the bulk get_files() pass didn't already provide.  Collected during the
+        # module walk and resolved in parallel AFTER it (see below): on a course
+        # with a restricted Files tab EVERY module File item needs its own
+        # get_file(), and doing those serially is by far the dominant cost of the
+        # whole analysis.  Keyed by content_id so a file linked from several
+        # modules is fetched only once (first-linking module wins, matching
+        # module_map and the download engine).
+        pending_file_fetches: dict = {}
         try:
             modules = list(course.get_modules())
         except Exception as e:
@@ -720,15 +793,50 @@ class CanvasManager:
                 progress_callback(f"Could not fetch modules: {e}", progress_type='log')
             return files, module_map
         total_modules = len(modules)
-        for idx, module in enumerate(modules):
-            if progress_callback:
-                progress_callback(idx + 1, total_modules, f"Scanning module: {module.name}")
 
-            clean_module_name = self._sanitize_filename(module.name)
+        # Per-worker Canvas client (its own requests.Session) so the parallel
+        # fetches below never touch a shared session. Built lazily once per
+        # worker thread and cached; reused by BOTH the module-items fan-out here
+        # and the per-file metadata fan-out further down.
+        import concurrent.futures as _cf
+        import threading as _threading
+        from canvasapi.module import Module as _CanvasModule
+        _tls = _threading.local()
+
+        def _worker_course():
+            _c = getattr(_tls, 'course', None)
+            if _c is None:
+                _c = self._new_canvas_client(self.api_url, self.api_key).get_course(course.id)
+                _tls.course = _c
+            return _c
+
+        # ── Fetch every module's item list in parallel ───────────────────────
+        # One HTTP call per module; done serially this is the dominant remaining
+        # cost on many-module courses. The Module is built straight from the
+        # worker's requester (no extra get_module round trip). ``_ex.map``
+        # preserves input order, so first-linking-module-wins is unchanged.
+        def _fetch_module_items(module):
+            _name = self._sanitize_filename(getattr(module, 'name', 'Module'))
             try:
-                items = list(module.get_module_items())
+                _m = _CanvasModule(_worker_course()._requester,
+                                   {'id': module.id, 'course_id': course.id})
+                return _name, list(_m.get_module_items())
             except Exception as e:
                 logger.warning(f"Could not fetch items for module '{getattr(module, 'name', '?')}': {e}")
+                return _name, None
+
+        if modules:
+            _items_workers = min(8, len(modules))
+            with _cf.ThreadPoolExecutor(max_workers=_items_workers,
+                                        thread_name_prefix="canvas-moditems") as _ex:
+                _modules_items = list(_ex.map(_fetch_module_items, modules))
+        else:
+            _modules_items = []
+
+        for idx, (clean_module_name, items) in enumerate(_modules_items):
+            if progress_callback:
+                progress_callback(idx + 1, total_modules, f"Scanning module: {clean_module_name}")
+            if items is None:
                 continue
             for item in items:
                 if item.type == 'File':
@@ -742,32 +850,9 @@ class CanvasManager:
                         # Already in the bulk get_files() result - the
                         # module_map entry above is all this item needed.
                         continue
-                    try:
-                        file = course.get_file(item.content_id)
-                        if not getattr(file, 'url', ''):
-                            continue
-                        files.append(CanvasFileInfo(
-                            id=file.id,
-                            filename=getattr(file, 'filename', ''),
-                            display_name=getattr(file, 'display_name', getattr(file, 'filename', '')),
-                            size=getattr(file, 'size', 0),
-                            modified_at=getattr(file, 'modified_at', None),
-                            md5=getattr(file, 'md5', None),
-                            url=getattr(file, 'url', ''),
-                            content_type=getattr(file, 'content-type', ''),
-                            folder_id=getattr(file, 'folder_id', None),
-                        ))
-                    except Exception as _fetch_err:
-                        logger.warning(
-                            f"Could not fetch file {item.content_id} from module "
-                            f"'{getattr(module, 'name', '?')}': {_fetch_err}"
-                        )
-                        if progress_callback:
-                            progress_callback(
-                                f"Could not access '{getattr(item, 'title', item.content_id)}' "
-                                f"in module '{getattr(module, 'name', '?')}'",
-                                progress_type='log',
-                            )
+                    # Defer the per-file get_file() HTTP call; resolved in
+                    # parallel after the module walk (first-linking module wins).
+                    pending_file_fetches.setdefault(item.content_id, clean_module_name)
                 elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
                     try:
                         # M-1 parity: Pages and links are MODULE ITEMS, written
@@ -832,7 +917,7 @@ class CanvasManager:
                         logger.warning(
                             f"Could not process {item.type} item "
                             f"'{getattr(item, 'title', '?')}' in module "
-                            f"'{getattr(module, 'name', '?')}': {_item_err}"
+                            f"'{clean_module_name}': {_item_err}"
                         )
 
                 # --- Secondary entities found in modules ---
@@ -861,7 +946,7 @@ class CanvasManager:
                     except Exception as _item_err:
                         logger.warning(
                             f"Could not process Assignment item '{getattr(item, 'title', '?')}' "
-                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                            f"in module '{clean_module_name}': {_item_err}"
                         )
                 elif item.type == 'Quiz' and secondary_content_settings and secondary_content_settings.get('download_quizzes'):
                     try:
@@ -888,7 +973,7 @@ class CanvasManager:
                     except Exception as _item_err:
                         logger.warning(
                             f"Could not process Quiz item '{getattr(item, 'title', '?')}' "
-                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                            f"in module '{clean_module_name}': {_item_err}"
                         )
                 elif item.type == 'Discussion' and secondary_content_settings and secondary_content_settings.get('download_discussions'):
                     try:
@@ -915,8 +1000,71 @@ class CanvasManager:
                     except Exception as _item_err:
                         logger.warning(
                             f"Could not process Discussion item '{getattr(item, 'title', '?')}' "
-                            f"in module '{getattr(module, 'name', '?')}': {_item_err}"
+                            f"in module '{clean_module_name}': {_item_err}"
                         )
+
+        # ── Resolve deferred per-file metadata fetches in parallel ────────────
+        # This is the hot path for restricted-Files-tab courses (bulk get_files()
+        # returns nothing, so every module File item lands here).  Each worker
+        # uses its OWN Canvas client (fresh requests.Session via a thread-local)
+        # so no session is touched concurrently; the workers never call st.* /
+        # progress_callback (that stays on this thread, driven by as_completed).
+        if pending_file_fetches:
+            # Reuses the module-scan's per-worker Canvas client (_worker_course)
+            # and _cf imported above.
+            def _resolve_module_file(content_id, module_name):
+                """Fetch one module-linked file's metadata on a worker thread.
+                Returns a CanvasFileInfo, or None to skip (locked / no url /
+                fetch failed).  A failure is logged and swallowed so one bad file
+                never aborts the rest of the scan (the old serial path let a fetch
+                error propagate and drop every remaining file)."""
+                try:
+                    _f = _worker_course().get_file(content_id)
+                    if not getattr(_f, 'url', ''):
+                        return None
+                    return CanvasFileInfo(
+                        id=_f.id,
+                        filename=getattr(_f, 'filename', ''),
+                        display_name=getattr(_f, 'display_name', getattr(_f, 'filename', '')),
+                        size=getattr(_f, 'size', 0),
+                        modified_at=getattr(_f, 'modified_at', None),
+                        md5=getattr(_f, 'md5', None),
+                        url=getattr(_f, 'url', ''),
+                        content_type=getattr(_f, 'content-type', ''),
+                        folder_id=getattr(_f, 'folder_id', None),
+                    )
+                except Exception as _fetch_err:
+                    logger.warning(
+                        f"Could not fetch file {content_id} from module "
+                        f"'{module_name}': {_fetch_err}"
+                    )
+                    return None
+
+            _total_pending = len(pending_file_fetches)
+            _max_workers = min(8, _total_pending)
+            _done = 0
+            # Throttle progress pushes: the analysis progress hook does a ~50ms
+            # DOM-flush sleep per call, so firing it once per file would re-add
+            # seconds of latency that the parallel fetch just removed. Cap it to
+            # ~20 updates across the whole batch (plus the final one).
+            _progress_step = max(1, _total_pending // 20)
+            with _cf.ThreadPoolExecutor(max_workers=_max_workers,
+                                        thread_name_prefix="canvas-modfile") as _ex:
+                _futs = [
+                    _ex.submit(_resolve_module_file, _cid, _mname)
+                    for _cid, _mname in pending_file_fetches.items()
+                ]
+                for _fut in _cf.as_completed(_futs):
+                    _done += 1
+                    _r = _fut.result()
+                    if _r is not None:
+                        files.append(_r)
+                    # 3-positional form only - the analysis/scanning progress hooks
+                    # don't accept progress_type kwargs.
+                    if progress_callback and (_done % _progress_step == 0 or _done == _total_pending):
+                        progress_callback(_done, _total_pending,
+                                          f"Fetching file details ({_done}/{_total_pending})…")
+
         return files, module_map
 
     def get_secondary_content_metadata(self, course, settings, is_scanning_phase=False,
