@@ -12,6 +12,9 @@
 
 ## Recent Activity
 
+- **Session 2026-07-08: Today Page Empty State "No Courses" Color & Boldness Alignment**
+    - **Title Class & CSS Styling**: Added a specific class `.today-courses-empty-title` to the "No courses in your daily sync yet." text in [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py) and styled it in [today.css](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/styles/today.css) with color `#c7ccd9` and font-weight `700`, matching the color and boldness of the "No new files today" empty title (`.today-files-empty-title`).
+
 - **Session 2026-07-07: Today Page Layout Simplifications & Button Border Fixes**
     - **Header Layout Restructuring**: Placed the auto-sync toggle card on the same row as the main title `Auto-download today's new files` (using `st.columns([0.46, 0.54])`). Removed the "Daily auto-sync" text labels and description from the card entirely.
     - **Header Row Stretch**: Wrapped the header row in `today_header_row` and used flex columns auto-stretching in CSS (`flex: 1 1 auto`) to make the card stretch to fill the remaining space on the right, starting exactly where the title ends and closing the gap.
