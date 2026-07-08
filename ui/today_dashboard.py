@@ -26,7 +26,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from shared import theme
 from styles import inject_css
 from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file
 from shared.components import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
@@ -81,6 +80,16 @@ _SVG_FILE_MINI = (
     "<path d='M6 22h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z'/>"
     "<path d='M13 4l5 5h-5V4z'/>"
     "</svg>"
+)
+# Lucide refresh-cw glyph (white) - the icon badge on the manual Quick Sync card.
+# A "refresh/update" mark (distinct from the button's ⚡ bolt) framing the card as
+# the on-demand way to bring these courses up to date.
+_SVG_QS_REFRESH = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='#ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' "
+    "style='width:21px;height:21px;'>"
+    "<path d='M21 2v6h-6'/><path d='M3 12a9 9 0 0 1 15-6.7L21 8'/>"
+    "<path d='M3 22v-6h6'/><path d='M21 12a9 9 0 0 1-15 6.7L3 16'/></svg>"
 )
 
 
@@ -191,11 +200,31 @@ def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> 
     
     dimming_css = ""
     if not auto_sync_enabled or sync_running:
+        # Dim the page sections while auto-sync is off / a sync is running - but
+        # NOT the running-sync card sandwiched between them (it's the active thing).
         dimming_css = """
-    div.st-key-today_content_area {
+    div.st-key-today_courses_card,
+    div.st-key-today_files_hero,
+    div.st-key-today_qs_section {
         opacity: 0.45 !important;
         filter: grayscale(100%) brightness(0.85) !important;
         pointer-events: none !important;
+    }
+        """
+
+    # When auto-sync is ON, theme the whole toggle "pill" green (green tint + green
+    # border + green switch track) so the card itself reads ACTIVE; when off it
+    # falls back to the standard grey defined in today.css.
+    toggle_active_css = ""
+    if auto_sync_enabled:
+        toggle_active_css = """
+    div[class*="st-key-today_toggle_card"] {
+        background: rgba(16, 185, 129, 0.12) !important;
+        border-color: rgba(16, 185, 129, 0.5) !important;
+        box-shadow: 0 0 18px rgba(16, 185, 129, 0.14) !important;
+    }
+    div[class*="st-key-today_toggle_card"] [data-testid="stCheckbox"] label > div:first-child {
+        background-color: #10b981 !important;
     }
         """
 
@@ -350,18 +379,27 @@ def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> 
         pointer-events: none !important;
     }}
 
-    /* ── Today-page collapsible header: compact 44px (single-line, no folder) ── */
+    /* ── Today-page collapsible header: compact 52px, emphasized ── */
     /* Double attribute selector on the run container boosts specificity above the
-       generic shist_run_ 60px rule in sync_history_cards.css. */
+       generic shist_run_ rules in sync_history_cards.css. Brighter header bar +
+       slightly taller than the compact default so the per-course cards read as
+       distinct, emphasized rows against the (darker) today_files_inner panel. */
+    div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] {{
+        border-color: rgba(255, 255, 255, 0.14) !important;
+    }}
     div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] div[class*="st-key-shist_btn_today_"] button {{
-        height: 44px !important;
-        min-height: 44px !important;
+        height: 52px !important;
+        min-height: 52px !important;
+        background: #2b313d !important;
+    }}
+    div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] div[class*="st-key-shist_btn_today_"] button:hover {{
+        background: #343b49 !important;
     }}
     div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] [data-testid="stElementContainer"]:has(.shist-card) {{
-        height: 44px !important;
+        height: 52px !important;
     }}
     div[class*="st-key-shist_run_today_"][class*="st-key-shist_run_today_"] .shist-card {{
-        height: 44px !important;
+        height: 52px !important;
     }}
 
     /* ── Toggle card: zero the column gap Streamlit injects between toggle and badge ── */
@@ -375,6 +413,7 @@ def _inject_dynamic_css(auto_sync_enabled: bool, sync_running: bool = False) -> 
 
 
     {dimming_css}
+    {toggle_active_css}
     </style>""", unsafe_allow_html=True)
 
 
@@ -458,6 +497,7 @@ def _group_widget_id(grp: dict) -> str:
     return f"{cid if cid is not None else 'x'}_{folder_h}"
 
 
+@st.fragment
 def _render_today_files(groups: list[dict]) -> None:
     """Render today's synced files as one collapsible card PER COURSE.
 
@@ -468,13 +508,19 @@ def _render_today_files(groups: list[dict]) -> None:
     completion and sync-history screens. This is the sync-history layout,
     grouped by course and trimmed for the Today page (no run timestamps, a file
     count badge instead of a run status, and the destination folder on line 2).
-    """
-    from styles import inject_css
-    from shared.helpers import short_path
-    from shared.components import inject_file_action_css, render_course_file_breakdown
 
-    inject_file_action_css()
-    inject_css("sync_history_cards.css")
+    Wrapped in ``@st.fragment`` so expanding/collapsing a course card (and the
+    per-file Open/Reveal buttons) reruns ONLY this file list via
+    ``st.rerun(scope="fragment")`` - not the whole page. A full-page rerun
+    re-injected the heavy ``today.css``, which caused a visible flash ("dip to
+    black") and lag on every expander toggle.
+    """
+    # NOTE: the shared card + file-row CSS is injected by the CALLER, OUTSIDE this
+    # fragment (see render_today_dashboard), so a fragment-scoped rerun never
+    # re-injects it and the <style> elements never sit inside this fragment's own
+    # vertical block (where they'd claim a flex-gap slot above the first card).
+    from shared.helpers import short_path
+    from shared.components import render_course_file_breakdown
 
     for grp in groups:
         files = grp.get("files") or []
@@ -507,7 +553,7 @@ def _render_today_files(groups: list[dict]) -> None:
         with st.container(border=True, key=f"shist_run_today_{gid}"):
             if st.button("​", key=f"shist_btn_today_{gid}", use_container_width=True):
                 st.session_state[open_key] = not is_open
-                st.rerun()
+                st.rerun(scope="fragment")
             st.markdown(header_html, unsafe_allow_html=True)
             if is_open:
                 with st.container(border=True, key=f"shist_body_today_{gid}"):
@@ -724,8 +770,9 @@ def _import_courses_dialog():
             <div style="font-size:1.75rem; font-weight:600; color:white;">Manage daily sync courses</div>
         </div>
         <p style="color:#aaa; font-size:0.9rem; margin:6px 0 12px 0;">
-            Tick the saved pairs and groups you want kept up to date automatically.
-            Your choice is saved - change it any time.
+            These are the pairs and groups you've saved in <b>Sync Course Folders.</b> Tick the
+            ones you want auto-sync daily. Don't see a course? Save it there
+            first, as a Pair or Group, then come back to add it here.
         </p>
         """,
         unsafe_allow_html=True,
@@ -1127,26 +1174,22 @@ def _render_sync_notice(notice: dict) -> None:
 
 
 def _render_course_chips(pairs: list[dict]) -> None:
-    """Render the daily-sync courses as a compact, read-only chip summary.
+    """Render the daily-sync courses as clickable chips that open each folder.
 
     This is the everyday (collapsed) view: the daily-sync set is a
     whole-semester setup that rarely changes, so the main page shows just these
-    glanceable chips instead of the full editable list. Each chip carries the
-    course's folder path as a hover ``title`` for a quick reminder without
-    cluttering the view; all editing lives behind the "Manage" toggle.
+    glanceable chips instead of the full editable list. Each chip is a native
+    ``st.button`` styled as a pill (folder glyph + course name); clicking it
+    opens that course's local folder in the file explorer. All editing lives
+    behind the "Manage" toggle. The keyed wrapper is laid out as a flex-wrap row
+    in today.css so the buttons flow like tags.
     """
-    chips = []
-    for p in pairs:
-        name = friendly_course_name(p.get("course_name") or "Course")
-        folder = p.get("local_folder", "")
-        chips.append(
-            f"<span class='tcs-pill' title='{esc(folder)}'>"  # audit-ignore: folder is a local path
-            f"{_SVG_COURSE}<span>{esc(name)}</span></span>"  # audit-ignore: static SVG constant
-        )
-    st.markdown(
-        f"<div class='today-courses-summary'>{''.join(chips)}</div>",
-        unsafe_allow_html=True,
-    )
+    with st.container(key="today_courses_summary"):
+        for i, p in enumerate(pairs):
+            name = friendly_course_name(p.get("course_name") or "Course")
+            folder = p.get("local_folder", "") or ""
+            if st.button(name, key=f"today_chip_{i}", disabled=not folder):
+                open_folder(folder)
 
 
 # ── Running sync (in-page progress card) ────────────────────────────────────
@@ -1268,14 +1311,12 @@ def render_today_dashboard(fetch_courses_fn=None):
                         if cfg["auto_sync_enabled"]:
                             st.html(
                                 "<div class='today-status-badge active'>"
-                                "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#10b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-circle-check'><circle cx='12' cy='12' r='10'/><path d='m9 12 2 2 4-4'/></svg>"
                                 "<span>Active</span>"
                                 "</div>"
                             )
                         else:
                             st.html(
                                 "<div class='today-status-badge inactive'>"
-                                "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#8A91A6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-circle-x'><circle cx='12' cy='12' r='10'/><path d='m15 9-6 6'/><path d='m9 9 6 6'/></svg>"
                                 "<span>Not Activated</span>"
                                 "</div>"
                             )
@@ -1285,7 +1326,9 @@ def render_today_dashboard(fetch_courses_fn=None):
             col_sub, col_help = st.columns([0.94, 0.06], vertical_alignment="center")
             with col_sub:
                 st.markdown(
-                    "<p class='today-subtitle'>Your daily course catch-up, in one place.</p>",
+                    "<p class='today-subtitle'>Add your courses to the daily sync, and their new "
+                    "files are downloaded automatically each morning, first time you open the app - no need to check "
+                    "Canvas yourself.</p>",
                     unsafe_allow_html=True,
                 )
             with col_help:
@@ -1304,61 +1347,28 @@ def render_today_dashboard(fetch_courses_fn=None):
             mode="card",
         )
 
-        # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
-        # A daily/Quick Sync is in flight: surface it as a slim progress card right
-        # here, below the toggle, instead of the sync engine taking over the whole
-        # screen. The rest of the dashboard stays below, dimmed (see the
-        # today_content_area dimming in _inject_dynamic_css).
+        # ── Courses in your daily sync (card) ───────────────────────────────────
+        # Day-to-day this list never changes (it's a whole-semester setup), so the
+        # main view shows only a compact chip summary of the courses - each chip
+        # clickable to open that course's folder. The full management UI (the
+        # editable list with Remove + the Add courses dialog) lives "a layer
+        # deeper", revealed inline by the "Manage" toggle. Add courses stays a
+        # dialog opened from the revealed layer, so it's never nested inside another
+        # dialog (which would crash Streamlit). The whole section is boxed in its
+        # own card so it reads as distinct from the "Today's files" highlight below.
         #
-        # CRITICAL: this keyed container is emitted UNCONDITIONALLY (even when
-        # idle) so React always keeps it as its OWN DOM node. If it were only
-        # rendered while syncing, then on the idle→syncing frame React would
-        # repurpose the *content-area's* node for this card (both are adjacent
-        # stVerticalBlocks), orphaning the content area's trailing children -
-        # the whole "Today's files" list - INSIDE this card's bordered box. That
-        # is the "content swallowed by the syncing card" bug. When idle the slot
-        # holds only a hidden anchor (keeps the node alive) and CSS collapses it
-        # to nothing (div[...today_running_card]:not(:has(.today-run-head))).
-        with st.container(key="today_running_card"):
-            st.markdown(
-                "<div class='today-run-anchor'></div>",  # audit-ignore: static node-anchor
-                unsafe_allow_html=True,
-            )
-            if sync_running:
-                _render_today_running_sync()
+        # Pairs whose folder is missing/moved are proactively hidden from the list so
+        # they never get in the way. No notice here - the user can only add courses via
+        # the import dialog, which already explains any hidden (issue) entries there.
+        visible_pairs = [
+            p for p in daily_pairs
+            if p.get("local_folder") and Path(p["local_folder"]).exists()
+        ]
+        has_courses = bool(visible_pairs)
+        manage_open = st.session_state.get("today_manage_open", False)
 
-        with st.container(key="today_content_area"):
-            # ── Last-run success notice ─────────────────────────────────────────────
-            # Written by the today completion handler (sync_ui.render_sync_step4) when a
-            # daily/Quick Sync finishes. Dismissible; survives navigation until closed
-            # or replaced by the next run. Idle view only - a run in flight returns
-            # above, so a stale notice can never sit beside the live progress card.
-            _sync_notice = st.session_state.get("today_sync_notice")
-            if _sync_notice:
-                _render_sync_notice(_sync_notice)
-
-            # ── Courses in your daily sync ──────────────────────────────────────────
-            # Day-to-day this list never changes (it's a whole-semester setup), so the
-            # main view shows only a compact, read-only chip summary of the courses.
-            # The full management UI - the editable list with Remove + the Add courses
-            # dialog - lives "a layer deeper", revealed inline by the "Manage" toggle.
-            # Add courses stays a dialog opened from the revealed layer, so it's never
-            # nested inside another dialog (which would crash Streamlit).
-            #
-            # Pairs whose folder is missing/moved are proactively hidden from the list so
-            # they never get in the way. No notice here - the user can only add courses via
-            # the import dialog, which already explains any hidden (issue) entries there.
-            visible_pairs = [
-                p for p in daily_pairs
-                if p.get("local_folder") and Path(p["local_folder"]).exists()
-            ]
-            has_courses = bool(visible_pairs)
-            manage_open = st.session_state.get("today_manage_open", False)
-
+        with st.container(key="today_courses_card"):
             # Header row: section label (+ live count) ........ Manage / Done toggle.
-            # The toggle is a compact, right-aligned control (content-sized, not a full
-            # bar) styled like the Sync UI "Edit" action button, so it reads as *the*
-            # control for the courses list below it.
             with st.container(key="today_courses_head"):
                 c_lbl, c_btn = st.columns([0.7, 0.3], vertical_alignment="center")
                 with c_lbl:
@@ -1385,26 +1395,24 @@ def render_today_dashboard(fetch_courses_fn=None):
                             st.rerun()
 
             if not has_courses:
-                # No courses yet - skip the summary/collapse and offer a direct CTA so
-                # first-time setup is a single click away.
-                with st.container(border=True, key="today_empty_container"):
-                    st.markdown(
-                        f"<div class='today-empty-inner'>"
-                        f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
-                        f"<div>No courses in your daily sync yet.</div>"
-                        f"<div class='today-empty-sub'>Use <b>Add courses</b> to import saved "
-                        f"pairs or groups.</div></div>",
-                        unsafe_allow_html=True,
-                    )
-                    if st.button("Add courses", use_container_width=True,
-                                 key="today_add_courses_btn", disabled=sync_running):
-                        _open_import_dialog()
+                # No courses yet - offer a direct CTA so first-time setup is one click away.
+                st.markdown(
+                    f"<div class='today-empty-inner today-courses-empty'>"
+                    f"<div class='today-empty-icon'>{_SVG_EMPTY_COURSES}</div>"  # audit-ignore: static SVG constant
+                    f"<div>No courses in your daily sync yet.</div>"
+                    f"<div class='today-empty-sub'>Use <b>Add courses</b> to import saved "
+                    f"pairs or groups.</div></div>",
+                    unsafe_allow_html=True,
+                )
+                if st.button("Add courses", use_container_width=True,
+                             key="today_add_courses_btn", disabled=sync_running):
+                    _open_import_dialog()
             elif not manage_open:
-                # COLLAPSED (the day-to-day view) - elegant, glanceable read-only chips.
+                # COLLAPSED (the day-to-day view) - clickable course chips (open folder).
                 _render_course_chips(visible_pairs)
             else:
                 # EXPANDED (the management layer) - editable list + Add courses dialog.
-                with st.container(border=True, key="today_list_outline"):
+                with st.container(key="today_list_outline"):
                     for i, pair in enumerate(visible_pairs):
                         folder = pair.get("local_folder", "")
                         name = friendly_course_name(pair.get("course_name") or "Course")
@@ -1437,46 +1445,108 @@ def render_today_dashboard(fetch_courses_fn=None):
                                  key="today_add_courses_btn", disabled=sync_running):
                         _open_import_dialog()
 
-            # ── Today's files (per course) ──────────────────────────────────────────
-            with st.container(key="today_files_head"):
+        # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
+        # A daily/Quick Sync is in flight: surface it as a slim progress card right
+        # here, directly BELOW the "Courses in your daily sync" card, instead of the
+        # sync engine taking over the whole screen. The sections above and below stay
+        # put, dimmed (see the dimming in _inject_dynamic_css); this card itself is
+        # never dimmed - it's the active thing.
+        #
+        # CRITICAL: this keyed container is emitted UNCONDITIONALLY (even when idle)
+        # so React always keeps it as its OWN DOM node. If it were only rendered
+        # while syncing, then on the idle→syncing frame React would repurpose a
+        # neighbouring section's node for this card (all are adjacent
+        # stVerticalBlocks), orphaning that section's children INSIDE this card's
+        # bordered box - the "content swallowed by the syncing card" bug. When idle
+        # the slot holds only a hidden anchor (keeps the node alive) and CSS
+        # collapses it to nothing (div[...today_running_card]:not(:has(.today-run-head))).
+        with st.container(key="today_running_card"):
+            st.markdown(
+                "<div class='today-run-anchor'></div>",  # audit-ignore: static node-anchor
+                unsafe_allow_html=True,
+            )
+            if sync_running:
+                _render_today_running_sync()
+
+        # ── Last-run success notice — floats in the gap ABOVE the hero ──────────
+        # Written by the today completion handler (sync_ui.render_sync_step4) when a
+        # daily/Quick Sync finishes. Rendered as a standalone sibling in the space
+        # BETWEEN the "Courses in your daily sync" card and the "Today's files" hero
+        # (not inside the hero). Dismissible; survives navigation until closed or
+        # replaced by the next run.
+        _sync_notice = st.session_state.get("today_sync_notice")
+        if _sync_notice:
+            _render_sync_notice(_sync_notice)
+
+        # ── Today's files — the HERO card (page highlight) ──────────────────────
+        # The main event and primary action of the page: a prominent, accented card
+        # that owns its own title and either a tall "all caught up" empty state or a
+        # highlighted inner panel holding the per-course file expanders (for visual
+        # depth + hierarchy). The "last run" notice lives OUTSIDE, above the hero.
+        groups = _todays_groups()
+        with st.container(key="today_files_hero"):
+            # Adaptive header: a live file-count badge + "grouped by course" copy when
+            # there are files today; a calmer "lands here" line when all caught up.
+            if groups:
+                _total = sum(len(g.get("files") or []) for g in groups)
+                _cnt_label = f"{_total} file" if _total == 1 else f"{_total} files"
+                _badge = (
+                    f"<span class='today-files-hero-count'>{esc(_cnt_label)}</span>"  # audit-ignore: static wrapper, int count
+                )
+                _sub = "Grouped by course &ndash; ready to open."
+            else:
+                _badge = ""
+                _sub = "New downloads from your daily sync land here."
+            st.markdown(
+                f"<div class='today-files-hero-head'>"
+                f"<div class='today-files-hero-titles'>"
+                f"<div class='today-files-hero-titlerow'>"
+                f"<span class='today-files-hero-title'>Today's files</span>{_badge}</div>"
+                f"<div class='today-files-hero-sub'>{_sub}</div>"
+                f"</div></div>",
+                unsafe_allow_html=True,
+            )
+
+            if not groups:
                 st.markdown(
-                    f"<div class='today-section-label'>Today's files</div>"
-                    f"<div class='today-section-sub'>Everything downloaded today, grouped by "
-                    f"course.</div>",
+                    f"<div class='today-files-empty'>"
+                    f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
+                    f"<div class='today-files-empty-title'>No new files today</div>"
+                    f"<div class='today-files-empty-sub'>You're all caught up.</div></div>",
                     unsafe_allow_html=True,
                 )
-
-            groups = _todays_groups()
-            if not groups:
-                with st.container(border=True, key="today_files_empty_container"):
-                    st.markdown(
-                        f"<div class='today-empty-inner'>"
-                        f"<div class='today-empty-icon'>{_SVG_CAUGHT_UP}</div>"  # audit-ignore: static SVG constant
-                        f"<div>No new files today - you're all caught up.</div></div>",
-                        unsafe_allow_html=True,
-                    )
             else:
-                _render_today_files(groups)
+                with st.container(key="today_files_inner"):
+                    # Inject the shared card + file-row CSS ONCE here, OUTSIDE the
+                    # fragment below, so an expand/collapse (fragment-scoped rerun)
+                    # doesn't re-inject it and the <style> elements stay direct
+                    # children of this gap:0 panel instead of inside the fragment's
+                    # own (gapped) block - which was banding space above the 1st card.
+                    from shared.components import inject_file_action_css
+                    inject_file_action_css()
+                    inject_css("sync_history_cards.css")
+                    _render_today_files(groups)
 
-            # ── Divider/Separator ──────────────────────────────────────────────────
-            st.markdown(
-                f"<hr style='border:none; border-top:1px solid {theme.BG_CARD}; "
-                f"margin:26px 0 14px 0;'>",
-                unsafe_allow_html=True,
-            )
-
-            # ── Quick Sync now - an optional, on-demand manual run ──────────────────
-            # Auto-sync (toggle above) is the primary, hands-off path, so this is framed
-            # and sized as a secondary "run it yourself now" choice: a lead-in line sets
-            # the expectation, and the button is deliberately narrower + centred rather
-            # than a full-bleed primary action.
-            st.markdown(
-                "<div class='today-qs-lead'>Auto-sync keeps these up to date for you "
-                "each morning &mdash; or run it yourself right now:</div>",
-                unsafe_allow_html=True,
-            )
+        # ── Quick Sync now — the manual, on-demand alternative to auto-sync ─────
+        # Rebuilt as an integrated action CARD in the page's card language (icon
+        # badge + explainer on the left, brand Quick Sync button on the right).
+        # Daily auto-sync (the toggle up top) is the hands-off primary path; this
+        # card is the "bring these courses up to date right now" manual option.
+        with st.container(key="today_qs_section"):
             runnable = resolve_today_pairs()
-            _qs_btn, _qs_empty = st.columns([0.19, 0.81])
+            _qs_info, _qs_btn = st.columns([0.66, 0.34], vertical_alignment="center")
+            with _qs_info:
+                st.markdown(
+                    "<div class='today-qs-card'>"
+                    f"<div class='today-qs-icon'>{_SVG_QS_REFRESH}</div>"  # audit-ignore: static SVG constant
+                    "<div class='today-qs-text'>"
+                    "<div class='today-qs-title'>Sync on demand</div>"
+                    "<div class='today-qs-sub'>Daily auto-sync runs each morning "
+                    "&mdash; trigger a manual Quick Sync any time to bring these "
+                    "courses up to date right now.</div>"
+                    "</div></div>",
+                    unsafe_allow_html=True,
+                )
             with _qs_btn:
                 if st.button("Quick Sync now", type="primary", use_container_width=True,
                              key="today_sync_now_btn", disabled=not runnable or sync_running):

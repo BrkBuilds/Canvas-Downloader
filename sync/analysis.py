@@ -89,6 +89,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         log_debug(f"Course Folder: {local_folder}", debug_file)
 
     progress_hook(0, 1, "Connecting to Canvas API...")
+    _t_connect = time.perf_counter()
     try:
         course = cm.canvas.get_course(course_id)
     except Exception as _gc_err:
@@ -96,12 +97,17 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             f"Could not fetch course '{course_name}' (ID {course_id}) from Canvas: {_gc_err}"
         ) from _gc_err
     if debug_file:
-        log_debug(f"Connected to course: {getattr(course, 'name', course_name)}", debug_file)
+        log_debug(f"Connected to course: {getattr(course, 'name', course_name)} "
+                  f"({int((time.perf_counter() - _t_connect) * 1000)} ms)", debug_file)
 
     sync_mgr = SyncManager(str(local_folder), course_id, course_name)
 
     progress_hook(0, 1, "Loading local sync manifest...")
+    _t_manifest = time.perf_counter()
     manifest = sync_mgr.load_manifest()
+    if debug_file:
+        log_debug(f"Loaded local manifest: {len(manifest.get('files', {}))} tracked entrie(s) "
+                  f"({int((time.perf_counter() - _t_manifest) * 1000)} ms)", debug_file)
 
     # Load secondary content contract so analysis includes negative-ID entities
     _sec_contract_source = "database"
@@ -151,18 +157,34 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         )
 
     progress_hook(0, 1, "Fetching files from Canvas...")
+    _t_fetch = time.perf_counter()
+    _fetch_timings: dict = {}
     canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(
         course,
         progress_callback=progress_hook,
         secondary_content_settings=_secondary_settings,
+        timings=_fetch_timings,
     )
     if debug_file:
-        log_debug(f"Fetched {len(canvas_files)} files from Canvas (secondary: {sec_fetch_status})", debug_file)
+        _fetch_ms = int((time.perf_counter() - _t_fetch) * 1000)
+        log_debug(f"Fetched {len(canvas_files)} files from Canvas "
+                  f"(secondary: {sec_fetch_status}) ({_fetch_ms} ms)", debug_file)
+        log_debug(
+            "  ↳ fetch breakdown: "
+            f"bulk_files={_fetch_timings.get('bulk_files_ms', '?')}ms | "
+            f"pages={_fetch_timings.get('pages_ms', '?')}ms "
+            f"(bulk‖pages wall-clock={_fetch_timings.get('fetch_parallel_ms', '?')}ms) | "
+            f"module_scan={_fetch_timings.get('module_scan_ms', '?')}ms | "
+            f"secondary={_fetch_timings.get('secondary_ms', '?')}ms",
+            debug_file,
+        )
 
     progress_hook(1, 1, "Healing local sync manifest...")
+    _t_heal = time.perf_counter()
     manifest = sync_mgr.heal_manifest(manifest)
     if debug_file:
-        log_debug(f"Manifest healed | DB was reset: {sync_mgr.db_was_reset}", debug_file)
+        log_debug(f"Manifest healed | DB was reset: {sync_mgr.db_was_reset} "
+                  f"({int((time.perf_counter() - _t_heal) * 1000)} ms)", debug_file)
 
     # One-time repair: manifests written before MD5-on-download existed have no
     # original_md5 baseline, which forces every genuine update onto the
@@ -170,11 +192,13 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     # rename matching. Backfill from the pristine bytes on disk. Gated by a DB
     # flag so the disk hashing runs at most once per folder.
     if sync_mgr._load_metadata('baseline_md5_backfilled') != '1':
+        _t_backfill = time.perf_counter()
         try:
             _filled = sync_mgr.backfill_baseline_md5(manifest)
             sync_mgr._save_metadata('baseline_md5_backfilled', '1')
             if debug_file:
-                log_debug(f"MD5 baseline backfill: repaired {_filled} entrie(s)", debug_file)
+                log_debug(f"MD5 baseline backfill: repaired {_filled} entrie(s) "
+                          f"({int((time.perf_counter() - _t_backfill) * 1000)} ms)", debug_file)
         except Exception as _bf_err:
             # Non-fatal: an empty baseline is safe (engine preserves local copy),
             # so a failed repair must never block the analysis.
@@ -182,6 +206,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 log_debug(f"MD5 baseline backfill skipped (error): {_bf_err}", debug_file)
 
     progress_hook(1, 1, "Comparing files...")
+    _t_compare = time.perf_counter()
     detected = sync_mgr.detect_structure()
     if debug_file:
         log_debug(f"Detected folder structure: {detected}", debug_file)
@@ -200,7 +225,8 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         _dc = len(getattr(result, 'deleted_on_canvas', []) or [])
         _lc = len(getattr(result, 'locally_deleted_files', []) or [])
         log_debug(
-            f"Analysis complete: {_nc} new | {_uc_clean} clean updates | "
+            f"Analysis complete ({int((time.perf_counter() - _t_compare) * 1000)} ms): "
+            f"{_nc} new | {_uc_clean} clean updates | "
             f"{_uc_mod} locally-edited updates | {_dc} deleted on Canvas | "
             f"{_lc} deleted locally",
             debug_file,
@@ -227,6 +253,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     # result so Review and what actually syncs can never disagree. A failure here
     # must never block the file analysis.
     panopto_payload = None
+    _t_panopto = time.perf_counter()
     try:
         from panopto.settings import (
             wants_transcription as _pan_wants_tx,
@@ -382,6 +409,11 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             log_debug(f"[WARNING] Panopto analysis skipped (error): {_pan_err}", debug_file)
         panopto_payload = {'changes': [], 'videos': [], 'download_mode': detected,
                            'settings': {}, 'error': str(_pan_err)}
+
+    # Only log the Panopto phase when it actually ran (payload stays None when the
+    # feature is disabled - no noise for the common no-Panopto case).
+    if debug_file and panopto_payload is not None:
+        log_debug(f"Panopto phase: {int((time.perf_counter() - _t_panopto) * 1000)} ms", debug_file)
 
     return course, sync_mgr, manifest, canvas_files, result, detected, panopto_payload
 
