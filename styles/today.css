@@ -932,6 +932,14 @@ div.st-key-today_add_courses_btn {
     width: 100% !important;
 }
 
+/* Empty state: the stButton wrapper is a full-width block, so the inline-flex
+   33.33%-wide button left-aligns by default. text-align:center on the block
+   wrapper centres the inline-level button in the card. (Reset to left inside the
+   management list below.) */
+div.st-key-today_add_courses_btn [data-testid="stButton"] {
+    text-align: center !important;
+}
+
 div.st-key-today_add_courses_btn button {
     background-color: #1f77b4 !important;
     border: none !important;
@@ -958,6 +966,11 @@ div.st-key-today_list_outline div.st-key-today_add_courses_btn button {
     min-height: 32px !important;
 }
 
+/* In the management list this is just another row - keep it left-aligned. */
+div.st-key-today_list_outline div.st-key-today_add_courses_btn [data-testid="stButton"] {
+    text-align: left !important;
+}
+
 
 /* ── Empty states ───────────────────────────────────────── */
 div.st-key-today_empty_container,
@@ -979,6 +992,11 @@ div.st-key-today_empty_container div.st-key-today_add_courses_btn {
     text-align: center;
     color: #8A91A6;
     line-height: 1.6;
+}
+
+.today-courses-empty-title {
+    color: #c7ccd9;
+    font-weight: 700;
 }
 
 .today-empty-icon {
