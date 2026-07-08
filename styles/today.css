@@ -863,6 +863,19 @@ div.st-key-today_sync_now_btn button {
     justify-content: center !important;
 }
 
+/* Tooltip hover target adjustments when the button is disabled and has help= */
+div.st-key-today_sync_now_btn [data-testid="stTooltipHoverTarget"] {
+    width: 100% !important;
+}
+
+div.st-key-today_sync_now_btn [data-testid="stTooltipHoverTarget"] > button {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 3em !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
 div.st-key-today_sync_now_btn button div[data-testid="stMarkdownContainer"] {
     display: flex !important;
     align-items: center !important;
@@ -1142,7 +1155,7 @@ div.st-key-today_courses_card {
     background: linear-gradient(180deg, #1a1e27 0%, #171a22 100%) !important;
     border: 1px solid #2D3248 !important;
     border-radius: 14px !important;
-    padding: 14px 16px 16px 16px !important;
+    padding: 14px 16px 24px 16px !important;
     margin-top: 8px !important;
     transition: opacity 0.3s ease, filter 0.3s ease !important;
     /* Deterministic spacing (see the hero card): zero the flex gap and drive
