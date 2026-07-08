@@ -174,9 +174,36 @@ if __name__ == "__main__":
     # Frozen worker re-exec: the transcription engine runs in an isolated child
     # process so a native CUDA crash can't take down the app (see
     # panopto.transcribe.transcribe_in_subprocess). In a frozen build the child
-    # is THIS exe relaunched with the worker flag - route it here BEFORE any
+    # is THIS exe relaunched to run the worker - route it here BEFORE any
     # webview/streamlit startup, run the worker, and exit.
-    if "--panopto-transcribe-worker" in sys.argv:
+    #
+    # Routing is via an ENVIRONMENT VARIABLE, not just a CLI flag: a macOS
+    # windowed .app bundle does NOT reliably forward custom argv to sys.argv (its
+    # bootloader rebuilds argv from Apple events), so the --panopto-transcribe-worker
+    # flag can be silently dropped - the child then falls through to webview and
+    # boots the FULL GUI (the macOS bug: a second Canvas Downloader window opened
+    # for every transcription, and the next file didn't start until you closed
+    # it). An env var is inherited verbatim by the execve'd child and is immune to
+    # the argv rebuild, so it is the primary signal; the flag is kept as a backup
+    # and for the dev `-m` path. pop() so the flag never leaks to any grandchild.
+    _env_worker = os.environ.pop("CANVAS_DL_TRANSCRIBE_WORKER", "") == "1"
+    if _env_worker or "--panopto-transcribe-worker" in sys.argv:
+        # Record HOW we routed so the worker can log it (confirms the env-var
+        # path is doing its job vs. falling back to the argv flag on some setup).
+        os.environ["_CANVAS_DL_WORKER_ROUTE"] = "env" if _env_worker else "argv"
+        # macOS: without this, the windowed-.app bootloader surfaces this headless
+        # helper as a SECOND Dock app while it transcribes. Demote it to a
+        # prohibited (background) process so it runs invisibly - one app icon,
+        # no window, hands-free, exactly like the Windows build. Best-effort:
+        # transcription still works if AppKit is unavailable.
+        if sys.platform == "darwin":
+            try:
+                from AppKit import (
+                    NSApplication, NSApplicationActivationPolicyProhibited)
+                NSApplication.sharedApplication().setActivationPolicy_(
+                    NSApplicationActivationPolicyProhibited)
+            except Exception:
+                pass
         try:
             from panopto.transcribe_worker import main as _worker_main
             sys.exit(_worker_main())

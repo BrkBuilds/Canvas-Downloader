@@ -1155,7 +1155,14 @@ div[class*="st-key-cancel_pp_btn_sync_phase3"] button::before {
     background-repeat: no-repeat !important;
     background-position: center !important;
     flex-shrink: 0 !important;
-    transition: all 0.15s ease !important;
+    /* NO transition here. `transition: all` made the X icon animate its
+       width/height from 0 to 17px every time the button re-mounted (i.e. on each
+       Cancel click / rerun), which on the macOS Cocoa/WKWebView backend renders
+       as the X "scaling up from its top-left corner". Chrome (Windows) suppresses
+       transitions on first paint so it never showed there. The only hover change
+       is a background-image swap, which is discrete (non-animatable) anyway, so
+       dropping the transition costs nothing and kills the mount animation. */
+    transition: none !important;
 }
 
 div[class*="st-key-cancel_download_btn"] button:hover,

@@ -14,8 +14,11 @@ Usage:
     from core.cancellation import cancel_download, cancel_sync, is_download_cancelled, is_sync_cancelled
 """
 
+import logging
 import threading
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════
 # Module-level Events (thread-safe cancel signals)
@@ -36,6 +39,7 @@ def cancel_download() -> None:
     for UI reactivity.
     """
     _download_cancel_event.set()
+    logger.info("Download cancellation requested (event set).")
     try:
         st.session_state['download_cancelled'] = True
         st.session_state['cancel_requested'] = True
@@ -139,6 +143,12 @@ def is_sync_cancelled() -> bool:
 
 def reset_download_cancel() -> None:
     """Clear the download cancel event and reset session_state flags."""
+    # Diagnostic: clearing a SET event means a pending user cancel was just
+    # discarded. That's legitimate at a fresh download start / cleanup, but if it
+    # shows up DURING an active phase (e.g. 'panopto') it means a stale-reset
+    # guard is swallowing the cancel (the _active_dl_statuses class of bug).
+    if _download_cancel_event.is_set():
+        logger.info("Download cancel event cleared (was set).")
     _download_cancel_event.clear()
     try:
         st.session_state['download_cancelled'] = False

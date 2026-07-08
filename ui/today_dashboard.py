@@ -1548,6 +1548,14 @@ def render_today_dashboard(fetch_courses_fn=None):
                     unsafe_allow_html=True,
                 )
             with _qs_btn:
+                # Disabled tooltip reasons (help wraps button in stTooltipHoverTarget)
+                help_text = None
+                if not runnable:
+                    help_text = "Add courses to your daily sync list to enable manual quick sync."
+                elif sync_running:
+                    help_text = "A sync is already in progress."
+
                 if st.button("Quick Sync now", type="primary", use_container_width=True,
-                             key="today_sync_now_btn", disabled=not runnable or sync_running):
+                             key="today_sync_now_btn", disabled=not runnable or sync_running,
+                             help=help_text):
                     start_today_sync(runnable)  # sets state + st.rerun()

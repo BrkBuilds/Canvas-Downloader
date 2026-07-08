@@ -1,4 +1,9 @@
 ## Latest Updates
+- [x] **Today Page Quick Sync Tooltip and Padding Adjustments** (2026-07-09):
+    - [x] **Increased Card Bottom Padding**: Increased bottom padding of `div.st-key-today_courses_card` inside `styles/today.css` from `16px` to `24px` to add extra space below the "Add courses" button and card borders.
+    - [x] **Disabled Quick Sync Tooltip**: Added dynamic `help` tooltip messages to the "Quick Sync now" button on the Today tab (`today_sync_now_btn` in `ui/today_dashboard.py`) to explain why it is disabled (e.g. no daily courses or sync already running).
+    - [x] **Tooltip Sizing Fix**: Added CSS rules for `div.st-key-today_sync_now_btn [data-testid="stTooltipHoverTarget"]` in `styles/today.css` to prevent button height and width shrinkage when the tooltip wrapper is active.
+
 - [x] **Today Page Empty State "No Courses" Color & Boldness Alignment** (2026-07-08):
     - [x] **Title Class & CSS Styling**: Added a specific class `.today-courses-empty-title` to the "No courses in your daily sync yet." text in `ui/today_dashboard.py` and styled it in `styles/today.css` with color `#c7ccd9` and font-weight `700`, matching the color and boldness of the "No new files today" empty title (`.today-files-empty-title`).
 
