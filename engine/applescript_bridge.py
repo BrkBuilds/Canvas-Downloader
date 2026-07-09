@@ -535,64 +535,135 @@ def _force_close_canvas_docs_async(only_app: str | None = None) -> None:
     ).start()
 
 
+def _idle_quit_script(app: str, collection: str) -> str:
+    """AppleScript that quits *app* unless a REAL user document is open.
+
+    Returns a human-readable status string (captured on stdout and logged) so a
+    failed quit is diagnosable from debug_log.txt instead of vanishing silently
+    - the old count-based quit swallowed everything, which made "Excel stayed in
+    the dock" impossible to root-cause from a test run.
+
+    A document blocks the quit only when it looks like the USER's: it has a path
+    on disk, or it has unsaved changes. Pristine blanks (never saved AND
+    unmodified - e.g. the empty ``Book1`` Excel sometimes auto-creates on a
+    hidden launch) do NOT block: the old ``count is 0`` condition let a single
+    pristine blank keep Excel in the dock forever. Quitting with only pristine
+    blanks open shows no save prompt (nothing is modified), so the quit cannot
+    hang on a hidden dialog. Every property read is try-wrapped (dictionary
+    differences across Office versions default to "blocker" via the outer try,
+    never to a wrong quit... property reads that fail leave hasPath=false/
+    isSaved=true only within their inner trys, while a failure of the whole
+    document loop aborts with an error status and no quit).
+    """
+    return f'''
+        tell application "System Events"
+            if not (exists process "{app}") then return "not running"
+        end tell
+        set total to 0
+        set blockers to 0
+        try
+            tell application "{app}"
+                repeat with d in ({collection} as list)
+                    set total to total + 1
+                    set pristine to false
+                    try
+                        set hasPath to false
+                        try
+                            set p to (path of d as text)
+                            if p is not "" then set hasPath to true
+                        end try
+                        if not hasPath then
+                            try
+                                if (full name of d as text) contains "/" then set hasPath to true
+                            end try
+                        end if
+                        set isSaved to true
+                        try
+                            set isSaved to (saved of d)
+                        end try
+                        if (not hasPath) and isSaved then set pristine to true
+                    end try
+                    if not pristine then set blockers to blockers + 1
+                end repeat
+                if blockers is 0 then quit
+            end tell
+        on error errMsg number errNum
+            return "error " & errNum & ": " & errMsg
+        end try
+        if blockers is 0 then return "quit sent (" & total & " open doc(s), none user-owned)"
+        return "kept running (" & blockers & " of " & total & " doc(s) look user-owned)"
+    '''
+
+
 def quit_idle_office_apps() -> None:
     """Tidy up Office after a run: quit the apps we launched, then purge Recents.
 
-    Three steps, on a single daemon thread (macOS only):
+    Steps, on a single daemon thread (macOS only):
 
     1. Force-close any documents still open from OUR container staging dir
        (marker-matched - see ``_force_close_canvas_docs_sync``). Cancelled or
        timed-out conversions leave their staged document open in the hidden
-       Office process; closing them first is also what lets step 2 actually
-       quit the app (its document count drops to 0).
-    2. Quit PowerPoint/Word/Excel - but ONLY if they have no open documents.
-       Post-processing leaves them running (we deliberately never quit them
-       mid-batch, to avoid relaunch churn between courses); this clears them from
-       the dock once everything is done. We check via System Events that the
-       process is actually RUNNING before addressing it (so we never auto-launch
-       a quit target) and only quit when its document count is 0, so a user who
-       has their own workbook/presentation open is never disturbed.
-    3. Purge our container-staged temp files from Office's Recent-files lists
+       Office process; closing them first is what lets step 2 actually quit.
+    2. Quit PowerPoint/Word/Excel - unless a REAL user document is open (a doc
+       with a path on disk or unsaved changes - see ``_idle_quit_script``).
+       Post-processing leaves the apps running (we deliberately never quit them
+       mid-batch, to avoid relaunch churn between courses); this clears them
+       from the dock once everything is done. The System Events running check
+       means we never auto-launch a quit target. Each app's outcome is LOGGED.
+    3. One retry pass ~3s later for any app that didn't quit (a transiently
+       busy app - e.g. one still tearing down a conversion when the user
+       cancelled - refuses the first Apple event and then lingered forever
+       because the quit was one-shot).
+    4. Purge our container-staged temp files from Office's Recent-files lists
        (see ``_purge_canvas_recents``) so the conversion scratch files don't
        crowd out the user's real recent documents. Marker-filtered - only
        Canvas Downloader temp paths are ever removed.
 
     Called from BOTH the completion screens and the cancelled screens (one-shot
     gated by the ``_office_quit_fired`` session sentinel in the callers).
-    Best-effort throughout; any failure is swallowed.
+    Best-effort throughout; any failure is swallowed (but logged).
     """
     if sys.platform != 'darwin':
         return
     import threading
 
+    def _quit_pass(pass_no: int, targets) -> list:
+        """Ask each target app to quit; return the apps that are still running."""
+        still_running = []
+        for app, collection in targets:
+            try:
+                r = subprocess.run(
+                    ['osascript', '-e', _idle_quit_script(app, collection)],
+                    capture_output=True, text=True, timeout=30,
+                )
+                status = (r.stdout or "").strip() or f"osascript rc={r.returncode}"
+            except Exception as e:
+                status = f"osascript failed: {e}"
+            logger.info("[OfficeQuit] pass %d: %s -> %s", pass_no, app, status)
+            if not status.startswith(("quit sent", "not running")):
+                still_running.append((app, collection))
+        return still_running
+
     def _worker():
+        import time as _time
         # 1. Sweep our staged zombie documents first, so idle-quit can succeed.
         _force_close_canvas_docs_sync()
 
-        # 2. Quit each app that now has nothing open.
-        for app, collection in _QUIT_TARGETS:
-            script = (
-                f'tell application "System Events"\n'
-                f'    if exists (process "{app}") then\n'
-                f'        try\n'
-                f'            tell application "{app}"\n'
-                f'                if (count of {collection}) is 0 then quit\n'
-                f'            end tell\n'
-                f'        end try\n'
-                f'    end if\n'
-                f'end tell'
-            )
-            try:
-                subprocess.run(['osascript', '-e', script], capture_output=True, timeout=20)
-            except Exception:
-                pass
+        # 2. + 3. Quit each app that has nothing user-owned open; retry once for
+        # stragglers (after re-sweeping staged docs, in case a doc was created
+        # between the sweep and the first quit attempt).
+        stragglers = _quit_pass(1, _QUIT_TARGETS)
+        if stragglers:
+            _time.sleep(3.0)
+            for app, _c in stragglers:
+                _force_close_canvas_docs_sync(only_app=app)
+            _quit_pass(2, stragglers)
 
-        # 3. Idle apps have now been asked to quit. Give them a beat to terminate
+        # 4. Idle apps have now been asked to quit. Give them a beat to terminate
         # and release the shared Recent-files registry DB, then surgically purge
         # our container-staged temp files from Office's Recent lists (marker-
         # filtered, so a user's real recent documents are never affected).
         # Best-effort and independent of whether anything was actually quit.
-        import time as _time
         _time.sleep(1.0)
         _purge_canvas_recents()
 
