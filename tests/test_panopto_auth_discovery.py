@@ -408,7 +408,160 @@ def test_stale_module_ids_remap_to_folder_sessions(monkeypatch):
     assert by_id[GUID_C].module_item_id == 12       # folder-matched neighbour
 
 
-# ── 6. log hygiene: auth diagnostics + HTML-free error messages ──────────────
+# ── 6. LTI 1.3 module-item launches (2026-07-09 CBS migration) ───────────────
+
+def test_lti_launch_ignores_panopto_markers_on_canvas_hops(monkeypatch):
+    """An intermediate Canvas hop (/api/lti/authorize) carries the encoded
+    Panopto target - including a legacy custom_context_delivery GUID - in its
+    QUERY. The chain must keep posting until the URL's HOST is Panopto, or it
+    breaks one hop early ("break:viewer" on a Canvas URL, no cookies)."""
+    tool_page = "https://canvas.test/courses/1/external_tools/863"
+    oidc = "https://pan.panopto.test/Panopto/lti/adv/platforms/x/login"
+    authorize = ("https://canvas.test/api/lti/authorize?redirect_uri="
+                 "https%3A%2F%2Fpan.panopto.test%2FPanopto%2FLTI%2FLTI.aspx"
+                 f"&custom_context_delivery={GUID_B}")
+    lti_aspx = "https://pan.panopto.test/Panopto/LTI/LTI.aspx"
+    viewer = f"https://pan.panopto.test/Panopto/Pages/Viewer.aspx?id={GUID_A}"
+
+    session = _FakeSession([
+        _FakeResp(tool_page, _form(oidc, login_hint="h")),
+        _FakeResp(authorize, _form(lti_aspx, id_token="jwt", state="s")),
+        _FakeResp(viewer, ""),
+    ])
+    _patch_http(monkeypatch, session)
+
+    s, final_url, vid, base, folder = pauth.lti_launch(
+        "https://canvas.test/api/sessionless_launch", "tok")
+
+    assert len(session.posts) == 2   # the authorize hop was POSTED, not broken on
+    assert vid == GUID_A             # the LIVE id from the viewer, never GUID_B
+    assert base == "https://pan.panopto.test"
+
+
+def test_discovery_module_item_launch_resolves_bare_lti13_links(monkeypatch):
+    """LTI 1.3 deep links carry NO GUID anywhere in the item JSON (bare
+    LTI.aspx external_url); only the per-item module-item launch
+    (launch_type=module_item) resolves the session. The item's own generic
+    launch URL lands on the course folder and must not be used."""
+    modules = [{
+        "id": 1, "name": "Tema 1",
+        "items": [{
+            "id": 11, "title": "Video (1): kultur", "type": "ExternalTool",
+            "content_id": 863,
+            "url": ("https://canvas.test/api/v1/courses/1/external_tools/"
+                    "sessionless_launch?id=863&url=LTI.aspx"),
+            "external_url": "https://pan.panopto.test/Panopto/LTI/LTI.aspx",
+        }],
+    }]
+
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return modules if path.endswith("/modules") else []
+
+        def get_one(self, path):
+            raise AssertionError("detail fetch must be skipped when the "
+                                 "module-item launch resolves the session")
+
+    launched = []
+
+    def _fake_lti(url, token):
+        launched.append(url)
+        assert "launch_type=module_item&module_item_id=11" in url
+        assert "&id=863" in url
+        return (object(),
+                f"https://pan.panopto.test/Panopto/Pages/Embed.aspx?id={GUID_A}",
+                GUID_A, "https://pan.panopto.test", None)
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _FakeREST)
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+
+    videos = pdisc.discover_course_videos("https://canvas.test", "tok", 1)
+
+    assert [v.video_id for v in videos] == [GUID_A]
+    assert len(launched) == 1
+    assert "launch_type=module_item" in videos[0].launch_url
+    assert videos[0].auth_launch_url == videos[0].launch_url
+    assert videos[0].module_item_id == 11
+
+
+def test_discovery_launch_resolution_beats_embedded_stale_guid(monkeypatch):
+    """A legacy item embeds custom_context_delivery=<stale guid>; after an LTI
+    migration that id is dead while the module-item launch resolves the LIVE
+    session. Only the live id may survive (a dead id would download nothing,
+    a re-homed one the WRONG recording)."""
+    STALE = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff9999"
+    modules = [{
+        "id": 1, "name": "Tema 1",
+        "items": [{
+            "id": 11, "title": "Video (1): kultur", "type": "ExternalTool",
+            "content_id": 863,
+            "external_url": ("https://pan.panopto.test/Panopto/LTI/LTI.aspx"
+                             f"?custom_context_delivery={STALE}"),
+        }],
+    }]
+
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return modules if path.endswith("/modules") else []
+
+        def get_one(self, path):
+            return {}
+
+    def _fake_lti(url, token):
+        assert "launch_type=module_item" in url
+        return (object(),
+                f"https://pan.panopto.test/Panopto/Pages/Viewer.aspx?id={GUID_A}",
+                GUID_A, "https://pan.panopto.test", None)
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _FakeREST)
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+
+    videos = pdisc.discover_course_videos("https://canvas.test", "tok", 1)
+
+    by_id = {v.video_id: v for v in videos}
+    assert set(by_id) == {GUID_A}           # stale id dropped, live id kept
+    assert by_id[GUID_A].module_item_id == 11
+
+
+def test_discovery_falls_back_to_embedded_guid_when_launch_fails(monkeypatch):
+    """When the module-item launch cannot reach Panopto at all, the embedded
+    GUID (pre-1.3 style) must still be used - old behavior preserved."""
+    modules = [{
+        "id": 1, "name": "Tema 1",
+        "items": [{
+            "id": 11, "title": "Video (1): kultur", "type": "ExternalTool",
+            "external_url": ("https://pan.panopto.test/Panopto/Pages/"
+                             f"Viewer.aspx?id={GUID_A}"),
+        }],
+    }]
+
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return modules if path.endswith("/modules") else []
+
+        def get_one(self, path):
+            return {}
+
+    def _fake_lti(url, token):
+        return (None, None, None, None, None)      # hard failure
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _FakeREST)
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+
+    videos = pdisc.discover_course_videos("https://canvas.test", "tok", 1)
+    assert [v.video_id for v in videos] == [GUID_A]
+
+
+# ── 7. log hygiene: auth diagnostics + HTML-free error messages ──────────────
 
 def test_session_auth_diag_reports_cookie_names_and_markers():
     import requests

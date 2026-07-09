@@ -448,6 +448,143 @@ def _purge_canvas_recents() -> None:
     _purge_securebookmarks()
 
 
+# ── Dock "Suggested and Recent Apps" housekeeping ────────────────────
+# macOS adds EVERY launched app to the Dock's recents list; the recents section
+# shows the ~3 most recently opened unpinned apps. Our hidden Office automation
+# therefore leaves its LAST-launched app (always Excel: priming/quit order is
+# PowerPoint → Word → Excel) squatting visibly in the Dock after the run - the
+# process is genuinely dead, the ICON is a Dock recents tile the user has to
+# right-click → Remove from Dock. (This is why the round-5 "quit properly +
+# escalate survivors" fix didn't clear the icon: quitting was never the issue.)
+# Fix: snapshot which Office apps sat in Dock recents BEFORE the run's first
+# hidden launch, and after the quit pass strip exactly the entries we added -
+# never a pre-existing tile, never a running app - then restart the Dock (the
+# only way it re-reads the list). The Dock is only ever restarted when a wrong
+# icon would otherwise stay visible.
+
+_OFFICE_BUNDLE_IDS = {
+    "Microsoft PowerPoint": "com.microsoft.powerpoint",
+    "Microsoft Word":       "com.microsoft.word",
+    "Microsoft Excel":      "com.microsoft.excel",
+}
+
+# Office bundle ids present in Dock recents before OUR first Office launch this
+# run. None = we have not launched any Office app (cleanup must then never
+# touch the Dock). Reset by reset_office_priming() at each run start.
+_dock_recents_before: set | None = None
+
+
+def _dock_prefs_export() -> dict | None:
+    """The full com.apple.dock domain as a dict (via cfprefsd), or None."""
+    import plistlib
+    try:
+        r = subprocess.run(['defaults', 'export', 'com.apple.dock', '-'],
+                           capture_output=True, timeout=10)
+        if r.returncode != 0 or not r.stdout:
+            return None
+        return plistlib.loads(r.stdout)
+    except Exception:
+        return None
+
+
+def _recents_entry_bundle_id(entry) -> str:
+    try:
+        return ((entry.get('tile-data') or {}).get('bundle-identifier') or '').lower()
+    except AttributeError:
+        return ''
+
+
+def _office_ids_in_dock_recents(dock: dict | None) -> set:
+    office = set(_OFFICE_BUNDLE_IDS.values())
+    found = set()
+    for entry in (dock or {}).get('recent-apps') or []:
+        bid = _recents_entry_bundle_id(entry)
+        if bid in office:
+            found.add(bid)
+    return found
+
+
+def _snapshot_dock_recents() -> None:
+    """Remember which Office apps were ALREADY in Dock recents pre-run.
+
+    Called (main thread, cheap: one ``defaults export``) right before the
+    run's first hidden Office launch. Only taken once per run - later priming
+    calls see the snapshot in place and keep the original baseline.
+    """
+    global _dock_recents_before
+    if sys.platform != 'darwin' or _dock_recents_before is not None:
+        return
+    dock = _dock_prefs_export()
+    # Export failure -> treat every Office tile as pre-existing (never clean).
+    _dock_recents_before = (_office_ids_in_dock_recents(dock)
+                            if dock is not None else set(_OFFICE_BUNDLE_IDS.values()))
+
+
+def _cleanup_dock_recents() -> None:
+    """Strip OUR hidden Office launches from the Dock's recents section.
+
+    Removes a recents tile only when ALL of these hold: it is one of the three
+    Office apps, we launched Office this run (snapshot exists), the app was
+    NOT in recents before the run, and its process is not running now. The
+    Dock is restarted (``killall Dock`` - it only reads the list at startup)
+    only when at least one tile was actually removed, so the one-off Dock
+    flicker happens exactly when the wrong icon would otherwise stay visible.
+    """
+    if sys.platform != 'darwin' or _dock_recents_before is None:
+        return
+    try:
+        # Recents section disabled -> the list is invisible; nothing to clean.
+        r = subprocess.run(['defaults', 'read', 'com.apple.dock', 'show-recents'],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and (r.stdout or '').strip().lower() in ('0', 'false', 'no'):
+            return
+    except Exception:
+        pass
+    dock = _dock_prefs_export()
+    if not dock:
+        return
+    recents = dock.get('recent-apps')
+    if not isinstance(recents, list) or not recents:
+        return
+    name_by_bid = {b: n for n, b in _OFFICE_BUNDLE_IDS.items()}
+
+    def _removable(entry) -> bool:
+        bid = _recents_entry_bundle_id(entry)
+        if bid not in name_by_bid or bid in _dock_recents_before:
+            return False
+        try:
+            alive = subprocess.run(['pgrep', '-x', name_by_bid[bid]],
+                                   capture_output=True, timeout=10).returncode == 0
+        except Exception:
+            alive = True   # can't tell -> leave the tile alone
+        return not alive
+
+    kept, removed = [], []
+    for entry in recents:
+        (removed if _removable(entry) else kept).append(entry)
+    if not removed:
+        return
+    dock['recent-apps'] = kept
+    import plistlib
+    try:
+        payload = plistlib.dumps(dock, fmt=plistlib.FMT_XML)
+        p = subprocess.run(['defaults', 'import', 'com.apple.dock', '-'],
+                           input=payload, capture_output=True, timeout=10)
+        if p.returncode != 0:
+            logger.info("[OfficeQuit] Dock recents rewrite failed (rc=%s): %s",
+                        p.returncode,
+                        (p.stderr or b'').decode(errors='replace')[:200])
+            return
+        subprocess.run(['killall', 'Dock'], capture_output=True, timeout=10)
+        logger.info(
+            "[OfficeQuit] removed %d Office tile(s) from Dock recents (%s) "
+            "and refreshed the Dock",
+            len(removed),
+            ", ".join(_recents_entry_bundle_id(e) for e in removed))
+    except Exception as e:
+        logger.debug(f"[OfficeQuit] Dock recents cleanup skipped: {e}")
+
+
 # (AppleScript app name, its document collection term) - shared by the idle-quit
 # and the staged-document force-close helpers below.
 _QUIT_TARGETS = [
@@ -892,6 +1029,12 @@ def quit_idle_office_apps() -> None:
             if _escalated:
                 _wait_for_exit(_escalated, timeout=6.0)
         _purge_canvas_recents()
+        # 5. Drop OUR hidden launches from the Dock's "Suggested and Recent
+        # Apps" section - the process being dead does not remove its recents
+        # tile (the "Excel still in the Dock after the run" report), and the
+        # Dock only re-reads the list on restart. Snapshot-scoped: only tiles
+        # our own priming added this run are ever touched.
+        _cleanup_dock_recents()
 
     threading.Thread(target=_worker, daemon=True).start()
 
@@ -920,9 +1063,10 @@ def reset_office_priming() -> None:
     run's completion screen, so their primed-state must be cleared or the next run
     would wrongly skip (re-)launching them.
     """
-    global _macro_pref_written
+    global _macro_pref_written, _dock_recents_before
     _primed_apps.clear()
     _macro_pref_written = False
+    _dock_recents_before = None
 
 
 def office_contract_from_folder(folder, base_contract: dict) -> dict:
@@ -1109,6 +1253,10 @@ def prime_office_automation(contract: dict) -> None:
     if write_macro_pref:
         _macro_pref_written = True
 
+    # Baseline the Dock recents BEFORE the first hidden launch, so the
+    # completion-screen cleanup can tell our tiles from pre-existing ones.
+    _snapshot_dock_recents()
+
     threading.Thread(
         target=_warmup_apps, args=(to_launch, write_macro_pref), daemon=True,
     ).start()
@@ -1204,6 +1352,10 @@ def first_run_permission_setup(contract: dict) -> bool:
     _primed_apps.update(wanted)
     write_macro_pref = not _macro_pref_written
     _macro_pref_written = True
+
+    # Baseline the Dock recents BEFORE the first hidden launch (see
+    # _snapshot_dock_recents) - the batch is about to launch every wanted app.
+    _snapshot_dock_recents()
 
     import threading
     threading.Thread(
