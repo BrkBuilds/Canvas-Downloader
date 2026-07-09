@@ -211,6 +211,8 @@ class _FakeFolderSession:
 
     def post(self, url, json=None, **kw):
         self.posts.append((url, json))
+        if url.endswith("/GetFolders"):
+            return _FakeHttpResp(200, json_data={"d": {"Results": []}})
         return _FakeHttpResp(200, json_data={"d": {
             "TotalNumber": 2,
             "Results": [
@@ -224,9 +226,87 @@ def test_folder_sessions_fall_back_to_data_svc():
     sess = _FakeFolderSession()
     found = pdisc._discover_folder_sessions(sess, "https://pan.panopto.test", FOLDER)
     assert found == [(GUID_A, "Video (1): kultur"), (GUID_B, "Video (2): kultur")]
-    (url, payload), = sess.posts
+    session_posts = [(u, p) for u, p in sess.posts if u.endswith("/GetSessions")]
+    assert session_posts
+    url, payload = session_posts[0]
     assert url.endswith("/Panopto/Services/Data.svc/GetSessions")
     assert payload["queryParameters"]["folderID"] == FOLDER
+
+
+SUBFOLDER = "12345678-90ab-cdef-1234-567890abcd99"
+
+
+class _FakeTreeSession:
+    """A course folder whose recordings live entirely in ONE subfolder -
+    GetSessions on the root truthfully answers 0 (the 2026-07-09 CBS shape)."""
+
+    def __init__(self):
+        self.posts = []
+
+    def get(self, url, **kw):
+        return _FakeHttpResp(401, text="Unauthorized")
+
+    def post(self, url, json=None, **kw):
+        self.posts.append((url, json))
+        qp = (json or {}).get("queryParameters") or {}
+        if url.endswith("/GetFolders"):
+            if qp.get("parentFolderID") == FOLDER:
+                return _FakeHttpResp(200, json_data={"d": {"Results": [
+                    {"ID": SUBFOLDER.upper(), "Name": "Forelaesninger"},
+                ]}})
+            return _FakeHttpResp(200, json_data={"d": {"Results": []}})
+        if url.endswith("/GetSessions"):
+            if qp.get("folderID") == SUBFOLDER:
+                return _FakeHttpResp(200, json_data={"d": {
+                    "TotalNumber": 2,
+                    "Results": [
+                        {"DeliveryID": GUID_A, "SessionName": "Video (1): kultur"},
+                        {"DeliveryID": GUID_B, "SessionName": "Video (2): kultur"},
+                    ],
+                }})
+            return _FakeHttpResp(200, json_data={"d": {"TotalNumber": 0, "Results": []}})
+        return _FakeHttpResp(404, text="unexpected")
+
+
+def test_folder_enumeration_walks_subfolders():
+    """Sessions parked in subfolders must be found: GetSessions only lists a
+    folder's DIRECT children, so the walk has to recurse via GetFolders."""
+    sess = _FakeTreeSession()
+    found = pdisc._discover_folder_sessions(sess, "https://pan.panopto.test", FOLDER)
+    assert found == [(GUID_A, "Video (1): kultur"), (GUID_B, "Video (2): kultur")]
+
+
+def test_empty_enumeration_fires_folder_probes():
+    """A fully-empty walk must fire the decisive probes: GetFolderInfo (is the
+    folder visible at all?) and an UNSCOPED GetSessions (does the session hold
+    ANY content grants?)."""
+
+    class _EmptySession:
+        def __init__(self):
+            self.posts = []
+
+        def get(self, url, **kw):
+            return _FakeHttpResp(401, text="Unauthorized")
+
+        def post(self, url, json=None, **kw):
+            self.posts.append((url, json))
+            if url.endswith("/GetFolderInfo"):
+                return _FakeHttpResp(200, json_data={"d": {
+                    "Name": "Kursusmappe", "SessionCount": 36,
+                }})
+            if url.endswith("/GetFolders"):
+                return _FakeHttpResp(200, json_data={"d": {"Results": []}})
+            return _FakeHttpResp(200, json_data={"d": {"TotalNumber": 0, "Results": []}})
+
+    sess = _EmptySession()
+    found = pdisc._discover_folder_sessions(sess, "https://pan.panopto.test", FOLDER)
+    assert found == []
+    called = {u.rsplit("/", 1)[-1] for u, _p in sess.posts}
+    assert "GetFolderInfo" in called
+    unscoped = [p for u, p in sess.posts
+                if u.endswith("/GetSessions")
+                and p["queryParameters"]["folderID"] is None]
+    assert unscoped, "the unscoped auth probe never ran"
 
 
 # ── 4. discovery wiring: folder landing resolves module links by title ───────
@@ -279,3 +359,82 @@ def test_discovery_folder_landing_resolves_links_by_title(monkeypatch):
     # Every video carries the VERIFIED auth beacon so the runner's session
     # bootstrap never depends on a legacy item's dead launch URL.
     assert all("sessionless_launch" in v.auth_launch_url for v in videos)
+
+
+# ── 5. stale direct GUIDs are remapped by title against the folder ───────────
+
+def test_stale_module_ids_remap_to_folder_sessions(monkeypatch):
+    """A module item can embed a delivery GUID that no longer exists after a
+    Panopto migration (DeliveryInfo answers "session isn't available" for it).
+    Once the course folder has been enumerated, the stale id must be remapped
+    to the live session with the matching title."""
+    STALE = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff9999"
+    modules = [{
+        "id": 1,
+        "name": "Tema 2",
+        "items": [
+            {"id": 11, "title": "Video (1): kultur", "type": "ExternalTool",
+             "external_url": ("https://pan.panopto.test/Panopto/Pages/"
+                              f"Viewer.aspx?id={STALE}")},
+            {"id": 12, "title": "Helt andet oplaeg", "type": "ExternalTool"},
+        ],
+    }]
+
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return modules if path.endswith("/modules") else []
+
+        def get_one(self, path):
+            return {"url": f"https://canvas.test/api/sessionless_launch?item={path}"}
+
+    def _fake_lti(url, token):
+        return (object(), "https://pan.panopto.test/Panopto/Pages/Sessions/List.aspx",
+                None, "https://pan.panopto.test", FOLDER)
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _FakeREST)
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+    monkeypatch.setattr(pdisc, "_discover_folder_sessions",
+                        lambda *a, **k: _SESSIONS)
+
+    videos = pdisc.discover_course_videos("https://canvas.test", "tok", 1)
+
+    by_id = {v.video_id: v for v in videos}
+    assert STALE not in by_id                       # dead id healed away
+    assert by_id[GUID_A].title == "Video (1): kultur"
+    assert by_id[GUID_A].module_item_id == 11       # identity preserved
+    assert by_id[GUID_C].module_item_id == 12       # folder-matched neighbour
+
+
+# ── 6. log hygiene: auth diagnostics + HTML-free error messages ──────────────
+
+def test_session_auth_diag_reports_cookie_names_and_markers():
+    import requests
+
+    s = requests.Session()
+    s.cookies.set(".ASPXAUTH", "secretvalue", domain="pan.panopto.test")
+    s.cookies.set("csrfToken", "x", domain="pan.panopto.test")
+    s.cookies.set("canvas_session", "y", domain="canvas.test")
+    body = ('{"IsAuthenticated": false} '
+            '<a href="/Panopto/Pages/Auth/Login.aspx">Log in</a>')
+
+    diag = pauth._session_auth_diag(s, "https://pan.panopto.test", body)
+
+    assert ".ASPXAUTH" in diag and "csrfToken" in diag   # names, host-matched
+    assert "canvas_session" not in diag                  # foreign host excluded
+    assert "secretvalue" not in diag                     # never values
+    assert "IsAuthenticated=false" in diag
+    assert "login-link-present" in diag
+
+
+def test_delivery_error_messages_are_html_stripped():
+    from panopto.stream import _clean_error
+
+    raw = ("This session isn't available. It may have been deleted.<br>"
+           "<a href='/Panopto/Pages/Sessions/List.aspx'>See other videos</a>")
+    cleaned = _clean_error(raw)
+    assert "<" not in cleaned and ">" not in cleaned
+    assert cleaned == ("This session isn't available. It may have been "
+                       "deleted. See other videos")
