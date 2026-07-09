@@ -896,6 +896,7 @@ def run_sync():
                         # quickly). Sem-bounded so refreshes respect the same
                         # concurrency cap as the downloads themselves.
                         download_url = getattr(file, 'url', '')
+                        fresh_file = None
                         try:
                             real_id = file.id
                             if real_id < 0:
@@ -916,6 +917,12 @@ def run_sync():
                             media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
                             if ext_lower in media_exts:
                                 err_msg = "LTI/Media Stream (Cannot directly download)"
+                            elif (getattr(file, 'locked_for_user', False)
+                                  or getattr(fresh_file, 'locked_for_user', False)):
+                                # Teacher-locked file: Canvas strips the URL for
+                                # students; nothing (not even a browser) can fetch
+                                # it until the teacher unlocks it.
+                                err_msg = "Locked by the teacher on Canvas (not downloadable)"
                             else:
                                 err_msg = "No download URL"
                             failed_files_for_pair.append(file)
