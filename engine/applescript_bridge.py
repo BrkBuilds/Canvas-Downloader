@@ -618,26 +618,35 @@ def _cleanup_dock_recents() -> None:
         if not any(_office_pgrep_alive(n) for n in _OFFICE_BUNDLE_IDS):
             break
         _t.sleep(0.5)
-    # 2. Wait until the Dock has actually WRITTEN the tiles we are about to
-    # remove. The Dock adds a quit app to recents when it processes the
-    # termination, which lands SECONDS after the process dies - a fixed 2s
-    # settle still lost the race on the 2026-07-09 21:08 run (Excel's tile
-    # materialized between the first strip and the verify pass, costing a
-    # second Dock restart). We know exactly which tiles to expect: the apps
-    # OUR priming launched this run, installed, now dead, and not in recents
-    # before the run - so poll the prefs until they are all present (bounded)
-    # and restart the Dock exactly ONCE.
-    _expected = set()
-    for _ms, _bid in _OFFICE_BUNDLE_IDS.items():
-        if (_ms in _primed_apps and _bid not in _dock_recents_before
-                and Path(f"/Applications/{_ms}.app").exists()
-                and not _office_pgrep_alive(_ms)):
-            _expected.add(_bid)
-    _deadline = _t.time() + 10
-    while _expected and _t.time() < _deadline:
-        if _expected <= _office_ids_in_dock_recents(_dock_prefs_export()):
-            break
-        _t.sleep(0.8)
+    # 2. Wait for the Dock's TERMINATION write. Tile PRESENCE is not a safe
+    # signal: the Dock also writes tiles at LAUNCH, which is what satisfied
+    # the previous expected-tiles poll instantly on the 21:26 run - the strip
+    # still ran before Excel's termination write and the verify pass had to
+    # restart the Dock a SECOND time. What is reliably observable is the
+    # WRITE itself: the Dock rewrites recent-apps when it processes an app's
+    # termination, 0-6s after the process dies (measured across the 21:08 /
+    # 21:26 runs). So watch the list: strip only after at least one CHANGE
+    # has been observed and the list has then stayed quiet for two
+    # consecutive 1s samples (per-app writes usually batch into one Dock
+    # pass), or after 8s if no write ever shows (it landed before our first
+    # sample, or the Dock declined to add a tile). The verify pass below
+    # remains the net for the outliers.
+    if any(_ms in _primed_apps and _bid not in _dock_recents_before
+           for _ms, _bid in _OFFICE_BUNDLE_IDS.items()):
+        _prev = (_dock_prefs_export() or {}).get('recent-apps')
+        _changed = False
+        _quiet = 0
+        _deadline = _t.time() + 8
+        while _t.time() < _deadline:
+            _t.sleep(1.0)
+            _cur = (_dock_prefs_export() or {}).get('recent-apps')
+            if _cur != _prev:
+                _prev, _changed, _quiet = _cur, True, 0
+                continue
+            if _changed:
+                _quiet += 1
+                if _quiet >= 2:
+                    break
     # 3. Strip; when something was removed, verify once after the restart
     # (normally a no-op now - it only acts, and only then restarts the Dock
     # again, if a tile still slipped in after the poll above).
