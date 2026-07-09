@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import requests
 
@@ -28,6 +28,14 @@ def _norm_title(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip()).casefold()
 
 
+def _norm_alnum(s: str) -> str:
+    """Only letters/digits, casefolded - bridges '_' vs ' ' vs punctuation
+    divergence between a module-item title and the Panopto session name
+    (e.g. 'Uformelletræk_organisationskultur' vs 'Uformelle træk organisationskultur'
+    differ only in separators)."""
+    return "".join(ch for ch in (s or "").casefold() if ch.isalnum())
+
+
 def _match_session_by_title(title: str, sessions, taken) -> str | None:
     """Resolve a module-item *title* against a folder's ``(id, name)`` sessions.
 
@@ -35,8 +43,9 @@ def _match_session_by_title(title: str, sessions, taken) -> str | None:
     recording, so an exact (normalized) name match is the norm. Sessions whose
     id is already attributed (*taken*) are excluded first, which lets two
     same-named recordings matched by two same-named items resolve pairwise in
-    folder order. A containment fallback is accepted only when it is UNIQUE,
-    so a generic title can never grab an arbitrary recording.
+    folder order. Tiers: exact normalized -> exact alphanumeric-only (separator
+    and punctuation differences) -> containment, accepted only when UNIQUE so
+    a generic title can never grab an arbitrary recording.
     """
     want = _norm_title(title)
     if not want:
@@ -45,6 +54,11 @@ def _match_session_by_title(title: str, sessions, taken) -> str | None:
     exact = [vid for vid, name in available if name == want]
     if exact:
         return exact[0]
+    want_an = _norm_alnum(title)
+    if want_an:
+        exact_an = [vid for vid, name in available if _norm_alnum(name) == want_an]
+        if exact_an:
+            return exact_an[0]
     contains = [vid for vid, name in available
                 if name and (name in want or want in name)]
     if len(contains) == 1:
@@ -60,6 +74,13 @@ class PanoptoVideo:
     launch_url: str = ""          # Canvas sessionless_launch API url (for auth)
     source: str = "module"        # module | page | assignment | announcement | folder
     module_item_id: int = 0       # Canvas module item id (for stable manifest ids)
+    # A launch URL that discovery VERIFIED reaches a Panopto host this run
+    # (the auth "beacon"). Some legacy items carry launch URLs that no longer
+    # complete the LTI chain (observed after CBS's LTI 1.3 migration: the six
+    # old-style links' own launches die on the Canvas tool page while every
+    # detail-fetched launch lands authenticated on Panopto) - the runner's
+    # session bootstrap tries this validated URL FIRST.
+    auth_launch_url: str = ""
 
 
 class _CanvasREST:
@@ -105,6 +126,12 @@ class _CanvasREST:
 
 
 def _panopto_api_get(session: requests.Session, panopto_base: str, path: str, params=None):
+    """GET a Panopto api/v1 endpoint. Returns ``(json | None, status)``.
+
+    *status* is the HTTP status code, or a short error string - callers log it
+    so an access-denied API no longer fails silently (the 2026-07-09 run
+    reported 'enumerated 0 session(s)' with zero clues as to why).
+    """
     try:
         r = session.get(
             f"{panopto_base}/Panopto/api/v1/{path}",
@@ -113,20 +140,27 @@ def _panopto_api_get(session: requests.Session, panopto_base: str, path: str, pa
             timeout=30,
         )
         if r.status_code == 200:
-            return r.json()
-    except Exception:
-        pass
-    return None
+            return r.json(), 200
+        return None, r.status_code
+    except Exception as e:
+        return None, f"error: {e}"
 
 
-def _discover_folder_sessions(session, panopto_base, folder_id) -> list[tuple[str, str]]:
+def _folder_sessions_api_v1(session, panopto_base, folder_id) -> list[tuple[str, str]]:
+    """Enumerate a folder via the modern REST API (needs api/v1 cookie access)."""
     found, page = [], 0
     while True:
-        data = _panopto_api_get(
+        data, status = _panopto_api_get(
             session, panopto_base, f"folders/{folder_id}/sessions",
             {"pageNumber": page, "pageSize": 100, "sortField": "1", "sortOrder": "0"},
         )
         if data is None:
+            if page == 0:
+                logger.info(
+                    "Panopto api/v1 folder listing unavailable for %s "
+                    "(status %s) - will fall back to Data.svc/GetSessions.",
+                    folder_id, status,
+                )
             break
         results = data.get("Results", [])
         for item in results:
@@ -137,6 +171,85 @@ def _discover_folder_sessions(session, panopto_base, folder_id) -> list[tuple[st
         if len(results) < 100:
             break
         page += 1
+    return found
+
+
+def _folder_sessions_data_svc(session, panopto_base, folder_id) -> list[tuple[str, str]]:
+    """Enumerate a folder via the INTERNAL ``Data.svc/GetSessions`` endpoint.
+
+    This is the exact call ``Sessions/List.aspx`` itself makes to render the
+    session list, so it works with the plain page cookies wherever the list
+    page renders - including tenants whose ``api/v1`` rejects cookie auth
+    (CBS: api/v1 yielded nothing while the list page showed all recordings).
+    Results carry ``DeliveryID`` (the id DeliveryInfo wants) + ``SessionName``.
+    """
+    found, page = [], 0
+    while True:
+        payload = {"queryParameters": {
+            "query": None,
+            "sortColumn": 1,
+            "sortAscending": False,
+            "maxResults": 100,
+            "page": page,
+            "startDate": None,
+            "endDate": None,
+            "folderID": folder_id,
+            "bookmarked": False,
+            "getFolderData": page == 0,
+            "includeArchived": True,
+            "includePlaylists": True,
+        }}
+        try:
+            r = session.post(
+                f"{panopto_base}/Panopto/Services/Data.svc/GetSessions",
+                json=payload,
+                headers={"Accept": "application/json"},
+                timeout=30,
+            )
+        except Exception as e:
+            logger.info("Panopto GetSessions failed for folder %s: %s", folder_id, e)
+            break
+        if r.status_code != 200:
+            logger.info(
+                "Panopto GetSessions returned HTTP %s for folder %s "
+                "(body starts: %.120s)",
+                r.status_code, folder_id, (r.text or "").strip(),
+            )
+            break
+        try:
+            data = (r.json() or {}).get("d") or {}
+        except Exception as e:
+            logger.info("Panopto GetSessions returned non-JSON for folder %s: %s",
+                        folder_id, e)
+            break
+        results = data.get("Results") or []
+        for item in results:
+            vid = (item.get("DeliveryID") or item.get("SessionID")
+                   or item.get("Id") or "").lower()
+            name = (item.get("SessionName") or item.get("Name") or "Unnamed")
+            if vid:
+                found.append((vid, name))
+        total = data.get("TotalNumber")
+        if page == 0:
+            logger.info(
+                "Panopto GetSessions: folder %s reports %s session(s) "
+                "(page 0 returned %d).",
+                folder_id, total if total is not None else "?", len(results),
+            )
+        if len(results) < 100:
+            break
+        if isinstance(total, int) and len(found) >= total:
+            break
+        page += 1
+    return found
+
+
+def _discover_folder_sessions(session, panopto_base, folder_id) -> list[tuple[str, str]]:
+    """All ``(delivery_id, name)`` sessions in *folder_id* - api/v1 first,
+    then the Data.svc/GetSessions fallback the list page itself uses."""
+    found = _folder_sessions_api_v1(session, panopto_base, folder_id)
+    if not found:
+        found = _folder_sessions_data_svc(session, panopto_base, folder_id)
     return found
 
 
@@ -268,6 +381,7 @@ def discover_course_videos(
     # via the Panopto API and resolve each item by recording title.
     _folder_sessions_cache: dict[tuple[str, str], list] = {}
     _unmatched_titles: list[str] = []
+    _auth_beacon = ""   # first launch VERIFIED to reach a Panopto host this run
     for entry, d_launch, direct, lti in resolved:
         if _cancelled():
             break
@@ -278,6 +392,8 @@ def discover_course_videos(
                 source="module", item_id=item_id)
         if lti is not None:
             session, final_url, real_id, pbase, lti_folder = lti
+            if pbase and session and d_launch and not _auth_beacon:
+                _auth_beacon = d_launch
             if real_id:
                 add(real_id, item_title, module=mod_name, launch=d_launch,
                     source="module", item_id=item_id)
@@ -332,6 +448,24 @@ def discover_course_videos(
             "title: %s",
             len(_unmatched_titles), "; ".join(_unmatched_titles[:10]),
         )
+        # Log BOTH sides of the failed match: without the folder's actual
+        # session names the mismatch cannot be diagnosed from the log.
+        for _fkey, _sessions in _folder_sessions_cache.items():
+            logger.info(
+                "Panopto folder %s holds %d session(s): %s",
+                _fkey[1], len(_sessions),
+                "; ".join(name for _vid, name in _sessions[:12]),
+            )
+
+    # Hand the runner a VERIFIED auth launch: legacy items can carry launch
+    # URLs whose own LTI chain no longer completes (they die on the Canvas
+    # tool page), which left the session bootstrap with nothing that works
+    # even though discovery just authenticated 30 times. Every video gets the
+    # beacon; the bootstrap tries it before the per-item URLs.
+    if _auth_beacon:
+        for v in videos.values():
+            if not v.auth_launch_url:
+                v.auth_launch_url = _auth_beacon
 
     # ── Pages ──
     if not _cancelled():

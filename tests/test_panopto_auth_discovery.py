@@ -16,8 +16,6 @@ import sys
 import types
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import panopto.auth as pauth
@@ -182,6 +180,55 @@ def test_title_match_unique_containment_only():
     assert pdisc._match_session_by_title("kultur", _SESSIONS, {}) is None
 
 
+def test_title_match_alnum_tier_bridges_separator_differences():
+    # Underscores vs spaces vs punctuation between the module-item title and
+    # the Panopto session name must still resolve (exact alnum tier).
+    sessions = [(GUID_A, "Uformelle traek organisationskultur (1)")]
+    assert pdisc._match_session_by_title(
+        "Uformelle_traek organisationskultur 1", sessions, {}) == GUID_A
+
+
+# ── 3b. folder enumeration falls back to Data.svc/GetSessions ────────────────
+
+class _FakeHttpResp:
+    def __init__(self, status_code, json_data=None, text=""):
+        self.status_code = status_code
+        self._json = json_data
+        self.text = text
+
+    def json(self):
+        return self._json
+
+
+class _FakeFolderSession:
+    """api/v1 rejected (401), Data.svc/GetSessions answers - the CBS shape."""
+
+    def __init__(self):
+        self.posts = []
+
+    def get(self, url, **kw):
+        return _FakeHttpResp(401, text="Unauthorized")
+
+    def post(self, url, json=None, **kw):
+        self.posts.append((url, json))
+        return _FakeHttpResp(200, json_data={"d": {
+            "TotalNumber": 2,
+            "Results": [
+                {"DeliveryID": GUID_A.upper(), "SessionName": "Video (1): kultur"},
+                {"DeliveryID": GUID_B, "SessionName": "Video (2): kultur"},
+            ],
+        }})
+
+
+def test_folder_sessions_fall_back_to_data_svc():
+    sess = _FakeFolderSession()
+    found = pdisc._discover_folder_sessions(sess, "https://pan.panopto.test", FOLDER)
+    assert found == [(GUID_A, "Video (1): kultur"), (GUID_B, "Video (2): kultur")]
+    (url, payload), = sess.posts
+    assert url.endswith("/Panopto/Services/Data.svc/GetSessions")
+    assert payload["queryParameters"]["folderID"] == FOLDER
+
+
 # ── 4. discovery wiring: folder landing resolves module links by title ───────
 
 def test_discovery_folder_landing_resolves_links_by_title(monkeypatch):
@@ -229,3 +276,6 @@ def test_discovery_folder_landing_resolves_links_by_title(monkeypatch):
     assert by_id[GUID_A].module_item_id == 11
     assert by_id[GUID_B].module_item_id == 12
     assert all(v.source == "module" for v in videos)
+    # Every video carries the VERIFIED auth beacon so the runner's session
+    # bootstrap never depends on a legacy item's dead launch URL.
+    assert all("sessionless_launch" in v.auth_launch_url for v in videos)

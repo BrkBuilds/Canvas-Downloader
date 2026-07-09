@@ -160,16 +160,27 @@ def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> 
     if not videos:
         return out
 
+    # Discovery-verified beacons first, then per-video launch URLs (legacy
+    # items can carry launch URLs whose LTI chain no longer completes).
     session = panopto_base = None
+    _candidates: list = []
     for v in videos:
-        if getattr(v, "launch_url", "") and "sessionless_launch" in v.launch_url:
-            try:
-                session, _final, _rid, panopto_base, _folder = lti_launch(v.launch_url, cm.api_key)
-            except Exception as e:
-                logger.debug("fetch_durations LTI launch failed: %s", e)
-                session = panopto_base = None
-            if session and panopto_base:
-                break
+        _beacon = getattr(v, "auth_launch_url", "")
+        if _beacon and "sessionless_launch" in _beacon and _beacon not in _candidates:
+            _candidates.append(_beacon)
+    for v in videos:
+        _lurl = getattr(v, "launch_url", "")
+        if _lurl and "sessionless_launch" in _lurl and _lurl not in _candidates:
+            _candidates.append(_lurl)
+    for _cand in _candidates:
+        try:
+            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, cm.api_key)
+        except Exception as e:
+            logger.debug("fetch_durations LTI launch failed: %s", e)
+            session = panopto_base = None
+        if session and panopto_base:
+            break
+        session = panopto_base = None
     if session is None or panopto_base is None:
         logger.info("Panopto duration probe skipped: no authenticated session.")
         return out

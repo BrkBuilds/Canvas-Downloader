@@ -555,63 +555,70 @@ def _idle_quit_script(app: str, collection: str) -> str:
     isSaved=true only within their inner trys, while a failure of the whole
     document loop aborts with an error status and no quit).
 
-    The document ENUMERATION itself is also try-wrapped: Excel in its
-    Workbook-Gallery-only state (no workbook open) errors on resolving the
-    ``workbooks`` collection instead of returning an empty list. An enumeration
-    failure means the app cannot name a single open document, so it is treated
-    as "no documents" - a real user workbook makes the collection resolve
-    normally.
+    Structured as three PHASE-TAGGED stages so the returned status pinpoints
+    exactly where a failure happened (Excel's gallery-state ``-1700: Can't
+    make missing value into type number`` survived two earlier fixes because
+    the single "error N" status could not say WHAT threw):
 
-    The ``quit`` verb runs OUTSIDE the enumeration try, in its own guard: Excel
-    in the gallery state can error on the quit Apple event itself (observed as
-    ``error -1700: Can't make missing value into type number`` on the
-    2026-07-09 macOS runs - both quit passes failed identically even with the
-    enumeration inner-try in place, so the enumeration was not the thrower).
-    On a quit error the script retries with ``quit saving no`` (safe here:
-    this branch is only reached when zero user-owned documents were counted,
-    so there is nothing to discard) and, if that also fails, returns a
-    distinct ``quit failed`` status. The Python caller uses that status -
-    which certifies "no user documents open" - to force-terminate the process
-    as a last resort, so a gallery-stuck Excel can no longer squat in the dock
-    and resurrect its Recents entries.
+      "enum failed (error N)"     resolving ``{collection} as list`` threw
+      "doc scan failed (error N)" reading the documents' properties threw
+      "kept running (...)"        a user-owned document blocks the quit
+      "quit failed (error N)"     zero user docs, but the quit verb threw
+      "quit sent (...)" / "not running"
+
+    Two hard-won structural rules:
+      1. The ``repeat`` loop lives OUTSIDE any ``tell application`` block.
+         Inside an application tell, ``repeat with x in someList`` dispatches
+         its implicit ``count`` command TO THE APP - and Excel's gallery
+         state can throw -1700 on events a local evaluation handles fine.
+         Each property read targets the app explicitly, per statement.
+      2. The quit verb has its own guard with a ``quit saving no`` retry
+         (safe: only reached with zero user-owned documents counted).
+
+    The Python caller escalates on the failure statuses: "quit failed"
+    certifies no user documents, and for enum/scan failures a separate
+    document-count probe (see ``_probe_open_docs``) certifies the app is
+    empty before it is force-terminated - so a gallery-stuck Excel can no
+    longer squat in the dock and resurrect its Recents entries.
     """
     return f'''
         tell application "System Events"
             if not (exists process "{app}") then return "not running"
         end tell
+        set docList to {{}}
+        try
+            tell application "{app}" to set docList to ({collection} as list)
+        on error errMsg number errNum
+            return "enum failed (error " & errNum & "): " & errMsg
+        end try
         set total to 0
         set blockers to 0
         try
-            tell application "{app}"
-                set docList to {{}}
+            repeat with d in docList
+                set total to total + 1
+                set pristine to false
                 try
-                    set docList to ({collection} as list)
-                end try
-                repeat with d in docList
-                    set total to total + 1
-                    set pristine to false
+                    set hasPath to false
                     try
-                        set hasPath to false
-                        try
-                            set p to (path of d as text)
-                            if p is not "" then set hasPath to true
-                        end try
-                        if not hasPath then
-                            try
-                                if (full name of d as text) contains "/" then set hasPath to true
-                            end try
-                        end if
-                        set isSaved to true
-                        try
-                            set isSaved to (saved of d)
-                        end try
-                        if (not hasPath) and isSaved then set pristine to true
+                        tell application "{app}" to set p to (path of d as text)
+                        if p is not "" then set hasPath to true
                     end try
-                    if not pristine then set blockers to blockers + 1
-                end repeat
-            end tell
+                    if not hasPath then
+                        try
+                            tell application "{app}" to set fn to (full name of d as text)
+                            if fn contains "/" then set hasPath to true
+                        end try
+                    end if
+                    set isSaved to true
+                    try
+                        tell application "{app}" to set isSaved to (saved of d)
+                    end try
+                    if (not hasPath) and isSaved then set pristine to true
+                end try
+                if not pristine then set blockers to blockers + 1
+            end repeat
         on error errMsg number errNum
-            return "error " & errNum & ": " & errMsg
+            return "doc scan failed (error " & errNum & "): " & errMsg
         end try
         if blockers > 0 then return "kept running (" & blockers & " of " & total & " doc(s) look user-owned)"
         try
@@ -625,6 +632,36 @@ def _idle_quit_script(app: str, collection: str) -> str:
         end try
         return "quit sent (" & total & " open doc(s), none user-owned)"
     '''
+
+
+def _probe_open_docs(app: str, collection: str) -> str:
+    """Ask *app* how many documents it has open - the kill-safety certificate.
+
+    Returns "gone", "docs N", "count failed (error N)" or "probe failed: ...".
+    The semantics that make this a safe gate: an Office app with a REAL open
+    document answers ``count of <collection>`` reliably; the pathological
+    gallery/no-document state is precisely where the count (like the
+    enumeration) throws. So "docs 0" and "count failed" both certify that no
+    user document exists, while "docs N>0" or a timeout (possible modal
+    dialog) mean the app must be left alone.
+    """
+    script = f'''
+        tell application "System Events"
+            if not (exists process "{app}") then return "gone"
+        end tell
+        try
+            tell application "{app}" to set n to (count of {collection})
+            return "docs " & n
+        on error errMsg number errNum
+            return "count failed (error " & errNum & ")"
+        end try
+    '''
+    try:
+        r = subprocess.run(['osascript', '-e', script],
+                           capture_output=True, text=True, timeout=15)
+        return (r.stdout or "").strip() or f"probe failed: rc={r.returncode}"
+    except Exception as e:
+        return f"probe failed: {e}"
 
 
 def quit_idle_office_apps() -> None:
@@ -686,20 +723,33 @@ def quit_idle_office_apps() -> None:
         return still_running, statuses
 
     def _terminate_gallery_stuck(app: str) -> None:
-        """Force-terminate *app* after the quit VERB itself failed.
+        """Terminate *app* after its scripted quit failed WITH the certificate
+        that no user document is open (a "quit failed" status or a passing
+        ``_probe_open_docs`` gate).
 
-        Only ever called for apps whose quit script certified "0 user-owned
-        documents open" and then errored on the quit Apple event (Excel's
-        Workbook-Gallery -1700 quirk). With nothing user-owned open there is
-        nothing to lose; SIGTERM also skips the app's exit-time rewrite of the
-        shared Recents registry DB, so the marker purge below sticks.
+        Tries one last graceful ``quit saving no`` (harmless: nothing to
+        discard), then SIGTERMs if the process is still alive. The SIGTERM
+        path also skips the app's exit-time rewrite of the shared Recents
+        registry DB, so the marker purge below sticks.
         """
+        import time as _t
         try:
-            subprocess.run(['pkill', '-x', app], capture_output=True, timeout=10)
-            logger.info(
-                "[OfficeQuit] force-terminated %s (quit verb failed with no "
-                "user documents open)", app,
+            subprocess.run(
+                ['osascript', '-e', f'tell application "{app}" to quit saving no'],
+                capture_output=True, timeout=10,
             )
+        except Exception:
+            pass
+        _t.sleep(1.0)
+        try:
+            still = subprocess.run(['pgrep', '-x', app], capture_output=True, timeout=10)
+            if still.returncode == 0:
+                subprocess.run(['pkill', '-x', app], capture_output=True, timeout=10)
+                logger.info(
+                    "[OfficeQuit] force-terminated %s (no user documents open)", app)
+            else:
+                logger.info(
+                    "[OfficeQuit] %s exited on the final 'quit saving no'", app)
         except Exception as e:
             logger.info("[OfficeQuit] force-terminate of %s failed: %s", app, e)
 
@@ -754,14 +804,33 @@ def quit_idle_office_apps() -> None:
             stragglers, _retry_statuses = _quit_pass(2, stragglers)
             statuses.update(_retry_statuses)
 
-        # 3b. Escalation: an app whose quit VERB errored even though the script
-        # certified zero user-owned documents (Excel's gallery-state -1700 on
-        # quit survives both passes) gets force-terminated - the ONLY remaining
-        # way to clear it from the dock, and provably safe because nothing
-        # user-owned is open.
-        for app, _c in stragglers:
-            if statuses.get(app, "").startswith("quit failed"):
+        # 3b. Escalation for the failure statuses. Two certified-safe paths:
+        #   - "quit failed": the script itself counted zero user-owned docs
+        #     before the quit verb threw -> terminate directly.
+        #   - "enum failed"/"doc scan failed" (Excel's gallery-state -1700
+        #     pathology): the script could not inspect the documents, so ask
+        #     for a document COUNT first (_probe_open_docs). "docs 0" and
+        #     "count failed" both certify the empty/gallery state (a real
+        #     open workbook answers the count); anything else - including a
+        #     timeout, which can mean a modal dialog - leaves the app alone.
+        _terminated = []
+        for app, coll in stragglers:
+            st = statuses.get(app, "")
+            if st.startswith("quit failed"):
                 _terminate_gallery_stuck(app)
+                _terminated.append((app, coll))
+            elif "failed" in st or st.startswith("error"):
+                probe = _probe_open_docs(app, coll)
+                logger.info("[OfficeQuit] %s document probe -> %s", app, probe)
+                if probe == "gone":
+                    continue
+                if probe == "docs 0" or probe.startswith("count failed"):
+                    _terminate_gallery_stuck(app)
+                    _terminated.append((app, coll))
+                else:
+                    logger.info(
+                        "[OfficeQuit] leaving %s running (cannot certify it "
+                        "has no user documents open)", app)
 
         # 4. Wait for the quit apps to actually DIE, then surgically purge our
         # container-staged temp files from Office's Recent-files lists (marker-
@@ -774,6 +843,9 @@ def quit_idle_office_apps() -> None:
             (app, coll) for app, coll in _QUIT_TARGETS
             if statuses.get(app, "").startswith(("quit sent", "quit failed"))
         ]
+        for pair in _terminated:
+            if pair not in _expected_exits:
+                _expected_exits.append(pair)
         if _expected_exits:
             _wait_for_exit(_expected_exits)
         _purge_canvas_recents()

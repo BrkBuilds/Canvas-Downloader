@@ -529,17 +529,39 @@ def test_page_stub_upgrade_failed_fetch_keeps_fallback_id():
 # ── macOS Office idle-quit script shape ──────────────────────────────────────
 
 def test_idle_quit_script_guards_quit_separately():
-    """Excel's gallery state can error on the quit VERB itself (-1700), not
-    just on enumerating workbooks. The quit must (a) only ever run after the
-    user-owned check passed, (b) carry its own error handling with a
-    'quit saving no' retry, and (c) surface a distinct 'quit failed' status so
-    the Python side knows force-termination is safe (zero user docs)."""
+    """The idle-quit script must be phase-tagged (Excel's gallery-state -1700
+    survived two fixes because a single 'error N' status could not say WHAT
+    threw): enumeration, doc scan and the quit verb each return a distinct
+    status, the quit only ever runs after the user-owned check passed, and
+    the repeat loop lives OUTSIDE any application tell block (inside one, the
+    loop's implicit 'count' is dispatched to the app - suspect for the
+    gallery -1700)."""
     from engine.applescript_bridge import _idle_quit_script
 
     s = _idle_quit_script("Microsoft Excel", "workbooks")
+    # Distinct phase statuses for diagnosability.
+    assert 'enum failed' in s
+    assert 'doc scan failed' in s
+    assert 'quit failed' in s
+    assert 'quit saving no' in s
     # The user-owned bail-out comes BEFORE any quit statement.
     assert s.index('kept running') < s.index('to quit')
-    assert 'quit saving no' in s
-    assert 'quit failed' in s
-    # Enumeration failure is still treated as "no documents" (inner try).
-    assert 'set docList to {}' in s
+    # The repeat loop must NOT sit inside a tell block: the only tell around
+    # the enumeration is the single-line form, and every per-property read
+    # targets the app explicitly.
+    assert 'repeat with d in docList' in s
+    _repeat_at = s.index('repeat with d in docList')
+    _last_block_tell = s.rindex('tell application', 0, _repeat_at)
+    assert 'to set docList' in s[_last_block_tell:_repeat_at]
+
+
+def test_probe_open_docs_script_shape():
+    """The kill-safety probe must ask the app for a document COUNT and map
+    every outcome to one of the statuses the escalation logic gates on."""
+    import inspect
+    from engine.applescript_bridge import _probe_open_docs
+
+    src = inspect.getsource(_probe_open_docs)
+    assert 'count of {collection}' in src
+    for token in ('"gone"', '"docs "', 'count failed'):
+        assert token in src
