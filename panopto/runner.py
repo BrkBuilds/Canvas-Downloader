@@ -457,12 +457,34 @@ def run_panopto_batch(
             continue
 
         # Authenticate once per course (reused for every DeliveryInfo call).
+        # Candidate launches, best first: the discovery-VERIFIED beacon(s)
+        # (auth_launch_url - a launch that just reached a Panopto host), then
+        # each video's own raw launch URL. Legacy items can carry launch URLs
+        # whose chain dies on the Canvas tool page (observed post-LTI-1.3
+        # migration), so trying only the per-video URLs used to leave the
+        # whole course without a session even though 30 working launches had
+        # just run during discovery.
         session = panopto_base = None
+        _auth_candidates: list[str] = []
         for v in videos:
-            if v.launch_url and "sessionless_launch" in v.launch_url:
-                session, _final, _rid, panopto_base, _folder = lti_launch(v.launch_url, cm.api_key)
-                if session and panopto_base:
-                    break
+            _beacon = getattr(v, "auth_launch_url", "")
+            if _beacon and "sessionless_launch" in _beacon and _beacon not in _auth_candidates:
+                _auth_candidates.append(_beacon)
+        for v in videos:
+            if (v.launch_url and "sessionless_launch" in v.launch_url
+                    and v.launch_url not in _auth_candidates):
+                _auth_candidates.append(v.launch_url)
+        for _try_no, _cand in enumerate(_auth_candidates, 1):
+            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, cm.api_key)
+            _ok = bool(session and panopto_base)
+            logger.info(
+                "Panopto auth bootstrap attempt %d/%d via %s -> %s",
+                _try_no, len(_auth_candidates), _cand.split("?")[0],
+                "OK" if _ok else "no Panopto session",
+            )
+            if _ok:
+                break
+            session = panopto_base = None
         if session is None or panopto_base is None:
             logger.warning(
                 "Panopto auth could NOT be established for '%s' - downloads for "
@@ -908,15 +930,24 @@ def _resolve_delivery(session, panopto_base, video, canvas_token):
     Returns ``(session, panopto_base, delivery, error)``. Some Canvas links need
     the embed's *real* id resolved via a per-video LTI launch (the Canvas-side id
     differs from the delivery id); when the first lookup yields no usable stream
-    we retry through that launch and adopt its session/host.
+    we retry through that launch and adopt its session/host. The discovery-
+    verified beacon (auth_launch_url) is tried too, in case the item's own
+    launch chain is dead but a fresh course session unlocks the delivery.
     """
     delivery, err = get_delivery_info(session, panopto_base, video.video_id)
     has_stream = bool(delivery and pick_audio_stream(delivery))
-    if not has_stream and video.launch_url and "sessionless_launch" in video.launch_url:
-        v_session, _final, real_id, v_base, _folder = lti_launch(video.launch_url, canvas_token)
-        if v_session and v_base and real_id:
-            session, panopto_base = v_session, v_base
-            delivery, err = get_delivery_info(session, panopto_base, real_id)
+    if not has_stream:
+        _launches = [video.launch_url, getattr(video, "auth_launch_url", "")]
+        for _lurl in _launches:
+            if not (_lurl and "sessionless_launch" in _lurl):
+                continue
+            v_session, _final, real_id, v_base, _folder = lti_launch(_lurl, canvas_token)
+            if v_session and v_base:
+                _vid = real_id or video.video_id
+                _delivery, _err = get_delivery_info(v_session, v_base, _vid)
+                if _delivery and pick_audio_stream(_delivery):
+                    return v_session, v_base, _delivery, _err
+                delivery, err = _delivery or delivery, _err or err
     return session, panopto_base, delivery, err
 
 

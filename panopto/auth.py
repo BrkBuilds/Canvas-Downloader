@@ -190,11 +190,24 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
         logger.warning("Panopto LTI: sessionless_launch returned no launch URL.")
         return None, None, None, None, None
 
+    def _loc(u: str) -> str:
+        """host+path of *u* - never the query (it can carry auth material)."""
+        try:
+            p = urlparse(u)
+            return f"{p.netloc}{p.path}"
+        except Exception:
+            return "?"
+
     try:
         r = session.get(launch_url, timeout=timeout, allow_redirects=True)
     except Exception as e:
         logger.warning(f"Panopto LTI: GET launch url failed: {e}")
         return None, None, None, None, None
+
+    # Chain trace: one entry per hop (hosts+paths, form-field NAMES only).
+    # Logged when the handshake fails to reach Panopto, so a dead chain is
+    # diagnosable from debug_log.txt instead of just "landed on <page>".
+    _trace = [f"GET->{getattr(r, 'status_code', '?')} {_loc(r.url)}"]
 
     # Follow the auto-submit form chain. 10 steps (was 6): some LTI 1.3 chains
     # (OIDC init -> authorize -> tool -> storage-access interstitials) are longer
@@ -219,13 +232,16 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
             "Viewer.aspx" in r.url or "Embed.aspx" in r.url
             or extract_panopto_ids(r.url)
         ):
+            _trace.append("break:viewer")
             break
         action, form_data = parse_lti_form(r.text)
         if not action:
+            _trace.append(f"break:no-form ({len(r.text or '')} chars)")
             break
         action = urljoin(r.url, action)
         if (panopto_base_from_url(r.url)
                 and action.split("?")[0] == r.url.split("?")[0]):
+            _trace.append("break:self-post")
             break
         _state = (r.url, action, tuple(sorted((form_data or {}).items())))
         _state_counts[_state] += 1
@@ -234,6 +250,7 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
                         "(action %s, identical form re-served) - breaking "
                         "after %d step(s).",
                         r.url.split("?")[0], action.split("?")[0], steps_used)
+            _trace.append("break:dead-loop")
             break
         steps_used += 1
         try:
@@ -241,6 +258,11 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
         except Exception as e:
             logger.warning(f"Panopto LTI: OIDC POST step {steps_used} failed: {e}")
             return None, None, None, None, None
+        _trace.append(
+            f"POST {_loc(action)} "
+            f"[{','.join(sorted((form_data or {}).keys()))[:160]}] "
+            f"->{getattr(r, 'status_code', '?')} {_loc(r.url)}"
+        )
 
     panopto_base = panopto_base_from_url(r.url)
     real_ids = extract_panopto_ids(r.url)
@@ -286,7 +308,8 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
     else:
         logger.warning(
             "Panopto LTI handshake did not reach a Panopto host (landed on %s). "
-            "Cookies may be missing - downloads will likely fail.",
+            "Cookies may be missing - downloads will likely fail. Chain: %s",
             r.url.split("?")[0] if r.url else "?",
+            " | ".join(_trace),
         )
     return session, r.url, real_video_id, panopto_base, folder_id
