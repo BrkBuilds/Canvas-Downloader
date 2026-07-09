@@ -365,6 +365,7 @@ def transcribe_in_subprocess(
     result = None
     error_msg = None
     rc = None
+    _gone_since = None
     try:
         while True:
             if is_cancelled and is_cancelled():
@@ -377,6 +378,23 @@ def transcribe_in_subprocess(
             try:
                 line = q.get(timeout=0.3)
             except queue.Empty:
+                # Don't rely on stdout EOF alone to detect the worker's end: EOF
+                # only arrives when the LAST write-end of the pipe closes, and any
+                # process that inherited the worker's std handles (a stray
+                # grandchild - e.g. the macOS rogue-GUI relaunch) keeps the pipe
+                # open indefinitely AFTER the worker itself has exited. That
+                # stalled this loop until the user closed the phantom window,
+                # blocking the next file. If the worker PROCESS is gone, give the
+                # reader a short grace to flush buffered lines, then move on.
+                if proc.poll() is not None:
+                    if _gone_since is None:
+                        _gone_since = _time.time()
+                    elif _time.time() - _gone_since > 3.0:
+                        logger.warning(
+                            "Transcribe worker (pid=%s) exited but its stdout pipe "
+                            "is still open (inherited by another process?) - "
+                            "proceeding without waiting for EOF.", proc.pid)
+                        break
                 continue
             if line is None:
                 break  # worker stdout closed (process ending)

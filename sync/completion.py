@@ -31,7 +31,7 @@ from engine.notifications import play_completion_beep
 
 
 def show_sync_cancelled():
-    """Render the sync-cancelled screen with error details."""
+    """Render the sync-cancelled screen (summary card only, no error list)."""
     render_sync_wizard(st, 3)
 
     # macOS: tidy Office the moment the user lands on the cancelled screen,
@@ -95,7 +95,9 @@ def show_sync_cancelled():
     </div>
     """, unsafe_allow_html=True)
 
-    show_sync_errors()
+    # Deliberately NO error list here (mirrors the download cancelled screen):
+    # the user cancelled, so partial-run errors are noise. Errors are only
+    # surfaced on the completion screen, where they're actionable.
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])

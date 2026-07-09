@@ -210,6 +210,125 @@ if __name__ == "__main__":
         except Exception:
             sys.exit(1)
 
+    # ── Single-instance guard ─────────────────────────────────────────
+    # Exactly ONE GUI instance per user. On macOS a rogue SECOND full GUI
+    # instance has been observed during Panopto transcription (second window +
+    # second Dock icon + a fresh Keychain permission prompt, since the new
+    # instance re-reads the token at session init). Regardless of what spawns it
+    # (LaunchServices resurrecting the bundle, a stray re-exec of the frozen
+    # binary, a notification click, or the user double-launching), a duplicate
+    # must never boot: it exits HERE, before any webview/streamlit/keyring
+    # access, after best-effort focusing the already-running window. The lock is
+    # an OS-level primitive (named mutex / flock) that the OS releases
+    # automatically on ANY process death, so a crash can never wedge the app.
+    # Transcribe workers are routed above and never reach this guard.
+    # Escape hatch for debugging: CANVAS_DL_ALLOW_MULTI=1 skips the guard.
+
+    def _instance_lock_dir() -> str:
+        if sys.platform == "darwin":
+            d = os.path.expanduser("~/Library/Application Support/CanvasDownloader")
+        elif sys.platform == "win32":
+            d = os.path.join(os.environ.get("LOCALAPPDATA")
+                             or os.path.expanduser("~"), "CanvasDownloader")
+        else:
+            d = os.path.expanduser("~/.canvas_downloader")
+        try:
+            os.makedirs(d, exist_ok=True)
+        except OSError:
+            pass
+        return d
+
+    def _acquire_single_instance_lock():
+        """Return a lock holder (kept alive for the process lifetime), or None
+        if another Canvas Downloader GUI instance already holds the lock."""
+        if sys.platform == "win32":
+            import ctypes
+            _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            _kernel32.CreateMutexW.restype = ctypes.c_void_p  # HANDLE (64-bit safe)
+            _kernel32.CreateMutexW.argtypes = (ctypes.c_void_p, ctypes.c_int,
+                                               ctypes.c_wchar_p)
+            _kernel32.CloseHandle.argtypes = (ctypes.c_void_p,)
+            handle = _kernel32.CreateMutexW(None, False,
+                                            "CanvasDownloader_SingleInstance")
+            if not handle:
+                return object()  # mutex creation failed - fail OPEN, never block launch
+            if ctypes.get_last_error() == 183:  # ERROR_ALREADY_EXISTS
+                _kernel32.CloseHandle(handle)
+                return None
+            return handle  # keep referenced so the mutex lives with the process
+        try:
+            import fcntl
+            f = open(os.path.join(_instance_lock_dir(), "instance.lock"), "w",
+                     encoding="utf-8")
+            try:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                f.close()
+                return None
+            f.write(str(os.getpid()))
+            f.flush()
+            return f  # keep the fd open: flock is released on process death
+        except Exception:
+            return object()  # locking unavailable - fail OPEN
+
+    def _focus_running_instance() -> None:
+        """Best-effort: bring the existing instance's window to the front."""
+        try:
+            if sys.platform == "darwin":
+                from AppKit import (
+                    NSRunningApplication, NSApplicationActivateIgnoringOtherApps)
+                apps = NSRunningApplication.runningApplicationsWithBundleIdentifier_(
+                    "com.canvasdownloader.app")
+                for a in apps:
+                    if a.processIdentifier() != os.getpid():
+                        a.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+                        break
+            elif sys.platform == "win32":
+                import ctypes
+                _user32 = ctypes.WinDLL("user32")
+                _user32.FindWindowW.restype = ctypes.c_void_p  # HWND
+                _user32.FindWindowW.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p)
+                _user32.ShowWindow.argtypes = (ctypes.c_void_p, ctypes.c_int)
+                _user32.SetForegroundWindow.argtypes = (ctypes.c_void_p,)
+                hwnd = _user32.FindWindowW(None, "Canvas Downloader")
+                if hwnd:
+                    _user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                    _user32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+
+    def _log_duplicate_launch() -> None:
+        """Breadcrumb identifying WHO spawned the duplicate (pid/ppid/argv).
+
+        The parent pid is the smoking gun for the macOS rogue-instance bug:
+        ppid == a transcribe worker -> grandchild re-exec; ppid == 1 (launchd)
+        -> LaunchServices launched the bundle (Dock/notification/`open`).
+        """
+        try:
+            parent = ""
+            try:
+                import psutil
+                p = psutil.Process(os.getppid())
+                parent = f" parent='{p.name()}'"
+            except Exception:
+                pass
+            import datetime
+            with open(os.path.join(_instance_lock_dir(),
+                                   "duplicate_launches.log"),
+                      "a", encoding="utf-8") as f:
+                f.write(f"{datetime.datetime.now().isoformat()} duplicate GUI "
+                        f"launch suppressed: pid={os.getpid()} "
+                        f"ppid={os.getppid()}{parent} argv={sys.argv!r}\n")
+        except Exception:
+            pass
+
+    if os.environ.get("CANVAS_DL_ALLOW_MULTI") != "1":
+        _instance_lock = _acquire_single_instance_lock()  # noqa: F841 - held for process lifetime
+        if _instance_lock is None:
+            _log_duplicate_launch()
+            _focus_running_instance()
+            os._exit(0)
+
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
