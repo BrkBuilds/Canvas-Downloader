@@ -572,14 +572,24 @@ def _idle_quit_script(app: str, collection: str) -> str:
          its implicit ``count`` command TO THE APP - and Excel's gallery
          state can throw -1700 on events a local evaluation handles fine.
          Each property read targets the app explicitly, per statement.
-      2. The quit verb has its own guard with a ``quit saving no`` retry
-         (safe: only reached with zero user-owned documents counted).
+      2. The quit verb is ``quit saving no`` FIRST (plain ``quit`` as the
+         error retry). A plain ``quit`` never errors when a document has
+         unsaved changes - the app just shows a (hidden) save sheet and
+         waits forever, while the Apple event returns fine and we log
+         "quit sent". That is exactly what the 2026-07-09 round-5 run
+         showed: Excel answered "quit sent (1 open doc)" and was STILL
+         alive with that doc 5 minutes later. ``saving no`` is prompt-free
+         and safe here: it is only reached after zero user-owned documents
+         were counted.
 
     The Python caller escalates on the failure statuses: "quit failed"
     certifies no user documents, and for enum/scan failures a separate
     document-count probe (see ``_probe_open_docs``) certifies the app is
-    empty before it is force-terminated - so a gallery-stuck Excel can no
-    longer squat in the dock and resurrect its Recents entries.
+    empty before it is force-terminated. Additionally, any app whose status
+    carried the "none user-owned" certificate but which SURVIVES the
+    post-quit exit wait is terminated - so a save-sheet-stuck or otherwise
+    lingering Excel can no longer squat in the dock and resurrect its
+    Recents entries.
     """
     return f'''
         tell application "System Events"
@@ -622,10 +632,10 @@ def _idle_quit_script(app: str, collection: str) -> str:
         end try
         if blockers > 0 then return "kept running (" & blockers & " of " & total & " doc(s) look user-owned)"
         try
-            tell application "{app}" to quit
+            tell application "{app}" to quit saving no
         on error
             try
-                tell application "{app}" to quit saving no
+                tell application "{app}" to quit
             on error errMsg number errNum
                 return "quit failed (error " & errNum & "): " & errMsg & " [" & total & " open doc(s), none user-owned]"
             end try
@@ -753,8 +763,12 @@ def quit_idle_office_apps() -> None:
         except Exception as e:
             logger.info("[OfficeQuit] force-terminate of %s failed: %s", app, e)
 
-    def _wait_for_exit(apps: list, timeout: float = 12.0) -> None:
+    def _wait_for_exit(apps: list, timeout: float = 12.0) -> list:
         """Poll until every app in *apps* has actually terminated (or timeout).
+
+        Returns the apps STILL RUNNING at the deadline so the caller can
+        escalate (round 5 showed Excel answering "quit sent" and then simply
+        never exiting - a hidden save sheet stalls a quit without any error).
 
         The Recents purge MUST run against dead Office processes: a still-alive
         app keeps its Recent-files list in memory and rewrites the shared
@@ -784,9 +798,9 @@ def quit_idle_office_apps() -> None:
             if remaining:
                 _time.sleep(0.5)
         if remaining:
-            logger.info("[OfficeQuit] still running after %.0fs wait: %s "
-                        "(Recents purge may not stick for these)",
+            logger.info("[OfficeQuit] still running after %.0fs wait: %s",
                         timeout, ", ".join(remaining))
+        return remaining
 
     def _worker():
         import time as _time
@@ -814,9 +828,11 @@ def quit_idle_office_apps() -> None:
         #     open workbook answers the count); anything else - including a
         #     timeout, which can mean a modal dialog - leaves the app alone.
         _terminated = []
+        _certified_safe = set()   # apps certified to hold no user documents
         for app, coll in stragglers:
             st = statuses.get(app, "")
             if st.startswith("quit failed"):
+                _certified_safe.add(app)
                 _terminate_gallery_stuck(app)
                 _terminated.append((app, coll))
             elif "failed" in st or st.startswith("error"):
@@ -825,6 +841,7 @@ def quit_idle_office_apps() -> None:
                 if probe == "gone":
                     continue
                 if probe == "docs 0" or probe.startswith("count failed"):
+                    _certified_safe.add(app)
                     _terminate_gallery_stuck(app)
                     _terminated.append((app, coll))
                 else:
@@ -838,7 +855,16 @@ def quit_idle_office_apps() -> None:
         # Purging while an app is still alive is futile - it rewrites the
         # registry DB from memory on exit. Only apps we actually asked to exit
         # are waited on, so a legitimately busy app ("kept running") no longer
-        # stalls the purge for the full timeout. Best-effort throughout.
+        # stalls the purge for the full timeout.
+        #
+        # Escalation on survivors: "quit sent" only means the Apple event was
+        # DELIVERED - an app can then stall its own quit forever on a hidden
+        # sheet (round 5: Excel answered "quit sent (1 open doc, none
+        # user-owned)" and was still alive, doc and all, 5 minutes later,
+        # squatting in the dock). Every status that reached the quit verb
+        # carries the "none user-owned" certificate, so terminating a
+        # survivor is provably safe - and SIGTERM also skips the app's
+        # exit-time Recents rewrite, which is what lets the purge stick.
         _expected_exits = [
             (app, coll) for app, coll in _QUIT_TARGETS
             if statuses.get(app, "").startswith(("quit sent", "quit failed"))
@@ -846,8 +872,25 @@ def quit_idle_office_apps() -> None:
         for pair in _terminated:
             if pair not in _expected_exits:
                 _expected_exits.append(pair)
+        for app, _coll in _expected_exits:
+            if "none user-owned" in statuses.get(app, ""):
+                _certified_safe.add(app)
         if _expected_exits:
-            _wait_for_exit(_expected_exits)
+            _survivors = _wait_for_exit(_expected_exits)
+            _escalated = []
+            for app in _survivors:
+                if app in _certified_safe:
+                    logger.info(
+                        "[OfficeQuit] %s survived the exit wait despite '%s' "
+                        "- escalating to terminate", app, statuses.get(app, ""))
+                    _terminate_gallery_stuck(app)
+                    _escalated.append((app, None))
+                else:
+                    logger.info(
+                        "[OfficeQuit] %s survived the exit wait without a "
+                        "no-user-docs certificate - leaving it alone", app)
+            if _escalated:
+                _wait_for_exit(_escalated, timeout=6.0)
         _purge_canvas_recents()
 
     threading.Thread(target=_worker, daemon=True).start()
