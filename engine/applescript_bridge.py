@@ -520,15 +520,83 @@ def _snapshot_dock_recents() -> None:
                             if dock is not None else set(_OFFICE_BUNDLE_IDS.values()))
 
 
+def _office_pgrep_alive(app_name: str) -> bool:
+    """BSD-level liveness (pgrep) - True on any doubt (safe default)."""
+    try:
+        return subprocess.run(['pgrep', '-x', app_name],
+                              capture_output=True, timeout=10).returncode == 0
+    except Exception:
+        return True
+
+
+def _strip_office_recents_tiles() -> list[str]:
+    """One export -> filter -> import -> ``killall Dock`` pass.
+
+    Removes a recents tile only when ALL of these hold: it is one of the three
+    Office apps, the app was NOT in recents before the run, and its process is
+    not running now. Returns the bundle ids removed ([] = nothing needed, so
+    the Dock was NOT restarted).
+    """
+    dock = _dock_prefs_export()
+    if not dock:
+        return []
+    recents = dock.get('recent-apps')
+    if not isinstance(recents, list) or not recents:
+        return []
+    name_by_bid = {b: n for n, b in _OFFICE_BUNDLE_IDS.items()}
+
+    def _removable(entry) -> bool:
+        bid = _recents_entry_bundle_id(entry)
+        if bid not in name_by_bid or bid in _dock_recents_before:
+            return False
+        return not _office_pgrep_alive(name_by_bid[bid])
+
+    kept, removed = [], []
+    for entry in recents:
+        (removed if _removable(entry) else kept).append(entry)
+    if not removed:
+        return []
+    dock['recent-apps'] = kept
+    import plistlib
+    try:
+        payload = plistlib.dumps(dock, fmt=plistlib.FMT_XML)
+        p = subprocess.run(['defaults', 'import', 'com.apple.dock', '-'],
+                           input=payload, capture_output=True, timeout=10)
+        if p.returncode != 0:
+            logger.info("[OfficeQuit] Dock recents rewrite failed (rc=%s): %s",
+                        p.returncode,
+                        (p.stderr or b'').decode(errors='replace')[:200])
+            return []
+        subprocess.run(['killall', 'Dock'], capture_output=True, timeout=10)
+        removed_ids = [_recents_entry_bundle_id(e) for e in removed]
+        logger.info(
+            "[OfficeQuit] removed %d Office tile(s) from Dock recents (%s) "
+            "and refreshed the Dock", len(removed_ids), ", ".join(removed_ids))
+        return removed_ids
+    except Exception as e:
+        logger.debug(f"[OfficeQuit] Dock recents cleanup skipped: {e}")
+        return []
+
+
 def _cleanup_dock_recents() -> None:
     """Strip OUR hidden Office launches from the Dock's recents section.
 
-    Removes a recents tile only when ALL of these hold: it is one of the three
-    Office apps, we launched Office this run (snapshot exists), the app was
-    NOT in recents before the run, and its process is not running now. The
-    Dock is restarted (``killall Dock`` - it only reads the list at startup)
-    only when at least one tile was actually removed, so the one-off Dock
-    flicker happens exactly when the wrong icon would otherwise stay visible.
+    Only runs when this run actually launched Office apps (snapshot exists)
+    and the recents section is enabled. The Dock is restarted (``killall
+    Dock`` - it only reads the list at startup) only when at least one tile
+    was actually removed, so the one-off Dock flicker happens exactly when a
+    wrong icon would otherwise stay visible.
+
+    TIMING IS THE WHOLE GAME (2026-07-09 19:34 run): the Dock MOVES a quit
+    app into its recents list when it processes the app's TERMINATION. The
+    first implementation rewrote+restarted the Dock 0.4s after Excel's "quit
+    sent" - Word/PPT were already dead so their tiles stayed gone, but Excel
+    (always quit LAST, and the slowest to tear down: it rewrites its Recents
+    registry on exit) was still terminating; the freshly restarted Dock
+    watched it die and re-added its tile. So: wait until every Office process
+    is BSD-dead (pgrep), give the Dock a moment to commit its own recents
+    write, strip, and VERIFY once after the restart - a tile that was
+    re-added by a racing termination event is stripped by the second pass.
     """
     if sys.platform != 'darwin' or _dock_recents_before is None:
         return
@@ -540,49 +608,25 @@ def _cleanup_dock_recents() -> None:
             return
     except Exception:
         pass
-    dock = _dock_prefs_export()
-    if not dock:
-        return
-    recents = dock.get('recent-apps')
-    if not isinstance(recents, list) or not recents:
-        return
-    name_by_bid = {b: n for n, b in _OFFICE_BUNDLE_IDS.items()}
 
-    def _removable(entry) -> bool:
-        bid = _recents_entry_bundle_id(entry)
-        if bid not in name_by_bid or bid in _dock_recents_before:
-            return False
-        try:
-            alive = subprocess.run(['pgrep', '-x', name_by_bid[bid]],
-                                   capture_output=True, timeout=10).returncode == 0
-        except Exception:
-            alive = True   # can't tell -> leave the tile alone
-        return not alive
-
-    kept, removed = [], []
-    for entry in recents:
-        (removed if _removable(entry) else kept).append(entry)
-    if not removed:
+    import time as _t
+    # 1. Wait for every Office process to be truly gone (bounded; an app kept
+    # alive by the user's own documents simply stays - its tile is then
+    # protected by the pgrep check inside the strip pass anyway).
+    _deadline = _t.time() + 15
+    while _t.time() < _deadline:
+        if not any(_office_pgrep_alive(n) for n in _OFFICE_BUNDLE_IDS):
+            break
+        _t.sleep(0.5)
+    # 2. Let the Dock process the terminations and write its recents list.
+    _t.sleep(2.0)
+    # 3. Strip; when something was removed, verify once after the restart.
+    if not _strip_office_recents_tiles():
         return
-    dock['recent-apps'] = kept
-    import plistlib
-    try:
-        payload = plistlib.dumps(dock, fmt=plistlib.FMT_XML)
-        p = subprocess.run(['defaults', 'import', 'com.apple.dock', '-'],
-                           input=payload, capture_output=True, timeout=10)
-        if p.returncode != 0:
-            logger.info("[OfficeQuit] Dock recents rewrite failed (rc=%s): %s",
-                        p.returncode,
-                        (p.stderr or b'').decode(errors='replace')[:200])
-            return
-        subprocess.run(['killall', 'Dock'], capture_output=True, timeout=10)
-        logger.info(
-            "[OfficeQuit] removed %d Office tile(s) from Dock recents (%s) "
-            "and refreshed the Dock",
-            len(removed),
-            ", ".join(_recents_entry_bundle_id(e) for e in removed))
-    except Exception as e:
-        logger.debug(f"[OfficeQuit] Dock recents cleanup skipped: {e}")
+    _t.sleep(3.0)
+    if _strip_office_recents_tiles():
+        logger.info("[OfficeQuit] Dock recents needed a second pass (a tile "
+                    "was re-added by a racing termination event)")
 
 
 # (AppleScript app name, its document collection term) - shared by the idle-quit

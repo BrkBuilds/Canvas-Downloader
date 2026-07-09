@@ -3425,15 +3425,30 @@ class CanvasManager:
 
             url = file_obj.url
             if not url:
-                
+
                 # Check for LTI/Media streams
                 ext_lower = filepath.suffix.lower()
                 media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
                 if ext_lower in media_exts:
                     err = DownloadError(course_name, filename, "LTI/Media Stream", "This video is streamed via a Canvas plugin (e.g., Panopto/Studio) and cannot be directly downloaded.", context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
+                elif getattr(file_obj, 'locked_for_user', False):
+                    # Teacher-locked file (module-linked but locked in Files):
+                    # Canvas strips the download URL for students, so no retry
+                    # can ever succeed - not even a browser can fetch it. Mark
+                    # permanent so it lands in "Cannot Be Downloaded" instead
+                    # of taunting the user with a retry button. NOT auto-ignored:
+                    # teachers often lock files only until the lecture date, so
+                    # a later run may legitimately succeed.
+                    _lock_reason = (getattr(file_obj, 'lock_explanation', '') or '').strip()
+                    err = DownloadError(
+                        course_name, filename, "Locked File",
+                        "The teacher has locked this file on Canvas, so it cannot be "
+                        "downloaded" + (f" ({_lock_reason.rstrip('.')})" if _lock_reason else "") + ".",
+                        context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
+                    err.retry_exhausted = True
                 else:
                     err = DownloadError(course_name, filename, "No URL", "File object has no URL", context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
-                    
+
                 if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                 self._log_error(error_root_path, err)
                 return
