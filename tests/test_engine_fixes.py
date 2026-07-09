@@ -432,3 +432,114 @@ def test_synced_groups_resolve_converted_files(tmp_path):
     names = {f['name'] for f in groups[0]['files']}
     assert "Page Kontortid.md" in names          # display shows the real file
     assert "Page Kontortid.html" not in names
+
+
+def test_synced_groups_use_actual_write_paths(tmp_path):
+    """The display name and the on-disk name can diverge completely (module
+    Pages: recorded "Filer til Klynge 1.html", written "Page Filer til
+    Klynge 1 (1).html", converted to ...md). Resolution must start from the
+    ACTUAL path the engine wrote (synced_actual_rels, 1:1 with the names) -
+    the 2026-07-09 completion screen showed dead .html rows because it only
+    ever looked at the display name."""
+    from sync.execution import _build_synced_groups
+
+    root = tmp_path / "Course"
+    root.mkdir()
+    # Converted after write: only the .md exists now.
+    (root / "Page Filer til Klynge 1 (1).md").write_bytes(b"# md")
+    # Written and NOT converted: exists exactly at its actual path.
+    (root / "Page Uge 6 pensum.html").write_bytes(b"<html>")
+
+    sel = {
+        'pair_idx': 0,
+        'redownload': [],
+        'res_data': {
+            'pair': {'local_folder': str(root), 'course_id': 1,
+                     'course_name': 'Course'},
+            'sync_manager': None,
+            'result': None,
+        },
+    }
+    synced_details = {0: ["Filer til Klynge 1.html", "Uge 6 pensum.html"]}
+    actual_rels = {0: ["Page Filer til Klynge 1 (1).html",
+                       "Page Uge 6 pensum.html"]}
+    groups = _build_synced_groups([sel], synced_details, actual_rels)
+    by_rel = {f['rel'] for f in groups[0]['files']}
+    assert by_rel == {"Page Filer til Klynge 1 (1).md", "Page Uge 6 pensum.html"}
+    names = {f['name'] for f in groups[0]['files']}
+    assert names == {"Page Filer til Klynge 1 (1).md", "Page Uge 6 pensum.html"}
+
+
+# ── page-stub fallback: restricted Pages LIST upgraded per slug ──────────────
+
+def test_page_stub_upgrade_restores_download_identity():
+    """When course.get_pages() is restricted (hidden Pages tab), the module
+    scan emits Pages under the module-item fallback id. The per-slug stub
+    fetch must upgrade the entry in place to the download engine's manifest
+    identity (-page_id primary, -item.id legacy) - without it, every fresh
+    download re-analyzed for sync shows all pages as "new" (the 2026-07-09
+    35-phantom bug persisted BECAUSE page_meta was empty on this course)."""
+    from types import SimpleNamespace
+    from core.canvas_logic import CanvasManager, _apply_page_stub_upgrades
+
+    cm = CanvasManager.__new__(CanvasManager)   # only _sanitize_filename used
+    mi = CanvasFileInfo(
+        id=-1102048, filename="Page: Kontortid.html",
+        display_name="Kontortid.html", size=0,
+        modified_at="2026-01-01T00:00:00Z", url="https://x/p",
+        content_type="text/html", name_locked=True,
+    )
+    module_map = {-1102048: "Modul A"}
+    stub = SimpleNamespace(page_id=261465,
+                           title="Helle Zinner Henriksens Kontortid",
+                           updated_at="2026-07-01T10:00:00Z")
+    fixed = _apply_page_stub_upgrades(
+        {"kontortid": [(mi, "kontortid", -1102048, "Modul A")]},
+        [("kontortid", stub)], module_map, cm._sanitize_filename,
+    )
+    assert fixed == 1
+    assert mi.id == -261465                       # download-engine identity
+    assert mi.legacy_sync_id == -1102048          # old folders keep matching
+    assert "Helle Zinner Henriksens Kontortid" in mi.display_name
+    assert mi.content_sig                         # page sig (title+updated_at)
+    assert mi.modified_at == "2026-07-01T10:00:00Z"
+    assert module_map[-261465] == "Modul A"       # path routing registered
+
+
+def test_page_stub_upgrade_failed_fetch_keeps_fallback_id():
+    from core.canvas_logic import CanvasManager, _apply_page_stub_upgrades
+
+    cm = CanvasManager.__new__(CanvasManager)
+    mi = CanvasFileInfo(
+        id=-1102048, filename="Page: Kontortid.html",
+        display_name="Kontortid.html", size=0,
+        modified_at="2026-01-01T00:00:00Z", url="https://x/p",
+        content_type="text/html", name_locked=True,
+    )
+    module_map = {}
+    fixed = _apply_page_stub_upgrades(
+        {"kontortid": [(mi, "kontortid", -1102048, "Modul A")]},
+        [("kontortid", None)], module_map, cm._sanitize_filename,
+    )
+    assert fixed == 0
+    assert mi.id == -1102048                      # untouched degraded path
+    assert mi.legacy_sync_id == 0
+
+
+# ── macOS Office idle-quit script shape ──────────────────────────────────────
+
+def test_idle_quit_script_guards_quit_separately():
+    """Excel's gallery state can error on the quit VERB itself (-1700), not
+    just on enumerating workbooks. The quit must (a) only ever run after the
+    user-owned check passed, (b) carry its own error handling with a
+    'quit saving no' retry, and (c) surface a distinct 'quit failed' status so
+    the Python side knows force-termination is safe (zero user docs)."""
+    from engine.applescript_bridge import _idle_quit_script
+
+    s = _idle_quit_script("Microsoft Excel", "workbooks")
+    # The user-owned bail-out comes BEFORE any quit statement.
+    assert s.index('kept running') < s.index('to quit')
+    assert 'quit saving no' in s
+    assert 'quit failed' in s
+    # Enumeration failure is still treated as "no documents" (inner try).
+    assert 'set docList to {}' in s
