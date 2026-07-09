@@ -164,7 +164,7 @@ def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> 
     for v in videos:
         if getattr(v, "launch_url", "") and "sessionless_launch" in v.launch_url:
             try:
-                session, _final, _rid, panopto_base = lti_launch(v.launch_url, cm.api_key)
+                session, _final, _rid, panopto_base, _folder = lti_launch(v.launch_url, cm.api_key)
             except Exception as e:
                 logger.debug("fetch_durations LTI launch failed: %s", e)
                 session = panopto_base = None

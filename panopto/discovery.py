@@ -11,6 +11,7 @@ of ``PanoptoVideo`` records, de-duplicated by video id.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 
 import requests
@@ -20,6 +21,35 @@ from panopto.auth import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _norm_title(s: str) -> str:
+    """Whitespace-collapsed, casefolded title for session-name matching."""
+    return re.sub(r"\s+", " ", (s or "").strip()).casefold()
+
+
+def _match_session_by_title(title: str, sessions, taken) -> str | None:
+    """Resolve a module-item *title* against a folder's ``(id, name)`` sessions.
+
+    Institutions that insert Panopto deep links name the module item after the
+    recording, so an exact (normalized) name match is the norm. Sessions whose
+    id is already attributed (*taken*) are excluded first, which lets two
+    same-named recordings matched by two same-named items resolve pairwise in
+    folder order. A containment fallback is accepted only when it is UNIQUE,
+    so a generic title can never grab an arbitrary recording.
+    """
+    want = _norm_title(title)
+    if not want:
+        return None
+    available = [(vid, _norm_title(name)) for vid, name in sessions if vid not in taken]
+    exact = [vid for vid, name in available if name == want]
+    if exact:
+        return exact[0]
+    contains = [vid for vid, name in available
+                if name and (name in want or want in name)]
+    if len(contains) == 1:
+        return contains[0]
+    return None
 
 
 @dataclass
@@ -209,7 +239,8 @@ def discover_course_videos(
         lti = None
         if not direct and d_launch and "sessionless_launch" in d_launch:
             try:
-                lti = lti_launch(d_launch, token)  # (session, final_url, real_id, pbase)
+                # (session, final_url, real_id, pbase, folder_id)
+                lti = lti_launch(d_launch, token)
             except Exception:
                 lti = None
         return entry, d_launch, direct, lti
@@ -228,15 +259,25 @@ def discover_course_videos(
     # Pass 3 (sequential): apply the resolved results - add() and folder-session
     # expansion. add() is idempotent, so the final de-duplicated set matches the
     # original sequential flow exactly.
+    #
+    # Folder-landing fallback: some Panopto LTI configurations resolve EVERY
+    # per-item launch to the course folder's Sessions/List.aspx (authenticated,
+    # but no session id in URL or body - the list is loaded client-side). The
+    # 2026-07-09 CBS course showed 30/36 links landing there. In that case the
+    # launch DID hand us the folder id, so enumerate the folder's sessions ONCE
+    # via the Panopto API and resolve each item by recording title.
+    _folder_sessions_cache: dict[tuple[str, str], list] = {}
+    _unmatched_titles: list[str] = []
     for entry, d_launch, direct, lti in resolved:
         if _cancelled():
             break
         mod, item, mod_name, item_title, item_id, launch_url = entry
+        _before = len(videos)
         for vid in direct:
             add(vid, item_title, module=mod_name, launch=d_launch,
                 source="module", item_id=item_id)
         if lti is not None:
-            session, final_url, real_id, pbase = lti
+            session, final_url, real_id, pbase, lti_folder = lti
             if real_id:
                 add(real_id, item_title, module=mod_name, launch=d_launch,
                     source="module", item_id=item_id)
@@ -244,20 +285,53 @@ def discover_course_videos(
                 add(vid, item_title, module=mod_name, launch=d_launch,
                     source="module", item_id=item_id)
 
+            if len(videos) == _before and session and pbase and lti_folder:
+                _fkey = (pbase, lti_folder)
+                if _fkey not in _folder_sessions_cache:
+                    _folder_sessions_cache[_fkey] = _discover_folder_sessions(
+                        session, pbase, lti_folder
+                    )
+                    logger.info(
+                        "Panopto folder-landing fallback: enumerated %d "
+                        "session(s) in folder %s for title matching",
+                        len(_folder_sessions_cache[_fkey]), lti_folder,
+                    )
+                _match = _match_session_by_title(
+                    item_title, _folder_sessions_cache[_fkey], videos
+                )
+                if _match:
+                    add(_match, item_title, module=mod_name, launch=d_launch,
+                        source="module", item_id=item_id)
+                else:
+                    _unmatched_titles.append(item_title)
+
             if include_folder_sessions and session and final_url and pbase:
-                folder_m = PANOPTO_FOLDER_PATTERN.search(final_url)
-                if not folder_m:
-                    try:
-                        page_r = session.get(final_url, timeout=15)
-                        folder_m = PANOPTO_FOLDER_PATTERN.search(page_r.text)
-                    except Exception:
-                        pass
-                if folder_m:
-                    for vid, vtitle in _discover_folder_sessions(
-                        session, pbase, folder_m.group(1)
-                    ):
+                folder_id = lti_folder
+                if not folder_id:
+                    folder_m = PANOPTO_FOLDER_PATTERN.search(final_url)
+                    if not folder_m:
+                        try:
+                            page_r = session.get(final_url, timeout=15)
+                            folder_m = PANOPTO_FOLDER_PATTERN.search(page_r.text)
+                        except Exception:
+                            pass
+                    folder_id = folder_m.group(1) if folder_m else None
+                if folder_id:
+                    _fkey = (pbase, folder_id.lower())
+                    if _fkey not in _folder_sessions_cache:
+                        _folder_sessions_cache[_fkey] = _discover_folder_sessions(
+                            session, pbase, _fkey[1]
+                        )
+                    for vid, vtitle in _folder_sessions_cache[_fkey]:
                         add(vid, vtitle, module=mod_name, launch=d_launch,
                             source="folder", item_id=item_id)
+
+    if _unmatched_titles:
+        logger.info(
+            "Panopto folder-landing fallback could not match %d link(s) by "
+            "title: %s",
+            len(_unmatched_titles), "; ".join(_unmatched_titles[:10]),
+        )
 
     # ── Pages ──
     if not _cancelled():
