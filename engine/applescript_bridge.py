@@ -618,9 +618,29 @@ def _cleanup_dock_recents() -> None:
         if not any(_office_pgrep_alive(n) for n in _OFFICE_BUNDLE_IDS):
             break
         _t.sleep(0.5)
-    # 2. Let the Dock process the terminations and write its recents list.
-    _t.sleep(2.0)
-    # 3. Strip; when something was removed, verify once after the restart.
+    # 2. Wait until the Dock has actually WRITTEN the tiles we are about to
+    # remove. The Dock adds a quit app to recents when it processes the
+    # termination, which lands SECONDS after the process dies - a fixed 2s
+    # settle still lost the race on the 2026-07-09 21:08 run (Excel's tile
+    # materialized between the first strip and the verify pass, costing a
+    # second Dock restart). We know exactly which tiles to expect: the apps
+    # OUR priming launched this run, installed, now dead, and not in recents
+    # before the run - so poll the prefs until they are all present (bounded)
+    # and restart the Dock exactly ONCE.
+    _expected = set()
+    for _ms, _bid in _OFFICE_BUNDLE_IDS.items():
+        if (_ms in _primed_apps and _bid not in _dock_recents_before
+                and Path(f"/Applications/{_ms}.app").exists()
+                and not _office_pgrep_alive(_ms)):
+            _expected.add(_bid)
+    _deadline = _t.time() + 10
+    while _expected and _t.time() < _deadline:
+        if _expected <= _office_ids_in_dock_recents(_dock_prefs_export()):
+            break
+        _t.sleep(0.8)
+    # 3. Strip; when something was removed, verify once after the restart
+    # (normally a no-op now - it only acts, and only then restarts the Dock
+    # again, if a tile still slipped in after the poll above).
     if not _strip_office_recents_tiles():
         return
     _t.sleep(3.0)
