@@ -143,6 +143,44 @@ def panopto_base_from_url(url: str) -> str | None:
     return None
 
 
+def _session_auth_diag(session, panopto_base: str, body: str) -> str:
+    """One-line auth-state diagnostic for a Panopto landing.
+
+    Cookie NAMES only (never values), domain-matched to the Panopto host, plus
+    anonymous-vs-authenticated markers scraped from the page body. Decisive
+    for the "every call answers but every list/delivery comes back empty or
+    denied" class: Panopto masks missing grants as empty results and 'session
+    isn't available' errors, so whether the LTI handshake actually produced an
+    authenticated session must be readable straight from the log.
+    """
+    try:
+        host = (urlparse(panopto_base).hostname or "").lower()
+    except Exception:
+        host = ""
+    names: set = set()
+    try:
+        for c in session.cookies:
+            d = (getattr(c, "domain", "") or "").lstrip(".").lower()
+            if d and host and (host == d or host.endswith("." + d)):
+                names.add(c.name)
+    except Exception:
+        pass
+    markers = []
+    b = body or ""
+    m = re.search(r'"IsAuthenticated"\s*:\s*(true|false)', b, re.IGNORECASE)
+    if m:
+        markers.append(f"IsAuthenticated={m.group(1).lower()}")
+    if re.search(
+        r'user[a-z]{0,12}["\']?\s*[:=]\s*["\']?0{8}-0{4}-0{4}-0{4}-0{12}',
+        b, re.IGNORECASE,
+    ):
+        markers.append("anonymous-user-guid")
+    if "Auth/Login.aspx" in b or "Pages/Auth/Login" in b:
+        markers.append("login-link-present")
+    return (f"cookies[{host or '?'}]=" + (",".join(sorted(names)) or "NONE")
+            + " | markers=" + (",".join(markers) or "none"))
+
+
 def parse_lti_form(html: str):
     """Extract (action, fields) from an auto-submit LTI form, or (None, None)."""
     m = re.search(r'<form[^>]+action=["\']([^"\']+)["\']', html, re.IGNORECASE)
@@ -299,11 +337,12 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
             logger.info(
                 "Panopto LTI: no session id resolved - landed on %s | "
                 "unfollowed form: %s | body: %d chars, %d candidate id(s) | "
-                "folder: %s",
+                "folder: %s | auth: %s",
                 r.url.split("?")[0] if r.url else "?",
                 (_leftover_action or "none").split("?")[0],
                 len(r.text or ""), body_candidates,
                 folder_id or "none",
+                _session_auth_diag(session, panopto_base, r.text or ""),
             )
     else:
         logger.warning(

@@ -9,13 +9,31 @@ whole stream to a kept MP4. Both use the ffmpeg binary that ships with the app
 
 from __future__ import annotations
 
+import html as _html
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
 
 logger = logging.getLogger(__name__)
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _clean_error(msg) -> str:
+    """Normalize a Panopto error message to plain text.
+
+    ``DeliveryInfo`` returns its ``ErrorMessage`` as an HTML fragment (e.g.
+    ``This session isn't available. It may have been deleted.<br><a
+    href='/Panopto/Pages/Sessions/List.aspx'>See other videos</a>``) - raw
+    markup that would otherwise surface verbatim in the live UI log and
+    debug_log.txt. Strip the tags, unescape entities and collapse whitespace
+    at the SOURCE so every consumer gets readable text.
+    """
+    text = _html.unescape(_TAG_RE.sub(" ", str(msg or "")))
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def ffmpeg_exe() -> str:
@@ -57,7 +75,8 @@ def get_delivery_info(session, panopto_base: str, video_id: str):
         return None, str(e)
 
     if data.get("ErrorCode"):
-        msg = data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}")
+        msg = _clean_error(
+            data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}"))
         logger.info("Panopto DeliveryInfo error for %s: %s", video_id, msg)
         return None, msg
     delivery = data.get("Delivery", {}) or {}
@@ -137,7 +156,8 @@ def _delivery_info_via_cookies(cookie_header: str, panopto_base: str, video_id: 
         logger.debug("Panopto DeliveryInfo (cookie mode) failed for %s: %s", video_id, e)
         return None, str(e)
     if data.get("ErrorCode"):
-        return None, data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}")
+        return None, _clean_error(
+            data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}"))
     return data.get("Delivery", {}) or {}, None
 
 

@@ -546,6 +546,14 @@ def test_idle_quit_script_guards_quit_separately():
     assert 'quit saving no' in s
     # The user-owned bail-out comes BEFORE any quit statement.
     assert s.index('kept running') < s.index('to quit')
+    # 'quit saving no' must be the PRIMARY quit verb: a plain 'quit' never
+    # errors when a document has unsaved changes - the app just waits forever
+    # on a hidden save sheet while the Apple event returns and we log "quit
+    # sent" (round 5: Excel answered "quit sent (1 open doc)" and was still
+    # alive with that doc 5 minutes later). saving-no is prompt-free and only
+    # reached after zero user-owned documents were counted.
+    _first_quit = s.index('to quit')
+    assert s[_first_quit:].startswith('to quit saving no')
     # The repeat loop must NOT sit inside a tell block: the only tell around
     # the enumeration is the single-line form, and every per-property read
     # targets the app explicitly.
@@ -565,3 +573,19 @@ def test_probe_open_docs_script_shape():
     assert 'count of {collection}' in src
     for token in ('"gone"', '"docs "', 'count failed'):
         assert token in src
+
+
+def test_quit_worker_escalates_certified_survivors():
+    """"quit sent" only proves DELIVERY of the Apple event - an app can stall
+    its own quit forever (round 5: Excel, dock-squatting for 5+ minutes after
+    "quit sent"). The worker must therefore verify actual process exit and
+    terminate any survivor whose status carried the no-user-docs certificate
+    ("none user-owned") - and only those."""
+    import inspect
+    from engine.applescript_bridge import quit_idle_office_apps
+
+    src = inspect.getsource(quit_idle_office_apps)
+    assert '_survivors = _wait_for_exit(_expected_exits)' in src
+    assert '"none user-owned" in statuses.get(app, "")' in src
+    # Survivors WITHOUT the certificate are left alone.
+    assert 'leaving it alone' in src or 'without a' in src
