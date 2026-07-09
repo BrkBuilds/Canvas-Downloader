@@ -608,10 +608,14 @@ def test_dock_recents_cleanup_is_snapshot_scoped():
     assert '_office_pgrep_alive' in strip                   # (b) running check
     assert 'killall' in strip and 'if not removed' in strip  # (c)
     # Timing (the 2026-07-09 Excel-tile-reappeared race): the Dock moves a
-    # quit app into recents when it processes the TERMINATION, so the cleanup
-    # must wait for BSD-level death, settle so the Dock commits its write,
-    # and VERIFY with a second strip pass after the restart.
+    # quit app into recents when it processes the TERMINATION - seconds after
+    # the process dies. The cleanup must wait for BSD-level death, then POLL
+    # the prefs until the expected tiles (primed + installed + dead + not in
+    # the pre-run snapshot) have actually been written, so the Dock restarts
+    # exactly ONCE - and still VERIFY with a second strip pass afterwards.
     assert '_office_pgrep_alive' in src and 'sleep' in src
+    assert '_primed_apps' in src                       # expected-tile set
+    assert '_office_ids_in_dock_recents' in src        # poll-until-written
     assert src.count('_strip_office_recents_tiles()') >= 2
     # The quit worker runs it AFTER the Office-Recents purge (dead processes).
     wsrc = inspect.getsource(ab.quit_idle_office_apps)
