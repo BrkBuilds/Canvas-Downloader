@@ -266,7 +266,12 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
     steps_used = 0
     _state_counts: Counter = Counter()
     for _step in range(10):
-        if "panopto" in r.url.lower() and (
+        # Terminal only when the HOST is a Panopto host: intermediate Canvas
+        # hops (the tool page, /api/lti/authorize) carry the encoded Panopto
+        # target - including a custom_context_delivery GUID on legacy links -
+        # in their QUERY, so a substring/id check alone stops the chain one
+        # hop early ("break:viewer" on a Canvas URL, no cookies, 0 downloads).
+        if panopto_base_from_url(r.url) and (
             "Viewer.aspx" in r.url or "Embed.aspx" in r.url
             or extract_panopto_ids(r.url)
         ):
