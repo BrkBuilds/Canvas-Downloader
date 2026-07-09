@@ -589,3 +589,48 @@ def test_quit_worker_escalates_certified_survivors():
     assert '"none user-owned" in statuses.get(app, "")' in src
     # Survivors WITHOUT the certificate are left alone.
     assert 'leaving it alone' in src or 'without a' in src
+
+
+def test_dock_recents_cleanup_is_snapshot_scoped():
+    """The Dock recents cleanup (the "Excel still in the Dock after the run"
+    fix - the icon is a Dock RECENTS tile, not a live process) must (a) run
+    only when OUR priming launched an Office app this run (snapshot exists),
+    (b) never remove a tile that was in recents before the run or whose
+    process is still alive, and (c) restart the Dock only when a tile was
+    actually removed."""
+    import inspect
+    import engine.applescript_bridge as ab
+
+    src = inspect.getsource(ab._cleanup_dock_recents)
+    assert '_dock_recents_before is None' in src            # (a) snapshot gate
+    assert 'bid in _dock_recents_before' in src             # (b) pre-existing
+    assert 'pgrep' in src                                   # (b) running check
+    assert 'killall' in src and 'if not removed' in src     # (c)
+    # The quit worker runs it AFTER the Office-Recents purge (dead processes).
+    wsrc = inspect.getsource(ab.quit_idle_office_apps)
+    assert wsrc.index('_purge_canvas_recents()') < wsrc.index('_cleanup_dock_recents()')
+
+
+def test_office_ids_in_dock_recents_parses_tiles():
+    import engine.applescript_bridge as ab
+
+    dock = {'recent-apps': [
+        {'tile-data': {'bundle-identifier': 'com.microsoft.Excel'}},
+        {'tile-data': {'bundle-identifier': 'com.apple.TextEdit'}},
+        'garbage',
+        {'tile-data': {}},
+    ]}
+    assert ab._office_ids_in_dock_recents(dock) == {'com.microsoft.excel'}
+    assert ab._office_ids_in_dock_recents({}) == set()
+    assert ab._office_ids_in_dock_recents(None) == set()
+
+
+def test_reset_office_priming_clears_dock_snapshot():
+    import engine.applescript_bridge as ab
+
+    ab._dock_recents_before = {'com.microsoft.excel'}
+    try:
+        ab.reset_office_priming()
+        assert ab._dock_recents_before is None
+    finally:
+        ab._dock_recents_before = None
