@@ -174,14 +174,59 @@ def _folder_sessions_api_v1(session, panopto_base, folder_id) -> list[tuple[str,
     return found
 
 
+_GUID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE
+)
+
+
+def _data_svc_post(session, panopto_base, method, payload):
+    """POST a Panopto internal ``Data.svc/<method>``. Returns ``(d, note)``.
+
+    ``d`` is the response's ``d`` node (``None`` on any failure); ``note`` is a
+    one-line diagnostic (status + collapsed body snippet) so a denied or
+    malformed call is explainable from debug_log.txt instead of surfacing as a
+    silent 0. Requests carry the browser-parity headers (Origin/Referer/XHR
+    marker) the real ``List.aspx`` sends - some ASP.NET service configs filter
+    on them.
+    """
+    def _snippet(text, n: int = 300) -> str:
+        return re.sub(r"\s+", " ", str(text or "")).strip()[:n]
+
+    try:
+        r = session.post(
+            f"{panopto_base}/Panopto/Services/Data.svc/{method}",
+            json=payload,
+            headers={
+                "Accept": "application/json",
+                "Origin": panopto_base,
+                "Referer": f"{panopto_base}/Panopto/Pages/Sessions/List.aspx",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            timeout=30,
+        )
+    except Exception as e:
+        return None, f"request failed: {e}"
+    if r.status_code != 200:
+        return None, f"HTTP {r.status_code}: {_snippet(r.text)}"
+    try:
+        d = (r.json() or {}).get("d")
+    except Exception:
+        return None, f"non-JSON response: {_snippet(r.text)}"
+    if d is None:
+        return None, f"no 'd' node: {_snippet(r.text)}"
+    return d, None
+
+
 def _folder_sessions_data_svc(session, panopto_base, folder_id) -> list[tuple[str, str]]:
-    """Enumerate a folder via the INTERNAL ``Data.svc/GetSessions`` endpoint.
+    """Sessions sitting DIRECTLY in a folder via ``Data.svc/GetSessions``.
 
     This is the exact call ``Sessions/List.aspx`` itself makes to render the
     session list, so it works with the plain page cookies wherever the list
     page renders - including tenants whose ``api/v1`` rejects cookie auth
-    (CBS: api/v1 yielded nothing while the list page showed all recordings).
-    Results carry ``DeliveryID`` (the id DeliveryInfo wants) + ``SessionName``.
+    (CBS: api/v1 401s while the list page shows all recordings). Results carry
+    ``DeliveryID`` (the id DeliveryInfo wants) + ``SessionName``. NOTE: it does
+    NOT include sessions inside subfolders - callers that need the whole tree
+    use :func:`_discover_folder_sessions`.
     """
     found, page = [], 0
     while True:
@@ -199,43 +244,35 @@ def _folder_sessions_data_svc(session, panopto_base, folder_id) -> list[tuple[st
             "includeArchived": True,
             "includePlaylists": True,
         }}
-        try:
-            r = session.post(
-                f"{panopto_base}/Panopto/Services/Data.svc/GetSessions",
-                json=payload,
-                headers={"Accept": "application/json"},
-                timeout=30,
-            )
-        except Exception as e:
-            logger.info("Panopto GetSessions failed for folder %s: %s", folder_id, e)
+        d, note = _data_svc_post(session, panopto_base, "GetSessions", payload)
+        if d is None or not isinstance(d, dict):
+            logger.info("Panopto GetSessions failed for folder %s: %s",
+                        folder_id, note or f"unexpected shape {type(d).__name__}")
             break
-        if r.status_code != 200:
-            logger.info(
-                "Panopto GetSessions returned HTTP %s for folder %s "
-                "(body starts: %.120s)",
-                r.status_code, folder_id, (r.text or "").strip(),
-            )
-            break
-        try:
-            data = (r.json() or {}).get("d") or {}
-        except Exception as e:
-            logger.info("Panopto GetSessions returned non-JSON for folder %s: %s",
-                        folder_id, e)
-            break
-        results = data.get("Results") or []
+        results = d.get("Results") or []
         for item in results:
             vid = (item.get("DeliveryID") or item.get("SessionID")
                    or item.get("Id") or "").lower()
             name = (item.get("SessionName") or item.get("Name") or "Unnamed")
             if vid:
                 found.append((vid, name))
-        total = data.get("TotalNumber")
+        total = d.get("TotalNumber")
         if page == 0:
             logger.info(
                 "Panopto GetSessions: folder %s reports %s session(s) "
                 "(page 0 returned %d).",
                 folder_id, total if total is not None else "?", len(results),
             )
+            if not results:
+                # The full 'd' node of an empty answer is the diagnostic gold:
+                # it shows WHAT Panopto thinks it returned (folder data, error
+                # markers, a different result key) instead of just "0".
+                import json as _json
+                try:
+                    logger.info("Panopto GetSessions raw 'd' node for %s: %.400s",
+                                folder_id, _json.dumps(d, default=str))
+                except Exception:
+                    pass
         if len(results) < 100:
             break
         if isinstance(total, int) and len(found) >= total:
@@ -244,13 +281,137 @@ def _folder_sessions_data_svc(session, panopto_base, folder_id) -> list[tuple[st
     return found
 
 
+def _folder_subfolders_data_svc(session, panopto_base, folder_id) -> list[tuple[str, str]]:
+    """Direct subfolders of *folder_id* as ``(id, name)`` via ``Data.svc/GetFolders``.
+
+    Course folders frequently keep their recordings in per-module/per-term
+    SUBFOLDERS; ``GetSessions`` on the parent then truthfully answers 0 while
+    the browser page shows everything (it renders the tree). Best-effort and
+    shape-tolerant: id key spelling varies across Panopto versions, and any
+    failure just logs + returns [] (the parent's own sessions still count).
+    """
+    payload = {"queryParameters": {
+        "query": None,
+        "sortColumn": 0,
+        "sortAscending": True,
+        "maxResults": 200,
+        "page": 0,
+        "parentFolderID": folder_id,
+        "folderOutputType": 0,
+        "onlyCanEdit": False,
+        "onlySubscribed": False,
+    }}
+    d, note = _data_svc_post(session, panopto_base, "GetFolders", payload)
+    if d is None:
+        logger.info("Panopto GetFolders failed for folder %s: %s", folder_id, note)
+        return []
+    results = d if isinstance(d, list) else (d.get("Results") or [])
+    out = []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        fid = str(item.get("ID") or item.get("Id")
+                  or item.get("PublicID") or "").lower()
+        name = item.get("Name") or "Unnamed"
+        if _GUID_RE.fullmatch(fid):
+            out.append((fid, name))
+    return out
+
+
+def _log_folder_probes(session, panopto_base, folder_id) -> None:
+    """Decisive diagnostics for a folder whose whole enumeration came back 0.
+
+    Two probes that separate the possible causes cleanly:
+      * ``GetFolderInfo`` - does the session even SEE the folder (name/counts),
+        or is the extracted folder id wrong/denied?
+      * an UNSCOPED ``GetSessions`` (no folderID) - can the session see ANY
+        content at all? ``TotalNumber=0`` here means the LTI cookie carries no
+        content grants (effectively anonymous - Panopto masks missing grants
+        as empty lists and "session isn't available" errors); ``>0`` means
+        auth is fine and the problem is folder-scoped.
+    """
+    d, note = _data_svc_post(session, panopto_base, "GetFolderInfo",
+                             {"folderID": folder_id})
+    if isinstance(d, dict):
+        logger.info(
+            "Panopto GetFolderInfo probe for %s -> name=%r sessions=%s "
+            "subfolders=%s",
+            folder_id, d.get("Name"),
+            d.get("SessionCount", "?"), d.get("ChildFolderCount", "?"),
+        )
+    else:
+        logger.info("Panopto GetFolderInfo probe for %s -> %s",
+                    folder_id, note or "unexpected shape")
+    payload = {"queryParameters": {
+        "query": None, "sortColumn": 1, "sortAscending": False,
+        "maxResults": 1, "page": 0, "startDate": None, "endDate": None,
+        "folderID": None, "bookmarked": False, "getFolderData": False,
+        "includeArchived": True, "includePlaylists": True,
+    }}
+    d2, note2 = _data_svc_post(session, panopto_base, "GetSessions", payload)
+    if isinstance(d2, dict):
+        logger.info(
+            "Panopto unscoped GetSessions probe -> TotalNumber=%s "
+            "(0 = the Panopto session holds NO content grants at all, i.e. "
+            "the LTI cookie is effectively anonymous; >0 = auth works and "
+            "the problem is folder-scoped)",
+            d2.get("TotalNumber"),
+        )
+    else:
+        logger.info("Panopto unscoped GetSessions probe -> %s",
+                    note2 or "unexpected shape")
+
+
 def _discover_folder_sessions(session, panopto_base, folder_id) -> list[tuple[str, str]]:
-    """All ``(delivery_id, name)`` sessions in *folder_id* - api/v1 first,
-    then the Data.svc/GetSessions fallback the list page itself uses."""
+    """All ``(delivery_id, name)`` sessions in *folder_id*, subfolders included.
+
+    api/v1 first (one call, when the tenant allows cookie auth), then the
+    Data.svc route the list page itself uses. ``GetSessions`` only returns the
+    sessions sitting DIRECTLY in a folder, and course folders often park their
+    recordings in per-module subfolders - the 2026-07-09 CBS run answered a
+    truthful 0 for the course folder while the browser page showed 36. The
+    Data.svc path therefore walks the subfolder tree breadth-first (bounded:
+    depth <= 3, <= 40 folders) and aggregates. When the whole walk still finds
+    nothing, :func:`_log_folder_probes` records the decisive facts.
+    """
     found = _folder_sessions_api_v1(session, panopto_base, folder_id)
-    if not found:
-        found = _folder_sessions_data_svc(session, panopto_base, folder_id)
-    return found
+    if found:
+        return found
+
+    root = (folder_id or "").lower()
+    seen = {root}
+    queue: list[tuple[str, str, int]] = [(root, "", 0)]   # (id, name, depth)
+    collected: list[tuple[str, str]] = []
+    _MAX_DEPTH, _MAX_FOLDERS = 3, 40
+    walked = 0
+    while queue:
+        if walked >= _MAX_FOLDERS:
+            logger.info(
+                "Panopto folder walk truncated at %d folder(s) "
+                "(%d still queued under %s).", walked, len(queue), root)
+            break
+        fid, fname, depth = queue.pop(0)
+        walked += 1
+        sessions = _folder_sessions_data_svc(session, panopto_base, fid)
+        if sessions and depth > 0:
+            logger.info("Panopto subfolder '%s' (%s) adds %d session(s).",
+                        fname, fid, len(sessions))
+        collected.extend(sessions)
+        if depth >= _MAX_DEPTH:
+            continue
+        for sub_id, sub_name in _folder_subfolders_data_svc(session, panopto_base, fid):
+            if sub_id not in seen:
+                seen.add(sub_id)
+                queue.append((sub_id, sub_name, depth + 1))
+
+    deduped, out = set(), []
+    for vid, name in collected:
+        if vid not in deduped:
+            deduped.add(vid)
+            out.append((vid, name))
+    if not out:
+        _log_folder_probes(session, panopto_base, root)
+    return out
 
 
 def discover_course_videos(
@@ -456,6 +617,33 @@ def discover_course_videos(
                 _fkey[1], len(_sessions),
                 "; ".join(name for _vid, name in _sessions[:12]),
             )
+
+    # Heal stale direct ids: a module item can embed a delivery GUID that no
+    # longer exists after a Panopto migration (the June-era CBS links carry
+    # ids the platform has since re-homed - DeliveryInfo answers "This session
+    # isn't available. It may have been deleted." for every one of them, on
+    # every platform). When the course folder WAS enumerated this run, any
+    # module-linked id absent from the folder is re-resolved by title against
+    # the folder's sessions: a match adopts the live id (logged); no match
+    # leaves the video untouched (it may legitimately live outside this
+    # folder, and a dead id fails loudly rather than downloading silently
+    # wrong content).
+    _all_folder_sessions = [s for _lst in _folder_sessions_cache.values() for s in _lst]
+    if _all_folder_sessions:
+        _live_ids = {vid for vid, _name in _all_folder_sessions}
+        for _old_id in list(videos):
+            _v = videos[_old_id]
+            if _v.source != "module" or _old_id in _live_ids:
+                continue
+            _new_id = _match_session_by_title(_v.title, _all_folder_sessions, videos)
+            if _new_id:
+                logger.info(
+                    "Panopto: module link '%s' carries a stale delivery id "
+                    "(%s not in the course folder) - remapped to %s by title.",
+                    _v.title, _old_id, _new_id,
+                )
+                _v.video_id = _new_id
+                videos[_new_id] = videos.pop(_old_id)
 
     # Hand the runner a VERIFIED auth launch: legacy items can carry launch
     # URLs whose own LTI chain no longer completes (they die on the Canvas
