@@ -2331,17 +2331,10 @@ with _main_content.container():
             </div>
             """, unsafe_allow_html=True)
             
-            # Show errors if any
-            download_errors = st.session_state.get('download_errors_list', [])
-            if download_errors:
-                with st.expander(f"Error Details ({len(download_errors)})", expanded=False):
-                    for err in download_errors[:20]:
-                        if hasattr(err, 'message'):
-                            st.markdown(f"\u274c {err.message}")
-                        else:
-                            st.markdown(f"\u274c {err}")
-                    if len(download_errors) > 20:
-                        st.caption(f"  ... and {len(download_errors) - 20} more")
+            # Deliberately NO error list here: the user cancelled, so partial-run
+            # errors are noise (and this ad-hoc expander didn't match the app's
+            # error UI). Errors are only surfaced on the completion screen via
+            # render_error_section, which is the one place they're actionable.
         
         if st.session_state['download_status'] in ['done', 'cancelled']:
             st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)

@@ -2962,8 +2962,9 @@ class CanvasManager:
                         await asyncio.sleep(RETRY_DELAY * (attempt + 1))
                     else:
                         files = []
-                        # Log warning
-                        if progress_callback: progress_callback("Files tab restricted, trying modules...", progress_type='log')
+                        # Debug-log only: a restricted Files tab is a normal Canvas
+                        # course configuration (module scan covers it), not
+                        # something the user needs to see in the live log.
                         log_debug("Files tab restricted (401?), falling back to module scan.", debug_file)
 
             downloaded_ids = set()
@@ -3009,10 +3010,11 @@ class CanvasManager:
                         self._log_error(error_root_path, err)
             except Exception as file_list_e:
                 # File listing failed mid-iteration (e.g. 401, network drop).
-                # Log a warning and fall through to the module-scan fallback below.
-                _msg = f"Files tab listing failed, falling back to module scan: {file_list_e}"
-                if progress_callback: progress_callback(_msg, progress_type='log')
-                log_debug(_msg, debug_file)
+                # Fall through to the module-scan fallback below. Debug-log only:
+                # many courses simply restrict the Files tab for students (the
+                # module scan then fetches everything), so surfacing this in the
+                # live log alarmed users about a non-problem.
+                log_debug(f"Files tab listing failed, falling back to module scan: {file_list_e}", debug_file)
 
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
