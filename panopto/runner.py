@@ -460,7 +460,7 @@ def run_panopto_batch(
         session = panopto_base = None
         for v in videos:
             if v.launch_url and "sessionless_launch" in v.launch_url:
-                session, _final, _rid, panopto_base = lti_launch(v.launch_url, cm.api_key)
+                session, _final, _rid, panopto_base, _folder = lti_launch(v.launch_url, cm.api_key)
                 if session and panopto_base:
                     break
         if session is None or panopto_base is None:
@@ -913,7 +913,7 @@ def _resolve_delivery(session, panopto_base, video, canvas_token):
     delivery, err = get_delivery_info(session, panopto_base, video.video_id)
     has_stream = bool(delivery and pick_audio_stream(delivery))
     if not has_stream and video.launch_url and "sessionless_launch" in video.launch_url:
-        v_session, _final, real_id, v_base = lti_launch(video.launch_url, canvas_token)
+        v_session, _final, real_id, v_base, _folder = lti_launch(video.launch_url, canvas_token)
         if v_session and v_base and real_id:
             session, panopto_base = v_session, v_base
             delivery, err = get_delivery_info(session, panopto_base, real_id)

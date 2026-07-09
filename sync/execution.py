@@ -125,16 +125,24 @@ def _redownload_restore_keys(redownload_items) -> set[str]:
     return keys
 
 
-def _build_synced_groups(sync_selections, synced_details):
+def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=None):
     """Build a per-course breakdown of the files synced this run.
 
     Resolves every synced file to its on-disk location (relative to the course
     folder) so the completion screen and the landing-page "New files since last
     sync" panel can offer Open / Reveal actions per file. Runs once at finalize
-    on the script thread - AFTER post-processing. synced_details still carries
-    the PRE-conversion names the download recorded, so resolution first tries
-    the exact basename and then falls back to a stem match against the files
-    actually on disk (post-processing keeps the stem when it converts).
+    on the script thread - AFTER post-processing.
+
+    ``synced_actual_rels`` is the authoritative source: it holds, 1:1 with each
+    pair's ``synced_details`` entries, the REAL relative path the sync engine
+    wrote (post conflict-resolution - e.g. display name "Filer til Klynge 1.html"
+    was written as "Page Filer til Klynge 1 (1).html"). Resolution starts from
+    that path; when post-processing converted the file (html -> md, office ->
+    pdf, ...) and deleted the original, the stem of the ACTUAL name - not the
+    display name - is matched against the files on disk (all converters keep
+    the stem; the code converter folds the old extension into it). Display-name
+    lookups remain as the final fallback for entries without an actual path
+    (e.g. sidecar artifacts appended after the download phase).
 
     Returns ``list[dict]`` - one entry per course that received files::
 
@@ -165,6 +173,7 @@ def _build_synced_groups(sync_selections, synced_details):
         names = synced_details.get(pair_idx, [])
         if not names:
             continue
+        actual_rels = (synced_actual_rels or {}).get(pair_idx, [])
         res_data = sel.get('res_data', {})
         pair = res_data.get('pair', {})
 
@@ -230,39 +239,69 @@ def _build_synced_groups(sync_selections, synced_details):
         # each resolve to their OWN path instead of both collapsing onto the
         # freshest copy (which would hide one behind a duplicate-looking row).
         used_rels: set[str] = set()
-        for nm in names:
+        for _i, nm in enumerate(names):
+            # The REAL path the engine wrote this entry to (1:1 with names for
+            # everything registered during the download phase; sidecars appended
+            # afterwards have no actual path and use the display-name fallback).
+            _act_rel = actual_rels[_i].replace('\\', '/') if _i < len(actual_rels) else None
+            _act_base = os.path.basename(_act_rel) if _act_rel else ''
+
             _nm_key = _norm(nm)
-            if "_NewVersion" in nm:
+            _act_key = _norm(_act_base) if _act_base else None
+            if "_NewVersion" in nm or "_NewVersion" in _act_base:
                 category = 'protected'
-            elif _nm_key in updates_for_pair:
+            elif _nm_key in updates_for_pair or (_act_key and _act_key in updates_for_pair):
                 category = 'updated'
-            elif _nm_key in redownloads_for_pair:
+            elif _nm_key in redownloads_for_pair or (_act_key and _act_key in redownloads_for_pair):
                 category = 'restored'
             else:
                 category = 'new'
 
-            rel = nm
-            display_name = nm
-            candidates = name_index.get(_nm_key)
-            if not candidates:
-                # CONVERTED-FILE fallback: post-processing may have converted
-                # the file this run recorded (html→md, pptx/docx/xlsx→pdf,
-                # mp4→mp3, code→"stem_ext.txt") and deleted the original - the
-                # exact-name lookup then misses, and the completion card
-                # rendered the PRE-conversion name with dead Open/Reveal
-                # buttons ("File not found at its last known location", the
-                # 2026-07-09 .html-instead-of-.md bug). All converters keep
-                # the stem (the code converter folds the old extension INTO
-                # the stem), so resolve by stem instead and display the file
-                # that is actually on disk.
-                _stem, _ext = os.path.splitext(nm)
-                _ext = _ext.lstrip('.').lower()
-                for _skey in ((f"{_stem}_{_ext}" if _ext else None), _stem):
-                    if _skey:
-                        candidates = stem_index.get(_norm(_skey))
-                        if candidates:
+            rel = None
+            candidates = None
+            if _act_rel and course_root is not None:
+                if os.path.isfile(os.path.join(str(course_root), _act_rel)):
+                    # Still on disk exactly where it was written - done. This is
+                    # what makes display-name/on-disk-name divergence (module
+                    # Pages: "X.html" recorded, "Page X (1).html" written)
+                    # irrelevant to resolution.
+                    rel = _act_rel
+                else:
+                    # CONVERTED-FILE fallback: post-processing converted the
+                    # written file (html→md, pptx/docx/xlsx→pdf, mp4→mp3,
+                    # code→"stem_ext.txt") and deleted the original. All
+                    # converters keep the stem (the code converter folds the
+                    # old extension INTO it), so match the ACTUAL name's stem -
+                    # never the display name's, which may not share it -
+                    # preferring hits in the directory the file was written to.
+                    _stem, _ext = os.path.splitext(_act_base)
+                    _ext = _ext.lstrip('.').lower()
+                    _act_dir = os.path.dirname(_act_rel)
+                    for _skey in ((f"{_stem}_{_ext}" if _ext else None), _stem):
+                        if not _skey:
+                            continue
+                        _cands = stem_index.get(_norm(_skey))
+                        if _cands:
+                            _same_dir = [c for c in _cands
+                                         if os.path.dirname(c) == _act_dir]
+                            candidates = _same_dir or _cands
                             break
-            if candidates:
+
+            if rel is None and not candidates:
+                # Display-name fallback (entries without an actual path, or
+                # whose written file vanished entirely): exact basename first,
+                # then the same conversion-stem match on the display name.
+                candidates = name_index.get(_nm_key)
+                if not candidates:
+                    _stem, _ext = os.path.splitext(nm)
+                    _ext = _ext.lstrip('.').lower()
+                    for _skey in ((f"{_stem}_{_ext}" if _ext else None), _stem):
+                        if _skey:
+                            candidates = stem_index.get(_norm(_skey))
+                            if candidates:
+                                break
+
+            if rel is None and candidates:
                 # Prefer candidates not yet claimed by a prior record; only fall
                 # back to the full list if every copy is already spoken for.
                 pool = [c for c in candidates if c not in used_rels] or candidates
@@ -278,8 +317,15 @@ def _build_synced_groups(sync_selections, synced_details):
                         )
                     except Exception:
                         rel = pool[0]
+
+            if rel is not None:
                 used_rels.add(rel)
                 display_name = os.path.basename(rel)
+            else:
+                # Nothing resolvable - degrade to the recorded name (buttons
+                # disabled) rather than guessing at an unrelated file.
+                rel = nm
+                display_name = nm
 
             files.append({'name': display_name, 'rel': rel, 'category': category})
 
@@ -2096,7 +2142,8 @@ def run_sync():
     # Open / Reveal actions on the completion screen and the landing-page
     # "New files since last sync" panel. Built once here, after post-processing.
     try:
-        synced_groups = _build_synced_groups(sync_selections, synced_details)
+        synced_groups = _build_synced_groups(sync_selections, synced_details,
+                                             _synced_actual_rels)
     except Exception as e:
         logger.warning(f"Failed to build synced file groups: {e}")
         synced_groups = []
@@ -2142,33 +2189,49 @@ def run_sync():
                 if pair_files:
                     synced_course_names.append(sel['res_data']['pair']['course_name'])
 
-                # Updates / restores categorisation MUST mirror _build_synced_groups
-                # exactly so the history panel and completion screen agree. Both use
-                # the shared basename-variant helpers (which decode '+' and %XX and
-                # NFC-normalize) instead of the bare unquote that mis-labelled
-                # form-encoded names as brand-'new'.
-                updates_for_pair = set()
-                res_data = sel.get('res_data', {})
-                if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
-                    for _cf, _sf in res_data['result'].updated_files:
-                        updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
-                        updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
+            # Prefer the RESOLVED per-file records from _build_synced_groups:
+            # they carry the on-disk (post-conversion) name AND the category,
+            # already computed with the authoritative actual-path data - so the
+            # history panel lists "Page X.md", not the pre-conversion "X.html".
+            _group_files = [f for g in synced_groups for f in g.get('files', [])]
+            if _group_files:
+                for _gf in _group_files:
+                    categorized_files.setdefault(
+                        _gf.get('category', 'new'), []).append(_gf.get('name', ''))
+                _synced_files_flat = [_gf.get('name', '') for _gf in _group_files]
+            else:
+                # Group build failed (or produced nothing) - fall back to the
+                # display names with the same categorisation rules the groups
+                # would have applied.
+                _synced_files_flat = [
+                    fname for pair_files in synced_details.values() for fname in pair_files
+                ]
+                for sel in sync_selections:
+                    pair_idx = sel['pair_idx']
+                    pair_files = synced_details.get(pair_idx, [])
 
-                redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
+                    updates_for_pair = set()
+                    res_data = sel.get('res_data', {})
+                    if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
+                        for _cf, _sf in res_data['result'].updated_files:
+                            updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
+                            updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
 
-                for fname in pair_files:
-                    try:
-                        _fn_key = _ud_hist.normalize('NFC', fname)
-                    except Exception:
-                        _fn_key = fname
-                    if "_NewVersion" in fname:
-                        categorized_files['protected'].append(fname)
-                    elif _fn_key in updates_for_pair:
-                        categorized_files['updated'].append(fname)
-                    elif _fn_key in redownloads_for_pair:
-                        categorized_files['restored'].append(fname)
-                    else:
-                        categorized_files['new'].append(fname)
+                    redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
+
+                    for fname in pair_files:
+                        try:
+                            _fn_key = _ud_hist.normalize('NFC', fname)
+                        except Exception:
+                            _fn_key = fname
+                        if "_NewVersion" in fname:
+                            categorized_files['protected'].append(fname)
+                        elif _fn_key in updates_for_pair:
+                            categorized_files['updated'].append(fname)
+                        elif _fn_key in redownloads_for_pair:
+                            categorized_files['restored'].append(fname)
+                        else:
+                            categorized_files['new'].append(fname)
 
             history_mgr.add_entry({
                 'timestamp': now_str,
@@ -2177,7 +2240,7 @@ def run_sync():
                 'course_names': list(set(synced_course_names)),
                 'errors': len(error_list),
                 'error_details': error_list,
-                'synced_files': [fname for pair_files in synced_details.values() for fname in pair_files],
+                'synced_files': _synced_files_flat,
                 'categorized_files': categorized_files,
                 # Per-course breakdown (course + rel path + category) so the
                 # "New files since last sync" panel can group, sort, Open & Reveal.

@@ -281,6 +281,51 @@ def link_content_sig(title: str, url: str) -> str:
     return secondary_content_sig('link', title, url)
 
 
+def _apply_page_stub_upgrades(slug_groups, stub_results, module_map, sanitize) -> int:
+    """Upgrade module-Page entries to the download engine's -page_id identity.
+
+    ``slug_groups`` maps a page slug to its queued fixups - tuples of
+    ``(entry, slug, legacy_item_id, module_name)`` where *entry* is the
+    CanvasFileInfo that was emitted with the module-item FALLBACK id because
+    the Pages LIST endpoint (page_meta) was restricted. ``stub_results`` is
+    the per-slug fetch outcome: ``(slug, page_stub | None)``.
+
+    For every successful fetch the entry is mutated in place to match what the
+    download engine records in the manifest: ``id = -page_id`` with the
+    module-item id preserved as ``legacy_sync_id``, filename/display re-derived
+    from the page's own title (the downloader names the file after it), the
+    page content signature computed, and the page id registered in
+    *module_map* for path routing. A failed fetch leaves its entries on the
+    module-item id (the pre-existing degraded behaviour). Returns the number
+    of entries upgraded.
+    """
+    fixed = 0
+    for _slug, _pg in stub_results:
+        _pgid = int(getattr(_pg, 'page_id', 0) or 0) if _pg is not None else 0
+        if not _pgid:
+            continue
+        for _mi, _slug_key, _legacy_id, _mname in slug_groups.get(_slug, []):
+            _mi.id = -_pgid
+            _mi.legacy_sync_id = _legacy_id
+            _pg_title = getattr(_pg, 'title', None)
+            if _pg_title:
+                _safe = sanitize(_pg_title)
+                _routing = _ENTITY_ROUTING['page']
+                _mi.filename = f"{_routing['prefix']}: {_safe}.html"
+                _mi.display_name = _safe + ".html"
+                _mi._page_title = _pg_title
+            try:
+                _mi.content_sig = compute_entity_content_sig('page', _pg)
+            except Exception:
+                pass
+            _pg_updated = getattr(_pg, 'updated_at', '') or ''
+            if _pg_updated:
+                _mi.modified_at = _pg_updated
+            module_map.setdefault(-_pgid, _mname)
+            fixed += 1
+    return fixed
+
+
 # Feature flag: rubric fetching is temporarily disabled.
 # The Canvas course-level rubrics endpoint (GET /courses/:id/rubrics) requires
 # the teacher/admin `manage_rubrics` permission, so student tokens always get a
@@ -785,6 +830,16 @@ class CanvasManager:
         # modules is fetched only once (first-linking module wins, matching
         # module_map and the download engine).
         pending_file_fetches: dict = {}
+        # Page module items whose stub was NOT in page_meta. course.get_pages()
+        # (the pages LIST endpoint) 401s on courses whose Pages tab is hidden -
+        # the same restriction class as the Files tab above - even though every
+        # individual page remains fetchable BY SLUG (which is exactly how the
+        # download engine gets its page_id). Without the stub these items fall
+        # back to the module-item id, breaking id-parity with the manifest and
+        # re-flagging every downloaded page as "new" (the 2026-07-09
+        # 35-phantom-new bug). Collected during the walk, fetched by slug in
+        # parallel AFTER it, and upgraded in place.
+        pending_page_fixups: list = []
         try:
             modules = list(course.get_modules())
         except Exception as e:
@@ -930,8 +985,17 @@ class CanvasManager:
                             # the REAL page body (offline HTML parity with the
                             # download engine) instead of writing a redirect
                             # stub that requires a Canvas login to be useful.
-                            mock_info._page_slug = getattr(item, 'page_url', '') or ''
+                            _slug = getattr(item, 'page_url', '') or ''
+                            mock_info._page_slug = _slug
                             mock_info._page_title = _title
+                            if _page_stub is None and _slug:
+                                # Pages LIST was restricted/missing this slug -
+                                # queue a per-slug stub fetch so the entry can
+                                # be upgraded to its real -page_id (see the
+                                # fixup pass after the module walk).
+                                pending_page_fixups.append(
+                                    (mock_info, _slug, _item_syn_id, clean_module_name)
+                                )
                         files.append(mock_info)
                     except Exception as _item_err:
                         logger.warning(
@@ -1022,6 +1086,39 @@ class CanvasManager:
                             f"Could not process Discussion item '{getattr(item, 'title', '?')}' "
                             f"in module '{clean_module_name}': {_item_err}"
                         )
+
+        # ── Page-stub fallback: fetch missing page stubs BY SLUG in parallel ──
+        # Fires only when page_meta lacked a Page item's slug (restricted Pages
+        # LIST). The per-slug endpoint works regardless of tab visibility - it
+        # is the same call the download engine uses - so the real page_id,
+        # title and content signature are recovered and the emitted entry is
+        # upgraded in place: id becomes -page_id (manifest parity with the
+        # download engine) and the module-item id is kept as the legacy alias.
+        # A failed fetch keeps the legacy module-item id (previous behaviour).
+        if pending_page_fixups:
+            _slug_groups: dict = {}
+            for _entry in pending_page_fixups:
+                _slug_groups.setdefault(_entry[1], []).append(_entry)
+
+            def _fetch_page_stub(slug):
+                try:
+                    return slug, _worker_course().get_page(slug)
+                except Exception as _pg_err:
+                    logger.debug(f"Page stub fetch failed for slug '{slug}': {_pg_err}")
+                    return slug, None
+
+            with _cf.ThreadPoolExecutor(max_workers=min(8, len(_slug_groups)),
+                                        thread_name_prefix="canvas-pagestub") as _pex:
+                _stub_results = list(_pex.map(_fetch_page_stub, _slug_groups.keys()))
+
+            _fixed_pages = _apply_page_stub_upgrades(
+                _slug_groups, _stub_results, module_map, self._sanitize_filename
+            )
+            if _fixed_pages:
+                logger.info(
+                    f"Page-stub fallback: resolved {_fixed_pages} module Page item(s) "
+                    f"by slug (Pages list restricted for course {getattr(course, 'id', '?')})"
+                )
 
         # ── Resolve deferred per-file metadata fetches in parallel ────────────
         # This is the hot path for restricted-Files-tab courses (bulk get_files()
