@@ -888,11 +888,30 @@ class CanvasManager:
                             _sig = link_content_sig(getattr(item, 'title', 'Untitled'),
                                                     getattr(item, 'external_url', None)
                                                     or getattr(item, 'html_url', '') or '')
-                        syn_id = -int(item.id) if hasattr(item, 'id') else 0
+                        # ID parity with the download engine: Pages are recorded
+                        # in the manifest by PAGE id (-page_id) at download time,
+                        # but this scan historically emitted the MODULE ITEM id
+                        # (-item.id) - so a freshly-downloaded course re-analyzed
+                        # for sync saw every module Page as "new" and pulled a
+                        # duplicate copy (the 2026-07-09 "35 new files on a fresh
+                        # download" bug). Emit the page id when the pages listing
+                        # provided it, and carry the module-item id as a LEGACY
+                        # alias so folders synced by older versions (tracked
+                        # under -item.id) keep matching too.
+                        _item_syn_id = -int(item.id) if hasattr(item, 'id') else 0
+                        syn_id = _item_syn_id
+                        _legacy_alias = 0
+                        if item.type == 'Page' and _page_stub is not None:
+                            _pgid = int(getattr(_page_stub, 'page_id', 0) or 0)
+                            if _pgid:
+                                syn_id = -_pgid
+                                _legacy_alias = _item_syn_id
                         if syn_id:
                             # Always register placement: these items live in
                             # their module folder in BOTH isolate modes.
                             module_map.setdefault(syn_id, clean_module_name)
+                        if _legacy_alias:
+                            module_map.setdefault(_legacy_alias, clean_module_name)
 
                         mock_info = CanvasFileInfo(
                             id=syn_id,
@@ -904,6 +923,7 @@ class CanvasManager:
                             content_type="text/html" if item.type == 'Page' else "application/x-url",
                             content_sig=_sig,
                             name_locked=True,
+                            legacy_sync_id=_legacy_alias,
                         )
                         if item.type == 'Page':
                             # Stash the page slug so the sync engine can fetch

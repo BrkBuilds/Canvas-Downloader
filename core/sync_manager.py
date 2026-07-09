@@ -78,6 +78,14 @@ class CanvasFileInfo:
     # ...) that must be used verbatim. Blocks the display_name preference in
     # preferred_disk_name().
     name_locked: bool = False
+    # Alternate synthetic id this entity may be tracked under in OLDER
+    # manifests. Module Pages were historically keyed two ways: the download
+    # engine records them by PAGE id (-page_id) while sync-created entries used
+    # the MODULE ITEM id (-item.id) - so a downloaded course re-analyzed for
+    # sync saw every page as "new" and downloaded a duplicate. Analysis now
+    # emits the page id as primary and carries the module-item id here;
+    # analyze_course falls back to it when only the legacy key is tracked.
+    legacy_sync_id: int = 0
 
 
 def preferred_disk_name(c_file) -> str:
@@ -1005,6 +1013,12 @@ class SyncManager:
         for c_file in canvas_files:
             file_id = str(c_file.id)
             seen_ids.add(file_id)
+            # Entities that older manifests key differently (module Pages: see
+            # CanvasFileInfo.legacy_sync_id) are "seen on Canvas" under BOTH
+            # ids, so a legacy-keyed row is never mistaken for a deletion.
+            _legacy = int(getattr(c_file, 'legacy_sync_id', 0) or 0)
+            if _legacy:
+                seen_ids.add(str(_legacy))
 
             # Determine target path. ``target_paths`` may key on positive
             # Canvas file IDs *or* synthetic negative IDs (Pages, Assignments,
@@ -1029,7 +1043,18 @@ class SyncManager:
 
         for c_file, calc_path in unique_canvas_files:
             file_id = str(c_file.id)
-                
+
+            # Legacy-id bridge: when the entity isn't tracked under its primary
+            # id but IS tracked under its legacy alias (module Pages synced by
+            # older versions were keyed by -item.id instead of -page_id), use
+            # the legacy row - the entry, its healed local_path, content_sig
+            # comparison and any future update all stay on the existing key,
+            # so nothing re-downloads or forks a duplicate.
+            _legacy = int(getattr(c_file, 'legacy_sync_id', 0) or 0)
+            if _legacy and file_id not in files_section \
+                    and str(_legacy) in files_section:
+                file_id = str(_legacy)
+
             if file_id not in files_section:
                 # Not in manifest - try to recognize a file the student already
                 # has on disk so we never re-download a duplicate. Three tiers:

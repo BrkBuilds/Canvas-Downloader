@@ -344,3 +344,91 @@ def test_delete_manifest_rows(sm, course_dir):
     assert "77" in sm.load_manifest()["files"]
     assert sm.delete_manifest_rows([77]) is True
     assert "77" not in sm.load_manifest()["files"]
+
+
+# ── page-id parity: download-then-sync must not duplicate module Pages ───────
+# The download engine records module Pages by PAGE id (-page_id); the sync
+# metadata scan historically emitted the MODULE ITEM id (-item.id), so a
+# freshly-downloaded course re-analyzed for sync saw every page as "new" and
+# downloaded " (1)" duplicates (2026-07-09 macOS run: 35 phantom-new files).
+# Analysis now emits -page_id as primary and carries -item.id in
+# CanvasFileInfo.legacy_sync_id for folders synced by older versions.
+
+def _page_cfile(page_id, item_id, title="Kontortid", sig="pagesig-v1"):
+    f = CanvasFileInfo(
+        id=-page_id, filename=f"Page: {title}.html",
+        display_name=f"{title}.html", size=0,
+        modified_at="2026-07-01T10:00:00Z", url="https://x/p",
+        content_type="text/html", content_sig=sig, name_locked=True,
+        legacy_sync_id=-item_id,
+    )
+    return f
+
+
+def test_downloaded_page_is_uptodate_in_sync_analysis(sm, course_dir):
+    # Download convention: tracked under -page_id, healed to the converted .md
+    # (the original .html is deleted by the HTML→MD converter).
+    _write_local(course_dir, "Page Kontortid.md", b"# converted")
+    sm.record_downloaded_file(-261465, "Page Kontortid.html",
+                              "Page Kontortid.md", "", 0,
+                              content_sig="pagesig-v1")
+    manifest = sm.load_manifest()
+    result = sm.analyze_course([_page_cfile(261465, 1102048)], manifest,
+                               cm=None, download_mode="flat")
+    assert result.new_files == []                       # the 35-phantom bug
+    assert {c.id for c, _ in result.uptodate_files} == {-261465}
+    assert result.deleted_on_canvas == []
+
+
+def test_legacy_item_id_page_row_still_matches(sm, course_dir):
+    # Folder synced by an OLDER version: page tracked under -item.id. The
+    # legacy bridge must keep matching that row - no re-download, no deletion.
+    _write_local(course_dir, "Page Kontortid.md", b"# converted")
+    sm.record_downloaded_file(-1102048, "Page Kontortid.html",
+                              "Page Kontortid.md", "", 0,
+                              content_sig="pagesig-v1")
+    manifest = sm.load_manifest()
+    result = sm.analyze_course([_page_cfile(261465, 1102048)], manifest,
+                               cm=None, download_mode="flat")
+    assert result.new_files == []
+    up = {info.canvas_file_id for _, info in result.uptodate_files}
+    assert up == {-1102048}                             # stays on the legacy key
+    assert result.deleted_on_canvas == []
+    assert result.locally_deleted_files == []
+
+
+# ── completion cards: resolve records to their CONVERTED on-disk files ───────
+
+def test_synced_groups_resolve_converted_files(tmp_path):
+    """synced_details carries pre-conversion names; the completion card must
+    point at the converted product on disk (html→md, pptx→pdf, code→_ext.txt)
+    instead of rendering a dead 'not found' row with the old name."""
+    from sync.execution import _build_synced_groups
+
+    root = tmp_path / "Course"
+    root.mkdir()
+    (root / "Page Kontortid.md").write_bytes(b"# md")          # was .html
+    (root / "Deck.pdf").write_bytes(b"pdf")                    # was .pptx
+    (root / "StudieTimerVejl_js.txt").write_bytes(b"code")     # was .js
+    (root / "Plain.pdf").write_bytes(b"pdf")                   # untouched
+
+    sel = {
+        'pair_idx': 0,
+        'redownload': [],
+        'res_data': {
+            'pair': {'local_folder': str(root), 'course_id': 1,
+                     'course_name': 'Course'},
+            'sync_manager': None,
+            'result': None,
+        },
+    }
+    synced_details = {0: ["Page Kontortid.html", "Deck.pptx",
+                          "StudieTimerVejl.js", "Plain.pdf"]}
+    groups = _build_synced_groups([sel], synced_details)
+    assert len(groups) == 1
+    by_rel = {f['rel'] for f in groups[0]['files']}
+    assert by_rel == {"Page Kontortid.md", "Deck.pdf",
+                      "StudieTimerVejl_js.txt", "Plain.pdf"}
+    names = {f['name'] for f in groups[0]['files']}
+    assert "Page Kontortid.md" in names          # display shows the real file
+    assert "Page Kontortid.html" not in names
