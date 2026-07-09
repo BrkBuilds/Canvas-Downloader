@@ -171,6 +171,36 @@ def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Eve
 # ── Entry Point ───────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    # ── Neutralize multiprocessing's resource tracker (frozen POSIX) ──
+    # ROOT CAUSE of the macOS phantom-instance bug: the transcription stack
+    # registers a POSIX semaphore, which makes CPython spawn a resource-tracker
+    # helper by re-executing sys.executable with `-c <tracker code>` argv. In a
+    # frozen windowed .app the bootloader REBUILDS argv from Apple events and
+    # drops the `-c` payload (the same argv rebuild as the worker-flag bug
+    # below), so the "tracker" child just re-ran start.py: before the
+    # single-instance guard existed it booted a FULL second GUI (window + Dock
+    # icon + Keychain prompt); with the guard it still spawned and insta-exited
+    # around every transcription (the visible Dock "flick"), and multiprocessing
+    # kept relaunching it - "resource_tracker: process died unexpectedly,
+    # relaunching" in the worker log (2026-07-09 run). A tracker that can never
+    # receive its protocol fd is pure liability, so no-op it entirely. Cost: if
+    # a process dies without cleanup, a named semaphore can leak until reboot -
+    # harmless, and this app never uses multiprocessing itself. Patch both the
+    # module-level functions (looked up at call time by
+    # multiprocessing.synchronize/shared_memory) and the class methods (in case
+    # anything grabs a fresh instance). Windows has no resource tracker.
+    if getattr(sys, "frozen", False) and sys.platform != "win32":
+        try:
+            from multiprocessing import resource_tracker as _rt
+            _rt.ResourceTracker.ensure_running = lambda self: None
+            _rt.ResourceTracker.register = lambda self, *a, **k: None
+            _rt.ResourceTracker.unregister = lambda self, *a, **k: None
+            _rt.ensure_running = lambda *a, **k: None
+            _rt.register = lambda *a, **k: None
+            _rt.unregister = lambda *a, **k: None
+        except Exception:
+            pass
+
     # Frozen worker re-exec: the transcription engine runs in an isolated child
     # process so a native CUDA crash can't take down the app (see
     # panopto.transcribe.transcribe_in_subprocess). In a frozen build the child

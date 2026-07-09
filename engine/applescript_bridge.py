@@ -554,6 +554,16 @@ def _idle_quit_script(app: str, collection: str) -> str:
     never to a wrong quit... property reads that fail leave hasPath=false/
     isSaved=true only within their inner trys, while a failure of the whole
     document loop aborts with an error status and no quit).
+
+    The document ENUMERATION itself is also try-wrapped: Excel in its
+    Workbook-Gallery-only state (no workbook open) errors on resolving the
+    ``workbooks`` collection instead of returning an empty list - observed as
+    ``error -1700: Can't make missing value into type number`` on the 2026-07-09
+    macOS run, which aborted the whole script via the outer try and left Excel
+    (and its Recents entries, which a live Excel rewrites) in the dock forever.
+    An enumeration failure means the app cannot name a single open document, so
+    it is treated as "no documents" - a real user workbook makes the collection
+    resolve normally.
     """
     return f'''
         tell application "System Events"
@@ -563,7 +573,11 @@ def _idle_quit_script(app: str, collection: str) -> str:
         set blockers to 0
         try
             tell application "{app}"
-                repeat with d in ({collection} as list)
+                set docList to {{}}
+                try
+                    set docList to ({collection} as list)
+                end try
+                repeat with d in docList
                     set total to total + 1
                     set pristine to false
                     try
@@ -644,6 +658,41 @@ def quit_idle_office_apps() -> None:
                 still_running.append((app, collection))
         return still_running
 
+    def _wait_for_exit(apps: list, timeout: float = 12.0) -> None:
+        """Poll until every app in *apps* has actually terminated (or timeout).
+
+        The Recents purge MUST run against dead Office processes: a still-alive
+        app keeps its Recent-files list in memory and rewrites the shared
+        registry DB when it eventually terminates, resurrecting the very
+        entries the purge just deleted (why Excel's Recents kept showing our
+        CanvasDownloaderTmp files while PowerPoint's/Word's were clean - they
+        had quit, Excel hadn't). A fixed 1s nap was a race; poll instead.
+        """
+        import time as _time
+        deadline = _time.time() + timeout
+        remaining = [a for a, _c in apps]
+        while remaining and _time.time() < deadline:
+            still = []
+            for app in remaining:
+                try:
+                    r = subprocess.run(
+                        ['osascript', '-e',
+                         f'tell application "System Events" to return '
+                         f'(exists process "{app}") as text'],
+                        capture_output=True, text=True, timeout=10,
+                    )
+                    if (r.stdout or "").strip().lower() == "true":
+                        still.append(app)
+                except Exception:
+                    pass  # can't tell - assume gone rather than stall the purge
+            remaining = still
+            if remaining:
+                _time.sleep(0.5)
+        if remaining:
+            logger.info("[OfficeQuit] still running after %.0fs wait: %s "
+                        "(Recents purge may not stick for these)",
+                        timeout, ", ".join(remaining))
+
     def _worker():
         import time as _time
         # 1. Sweep our staged zombie documents first, so idle-quit can succeed.
@@ -657,14 +706,14 @@ def quit_idle_office_apps() -> None:
             _time.sleep(3.0)
             for app, _c in stragglers:
                 _force_close_canvas_docs_sync(only_app=app)
-            _quit_pass(2, stragglers)
+            stragglers = _quit_pass(2, stragglers)
 
-        # 4. Idle apps have now been asked to quit. Give them a beat to terminate
-        # and release the shared Recent-files registry DB, then surgically purge
-        # our container-staged temp files from Office's Recent lists (marker-
+        # 4. Wait for the quit apps to actually DIE, then surgically purge our
+        # container-staged temp files from Office's Recent-files lists (marker-
         # filtered, so a user's real recent documents are never affected).
-        # Best-effort and independent of whether anything was actually quit.
-        _time.sleep(1.0)
+        # Purging while an app is still alive is futile - it rewrites the
+        # registry DB from memory on exit. Best-effort throughout.
+        _wait_for_exit(_QUIT_TARGETS)
         _purge_canvas_recents()
 
     threading.Thread(target=_worker, daemon=True).start()
