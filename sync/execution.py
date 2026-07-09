@@ -131,8 +131,10 @@ def _build_synced_groups(sync_selections, synced_details):
     Resolves every synced file to its on-disk location (relative to the course
     folder) so the completion screen and the landing-page "New files since last
     sync" panel can offer Open / Reveal actions per file. Runs once at finalize
-    on the script thread - AFTER post-processing - so converted names (e.g.
-    .pptx → .pdf) and sidecar artifacts are already reflected in synced_details.
+    on the script thread - AFTER post-processing. synced_details still carries
+    the PRE-conversion names the download recorded, so resolution first tries
+    the exact basename and then falls back to a stem match against the files
+    actually on disk (post-processing keeps the stem when it converts).
 
     Returns ``list[dict]`` - one entry per course that received files::
 
@@ -201,7 +203,10 @@ def _build_synced_groups(sync_selections, synced_details):
 
         # Walk the folder ONCE to build basename -> [rel paths]; Finding each
         # name against this index is O(1) and tolerates module subfolders.
+        # stem_index (filename sans extension -> [rel paths]) backs the
+        # converted-file fallback below.
         name_index = {}
+        stem_index = {}
         if course_root is not None:
             try:
                 root_str = str(course_root)
@@ -214,8 +219,10 @@ def _build_synced_groups(sync_selections, synced_details):
                         # is resilient to NFC/NFD mismatches between disk and the
                         # Canvas-supplied filename.
                         name_index.setdefault(_norm(fn), []).append(rel)
+                        stem_index.setdefault(_norm(os.path.splitext(fn)[0]), []).append(rel)
             except Exception:
                 name_index = {}
+                stem_index = {}
 
         files = []
         # Paths already assigned to an earlier record this course, so two synced
@@ -235,7 +242,26 @@ def _build_synced_groups(sync_selections, synced_details):
                 category = 'new'
 
             rel = nm
+            display_name = nm
             candidates = name_index.get(_nm_key)
+            if not candidates:
+                # CONVERTED-FILE fallback: post-processing may have converted
+                # the file this run recorded (html→md, pptx/docx/xlsx→pdf,
+                # mp4→mp3, code→"stem_ext.txt") and deleted the original - the
+                # exact-name lookup then misses, and the completion card
+                # rendered the PRE-conversion name with dead Open/Reveal
+                # buttons ("File not found at its last known location", the
+                # 2026-07-09 .html-instead-of-.md bug). All converters keep
+                # the stem (the code converter folds the old extension INTO
+                # the stem), so resolve by stem instead and display the file
+                # that is actually on disk.
+                _stem, _ext = os.path.splitext(nm)
+                _ext = _ext.lstrip('.').lower()
+                for _skey in ((f"{_stem}_{_ext}" if _ext else None), _stem):
+                    if _skey:
+                        candidates = stem_index.get(_norm(_skey))
+                        if candidates:
+                            break
             if candidates:
                 # Prefer candidates not yet claimed by a prior record; only fall
                 # back to the full list if every copy is already spoken for.
@@ -253,8 +279,9 @@ def _build_synced_groups(sync_selections, synced_details):
                     except Exception:
                         rel = pool[0]
                 used_rels.add(rel)
+                display_name = os.path.basename(rel)
 
-            files.append({'name': nm, 'rel': rel, 'category': category})
+            files.append({'name': display_name, 'rel': rel, 'category': category})
 
         groups.append({
             'pair_idx': pair_idx,

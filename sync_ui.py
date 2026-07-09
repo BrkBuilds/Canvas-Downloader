@@ -2475,22 +2475,35 @@ def render_sync_step4( main_placeholder=None):
             st.session_state['download_status'] = 'syncing'
             st.rerun()
 
-        # ── Regular sync (full-page): deterministic server-side advance ─────
-        # Draw the "Initializing…" shell, sleep briefly so the paint flushes,
-        # then let THIS run end via st.rerun(). Ending the run without
-        # re-rendering the confirmation dialog is what makes React tear the
-        # modal down before the heavy sync run starts - the same mechanism
-        # every modal Close button uses (st.rerun(scope="app"), CLAUDE.md).
-        # The next run enters 'syncing' with the modal already gone, so it can
-        # never get stuck floating over the progress bars. Replaces the old
-        # hidden-button + components.html auto-click bridge, which could
-        # silently never fire (CSP, iframe sandbox, cold first-open) and whose
-        # 5s watchdog only ticked if something else happened to rerun the app.
-        import time as _ps_time
+        # ── Regular sync (full-page): tear the confirm modal down FIRST ─────
+        # The confirmation dialog is a stale node from the previous run, and
+        # Streamlit only removes stale nodes when a script run finishes
+        # NORMALLY - a run that ends in st.rerun() (FINISHED_EARLY_FOR_RERUN)
+        # skips the cleanup. The old "render shell → sleep → st.rerun()"
+        # advance therefore chained straight into the long blocking 'syncing'
+        # run with the modal still mounted: the grey overlay + dialog floated
+        # over the entire sync until completion (2026-07-09 macOS run).
+        #
+        # Fix: let THIS run finish normally (React tears the modal down), and
+        # advance to 'syncing' from a timed fragment tick that fires ~0.4s
+        # AFTER the run has finished. The fragment's inline (same-run) call
+        # must no-op - advancing inline would end this run in a rerun again
+        # and resurrect the exact bug.
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
-        _ps_time.sleep(0.35)
-        st.session_state['download_status'] = 'syncing'
-        st.rerun()
+        st.session_state['_presync_tick'] = 0
+
+        @st.fragment(run_every=0.4)
+        def _advance_to_sync():
+            _seen = st.session_state.get('_presync_tick', 0)
+            st.session_state['_presync_tick'] = _seen + 1
+            if _seen == 0:
+                return  # inline call during the teardown run - wait for the timer
+            if st.session_state.get('download_status') == 'pre_sync':
+                st.session_state.pop('_presync_tick', None)
+                st.session_state['download_status'] = 'syncing'
+                st.rerun(scope="app")
+
+        _advance_to_sync()
 
     elif status == 'syncing':
         _run_sync()
