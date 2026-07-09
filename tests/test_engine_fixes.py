@@ -603,9 +603,16 @@ def test_dock_recents_cleanup_is_snapshot_scoped():
 
     src = inspect.getsource(ab._cleanup_dock_recents)
     assert '_dock_recents_before is None' in src            # (a) snapshot gate
-    assert 'bid in _dock_recents_before' in src             # (b) pre-existing
-    assert 'pgrep' in src                                   # (b) running check
-    assert 'killall' in src and 'if not removed' in src     # (c)
+    strip = inspect.getsource(ab._strip_office_recents_tiles)
+    assert 'bid in _dock_recents_before' in strip           # (b) pre-existing
+    assert '_office_pgrep_alive' in strip                   # (b) running check
+    assert 'killall' in strip and 'if not removed' in strip  # (c)
+    # Timing (the 2026-07-09 Excel-tile-reappeared race): the Dock moves a
+    # quit app into recents when it processes the TERMINATION, so the cleanup
+    # must wait for BSD-level death, settle so the Dock commits its write,
+    # and VERIFY with a second strip pass after the restart.
+    assert '_office_pgrep_alive' in src and 'sleep' in src
+    assert src.count('_strip_office_recents_tiles()') >= 2
     # The quit worker runs it AFTER the Office-Recents purge (dead processes).
     wsrc = inspect.getsource(ab.quit_idle_office_apps)
     assert wsrc.index('_purge_canvas_recents()') < wsrc.index('_cleanup_dock_recents()')
@@ -634,3 +641,27 @@ def test_reset_office_priming_clears_dock_snapshot():
         assert ab._dock_recents_before is None
     finally:
         ab._dock_recents_before = None
+
+
+def test_teacher_locked_files_classify_as_permanent():
+    """A module-linked file the teacher LOCKED in Files has no download URL for
+    students (Canvas strips it; even a browser gets 'This file is currently
+    locked'). It must be reported as a permanent 'Locked File' (retry_exhausted
+    -> the Cannot Be Downloaded bucket), never as a retryable failure - and
+    never auto-ignored (teachers often unlock after the lecture)."""
+    import inspect
+
+    import core.canvas_logic as cl
+    src = inspect.getsource(cl.CanvasManager)
+    i = src.index("locked_for_user")
+    block = src[i:i + 1800]
+    assert '"Locked File"' in block
+    assert 'err.retry_exhausted = True' in block
+    assert 'lock_explanation' in block
+
+    import shared.components as sc
+    assert 'Locked File' in sc._ERROR_TRANSLATIONS
+
+    from pathlib import Path
+    sync_src = Path('sync/execution.py').read_text(encoding='utf-8')
+    assert "Locked by the teacher on Canvas" in sync_src
