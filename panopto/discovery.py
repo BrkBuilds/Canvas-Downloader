@@ -465,8 +465,14 @@ def discover_course_videos(
     )
 
     # Pass 1 (cheap, sequential): direct GUID extraction from the module items
-    # already in hand, and queue ExternalTool items that still need a network
-    # round-trip (item detail fetch + LTI handshake) to resolve their GUID.
+    # already in hand. EVERY ExternalTool item is queued for a per-item LTI
+    # launch in pass 2 - even one that embeds a GUID: after an LTI 1.3
+    # migration the embedded ``custom_context_delivery`` ids can be stale
+    # (Panopto re-homed the sessions) while the launch always resolves the
+    # CURRENT session (2026-07-09 CBS: all 6 embedded ids were dead, and the
+    # other 30 bare LTI.aspx links carried no id anywhere in their JSON). The
+    # direct ids ride along in the queue entry as a fallback for when the
+    # launch fails.
     pending: list[tuple] = []
     for mod in modules:
         if _cancelled():
@@ -482,42 +488,82 @@ def discover_course_videos(
             ):
                 continue
 
-            before = len(videos)
             launch_url = item.get("url", "") or ""
-
+            direct_vids: list[str] = []
             for field_name in ("external_url", "url", "html_url"):
                 for vid in extract_panopto_ids(item.get(field_name) or ""):
+                    if vid not in direct_vids:
+                        direct_vids.append(vid)
+
+            # quiz_lti marks Canvas New Quizzes - an LTI tool, never Panopto;
+            # launching it would waste a full handshake per quiz.
+            if item.get("type") == "ExternalTool" and not item.get("quiz_lti"):
+                pending.append((mod, item, mod_name, item_title, item_id,
+                                launch_url, direct_vids))
+            else:
+                for vid in direct_vids:
                     add(vid, item_title, module=mod_name, launch=launch_url,
                         source="module", item_id=item_id)
 
-            if item.get("type") == "ExternalTool" and len(videos) == before:
-                pending.append((mod, item, mod_name, item_title, item_id, launch_url))
-
     # Pass 2 (parallel): the slow part. Each pending ExternalTool item needs an
-    # item-detail fetch and (usually) an LTI handshake - ~1-2s of pure network
+    # LTI handshake (and possibly an item-detail fetch) - ~1-2s of pure network
     # I/O each. They are independent (own request/session, read-only token), so
     # Finding them concurrently turns N×2s of sequential waiting into a handful
     # of round-trips. add()/folder-expansion stay sequential in pass 3.
     def _resolve(entry):
-        mod, item, mod_name, item_title, item_id, launch_url = entry
-        try:
-            detail = rest.get_one(
-                f"/api/v1/courses/{course_id}/modules/{mod['id']}/items/{item['id']}"
-            )
-        except Exception:
-            detail = {}
-        d_launch = detail.get("url", launch_url) or launch_url
-        direct: list[str] = []
-        for field_name in ("external_url", "url", "html_url"):
-            direct.extend(extract_panopto_ids(detail.get(field_name) or ""))
+        mod, item, mod_name, item_title, item_id, launch_url, direct_vids = entry
+        direct: list[str] = list(direct_vids)
+        d_launch = launch_url
         lti = None
-        if not direct and d_launch and "sessionless_launch" in d_launch:
+        used_launch = ""
+
+        # The MODULE-ITEM launch replicates a browser click on THIS item:
+        # Canvas builds the LTI 1.3 request from the item's own resource link,
+        # so Panopto lands on the recording's Viewer/Embed page (session id in
+        # the URL). The item's own ``url`` field is only
+        # ``sessionless_launch?id=<tool>&url=LTI.aspx`` - a GENERIC tool launch
+        # with no per-item context - which lands on the course FOLDER page
+        # instead (the 2026-07-09 CBS failure: 30/36 links unresolvable).
+        mi_launch = ""
+        if item_id:
+            mi_launch = (
+                f"{canvas_base.rstrip('/')}/api/v1/courses/{course_id}"
+                f"/external_tools/sessionless_launch"
+                f"?launch_type=module_item&module_item_id={item_id}"
+            )
+            if item.get("content_id"):
+                mi_launch += f"&id={item['content_id']}"
             try:
                 # (session, final_url, real_id, pbase, folder_id)
-                lti = lti_launch(d_launch, token)
+                attempt = lti_launch(mi_launch, token)
             except Exception:
-                lti = None
-        return entry, d_launch, direct, lti
+                attempt = None
+            if attempt and attempt[0] is not None and attempt[3] is not None:
+                lti, used_launch = attempt, mi_launch
+
+        if lti is None or (not lti[2] and not direct):
+            # Legacy fallback: item detail + the item's own launch URL (the
+            # pre-1.3 route; its folder landing also feeds the title matcher).
+            try:
+                detail = rest.get_one(
+                    f"/api/v1/courses/{course_id}/modules/{mod['id']}/items/{item['id']}"
+                )
+            except Exception:
+                detail = {}
+            d_launch = detail.get("url", launch_url) or launch_url
+            for field_name in ("external_url", "url", "html_url"):
+                for vid in extract_panopto_ids(detail.get(field_name) or ""):
+                    if vid not in direct:
+                        direct.append(vid)
+            if (lti is None and not direct and d_launch
+                    and "sessionless_launch" in d_launch and d_launch != mi_launch):
+                try:
+                    attempt = lti_launch(d_launch, token)
+                except Exception:
+                    attempt = None
+                if attempt and attempt[0] is not None:
+                    lti, used_launch = attempt, d_launch
+        return entry, d_launch, direct, lti, used_launch
 
     resolved: list[tuple] = []
     if pending and not _cancelled():
@@ -543,23 +589,44 @@ def discover_course_videos(
     _folder_sessions_cache: dict[tuple[str, str], list] = {}
     _unmatched_titles: list[str] = []
     _auth_beacon = ""   # first launch VERIFIED to reach a Panopto host this run
-    for entry, d_launch, direct, lti in resolved:
+    # Folder-scope body sniff (include_folder_sessions): a VIEWER landing only
+    # reveals its home folder inside the page body, which costs one page GET.
+    # Every module item of a course shares that home folder, so sniff it once
+    # per course instead of once per item (36 sequential GETs on the CBS run).
+    _viewer_folder_sniffed = False
+    for entry, d_launch, direct, lti, used_launch in resolved:
         if _cancelled():
             break
-        mod, item, mod_name, item_title, item_id, launch_url = entry
+        mod, item, mod_name, item_title, item_id, launch_url, _p1_vids = entry
+        # The stored launch is the one that actually REACHED Panopto this run
+        # (the runner re-uses it for the per-video DeliveryInfo auth fallback).
+        item_launch = used_launch or d_launch
         _before = len(videos)
-        for vid in direct:
-            add(vid, item_title, module=mod_name, launch=d_launch,
+        real_id = lti[2] if lti is not None else None
+        if real_id:
+            # Launch-resolved id is authoritative: it is what a browser click
+            # on this item plays TODAY. Any GUID embedded in the item JSON that
+            # disagrees is a leftover from before an LTI migration - adding it
+            # would download dead/wrong content, so it is dropped (logged).
+            add(real_id, item_title, module=mod_name, launch=item_launch,
                 source="module", item_id=item_id)
-        if lti is not None:
-            session, final_url, real_id, pbase, lti_folder = lti
-            if pbase and session and d_launch and not _auth_beacon:
-                _auth_beacon = d_launch
-            if real_id:
-                add(real_id, item_title, module=mod_name, launch=d_launch,
+            _stale = [d for d in direct if d != real_id]
+            if _stale:
+                logger.info(
+                    "Panopto: module link '%s' launch-resolves to %s - ignoring "
+                    "embedded stale id(s): %s",
+                    item_title, real_id, ", ".join(_stale),
+                )
+        else:
+            for vid in direct:
+                add(vid, item_title, module=mod_name, launch=item_launch,
                     source="module", item_id=item_id)
+        if lti is not None:
+            session, final_url, _rid, pbase, lti_folder = lti
+            if pbase and session and item_launch and not _auth_beacon:
+                _auth_beacon = item_launch
             for vid in extract_panopto_ids(final_url or ""):
-                add(vid, item_title, module=mod_name, launch=d_launch,
+                add(vid, item_title, module=mod_name, launch=item_launch,
                     source="module", item_id=item_id)
 
             if len(videos) == _before and session and pbase and lti_folder:
@@ -577,7 +644,7 @@ def discover_course_videos(
                     item_title, _folder_sessions_cache[_fkey], videos
                 )
                 if _match:
-                    add(_match, item_title, module=mod_name, launch=d_launch,
+                    add(_match, item_title, module=mod_name, launch=item_launch,
                         source="module", item_id=item_id)
                 else:
                     _unmatched_titles.append(item_title)
@@ -586,12 +653,14 @@ def discover_course_videos(
                 folder_id = lti_folder
                 if not folder_id:
                     folder_m = PANOPTO_FOLDER_PATTERN.search(final_url)
-                    if not folder_m:
+                    if not folder_m and (not real_id or not _viewer_folder_sniffed):
                         try:
                             page_r = session.get(final_url, timeout=15)
                             folder_m = PANOPTO_FOLDER_PATTERN.search(page_r.text)
                         except Exception:
                             pass
+                        if real_id:
+                            _viewer_folder_sniffed = True
                     folder_id = folder_m.group(1) if folder_m else None
                 if folder_id:
                     _fkey = (pbase, folder_id.lower())
@@ -600,7 +669,7 @@ def discover_course_videos(
                             session, pbase, _fkey[1]
                         )
                     for vid, vtitle in _folder_sessions_cache[_fkey]:
-                        add(vid, vtitle, module=mod_name, launch=d_launch,
+                        add(vid, vtitle, module=mod_name, launch=item_launch,
                             source="folder", item_id=item_id)
 
     if _unmatched_titles:
