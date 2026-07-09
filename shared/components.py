@@ -1193,6 +1193,7 @@ def _build_filetype_pills_html(files: list) -> str:
 _ERROR_TRANSLATIONS = {
     'No URL': 'Canvas did not provide a download link for this file',
     'LTI/Media Stream': 'This is a streamed video that cannot be downloaded directly',
+    'Locked File': 'The teacher has locked this file on Canvas - it may become downloadable when they unlock it',
     'URL Expiration': 'The download link expired and could not be refreshed',
     'Network Error': 'Network connection failed after multiple retries',
     'SSL Certificate Error': 'Your computer could not verify the secure connection to Canvas - check for a VPN, proxy or firewall intercepting traffic, or update Canvas Downloader',
