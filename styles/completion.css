@@ -547,9 +547,15 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     font-size: 1.15em;
     font-weight: 700;
     color: #e5e7eb;
-    margin: 20px 0 10px 0;
+    margin: 20px 0 10px 0 !important;
     padding-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Collapse empty Streamlit container blocks that only hold style injections */
+div[data-testid="stElementContainer"]:has(style),
+div[data-testid="element-container"]:has(style) {
+    display: none !important;
 }
 
 /* --- Custom Folder Cards --- */
