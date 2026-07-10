@@ -28,7 +28,7 @@ import streamlit as st
 
 from styles import inject_css
 from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file
-from shared.components import SVG_FOLDER_YELLOW, render_help_card, HELP_ICONS
+from shared.components import SVG_FOLDER_YELLOW, render_help_card, render_fda_nudge, HELP_ICONS
 
 
 # Lucide calendar glyph (matches the sidebar "Today" nav icon).
@@ -427,9 +427,17 @@ def _entry_logical_date(ts: str) -> str:
 
 
 def _todays_groups() -> list[dict]:
-    """Aggregate this logical-day's synced files per course from sync history.
+    """Aggregate this logical-day's QUICK-SYNC files per course from sync history.
 
-    Merges across multiple sync runs today, de-duplicating files by their
+    Only the page's own hands-off / one-click syncs feed this list: the daily
+    auto-sync and "Quick Sync now" (both run in quick mode, recorded as
+    ``sync_mode == 'quick'``). A deliberate "Analyze, Review & Sync" is the user
+    curating their folder by hand - it can restore locally-deleted files and
+    stage ``_NewVersion`` copies, which are NOT "new files that arrived today" -
+    so it is intentionally excluded even when it ran today. (Quick Sync can never
+    produce a restore, so this filter is what keeps restored files off the page.)
+
+    Merges across multiple qualifying runs today, de-duplicating files by their
     on-disk relative path. Returns a list of
     ``{course_name, local_folder, files:[{name, rel, category}]}``.
     """
@@ -442,6 +450,10 @@ def _todays_groups() -> list[dict]:
     merged: dict = {}
     for entry in history:
         if _entry_logical_date(entry.get("timestamp", "")) != today:
+            continue
+        # Quick Sync / daily auto-sync only - never a manual "Analyze, Review &
+        # Sync" (that is the user hand-curating, not today's automatic arrivals).
+        if entry.get("sync_mode") != "quick":
             continue
         for grp in entry.get("synced_groups", []) or []:
             key = (grp.get("course_id"), grp.get("local_folder"))
@@ -1346,6 +1358,13 @@ def render_today_dashboard(fetch_courses_fn=None):
             text_html=_TODAY_HELP_TEXT,
             mode="card",
         )
+
+        # ── macOS hands-off nudge (Full Disk Access) - card or subtle link ──────
+        # Shared component (also at the bottom of the Settings dialog); sits
+        # right under the description. Idle-only: while a sync runs the page is
+        # in slim mode and must not gain/lose sibling blocks (DOM stability).
+        if not sync_running:
+            render_fda_nudge("today_fda", dismissed=cfg["fda_nudge_dismissed"])
 
         # ── Courses in your daily sync (card) ───────────────────────────────────
         # Day-to-day this list never changes (it's a whole-semester setup), so the

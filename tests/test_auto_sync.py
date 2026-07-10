@@ -139,3 +139,56 @@ def test_notice_tolerates_garbage_types(fake_session):
     notice = auto_sync.build_today_sync_notice()
     assert notice["total_files"] == 1   # falls back to the group tally
     assert notice["errors"] == 0
+
+
+# ── Today's files: quick-sync-only filter (ui.today_dashboard._todays_groups) ─
+# "Today's files" must reflect ONLY the page's own hands-off / one-click syncs
+# (daily auto-sync + "Quick Sync now", both recorded sync_mode == 'quick'). A
+# manual "Analyze, Review & Sync" is the ONLY run type that can restore a
+# locally-deleted file, so filtering to quick-mode is also what keeps restored
+# files off the Today page.
+
+def _write_history_entry(config_dir, *, sync_mode, course_id, course_name, files):
+    from datetime import datetime
+    from core.sync_manager import SyncHistoryManager
+    SyncHistoryManager(str(config_dir)).add_entry({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "sync_mode": sync_mode,
+        "synced_groups": [{
+            "course_id": course_id, "course_name": course_name,
+            "local_folder": f"/tmp/c{course_id}", "files": files,
+        }],
+    })
+
+
+def test_todays_files_excludes_manual_review_sync(config_dir, monkeypatch):
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+
+    # Manual review-sync today that RESTORED a locally-deleted file.
+    _write_history_entry(
+        config_dir, sync_mode="normal", course_id=1, course_name="Manual",
+        files=[{"name": "restored.pdf", "rel": "restored.pdf", "category": "restored"}],
+    )
+    # Quick Sync today that pulled a genuinely new file.
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=2, course_name="Quick",
+        files=[{"name": "new.pdf", "rel": "new.pdf", "category": "new"}],
+    )
+
+    groups = td._todays_groups()
+    assert {g["course_id"] for g in groups} == {2}          # manual run excluded
+    all_files = [f for g in groups for f in g["files"]]
+    assert all(f["category"] != "restored" for f in all_files)
+
+
+def test_todays_files_excludes_legacy_boolean_sync_mode(config_dir, monkeypatch):
+    # Pre-fix entries stored sync_mode as a boolean (True = "in sync mode"), which
+    # can't prove the run was quick - so they're safely excluded, not shown.
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+    _write_history_entry(
+        config_dir, sync_mode=True, course_id=9, course_name="Legacy",
+        files=[{"name": "x.pdf", "rel": "x.pdf", "category": "new"}],
+    )
+    assert td._todays_groups() == []

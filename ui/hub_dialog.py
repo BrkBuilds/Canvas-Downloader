@@ -901,7 +901,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             course_disp = course_names[temp_course_id]
 
                         with st.container(key=f"hub_inline_edit_row_course_{p_idx}"):
-                            col_c_info, col_c_btn = st.columns(2, vertical_alignment="center", gap="small")
+                            col_c_info, col_c_btn, col_c_notice = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
                             with col_c_info:
                                 st.markdown(
                                     f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
@@ -913,6 +913,16 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 st.button("Change Course", key=f"btn_hub_compact_change_course_{p_idx}",
                                           on_click=change_hub_layer,
                                           kwargs={'target_layer': 'layer_course_selector'})
+                            with col_c_notice:
+                                if st.session_state.get('hub_auto_detected_course') and temp_course_id:
+                                    st.markdown(
+                                        f'<span style="color:#a6eaff;font-size:0.85rem;font-weight:500;display:inline-flex;align-items:center;margin-left:8px;white-space:nowrap;">'
+                                        f'<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wand-sparkles-icon lucide-wand-sparkles" style="margin-right:4px;flex-shrink:0;"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>'
+                                        f'Course auto-selected: A matching course was registered in the folder</span>',
+                                        unsafe_allow_html=True
+                                    )
+                                else:
+                                    st.empty()
 
                         # --- Folder row ---
                         temp_folder = st.session_state.get('hub_edit_temp_folder', pair.get('local_folder', ''))
@@ -929,17 +939,6 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             with col_f_btn:
                                 st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
                                           on_click=hub_pick_folder_cb)
-
-                        # --- Auto-detection info notice ---
-                        if st.session_state.get('hub_auto_detected_course') and temp_course_id:
-                            from ui.amber_notice import render_info_notice
-                            render_info_notice(
-                                f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(course_disp)}</span>",
-                                detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
-                                margin="4px 0 4px 0",
-                                allow_html=True,
-                                tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
-                            )
 
                         # --- Warnings ---
                         is_hub_dup_edit = False
@@ -1102,7 +1101,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         add_course_disp = course_names[add_course_id]
 
                     with st.container(key="hub_inline_edit_row_add_course"):
-                        col_ac_info, col_ac_btn = st.columns(2, vertical_alignment="center", gap="small")
+                        col_ac_info, col_ac_btn, col_ac_notice = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
                         with col_ac_info:
                             st.markdown(
                                 f'<span style="color:#8ad;font-weight:500;margin-right:8px;font-size:0.95rem;white-space:nowrap;">'
@@ -1115,17 +1114,16 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             st.button(_course_btn_label, key="btn_hub_compact_change_course_add",
                                       on_click=change_hub_layer,
                                       kwargs={'target_layer': 'layer_course_selector'})
-
-                    # --- Auto-detection info notice ---
-                    if st.session_state.get('hub_auto_detected_course') and add_course_id:
-                        from ui.amber_notice import render_info_notice
-                        render_info_notice(
-                            f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(add_course_disp)}</span>",
-                            detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
-                            margin="4px 0 4px 0",
-                            allow_html=True,
-                            tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
-                        )
+                        with col_ac_notice:
+                            if st.session_state.get('hub_auto_detected_course') and add_course_id:
+                                st.markdown(
+                                    f'<span style="color:#a6eaff;font-size:0.85rem;font-weight:500;display:inline-flex;align-items:center;margin-left:8px;white-space:nowrap;">'
+                                    f'<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wand-sparkles-icon lucide-wand-sparkles" style="margin-right:4px;flex-shrink:0;"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>'
+                                    f'Course auto-selected: A matching course was registered in the folder</span>',
+                                    unsafe_allow_html=True
+                                )
+                            else:
+                                st.empty()
 
                     # --- Warnings ---
                     is_hub_dup_add = False

@@ -48,7 +48,12 @@ def test_logical_date_rolls_at_4am(dt, expected):
 
 def test_missing_file_returns_defaults(config_dir):
     cfg = today_store.load_today_config()
-    assert cfg == {"auto_sync_enabled": False, "pairs": [], "last_auto_sync_date": ""}
+    assert cfg == {
+        "auto_sync_enabled": False,
+        "pairs": [],
+        "last_auto_sync_date": "",
+        "fda_nudge_dismissed": False,
+    }
 
 
 @pytest.mark.parametrize("garbage", ["{not json", '"a string"', "[1,2,3]", ""])
@@ -135,6 +140,32 @@ def test_mark_auto_synced_and_toggle(config_dir):
     cfg = today_store.load_today_config()
     assert cfg["last_auto_sync_date"] == "2026-07-05"
     assert cfg["auto_sync_enabled"] is True
+
+
+def test_fda_nudge_dismissed_round_trip(config_dir):
+    assert today_store.load_today_config()["fda_nudge_dismissed"] is False
+    today_store.set_fda_nudge_dismissed(True)
+    assert today_store.load_today_config()["fda_nudge_dismissed"] is True
+    # Dismissing must not clobber neighbouring keys.
+    today_store.set_auto_sync_enabled(True)
+    cfg = today_store.load_today_config()
+    assert cfg["fda_nudge_dismissed"] is True
+    assert cfg["auto_sync_enabled"] is True
+
+
+def test_fda_nudge_flag_coerced_and_absent_defaults_false(config_dir):
+    import json
+    # Legacy file written before the key existed + a junk value both load safely.
+    (config_dir / "today_dashboard.json").write_text(
+        json.dumps({"auto_sync_enabled": True, "pairs": [],
+                    "last_auto_sync_date": ""}),
+        encoding="utf-8",
+    )
+    assert today_store.load_today_config()["fda_nudge_dismissed"] is False
+    (config_dir / "today_dashboard.json").write_text(
+        json.dumps({"fda_nudge_dismissed": "yes-ish"}), encoding="utf-8",
+    )
+    assert today_store.load_today_config()["fda_nudge_dismissed"] is True
 
 
 # ── Atomic write hygiene ─────────────────────────────────────────────────────

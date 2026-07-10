@@ -890,7 +890,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
 
         # Two columns like folder row: [1, 1, 1] to keep it left-aligned
         # REVISED: [1, 1, 1] - relying on CSS flex auto-width to handle content size
-        col_c_info, col_c_btn, col_c_spacer = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
+        col_c_info, col_c_btn, col_c_notice = st.columns([1, 1, 1], vertical_alignment="center", gap="small")
 
         with col_c_info:
             st.markdown(
@@ -905,8 +905,16 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.session_state["sync_d_selected_id"] = selected_course_id
                 select_course_dialog_inner(courses, selected_course_id)
         
-        with col_c_spacer:
-            st.empty()
+        with col_c_notice:
+            if st.session_state.get('sync_auto_detected_course') and selected_course_id:
+                st.markdown(
+                    f'<span style="color:#a6eaff;font-size:0.85rem;font-weight:500;display:inline-flex;align-items:center;margin-left:8px;white-space:nowrap;">'
+                    f'<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wand-sparkles-icon lucide-wand-sparkles" style="margin-right:4px;flex-shrink:0;"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>'
+                    f'Course auto-selected: A matching course was registered in the folder</span>',
+                    unsafe_allow_html=True
+                )
+            else:
+                st.empty()
 
         # Two auto-width columns + spacer, vertically centered
         col_folder_info, col_change_btn, col_spacer = st.columns(
@@ -927,17 +935,6 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 st.rerun()
         with col_spacer:
             st.empty()
-
-        # --- Auto-detection info notice ---
-        if st.session_state.get('sync_auto_detected_course') and selected_course_id:
-            from ui.amber_notice import render_info_notice
-            render_info_notice(
-                f"Canvas Downloader automatically matched this folder to <span style='color: white; margin-left: 2px;'>{esc(selected_course_name or 'its corresponding course')}</span>",
-                detail="If you think the match was wrong, click the \"Change Course\" button above to relink it.",
-                margin="4px 0 10px 0",
-                allow_html=True,
-                tooltip="All courses downloaded with Canvas Downloader save a tiny hidden file with the course code inside - we use this to match the canvas course to the course folder."
-            )
 
         # Check for return value from dialog
         if "sync_selected_return_id" in st.session_state:

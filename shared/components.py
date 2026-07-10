@@ -1605,8 +1605,16 @@ def render_panopto_summary(summary: dict | None) -> None:
     # (see the note above). Errors appear only when something actually failed.
     cards = [
         _stat(_dl_icon, downloaded, "Downloaded"),
-        _stat(_tx_icon, transcribed, "Transcribed"),
     ]
+    # "Transcribed" appears only when transcription was actually in play: either
+    # the run's config requested a transcript (want_transcription), or we in fact
+    # produced one (transcribed > 0). A course with transcription switched off
+    # must NOT show a "0 Transcribed" box - users read that as a bug/failure when
+    # nothing was ever meant to be transcribed. (want_transcription is absent on
+    # the manual "already up to date" sync summary, but that card is hidden above.)
+    _want_tx = bool(summary.get('want_transcription'))
+    if transcribed or _want_tx:
+        cards.append(_stat(_tx_icon, transcribed, "Transcribed"))
     if failed:
         cards.append(_stat(_skip_icon, failed, "Errors", error=True))
 
@@ -1927,6 +1935,121 @@ def error_log_dialog(log_paths):
 
     if st.button("Close", type="primary", use_container_width=True):
         st.rerun(scope="app")
+
+
+# ── macOS "make it fully hands-off" nudge (Full Disk Access) ─────────────────
+# The one dialog that can still hold up an unattended run is the macOS 15+ App
+# Data consent ("access data from other apps") - by Apple design it expires
+# when the app quits, so it re-asks once per session when conversions stage
+# Office files (see engine.applescript_bridge.arm_app_data_access). Full Disk
+# Access exempts the app permanently; this nudge points exactly there. Rendered
+# on the Today page and at the bottom of the Settings dialog - key_prefix
+# namespaces the widget keys so both surfaces can render in the same script
+# run. The persisted dismissal (today_store.fda_nudge_dismissed) and the
+# session spawn flag are deliberately SHARED across surfaces: closing the card
+# anywhere means "stop auto-showing it everywhere"; the subtle link remains on
+# both and re-spawns the card. CSS lives in styles/global.css (prefix-agnostic
+# `_fda_*` selectors) so it is loaded on every page AND inside the Settings
+# dialog portal.
+
+# Lucide sparkles glyph - violet, sized inline (the inline size is required so
+# the icon can't balloon if a page's CSS unmounts during a transition).
+_SVG_FDA_SPARKLES = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='#a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+    "style='width:19px;height:19px;flex-shrink:0;'>"
+    "<path d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 "
+    "9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 "
+    "15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 "
+    "1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/>"
+    "<path d='M20 3v4'/><path d='M22 5h-4'/></svg>"
+)
+
+
+def _dismiss_fda_nudge() -> None:
+    """on_click for the nudge's close button - the card never auto-shows again."""
+    from core.today_store import set_fda_nudge_dismissed
+    set_fda_nudge_dismissed(True)
+    st.session_state.pop("fda_nudge_card_open", None)
+
+
+def _spawn_fda_nudge_card() -> None:
+    """on_click for the subtle link - re-shows the card for this session."""
+    st.session_state["fda_nudge_card_open"] = True
+
+
+def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
+    """Render the Full Disk Access nudge slot (card, or its re-spawn link).
+
+    States (only while the gate holds - macOS 15+, FDA not granted):
+      * not dismissed          → the full card.
+      * dismissed              → a subtle text link; a click re-spawns the card
+                                 for this session (on all surfaces).
+      * FDA granted / non-Mac  → nothing at all (the gate re-checks every
+                                 rerun, so granting FDA mid-session makes the
+                                 whole slot vanish on the next interaction).
+
+    *dismissed* saves the caller a config read when it already holds the Today
+    config; pass None to have it loaded here. All interactions use on_click
+    callbacks, never st.rerun(): a bare st.rerun() is app-scoped and would
+    CLOSE a host @st.dialog (Settings), while on_click + the natural rerun
+    repaints in place and keeps the dialog open.
+    """
+    import sys
+    if sys.platform != "darwin":
+        return
+    try:
+        from engine.applescript_bridge import (
+            is_macos_15_plus, has_full_disk_access, open_full_disk_access_settings,
+        )
+        if not is_macos_15_plus() or has_full_disk_access():
+            return
+    except Exception:
+        return
+    if dismissed is None:
+        try:
+            from core.today_store import load_today_config
+            dismissed = bool(load_today_config()["fda_nudge_dismissed"])
+        except Exception:
+            dismissed = True  # never nag if the store is unreadable
+
+    if dismissed and not st.session_state.get("fda_nudge_card_open", False):
+        # Dismissed: the always-there subtle re-spawn link.
+        st.button("Make it fully hands-off", key=f"{key_prefix}_link_btn",
+                  on_click=_spawn_fda_nudge_card)
+        return
+
+    with st.container(key=f"{key_prefix}_nudge_card"):
+        c_body, c_close = st.columns([0.95, 0.05], vertical_alignment="center")
+        with c_body:
+            st.markdown(
+                f"<div class='fda-nudge-inner'>"
+                f"<div class='fda-nudge-head'>{_SVG_FDA_SPARKLES}"  # audit-ignore: static SVG constant
+                f"<span class='fda-nudge-title'>Make it fully hands-off</span></div>"
+                f"<div class='fda-nudge-desc'>macOS asks a one-click "
+                f"<b>&ldquo;access data from other apps&rdquo;</b> permission the first "
+                f"time each session converts Office files &ndash; the only dialog that "
+                f"can hold up an unattended morning sync. Grant Canvas Downloader "
+                f"<b>Full Disk Access</b> once and it never appears again.</div>"
+                f"<div class='fda-nudge-hint'>System Settings &rarr; Privacy &amp; "
+                f"Security &rarr; Full Disk Access &rarr; enable Canvas Downloader, "
+                f"then quit &amp; reopen the app.</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        with c_close:
+            # No help= tooltip: it wraps the <button> in a stTooltipHoverTarget,
+            # which breaks the fixed 32px sizing CSS (see CLAUDE.md).
+            st.button(
+                "​", key=f"{key_prefix}_close_btn",
+                on_click=_dismiss_fda_nudge,
+            )
+        if st.button("Open Full Disk Access Settings", key=f"{key_prefix}_open_btn"):
+            open_full_disk_access_settings()
+            st.toast(
+                "Add Canvas Downloader under Full Disk Access, "
+                "then quit & reopen the app."
+            )
 
 
 def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "", mode: str = "auto"):
