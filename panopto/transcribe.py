@@ -216,17 +216,34 @@ _WORKER_FLAG = "--panopto-transcribe-worker"
 def _worker_command() -> list[str]:
     """Command that launches one transcription worker (dev vs frozen .exe/.app).
 
-    Frozen: re-exec THIS binary. start.py routes the child into worker mode
+    Frozen: re-exec the app binary. start.py routes the child into worker mode
     PRIMARILY via the ``CANVAS_DL_TRANSCRIBE_WORKER`` env var (set in
     transcribe_in_subprocess), because a macOS windowed ``.app`` bundle does not
     reliably forward custom argv to ``sys.argv`` - its bootloader rebuilds argv
     from Apple events, silently dropping the flag, which made the child boot the
     FULL GUI instead of the worker. The flag is still passed as a secondary
     signal (and for parity with the dev command).
+
+    Frozen macOS: prefer the bundled CONSOLE-bootloader binary
+    (Canvas_Downloader_Worker - same code, built by the .spec) over the
+    windowed one. The windowed bootloader registers each child with
+    LaunchServices for Apple-event handling, and macOS 15's Dock files that
+    child's termination as a phantom "Canvas Downloader" recents tile held in
+    Dock MEMORY - invisible to `defaults export`, so the prefs-based recents
+    strip can't remove it until a Dock restart flushes it. The console binary
+    never registers, so workers run with zero Dock footprint. Falls back to
+    the app binary when the worker binary is absent (older bundles).
+
     Dev: run the worker module directly - argv works normally there.
     """
+    import os
     import sys
     if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            _worker_bin = os.path.join(
+                os.path.dirname(sys.executable), "Canvas_Downloader_Worker")
+            if os.path.isfile(_worker_bin):
+                return [_worker_bin, _WORKER_FLAG]
         return [sys.executable, _WORKER_FLAG]
     return [sys.executable, "-u", "-m", "panopto.transcribe_worker"]
 

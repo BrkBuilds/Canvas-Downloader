@@ -2473,6 +2473,19 @@ div.st-key-review_browse_folder button:hover {
     """
 
         st.markdown(_dl_details_html, unsafe_allow_html=True)
+
+        # ── macOS hands-off nudge (Full Disk Access) ─────────────────────
+        # Office→PDF conversion is about to run for this download (custom
+        # config or an applied quick-download preset both land here), so this
+        # is the moment the once-per-session macOS consent dialog becomes
+        # relevant - surface the dismissible guide right at the decision
+        # point. Same shared component + persisted dismissal as the Today
+        # page; renders nothing on Windows, macOS ≤14, or once FDA is granted.
+        if any(st.session_state.get(_k, st.session_state.get(f'persistent_{_k}', False))
+               for _k in ('convert_pptx', 'convert_word', 'convert_excel')):
+            from shared.components import render_fda_nudge
+            render_fda_nudge("dl_fda")
+
         col_back, _, col_conf = st.columns([1, 5, 1.5])
         with col_conf:
             # Button label changes based on mode
