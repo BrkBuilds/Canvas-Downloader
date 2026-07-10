@@ -2221,7 +2221,12 @@ def _render_sync_history():
                             synced_groups = [g for g in (entry.get('synced_groups') or [])
                                              if isinstance(g, dict) and g.get('files')]
 
-                            if errors > 0:
+                            if entry.get('cancelled'):
+                                # Partial, user-stopped run (files listed below
+                                # ARE on disk) - never show it as "Success".
+                                status_bg, status_color, status_border = "rgba(235,168,52,0.1)", "#eba834", "rgba(235,168,52,0.2)"
+                                status_text = "Cancelled"
+                            elif errors > 0:
                                 status_bg, status_color, status_border = "rgba(235,168,52,0.1)", "#eba834", "rgba(235,168,52,0.2)"
                                 status_text = f"{errors} error{'s' if errors != 1 else ''}"
                             elif count > 0:
@@ -2765,6 +2770,17 @@ def _run_sync_panopto():
         'dl_total': 0, 'dl_done': 0,
         'tx_total': 0, 'tx_done': 0, 'tx_pct': 0, 'tx_pct_shown': -10,
     }
+    # Pre-fill the header's course line (the h3 under the phase label - the
+    # same slot the file-sync dashboard fills with the course name). Without
+    # it the download/transcribe phases rendered an EMPTY h3: a phantom gap
+    # between the phase label and the progress bar. Single-pair syncs seed it
+    # here; multi-pair syncs update it from per-recording events.
+    if len(sels) == 1:
+        try:
+            _pan['course'] = (sels[0].get('res_data', {}).get('pair', {})
+                              or {}).get('course_name', '') or ''
+        except Exception:
+            pass
 
     def _elapsed():
         return _time.strftime('%M:%S', _time.gmtime(max(0, _time.time() - pan_start)))
@@ -2772,7 +2788,9 @@ def _run_sync_panopto():
     def _render():
         ph = _pan['phase']
         if ph == 'download':
-            render_progress_header(dp, "Downloading Recordings", _esc(_pan['course']))
+            # No _esc(): render_progress_header html-escapes the course name
+            # itself (pre-escaping showed "&amp;" in & names).
+            render_progress_header(dp, "Downloading Recordings", _pan['course'])
             pct = int(_pan['dl_done'] / _pan['dl_total'] * 100) if _pan['dl_total'] else 0
             render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
             _mb = st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024)
@@ -2785,7 +2803,7 @@ def _run_sync_panopto():
                 ("Elapsed", _elapsed(), "#F59E0B"),
             ])
         elif ph == 'transcribe':
-            render_progress_header(dp, "Transcribing Recordings", _esc(_pan['course']))
+            render_progress_header(dp, "Transcribing Recordings", _pan['course'])
             _base = _pan['tx_done'] + (_pan['tx_pct'] / 100.0)
             pct = int(_base / _pan['tx_total'] * 100) if _pan['tx_total'] else 0
             render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['transcribe'])
@@ -2795,7 +2813,7 @@ def _run_sync_panopto():
                 ("Elapsed", _elapsed(), "#F59E0B"),
             ])
         else:  # search
-            render_progress_header(dp, "Searching for Panopto Recordings", _esc(_pan['course']))
+            render_progress_header(dp, "Searching for Panopto Recordings", _pan['course'])
             render_progress_bar(dp, 0, color=PHASE_BAR_COLOR['search'],
                                 indeterminate=True, label="Searching…")
             render_custom_metrics(dp, [
@@ -2807,6 +2825,10 @@ def _run_sync_panopto():
 
     def progress(kind, **kw):
         try:
+            # Keep the header's course line current on every event that knows
+            # its course (multi-pair syncs flow through here).
+            if kw.get('course'):
+                _pan['course'] = kw['course']
             if kind == 'discovering':
                 _pan['phase'] = 'search'
                 _pan['course'] = kw.get('course', '')
@@ -2983,6 +3005,9 @@ def _run_sync_panopto():
             # Record to the panopto manifest (idempotent) AND remember the kept
             # artifacts (with their video id) so the completion screen can list
             # them per course AND categorize new vs restored correctly.
+            # De-duped: the runner now records incrementally (after download AND
+            # after transcription, plus the end-of-batch catch-all), passing the
+            # task's CUMULATIVE produced list each time.
             if _base is not None:
                 try:
                     _base(video, produced_paths)
@@ -2990,7 +3015,10 @@ def _run_sync_panopto():
                     pass
             if _pi is not None and produced_paths:
                 _vid = getattr(video, 'video_id', '')
-                _pan_produced.setdefault(_pi, []).extend((_vid, _p) for _p in produced_paths)
+                _lst = _pan_produced.setdefault(_pi, [])
+                for _p in produced_paths:
+                    if (_vid, _p) not in _lst:
+                        _lst.append((_vid, _p))
 
         # video_id -> bucket ('new' / 'restore') so produced files inherit the
         # same category they had in Review (restore = locally-deleted restore).
@@ -3043,18 +3071,16 @@ def _run_sync_panopto():
     else:
         _pan_max_bytes = None
 
-    try:
-        _summary = run_panopto_batch(
-            cm, _targets, settings=pan,
-            progress=progress, is_cancelled=is_sync_cancelled,
-            max_file_size_bytes=_pan_max_bytes,
-        )
-        # Carry the analysis-derived "already up to date" count + the selected
-        # count so the completion card reads honestly (no misleading "Skipped").
-        _summary['uptodate'] = int(st.session_state.get('panopto_uptodate_total', 0) or 0)
-        _summary['selected'] = _total_selected
-        st.session_state['panopto_summary'] = _summary
-
+    def _record_pan_results():
+        """Merge produced recordings into the completion structures and sync
+        history. Called from ``finally`` so it runs on EVERY exit of the
+        batch - normal return, crash, and (critically) the RerunException a
+        mid-batch Cancel click raises at the next placeholder write.
+        Recordings finished before a cancel are on disk and in the panopto
+        manifest, so sync history / Today's files must list them too (the
+        Today page merges + de-dupes quick entries of the same day). Touches
+        only session state and the history JSON, never placeholders - safe
+        to run while the rerun unwinds."""
         # Merge produced recordings into the completion screen's synced-files
         # structures so each appears with Open / Reveal / path like other files.
         try:
@@ -3118,7 +3144,13 @@ def _run_sync_panopto():
             if _h_names:
                 _hm = SyncHistoryManager(get_config_dir())
                 _ts = st.session_state.get('_sync_history_ts')
-                _amended = _hm.amend_last_entry(
+                # Amend ONLY the entry THIS run wrote (matched by timestamp).
+                # Without _ts this run wrote no file entry, and
+                # amend_last_entry(None) falls back to "most recent" - gluing
+                # the recordings onto some PREVIOUS sync's entry (which also
+                # hides a quick sync's recordings from Today's files whenever
+                # that older entry isn't sync_mode='quick').
+                _amended = bool(_ts) and _hm.amend_last_entry(
                     timestamp=_ts,
                     add_files_synced=len(_h_names),
                     add_categorized={'new': _h_new, 'restored': _h_restored},
@@ -3128,7 +3160,7 @@ def _run_sync_panopto():
                 if not _amended:
                     # No file-sync entry to amend (recordings-only sync) - create one.
                     _cnames = list({m.get('course_name', '') for m in _pan_pair_meta.values() if m.get('course_name')})
-                    _hm.add_entry({
+                    _pan_entry = {
                         'timestamp': _ts or _dt.now().strftime("%Y-%m-%d %H:%M"),
                         'files_synced': len(_h_names),
                         'courses': len(_pan_pair_meta),
@@ -3141,15 +3173,35 @@ def _run_sync_panopto():
                         # Run TYPE (quick vs review), not the sync-vs-download flag -
                         # matches the file-sync entry writer in sync/execution.py.
                         'sync_mode': 'quick' if st.session_state.get('sync_quick_mode') else 'normal',
-                    })
+                    }
+                    if is_sync_cancelled():
+                        # Partial, user-stopped pass: history shows a Cancelled
+                        # chip instead of "Success" (files listed ARE on disk).
+                        _pan_entry['cancelled'] = True
+                    _hm.add_entry(_pan_entry)
                 st.session_state.pop('_sync_history_cache', None)
         except Exception as _hist_err:
             logger.debug(f"Panopto history amend failed: {_hist_err}")
+
+    try:
+        _summary = run_panopto_batch(
+            cm, _targets, settings=pan,
+            progress=progress, is_cancelled=is_sync_cancelled,
+            max_file_size_bytes=_pan_max_bytes,
+        )
+        # Carry the analysis-derived "already up to date" count + the selected
+        # count so the completion card reads honestly (no misleading "Skipped").
+        _summary['uptodate'] = int(st.session_state.get('panopto_uptodate_total', 0) or 0)
+        _summary['selected'] = _total_selected
+        st.session_state['panopto_summary'] = _summary
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception as e:
         logger.error(f"Sync Panopto pass crashed: {e}", exc_info=True)
         progress('error', error=SimpleNamespace(item_name='Panopto', message=str(e)))
+    finally:
+        # Runs on the cancel-interrupt unwind too - see _record_pan_results.
+        _record_pan_results()
 
     active_ph.empty()
     st.session_state['download_status'] = 'sync_cancelled' if is_sync_cancelled() else 'sync_complete'

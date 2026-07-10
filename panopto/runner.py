@@ -646,6 +646,23 @@ def _run_panopto_batch(
                     is_cancelled(), len(tasks))
         return summary
 
+    def _record_now(t):
+        """Persist a task's kept artifacts NOW (idempotent per (video, kind)).
+
+        Called at every per-recording completion point in Phases 2 and 3.
+        The end-of-batch record loop remains as a catch-all, but a mid-batch
+        cancel interrupts the batch WHEREVER it stands (in Streamlit the
+        Cancel click surfaces as a RerunException at the next placeholder
+        write) - so anything recorded only at batch end would be lost.
+        Recording per recording means everything that finished before the
+        cancel is already in the folder manifest and, in sync mode, in the
+        history recorder's produced-map for Today's files."""
+        if t.record_fn and t.produced:
+            try:
+                t.record_fn(t.video, t.produced)
+            except Exception as e:
+                logger.debug(f"Panopto record_fn failed for '{t.video.title}': {e}")
+
     # ═══ Phase 2: Download every recording's media (video and/or audio) ═══
     # Downloads run CONCURRENTLY. Each recording is an independent ffmpeg
     # subprocess (dominated by the network transfer of the combined stream, plus
@@ -742,6 +759,7 @@ def _run_panopto_batch(
                     for p in res.produced_kept:
                         t.produced.append(p)
                         progress("produced", title=v.title, path=p, course=t.course_name)
+                    _record_now(t)
                     if res.total_bytes == 0:
                         # Nothing came down (every media failed) -> a failure; don't
                         # advance the "downloaded" tally.
@@ -807,7 +825,8 @@ def _run_panopto_batch(
                 break
             t = tx_tasks[i]
             v = t.video
-            progress("transcribe_start", title=v.title, index=i + 1, total=len(tx_tasks))
+            progress("transcribe_start", title=v.title, index=i + 1,
+                     total=len(tx_tasks), course=t.course_name)
             logger.info("Transcribing [%d/%d] '%s' (device=%s, source=%s)...",
                         i + 1, len(tx_tasks), v.title, active_device,
                         Path(t.tx_source).name)
@@ -832,6 +851,7 @@ def _run_panopto_batch(
                         t.produced.append(p)
                         progress("produced", title=v.title, path=p, course=t.course_name)
                 progress("transcribed", title=v.title, paths=made)
+                _record_now(t)
                 # Transcription succeeded: drop the intermediate audio unless kept.
                 if not t.want_mp3 and t.mp3_path.exists():
                     try:
@@ -873,6 +893,7 @@ def _run_panopto_batch(
                     t.produced.append(str(t.mp3_path))
                     progress("produced", title=v.title, path=str(t.mp3_path),
                              course=t.course_name)
+                _record_now(t)
                 i += 1
             except Exception as e:
                 # GPU runtime failure (cuBLAS/cuDNN missing, OOM, ...): downgrade
@@ -908,6 +929,7 @@ def _run_panopto_batch(
                     t.produced.append(str(t.mp3_path))
                     progress("produced", title=v.title, path=str(t.mp3_path),
                              course=t.course_name)
+                _record_now(t)
                 i += 1
         progress("transcribe_done", total=len(tx_tasks), ok=_ok)
 

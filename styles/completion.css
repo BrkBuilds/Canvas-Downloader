@@ -21,7 +21,9 @@
 .completion-card .card-title {
     font-weight: 700;
     font-size: 1.5em;
-    margin: -20px 0 0 0;
+    /* -14px (was -20px): keep the pull-up but leave ~6px of air between the
+       card edge and the "Sync Success" / "Partial Success" title. */
+    margin: -14px 0 0 0;
 }
 
 .completion-card .card-subtitle {
@@ -573,7 +575,8 @@ div[class*="st-key-panopto_summary_dashboard"] {
     border-radius: 8px !important;
     padding: 8px !important;
     padding-bottom: 25px !important;
-    margin-top: 0px;
+    /* Breathing room between the stat-cards row above and this card. */
+    margin-top: 8px !important;
     margin-bottom: 0px !important;
 }
 
@@ -713,6 +716,19 @@ div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary span {
 
 div[class*="st-key-sync_complete_fc_"] [data-testid="stExpanderDetails"] {
     padding: 5px 10px 14px 5px !important;
+}
+
+/* File rows inside the completion folder cards: same tight rhythm as the
+   sync-history rows (the gold standard sets 7px in sync_history_cards.css;
+   without a rule here the fileactlist container kept Streamlit's default
+   ~1rem flex gap, so completion rows sat visibly looser than history rows).
+   Both the keyed container itself AND nested vertical blocks are covered, so
+   the gap holds regardless of which wrapper carries the st-key class. */
+div[class*="st-key-sync_complete_fc_"] div[class*="st-key-fileactlist_"],
+div[class*="st-key-dl_fc_"] div[class*="st-key-fileactlist_"],
+div[class*="st-key-sync_complete_fc_"] div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"],
+div[class*="st-key-dl_fc_"] div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] {
+    gap: 7px !important;
 }
 
 /* --- Folder Card Header Row --- */

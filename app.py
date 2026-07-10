@@ -1838,6 +1838,15 @@ with _main_content.container():
                 'dl_total': 0, 'dl_done': 0,
                 'tx_total': 0, 'tx_done': 0, 'tx_pct': 0, 'tx_pct_shown': -10,
             }
+            # Pre-fill the header's course line (the h3 under the phase label -
+            # same slot the file-download dashboard fills with the course name).
+            # Without it the download/transcribe phases rendered an EMPTY h3:
+            # a phantom gap between the phase label and the progress bar.
+            # Single-course runs seed it here; multi-course runs update it from
+            # the per-recording events as work flows.
+            _pan_course_list = st.session_state.get('courses_to_download', [])
+            if len(_pan_course_list) == 1:
+                _pan['course'] = getattr(_pan_course_list[0], 'name', '') or ''
 
             def _elapsed() -> str:
                 return time.strftime('%M:%S', time.gmtime(max(0, time.time() - pan_start)))
@@ -1845,7 +1854,9 @@ with _main_content.container():
             def _render_pan():
                 ph = _pan['phase']
                 if ph == 'download':
-                    render_progress_header(_pan_dp, "Downloading Lectures", esc(_pan['course']))
+                    # No esc(): render_progress_header html-escapes the course
+                    # name itself (pre-escaping showed "&amp;" in & names).
+                    render_progress_header(_pan_dp, "Downloading Lectures", _pan['course'])
                     pct = int(_pan['dl_done'] / _pan['dl_total'] * 100) if _pan['dl_total'] else 0
                     render_progress_bar(_pan_dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
                     _mb = st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024)
@@ -1858,7 +1869,7 @@ with _main_content.container():
                         ("Elapsed", _elapsed(), "#F59E0B"),
                     ])
                 elif ph == 'transcribe':
-                    render_progress_header(_pan_dp, "Transcribing Recordings", esc(_pan['course']))
+                    render_progress_header(_pan_dp, "Transcribing Recordings", _pan['course'])
                     _base = _pan['tx_done'] + (_pan['tx_pct'] / 100.0)
                     pct = int(_base / _pan['tx_total'] * 100) if _pan['tx_total'] else 0
                     render_progress_bar(_pan_dp, min(100, pct), color=PHASE_BAR_COLOR['transcribe'])
@@ -1868,7 +1879,7 @@ with _main_content.container():
                         ("Elapsed", _elapsed(), "#F59E0B"),
                     ])
                 else:  # search
-                    render_progress_header(_pan_dp, "Searching for Panopto Recordings", esc(_pan['course']))
+                    render_progress_header(_pan_dp, "Searching for Panopto Recordings", _pan['course'])
                     render_progress_bar(_pan_dp, 0, color=PHASE_BAR_COLOR['search'],
                                         indeterminate=True, label="Searching…")
                     render_custom_metrics(_pan_dp, [
@@ -1889,6 +1900,10 @@ with _main_content.container():
 
             def pan_progress(kind, **kw):
                 try:
+                    # Keep the header's course line current on every event that
+                    # knows its course (multi-course runs flow through here).
+                    if kw.get('course'):
+                        _pan['course'] = kw['course']
                     # ── Discovery phase ──
                     if kind == 'discovering':
                         _pan['phase'] = 'search'

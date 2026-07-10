@@ -64,6 +64,10 @@ class PanoptoChange:
     paths: dict = field(default_factory=dict)          # kind -> absolute path str
     sizes: dict = field(default_factory=dict)          # kind -> bytes (real or est.)
     estimated: set = field(default_factory=set)        # kinds whose size is an estimate
+    # kind -> absolute path str for kinds whose MANIFEST path was stale but a
+    # live copy was found at the current-layout path (see classify_videos);
+    # the caller should re-point the manifest at these.
+    healed_paths: dict = field(default_factory=dict)
     # The classification this recording WOULD have had if not ignored, so the UI
     # can put it back in the right bucket on restore.
     pre_ignore_state: str = ""
@@ -190,17 +194,35 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
             present, missing, deleted, new = [], [], [], []
             paths: dict = {}
             sizes: dict = {}
+            healed: dict = {}
             for kind in wanted:
                 rel = mani.get(kind)
                 if rel:
                     p = course_root / rel
                 else:
                     p = Path(str(base) + "." + kind)
-                paths[kind] = str(p)
                 try:
                     exists = p.exists()
                 except OSError:
                     exists = False
+                if rel and not exists:
+                    # The manifest path is stale (its file is gone), but the
+                    # same kind may exist at the CURRENT layout path - e.g. a
+                    # download-mode run of this folder plans purely by layout
+                    # (it has no manifest to honour) and, when interrupted,
+                    # records nothing. Trusting the manifest alone would
+                    # misreport the kind as missing and the next sync would
+                    # re-download it into the stale folder - a duplicate copy
+                    # of a file the user already has. Adopt the on-disk copy
+                    # and flag it for a manifest heal instead.
+                    alt = Path(str(base) + "." + kind)
+                    try:
+                        if alt != p and alt.exists():
+                            p, exists = alt, True
+                            healed[kind] = str(alt)
+                    except OSError:
+                        pass
+                paths[kind] = str(p)
                 if exists:
                     present.append(kind)
                     # Real on-disk size is authoritative (never an estimate).
@@ -235,6 +257,7 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
                 present_kinds=present, missing_kinds=missing,
                 deleted_kinds=deleted, new_kinds=new, paths=paths,
                 sizes=sizes, pre_ignore_state=pre_ignore,
+                healed_paths=healed,
             ))
         except Exception as e:  # noqa: BLE001 - classification must never abort analysis
             logger.debug(f"Panopto classify failed for '{getattr(v, 'title', '?')}': {e}")
