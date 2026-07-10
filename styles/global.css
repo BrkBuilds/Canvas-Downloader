@@ -1268,11 +1268,14 @@ div[class*="st-key-open_token_settings_btn"] button:disabled {
    macOS Full Disk Access nudge (shared component)
    ───────────────────────────────────────────────
    shared/components.py render_fda_nudge - rendered on the Today page
-   (today_fda_* keys) and at the bottom of the Settings dialog (stg_fda_*), so
-   every selector matches on the common `_fda_*` key suffix. Lives HERE (not
+   (today_fda_* keys) and above the download confirm button in step 2
+   (dl_fda_*), so every selector matches on the common `_fda_*` key suffix.
+   (The Settings dialog uses the separate PERMANENT status card,
+   render_fda_settings_card - st.html-based, styled inline like its sibling
+   cards, deliberately NOT covered by these selectors.) Lives HERE (not
    today.css) because global.css is the only stylesheet loaded on every page
-   AND under the Settings dialog portal. NOTE: this file is wrapped in style
-   tags by styles.inject_css - never write a literal closing style tag in here
+   the nudge can appear on. NOTE: this file is wrapped in style tags by
+   styles.inject_css - never write a literal closing style tag in here
    (a stray one used to sit at EOF; anything after it would be dead CSS). */
 
 /* Card: blue-tinted sibling of the Today sync-notice card (theme BLUE_PRIMARY

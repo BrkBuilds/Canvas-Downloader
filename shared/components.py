@@ -1640,31 +1640,14 @@ def render_panopto_summary(summary: dict | None) -> None:
     )
     _body = f"<div class='completion-stats-grid'>{''.join(cards)}</div>"
 
-    _style = """
-    <style>
-    div[class*="st-key-panopto_summary_dashboard"] {
-        background-color: rgba(255, 255, 255, 0.075) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 8px !important;
-        padding: 8px !important;
-        padding-bottom: 25px !important;
-        margin-top: 0px;
-        margin-bottom: 0px !important;
-    }
-    div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 12px !important;
-        margin-top: 5px;
-    }
-    </style>
-    """
-
+    # Card styling lives in completion.css (injected above). NEVER bundle a
+    # <style> tag into this markdown: completion.css collapses style-carrying
+    # markdown wrappers, and the blanket form of that rule blanked this whole
+    # card on the completion screens (2026-07-10).
     col1, _ = st.columns([1, 1])
     with col1:
         with st.container(key='panopto_summary_dashboard'):
-            st.markdown(_hdr + _body + _style, unsafe_allow_html=True)
+            st.markdown(_hdr + _body, unsafe_allow_html=True)
 
 
 def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
@@ -1942,15 +1925,51 @@ def error_log_dialog(log_paths):
 # Data consent ("access data from other apps") - by Apple design it expires
 # when the app quits, so it re-asks once per session when conversions stage
 # Office files (see engine.applescript_bridge.arm_app_data_access). Full Disk
-# Access exempts the app permanently; this nudge points exactly there. Rendered
-# on the Today page and at the bottom of the Settings dialog - key_prefix
-# namespaces the widget keys so both surfaces can render in the same script
-# run. The persisted dismissal (today_store.fda_nudge_dismissed) and the
-# session spawn flag are deliberately SHARED across surfaces: closing the card
-# anywhere means "stop auto-showing it everywhere"; the subtle link remains on
-# both and re-spawns the card. CSS lives in styles/global.css (prefix-agnostic
-# `_fda_*` selectors) so it is loaded on every page AND inside the Settings
-# dialog portal.
+# Access exempts the app permanently; these surfaces point exactly there.
+# Conversions are CORE to the app's value proposition, so the guidance lives
+# everywhere they do:
+#   * Settings dialog       - render_fda_settings_card: a PERMANENT status card
+#                             (green when granted, blue call-to-action with the
+#                             step-by-step guide when not). Never dismissible.
+#   * Today page + download - render_fda_nudge: the dismissible blue card /
+#     step 2                  subtle re-spawn link. key_prefix namespaces the
+#                             widget keys so several surfaces can render in the
+#                             same script run.
+# The persisted dismissal (today_store.fda_nudge_dismissed) and the session
+# spawn flag are deliberately SHARED across the nudge surfaces: closing the
+# card anywhere means "stop auto-showing it everywhere"; the subtle link
+# remains and re-spawns the card. Nudge CSS lives in styles/global.css
+# (prefix-agnostic `_fda_*` selectors) so it is loaded on every page; the
+# Settings card is st.html-based (inline styles) like its sibling cards.
+
+# The 4-step grant walkthrough, shared by the nudge card and the Settings
+# card so the copy can never drift between surfaces.
+_FDA_STEPS_HTML = (
+    "<li>Click <b>Open Full Disk Access Settings</b> below.</li>"
+    "<li>Turn on <b>Canvas Downloader</b> in the app list.</li>"
+    "<li>Enter your Mac password to confirm.</li>"
+    "<li>Choose <b>Quit &amp; Reopen</b> when macOS asks &ndash; done, "
+    "the permission dialog never shows again.</li>"
+)
+
+_FDA_TOAST = ("Turn on Canvas Downloader under Full Disk Access, "
+              "then choose Quit & Reopen.")
+
+
+def _fda_gate() -> tuple[bool, bool]:
+    """(applies, granted): whether the FDA story applies here at all
+    (macOS 15+), and whether Full Disk Access is already granted."""
+    import sys
+    if sys.platform != "darwin":
+        return False, False
+    try:
+        from engine.applescript_bridge import is_macos_15_plus, has_full_disk_access
+        if not is_macos_15_plus():
+            return False, False
+        return True, bool(has_full_disk_access())
+    except Exception:
+        return False, False
+
 
 def _dismiss_fda_nudge() -> None:
     """on_click for the nudge's close button - the card never auto-shows again."""
@@ -1981,17 +2000,10 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
     CLOSE a host @st.dialog (Settings), while on_click + the natural rerun
     repaints in place and keeps the dialog open.
     """
-    import sys
-    if sys.platform != "darwin":
+    _applies, _granted = _fda_gate()
+    if not _applies or _granted:
         return
-    try:
-        from engine.applescript_bridge import (
-            is_macos_15_plus, has_full_disk_access, open_full_disk_access_settings,
-        )
-        if not is_macos_15_plus() or has_full_disk_access():
-            return
-    except Exception:
-        return
+    from engine.applescript_bridge import open_full_disk_access_settings
     if dismissed is None:
         try:
             from core.today_store import load_today_config
@@ -2019,13 +2031,7 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
                 f"time each session converts Office files &ndash; the only dialog that "
                 f"can hold up an unattended morning sync. Grant Canvas Downloader "
                 f"<b>Full Disk Access</b> once and it never appears again:</div>"
-                f"<ol class='fda-nudge-steps'>"
-                f"<li>Click <b>Open Full Disk Access Settings</b> below.</li>"
-                f"<li>Turn on <b>Canvas Downloader</b> in the app list.</li>"
-                f"<li>Enter your Mac password to confirm.</li>"
-                f"<li>Choose <b>Quit &amp; Reopen</b> when macOS asks &ndash; done, "
-                f"the permission dialog never shows again.</li>"
-                f"</ol>"
+                f"<ol class='fda-nudge-steps'>{_FDA_STEPS_HTML}</ol>"  # audit-ignore: static module constant (shared step copy)
                 f"</div>",
                 unsafe_allow_html=True,
             )
@@ -2038,10 +2044,66 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
             )
         if st.button("Open Full Disk Access Settings", key=f"{key_prefix}_open_btn"):
             open_full_disk_access_settings()
-            st.toast(
-                "Turn on Canvas Downloader under Full Disk Access, "
-                "then choose Quit & Reopen."
-            )
+            st.toast(_FDA_TOAST)
+
+
+def render_fda_settings_card() -> None:
+    """Permanent Full Disk Access status card for the Settings dialog (macOS).
+
+    Unlike the dismissible nudge, this card is ALWAYS present on macOS 15+ -
+    it is the durable home of the hands-off story, styled exactly like its
+    sibling Settings cards (bordered container + st.html header, status dot):
+
+      * granted     → green dot, one-line confirmation, no actions.
+      * not granted → blue dot + why-it-matters copy, the 4-step walkthrough,
+                      and the Open Full Disk Access Settings button.
+
+    Renders its own "MACOS PERMISSIONS" section header so non-Mac platforms
+    show neither header nor card. Never touches the nudge's dismissal state.
+    """
+    _applies, _granted = _fda_gate()
+    if not _applies:
+        return
+
+    st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">MACOS PERMISSIONS</span></div>""")
+
+    # Lucide shield-check, blue - sized inline like the sibling cards' 18px icons.
+    _shield = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='#60a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+        "style='width:18px;height:18px;flex-shrink:0;'>"
+        "<path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/>"
+        "<path d='m9 12 2 2 4-4'/></svg>"
+    )
+
+    if _granted:
+        _dot, _status = "#22c55e", ("Full Disk Access granted &middot; "
+                                    "conversions run fully hands-off")
+    else:
+        _dot, _status = "#3b82f6", ("Not granted &middot; macOS asks a one-click "
+                                    "permission once per app session")
+
+    _steps_html = "" if _granted else (
+        "<ol style='margin:9px 0 2px 0;padding-left:1.35em;color:#cbd5e1;"
+        "font-size:0.78rem;line-height:1.65;'>"
+        + _FDA_STEPS_HTML.replace("<b>", "<b style='color:#b6d3ff;'>")
+        + "</ol>"
+    )
+
+    with st.container(border=True, key="stg_card_fda"):
+        st.html(
+            f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission the first time each app session converts &ndash; the only dialog that can hold up an unattended sync. Granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. Optional &ndash; conversions work either way.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
+        )
+        if not _granted:
+            # Key deliberately avoids the `_fda_open_btn` suffix: that CSS
+            # styles the nudge's compact pill, while this button must render
+            # like its full-width Settings siblings (e.g. "Configure
+            # transcription").
+            if st.button("Open Full Disk Access Settings", key="stg_fda_grant_btn",
+                         use_container_width=True):
+                from engine.applescript_bridge import open_full_disk_access_settings
+                open_full_disk_access_settings()
+                st.toast(_FDA_TOAST)
 
 
 def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "", mode: str = "auto"):

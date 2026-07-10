@@ -192,9 +192,12 @@ SYNC_TRANSIENT_KEYS = {
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'completion_beep_fired',
     # Panopto sync-pass trackers (mirror the download-mode transient keys).
+    # 'log_deque' rides along: the sync Panopto pass owns it while running
+    # (recreated fresh each pass) - clearing it here stops a finished sync's
+    # terminal lines from ever leaking into a later run's log.
     'panopto_total', 'panopto_done_count', 'panopto_mb_tracker',
     'panopto_run_started', '_panopto_warned', 'panopto_summary',
-    'panopto_uptodate_total', '_sync_history_ts',
+    'panopto_uptodate_total', '_sync_history_ts', 'log_deque',
     # M-8: reset per-run warning sentinels so they re-arm on the next sync
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).

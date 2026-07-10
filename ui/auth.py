@@ -2073,14 +2073,15 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     st.session_state['_pan_return_to_settings'] = True
                     st.rerun(scope="app")
 
-            # ── macOS hands-off nudge (Full Disk Access) ──────────────
-            # Same dismissible card / subtle-link pattern as the Today page
-            # (shared component + shared persisted dismissal). Renders nothing
-            # on Windows, macOS ≤14, or once FDA is granted. Bottom of the
-            # scrollable body on purpose; interactions are on_click-based so
-            # the dialog never closes underneath the user.
-            from shared.components import render_fda_nudge
-            render_fda_nudge("stg_fda")
+            # ── MACOS PERMISSIONS (Full Disk Access status card) ──────
+            # PERMANENT card (its own section, own header) - never the
+            # dismissible nudge: Settings is the durable home of the
+            # hands-off story. Green status once granted, blue call-to-
+            # action with the step-by-step guide until then. Renders
+            # nothing on Windows / macOS ≤14. Interactions are rerun-safe
+            # inside the dialog (plain button + toast).
+            from shared.components import render_fda_settings_card
+            render_fda_settings_card()
 
         # ── Sticky footer ─────────────────────────────────────────────
         st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
