@@ -600,14 +600,9 @@ def _cleanup_dock_recents() -> None:
     """
     if sys.platform != 'darwin' or _dock_recents_before is None:
         return
-    try:
-        # Recents section disabled -> the list is invisible; nothing to clean.
-        r = subprocess.run(['defaults', 'read', 'com.apple.dock', 'show-recents'],
-                           capture_output=True, text=True, timeout=10)
-        if r.returncode == 0 and (r.stdout or '').strip().lower() in ('0', 'false', 'no'):
-            return
-    except Exception:
-        pass
+    # Recents section disabled -> the list is invisible; nothing to clean.
+    if not _dock_recents_enabled():
+        return
 
     import time as _t
     # 1. Wait for every Office process to be truly gone (bounded; an app kept
@@ -656,6 +651,208 @@ def _cleanup_dock_recents() -> None:
     if _strip_office_recents_tiles():
         logger.info("[OfficeQuit] Dock recents needed a second pass (a tile "
                     "was re-added by a racing termination event)")
+
+
+# ── Self (Canvas Downloader) Dock recents housekeeping ───────────────
+# Two ways a phantom "Canvas Downloader" tile (no running process, no dot)
+# lands in the Dock's recents section (2026-07-10 Today-mode run, macOS 15):
+#   1. Transcription re-execs THIS app's binary per recording
+#      (panopto.transcribe). The PyInstaller windowed bootloader registers the
+#      child with LaunchServices before start.py can demote it to a Prohibited
+#      background process, and the Dock may file the child's TERMINATION
+#      (normal exit, or the SIGKILL a cancel sends) as a recents tile.
+#   2. System Settings' "Quit & Reopen" (the Full Disk Access grant flow)
+#      relaunches the app under a fresh LaunchServices identity; the OLD
+#      instance's termination files a tile that can never merge with the
+#      running app's (same for a stale App-Translocation launch path).
+# Same disease as the Office tiles above, same proven cure: snapshot, strip
+# exactly what appeared, restart the Dock only when a tile was removed.
+
+_OWN_BUNDLE_ID = "com.canvasdownloader.app"
+
+# OUR recents rows (raw file-URL keys) present before this Panopto batch.
+# None = no snapshot taken -> cleanup must never touch the Dock.
+_own_recents_before: set | None = None
+
+
+def _dock_recents_enabled() -> bool:
+    """False only when the Dock's recents section is explicitly disabled."""
+    try:
+        r = subprocess.run(['defaults', 'read', 'com.apple.dock', 'show-recents'],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and (r.stdout or '').strip().lower() in ('0', 'false', 'no'):
+            return False
+    except Exception:
+        pass
+    return True
+
+
+def _recents_entry_url(entry) -> str:
+    """The raw _CFURLString of a recents row ('' when absent)."""
+    try:
+        return (((entry.get('tile-data') or {}).get('file-data') or {})
+                .get('_CFURLString') or '')
+    except AttributeError:
+        return ''
+
+
+def _recents_entry_path(entry) -> str:
+    """A recents row's bundle path, normalized for comparison ('' when absent)."""
+    import os
+    from urllib.parse import unquote, urlparse
+    url = _recents_entry_url(entry)
+    if not url:
+        return ''
+    path = unquote(urlparse(url).path) if url.startswith('file:') else url
+    return os.path.realpath(path.rstrip('/')) if path else ''
+
+
+def _own_bundle_path() -> str:
+    """The RUNNING instance's .app bundle path ('' when not bundled, e.g. dev)."""
+    import os
+    exe = os.path.realpath(sys.executable)
+    idx = exe.rfind('.app/Contents/')
+    return exe[:idx + 4] if idx > 0 else ''
+
+
+def _own_recents_rows(dock: dict | None) -> set:
+    """Raw file-URL keys of every recents row carrying OUR bundle id."""
+    return {
+        _recents_entry_url(entry)
+        for entry in (dock or {}).get('recent-apps') or []
+        if _recents_entry_bundle_id(entry) == _OWN_BUNDLE_ID
+    }
+
+
+def _commit_dock_recents(dock: dict, kept: list, removed: list, tag: str) -> int:
+    """defaults-import the filtered recent-apps + restart the Dock.
+
+    Returns the number of rows removed (0 = nothing written, Dock untouched).
+    """
+    if not removed:
+        return 0
+    dock['recent-apps'] = kept
+    import plistlib
+    try:
+        payload = plistlib.dumps(dock, fmt=plistlib.FMT_XML)
+        p = subprocess.run(['defaults', 'import', 'com.apple.dock', '-'],
+                           input=payload, capture_output=True, timeout=10)
+        if p.returncode != 0:
+            logger.info("[%s] Dock recents rewrite failed (rc=%s): %s", tag,
+                        p.returncode,
+                        (p.stderr or b'').decode(errors='replace')[:200])
+            return 0
+        subprocess.run(['killall', 'Dock'], capture_output=True, timeout=10)
+        logger.info(
+            "[%s] removed %d phantom Canvas Downloader tile(s) from Dock "
+            "recents (%s) and refreshed the Dock", tag, len(removed),
+            ", ".join(_recents_entry_url(e) or '<no url>' for e in removed))
+        return len(removed)
+    except Exception as e:
+        logger.debug(f"[{tag}] Dock recents cleanup skipped: {e}")
+        return 0
+
+
+def snapshot_own_dock_recents() -> None:
+    """Remember OUR pre-batch Dock-recents rows (Panopto batch start, darwin).
+
+    Re-taken per batch (batch scope, unlike the once-per-run Office snapshot).
+    Export failure -> None -> cleanup never touches the Dock (fail-safe).
+    """
+    global _own_recents_before
+    if sys.platform != 'darwin':
+        return
+    dock = _dock_prefs_export()
+    _own_recents_before = _own_recents_rows(dock) if dock is not None else None
+
+
+def _strip_own_recents_tiles() -> int:
+    """Remove OUR rows that were NOT in the snapshot. Returns rows removed."""
+    if _own_recents_before is None:
+        return 0
+    dock = _dock_prefs_export()
+    recents = (dock or {}).get('recent-apps')
+    if not isinstance(recents, list) or not recents:
+        return 0
+    kept, removed = [], []
+    for entry in recents:
+        if (_recents_entry_bundle_id(entry) == _OWN_BUNDLE_ID
+                and _recents_entry_url(entry) not in _own_recents_before):
+            removed.append(entry)
+        else:
+            kept.append(entry)
+    return _commit_dock_recents(dock, kept, removed, 'SelfDock')
+
+
+def cleanup_own_dock_recents() -> None:
+    """Strip the phantom Canvas Downloader tiles this Panopto batch added.
+
+    Called (daemon thread) when the batch ends - every exit path, including
+    cancel, which SIGKILLs the live worker and is the likeliest tile filer.
+    Timing mirrors _cleanup_dock_recents: the Dock files a tile when it
+    processes a TERMINATION, 0-6s after the process dies; the last worker
+    exits right before the batch returns. So watch recent-apps until a write
+    has been observed and the list stays quiet for two 1s samples (8s cap),
+    strip, and verify once after 3s for a racing write.
+    """
+    global _own_recents_before
+    if sys.platform != 'darwin' or _own_recents_before is None:
+        return
+    if not _dock_recents_enabled():
+        _own_recents_before = None
+        return
+    import time as _t
+    _prev = (_dock_prefs_export() or {}).get('recent-apps')
+    _changed = False
+    _quiet = 0
+    _deadline = _t.time() + 8
+    while _t.time() < _deadline:
+        _t.sleep(1.0)
+        _cur = (_dock_prefs_export() or {}).get('recent-apps')
+        if _cur != _prev:
+            _prev, _changed, _quiet = _cur, True, 0
+            continue
+        if _changed:
+            _quiet += 1
+            if _quiet >= 2:
+                break
+    if _strip_own_recents_tiles():
+        _t.sleep(3.0)
+        if _strip_own_recents_tiles():
+            logger.info("[SelfDock] recents needed a second pass (a tile was "
+                        "re-added by a racing termination event)")
+    _own_recents_before = None
+
+
+def purge_stale_self_dock_tiles() -> None:
+    """Strip DEAD-IDENTITY Canvas Downloader tiles from Dock recents (boot).
+
+    A recents row carrying our bundle id whose bundle path is not the RUNNING
+    bundle's is a dead LaunchServices identity - left by System Settings'
+    "Quit & Reopen" (Full Disk Access grant) or by a previous session's
+    App-Translocation path. It can never merge with the running app's tile,
+    so it squats in the Dock as a second Canvas Downloader with no process
+    behind it. The row from a NORMAL previous quit has the SAME path as the
+    running bundle and is deliberately kept (stripping it would restart the
+    Dock on every boot for nothing). Runs once at GUI boot, off-thread.
+    """
+    if sys.platform != 'darwin' or not _dock_recents_enabled():
+        return
+    own = _own_bundle_path()
+    if not own:
+        return  # not running from an .app bundle (dev) - identity unknowable
+    dock = _dock_prefs_export()
+    recents = (dock or {}).get('recent-apps')
+    if not isinstance(recents, list) or not recents:
+        return
+    kept, removed = [], []
+    for entry in recents:
+        if (_recents_entry_bundle_id(entry) == _OWN_BUNDLE_ID
+                and _recents_entry_path(entry) != own):
+            removed.append(entry)
+        else:
+            kept.append(entry)
+    _commit_dock_recents(dock, kept, removed, 'SelfDock/boot')
 
 
 # (AppleScript app name, its document collection term) - shared by the idle-quit
