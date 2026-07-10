@@ -125,6 +125,30 @@ def _redownload_restore_keys(redownload_items) -> set[str]:
     return keys
 
 
+def _redownload_target(local_path: Path, recorded_rel: str, filename: str):
+    """Resolve the on-disk target for restoring a locally-deleted file.
+
+    ``recorded_rel`` is the manifest's tracked relative path; ``filename`` is
+    the sanitized name of the file the download will actually fetch from
+    Canvas. When the extensions match, the restore claims the EXACT recorded
+    path (survives the user's folder reorganization). When they differ, the
+    recorded path is a conversion PRODUCT (e.g. the .pdf produced from this
+    .pptx; the source was deleted after converting) - writing raw source bytes
+    under the product's name would corrupt it, so the SOURCE is restored into
+    the recorded folder and the ownership-aware converter regenerates the
+    product in place (mirrors the clean-update routing).
+
+    Returns ``(filepath, target_dir)``, or ``(None, None)`` when the recorded
+    parent no longer exists (caller falls back to the canonical calc_path).
+    """
+    recorded = local_path / Path(recorded_rel)
+    if str(recorded.parent) == '.' or not recorded.parent.exists():
+        return None, None
+    if recorded.suffix.lower() == Path(filename).suffix.lower():
+        return recorded, recorded.parent
+    return recorded.parent / filename, recorded.parent
+
+
 def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=None):
     """Build a per-course breakdown of the files synced this run.
 
@@ -1259,12 +1283,14 @@ def run_sync():
                                     filepath = target_dir / filename
                         elif is_redownload and _redl_info is not None \
                                 and getattr(_redl_info, 'local_path', ''):
-                            _recorded = local_path / Path(_redl_info.local_path)
-                            if str(_recorded.parent) != '.' and _recorded.parent.exists():
-                                # Restore under the exact recorded name/location
-                                # (survives the user's folder reorganization).
-                                filepath = _recorded
-                                target_dir = _recorded.parent
+                            # Exact recorded path when the type matches; the
+                            # SOURCE (for the converter to regenerate) when the
+                            # record is a conversion product - see helper.
+                            _redl_fp, _redl_dir = _redownload_target(
+                                local_path, _redl_info.local_path, filename)
+                            if _redl_fp is not None:
+                                filepath = _redl_fp
+                                target_dir = _redl_dir
 
                         if filepath is None:
                             calc_path = getattr(file, '_target_local_path', '')

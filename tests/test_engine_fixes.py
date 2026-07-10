@@ -470,6 +470,52 @@ def test_synced_groups_use_actual_write_paths(tmp_path):
     assert names == {"Page Filer til Klynge 1 (1).md", "Page Uge 6 pensum.html"}
 
 
+# ── restore routing: locally-deleted conversion products ─────────────────────
+
+def test_redownload_target_exact_path_when_type_matches(tmp_path):
+    """A plain restore (recorded ext == downloaded ext) claims the EXACT
+    recorded path, surviving the user's folder reorganization."""
+    from sync.execution import _redownload_target
+
+    root = tmp_path / "Course"
+    (root / "Week 1").mkdir(parents=True)
+    fp, td = _redownload_target(root, "Week 1/Notes.pdf", "Notes.pdf")
+    assert fp == root / "Week 1" / "Notes.pdf"
+    assert td == root / "Week 1"
+
+
+def test_redownload_target_conversion_product_restores_source(tmp_path):
+    """The 2026-07-10 corrupt-restore bug: the manifest tracked the .pdf
+    CONVERTED from a .pptx; restoring wrote raw PowerPoint bytes under the
+    .pdf name (unreadable in Preview/Safari) and post-processing never saw a
+    .pptx to convert. The restore must fetch the SOURCE into the recorded
+    folder so the ownership-aware converter regenerates the product."""
+    from sync.execution import _redownload_target
+
+    root = tmp_path / "Course"
+    root.mkdir()
+    fp, td = _redownload_target(
+        root, "Lektion uge 43_2 upload.pdf", "Lektion uge 43_2 upload.pptx")
+    assert fp == root / "Lektion uge 43_2 upload.pptx"
+    assert td == root
+    # Same family: video→mp3 and page html→md products.
+    fp, _ = _redownload_target(root, "Lecture.mp3", "Lecture.mp4")
+    assert fp == root / "Lecture.mp4"
+    fp, _ = _redownload_target(root, "Page Kontortid.md", "Page Kontortid.html")
+    assert fp == root / "Page Kontortid.html"
+
+
+def test_redownload_target_missing_parent_falls_back(tmp_path):
+    """When the recorded parent folder no longer exists the helper defers to
+    the caller's canonical calc_path fallback."""
+    from sync.execution import _redownload_target
+
+    root = tmp_path / "Course"
+    root.mkdir()
+    fp, td = _redownload_target(root, "Gone Folder/Notes.pdf", "Notes.pdf")
+    assert (fp, td) == (None, None)
+
+
 # ── page-stub fallback: restricted Pages LIST upgraded per slug ──────────────
 
 def test_page_stub_upgrade_restores_download_identity():
