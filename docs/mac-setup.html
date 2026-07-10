@@ -927,7 +927,8 @@
 
           <div class="action warn" style="border-radius: 8px; margin-bottom:16px;">
             Stay at your Mac for the first minute of your first download and click <strong>Allow</strong> on each
-            dialog. They appear once, and never again.
+            dialog. All of them appear once and never again - except App Data (dialog 1 below), which macOS re-asks
+            once per app session unless you silence it permanently (see dialog 1).
           </div>
 
           <div class="card">
@@ -952,6 +953,22 @@
                   <p class="why">PDF conversions use a private scratch folder inside Microsoft Office's own app container
                     - macOS 15 Sequoia flags that as "another app's data." On macOS 14 and earlier this dialog simply
                     never appears.</p>
+                  <p class="why"><strong>The one repeat offender:</strong> unlike every other dialog on this page, macOS
+                    deliberately forgets this consent when the app quits - Apple designed it to last only while the app
+                    is open. So expect it once per session: after reopening Canvas Downloader, your first download or
+                    sync with conversions asks again, right at the start of the run. One click, then the whole session
+                    is covered.</p>
+                  <details>
+                    <summary><span class="arr">▶</span> Never want to see it again? Grant Full Disk Access (optional,
+                      one-time).</summary>
+                    <div class="details-body">
+                      <p>Apps with <strong>Full Disk Access</strong> are exempt from the App Data check - it is the only
+                        permanent silence macOS offers. Recommended if you use the hands-off daily sync.</p>
+                      <p>Go to <strong>System Settings → Privacy &amp; Security → Full Disk Access</strong>, click
+                        <strong>+</strong>, choose <strong>Canvas Downloader</strong> from Applications and switch it
+                        on, then quit and reopen the app.</p>
+                    </div>
+                  </details>
                 </div>
               </div>
 
@@ -1046,7 +1063,8 @@
 
             <p
               style="font-size:13px; color:var(--txt3); margin:16px 0 0; padding-top:16px; border-top:1px solid var(--border-sub);">
-              That's everything. Every later download and sync runs completely hands-free.
+              That's everything. Every later download and sync runs hands-free - the only possible repeat is the
+              macOS 15+ App Data dialog (1), once per app session, unless you've granted Full Disk Access.
             </p>
           </div>
         </section>
@@ -1065,9 +1083,18 @@
             </div>
             <div class="trouble-item">
               <div class="trouble-q">Some files say "timed out" or were skipped during conversion.</div>
-              <p class="trouble-a">A permission dialog was probably waiting unanswered while you were away - this can
-                only happen on the very first run. Once all dialogs have been answered, run a <strong>Sync</strong> on
-                the same folder and it will pick up any skipped files.</p>
+              <p class="trouble-a">A permission dialog was probably waiting unanswered while you were away - either the
+                first run's dialog batch, or (macOS 15+) the once-per-session App Data dialog. Answer the dialog, then
+                run a <strong>Sync</strong> on the same folder and it will pick up any skipped files. To stop the App
+                Data dialog from ever returning, grant Full Disk Access (see Step 5, dialog 1).</p>
+            </div>
+            <div class="trouble-item">
+              <div class="trouble-q">It asks to "access data from other apps" every time I reopen the app.</div>
+              <p class="trouble-a">That's macOS 15+ behavior, not a bug: Apple expires this consent when the app quits,
+                so it can only ever be granted per session. Click <strong>Allow</strong> once at the start of the
+                session's first download or sync - or silence it permanently via <strong>System Settings → Privacy
+                  &amp; Security → Full Disk Access</strong>: add <strong>Canvas Downloader</strong>, switch it on,
+                then quit and reopen the app.</p>
             </div>
             <div class="trouble-item">
               <div class="trouble-q">I denied access to my Downloads, Documents or Desktop folder.</div>

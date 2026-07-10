@@ -25,7 +25,7 @@
  * ONLY the header (the button), never the content. */
 div[class*="st-key-shist_run_"] {
     position: relative !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.13) !important;
     border-radius: 8px !important;
     background: #15181e !important;            /* dark CONTENT bg */
     box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
@@ -33,6 +33,12 @@ div[class*="st-key-shist_run_"] {
     margin-bottom: 7px !important;
     overflow: hidden !important;
 }
+/* ---------- 3-level visual hierarchy for headers --------------- *
+ * Level 0  (Sync History toggle):      brightest  → #262b34  (sync_ui.py)
+ * Level 1  (run card header):          familiar   → #21252e
+ * Level 2  (per-course section head):  emphasized → #282d38
+ * Level 3  (file content body):        darkest    → #11141a
+ * This makes nested sections clearly distinct at a glance. */
 /* Flush header(button) <-> body. Collapse EVERY vertical-block
    gap inside the run to 0 (descendant selector - this is the
    form that reliably matches Streamlit 1.51's wrapper depth),
@@ -48,7 +54,7 @@ div[class*="st-key-shist_run_"] [data-testid="stVerticalBlock"] { gap: 0 !import
 div[class*="st-key-shist_run_"] [data-testid="stButton"] { margin: 0 !important; }
 div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button {
     height: 60px !important; min-height: 60px !important; width: 100% !important;
-    background: #21252e !important; border: none !important;
+    background: #21252e !important; border: none !important;  /* Level 1: familiar */
     box-shadow: none !important; padding: 0 !important;
     transition: background 0.15s ease !important;
 }
@@ -58,6 +64,11 @@ div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:hover {
 div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:focus,
 div[class*="st-key-shist_run_"] div[class*="st-key-shist_btn_"] button:active {
     box-shadow: none !important; color: inherit !important;
+}
+/* When the body is visible (card expanded), draw a subtle bottom divider on the
+   header so it reads as a distinct bar sitting above the content area. */
+div[class*="st-key-shist_run_"]:has(div[class*="st-key-shist_body_"]) div[class*="st-key-shist_btn_"] button {
+    border-bottom: 1px solid rgba(255,255,255,0.10) !important;
 }
 /* The rich header painted on top of the button. */
 div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-card) {
@@ -76,7 +87,15 @@ div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-ca
     line-height: 1.35; border: 1px solid; white-space: nowrap; flex-shrink: 0; }
 .shist-l2 { display: flex; align-items: center; gap: 8px; color: #c9d1d9; font-size: 0.82rem; }
 .shist-l2 .shist-dot { color: #5c6269; }
-.shist-l2 .shist-mode { display: inline-flex; align-items: center; gap: 5px; }
+.shist-l2 .shist-mode { display: inline-flex; align-items: center; gap: 3px; }
+/* Sync-mode icons (bolt / search) are rendered by the shared _img() helper at
+   11px with margin:0 4px. Override here: 13px, snugged horizontally, and nudged
+   down so both sit on the text baseline. The search icon gets an extra pixel
+   because its visual weight is top-heavy (the lens circle). */
+.shist-l2 .shist-mode img {
+    width: 13px !important; height: 13px !important;
+    margin: 0 1px !important; top: 1px !important;
+}
 .shist-time { display: flex; align-items: center; gap: 5px; color: #8b949e;
     font-size: 0.82rem; flex-shrink: 0; margin-left: 12px; }
 /* Kill the hollow bordered box entirely. Streamlit wraps a
@@ -100,15 +119,18 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_) {
 div[class*="st-key-shist_body_"] {
     /* flush top (content pulled up under header), comfy bottom
        (+5px breathing room from the card border), left indent
-       lines the content up with the header title. */
-    padding: 6px 18px 23px 44px !important;
+       lines the content up with the header title. Right matches
+       left for balanced visual weight. */
+    padding: 6px 44px 23px 44px !important;
 }
 /* Comfortable spacing between the body's content SECTIONS
    (category headers + their file lists). The tight file rows
    keep their own small gap - re-asserted LAST so it wins at
    equal specificity. */
 div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"] { gap: 9px !important; }
-div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] { gap: 4px !important; }
+/* File rows get a little more air than the completion screen's tight 4px so
+   the destination-folder chips on each row read as distinct rows here. */
+div[class*="st-key-fileactlist_"] [data-testid="stVerticalBlock"] { gap: 7px !important; }
 /* Categories within a course are separated by the divider line
    (see render_course_file_breakdown / the legacy loop below), so
    collapse the 9px gap between the category containers themselves
@@ -123,3 +145,140 @@ div[class*="st-key-shist_body_"] [data-testid="stVerticalBlock"]:has(> div[class
    against the file row above it. Bump the divider's own top
    spacing to match its 12px bottom so it sits symmetrically. */
 div[class*="st-key-shist_body_"] .cat-section-sep { padding-top: 18px !important; }
+
+/* A single-course run has no course sub-header, so its first category header
+   ("New Files Added") would otherwise sit almost flush against the card's title
+   bar. Give the body a comfortable top inset. Multi-course runs zero their first
+   course title's top margin, so both land on the same rhythm. Today's cards open
+   with their own button row and keep the original tight inset. */
+div[class*="st-key-shist_body_"]:not([class*="st-key-shist_body_today_"]) {
+    padding-top: 16px !important;
+}
+/* --- Per-course STATIC card (multi-course runs) ---------------------------- *
+ * Mirrors the Today page's EXPANDED card (minus the toggle): a light header bar
+ * (course name + file count) seamlessly joined to a dark, bordered body holding
+ * the category lists, with dividers restored between categories. So a dense
+ * multi-course run reads as distinct, enclosed course sections.
+ *
+ * This is the one place a nested st.container is safe here: the card's content
+ * is genuinely tall (header + file rows), and a container DOES grow to fit tall
+ * content - the 1.51 collapse only bites an AUTO-HEIGHT single child (which is
+ * why the run HEADER, not this, needs the JS height bridge). */
+div[class*="st-key-shist_course_"] {
+    background: #11141a !important;                       /* Level 3: darkest body bg */
+    border: 1px solid rgba(255,255,255,0.17) !important;
+    border-radius: 10px !important;
+    padding: 16px 18px 16px 18px !important;
+    margin: 0 0 16px 0 !important;
+    overflow: hidden !important;                          /* clip bar/dividers to the radius */
+}
+/* Level-2 header bar, full-bleed to the card edges (negative margins escape the
+   card's own padding), with a divider under it separating it from the body. */
+.shist-course-head {
+    display: flex; align-items: center; gap: 10px;
+    background: #282d38;                                  /* Level 2: emphasized */
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    padding: 12px 18px;
+    margin: -16px -18px 16px -18px;
+}
+.shist-course-title {
+    flex: 1 1 auto; min-width: 0;
+    color: #ffffff; font-size: 1rem; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.shist-course-count {
+    flex-shrink: 0; font-size: 0.72rem; font-weight: 600; line-height: 1.5;
+    color: #adb6c0; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10); border-radius: 5px;
+    padding: 1px 8px;
+}
+/* Category header + rows align under the course title. padding-left 22px puts
+   the category ICON at the title's edge:
+   icon_x = 18 card-pad + 22 - 26 hang + 4 icon-margin = 18 (= title text x). */
+div[class*="st-key-shist_course_"] div[class*="st-key-fileactlist_synchist_m_"] {
+    padding-left: 22px !important;
+}
+
+/* Restore the divider between categories inside the card (this is Today's look).
+   Its shared rule hangs it -26px left; keep that so it lines up with the
+   category header, and the card's overflow:hidden trims the bleed. Match the
+   right overshoot to the left so the divider is symmetrically inset. */
+div[class*="st-key-shist_course_"] .cat-section-sep {
+    display: block !important;
+    margin-right: -12px !important;
+}
+/* Single-course runs (no panel): align the list to the CARD title text.
+   category-icon x = 44 body-pad + padding-left - 26 hang + 4 icon-margin;
+   measured target x = 47 -> padding-left 24px. Later in source order than
+   inject_file_action_css's base 34px, so it wins at equal specificity. */
+div[class*="st-key-fileactlist_synchist_s_"] {
+    padding-left: 24px !important;
+}
+
+/* ============================================================= *
+ * Sync-History run header - VARIABLE height (multi-course aware) *
+ * ------------------------------------------------------------- *
+ * A multi-course run shows a clean "N courses" title with every
+ * course as a wrapping pill on the middle row, so the header height
+ * is no longer fixed. Same "fake expander" shape as Today's cards:
+ *   - shist_btn_     : invisible full-width button. It is BOTH the
+ *                      click target AND the element that gives the
+ *                      card its height, and it carries the header's
+ *                      background + the card's only hover state.
+ *   - .shist-runhead : the rich header, painted on top as an
+ *                      absolute, pointer-events:none overlay, so
+ *                      clicks anywhere (pills included) reach the
+ *                      button and the WHOLE card is clickable.
+ * Why the button, not the header, sets the height: Streamlit 1.51
+ * will not grow a container from an auto-height flow child (a card
+ * stayed 92px around a 106px header, clipping its last line). Only
+ * a flow child with an EXPLICIT pixel height sizes the card - and
+ * the header's height depends on how many rows the pills wrap onto,
+ * which CSS cannot know. So sync_ui._inject_shist_height_bridge()
+ * measures each header and copies its height onto the button.
+ * Today's cards are single-course, keep their fixed 52/60px bar and
+ * their own .shist-card overlay, so every rule here either excludes
+ * shist_run_today_ or keys off .shist-runhead, which Today never
+ * renders. */
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) {
+    gap: 0 !important;
+}
+/* The rich header: an absolute, pointer-events:none overlay painted on top of
+   the invisible button, so clicks anywhere on it reach that button and the
+   whole card is clickable. Its height is its content (it grows with the pills);
+   _inject_shist_height_bridge() copies that height onto the button below, which
+   is what actually gives the card its height. NOTE: no fixed height here (the
+   Today-only .shist-card rule above pins 60px - this one must not). */
+div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-runhead) {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important; right: 0 !important;
+    z-index: 3 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+}
+/* The click target / height driver. It keeps the header's background + the only
+   hover state on the card (the overlay above it is fully transparent), and the
+   bridge overrides its height inline with !important. min-height 60px keeps the
+   familiar single-course bar height before the bridge runs. */
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) div[class*="st-key-shist_btn_"] button {
+    height: 60px !important; min-height: 60px !important; width: 100% !important;
+}
+/* The header sits ON the button, so it must not paint its own background - the
+   button's background (and its hover) shows through and lights the whole card. */
+.shist-runhead {
+    display: flex; align-items: center; gap: 13px;
+    min-height: 60px; padding: 11px 18px; box-sizing: border-box;
+}
+.shist-runhead .shist-info { gap: 6px; }
+/* Course-name pills - wrap onto new rows; a single over-long name
+   ellipsizes inside its own pill rather than overflowing the row.
+   White text on a background darker than the header bar, with a
+   softly-lit white outline (a solid white border reads far too hot
+   against the dark chip). */
+.shist-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.shist-pill {
+    font-size: 0.76rem; line-height: 1.5; color: #c3ccd6;
+    background: #1b1f25; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px; padding: 3px 9px; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

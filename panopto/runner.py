@@ -326,6 +326,11 @@ def run_panopto_batch(
     model_id = settings.get("model", "small")
     engine_ready = pmodels.whisper_available() and pmodels.is_installed(model_id)
     any_want_tx = any(wants_transcription(_ts(t)) for t in targets)
+    # Record whether ANY target's contract asked for a transcript this run. The
+    # completion card uses this to decide whether to surface the "Transcribed"
+    # stat at all: a course with transcription switched off shouldn't display a
+    # "0 Transcribed" box (reads as a bug). See render_panopto_summary.
+    summary["want_transcription"] = bool(any_want_tx)
     model_path = str(pmodels.model_dir(model_id)) if engine_ready else None
     device = settings.get("device", "cpu")
     language = settings.get("language", "auto")
