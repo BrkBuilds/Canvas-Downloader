@@ -516,6 +516,40 @@ def test_redownload_target_missing_parent_falls_back(tmp_path):
     assert (fp, td) == (None, None)
 
 
+# ── effective (post-conversion) file type shown across the sync UI ───────────
+
+def test_effective_ext_converts_per_contract():
+    """A course whose contract converts must display the PRODUCT type
+    (pptx→pdf etc.) so Smart Select, review rows and the Confirm dialog all
+    tell one story (2026-07-10: pills said PPTX while the same rows said PDF)."""
+    from shared.helpers import effective_ext
+
+    on = {'convert_pptx': True, 'convert_word': True, 'convert_excel': True,
+          'convert_video': True, 'convert_html': True, 'convert_code': True}
+    assert effective_ext("Deck upload.pptx", on) == ".pdf"
+    assert effective_ext("Deck upload.PPTM", on) == ".pdf"
+    assert effective_ext("Notes.doc", on) == ".pdf"
+    assert effective_ext("Grades.xlsx", on) == ".pdf"
+    assert effective_ext("Lecture.mp4", on) == ".mp3"
+    assert effective_ext("Page X.html", on) == ".md"
+    assert effective_ext("script.py", on) == ".txt"
+    # Types with no 1:1 conversion product keep their own extension.
+    assert effective_ext("Real.pdf", on) == ".pdf"
+    assert effective_ext("Archive.zip", on) == ".zip"
+
+
+def test_effective_ext_respects_disabled_and_missing_contract():
+    from shared.helpers import effective_ext
+
+    off = {'convert_pptx': False, 'convert_video': False, 'convert_code': False}
+    assert effective_ext("Deck.pptx", off) == ".pptx"
+    assert effective_ext("Lecture.mp4", off) == ".mp4"
+    # docx has NO converter (only legacy .doc/.rtf/.odt) - never relabeled.
+    assert effective_ext("Essay.docx", {'convert_word': True}) == ".docx"
+    assert effective_ext("no_extension", {'convert_pptx': True}) == ""
+    assert effective_ext("", None) == ""
+
+
 # ── page-stub fallback: restricted Pages LIST upgraded per slug ──────────────
 
 def test_page_stub_upgrade_restores_download_identity():

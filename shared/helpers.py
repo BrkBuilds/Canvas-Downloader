@@ -1109,7 +1109,66 @@ def parse_cbs_metadata(raw_name: str) -> dict:
         meta['semester'] = 'Autumn' if sem_code == 'E' else 'Spring'
         meta['year'] = year_short
         meta['year_full'] = f"20{year_short}"
-        
+
     return meta
+
+
+# ── Effective (post-conversion) file type ────────────────────────────────────
+# One source of truth for "what extension will this Canvas file have ON DISK
+# once this course's post-processing contract has run". Every sync surface
+# (Smart Select pills, review row tags, the Confirm Sync dialog) must show THIS
+# type, never the raw Canvas type: a course that converts pptx→pdf downloads a
+# .pptx but the user only ever sees/keeps a .pdf, and mixing the two labels in
+# one screen (PPTX in Smart Select, PDF on the same file's row) reads as a bug
+# and destroys trust. Ext sets mirror the converter dispatch in
+# sync/execution.py + converters/post_processing.py exactly - update BOTH when
+# a converter's coverage changes. (Archives and .url/.webloc shortcuts keep
+# their extension: extraction/compilation has no 1:1 product file.)
+
+_EFFECTIVE_EXT_MAP = (
+    ('convert_pptx',  {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, '.pdf'),
+    ('convert_word',  {'.doc', '.rtf', '.odt'},                    '.pdf'),
+    ('convert_excel', {'.xlsx', '.xls', '.xlsm'},                  '.pdf'),
+    ('convert_video', {'.mp4', '.mov', '.mkv', '.avi', '.m4v'},    '.mp3'),
+    ('convert_html',  {'.html'},                                   '.md'),
+)
+
+
+def effective_ext(filename: str, contract: dict | None) -> str:
+    """The lowercase extension *filename* will have on disk after conversion.
+
+    ``contract`` is the course's sync contract (``res_data['contract']``). A
+    key missing from the contract falls back to the session's persistent
+    toggle - the same fallback the execution engine applies - so the display
+    always matches what post-processing will actually do. Returns the original
+    extension when no enabled converter claims it ('' for extension-less
+    names).
+    """
+    ext = os.path.splitext(filename or '')[1].lower()
+    if not ext:
+        return ext
+    contract = contract or {}
+
+    def _enabled(key: str) -> bool:
+        val = contract.get(key)
+        if val is None:
+            try:
+                import streamlit as st
+                val = st.session_state.get(f'persistent_{key}', False)
+            except Exception:
+                val = False
+        return bool(val)
+
+    for _key, _exts, _target in _EFFECTIVE_EXT_MAP:
+        if ext in _exts:
+            return _target if _enabled(_key) else ext
+    if _enabled('convert_code'):
+        try:
+            from converters.code import CODE_EXTENSIONS
+        except Exception:
+            CODE_EXTENSIONS = ()
+        if ext in CODE_EXTENSIONS:
+            return '.txt'
+    return ext
 
 

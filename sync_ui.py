@@ -2740,7 +2740,12 @@ def _run_sync_panopto():
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
-    dq = st.session_state.get('log_deque') or collections.deque(maxlen=200)
+    # FRESH terminal log for this pass (runs exactly once per sync). Reusing the
+    # session-persisted deque leaked previous runs' entries into this run's
+    # terminal - most visibly a stack of stale "Transcribing N recordings"
+    # dividers from earlier syncs/Today runs ('log_deque' is only cleared by the
+    # DOWNLOAD-mode cleanup, never the sync one).
+    dq = collections.deque(maxlen=200)
     st.session_state['log_deque'] = dq
     # Fresh counters for this pass (runs exactly once per sync).
     st.session_state['panopto_mb_tracker'] = {'bytes': 0}

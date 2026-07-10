@@ -137,8 +137,24 @@ exe = EXE(
     bootloader_ignore_signals=False, strip=False, upx=False, console=False,
 )
 
+# Headless transcription worker: SAME code (start.py routes via the
+# CANVAS_DL_TRANSCRIBE_WORKER env var) but built with the CONSOLE bootloader.
+# The windowed bootloader registers every process with LaunchServices to handle
+# Apple events - which is what made each transcribe child surface in the Dock:
+# first as a live second app (fixed by the Prohibited demotion), then on
+# macOS 15 as a phantom "Canvas Downloader" recents tile filed at the child's
+# termination, held in the Dock's MEMORY (invisible to `defaults export`, so
+# the prefs-based recents strip can't catch it until a Dock restart). A console
+# binary never touches LaunchServices, so workers leave no Dock trace at all.
+# panopto.transcribe._worker_command prefers this binary when present.
+exe_worker = EXE(
+    pyz, a.scripts, [], exclude_binaries=True,
+    name='Canvas_Downloader_Worker', debug=False,
+    bootloader_ignore_signals=False, strip=False, upx=False, console=True,
+)
+
 coll = COLLECT(
-    exe, a.binaries, a.datas, strip=False, upx=False, name='Canvas_Downloader',
+    exe, exe_worker, a.binaries, a.datas, strip=False, upx=False, name='Canvas_Downloader',
 )
 
 app = BUNDLE(
