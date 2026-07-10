@@ -27,7 +27,26 @@ from shared.helpers import (
     check_disk_space,
     get_base64_image,
     esc,
+    effective_ext,
 )
+
+
+def _disk_ext(local_path: str, canvas_name: str, contract: dict) -> str:
+    """The extension a review entry truly has (or will have) ON DISK.
+
+    Tracked entries (``local_path`` set) use the recorded on-disk extension
+    verbatim - it already reflects any conversion that ran (and honestly shows
+    e.g. a .pptx whose conversion failed). Untracked entries (new files) fall
+    back to the post-conversion type this course's contract will produce.
+    Keeps the Smart Select pills, the row tags, and the Confirm dialog telling
+    ONE story - never Canvas's raw type on one surface and the converted type
+    on another.
+    """
+    if local_path:
+        _ext = os.path.splitext(local_path)[1].lower()
+        if _ext:
+            return _ext
+    return effective_ext(canvas_name, contract)
 
 
 def _checkbox_default(key: str) -> bool:
@@ -884,20 +903,24 @@ def show_analysis_review(on_confirm_sync):
     for idx, res_data in enumerate(all_results):
         res = res_data['result']
         cid = res_data['pair']['course_id']
+        # Group by the ON-DISK (post-conversion) type so the Smart Select
+        # pills always agree with the per-row tags below (which read the
+        # recorded local_path / the contract's conversion product).
+        _sm_contract = res_data.get('contract') or {}
         for f in res.new_files:
-            ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
+            ext = effective_ext(f.filename, _sm_contract) or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_new_{cid}_{f.id}')
-        for f, _ in res.updated_clean_files:
-            ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
+        for f, _si in res.updated_clean_files:
+            ext = _disk_ext(getattr(_si, 'local_path', ''), f.filename, _sm_contract) or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_upd_{cid}_{f.id}')
-        for f, _ in res.updated_modified_files:
-            ext = os.path.splitext(f.filename)[1].lower() or "Unknown"
+        for f, _si in res.updated_modified_files:
+            ext = _disk_ext(getattr(_si, 'local_path', ''), f.filename, _sm_contract) or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_updmod_{cid}_{f.id}')
         for si in res.locally_deleted_files:
-            ext = os.path.splitext(si.canvas_filename)[1].lower() or "Unknown"
+            ext = _disk_ext(getattr(si, 'local_path', ''), si.canvas_filename, _sm_contract) or "Unknown"
             all_extensions.add(ext)
             files_by_ext[ext].append(f'sync_locdel_{cid}_{si.canvas_file_id}')
         
@@ -1696,6 +1719,9 @@ def show_analysis_review(on_confirm_sync):
             with st.container(border=True):
                 pair = res_data['pair']
                 result = res_data['result']
+                # This course's conversion contract - row tags show the
+                # ON-DISK (post-conversion) type, in lockstep with Smart Select.
+                _contract = res_data.get('contract') or {}
 
                 display_name = friendly_course_name(pair['course_name'])
                 folder_display = short_path(pair['local_folder'])
@@ -1841,7 +1867,6 @@ def show_analysis_review(on_confirm_sync):
 
                                 with st.container(key=f"sync_review_file_list_{idx}_new"):
                                     for file in result.new_files:
-                                        ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
                                         size = format_file_size(file.size) if file.size else ""
                                         key = f"sync_new_{pair['course_id']}_{file.id}"
                                         st.session_state.setdefault(key, True)
@@ -1849,7 +1874,8 @@ def show_analysis_review(on_confirm_sync):
                                             col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                             with col1:
                                                 _disp_raw = unquote_plus(file.display_name or file.filename)
-                                                _name, _ext = os.path.splitext(_disp_raw)
+                                                _name, _ = os.path.splitext(_disp_raw)
+                                                _ext = effective_ext(_disp_raw, _contract) or effective_ext(file.filename, _contract)
                                                 _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                                 _size_clean = f" `{size}`" if size else ""
                                                 st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
@@ -1878,7 +1904,6 @@ def show_analysis_review(on_confirm_sync):
 
                             with st.container(key=f"sync_review_file_list_{idx}_upd"):
                                 for canvas_file, sync_info in result.updated_clean_files:
-                                    ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
                                     size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                     key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
                                     st.session_state.setdefault(key, True)
@@ -1886,7 +1911,8 @@ def show_analysis_review(on_confirm_sync):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
                                             _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _name, _ = os.path.splitext(_disp_raw)
+                                            _ext = _disk_ext(getattr(sync_info, 'local_path', ''), canvas_file.filename, _contract)
                                             _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                             _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
@@ -1914,7 +1940,6 @@ def show_analysis_review(on_confirm_sync):
 
                             with st.container(key=f"sync_review_file_list_{idx}_updmod"):
                                 for canvas_file, sync_info in result.updated_modified_files:
-                                    ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
                                     size = format_file_size(canvas_file.size) if canvas_file.size else ""
                                     key = f"sync_updmod_{pair['course_id']}_{canvas_file.id}"
                                     st.session_state.setdefault(key, False)
@@ -1922,7 +1947,8 @@ def show_analysis_review(on_confirm_sync):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
                                             _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _name, _ = os.path.splitext(_disp_raw)
+                                            _ext = _disk_ext(getattr(sync_info, 'local_path', ''), canvas_file.filename, _contract)
                                             _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                             _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
@@ -1951,14 +1977,14 @@ def show_analysis_review(on_confirm_sync):
 
                                 with st.container(key=f"sync_review_file_list_{idx}_locdel"):
                                     for sync_info in result.locally_deleted_files:
-                                        ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
                                         key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
                                         st.session_state.setdefault(key, False)
                                         with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
                                             col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                             with col1:
                                                 _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
-                                                _name, _ext = os.path.splitext(_disp_raw)
+                                                _name, _ = os.path.splitext(_disp_raw)
+                                                _ext = _disk_ext(getattr(sync_info, 'local_path', ''), sync_info.canvas_filename, _contract)
                                                 _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                                 _size_clean = f" `{format_file_size(sync_info.original_size)}`" if sync_info.original_size else ""
                                                 st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
@@ -1998,7 +2024,8 @@ def show_analysis_review(on_confirm_sync):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
                                             _disp_raw = unquote_plus(sync_info.canvas_filename)
-                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _name, _ = os.path.splitext(_disp_raw)
+                                            _ext = _disk_ext(getattr(sync_info, 'local_path', ''), sync_info.canvas_filename, _contract)
                                             _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
                                             _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
                                             st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)

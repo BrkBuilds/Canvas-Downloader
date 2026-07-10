@@ -226,7 +226,15 @@ if __name__ == "__main__":
         # prohibited (background) process so it runs invisibly - one app icon,
         # no window, hands-free, exactly like the Windows build. Best-effort:
         # transcription still works if AppKit is unavailable.
-        if sys.platform == "darwin":
+        #
+        # SKIP the demotion when running as the CONSOLE worker binary
+        # (Canvas_Downloader_Worker, preferred by _worker_command): its
+        # bootloader never touches LaunchServices, and calling
+        # NSApplication.sharedApplication() here would CREATE the very
+        # registration the console build exists to avoid (macOS 15 files a
+        # registered child's termination as a phantom Dock recents tile).
+        if (sys.platform == "darwin"
+                and "worker" not in os.path.basename(sys.executable).lower()):
             try:
                 from AppKit import (
                     NSApplication, NSApplicationActivationPolicyProhibited)

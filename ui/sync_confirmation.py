@@ -22,6 +22,7 @@ from shared.helpers import (
     friendly_course_name,
     format_file_size,
     esc,
+    effective_ext,
 )
 from shared.components import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
 
@@ -58,8 +59,21 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             unquoted = urllib.parse.unquote_plus(name)
             return unquoted
 
-        def _file_li(raw_name, display_name, size_bytes):
-            ext = os.path.splitext(raw_name)[1].lower().lstrip('.')
+        # This course's conversion contract: the dialog shows each file's
+        # ON-DISK (post-conversion) type - the same type Smart Select and the
+        # review rows show - never the raw Canvas type (a pptx→pdf course must
+        # read PDF on every surface, or the mixed labels look like a bug).
+        _contract = s['res_data'].get('contract') or {}
+
+        def _on_disk_ext(raw_name, local_path=''):
+            if local_path:
+                _e = os.path.splitext(local_path)[1].lower()
+                if _e:
+                    return _e
+            return effective_ext(raw_name, _contract)
+
+        def _file_li(raw_name, display_name, size_bytes, disk_ext):
+            ext = (disk_ext or '').lstrip('.')
             fname = os.path.splitext(get_friendly_name(display_name or raw_name))[0]
             icon_url = _FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)
             ext_badge = (
@@ -78,11 +92,14 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             return (sort_name, html)
 
         for f in s['new']:
-            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
+            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size,
+                                       _on_disk_ext(f.filename)))
         for f in s['updates']:
-            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size))
+            file_items.append(_file_li(f.filename, f.display_name or f.filename, f.size,
+                                       _on_disk_ext(f.filename)))
         for f in s['redownload']:
-            file_items.append(_file_li(f.canvas_filename, f.canvas_filename, f.original_size))
+            file_items.append(_file_li(f.canvas_filename, f.canvas_filename, f.original_size,
+                                       _on_disk_ext(f.canvas_filename, getattr(f, 'local_path', ''))))
 
         # Collect selected Panopto changes
         _pan_changes = {c.video_id: c for c in (s['res_data'].get('panopto') or {}).get('changes', [])}

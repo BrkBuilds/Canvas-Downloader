@@ -552,10 +552,37 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Collapse empty Streamlit container blocks that only hold style injections */
-div[data-testid="stElementContainer"]:has(style),
-div[data-testid="element-container"]:has(style) {
+/* Collapse empty Streamlit container blocks that ONLY hold a style injection.
+   Must stay scoped to style-ONLY markdown (style:only-child): the original
+   blanket `:has(style)` form also hid every block that bundles real content
+   WITH a trailing <style> - which silently blanked the whole Panopto results
+   card on the completion screens (2026-07-10 sync run: an empty half-width
+   box where "Panopto Recordings · 1 processed" should have been). */
+div[data-testid="stElementContainer"]:has(div[data-testid="stMarkdownContainer"] > style:only-child),
+div[data-testid="element-container"]:has(div[data-testid="stMarkdownContainer"] > style:only-child) {
     display: none !important;
+}
+
+/* Panopto results card (shared/components.py render_panopto_summary) - the
+   stats panel on the download + sync completion screens. Lives HERE, never as
+   an inline <style> inside the card's own markdown: a bundled style tag makes
+   the collapse rule above (in its blanket form) hide the entire card. */
+div[class*="st-key-panopto_summary_dashboard"] {
+    background-color: rgba(255, 255, 255, 0.075) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    padding-bottom: 25px !important;
+    margin-top: 0px;
+    margin-bottom: 0px !important;
+}
+
+div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    margin-top: 5px;
 }
 
 /* --- Custom Folder Cards --- */
