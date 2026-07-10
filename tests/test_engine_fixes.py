@@ -751,3 +751,50 @@ def test_teacher_locked_files_classify_as_permanent():
     from pathlib import Path
     sync_src = Path('sync/execution.py').read_text(encoding='utf-8')
     assert "Locked by the teacher on Canvas" in sync_src
+
+
+def test_panopto_classify_heals_stale_manifest_path(tmp_path):
+    """A kind whose MANIFEST path is dead but which exists at the CURRENT
+    layout path must classify as PRESENT (real path + real size + a
+    healed_paths entry for the manifest upsert) - never as missing. A
+    download-mode run of the same folder re-fetches recordings purely by
+    layout (it has no manifest to honour), so trusting the stale manifest
+    alone re-offered the kind and the next sync re-downloaded a duplicate
+    copy into the dead folder (2026-07-10: review showed 'missing: mp3'
+    while the freshly-downloaded mp3 sat on disk)."""
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    from panopto.sync_plan import classify_videos
+
+    cm = SimpleNamespace(_sanitize_filename=lambda s: s)
+    root = tmp_path
+    settings = {'output_mp3': True, 'output_txt': True, 'layout': 'separate'}
+    v = SimpleNamespace(video_id='vid-1', title='Lecture 1', module_name='')
+
+    rec_dir = root / 'Panopto Recordings' / 'Lecture 1'
+    rec_dir.mkdir(parents=True)
+    # txt: manifest path is alive -> resolved via the manifest, present.
+    (rec_dir / 'Lecture 1.txt').write_text('transcript', encoding='utf-8')
+    # mp3: manifest points at a DELETED old-layout copy, but a live copy sits
+    # at the current layout path (what a download-mode run wrote there).
+    (rec_dir / 'Lecture 1.mp3').write_bytes(b'a' * 2048)
+    manifest = {'vid-1': {
+        'txt': 'Panopto Recordings/Lecture 1/Lecture 1.txt',
+        'mp3': 'Old Layout/Lecture 1.mp3',          # gone from disk
+    }}
+
+    (ch,) = classify_videos(cm, [v], root, 'flat', settings, manifest)
+    assert ch.state == 'uptodate'
+    assert ch.missing_kinds == []
+    assert set(ch.healed_paths) == {'mp3'}
+    assert Path(ch.paths['mp3']) == rec_dir / 'Lecture 1.mp3'
+    assert ch.sizes['mp3'] == 2048        # real on-disk size, never an estimate
+
+    # Control: with NO live layout copy, the stale manifest kind stays missing
+    # (a genuine locally-deleted restore) and nothing is healed.
+    (rec_dir / 'Lecture 1.mp3').unlink()
+    (ch2,) = classify_videos(cm, [v], root, 'flat', settings, manifest)
+    assert 'mp3' in ch2.missing_kinds
+    assert ch2.healed_paths == {}
+    assert ch2.state == 'restore'
