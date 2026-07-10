@@ -1928,6 +1928,22 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             background: rgba(176,157,254,0.18) !important;
             border-color: #b89dfe !important; color: #ffffff !important;
         }
+
+        /* ── Full Disk Access "Open Settings" button (blue accent) ──
+           Same shape as the Panopto configure button above, in the FDA
+           card's blue family so the card reads as one story. */
+        div[data-testid="stDialog"] div.st-key-stg_fda_grant_btn button {
+            background: rgba(59,130,246,0.10) !important;
+            border: 1px solid rgba(59,130,246,0.35) !important;
+            color: #b6d3ff !important;
+            min-height: unset !important; height: auto !important;
+            padding-top: 6px !important; padding-bottom: 6px !important;
+            font-size: 0.82rem !important; font-weight: 600 !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_fda_grant_btn button:hover {
+            background: rgba(59,130,246,0.18) !important;
+            border-color: #60a5fa !important; color: #ffffff !important;
+        }
         </style>""")
 
         st.markdown("""

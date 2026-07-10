@@ -1876,13 +1876,173 @@ def run_sync():
         error_list[:] = _cached_run['errors']
         _synced_actual_rels = _cached_run.get('actual_rels', {})
 
+    def _finalize_sync_records(*, cancelled: bool = False):
+        """Build the per-course synced_groups + write THIS run's history entry.
+
+        Called on the normal completion path AND from the cancel guards below:
+        a cancelled run's already-synced files are on disk and in the folder
+        manifests, so Sync History and the Today page's "Today's files" must
+        list them (the Today page merges + de-dupes multiple quick entries of
+        the same day, so a later run simply appends). On cancel the entry is
+        flagged ``cancelled`` (history shows a Cancelled chip) and last_synced
+        is NOT stamped - a partial run must not masquerade as a completed sync.
+        Single-fire per run: the cancel guards st.rerun() immediately after
+        calling this, so the normal-path call can never run in the same pass.
+        """
+        # Per-course breakdown with resolved file paths - powers the per-file
+        # Open / Reveal actions on the completion screen and the landing-page
+        # "New files since last sync" panel. Built after post-processing on the
+        # normal path; on cancel it reflects everything synced so far.
+        try:
+            synced_groups = _build_synced_groups(sync_selections, synced_details,
+                                                 _synced_actual_rels)
+        except Exception as e:
+            logger.warning(f"Failed to build synced file groups: {e}")
+            synced_groups = []
+        st.session_state['synced_groups'] = synced_groups
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if not cancelled:
+            # Update last_synced timestamps atomically (completed runs only).
+            updates = []
+            for sel in sync_selections:
+                # Save securely to folder database
+                try:
+                    if 'res_data' in sel and 'sync_manager' in sel['res_data']:
+                        sel['res_data']['sync_manager']._save_metadata('last_synced', now_str)
+                except Exception as e:
+                    logger.warning(f"Failed to save last_synced to db: {e}")
+
+                # H-6: identify the pair by ITS OWN course_id + folder (carried in
+                # res_data), never by indexing st.session_state['sync_pairs'] with
+                # pair_idx - the indexes drift apart whenever analysis skipped a pair
+                # (missing folder / analysis error), which used to stamp last_synced
+                # onto the WRONG pair.
+                _own_pair = sel.get('res_data', {}).get('pair', {})
+                if _own_pair.get('local_folder'):
+                    updates.append((_own_pair.get('course_id'), _own_pair.get('local_folder'), now_str))
+
+            if updates:
+                _update_last_synced_batch(updates)
+
+        # Record sync history - also for all-failed runs (synced 0, errors > 0)
+        # so the user can see in the Hub that a sync was attempted and failed.
+        if synced_counter[0] > 0 or error_list:
+            try:
+                from shared.helpers import get_config_dir
+                history_mgr = SyncHistoryManager(get_config_dir())
+
+                import unicodedata as _ud_hist
+                categorized_files = {'new': [], 'updated': [], 'restored': [], 'protected': []}
+                synced_course_names = []
+
+                for sel in sync_selections:
+                    pair_idx = sel['pair_idx']
+                    pair_files = synced_details.get(pair_idx, [])
+                    if pair_files:
+                        synced_course_names.append(sel['res_data']['pair']['course_name'])
+
+                # Prefer the RESOLVED per-file records from _build_synced_groups:
+                # they carry the on-disk (post-conversion) name AND the category,
+                # already computed with the authoritative actual-path data - so the
+                # history panel lists "Page X.md", not the pre-conversion "X.html".
+                _group_files = [f for g in synced_groups for f in g.get('files', [])]
+                if _group_files:
+                    for _gf in _group_files:
+                        categorized_files.setdefault(
+                            _gf.get('category', 'new'), []).append(_gf.get('name', ''))
+                    _synced_files_flat = [_gf.get('name', '') for _gf in _group_files]
+                else:
+                    # Group build failed (or produced nothing) - fall back to the
+                    # display names with the same categorisation rules the groups
+                    # would have applied.
+                    _synced_files_flat = [
+                        fname for pair_files in synced_details.values() for fname in pair_files
+                    ]
+                    for sel in sync_selections:
+                        pair_idx = sel['pair_idx']
+                        pair_files = synced_details.get(pair_idx, [])
+
+                        updates_for_pair = set()
+                        res_data = sel.get('res_data', {})
+                        if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
+                            for _cf, _sf in res_data['result'].updated_files:
+                                updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
+                                updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
+
+                        redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
+
+                        for fname in pair_files:
+                            try:
+                                _fn_key = _ud_hist.normalize('NFC', fname)
+                            except Exception:
+                                _fn_key = fname
+                            if "_NewVersion" in fname:
+                                categorized_files['protected'].append(fname)
+                            elif _fn_key in updates_for_pair:
+                                categorized_files['updated'].append(fname)
+                            elif _fn_key in redownloads_for_pair:
+                                categorized_files['restored'].append(fname)
+                            else:
+                                categorized_files['new'].append(fname)
+
+                _entry = {
+                    'timestamp': now_str,
+                    'files_synced': synced_counter[0],
+                    'courses': len(sync_selections),
+                    'course_names': list(set(synced_course_names)),
+                    'errors': len(error_list),
+                    'error_details': error_list,
+                    'synced_files': _synced_files_flat,
+                    'categorized_files': categorized_files,
+                    # Per-course breakdown (course + rel path + category) so the
+                    # "New files since last sync" panel can group, sort, Open & Reveal.
+                    'synced_groups': synced_groups,
+                    # Record the RUN TYPE (quick vs review), not the sync-vs-download
+                    # boolean 'sync_mode' session flag. The Sync History label AND the
+                    # Today page's "today's files" filter both key off 'quick' here.
+                    # (sync_quick_mode is still set at this point - analysis never pops
+                    # it; see sync/analysis.py:908.)
+                    'sync_mode': 'quick' if st.session_state.get('sync_quick_mode') else 'normal',
+                }
+                if cancelled:
+                    # Honest labelling: the history card shows a Cancelled chip
+                    # instead of "Success" for a partial, user-stopped run.
+                    _entry['cancelled'] = True
+                history_mgr.add_entry(_entry)
+                # M-1: Invalidate the step-1 history cache so the next render
+                # re-reads from disk and shows the entry we just wrote.
+                st.session_state.pop('_sync_history_cache', None)
+                if not cancelled:
+                    # Remember this entry's timestamp so the terminal Panopto pass
+                    # can amend THIS entry with the recordings it downloads
+                    # afterwards (no pass follows a cancelled run).
+                    st.session_state['_sync_history_ts'] = now_str
+            except Exception as e:
+                logger.error(f"Failed to record sync history: {e}")
+
+    def _cancel_exit():
+        """Route to the cancelled screen WITHOUT losing this run's results.
+
+        Records history/groups first (files synced before the cancel are real
+        and on disk), mirrors the counters the cancelled screen reads, then
+        drops the worker snapshot and reruns into 'sync_cancelled'.
+        """
+        _finalize_sync_records(cancelled=True)
+        st.session_state['synced_details'] = dict(synced_details)
+        st.session_state['synced_count'] = synced_counter[0]
+        st.session_state['synced_bytes'] = synced_counter[1]
+        st.session_state['sync_errors'] = error_list
+        st.session_state['sync_cancelled_file_count'] = synced_counter[0]
+        st.session_state.pop('sync_worker_result', None)
+        st.session_state['download_status'] = 'sync_cancelled'
+        st.rerun()
+
     # Deferred cancel: checked here on the script thread so RerunException
     # never escapes the background coroutine and skips post-processing.
     # L-11: Pre-set status so the rerun doesn't re-enter 'syncing' for one pass.
     if is_sync_cancelled():
-        st.session_state.pop('sync_worker_result', None)
-        st.session_state['download_status'] = 'sync_cancelled'
-        st.rerun()
+        _cancel_exit()
 
     # --- Shared post-processing helpers ---
     def get_synced_file_paths(target_exts, conversion_key=None):
@@ -1934,9 +2094,7 @@ def run_sync():
     # SECONDARY GUARD (defense-in-depth): Catch any cancel that slipped past the primary guard above save_manifest
     # ==========================================
     if is_sync_cancelled():
-        st.session_state.pop('sync_worker_result', None)
-        st.session_state['download_status'] = 'sync_cancelled'
-        st.rerun()
+        _cancel_exit()
 
     # ==========================================
     # POST-PROCESSING PIPELINE (Shared Module)
@@ -2177,129 +2335,12 @@ def run_sync():
     st.session_state['synced_details'] = dict(synced_details)
     st.session_state['retry_selections'] = retry_selections
 
-    # Per-course breakdown with resolved file paths - powers the per-file
-    # Open / Reveal actions on the completion screen and the landing-page
-    # "New files since last sync" panel. Built once here, after post-processing.
-    try:
-        synced_groups = _build_synced_groups(sync_selections, synced_details,
-                                             _synced_actual_rels)
-    except Exception as e:
-        logger.warning(f"Failed to build synced file groups: {e}")
-        synced_groups = []
-    st.session_state['synced_groups'] = synced_groups
-
-    # Update last_synced timestamps atomically
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-    updates = []
-    for sel in sync_selections:
-        # Save securely to folder database
-        try:
-            if 'res_data' in sel and 'sync_manager' in sel['res_data']:
-                sel['res_data']['sync_manager']._save_metadata('last_synced', now_str)
-        except Exception as e:
-            logger.warning(f"Failed to save last_synced to db: {e}")
-
-        # H-6: identify the pair by ITS OWN course_id + folder (carried in
-        # res_data), never by indexing st.session_state['sync_pairs'] with
-        # pair_idx - the indexes drift apart whenever analysis skipped a pair
-        # (missing folder / analysis error), which used to stamp last_synced
-        # onto the WRONG pair.
-        _own_pair = sel.get('res_data', {}).get('pair', {})
-        if _own_pair.get('local_folder'):
-            updates.append((_own_pair.get('course_id'), _own_pair.get('local_folder'), now_str))
-
-    if updates:
-        _update_last_synced_batch(updates)
-
-    # Record sync history - also for all-failed runs (synced 0, errors > 0)
-    # so the user can see in the Hub that a sync was attempted and failed.
-    if synced_counter[0] > 0 or error_list:
-        try:
-            from shared.helpers import get_config_dir
-            history_mgr = SyncHistoryManager(get_config_dir())
-            
-            import unicodedata as _ud_hist
-            categorized_files = {'new': [], 'updated': [], 'restored': [], 'protected': []}
-            synced_course_names = []
-
-            for sel in sync_selections:
-                pair_idx = sel['pair_idx']
-                pair_files = synced_details.get(pair_idx, [])
-                if pair_files:
-                    synced_course_names.append(sel['res_data']['pair']['course_name'])
-
-            # Prefer the RESOLVED per-file records from _build_synced_groups:
-            # they carry the on-disk (post-conversion) name AND the category,
-            # already computed with the authoritative actual-path data - so the
-            # history panel lists "Page X.md", not the pre-conversion "X.html".
-            _group_files = [f for g in synced_groups for f in g.get('files', [])]
-            if _group_files:
-                for _gf in _group_files:
-                    categorized_files.setdefault(
-                        _gf.get('category', 'new'), []).append(_gf.get('name', ''))
-                _synced_files_flat = [_gf.get('name', '') for _gf in _group_files]
-            else:
-                # Group build failed (or produced nothing) - fall back to the
-                # display names with the same categorisation rules the groups
-                # would have applied.
-                _synced_files_flat = [
-                    fname for pair_files in synced_details.values() for fname in pair_files
-                ]
-                for sel in sync_selections:
-                    pair_idx = sel['pair_idx']
-                    pair_files = synced_details.get(pair_idx, [])
-
-                    updates_for_pair = set()
-                    res_data = sel.get('res_data', {})
-                    if res_data and 'result' in res_data and hasattr(res_data['result'], 'updated_files'):
-                        for _cf, _sf in res_data['result'].updated_files:
-                            updates_for_pair |= _basename_variants(getattr(_cf, 'filename', '') or '')
-                            updates_for_pair |= _basename_variants(getattr(_sf, 'local_path', '') or '')
-
-                    redownloads_for_pair = _redownload_restore_keys(sel.get('redownload'))
-
-                    for fname in pair_files:
-                        try:
-                            _fn_key = _ud_hist.normalize('NFC', fname)
-                        except Exception:
-                            _fn_key = fname
-                        if "_NewVersion" in fname:
-                            categorized_files['protected'].append(fname)
-                        elif _fn_key in updates_for_pair:
-                            categorized_files['updated'].append(fname)
-                        elif _fn_key in redownloads_for_pair:
-                            categorized_files['restored'].append(fname)
-                        else:
-                            categorized_files['new'].append(fname)
-
-            history_mgr.add_entry({
-                'timestamp': now_str,
-                'files_synced': synced_counter[0],
-                'courses': len(sync_selections),
-                'course_names': list(set(synced_course_names)),
-                'errors': len(error_list),
-                'error_details': error_list,
-                'synced_files': _synced_files_flat,
-                'categorized_files': categorized_files,
-                # Per-course breakdown (course + rel path + category) so the
-                # "New files since last sync" panel can group, sort, Open & Reveal.
-                'synced_groups': synced_groups,
-                # Record the RUN TYPE (quick vs review), not the sync-vs-download
-                # boolean 'sync_mode' session flag. The Sync History label AND the
-                # Today page's "today's files" filter both key off 'quick' here.
-                # (sync_quick_mode is still set at this point - analysis never pops
-                # it; see sync/analysis.py:908.)
-                'sync_mode': 'quick' if st.session_state.get('sync_quick_mode') else 'normal',
-            })
-            # M-1: Invalidate the step-1 history cache so the next render
-            # re-reads from disk and shows the entry we just wrote.
-            st.session_state.pop('_sync_history_cache', None)
-            # Remember this entry's timestamp so the terminal Panopto pass can
-            # amend THIS entry with the recordings it downloads afterwards
-            # (instead of them being silently absent from sync history).
-            st.session_state['_sync_history_ts'] = now_str
-        except Exception as e:
-            logger.error(f"Failed to record sync history: {e}")
+    # Build synced_groups + record history (moved into _finalize_sync_records
+    # so the cancel guards above can record partial runs too). A cancel set
+    # DURING post-processing lands here with the event already set - the
+    # conversion runners stop gracefully - so pass the live cancel state:
+    # the entry is then flagged cancelled and last_synced stays unstamped.
+    _finalize_sync_records(cancelled=is_sync_cancelled())
 
     # Run fully consumed - drop the cached worker snapshot so the next sync
     # (including the Retry path, which re-enters with status='syncing')
