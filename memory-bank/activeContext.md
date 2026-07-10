@@ -12,6 +12,15 @@
 
 ## Recent Activity
 
+- **Session 2026-07-10: Inline Auto-Detection Sparkles Notice & Copy Alignment**
+    - **Inline Sparkles Notification**: Converted the full-width blue auto-match notice card into a clean, inline text element with a `14px` Lucide `wand-sparkles` SVG icon on the "Select Course" row (directly to the right of the select course/change course button).
+    - **Aligned UI Copy**: Configured the notification text to read `Course auto-selected: A matching course was registered in the folder` as approved, styled in bright cyan (`#00e5ff`) to fit the design system.
+    - **Unified Hub Dialogs**: Applied the exact same inline notice layout and style to both the edit and add pair rows inside [hub_dialog.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/hub_dialog.py) for UI consistency.
+
+- **Session 2026-07-10: Sync Review Page Folder Icon & Spacing Polish**
+    - **Shrank Yellow Folder SVG**: Injected CSS class `sync-review-folder-row` and added styles to shrink the yellow folder SVG icons to a clean, proportional `14px` by `14px` (down from their large default `1.4em` size) on the Sync Review page (`ui/sync_review.py`). This prevents them from looking comically large relative to the surrounding `0.78rem` folder path text.
+    - **Consistent Vertical Spacing**: Removed the injected 20px spacer div from `ui/sync_review.py` that was adding extra padding between pending courses and up-to-date courses, ensuring clean, natural, and consistent layout gaps between all course blocks.
+
 - **Session 2026-07-09: Today Page Quick Sync Tooltip and Padding Adjustments**
     - **Increased Card Bottom Padding**: Increased bottom padding of `div.st-key-today_courses_card` inside [today.css](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/styles/today.css) from `16px` to `24px` to add extra space below the "Add courses" button and card borders.
     - **Disabled Quick Sync Tooltip**: Added dynamic `help` tooltip messages to the "Quick Sync now" button on the Today tab (`today_sync_now_btn` in [today_dashboard.py](file:///g:/18%20AI/ANTIGRAVITY%20WORKSPACES/Canvas%20Downloader/ui/today_dashboard.py)) to explain why it is disabled (e.g. no daily courses or sync already running).

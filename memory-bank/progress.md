@@ -1,4 +1,13 @@
 ## Latest Updates
+- [x] **Inline Auto-Detection Sparkles Notice & Copy Alignment** (2026-07-10):
+    - [x] **Inline Sparkles Notification**: Converted the full-width blue auto-match notice card into a clean, inline text element with a `14px` Lucide `wand-sparkles` SVG icon on the "Select Course" row (directly to the right of the select course/change course button).
+    - [x] **Aligned UI Copy**: Configured the notification text to read `Course auto-selected: A matching course was registered in the folder` as approved, styled in bright cyan (`#00e5ff`) to fit the design system.
+    - [x] **Unified Hub Dialogs**: Applied the exact same inline notice layout and style to both the edit and add pair rows inside `ui/hub_dialog.py` for UI consistency.
+
+- [x] **Sync Review Page Folder Icon & Spacing Polish** (2026-07-10):
+    - [x] **Shrank Yellow Folder SVG**: Injected CSS class `sync-review-folder-row` and added styles to shrink the yellow folder SVG icons to a clean, proportional `14px` by `14px` (down from their large default `1.4em` size) on the Sync Review page (`ui/sync_review.py`). This prevents them from looking comically large relative to the surrounding `0.78rem` folder path text.
+    - [x] **Consistent Vertical Spacing**: Removed the injected 20px spacer div from `ui/sync_review.py` that was adding extra padding between pending courses and up-to-date courses, ensuring clean, natural, and consistent layout gaps between all course blocks.
+
 - [x] **Today Page Quick Sync Tooltip and Padding Adjustments** (2026-07-09):
     - [x] **Increased Card Bottom Padding**: Increased bottom padding of `div.st-key-today_courses_card` inside `styles/today.css` from `16px` to `24px` to add extra space below the "Add courses" button and card borders.
     - [x] **Disabled Quick Sync Tooltip**: Added dynamic `help` tooltip messages to the "Quick Sync now" button on the Today tab (`today_sync_now_btn` in `ui/today_dashboard.py`) to explain why it is disabled (e.g. no daily courses or sync already running).

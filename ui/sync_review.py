@@ -392,6 +392,12 @@ def show_analysis_review(on_confirm_sync):
             margin-top: 10px !important;
             margin-left: 0 !important;
         }
+        div.sync-review-folder-row svg {
+            width: 14px !important;
+            height: 14px !important;
+            vertical-align: -2px !important;
+            margin-right: 5px !important;
+        }
         </style>
     """)
 
@@ -1685,341 +1691,340 @@ def show_analysis_review(on_confirm_sync):
                                   on_click=handle_ignore_panopto, args=(idx, c))
 
     # Per-folder results
-    for idx, res_data in enumerate(all_results):
-        with st.container(border=True):
-            pair = res_data['pair']
-            result = res_data['result']
+    with st.container(key="sync_course_cards"):
+        for idx, res_data in enumerate(all_results):
+            with st.container(border=True):
+                pair = res_data['pair']
+                result = res_data['result']
 
-            display_name = friendly_course_name(pair['course_name'])
-            folder_display = short_path(pair['local_folder'])
+                display_name = friendly_course_name(pair['course_name'])
+                folder_display = short_path(pair['local_folder'])
             
-            # Panopto recordings for THIS course, split into the review buckets.
-            pan_changes = (res_data.get('panopto') or {}).get('changes', [])
-            pan_new = [c for c in pan_changes if c.bucket == 'new']
-            pan_restore = [c for c in pan_changes if c.bucket == 'restore']
-            pan_ignored = [c for c in pan_changes if c.bucket == 'ignored']
+                # Panopto recordings for THIS course, split into the review buckets.
+                pan_changes = (res_data.get('panopto') or {}).get('changes', [])
+                pan_new = [c for c in pan_changes if c.bucket == 'new']
+                pan_restore = [c for c in pan_changes if c.bucket == 'restore']
+                pan_ignored = [c for c in pan_changes if c.bucket == 'ignored']
 
-            has_new = bool(result.new_files)
-            has_updated_clean = bool(result.updated_clean_files)
-            has_updated_modified = bool(result.updated_modified_files)
-            has_locally_deleted = bool(result.locally_deleted_files)
-            has_panopto = bool(pan_new or pan_restore)
-            has_ignored = (hasattr(result, 'ignored_files') and bool(result.ignored_files)) or bool(pan_ignored)
-            is_fully_up_to_date = not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted, has_panopto]) and not has_ignored
+                has_new = bool(result.new_files)
+                has_updated_clean = bool(result.updated_clean_files)
+                has_updated_modified = bool(result.updated_modified_files)
+                has_locally_deleted = bool(result.locally_deleted_files)
+                has_panopto = bool(pan_new or pan_restore)
+                has_ignored = (hasattr(result, 'ignored_files') and bool(result.ignored_files)) or bool(pan_ignored)
+                is_fully_up_to_date = not any([has_new, has_updated_clean, has_updated_modified, has_locally_deleted, has_panopto]) and not has_ignored
 
-            # Build status pill - pending takes priority over up-to-date
-            # Strictly use uptodate_files only - do NOT add untracked_shortcuts
-            # as those are already counted in new_files or other actionable categories
-            uptodate_count = len(result.uptodate_files)
-            pending_count = (
-                len(result.new_files)
-                + len(result.updated_clean_files)
-                + len(result.updated_modified_files)
-                + len(result.locally_deleted_files)
-                + len(pan_new) + len(pan_restore)
-            )
-            _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
-            # Dimmed white sync icon for the pending-sync label
-            _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.65);" />'
-            # Inline checkmark for the up-to-date label (base64 to avoid Streamlit SVG sanitization)
-            import base64 as _b64
-            _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
-            _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
-            _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0;" />'
-            # No background - plain grey text labels stacked on the right
-            _tag_style = (
-                "font-size: 0.73rem; color: rgba(255,255,255,0.65); font-weight: 500; "
-                "display:inline-flex; align-items:center; white-space:nowrap;"
-            )
-
-            pending_pill = ""
-            uptodate_pill = ""
-            right_side_html = ""
-
-            if is_fully_up_to_date:
-                # Custom large success label instead of the small pills
-                uptodate_word = "file" if uptodate_count == 1 else "files"
-                _text_color = "rgba(209, 250, 229, 0.85)"  # Lighter and slightly saturated (pale green)
-                
-                _check_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{_text_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-                _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
-                _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:16px; height:16px; flex-shrink:0; vertical-align:middle; margin-top:-1px;" />'
-                
-                _file_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="{_text_color}" stroke="none"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>'
-                _file_b64 = _b64.b64encode(_file_svg_raw.encode()).decode()
-                _file_svg_html = f'<img src="data:image/svg+xml;base64,{_file_b64}" style="width:13px; height:13px; vertical-align:middle; margin-right:5px; margin-top:-1px;" />'
-
-                right_side_html = (
-                    '<div style="display: flex; align-items: center; justify-content: flex-end; gap: 16px;">'
-                    f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500; gap: 6px;">'
-                    f'{_checkmark_svg}<span>100% Up-to-date with Canvas</span></div>'
-                    f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500;">{_file_svg_html}{uptodate_count} {uptodate_word} checked</div>'
-                    '</div>'
+                # Build status pill - pending takes priority over up-to-date
+                # Strictly use uptodate_files only - do NOT add untracked_shortcuts
+                # as those are already counted in new_files or other actionable categories
+                uptodate_count = len(result.uptodate_files)
+                pending_count = (
+                    len(result.new_files)
+                    + len(result.updated_clean_files)
+                    + len(result.updated_modified_files)
+                    + len(result.locally_deleted_files)
+                    + len(pan_new) + len(pan_restore)
                 )
-                
-                # Green gradient (lighter, slightly more saturated)
-                bg_gradient = "linear-gradient(180deg, #2a3d31 0%, #344c3d 100%)"
-                border_bottom = "1px solid rgba(74, 222, 128, 0.15)"
-                margin_bottom = "-16px"
-                border_radius = "8px"
-            else:
-                if pending_count:
-                    pending_word = "file" if pending_count == 1 else "files"
-                    pending_pill = f'<span style="{_tag_style}">{_sync_icon_html}{pending_count} {pending_word} pending sync</span>'
-                if uptodate_count:
+                _sync_icon_b64 = get_base64_image("assets/icon_sync.png")
+                # Dimmed white sync icon for the pending-sync label
+                _sync_icon_html = f'<img src="data:image/png;base64,{_sync_icon_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0; filter: brightness(0) invert(1) opacity(0.65);" />'
+                # Inline checkmark for the up-to-date label (base64 to avoid Streamlit SVG sanitization)
+                import base64 as _b64
+                _check_svg_raw = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 6,13 14,3"/></svg>'
+                _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
+                _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px; flex-shrink:0;" />'
+                # No background - plain grey text labels stacked on the right
+                _tag_style = (
+                    "font-size: 0.73rem; color: rgba(255,255,255,0.65); font-weight: 500; "
+                    "display:inline-flex; align-items:center; white-space:nowrap;"
+                )
+
+                pending_pill = ""
+                uptodate_pill = ""
+                right_side_html = ""
+
+                if is_fully_up_to_date:
+                    # Custom large success label instead of the small pills
                     uptodate_word = "file" if uptodate_count == 1 else "files"
-                    uptodate_pill = f'<span style="{_tag_style}">{_checkmark_svg}{uptodate_count} {uptodate_word} up to date</span>'
+                    _text_color = "rgba(209, 250, 229, 0.85)"  # Lighter and slightly saturated (pale green)
                 
-                right_side_html = f'<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">{pending_pill}{uptodate_pill}</div>'
+                    _check_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{_text_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                    _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
+                    _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:16px; height:16px; flex-shrink:0; vertical-align:middle; margin-top:-1px;" />'
                 
-                bg_gradient = "linear-gradient(180deg, #252830 0%, #32363f 100%)"
-                border_bottom = "1px solid rgba(255,255,255,0.06)"
-                margin_bottom = "16px"
-                border_radius = "8px 8px 0 0"
+                    _file_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="{_text_color}" stroke="none"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>'
+                    _file_b64 = _b64.b64encode(_file_svg_raw.encode()).decode()
+                    _file_svg_html = f'<img src="data:image/svg+xml;base64,{_file_b64}" style="width:13px; height:13px; vertical-align:middle; margin-right:5px; margin-top:-1px;" />'
 
-            # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
-            header_html = f"""
-            <div style="
-                margin: -16px -16px {margin_bottom} -16px;
-                padding: 16px 16px;
-                background: {bg_gradient};
-                border: 1px solid rgba(255,255,255,0.1);
-                border-bottom: {border_bottom};
-                border-radius: {border_radius};
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-            ">
-                <div style="min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px;">
-                    <div style="display: flex; align-items: baseline; overflow: hidden; white-space: nowrap;">
-                        <span style="color: {theme.WHITE}; font-size: 1rem; font-weight: 700; min-width: 26px; flex-shrink: 0;">{idx + 1}.</span>
-                        <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{display_name}</span>
+                    right_side_html = (
+                        '<div style="display: flex; align-items: center; justify-content: flex-end; gap: 16px;">'
+                        f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500; gap: 6px;">'
+                        f'{_checkmark_svg}<span>100% Up-to-date with Canvas</span></div>'
+                        f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500;">{_file_svg_html}{uptodate_count} {uptodate_word} checked</div>'
+                        '</div>'
+                    )
+                
+                    # Green gradient (lighter, slightly more saturated)
+                    bg_gradient = "linear-gradient(180deg, #2a3d31 0%, #344c3d 100%)"
+                    border_bottom = "1px solid rgba(74, 222, 128, 0.15)"
+                    margin_bottom = "-16px"
+                    border_radius = "8px"
+                else:
+                    if pending_count:
+                        pending_word = "file" if pending_count == 1 else "files"
+                        pending_pill = f'<span style="{_tag_style}">{_sync_icon_html}{pending_count} {pending_word} pending sync</span>'
+                    if uptodate_count:
+                        uptodate_word = "file" if uptodate_count == 1 else "files"
+                        uptodate_pill = f'<span style="{_tag_style}">{_checkmark_svg}{uptodate_count} {uptodate_word} up to date</span>'
+                
+                    right_side_html = f'<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">{pending_pill}{uptodate_pill}</div>'
+                
+                    bg_gradient = "linear-gradient(180deg, #252830 0%, #32363f 100%)"
+                    border_bottom = "1px solid rgba(255,255,255,0.06)"
+                    margin_bottom = "16px"
+                    border_radius = "8px 8px 0 0"
+
+                # 2. THE FLUSH HEADER BAND (Negative Margin Bleed Trick)
+                header_html = f"""
+                <div style="
+                    margin: -16px -16px {margin_bottom} -16px;
+                    padding: 16px 16px;
+                    background: {bg_gradient};
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-bottom: {border_bottom};
+                    border-radius: {border_radius};
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                ">
+                    <div style="min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                        <div style="display: flex; align-items: baseline; overflow: hidden; white-space: nowrap;">
+                            <span style="color: {theme.WHITE}; font-size: 1rem; font-weight: 700; min-width: 26px; flex-shrink: 0;">{idx + 1}.</span>
+                            <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{display_name}</span>
+                        </div>
+                        <div class="sync-review-folder-row" style="display: flex; align-items: center; overflow: hidden; padding-left: 25px;">
+                            {SVG_FOLDER_YELLOW}
+                            <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: center; overflow: hidden; padding-left: 25px;">
-                        {SVG_FOLDER_YELLOW}
-                        <span style="color: rgba(255,255,255,0.75); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{folder_display}</span>
-                    </div>
-                </div>
-                {right_side_html}
-            </div>"""
-            st.markdown(header_html, unsafe_allow_html=True)
+                    {right_side_html}
+                </div>"""
+                st.markdown(header_html, unsafe_allow_html=True)
 
-            if is_fully_up_to_date:
-                continue
+                if is_fully_up_to_date:
+                    continue
 
 
 
-            # New files - always starts OPEN. New / not-yet-downloaded Panopto
-            # recordings are shown here too (treated as new files) at the bottom.
-            if result.new_files or pan_new:
-                with st.container(key=f"cat_new_{pair['course_id']}"):
-                    with st.expander(f"{'New Files'}"):
-                        if result.new_files:
-                            total_new = len(result.new_files)
-                            selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
-                            deselected_new = total_new - selected_new
+                # New files - always starts OPEN. New / not-yet-downloaded Panopto
+                # recordings are shown here too (treated as new files) at the bottom.
+                if result.new_files or pan_new:
+                    with st.container(key=f"cat_new_{pair['course_id']}"):
+                        with st.expander(f"{'New Files'}"):
+                            if result.new_files:
+                                total_new = len(result.new_files)
+                                selected_new = sum(1 for f in result.new_files if st.session_state.get(f"sync_new_{pair['course_id']}_{f.id}", True))
+                                deselected_new = total_new - selected_new
+                                render_category_action_row(
+                                    idx, pair['course_id'], 'new_files', 'sync_new',
+                                    f"Move deselected files to Ignored *({deselected_new})*",
+                                    f"sweep_new_{pair['course_id']}", (selected_new == total_new),
+                                    "These files will be moved to the Ignored Files section and skipped during sync.")
+                                st.caption("Brand new files available on Canvas that you don't have locally yet.")
+
+                                with st.container(key=f"sync_review_file_list_{idx}_new"):
+                                    for file in result.new_files:
+                                        ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
+                                        size = format_file_size(file.size) if file.size else ""
+                                        key = f"sync_new_{pair['course_id']}_{file.id}"
+                                        st.session_state.setdefault(key, True)
+                                        with st.container(key=f"sync_row_new_{pair['course_id']}_{file.id}"):
+                                            col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                            with col1:
+                                                _disp_raw = unquote_plus(file.display_name or file.filename)
+                                                _name, _ext = os.path.splitext(_disp_raw)
+                                                _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                                _size_clean = f" `{size}`" if size else ""
+                                                st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                            with col2:
+                                                st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+
+                            if pan_new:
+                                _render_pan_subsection(idx, pair, pan_new, True, 'pannew')
+
+                # Updated files - always starts OPEN
+                # Updates Available (clean) \u2014 default CHECKED. Local file is
+                # byte-identical to what we downloaded, so we overwrite in place.
+                if result.updated_clean_files:
+                    total_upd = len(result.updated_clean_files)
+                    selected_upd = sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f"sync_upd_{pair['course_id']}_{f.id}", True))
+
+                    with st.container(key=f"cat_update_{pair['course_id']}"):
+                        with st.expander("Updates Available"):
+                            deselected_upd = total_upd - selected_upd
                             render_category_action_row(
-                                idx, pair['course_id'], 'new_files', 'sync_new',
-                                f"Move deselected files to Ignored *({deselected_new})*",
-                                f"sweep_new_{pair['course_id']}", (selected_new == total_new),
+                                idx, pair['course_id'], 'updated_clean_files', 'sync_upd',
+                                f"Move deselected files to Ignored *({deselected_upd})*",
+                                f"sweep_upd_{pair['course_id']}", (selected_upd == total_upd),
                                 "These files will be moved to the Ignored Files section and skipped during sync.")
-                            st.caption("Brand new files available on Canvas that you don't have locally yet.")
+                            st.caption("Your local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.")
 
-                            with st.container(key=f"sync_review_file_list_{idx}_new"):
-                                for file in result.new_files:
-                                    ext = os.path.splitext(file.filename)[1].lower() or "Unknown"
-                                    size = format_file_size(file.size) if file.size else ""
-                                    key = f"sync_new_{pair['course_id']}_{file.id}"
+                            with st.container(key=f"sync_review_file_list_{idx}_upd"):
+                                for canvas_file, sync_info in result.updated_clean_files:
+                                    ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
+                                    size = format_file_size(canvas_file.size) if canvas_file.size else ""
+                                    key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
                                     st.session_state.setdefault(key, True)
-                                    with st.container(key=f"sync_row_new_{pair['course_id']}_{file.id}"):
+                                    with st.container(key=f"sync_row_upd_{pair['course_id']}_{canvas_file.id}"):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
-                                            _disp_raw = unquote_plus(file.display_name or file.filename)
+                                            _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
                                             _name, _ext = os.path.splitext(_disp_raw)
                                             _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                             _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                         with col2:
-                                            st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                                            st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_clean_files', (canvas_file, sync_info)))
 
-                        if pan_new:
-                            _render_pan_subsection(idx, pair, pan_new, True, 'pannew')
+                # Updates Available \u2014 You've Edited These \u2014 default UNCHECKED.
+                # Local file has been modified by the student; if they opt in, the
+                # new Canvas version is saved alongside as `_NewVersion` so their
+                # annotations survive.
+                if result.updated_modified_files:
+                    total_updmod = len(result.updated_modified_files)
+                    selected_updmod = sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f"sync_updmod_{pair['course_id']}_{f.id}", False))
 
-            # Updated files - always starts OPEN
-            # Updates Available (clean) \u2014 default CHECKED. Local file is
-            # byte-identical to what we downloaded, so we overwrite in place.
-            if result.updated_clean_files:
-                total_upd = len(result.updated_clean_files)
-                selected_upd = sum(1 for f, _ in result.updated_clean_files if st.session_state.get(f"sync_upd_{pair['course_id']}_{f.id}", True))
-
-                with st.container(key=f"cat_update_{pair['course_id']}"):
-                    with st.expander("Updates Available"):
-                        deselected_upd = total_upd - selected_upd
-                        render_category_action_row(
-                            idx, pair['course_id'], 'updated_clean_files', 'sync_upd',
-                            f"Move deselected files to Ignored *({deselected_upd})*",
-                            f"sweep_upd_{pair['course_id']}", (selected_upd == total_upd),
-                            "These files will be moved to the Ignored Files section and skipped during sync.")
-                        st.caption("Your local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.")
-
-                        with st.container(key=f"sync_review_file_list_{idx}_upd"):
-                            for canvas_file, sync_info in result.updated_clean_files:
-                                ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
-                                size = format_file_size(canvas_file.size) if canvas_file.size else ""
-                                key = f"sync_upd_{pair['course_id']}_{canvas_file.id}"
-                                st.session_state.setdefault(key, True)
-                                with st.container(key=f"sync_row_upd_{pair['course_id']}_{canvas_file.id}"):
-                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                    with col1:
-                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                        _name, _ext = os.path.splitext(_disp_raw)
-                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                        _size_clean = f" `{size}`" if size else ""
-                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
-                                    with col2:
-                                        st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_clean_files', (canvas_file, sync_info)))
-
-            # Updates Available \u2014 You've Edited These \u2014 default UNCHECKED.
-            # Local file has been modified by the student; if they opt in, the
-            # new Canvas version is saved alongside as `_NewVersion` so their
-            # annotations survive.
-            if result.updated_modified_files:
-                total_updmod = len(result.updated_modified_files)
-                selected_updmod = sum(1 for f, _ in result.updated_modified_files if st.session_state.get(f"sync_updmod_{pair['course_id']}_{f.id}", False))
-
-                with st.container(key=f"cat_updmod_{pair['course_id']}"):
-                    with st.expander("Updates Available \u2014 You've Edited These"):
-                        deselected_updmod = total_updmod - selected_updmod
-                        is_disabled_updmod = (selected_updmod == total_updmod)
-                        help_text_updmod = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_updmod else "All files are selected. Uncheck one or more files to enable this button."
-                        render_category_action_row(
-                            idx, pair['course_id'], 'updated_modified_files', 'sync_updmod',
-                            f"Move deselected files to Ignored *({deselected_updmod})*",
-                            f"sweep_updmod_{pair['course_id']}", is_disabled_updmod, help_text_updmod)
-                        st.caption("You've modified your local copies of these files. They are **unchecked by default** to protect your edits. If you sync them, the new Canvas version will be saved alongside as `_NewVersion` \u2014 your edited copy is never touched.")
-
-                        with st.container(key=f"sync_review_file_list_{idx}_updmod"):
-                            for canvas_file, sync_info in result.updated_modified_files:
-                                ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
-                                size = format_file_size(canvas_file.size) if canvas_file.size else ""
-                                key = f"sync_updmod_{pair['course_id']}_{canvas_file.id}"
-                                st.session_state.setdefault(key, False)
-                                with st.container(key=f"sync_row_updmod_{pair['course_id']}_{canvas_file.id}"):
-                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                    with col1:
-                                        _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
-                                        _name, _ext = os.path.splitext(_disp_raw)
-                                        _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                        _size_clean = f" `{size}`" if size else ""
-                                        st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
-                                    with col2:
-                                        st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
-
-            # Missing files - always starts OPEN
-            # (Missing Files category retired \u2014 rolled into New Files.)
-
-            # Locally Deleted Files (Student deleted locally to save space).
-            # Recordings whose downloaded outputs were deleted appear here too.
-            if result.locally_deleted_files or pan_restore:
-                with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
-                    with st.expander("Deleted Locally"):
-                        if result.locally_deleted_files:
-                            total_locdel = len(result.locally_deleted_files)
-                            selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", False))
-                            deselected_locdel = total_locdel - selected_locdel
-                            is_disabled_locdel = (selected_locdel == total_locdel)
-                            help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
+                    with st.container(key=f"cat_updmod_{pair['course_id']}"):
+                        with st.expander("Updates Available \u2014 You've Edited These"):
+                            deselected_updmod = total_updmod - selected_updmod
+                            is_disabled_updmod = (selected_updmod == total_updmod)
+                            help_text_updmod = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_updmod else "All files are selected. Uncheck one or more files to enable this button."
                             render_category_action_row(
-                                idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
-                                f"Move deselected files to Ignored *({deselected_locdel})*",
-                                f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
-                            st.caption("These files are missing from your Course Folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
+                                idx, pair['course_id'], 'updated_modified_files', 'sync_updmod',
+                                f"Move deselected files to Ignored *({deselected_updmod})*",
+                                f"sweep_updmod_{pair['course_id']}", is_disabled_updmod, help_text_updmod)
+                            st.caption("You've modified your local copies of these files. They are **unchecked by default** to protect your edits. If you sync them, the new Canvas version will be saved alongside as `_NewVersion` \u2014 your edited copy is never touched.")
 
-                            with st.container(key=f"sync_review_file_list_{idx}_locdel"):
-                                for sync_info in result.locally_deleted_files:
-                                    ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
-                                    key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
+                            with st.container(key=f"sync_review_file_list_{idx}_updmod"):
+                                for canvas_file, sync_info in result.updated_modified_files:
+                                    ext = os.path.splitext(canvas_file.filename)[1].lower() or "Unknown"
+                                    size = format_file_size(canvas_file.size) if canvas_file.size else ""
+                                    key = f"sync_updmod_{pair['course_id']}_{canvas_file.id}"
                                     st.session_state.setdefault(key, False)
-                                    with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                    with st.container(key=f"sync_row_updmod_{pair['course_id']}_{canvas_file.id}"):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
-                                            _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                            _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(canvas_file.display_name or canvas_file.filename)
                                             _name, _ext = os.path.splitext(_disp_raw)
                                             _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
-                                            _size_clean = f" `{format_file_size(sync_info.original_size)}`" if sync_info.original_size else ""
+                                            _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                         with col2:
-                                            st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                                            st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
 
-                        if pan_restore:
-                            _render_pan_subsection(idx, pair, pan_restore, False, 'panlocdel')
+                # Missing files - always starts OPEN
+                # (Missing Files category retired \u2014 rolled into New Files.)
 
-            # Deleted files - always starts OPEN
-            if result.deleted_on_canvas:
-                lbl_del = "Deleted on Canvas (Kept Locally)"
+                # Locally Deleted Files (Student deleted locally to save space).
+                # Recordings whose downloaded outputs were deleted appear here too.
+                if result.locally_deleted_files or pan_restore:
+                    with st.container(key=f"cat_deleted_local_{pair['course_id']}"):
+                        with st.expander("Deleted Locally"):
+                            if result.locally_deleted_files:
+                                total_locdel = len(result.locally_deleted_files)
+                                selected_locdel = sum(1 for f in result.locally_deleted_files if st.session_state.get(f"sync_locdel_{pair['course_id']}_{f.canvas_file_id}", False))
+                                deselected_locdel = total_locdel - selected_locdel
+                                is_disabled_locdel = (selected_locdel == total_locdel)
+                                help_text_locdel = "These files will be moved to the Ignored Files section and skipped during sync." if not is_disabled_locdel else "All files are selected. Uncheck one or more files to enable this button."
+                                render_category_action_row(
+                                    idx, pair['course_id'], 'locally_deleted_files', 'sync_locdel',
+                                    f"Move deselected files to Ignored *({deselected_locdel})*",
+                                    f"sweep_locdel_{pair['course_id']}", is_disabled_locdel, help_text_locdel)
+                                st.caption("These files are missing from your Course Folder. They are **unchecked by default** since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.")
+
+                                with st.container(key=f"sync_review_file_list_{idx}_locdel"):
+                                    for sync_info in result.locally_deleted_files:
+                                        ext = os.path.splitext(sync_info.canvas_filename)[1].lower() or "Unknown"
+                                        key = f"sync_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"
+                                        st.session_state.setdefault(key, False)
+                                        with st.container(key=f"sync_row_locdel_{pair['course_id']}_{sync_info.canvas_file_id}"):
+                                            col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                            with col1:
+                                                _disp_raw = Path(sync_info.local_path).name if getattr(sync_info, 'local_path', None) else unquote_plus(sync_info.canvas_filename)
+                                                _name, _ext = os.path.splitext(_disp_raw)
+                                                _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
+                                                _size_clean = f" `{format_file_size(sync_info.original_size)}`" if sync_info.original_size else ""
+                                                st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                            with col2:
+                                                st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+
+                            if pan_restore:
+                                _render_pan_subsection(idx, pair, pan_restore, False, 'panlocdel')
+
+                # Deleted files - always starts OPEN
+                if result.deleted_on_canvas:
+                    lbl_del = "Deleted on Canvas (Kept Locally)"
                 
                 
 
-                with st.container(key=f"cat_deleted_canvas_{pair['course_id']}"):
-                    with st.expander(f"{lbl_del}"):
-                        st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
-                        for sync_info in result.deleted_on_canvas:
-                            _disp_raw = unquote_plus(sync_info.canvas_filename)
-                            _name, _ext = os.path.splitext(_disp_raw)
-                            _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                            _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
-                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
+                    with st.container(key=f"cat_deleted_canvas_{pair['course_id']}"):
+                        with st.expander(f"{lbl_del}"):
+                            st.caption("These files were deleted by the teacher on Canvas. They are preserved locally for your safety.")
+                            for sync_info in result.deleted_on_canvas:
+                                _disp_raw = unquote_plus(sync_info.canvas_filename)
+                                _name, _ext = os.path.splitext(_disp_raw)
+                                _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
+                                st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
 
-            # Ignored files Bucket (Canvas files AND/OR Panopto recordings)
-            if (hasattr(result, 'ignored_files') and result.ignored_files) or pan_ignored:
-                is_ignored_open = st.session_state.get('keep_ignored_open', False)
-                with st.container(key=f"cat_ignored_{pair['course_id']}"):
-                    with st.expander(f"Ignored Files", expanded=is_ignored_open):
-                        st.session_state['keep_ignored_open'] = False
-                        st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again")
-                        st.caption("These files are safely ignored and will not be synced.")
-                        with st.container(key=f"sync_review_file_list_{idx}_ign"):
-                            for sync_info in (result.ignored_files if hasattr(result, 'ignored_files') else []):
-                                with st.container(key=f"ign_restore_row_{pair['course_id']}_{sync_info.canvas_file_id}"):
-                                    col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
-                                    with col1:
-                                        _disp_raw = unquote_plus(sync_info.canvas_filename)
-                                        _name, _ext = os.path.splitext(_disp_raw)
-                                        _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
-                                        _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
-                                        st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
-                                    with col2:
-                                        st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
-
-                        # Ignored Panopto recordings (the whole recording entity).
-                        if pan_ignored:
-                            st.markdown(
-                                "<div style='margin:10px 0 6px 0; padding-top:10px; "
-                                "border-top:1px solid rgba(255,255,255,0.10); color:rgba(255,255,255,0.6); "
-                                "font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:7px;'>"
-                                f"{_PAN_REC_SVG}<span>Panopto Recordings</span></div>",  # audit-ignore: _PAN_REC_SVG is a self-built constant SVG (no user input)
-                                unsafe_allow_html=True,
-                            )
-                            with st.container(key=f"sync_review_file_list_{idx}_ign_pan"):
-                                for c in pan_ignored:
-                                    # Show the size of the outputs it WOULD produce.
-                                    _ik = c.download_kinds or c.wanted_kinds
-                                    _isz = c.size_for(_ik)
-                                    _isize_html = ""
-                                    if _isz > 0:
-                                        _iapprox = "~" if c.estimated_for(_ik) else ""
-                                        _isize_html = f" <code>{_iapprox}{format_file_size(_isz)}</code>"
-                                    _badges_html = "".join(f" <del>{k.upper()}</del>" for k in _ik)
-                                    with st.container(key=f"ign_restore_row_{pair['course_id']}_pan_{c.video_id}"):
+                # Ignored files Bucket (Canvas files AND/OR Panopto recordings)
+                if (hasattr(result, 'ignored_files') and result.ignored_files) or pan_ignored:
+                    is_ignored_open = st.session_state.get('keep_ignored_open', False)
+                    with st.container(key=f"cat_ignored_{pair['course_id']}"):
+                        with st.expander(f"Ignored Files", expanded=is_ignored_open):
+                            st.session_state['keep_ignored_open'] = False
+                            st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again")
+                            st.caption("These files are safely ignored and will not be synced.")
+                            with st.container(key=f"sync_review_file_list_{idx}_ign"):
+                                for sync_info in (result.ignored_files if hasattr(result, 'ignored_files') else []):
+                                    with st.container(key=f"ign_restore_row_{pair['course_id']}_{sync_info.canvas_file_id}"):
                                         col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
                                         with col1:
-                                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(c.title)}{_badges_html}{_isize_html}</div>", unsafe_allow_html=True)
+                                            _disp_raw = unquote_plus(sync_info.canvas_filename)
+                                            _name, _ext = os.path.splitext(_disp_raw)
+                                            _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                            _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
+                                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
                                         with col2:
-                                            st.button("\u200b", key=f"restitem_pan_{pair['course_id']}_{c.video_id}", help="Restore this recording to the sync list above", on_click=handle_restore_panopto, args=(idx, c))
+                                            st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
+
+                            # Ignored Panopto recordings (the whole recording entity).
+                            if pan_ignored:
+                                st.markdown(
+                                    "<div style='margin:10px 0 6px 0; padding-top:10px; "
+                                    "border-top:1px solid rgba(255,255,255,0.10); color:rgba(255,255,255,0.6); "
+                                    "font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:7px;'>"
+                                    f"{_PAN_REC_SVG}<span>Panopto Recordings</span></div>",  # audit-ignore: _PAN_REC_SVG is a self-built constant SVG (no user input)
+                                    unsafe_allow_html=True,
+                                )
+                                with st.container(key=f"sync_review_file_list_{idx}_ign_pan"):
+                                    for c in pan_ignored:
+                                        # Show the size of the outputs it WOULD produce.
+                                        _ik = c.download_kinds or c.wanted_kinds
+                                        _isz = c.size_for(_ik)
+                                        _isize_html = ""
+                                        if _isz > 0:
+                                            _iapprox = "~" if c.estimated_for(_ik) else ""
+                                            _isize_html = f" <code>{_iapprox}{format_file_size(_isz)}</code>"
+                                        _badges_html = "".join(f" <del>{k.upper()}</del>" for k in _ik)
+                                        with st.container(key=f"ign_restore_row_{pair['course_id']}_pan_{c.video_id}"):
+                                            col1, col2 = st.columns([0.85, 0.15], vertical_alignment="center")
+                                            with col1:
+                                                st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(c.title)}{_badges_html}{_isize_html}</div>", unsafe_allow_html=True)
+                                            with col2:
+                                                st.button("\u200b", key=f"restitem_pan_{pair['course_id']}_{c.video_id}", help="Restore this recording to the sync list above", on_click=handle_restore_panopto, args=(idx, c))
             
-        # Inject 20px gap BETWEEN courses, outside the course's content container
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 

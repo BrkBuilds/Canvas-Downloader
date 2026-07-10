@@ -265,7 +265,7 @@
   function permissionsScreen() {
     var rows = '';
     if (state.version === 'new') {
-      rows += permRow(ICO.layers(16), 'App data access', 'Lets conversions run in a private scratch folder.', true);
+      rows += permRow(ICO.layers(16), 'App data access', 'Lets conversions run in a private scratch folder. The one repeat: macOS forgets this consent when the app quits, so it re-asks once per session - granting the app Full Disk Access silences it for good (see the full guide).', true);
     }
     rows += permRow(ICO.folder(16),   'Your Downloads folder',              'So your course files can be saved.',              false);
     rows += permRow(ICO.terminal(16), 'System Events',                      'Keeps Office windows hidden during conversions.', false);
@@ -274,7 +274,9 @@
     return {
       eyebrow: 'Step 5 of 5',
       title: 'Your first download',
-      sub: 'macOS asks for a few one-time permissions. Click Allow on each - they never come back.',
+      sub: state.version === 'new'
+        ? 'macOS asks for a few permissions up front. Click Allow on each - only App data access ever returns (once per app session).'
+        : 'macOS asks for a few one-time permissions. Click Allow on each - they never come back.',
       body:
         note('amber', ICO.clock(18), '<strong>Stay near your Mac for the first minute of your first download.</strong> If a permission dialog sits unanswered too long, that one file’s conversion is skipped - you can always re-run a Sync to catch it later.') +
         '<div class="mw-perms">' + rows + '</div>' +
@@ -307,7 +309,7 @@
         '<div class="mw-done">' +
           '<div class="mw-done-emoji">🎉</div>' +
           '<h2>You’re all set!</h2>' +
-          '<p>Every future download and sync runs completely hands-free. Enjoy studying with Canvas Downloader!</p>' +
+          '<p>Every future download and sync runs hands-free. Enjoy studying with Canvas Downloader!</p>' +
           '<div class="mw-done-actions">' + actions + '</div>' +
           '<button class="mw-restart" data-restart>↺ Run through the setup again</button>' +
         '</div>'
