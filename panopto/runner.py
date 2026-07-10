@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -266,6 +267,45 @@ def _is_cuda_runtime_error(exc: Exception) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_panopto_batch(
+    cm,
+    targets: list,
+    *,
+    settings: dict,
+    progress=None,
+    is_cancelled=None,
+    debug_file=None,
+    max_file_size_bytes: int | None = None,
+) -> dict:
+    """Run :func:`_run_panopto_batch` inside the macOS Dock-recents guard.
+
+    Transcription re-execs this app's binary per recording; a worker's
+    termination (normal exit, or the SIGKILL a cancel sends) can be filed by
+    the Dock as a phantom "Canvas Downloader" recents tile. Snapshot OUR
+    recents rows before the batch and strip exactly what the batch added -
+    on EVERY exit path (return, cancel, raise) via finally, off-thread so
+    completion rendering never waits on Dock polling. No-op off macOS.
+    See engine.applescript_bridge for the mechanism write-up.
+    """
+    _dock = None
+    if sys.platform == 'darwin':
+        try:
+            from engine import applescript_bridge as _dock
+            _dock.snapshot_own_dock_recents()
+        except Exception:
+            _dock = None
+    try:
+        return _run_panopto_batch(
+            cm, targets, settings=settings, progress=progress,
+            is_cancelled=is_cancelled, debug_file=debug_file,
+            max_file_size_bytes=max_file_size_bytes,
+        )
+    finally:
+        if _dock is not None:
+            threading.Thread(
+                target=_dock.cleanup_own_dock_recents, daemon=True).start()
+
+
+def _run_panopto_batch(
     cm,
     targets: list,
     *,

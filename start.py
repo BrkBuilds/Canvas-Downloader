@@ -359,6 +359,22 @@ if __name__ == "__main__":
             _focus_running_instance()
             os._exit(0)
 
+    # macOS: sweep DEAD-IDENTITY "Canvas Downloader" tiles out of the Dock's
+    # recents section - left by System Settings' "Quit & Reopen" (the Full
+    # Disk Access grant flow relaunches the app under a fresh LaunchServices
+    # identity, so the old instance's tile can never merge with ours) or by a
+    # previous App-Translocation launch path. Off the boot path (one
+    # `defaults export`); the Dock is only restarted when a stale tile
+    # actually existed. See engine.applescript_bridge.purge_stale_self_dock_tiles.
+    if sys.platform == "darwin" and getattr(sys, "frozen", False):
+        def _sweep_stale_dock_tiles() -> None:
+            try:
+                from engine.applescript_bridge import purge_stale_self_dock_tiles
+                purge_stale_self_dock_tiles()
+            except Exception:
+                pass
+        threading.Thread(target=_sweep_stale_dock_tiles, daemon=True).start()
+
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 

@@ -1744,24 +1744,30 @@ def show_analysis_review(on_confirm_sync):
                 right_side_html = ""
 
                 if is_fully_up_to_date:
-                    # Custom large success label instead of the small pills
+                    # Custom success label arranged like the regular courses
                     uptodate_word = "file" if uptodate_count == 1 else "files"
                     _text_color = "rgba(209, 250, 229, 0.85)"  # Lighter and slightly saturated (pale green)
                 
-                    _check_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{_text_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                    # 12px checkmark SVG (base64)
+                    _check_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{_text_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
                     _check_b64 = _b64.b64encode(_check_svg_raw.encode()).decode()
-                    _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:16px; height:16px; flex-shrink:0; vertical-align:middle; margin-top:-1px;" />'
+                    _checkmark_svg = f'<img src="data:image/svg+xml;base64,{_check_b64}" style="width:12px; height:12px; flex-shrink:0; vertical-align:middle; margin-right:4px;" />'
                 
-                    _file_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="{_text_color}" stroke="none"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>'
+                    # 12px file SVG (base64)
+                    _file_svg_raw = f'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="{_text_color}" stroke="none"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>'
                     _file_b64 = _b64.b64encode(_file_svg_raw.encode()).decode()
-                    _file_svg_html = f'<img src="data:image/svg+xml;base64,{_file_b64}" style="width:13px; height:13px; vertical-align:middle; margin-right:5px; margin-top:-1px;" />'
+                    _file_svg_html = f'<img src="data:image/svg+xml;base64,{_file_b64}" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;" />'
+
+                    _uptodate_tag_style = (
+                        f"font-size: 0.73rem; color: {_text_color}; font-weight: 500; "
+                        "display:inline-flex; align-items:center; white-space:nowrap;"
+                    )
 
                     right_side_html = (
-                        '<div style="display: flex; align-items: center; justify-content: flex-end; gap: 16px;">'
-                        f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500; gap: 6px;">'
-                        f'{_checkmark_svg}<span>100% Up-to-date with Canvas</span></div>'
-                        f'<div style="display: flex; align-items: center; color: {_text_color}; font-size: 0.95rem; font-weight: 500;">{_file_svg_html}{uptodate_count} {uptodate_word} checked</div>'
-                        '</div>'
+                        f'<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0;">'
+                        f'<span style="{_uptodate_tag_style}">{_checkmark_svg}100% Up-to-date with Canvas</span>'
+                        f'<span style="{_uptodate_tag_style}">{_file_svg_html}{uptodate_count} {uptodate_word} checked</span>'
+                        f'</div>'
                     )
                 
                     # Green gradient (lighter, slightly more saturated)

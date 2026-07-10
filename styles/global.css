@@ -1275,10 +1275,11 @@ div[class*="st-key-open_token_settings_btn"] button:disabled {
    tags by styles.inject_css - never write a literal closing style tag in here
    (a stray one used to sit at EOF; anything after it would be dead CSS). */
 
-/* Card: violet-tinted sibling of the Today sync-notice card. */
+/* Card: blue-tinted sibling of the Today sync-notice card (theme BLUE_PRIMARY
+   #3b82f6 family). */
 div[class*="_fda_nudge_card"] {
-    background: rgba(167, 139, 250, 0.05) !important;
-    border: 1px solid rgba(167, 139, 250, 0.28) !important;
+    background: rgba(59, 130, 246, 0.05) !important;
+    border: 1px solid rgba(59, 130, 246, 0.28) !important;
     border-radius: 12px !important;
     padding: 13px 14px 13px 18px !important;
     margin: 0 0 10px 0 !important;
@@ -1295,10 +1296,11 @@ div[data-testid="stDialog"] div[class*="_fda_nudge_card"] {
     gap: 10px !important;
 }
 
-/* Keep the [body, close] columns vertically centred against multi-line bodies,
-   and zero the markdown element-container's built-in bottom margin. */
+/* Pin the close button to the card's TOP-right (level with the title) instead
+   of letting it float mid-card against the multi-line step list; zero the
+   markdown element-container's built-in bottom margin. */
 div[class*="_fda_nudge_card"] [data-testid="stHorizontalBlock"] {
-    align-items: center !important;
+    align-items: flex-start !important;
 }
 
 div[class*="_fda_nudge_card"] [data-testid="stMarkdownContainer"] {
@@ -1308,13 +1310,7 @@ div[class*="_fda_nudge_card"] [data-testid="stMarkdownContainer"] {
 .fda-nudge-inner {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-}
-
-.fda-nudge-head {
-    display: flex;
-    align-items: center;
-    gap: 9px;
+    gap: 5px;
 }
 
 .fda-nudge-title {
@@ -1329,25 +1325,41 @@ div[class*="_fda_nudge_card"] [data-testid="stMarkdownContainer"] {
     line-height: 1.5;
 }
 
-.fda-nudge-desc b {
-    color: #e3dbff;
+.fda-nudge-desc b,
+.fda-nudge-steps b {
+    color: #b6d3ff;
 }
 
-.fda-nudge-hint {
-    color: #7c8496;
-    font-size: 0.8rem;
+/* Step-by-step guide: numbered list, blue markers, tight rhythm. The
+   !importants beat Streamlit's stMarkdownContainer list margins/padding. */
+.fda-nudge-steps {
+    margin: 1px 0 0 0 !important;
+    padding-left: 1.3em !important;
+    color: #c7ccd9;
+    font-size: 0.88rem;
+    line-height: 1.55;
 }
 
-/* Action button: violet outline pill, indented to align with the text column
-   (19px icon + 9px gap). Content-sized (no use_container_width). */
+.fda-nudge-steps li {
+    margin: 0 0 2px 0 !important;
+    padding-left: 3px;
+}
+
+.fda-nudge-steps li::marker {
+    color: #7ea8e8;
+    font-weight: 600;
+}
+
+/* Action button: blue outline pill, flush with the card's text column
+   (left-aligned). Content-sized (no use_container_width). */
 div[class*="_fda_open_btn"] {
-    margin: 0 0 0 28px !important;
+    margin: 0 !important;
 }
 
 div[class*="_fda_open_btn"] button {
-    background: rgba(167, 139, 250, 0.12) !important;
-    border: 1px solid rgba(167, 139, 250, 0.45) !important;
-    color: #e3dbff !important;
+    background: rgba(59, 130, 246, 0.12) !important;
+    border: 1px solid rgba(59, 130, 246, 0.45) !important;
+    color: #dbe9ff !important;
     min-height: 0 !important;
     height: 34px !important;
     padding: 0 16px !important;
@@ -1358,14 +1370,14 @@ div[class*="_fda_open_btn"] button {
 }
 
 div[class*="_fda_open_btn"] button:hover {
-    background: rgba(167, 139, 250, 0.22) !important;
-    border-color: rgba(167, 139, 250, 0.75) !important;
+    background: rgba(59, 130, 246, 0.22) !important;
+    border-color: rgba(59, 130, 246, 0.75) !important;
     color: #ffffff !important;
 }
 
-/* Subtle re-spawn link (shown once the card is dismissed): bare text button
-   with a small violet sparkle. On the Today page it hugs the description
-   above it; inside the Settings dialog the compact gap suffices. */
+/* Subtle re-spawn link (shown once the card is dismissed): bare text button.
+   On the Today page it hugs the description above it; inside the Settings
+   dialog the compact gap suffices. */
 div[class*="_fda_link_btn"] {
     margin: -6px 0 2px 0 !important;
 }
@@ -1390,37 +1402,25 @@ div[class*="_fda_link_btn"] button {
 div[class*="_fda_link_btn"] button:hover {
     background: transparent !important;
     border: none !important;
-    color: #c4b5fd !important;
+    color: #9ec1ff !important;
 }
 
 div[class*="_fda_link_btn"] button p {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
     margin: 0 !important;
     font-size: inherit !important;
     color: inherit !important;
 }
 
-div[class*="_fda_link_btn"] button p::before {
-    content: '';
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-    background-color: #a78bfa;
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: 12px;
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E");
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: 12px;
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E");
+/* Close button: compact ghost square with a masked X glyph (zero-width-space
+   label) - same pattern as the Today notice close button. The columns row is
+   top-aligned (flex-start); the -4px lifts the 32px square so the X centres
+   optically on the title's first line. */
+div[class*="_fda_close_btn"] {
+    margin-top: -4px !important;
 }
 
-/* Close button: compact ghost square with a masked X glyph (zero-width-space
-   label) - same pattern as the Today notice close button. */
 div[class*="_fda_close_btn"] button {
     width: 32px !important;
     min-width: 32px !important;
