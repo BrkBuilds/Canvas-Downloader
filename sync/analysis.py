@@ -369,6 +369,29 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 cm, _pan_videos, local_folder, _pan_dmode, _pan,
                 _pan_manifest, ignored_ids=_pan_ignored,
             )
+            # Heal stale manifest paths: classify found these kinds alive at
+            # the CURRENT layout path while their recorded path is gone (e.g.
+            # a download-mode run of the same folder re-fetched them - it
+            # plans purely by layout and knows nothing of manifest paths).
+            # Re-point the manifest (idempotent upsert) so execution and
+            # future analyses resolve to the real file; without this the
+            # runner's manifest-first stem keeps writing new outputs next to
+            # the dead path, duplicating files the user already has.
+            for _hc in _pan_changes:
+                for _hk, _hp in (getattr(_hc, 'healed_paths', None) or {}).items():
+                    try:
+                        _h_rel = str(Path(_hp).relative_to(Path(local_folder))).replace('\\', '/')
+                    except Exception:
+                        _h_rel = str(_hp)
+                    try:
+                        sync_mgr.record_panopto_file(
+                            _hc.video.video_id, _hk, _h_rel,
+                            getattr(_hc.video, 'title', ''))
+                        logger.info("Panopto manifest healed: '%s' %s -> %s",
+                                    getattr(_hc.video, 'title', _hc.video.video_id),
+                                    _hk, _h_rel)
+                    except Exception as _heal_err:
+                        logger.debug(f"Panopto manifest heal failed: {_heal_err}")
             # Size the recordings whose outputs aren't on disk yet (new/restore/
             # ignored): fetch durations only for those, then estimate. Best-effort -
             # a probe failure just leaves those sizes unknown.

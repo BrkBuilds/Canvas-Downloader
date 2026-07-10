@@ -1102,6 +1102,19 @@ div.st-key-page_nav_quick_start button:active {{
         )
         error_placeholder = st.empty()
 
+        # ── macOS hands-off nudge (Full Disk Access) ─────────────────────
+        # Presets that convert Office files (Daily study pack, AI-Optimized)
+        # hit the once-per-session macOS consent dialog when the run starts -
+        # surface the same dismissible guide as custom download's step 2,
+        # right above the confirm button. The qdl_fda key prefix picks up the
+        # download-surface CSS (right-aligned link, 15px air below). Renders
+        # nothing on Windows, macOS ≤14, or once FDA is granted.
+        if active_preset is not None and any(
+                active_preset['settings'].get(_k, False)
+                for _k in ('convert_pptx', 'convert_word', 'convert_excel')):
+            from shared.components import render_fda_nudge
+            render_fda_nudge("qdl_fda")
+
         act_back, _spacer, act_start = st.columns([1, 3.5, 1.5])
         with act_back:
             back_clicked = st.button("Go back", key="page_nav_quick_back", use_container_width=True)
