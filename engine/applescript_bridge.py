@@ -1302,6 +1302,14 @@ def prime_office_automation(contract: dict) -> None:
     download phase batches ALL of the prompts before post-processing begins,
     warms up the heavy Office processes, and crucially launches them *hidden*
     so they never bounce the dock into the foreground.
+
+    Also re-touches our container staging dirs (``touch_containers=True``):
+    the macOS 15+ App Data consent is TRANSIENT (process lifetime - see
+    arm_app_data_access), so unlike the Automation grants it must be re-armed
+    every session, not just in the one-time first-run batch. The touch is
+    silent when the session's consent already exists; when it doesn't, the
+    prompt fires here (mid-download, user recently clicked Start) instead of
+    hanging the first conversion.
     """
     import threading
     if sys.platform != 'darwin':
@@ -1331,8 +1339,125 @@ def prime_office_automation(contract: dict) -> None:
     _snapshot_dock_recents()
 
     threading.Thread(
-        target=_warmup_apps, args=(to_launch, write_macro_pref), daemon=True,
+        target=_warmup_apps, args=(to_launch, write_macro_pref),
+        kwargs={'touch_containers': True}, daemon=True,
     ).start()
+
+
+def arm_app_data_access(contract: dict) -> None:
+    """Fire this session's macOS 15+ "access data from other apps" prompt NOW.
+
+    Conversions stage files inside the Office apps' own sandbox containers
+    (office_container_stage), which macOS 15+ gates behind the App Data
+    consent. Unlike the Automation grants, that consent is TRANSIENT: Apple
+    DTS classifies the privilege as "transient, process lifetime" (dev forums
+    thread 742147), so macOS forgets it the moment the app quits and re-asks
+    once per app instance - no recording, signing identity, or first-run batch
+    can make it stick. (Full Disk Access is the only durable bypass; the
+    mac-setup guide documents it.)
+
+    So the best available UX is to make the session's single prompt fire at
+    RUN START - the user just clicked Start and is at the screen - by touching
+    our staging dir inside every already-existing Office container. Consent is
+    granted app-wide per instance, so one Allow covers all later staging AND
+    the quit-time Recents purge in the Office group container. Runs on a
+    daemon thread: a pending TCC consent BLOCKS the touching syscall until the
+    user answers, and that must never freeze the run itself. Idempotent and
+    silent when this session's consent (or Full Disk Access) already exists;
+    containers that don't exist yet are skipped here and covered instead by
+    the touch inside per-run priming, which runs right after the app launches.
+    """
+    if sys.platform != 'darwin':
+        return
+    if not any(contract.get(key, False) for key, _ms, _short in _APP_TRIPLES):
+        return
+    import threading
+
+    def _touch_all():
+        # The TCC dialog itself is invisible to us; the only observable is that
+        # the first touch BLOCKS until the user answers. Log the duration so
+        # debug_log.txt shows whether (and how long) the prompt was up.
+        import time as _t
+        t0 = _t.time()
+        for _key, _ms, short in _APP_TRIPLES:
+            try:
+                _office_container_tmp(short)
+            except Exception:
+                pass
+        took = _t.time() - t0
+        logger.info(
+            f"[Setup] App Data container arming finished in {took:.1f}s"
+            + (" (consent prompt was likely shown)" if took > 2 else "")
+        )
+
+    threading.Thread(target=_touch_all, daemon=True).start()
+
+
+# ── Full Disk Access (the permanent App Data silence) ───────────────
+# FDA-granted apps are exempt from the macOS 15+ App Data check entirely - the
+# only DURABLE way to kill the once-per-session "access data from other apps"
+# prompt (see arm_app_data_access). These helpers back the Today page's
+# "make it fully hands-off" nudge.
+
+_FDA_SETTINGS_URL = (
+    'x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles'
+)
+
+
+def is_macos_15_plus() -> bool:
+    """True on macOS 15 Sequoia or newer - where App Data protection exists."""
+    if sys.platform != 'darwin':
+        return False
+    try:
+        import platform
+        return int((platform.mac_ver()[0] or '0').split('.')[0]) >= 15
+    except Exception:
+        return False
+
+
+def has_full_disk_access() -> bool:
+    """Best-effort: does this app currently hold Full Disk Access?
+
+    Reads one byte of the user TCC database - a file readable ONLY with FDA
+    (kTCCServiceSystemPolicyAllFiles). Probing is silent by construction: FDA
+    has no consent prompt (grants live solely in System Settings), so this can
+    never pop a dialog. Un-cached on purpose - the user can flip the toggle in
+    System Settings mid-session and the next rerun should notice. Any failure
+    reports False (worst case: a granted user sees a dismissible nudge).
+    """
+    if sys.platform != 'darwin':
+        return False
+    try:
+        tcc_db = (Path.home() / 'Library' / 'Application Support'
+                  / 'com.apple.TCC' / 'TCC.db')
+        with open(tcc_db, 'rb') as fh:
+            fh.read(1)
+        return True
+    except Exception:
+        return False
+
+
+def open_full_disk_access_settings() -> None:
+    """Open System Settings directly on Privacy & Security → Full Disk Access.
+
+    The legacy prefpane anchor URL still deep-links correctly in the new
+    System Settings (Ventura through Tahoe). Falls back to plainly launching
+    System Settings if the anchor is ever rejected. Best-effort, never raises.
+    """
+    if sys.platform != 'darwin':
+        return
+    try:
+        r = subprocess.run(['open', _FDA_SETTINGS_URL],
+                           capture_output=True, timeout=15)
+        if r.returncode == 0:
+            return
+    except Exception:
+        pass
+    try:
+        subprocess.run(['open', '-b', 'com.apple.systempreferences'],
+                       capture_output=True, timeout=15)
+    except Exception:
+        pass
 
 
 # ── First-run batched permission setup ──────────────────────────────
@@ -1398,9 +1523,11 @@ def first_run_permission_setup(contract: dict) -> bool:
     For each enabled converter whose app is installed and whose Automation
     prompt has never been answered, this launches the app hidden and fires the
     TCC-triggering events (plus the container-staging touch that hoists the
-    macOS 15 "access data from other apps" prompt into the same batch).
-    Answered apps are recorded in the config dir, so this is one-time per
-    machine - NOT per run. Returns True when a batch was actually started, so
+    macOS 15 "access data from other apps" prompt into the same batch - but
+    NOTE: that consent is transient per app instance and re-armed each session
+    by arm_app_data_access / per-run priming; only the Automation grants are
+    what this batch settles durably). Answered apps are recorded in the config
+    dir, so this is one-time per machine - NOT per run. Returns True when a batch was actually started, so
     the caller can show a heads-up banner; False otherwise (not macOS, nothing
     outstanding, already ran this process).
     """

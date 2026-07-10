@@ -1571,6 +1571,85 @@ _SYNC_HISTORY_CATEGORIES = [
 ]
 
 
+def _inject_shist_height_bridge():
+    """Size each Sync-History run's click button to its header's measured height.
+
+    Streamlit 1.51 refuses to grow a nested container from an auto-height flow
+    child - a run card stayed 92px tall around a 106px header, clipping its last
+    line. Only a flow child with an EXPLICIT pixel height sizes the card. So the
+    rich header is an absolute, pointer-events:none overlay and the invisible
+    click button is the flow element; this bridge copies the header's measured
+    height onto that button. The card then always fits the header exactly, and
+    the button (being the full header) stays clickable across the whole card -
+    no matter how many rows the course pills wrap onto.
+
+    A ResizeObserver re-syncs when a header reflows (window resize / zoom changes
+    the pill wrapping). Per CLAUDE.md, a FRESH observer + listener set is bound on
+    EVERY injection: components.html rebuilds its iframe on each rerun and
+    destroys the previous JS realm, so a one-time guard would leave dead closures
+    and the sizing would silently stop working after the first rerun.
+    """
+    import streamlit.components.v1 as components
+
+    components.html(
+        """
+        <script>
+        (function(){
+            var P = window.parent, doc = P.document;
+            var reg = P._cdShistHeights = P._cdShistHeights || {};
+
+            // Tear down the previous realm's observers/listener. The stored refs
+            // stay valid for removal even though their closures are dead.
+            try { (reg.observers || []).forEach(function(o){ o.disconnect(); }); } catch(e){}
+            try { if (reg.onResize) P.removeEventListener('resize', reg.onResize); } catch(e){}
+            reg.observers = [];
+
+            function sizeOne(run){
+                if (!run || !run.isConnected) return;
+                var head  = run.querySelector('.shist-runhead');
+                var btnEC = run.querySelector('[class*="st-key-shist_btn_"]');
+                if (!head || !btnEC) return;
+                var h = Math.ceil(head.getBoundingClientRect().height);
+                if (!h) return;
+                var px = h + 'px';
+                // setProperty(..., 'important') is required: the stylesheet's
+                // height/min-height on this button carry !important, which would
+                // otherwise beat a plain inline style.
+                btnEC.style.setProperty('height', px, 'important');
+                var btn = btnEC.querySelector('button');
+                if (btn){
+                    btn.style.setProperty('height', px, 'important');
+                    btn.style.setProperty('min-height', px, 'important');
+                }
+            }
+
+            function sizeAll(){
+                doc.querySelectorAll('[class*="st-key-shist_run_"]').forEach(sizeOne);
+            }
+
+            sizeAll();
+
+            // Re-measure whenever a header reflows (pill wrapping changes). Setting
+            // the button height never changes the header's WIDTH, so this cannot
+            // feed back into an observer loop.
+            doc.querySelectorAll('[class*="st-key-shist_run_"] .shist-runhead').forEach(function(head){
+                var run = head.closest('[class*="st-key-shist_run_"]');
+                try {
+                    var ro = new P.ResizeObserver(function(){ sizeOne(run); });
+                    ro.observe(head);
+                    reg.observers.push(ro);
+                } catch(e){}
+            });
+
+            reg.onResize = function(){ sizeAll(); };
+            P.addEventListener('resize', reg.onResize);
+        })();
+        </script>
+        """,
+        height=0,
+    )
+
+
 def _render_sync_history():
     """Render sync history in an expander at the bottom of step 1."""
     history_mgr = None
@@ -1791,7 +1870,7 @@ def _render_sync_history():
             border-top-right-radius: 0 !important;
             border-bottom-left-radius: 8px !important;
             border-bottom-right-radius: 8px !important;
-            background: #0f1318 !important;
+            background: #0b0e13 !important;
             padding: 16px 20px 18px 20px !important;
             margin-top: -16px !important;
         }
@@ -1914,8 +1993,8 @@ def _render_sync_history():
         st.markdown(
             f"""<style>
             div.st-key-sync_history_toggle button {{
-                background: #1a1e24 !important;
-                border: 1px solid rgba(255,255,255,0.08) !important;
+                background: #262b34 !important;
+                border: 1px solid rgba(255,255,255,0.10) !important;
                 border-top-left-radius: 8px !important;
                 border-top-right-radius: 8px !important;
                 /* When open, square the bottom corners + keep the bottom border
@@ -1928,8 +2007,8 @@ def _render_sync_history():
                 margin-top: 32px !important;
             }}
             div.st-key-sync_history_toggle button:hover {{
-                background: #1e2330 !important;
-                border-color: rgba(255,255,255,0.14) !important;
+                background: #2c3240 !important;
+                border-color: rgba(255,255,255,0.16) !important;
             }}
             div.st-key-sync_history_toggle button p {{
                 font-size: 1.15rem !important; font-weight: 600 !important;
@@ -2164,8 +2243,32 @@ def _render_sync_history():
                             # and the body renders below only when open.
                             _names = [friendly_course_name(str(n)) for n in course_names if n]
                             _names = [nm for nm in _names if isinstance(nm, str) and nm]
-                            _courses_plain = (", ".join(_names) if _names
-                                              else (f"Across {courses_count} courses" if courses_count > 0 else "Sync"))
+                            _n_courses = len(_names)
+                            # Collapsed title: a single-course run shows its full
+                            # course name; a multi-course run shows a clean
+                            # "N courses" count. (The old ", ".join(names) was an
+                            # unreadable, ellipsis-truncated comma wall for 3+
+                            # courses.) The individual course names move to
+                            # wrapping pills on the row below - see _pills_html.
+                            if _n_courses >= 2:
+                                _title = f"{_n_courses} courses"
+                            elif _n_courses == 1:
+                                _title = _names[0]
+                            else:
+                                _title = (f"{courses_count} courses" if courses_count > 1 else "Sync")
+                            # Multi-course runs list every course as wrapping pills
+                            # on the middle row of the header, between the title and
+                            # the "Synced N files" line.
+                            _pills_html = ""
+                            if _n_courses >= 2:
+                                _pills_html = (
+                                    "<div class='shist-pills'>"
+                                    + "".join(
+                                        f"<span class='shist-pill' title=\"{esc(nm)}\">{esc(nm)}</span>"
+                                        for nm in _names
+                                    )
+                                    + "</div>"
+                                )
 
                             open_key = f"shist_open_{run_seq}"
                             is_open = st.session_state.get(open_key, False)
@@ -2177,14 +2280,15 @@ def _render_sync_history():
                                         "fill='none' stroke='#8b949e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>"
                                         "<polyline points='9 6 15 12 9 18'/></svg>")
                             header_html = (
-                                "<div class='shist-card'>"
+                                "<div class='shist-runhead'>"
                                 f"<div class='shist-chev' style='transform:rotate({90 if is_open else 0}deg);'>{_chevron}</div>"
                                 "<div class='shist-info'>"
                                 "<div class='shist-l1'>"
-                                f"<span class='shist-title'>{esc(_courses_plain)}</span>"
+                                f"<span class='shist-title'>{esc(_title)}</span>"
                                 f"<span class='shist-badge' style='color:{status_color};background:{status_bg};"
                                 f"border-color:{status_border};'>{status_text}</span>"
                                 "</div>"
+                                + _pills_html +
                                 "<div class='shist-l2'>"
                                 f"<span>Synced {count} file{'s' if count != 1 else ''}</span>"
                                 "<span class='shist-dot'>&bull;</span>"
@@ -2198,6 +2302,20 @@ def _render_sync_history():
                             )
 
                             with st.container(border=True, key=f"shist_run_{run_seq}"):
+                                # "Fake expander": the invisible full-width button is
+                                # BOTH the click target and the element that gives the
+                                # card its height; the rich header (title / course
+                                # pills / meta) is painted on top as a
+                                # pointer-events:none absolute overlay.
+                                #
+                                # Streamlit 1.51 will NOT grow a nested container from
+                                # an auto-height flow child (verified in-browser: the
+                                # card stayed 92px around a 106px header). Only a flow
+                                # child with an EXPLICIT pixel height sizes the card.
+                                # The header's height depends on how many rows the
+                                # course pills wrap onto, which CSS cannot know - so
+                                # _inject_shist_height_bridge() measures each header
+                                # and copies its height onto this button.
                                 if st.button("​", key=f"shist_btn_{run_seq}", use_container_width=True):
                                     st.session_state[open_key] = not is_open
                                     st.rerun()
@@ -2215,16 +2333,35 @@ def _render_sync_history():
                                                     if _alt and Path(_alt).exists():
                                                         course_root = _alt
                                                 if multi:
+                                                    # Each course is a STATIC card mirroring the Today
+                                                    # page's expanded card (minus the toggle): a light
+                                                    # header bar with the course name + file count,
+                                                    # seamlessly joined to a dark, bordered body that
+                                                    # holds the category lists (with dividers between
+                                                    # categories). Reads as distinct, enclosed sections
+                                                    # instead of one flat wall of filenames.
                                                     _cname = esc(friendly_course_name(g.get('course_name', '') or 'Course'))
-                                                    st.markdown(
-                                                        f"<div style='margin:10px 0 2px 0;color:#cdd9e5;font-size:0.9rem;font-weight:700;'>"
-                                                        f"{HELP_ICONS['folder']} {_cname}</div>",
-                                                        unsafe_allow_html=True,
+                                                    _fcount = len(files)
+                                                    _fcount_label = f"{_fcount} file" if _fcount == 1 else f"{_fcount} files"
+                                                    with st.container(key=f"shist_course_{run_seq}_{gi}"):
+                                                        st.markdown(
+                                                            "<div class='shist-course-head'>"
+                                                            f"<span class='shist-course-title'>{_cname}</span>"
+                                                            f"<span class='shist-course-count'>{esc(_fcount_label)}</span>"
+                                                            "</div>",
+                                                            unsafe_allow_html=True,
+                                                        )
+                                                        render_course_file_breakdown(
+                                                            files, course_root,
+                                                            key_scope=f"synchist_m_{run_seq}_{gi}",
+                                                        )
+                                                else:
+                                                    # "s_" scope aligns a single-course run's list with
+                                                    # the card's own title (it has no course panel).
+                                                    render_course_file_breakdown(
+                                                        files, course_root,
+                                                        key_scope=f"synchist_s_{run_seq}_{gi}",
                                                     )
-                                                render_course_file_breakdown(
-                                                    files, course_root,
-                                                    key_scope=f"synchist_{run_seq}_{gi}",
-                                                )
                                         elif count > 0:
                                             categorized_files = entry.get('categorized_files') or {}
                                             if not isinstance(categorized_files, dict):
@@ -2288,6 +2425,10 @@ def _render_sync_history():
                                     _entry_exc, exc_info=True,
                                 )
                             run_seq += 1
+
+                # Every run card is rendered - now match each card's height to its
+                # header (see _inject_shist_height_bridge for why this needs JS).
+                _inject_shist_height_bridge()
 
 
 
@@ -2992,7 +3133,9 @@ def _run_sync_panopto():
                         'synced_files': _h_names,
                         'categorized_files': {'new': _h_new, 'updated': [], 'restored': _h_restored, 'protected': []},
                         'synced_groups': st.session_state.get('synced_groups'),
-                        'sync_mode': st.session_state.get('sync_mode', 'normal'),
+                        # Run TYPE (quick vs review), not the sync-vs-download flag -
+                        # matches the file-sync entry writer in sync/execution.py.
+                        'sync_mode': 'quick' if st.session_state.get('sync_quick_mode') else 'normal',
                     })
                 st.session_state.pop('_sync_history_cache', None)
         except Exception as _hist_err:

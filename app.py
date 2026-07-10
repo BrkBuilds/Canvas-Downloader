@@ -131,7 +131,7 @@ components.html("""<script>
         if(p.vis)return;
         // Re-attach if Streamlit hot-reload replaced document.body while we were detached
         if(!p.el.isConnected)doc.body.appendChild(p.el);
-        p.el.style.display='flex'; p.vis=true;
+        p.el.style.display='flex'; p.vis=true; p.abortScroll=false;
         // Safety valve: force-hide after 8 s so a hung rerun can't trap the overlay.
         // Also kill any pending poll timer - otherwise the stabilization loop keeps
         // running as a zombie AFTER the overlay is hidden and later fires its
@@ -172,7 +172,11 @@ components.html("""<script>
             function waitForReady(){
                 // Overlay already hidden (safety valve or a prior hide): stop the
                 // loop so it can never fire scroll/side-effects after teardown.
-                if(!p.vis){p.hT=null;return;}
+                // Also bail if the overlay got detached from the DOM (a Streamlit
+                // hot-reload can replace document.body): p.vis would still say
+                // "visible" while nothing actually covers the page, so the user is
+                // free to click - and this loop would later yank them to the top.
+                if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
                 if(!isStReady()){
                     p.hT=setTimeout(waitForReady,150);
                     return;
@@ -197,9 +201,10 @@ components.html("""<script>
                 var lastFP='';
                 var stableCount=0;
                 function pollStable(){
-                    // Overlay already hidden (safety valve or a prior hide): abort so
-                    // a stale loop can never yank scroll after the overlay is gone.
-                    if(!p.vis){p.hT=null;return;}
+                    // Overlay already hidden (safety valve or a prior hide), or
+                    // detached from the DOM: abort so a stale loop can never yank
+                    // scroll after the overlay is gone / while it isn't covering.
+                    if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
                     // If a new rerun started (e.g. st.query_params.update() on the
                     // previous rerun triggered a second server round-trip), go back
                     // to Phase 2 so we wait for it to finish before counting stability.
@@ -220,6 +225,13 @@ components.html("""<script>
                                 // Capture the stable fingerprint for the rAF guard.
                                 var commitFP=lastFP;
                                 requestAnimationFrame(function(){
+                                    // The overlay may have been torn down during the
+                                    // ~16 ms rAF gap (the 8 s safety valve can fire, or a
+                                    // hot-reload can detach it).  pollStable's guard ran
+                                    // BEFORE this callback was queued, so re-check here -
+                                    // otherwise the scroll below still executes on a page
+                                    // the user is already reading and interacting with.
+                                    if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
                                     // Guard against the ~16 ms rAF gap: a late mutation
                                     // (deep React cleanup, URL-param update, second rerun)
                                     // may have fired between the stableCount decision and
@@ -232,20 +244,28 @@ components.html("""<script>
                                         return;
                                     }
                                     // Confirmed stable AND still the active navigation
-                                    // overlay (pollStable aborts at the top once p.vis is
-                                    // false, so we can't reach here from a stale loop).
-                                    // Scroll to top as the LAST act before hiding, so it
-                                    // fires exactly once per navigation - never early,
-                                    // never repeatedly, and never while the user reads a
-                                    // settled page.  Streamlit uses internal scroll
-                                    // containers, not the window - hit all candidates.
-                                    win.scrollTo(0,0);
-                                    var sc=doc.querySelectorAll(
-                                        '[data-testid="stMain"],'
-                                        +'[data-testid="stAppViewContainer"],'
-                                        +'[data-testid="stVerticalBlock"]'
-                                    );
-                                    for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
+                                    // overlay.  Scroll to top as the LAST act before
+                                    // hiding, so it fires exactly once per navigation -
+                                    // never early, never repeatedly, and never while the
+                                    // user reads a settled page.  Streamlit uses internal
+                                    // scroll containers, not the window - hit all
+                                    // candidates.
+                                    //
+                                    // abortScroll: a click reached a button while the
+                                    // overlay was supposedly covering the page, so it was
+                                    // NOT actually blocking input.  The user is already
+                                    // interacting (e.g. expanding a sync-history card);
+                                    // hide silently rather than yanking them to the top.
+                                    if(!p.abortScroll){
+                                        win.scrollTo(0,0);
+                                        var sc=doc.querySelectorAll(
+                                            '[data-testid="stMain"],'
+                                            +'[data-testid="stAppViewContainer"],'
+                                            +'[data-testid="stVerticalBlock"]'
+                                        );
+                                        for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
+                                    }
+                                    p.abortScroll=false;
                                     if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
                                     p.el.style.display='none';p.vis=false;p.hT=null;
                                 });
@@ -290,6 +310,12 @@ components.html("""<script>
         doc.addEventListener('click',function(e){
             if(!e.target.closest('button'))return;
             var btn = e.target.closest(NAV_SEL);
+            // A click reached a button while the overlay claims to be visible, so it
+            // is NOT actually blocking input (it was detached, or is mid-teardown).
+            // Cancel the pending scroll-to-top: the user is already interacting with
+            // a settled page (e.g. expanding a sync-history card) and yanking them
+            // to the top is exactly the intermittent bug this guards against.
+            if(p.vis&&!btn)p.abortScroll=true;
             if(!btn)return;
             
             // Sidebar nav buttons: skip overlay when already at the target mode's
@@ -922,6 +948,7 @@ with _main_content.container():
                 try:
                     from engine.applescript_bridge import (
                         reset_office_priming, first_run_permission_setup,
+                        arm_app_data_access,
                     )
                     reset_office_priming()
                     # One-time per machine: fire ALL outstanding Office permission
@@ -929,12 +956,17 @@ with _main_content.container():
                     # clicked Start) - instead of letting each app's prompt ambush
                     # a later run mid-conversion. Uses the UNscoped toggles on
                     # purpose; the per-course prime stays file-scoped.
-                    if first_run_permission_setup({
+                    _conv_contract = {
                         'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
                         'convert_word': st.session_state.get('persistent_convert_word', False),
                         'convert_excel': st.session_state.get('persistent_convert_excel', False),
-                    }):
+                    }
+                    if first_run_permission_setup(_conv_contract):
                         st.session_state['_tcc_batch_active'] = True
+                    # Every session (not one-time): the macOS 15+ App Data consent
+                    # is forgotten at quit by OS design, so re-fire its single
+                    # prompt at run start rather than mid-conversion.
+                    arm_app_data_access(_conv_contract)
                 except Exception:
                     pass
 

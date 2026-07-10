@@ -1,6 +1,6 @@
 """core.today_store - persistence for the Today dashboard & daily auto-sync.
 
-Stores three things in ``today_dashboard.json`` (config dir):
+Stores four things in ``today_dashboard.json`` (config dir):
   - ``auto_sync_enabled``     master toggle for the daily auto-sync
   - ``pairs``                 the full course/folder pairs (course_id +
                               course_name + local_folder) the user imported from
@@ -8,6 +8,8 @@ Stores three things in ``today_dashboard.json`` (config dir):
                               Stored as standalone copies so the daily sync is
                               self-contained and survives edits/deletes in the hub.
   - ``last_auto_sync_date``   the logical date the daily run last fired
+  - ``fda_nudge_dismissed``   macOS: the Full Disk Access nudge card was closed
+                              (it then only reopens via its subtle link)
 
 Atomic writes (tmp + ``os.replace``) under a module ``threading.Lock``, mirroring
 ``sync/persistence.py``. All reads degrade to defaults on a corrupt/missing file.
@@ -48,7 +50,14 @@ def _path() -> Path:
 
 
 def _default() -> dict:
-    return {"auto_sync_enabled": False, "pairs": [], "last_auto_sync_date": ""}
+    return {
+        "auto_sync_enabled": False,
+        "pairs": [],
+        "last_auto_sync_date": "",
+        # macOS: the "make it fully hands-off" (Full Disk Access) nudge card was
+        # closed - it then never auto-shows again, only via its subtle link.
+        "fda_nudge_dismissed": False,
+    }
 
 
 def _norm_pair(p: dict) -> dict | None:
@@ -87,6 +96,7 @@ def load_today_config() -> dict:
             d["pairs"] = [np for np in (_norm_pair(p) for p in d["pairs"]) if np]
         d["auto_sync_enabled"] = bool(d["auto_sync_enabled"])
         d["last_auto_sync_date"] = str(d["last_auto_sync_date"] or "")
+        d["fda_nudge_dismissed"] = bool(d["fda_nudge_dismissed"])
         return d
     except Exception:
         return _default()
@@ -122,6 +132,10 @@ def _update(**changes) -> dict:
 
 def set_auto_sync_enabled(enabled: bool) -> None:
     _update(auto_sync_enabled=bool(enabled))
+
+
+def set_fda_nudge_dismissed(dismissed: bool = True) -> None:
+    _update(fda_nudge_dismissed=bool(dismissed))
 
 
 def _dedupe(pairs: list[dict]) -> list[dict]:

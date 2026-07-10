@@ -1059,6 +1059,17 @@ summary::-webkit-details-marker {
 }
 
 /* ═══════════════════════════════════════════════
+       15b. Sync Review - per-course card spacing
+       Wraps the per-folder result cards (ui/sync_review.py). The class sits
+       directly on the outer stVerticalBlock, so gap here spaces its immediate
+       children (each course card) uniformly - pending AND fully-up-to-date
+       courses alike. Overrides Streamlit's default 1rem inter-block gap.
+       ═══════════════════════════════════════════════ */
+div.st-key-sync_course_cards {
+    gap: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════
        16. "Go back" Buttons - action-button style + curved arrow via ::before
        ═══════════════════════════════════════════════ */
 div.st-key-page_nav_back_to_settings button,
@@ -1253,4 +1264,208 @@ div[class*="st-key-open_token_settings_btn"] button:disabled {
     opacity: 1 !important;
 }
 
-</style>
+/* ═══════════════════════════════════════════════
+   macOS Full Disk Access nudge (shared component)
+   ───────────────────────────────────────────────
+   shared/components.py render_fda_nudge - rendered on the Today page
+   (today_fda_* keys) and at the bottom of the Settings dialog (stg_fda_*), so
+   every selector matches on the common `_fda_*` key suffix. Lives HERE (not
+   today.css) because global.css is the only stylesheet loaded on every page
+   AND under the Settings dialog portal. NOTE: this file is wrapped in style
+   tags by styles.inject_css - never write a literal closing style tag in here
+   (a stray one used to sit at EOF; anything after it would be dead CSS). */
+
+/* Card: violet-tinted sibling of the Today sync-notice card. */
+div[class*="_fda_nudge_card"] {
+    background: rgba(167, 139, 250, 0.05) !important;
+    border: 1px solid rgba(167, 139, 250, 0.28) !important;
+    border-radius: 12px !important;
+    padding: 13px 14px 13px 18px !important;
+    margin: 0 0 10px 0 !important;
+    /* Key class sits on the flex block itself (1.51): this gap spaces the
+       [body, close] row from the action-button row below it. */
+    gap: 10px !important;
+}
+
+/* The Settings dialog's blanket gap rule
+   (div[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap: 0.3rem })
+   is more specific than the plain selector above - restore the card's internal
+   gap inside the dialog portal. */
+div[data-testid="stDialog"] div[class*="_fda_nudge_card"] {
+    gap: 10px !important;
+}
+
+/* Keep the [body, close] columns vertically centred against multi-line bodies,
+   and zero the markdown element-container's built-in bottom margin. */
+div[class*="_fda_nudge_card"] [data-testid="stHorizontalBlock"] {
+    align-items: center !important;
+}
+
+div[class*="_fda_nudge_card"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+.fda-nudge-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fda-nudge-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.fda-nudge-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.fda-nudge-desc {
+    color: #c7ccd9;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.fda-nudge-desc b {
+    color: #e3dbff;
+}
+
+.fda-nudge-hint {
+    color: #7c8496;
+    font-size: 0.8rem;
+}
+
+/* Action button: violet outline pill, indented to align with the text column
+   (19px icon + 9px gap). Content-sized (no use_container_width). */
+div[class*="_fda_open_btn"] {
+    margin: 0 0 0 28px !important;
+}
+
+div[class*="_fda_open_btn"] button {
+    background: rgba(167, 139, 250, 0.12) !important;
+    border: 1px solid rgba(167, 139, 250, 0.45) !important;
+    color: #e3dbff !important;
+    min-height: 0 !important;
+    height: 34px !important;
+    padding: 0 16px !important;
+    border-radius: 9px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+}
+
+div[class*="_fda_open_btn"] button:hover {
+    background: rgba(167, 139, 250, 0.22) !important;
+    border-color: rgba(167, 139, 250, 0.75) !important;
+    color: #ffffff !important;
+}
+
+/* Subtle re-spawn link (shown once the card is dismissed): bare text button
+   with a small violet sparkle. On the Today page it hugs the description
+   above it; inside the Settings dialog the compact gap suffices. */
+div[class*="_fda_link_btn"] {
+    margin: -6px 0 2px 0 !important;
+}
+
+div[data-testid="stDialog"] div[class*="_fda_link_btn"] {
+    margin: 0 !important;
+}
+
+div[class*="_fda_link_btn"] button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px 4px 2px 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    color: #7c8496 !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    transition: color 0.15s ease !important;
+}
+
+div[class*="_fda_link_btn"] button:hover {
+    background: transparent !important;
+    border: none !important;
+    color: #c4b5fd !important;
+}
+
+div[class*="_fda_link_btn"] button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    font-size: inherit !important;
+    color: inherit !important;
+}
+
+div[class*="_fda_link_btn"] button p::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    background-color: #a78bfa;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 12px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 12px;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E");
+}
+
+/* Close button: compact ghost square with a masked X glyph (zero-width-space
+   label) - same pattern as the Today notice close button. */
+div[class*="_fda_close_btn"] button {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+}
+
+div[class*="_fda_close_btn"] button:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+div[class*="_fda_close_btn"] button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+
+div[class*="_fda_close_btn"] button p::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.55);
+    transition: background-color 0.15s ease;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 14px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 14px;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+}
+
+div[class*="_fda_close_btn"] button:hover p::before {
+    background-color: #ffffff;
+}

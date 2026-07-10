@@ -386,6 +386,7 @@ def run_sync():
             try:
                 from engine.applescript_bridge import (
                     reset_office_priming, first_run_permission_setup,
+                    arm_app_data_access,
                 )
                 reset_office_priming()
                 # One-time per machine: fire ALL outstanding Office permission
@@ -394,12 +395,17 @@ def run_sync():
                 # run mid-conversion. Unscoped toggles on purpose; the in-run
                 # prime stays file-scoped. Idempotent across reruns (module flag
                 # + persisted record inside first_run_permission_setup).
-                if first_run_permission_setup({
+                _conv_contract = {
                     'convert_pptx': st.session_state.get('persistent_convert_pptx', False),
                     'convert_word': st.session_state.get('persistent_convert_word', False),
                     'convert_excel': st.session_state.get('persistent_convert_excel', False),
-                }):
+                }
+                if first_run_permission_setup(_conv_contract):
                     st.session_state['_tcc_batch_active'] = True
+                # Every session (not one-time): the macOS 15+ App Data consent
+                # is forgotten at quit by OS design, so re-fire its single
+                # prompt at run start rather than mid-conversion.
+                arm_app_data_access(_conv_contract)
             except Exception:
                 pass
 
@@ -2252,7 +2258,12 @@ def run_sync():
                 # Per-course breakdown (course + rel path + category) so the
                 # "New files since last sync" panel can group, sort, Open & Reveal.
                 'synced_groups': synced_groups,
-                'sync_mode': st.session_state.get('sync_mode', 'normal')
+                # Record the RUN TYPE (quick vs review), not the sync-vs-download
+                # boolean 'sync_mode' session flag. The Sync History label AND the
+                # Today page's "today's files" filter both key off 'quick' here.
+                # (sync_quick_mode is still set at this point - analysis never pops
+                # it; see sync/analysis.py:908.)
+                'sync_mode': 'quick' if st.session_state.get('sync_quick_mode') else 'normal',
             })
             # M-1: Invalidate the step-1 history cache so the next render
             # re-reads from disk and shows the entry we just wrote.
