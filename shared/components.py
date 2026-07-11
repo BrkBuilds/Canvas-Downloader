@@ -1971,6 +1971,18 @@ def _fda_gate() -> tuple[bool, bool]:
         return False, False
 
 
+def fda_nudge_applies() -> bool:
+    """True when the FDA nudge slot WOULD render (macOS 15+, FDA not granted).
+
+    Public visibility gate for callers that need to know without rendering -
+    e.g. step 2's Card 3 fragment: the nudge slot lives OUTSIDE that fragment,
+    so when a converter toggle flips the slot's visibility the fragment
+    escalates to a full-page rerun (and only then - Windows / granted
+    machines never flash)."""
+    _applies, _granted = _fda_gate()
+    return _applies and not _granted
+
+
 def _dismiss_fda_nudge() -> None:
     """on_click for the nudge's close button - the card never auto-shows again."""
     from core.today_store import set_fda_nudge_dismissed
@@ -2028,7 +2040,7 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
                 f"<div class='fda-nudge-title'>How to silence 'Would like to access data from other apps' pop-up</div>"
                 f"<div class='fda-nudge-desc'>macOS asks a one-click "
                 f"<b>&ldquo;access data from other apps&rdquo;</b> permission every time "
-                f"you open the app to convert Office files &ndash; This is is annoying, and "
+                f"you open the app. The app needs this permission to safely and cleanly convert Office files to your ai-ready formats. This permission is annoying and "
                 f"makes features like the 'Todays Files' mode require your input. To hide it for good, grant Canvas Downloader "
                 f"<b>Full Disk Access</b> once and it will never appear again:</div>"
                 f"<ol class='fda-nudge-steps'>{_FDA_STEPS_HTML}</ol>"  # audit-ignore: static module constant (shared step copy)
@@ -2078,10 +2090,10 @@ def render_fda_settings_card() -> None:
 
     if _granted:
         _dot, _status = "#22c55e", ("Full Disk Access granted &middot; "
-                                    "conversions run fully hands-off")
+                                    "permission pop-up hidden and conversions run fully hands-off")
     else:
-        _dot, _status = "#3b82f6", ("Not granted &middot; macOS asks a one-click "
-                                    "permission once per app session")
+        _dot, _status = "#3b82f6", ("Not granted &middot; macOS will prompt you with a one-click "
+                                    "permission pop-up, every time you start the app.")
 
     _steps_html = "" if _granted else (
         "<ol style='margin:9px 0 2px 0;padding-left:1.35em;color:#cbd5e1;"
@@ -2092,7 +2104,7 @@ def render_fda_settings_card() -> None:
 
     with st.container(border=True, key="stg_card_fda"):
         st.html(
-            f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission the first time each app session converts &ndash; the only dialog that can hold up an unattended sync. Granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. Optional &ndash; conversions work either way.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
+            f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 + 26 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission the every time you start the app, the moment office conversions start. But you don't need to manually click allow every time you use the app - granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. This is an optional, but recommended action.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
         )
         if not _granted:
             # Key deliberately avoids the `_fda_open_btn` suffix: that CSS
