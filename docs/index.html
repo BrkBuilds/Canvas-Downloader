@@ -341,6 +341,50 @@
       white-space: nowrap;
     }
 
+    /* ---- KO-FI SUPPORT BUTTONS (mirrors the app sidebar's .kofi-tag) ---- */
+    .kofi-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--txt2);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 7px 14px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .kofi-tag:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .kofi-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      border-radius: var(--rad);
+      padding: 13px 26px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .kofi-cta:hover {
+      background: rgba(249, 115, 22, 0.18);
+      border-color: rgba(249, 115, 22, 0.55);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(249, 115, 22, 0.18);
+    }
+
     @media(max-width:860px) {
 
       .btn-nav-ghost span,
@@ -358,7 +402,7 @@
       display: none;
     }
 
-    @media(max-width:540px) {
+    @media(max-width:600px) {
       .setup-full {
         display: none;
       }
@@ -368,6 +412,16 @@
       }
 
       .nav-v {
+        display: none;
+      }
+    }
+
+    /* Below 540px the two text links can no longer fit next to the logo and
+       the two icon buttons - hide them (all pages remain reachable via the
+       footer). This is what keeps the nav from overflowing the viewport and
+       causing horizontal scroll on phones. */
+    @media(max-width:540px) {
+      .nav-right .nav-link {
         display: none;
       }
     }
@@ -2654,7 +2708,7 @@
           Canvas Downloader
         </a>
         <div class="nav-right">
-          <a href="mac-setup.html" class="nav-link"><span class="setup-full">How to set up</span><span
+          <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
               class="setup-short">Setup</span></a>
           <a href="guide.html" class="nav-link">How It Works</a>
           <a href="#get" class="btn-nav">
@@ -2720,9 +2774,7 @@
                 <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%;" />
               </a>
-              <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-                class="btn-dl btn-dl-ghost" id="hero-get-win"
-                onclick="setTimeout(() => window.location.href='thanks-win.html', 100);"
+              <a href="releases.html" class="btn-dl btn-dl-ghost" id="hero-get-win" data-latest-exe
                 style="padding: 10px 16px; font-size: 13px; width: 100%; justify-content: center; box-shadow: none;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
@@ -2775,6 +2827,14 @@
               manually downloading my course files from Canvas and converting them to AI-ready formats, so i decided to
               make this app!
               It's 100% free and open-source - for all students to use! Happy downloading!</p>
+            <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener" class="kofi-tag"
+              style="margin-top: 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#f97316">
+                <path
+                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              Support me &amp; the project
+            </a>
           </div>
         </div>
       </div>
@@ -3010,8 +3070,8 @@
             <p>Imagine this - It’s Monday morning. Instead of digging through Canvas to find the files for your first
               class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads only
               the newest files your professors added to canvas.<br><br><b>Pro-tip:</b> Save your courses as a group, and
-              add them to the Sync List. Simply hit <b>Quick Sync All</b> every morning to get all the new files your
-              teacher added to the course, straight to your pc. Doesn’t get much easier.</p>
+              add them to the Sync List. Then one press of <b>Quick Sync All</b> fetches everything new, straight to
+              your pc. Want it fully automatic? That's the next section.</p>
             <label for="p2-open" class="pillar-expander-label desktop-only">What is downloaded and how does it work?
               <span class="pex-arrow"></span></label>
           </div>
@@ -3072,19 +3132,75 @@
         </div>
       </div>
 
-      <!-- Pillar 3 -->
+      <!-- Pillar 3: Today / Daily Auto-Sync -->
       <div class="pillar-section">
-        <input type="checkbox" id="p3-open" class="pillar-toggle">
+        <input type="checkbox" id="p6-open" class="pillar-toggle">
         <div class="pillar-row reveal">
           <div class="pillar-text">
-            <div class="section-kicker">3. Sync Review</div>
+            <div class="section-kicker">3. Daily Auto-Sync</div>
+            <h3>Your courses sync themselves - every morning.</h3>
+            <p>Meet the <b>Today</b> page - your daily home in the app. Pick your courses once and switch on
+              <b>daily sync</b>. From then on, the first time you open the app each day, it quietly fetches every new
+              file from Canvas all by itself.<br><br>Below the toggle, <b>Today's files</b> shows exactly what arrived
+              today, grouped per course - open any file or its folder with one click. No digging through Canvas, no
+              guessing what's new.</p>
+            <label for="p6-open" class="pillar-expander-label desktop-only">How daily sync works
+              <span class="pex-arrow"></span></label>
+          </div>
+          <div class="pillar-vis aligned-to-title"
+            style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+            <!-- TODO: drop in the Today page demo clip as assets/Today_Demo.mp4 -->
+            <video class="expandable-video" src="assets/Today_Demo.mp4" autoplay loop muted playsinline
+              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2); background: var(--surf2); aspect-ratio: 16/9;"></video>
+          </div>
+        </div>
+        <label for="p6-open" class="pillar-expander-label mobile-only"
+          style="display: flex; width: fit-content; margin: 24px auto 0;">How daily sync works <span
+            class="pex-arrow"></span></label>
+        <div class="pillar-expand-content">
+          <div class="expand-section-label">Daily Sync in 3 Steps</div>
+          <p class="expand-intro">The Today page reuses the exact same Quick Sync engine - so the same safety rules
+            apply: it never overwrites files you've edited and never re-downloads files you've deleted. Read more in
+            the <a href="guide.html#today" style="color:var(--cyan);text-decoration:none;">Today guide</a>.</p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:16px;">
+            <div class="app-card">
+              <div class="app-card-header" style="color: var(--cyan);">1. Pick your courses</div>
+              <div class="app-card-body" style="font-size: 13px; color: var(--txt2); line-height: 1.6;">
+                Import the course/folder pairs you care about from your saved groups &amp; pairs - once. Your selection
+                is remembered and can be edited any time.
+              </div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-header" style="color: var(--cyan);">2. Toggle daily sync on</div>
+              <div class="app-card-body" style="font-size: 13px; color: var(--txt2); line-height: 1.6;">
+                That's the whole setup. The sync runs automatically on your first app launch each day (a "day" rolls
+                over at 4 AM, so late-night sessions don't count as tomorrow).
+              </div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-header" style="color: var(--cyan);">3. Glance at Today's files</div>
+              <div class="app-card-body" style="font-size: 13px; color: var(--txt2); line-height: 1.6;">
+                Every file that arrived today is listed per course - including Panopto lecture recordings. Prefer
+                manual? Hit <b>Quick Sync now</b> on the same page instead.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillar 4: Sync Review -->
+      <div class="pillar-section">
+        <input type="checkbox" id="p3-open" class="pillar-toggle">
+        <div class="pillar-row rev reveal">
+          <div class="pillar-text">
+            <div class="section-kicker">4. Sync Review</div>
             <h3>Full control over your files.</h3>
             <p>Get the full status overview of your local course folders. <b>Sync Review mode</b> compares your local
               files directly against your Canvas courses and runs advanced algorithms to show you exactly what's
               different.<br><br>The app categorizes the results so you can select and download exactly what you need:
               New files, deleted files, updates or changes, giving you <b>full control</b> and confidence that your
               materials are always 100% up-to-date.</p>
-            <label for="p3-open" class="pillar-expander-label desktop-only">The 5 categories, and how Sync Review works
+            <label for="p3-open" class="pillar-expander-label desktop-only">The file categories, and how Sync Review works
               <span class="pex-arrow"></span></label>
           </div>
           <div class="pillar-vis aligned-to-title"
@@ -3094,13 +3210,14 @@
           </div>
         </div>
         <label for="p3-open" class="pillar-expander-label mobile-only"
-          style="display: flex; width: fit-content; margin: 24px auto 0;">The 5 categories, and how Sync Review works
+          style="display: flex; width: fit-content; margin: 24px auto 0;">The file categories, and how Sync Review works
           <span class="pex-arrow"></span></label>
         <div class="pillar-expand-content">
-          <div class="expand-section-label">5 Sync Categories</div>
-          <p class="expand-intro">Every file in a sync Review is placed into one of these 5 categories - each with its
-            own action and default state. You can check or uncheck individual files to download, or use the built-in
-            tools to bulk-select. See the <a href="guide.html#sync-review"
+          <div class="expand-section-label">The Sync Categories</div>
+          <p class="expand-intro">Every file in a sync Review is sorted into a category - the 5 that need decisions are
+            shown below (two more, <b>Ignored</b> and <b>Up to Date</b>, are handled automatically). Each category has
+            its own action and default state. You can check or uncheck individual files to download, or use the
+            built-in tools to bulk-select. See the <a href="guide.html#sync-review"
               style="color:var(--cyan);text-decoration:none;">Sync Review guide</a> for the full breakdown.</p>
           <div class="sync-cats-grid">
 
@@ -3177,9 +3294,9 @@
       <!-- Pillar 4 -->
       <div class="pillar-section">
         <input type="checkbox" id="p4-open" class="pillar-toggle">
-        <div class="pillar-row rev reveal">
+        <div class="pillar-row reveal">
           <div class="pillar-text">
-            <div class="section-kicker">4. AI Optimization</div>
+            <div class="section-kicker">5. AI Optimization</div>
             <h3>Supercharge your exam prep</h3>
             <p>Canvas Downloader is built for the modern studying workflow, where <b>AI-assisted learning</b> is at the
               core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to
@@ -3203,7 +3320,7 @@
           <p class="expand-intro">Toggle these on and the engine automatically converts complex files into AI-readable
             formats on every download or sync. Office conversions require Microsoft Office installed. When fully
             enabled, your entire course is 100% ready for tools like NotebookLM. See the <a
-              href="guide.html#ai-optimizations" style="color:var(--cyan);text-decoration:none;">AI Optimization
+              href="guide.html#card3" style="color:var(--cyan);text-decoration:none;">AI Optimization
               guide</a> for details.</p>
           <div class="pp-grid">
             <div class="pp-btn active">
@@ -3285,9 +3402,9 @@
       <!-- Pillar 5: Panopto Lecture Recordings -->
       <div class="pillar-section">
         <input type="checkbox" id="p5-open" class="pillar-toggle">
-        <div class="pillar-row reveal">
+        <div class="pillar-row rev reveal">
           <div class="pillar-text">
-            <div class="section-kicker">5. Lecture Recordings</div>
+            <div class="section-kicker">6. Lecture Recordings</div>
             <h3>Your lecture recordings, downloaded and transcribed.</h3>
             <p>Some courses post their lectures as <b>Panopto</b> recordings - slow to rewatch, and impossible to hand
               to an AI. Canvas Downloader saves them straight to your course folder as <b>video</b> or <b>audio</b> to
@@ -3530,9 +3647,7 @@
                 <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%; max-width: 260px;" />
               </a>
-              <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest/download/Canvas_Downloader_Setup_2.0.0.exe"
-                class="btn-download btn-dl-ghost"
-                onclick="setTimeout(() => window.location.href='thanks-win.html', 100);"
+              <a href="releases.html" class="btn-download btn-dl-ghost" data-latest-exe
                 style="width: 100%; padding: 10px 14px; font-size: 13px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -3557,9 +3672,7 @@
                 d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
             </svg>
             <div>
-              <div class="plat-name">macOS <span
-                  style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.3);vertical-align:middle;margin-left:6px;">Pre-release</span>
-              </div>
+              <div class="plat-name">macOS</div>
               <div class="plat-req">Apple Silicon (M1 or later)</div>
             </div>
           </div>
@@ -3571,7 +3684,7 @@
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Download macOS Beta (.dmg)
+              Download for macOS (.dmg)
             </a>
             <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
           </div>
@@ -3635,6 +3748,36 @@
             showingMac = !showingMac;
             updateOSUI();
           });
+        });
+      </script>
+
+      <!-- Latest-release resolver: points every [data-latest-exe] button at the
+           newest .exe on GitHub Releases (so links never go stale). Until the
+           API answers - or if it fails - the buttons fall back to releases.html. -->
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const exeBtns = document.querySelectorAll('[data-latest-exe]');
+          if (!exeBtns.length) return;
+          fetch('https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases?per_page=30',
+            { headers: { 'Accept': 'application/vnd.github+json' } })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(rels => {
+              for (const rel of (rels || [])) {
+                if (rel.draft) continue;
+                const exe = (rel.assets || []).find(a => /\.exe$/i.test(a.name));
+                if (exe) {
+                  exeBtns.forEach(btn => {
+                    btn.href = exe.browser_download_url;
+                    // Direct download started -> show the SmartScreen walkthrough.
+                    btn.addEventListener('click', () => {
+                      setTimeout(() => window.location.href = 'thanks-win.html', 100);
+                    });
+                  });
+                  return;
+                }
+              }
+            })
+            .catch(() => { /* keep releases.html fallback */ });
         });
       </script>
 
@@ -3836,7 +3979,7 @@
             Make sure Canvas Downloader has the right permissions to save files, especially on macOS. Check out our
             step-by-step setup guide for detailed instructions.
           </p>
-          <a href="guide.html"
+          <a href="mac-setup.html" data-setup-link
             style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 24px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--txt); font-weight: 500; font-size: 14px; border-radius: var(--rad); text-decoration: none; transition: background 0.2s ease;"
             onmouseover="this.style.background='rgba(255,255,255,0.08)'"
             onmouseout="this.style.background='rgba(255,255,255,0.05)'">
@@ -3861,7 +4004,7 @@
   <section id="macos-notes" style="padding:80px 0 70px; display:none;">
     <div class="container">
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
-        <div class="label org" style="justify-content:center;">macOS - Pre-release</div>
+        <div class="label org" style="justify-content:center;">macOS</div>
         <h2>Known limitations on Mac</h2>
         <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you
           dive in - especially if you're on a university-managed Mac.</p>
@@ -4012,6 +4155,13 @@
             lost.</p>
         </details>
         <details class="faq-item reveal">
+          <summary>Can it fetch new files automatically every day?</summary>
+          <p>Yes. On the <strong>Today</strong> page, pick the courses you care about and switch on <strong>daily
+              sync</strong>. The first time you open the app each day it quietly syncs those courses by itself and shows
+            you the files that arrived today, grouped per course. You can also hit <strong>Quick Sync now</strong> on
+            the same page whenever you want. See the <a href="guide.html#today">Today guide</a>.</p>
+        </details>
+        <details class="faq-item reveal">
           <summary>Can it download lecture recordings (Panopto)?</summary>
           <p>Yes. Canvas Downloader automatically finds <strong>Panopto</strong> lecture recordings linked in your
             courses and saves them in the course folder as video (MP4), audio (MP3), or a written transcript (.txt) and
@@ -4040,6 +4190,41 @@
     </div>
   </section>
 
+  <hr class="div" />
+
+  <!-- SUPPORT CTA -->
+  <section class="reveal" id="support" style="padding: 90px 0; position: relative; overflow: hidden;">
+    <div
+      style="position: absolute; top: -140px; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(ellipse, rgba(249,115,22,0.1) 0%, transparent 70%); pointer-events: none;">
+    </div>
+    <div class="container" style="max-width: 560px; text-align: center; position: relative;">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="#f97316" style="margin-bottom: 16px;">
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      </svg>
+      <h2 style="font-size: clamp(24px, 3.5vw, 34px); font-weight: 900; letter-spacing: -0.03em; margin: 0 0 14px;">
+        Enjoying Canvas Downloader?</h2>
+      <p style="font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0 0 28px;">
+        It's built by one student, between lectures, and will always be 100% free. If it saves you hours every
+        semester, you can buy me a coffee - it keeps the project alive and gets us closer to the paid app
+        certificates that would remove the install warnings for everyone.
+      </p>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener" class="kofi-cta">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#f97316">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+        Support me &amp; the project
+      </a>
+      <p style="font-size: 13px; color: var(--txt3); margin: 18px 0 0;">
+        Not in a position to donate? Starring the project on
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+          style="color: var(--txt2); text-decoration: underline; text-underline-offset: 2px;">GitHub</a>
+        helps too.
+      </p>
+    </div>
+  </section>
+
 
   <!-- FOOTER -->
   <footer>
@@ -4051,16 +4236,17 @@
       <p>Built by a student, for students. Free and open source.</p>
       <div class="foot-links">
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases" target="_blank"
-          rel="noopener">Releases</a>
+        <a href="releases.html">Downloads &amp; Releases</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
           rel="noopener">Report a Bug</a>
         <a href="#faq">FAQ</a>
         <a href="guide.html">How It Works</a>
-        <a href="mac-setup.html">Setup Guide</a>
+        <a href="mac-setup.html" data-setup-link>Setup Guide</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+            style="color:#f97316;">&hearts;</span> Support the project</a>
       </div>
-      <div class="foot-v">v2.0.0 - Not affiliated with Instructure or Canvas LMS</div>
+      <div class="foot-v">Not affiliated with Instructure or Canvas LMS</div>
     </div>
   </footer>
 
@@ -4279,6 +4465,15 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
+  </script>
+
+  <script>
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
   </script>
 </body>
 
