@@ -1946,10 +1946,10 @@ def error_log_dialog(log_paths):
 # card so the copy can never drift between surfaces.
 _FDA_STEPS_HTML = (
     "<li>Click <b>Open Full Disk Access Settings</b> below.</li>"
-    "<li>Turn on <b>Canvas Downloader</b> in the app list.</li>"
-    "<li>Enter your Mac password to confirm.</li>"
-    "<li>Choose <b>Quit &amp; Reopen</b> when macOS asks &ndash; done, "
-    "the permission dialog never shows again.</li>"
+    "<li>Toggle on <b>Canvas Downloader</b> in the app list.</li>"
+    "<li>Enter your Mac password to confirm and click <b>Modify Settings</b></li>"
+    "<li>Choose <b>Quit &amp; Reopen</b> when macOS asks. That's all, "
+    "the permission dialog will never show again.</li>"
 )
 
 _FDA_TOAST = ("Turn on Canvas Downloader under Full Disk Access, "
@@ -2013,7 +2013,7 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
 
     if dismissed and not st.session_state.get("fda_nudge_card_open", False):
         # Dismissed: the always-there subtle re-spawn link.
-        st.button("Make Canvas Downloader fully hands-off - Remove the 'Would like to access data from other apps' dialog", key=f"{key_prefix}_link_btn",
+        st.button("Recommended action: Silence the 'Would like to access data from other apps' pop-up forever", key=f"{key_prefix}_link_btn",
                   on_click=_spawn_fda_nudge_card)
         return
 
@@ -2025,12 +2025,12 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
         with c_body:
             st.markdown(
                 f"<div class='fda-nudge-inner'>"
-                f"<div class='fda-nudge-title'>Make it fully hands-off</div>"
+                f"<div class='fda-nudge-title'>How to silence 'Would like to access data from other apps' pop-up</div>"
                 f"<div class='fda-nudge-desc'>macOS asks a one-click "
-                f"<b>&ldquo;access data from other apps&rdquo;</b> permission the first "
-                f"time each session converts Office files &ndash; the only dialog that "
-                f"can hold up an unattended morning sync. Grant Canvas Downloader "
-                f"<b>Full Disk Access</b> once and it never appears again:</div>"
+                f"<b>&ldquo;access data from other apps&rdquo;</b> permission every time "
+                f"you open the app to convert Office files &ndash; This is is annoying, and "
+                f"makes features like the 'Todays Files' mode require your input. To hide it for good, grant Canvas Downloader "
+                f"<b>Full Disk Access</b> once and it will never appear again:</div>"
                 f"<ol class='fda-nudge-steps'>{_FDA_STEPS_HTML}</ol>"  # audit-ignore: static module constant (shared step copy)
                 f"</div>",
                 unsafe_allow_html=True,
