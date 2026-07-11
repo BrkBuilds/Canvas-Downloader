@@ -1826,6 +1826,27 @@ def render_download_settings(fetch_courses_fn):
                         else:
                             st.button(conv_title, key=f"btn_{conv_key}", on_click=_toggle_conv_sub, args=(conv_key,), use_container_width=True)
 
+            # ── FDA nudge slot sync ──────────────────────────────────────
+            # The hands-off notice above Confirm-and-Download is gated on the
+            # office converters, but its slot lives OUTSIDE this fragment - a
+            # toggle click repaints only this card, so the notice used to
+            # appear/disappear one full-page rerun too late (user report: it
+            # only showed after opening Settings). When a toggle flips the
+            # slot's visibility, escalate to a full-page rerun - and ONLY
+            # then: Windows / macOS ≤14 / FDA-granted machines never rerun,
+            # so the usual toggle stays flash-free. Record BEFORE rerunning:
+            # this fragment renders before the slot in DOM order, so on a
+            # fresh page the sentinel is still unset here - rerunning without
+            # recording first would loop forever on macOS 15+.
+            _fda_conv_now = any(
+                st.session_state.get(_k, st.session_state.get(f'persistent_{_k}', False))
+                for _k in ('convert_pptx', 'convert_word', 'convert_excel'))
+            if _fda_conv_now != st.session_state.get('_dl_fda_conv_on'):
+                st.session_state['_dl_fda_conv_on'] = _fda_conv_now
+                from shared.components import fda_nudge_applies
+                if fda_nudge_applies():
+                    st.rerun(scope="app")
+
         with st.container(border=True, key="card_ai_engine"):
             _render_card3_inner()
 
@@ -2481,8 +2502,14 @@ div.st-key-review_browse_folder button:hover {
         # relevant - surface the dismissible guide right at the decision
         # point. Same shared component + persisted dismissal as the Today
         # page; renders nothing on Windows, macOS ≤14, or once FDA is granted.
-        if any(st.session_state.get(_k, st.session_state.get(f'persistent_{_k}', False))
-               for _k in ('convert_pptx', 'convert_word', 'convert_excel')):
+        _fda_conv_on = any(
+            st.session_state.get(_k, st.session_state.get(f'persistent_{_k}', False))
+            for _k in ('convert_pptx', 'convert_word', 'convert_excel'))
+        # Card 3's fragment compares against this to detect a converter toggle
+        # flipping this slot's visibility (the slot lives HERE, outside the
+        # fragment, so the fragment escalates to a full rerun when it changes).
+        st.session_state['_dl_fda_conv_on'] = _fda_conv_on
+        if _fda_conv_on:
             from shared.components import render_fda_nudge
             render_fda_nudge("dl_fda")
 
