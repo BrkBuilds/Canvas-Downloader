@@ -110,6 +110,26 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: filter 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-nav:hover {
+      filter: brightness(1.15);
+    }
+
     .btn-nav-ghost {
       display: inline-flex;
       align-items: center;
@@ -131,13 +151,22 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span { display: none; }
-      .btn-nav-ghost { padding: 8px 10px; }
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
+
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
     }
 
-    @media(max-width:520px) {
-      .nav-link { display: none; }
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
     }
 
     /* ---- HERO ---- */
@@ -451,7 +480,8 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link">How to set up</a>
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link">How It Works</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
@@ -567,8 +597,10 @@
       <a href="index.html">Homepage</a>
       <a href="guide.html">How It Works</a>
       <a href="privacy.html">Privacy Policy</a>
-      <a href="mac-setup.html">Setup Guide</a>
+      <a href="mac-setup.html" data-setup-link>Setup Guide</a>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+          style="color:#f97316;">&hearts;</span> Support the project</a>
       <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
     </div>
   </footer>
@@ -627,25 +659,33 @@
         toggleBtn.textContent = showingMac ? 'Need the Windows version?' : 'Need the Mac version?';
       }
 
-      function renderLatest(rel) {
-        const winAsset = findAsset(rel, winRe);
-        const macAsset = findAsset(rel, macRe);
-        const ver = fmtVer(rel);
+      function renderLatest(rels) {
+        // Per-platform "latest": the newest release that actually carries an
+        // installer for that platform. (A release may ship only one platform -
+        // e.g. a mac-only build - and must not hide the other platform's
+        // newest installer.)
+        let winRel = null, winAsset = null, macRel = null, macAsset = null;
+        for (const rel of rels) {
+          if (!winAsset) { const a = findAsset(rel, winRe); if (a) { winRel = rel; winAsset = a; } }
+          if (!macAsset) { const a = findAsset(rel, macRe); if (a) { macRel = rel; macAsset = a; } }
+          if (winAsset && macAsset) break;
+        }
         hasWin = !!winAsset;
         hasMac = !!macAsset;
 
         if (winAsset) {
-          el('win-ver').textContent = 'v' + ver;
+          el('win-ver').textContent = 'v' + fmtVer(winRel);
           el('win-exe').href = winAsset.browser_download_url;
         }
         if (macAsset) {
-          el('mac-ver').textContent = 'v' + ver;
+          el('mac-ver').textContent = 'v' + fmtVer(macRel);
           el('mac-dmg').href = macAsset.browser_download_url;
         }
 
         // Only show the OS toggle when both platforms are available.
         osToggle.classList.toggle('hidden', !(hasWin && hasMac));
         updateOSUI();
+        return { winRel, macRel };
       }
 
       function renderOlder(rels) {
@@ -722,10 +762,17 @@
           if (!visible.length) { showError(); return; }
 
           loadingEl.classList.add('hidden');
-          renderLatest(visible[0]);
-          renderOlder(visible.slice(1));
+          const { winRel, macRel } = renderLatest(visible);
+          renderOlder(visible.filter(r => r !== winRel && r !== macRel));
         })
         .catch(showError);
+    })();
+
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
     })();
   </script>
 </body>

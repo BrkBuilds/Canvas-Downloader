@@ -176,18 +176,41 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span {
+    .nav-link,
+    .nav-logo,
+    .btn-nav,
+    .btn-nav-ghost {
+      white-space: nowrap;
+    }
+
+    @media(max-width:860px) {
+      .btn-nav-ghost span,
+      .btn-nav span {
         display: none;
       }
 
-      .btn-nav-ghost {
+      .btn-nav-ghost,
+      .btn-nav {
         padding: 8px 10px;
       }
     }
 
-    @media(max-width:520px) {
-      .nav-link {
+    .setup-short {
+      display: none;
+    }
+
+    @media(max-width:600px) {
+      .setup-full {
+        display: none;
+      }
+
+      .setup-short {
+        display: inline;
+      }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link {
         display: none;
       }
     }
@@ -443,7 +466,8 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link">How to set up</a>
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link active">How It Works</a>
         <a href="index.html#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -452,7 +476,7 @@
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Download
+          <span>Download</span>
         </a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
@@ -505,9 +529,13 @@
       <a href="#quick-vs-analyze" class="sub">Quick Sync vs Analyze</a>
       <a href="#saved-groups" class="sub">Saved Groups</a>
       <a href="#safety" class="sub">Safety Guarantees</a>
+      <a href="#sync-history" class="sub">Sync History</a>
       <a href="#sync-review">Sync Review</a>
       <a href="#file-categories" class="sub">The 7 File Categories</a>
       <a href="#review-tools" class="sub">Review Tools</a>
+      <a href="#today">The Today Page</a>
+      <a href="#today-daily" class="sub">Daily Auto-Sync</a>
+      <a href="#today-files" class="sub">Today's Files</a>
       <a href="#settings">Settings</a>
       <a href="#settings-download" class="sub">Download Options</a>
       <a href="#settings-save" class="sub">Default Save Location</a>
@@ -606,14 +634,14 @@
           <div class="preset-row">
             <img src="assets/icon_quick_dl_ai_optimized.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
-              <strong>AI Study Pack</strong>
+              <strong>Daily study pack (Optimized)</strong>
               <span>Same as Complete, plus PowerPoint and Word files are automatically converted to PDF, and Panopto lecture video &amp; audio are saved. Designed for uploading your whole course to an AI tool.</span>
             </div>
           </div>
           <div class="preset-row">
             <img src="assets/icon_quick_dl_notebook.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
-              <strong>NotebookLM Ready</strong>
+              <strong>100% AI &amp; NotebookLM Ready</strong>
               <span>All files in a single flat folder with all conversions enabled (PPTX, Word, Excel, code files, web pages, videos), plus Panopto lecture audio in a separate Recordings folder. Optimized for NotebookLM and similar AI tools. Folder layout is locked to flat.</span>
             </div>
           </div>
@@ -1018,6 +1046,35 @@
             <p><strong>Treats lecture recordings the same way</strong> - <a href="#panopto" style="color:var(--cyan)">Panopto recordings</a> sync like any other file: new lectures are added, ones you deleted locally are left alone, and any you ignore stay hidden.</p>
           </div>
         </div>
+
+        <!-- Sync History -->
+        <h3 class="sub-title reveal" id="sync-history">Sync History</h3>
+        <p class="body-text reveal">
+          The <strong>Sync History</strong> expander at the bottom of the Sync page is your sync journal - a rolling log
+          of your most recent sync runs, so you can always see exactly when and how your Course Folders were modified,
+          and which files failed to download.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>Reading the log</h4>
+          <p>Each entry shows the date and time, which courses were synced, the total files downloaded, and a color-coded status badge:</p>
+          <ul>
+            <li><strong style="color:#34d399;">Success</strong> - synced with no issues.</li>
+            <li><strong style="color:#f59e0b;">Errors</strong> - some files failed to sync.</li>
+            <li><strong style="color:#8b949e;">No Changes</strong> - everything was already fully up to date.</li>
+          </ul>
+          <p style="margin-top:8px;">Click any run to expand it and see what happened to individual files, sorted by category - new files added, updates overwritten, locally-deleted files you chose to restore, modified files protected with a <em>_NewVersion</em> copy, and any Panopto recordings fetched.</p>
+        </div>
+
+        <div class="info-card reveal">
+          <h4>Filtering &amp; controls</h4>
+          <ul>
+            <li><strong>View All</strong> - every sync run across all your courses, chronologically.</li>
+            <li><strong>By Course</strong> - pick a course from the dropdown to see only its runs.</li>
+            <li><strong>Clear History</strong> - permanently deletes all history entries.</li>
+          </ul>
+          <p style="margin-top:8px;">How many runs are kept is configurable in <a href="#settings-prefs" style="color:var(--cyan)">Settings &rarr; Preferences</a> (10-500, default 50) - older entries are trimmed automatically.</p>
+        </div>
       </section>
 
       <!-- ============================================================ -->
@@ -1122,6 +1179,54 @@
       </section>
 
       <!-- ============================================================ -->
+      <!-- SECTION 5.5: THE TODAY PAGE                                   -->
+      <!-- ============================================================ -->
+      <section class="guide-section" id="today">
+        <div class="sh reveal">
+          <div class="label blu">Your Daily Home</div>
+          <h2>The Today Page</h2>
+          <p>A daily dashboard that keeps your courses up to date on autopilot - and shows you exactly which files arrived today.</p>
+        </div>
+
+        <p class="body-text reveal">
+          The <strong>Today</strong> page (first item in the sidebar) is built around one idea: you shouldn't have to
+          think about syncing at all. Pick the courses you care about once, switch on daily sync, and from then on the
+          app fetches everything new by itself - you just glance at the page to see what landed.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>Setting it up</h4>
+          <ol class="guide-steps">
+            <li><strong>Add your courses.</strong> The Today page imports course/folder pairs from your <a href="#saved-groups" style="color:var(--cyan)">Saved Groups &amp; Pairs</a> hub - pick which ones should be part of your daily set. Your selection is saved and can be edited any time, independently of the hub.</li>
+            <li><strong>Toggle daily sync on.</strong> That's it - no schedule to configure.</li>
+          </ol>
+        </div>
+
+        <h3 class="sub-title reveal" id="today-daily">Daily Auto-Sync</h3>
+        <p class="body-text reveal">
+          With daily sync enabled, the app automatically runs a <a href="#quick-vs-analyze" style="color:var(--cyan)">Quick Sync</a>
+          of your chosen courses <strong>the first time you open it each day</strong> (a "day" rolls over at 4 AM, so a
+          late-night session doesn't count as tomorrow). It runs quietly as a slim progress bar right on the page - no
+          wizard, no takeover - and posts a notification when it's done. It follows the exact same safety rules as any
+          Quick Sync: only new files and clean updates are downloaded, and your edited or deleted files are never touched.
+        </p>
+
+        <div class="callout info reveal">
+          <strong>Prefer to stay in charge?</strong> Leave the toggle off and use the <strong>Quick Sync now</strong>
+          button on the same page whenever you want - it syncs the same curated set of courses on demand.
+        </div>
+
+        <h3 class="sub-title reveal" id="today-files">Today's Files</h3>
+        <p class="body-text reveal">
+          Below the toggle, the page lists <strong>every file downloaded today</strong>, grouped per course - the same
+          interactive folder cards you see on the sync completion screen, so you can open a file or its folder with one
+          click. Panopto lecture recordings fetched by the sync show up here too. If nothing new arrived, you get a
+          friendly "all caught up" instead. The list covers the page's own syncs (the daily auto-sync and Quick Syncs),
+          so it always answers the one question that matters in the morning: <em>what's new for me today?</em>
+        </p>
+      </section>
+
+      <!-- ============================================================ -->
       <!-- SECTION 6: SETTINGS                                           -->
       <!-- ============================================================ -->
       <section class="guide-section" id="settings">
@@ -1223,6 +1328,14 @@
         <p class="body-text reveal">
           <strong>Engine vs. output:</strong> this only sets up <em>how</em> transcription runs. The decision of <em>whether</em> to actually produce transcripts or subtitles for a given batch lives in <a href="#panopto" style="color:var(--cyan)">Custom Download &rarr; Panopto</a>, alongside the video/audio output choices.
         </p>
+
+        <div class="callout info reveal">
+          <strong>macOS 15+ only - Full Disk Access card.</strong> On newer macOS versions, Settings also shows a status
+          card for <strong>Full Disk Access</strong>. macOS 15 asks for permission to "access data from other apps"
+          every session when the app converts Office files - granting Full Disk Access once (System Settings &rarr;
+          Privacy &amp; Security) is the only way to silence that prompt permanently. The card shows whether it's
+          granted; the <a href="mac-setup.html" style="color:var(--cyan)">Mac setup guide</a> walks you through it.
+        </div>
       </section>
 
       <!-- ============================================================ -->
@@ -1236,6 +1349,10 @@
         </div>
 
         <div class="faq-grid">
+          <div class="faq-item reveal">
+            <h4>Can the app sync my courses automatically every day?</h4>
+            <p>Yes. On the <strong>Today</strong> page, pick your courses and switch on daily sync. The first time you open the app each day, it runs a Quick Sync of those courses by itself and lists the files that arrived today, per course. See <a href="#today" style="color:var(--cyan)">The Today Page</a>.</p>
+          </div>
           <div class="faq-item reveal">
             <h4>What is the difference between Download Mode and Sync Mode?</h4>
             <p>Download Mode fetches a complete fresh copy of everything - it has no memory of previous downloads. Sync Mode tracks every file in a hidden database, compares your Course Folder against Canvas, and only fetches what's new or changed. Use Download Mode for a first-time backup; use Sync Mode for ongoing maintenance.</p>
@@ -1301,14 +1418,16 @@
     <p>Built by a student, for students. Free and open source.</p>
     <div class="foot-links">
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="releases.html">Downloads &amp; Releases</a>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank" rel="noopener">Report a Bug</a>
       <a href="index.html#faq">FAQ</a>
       <a href="guide.html">How It Works</a>
-      <a href="mac-setup.html">Setup Guide</a>
+      <a href="mac-setup.html" data-setup-link>Setup Guide</a>
       <a href="privacy.html">Privacy Policy</a>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+          style="color:#f97316;">&hearts;</span> Support the project</a>
     </div>
-    <div class="foot-v">v2.0.0 - Not affiliated with Instructure or Canvas LMS</div>
+    <div class="foot-v">Not affiliated with Instructure or Canvas LMS</div>
   </div>
 </footer>
 
@@ -1345,6 +1464,13 @@
   }
   window.addEventListener('scroll', updateToc, { passive: true });
   updateToc();
+
+  // OS-aware setup links: Windows users get the Windows guide.
+  (function () {
+    if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+    }
+  })();
 </script>
 </body>
 </html>

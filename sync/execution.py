@@ -1734,7 +1734,6 @@ def run_sync():
                 manifest = res_data.get('manifest')
                 if sync_mgr is None or manifest is None:
                     continue
-                local_path = sync_mgr.local_path
 
                 sync_mgr.save_manifest(manifest)
 
@@ -1752,54 +1751,6 @@ def run_sync():
                         _ckpt_conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
                 except Exception as _ckpt_err:
                     logger.warning(f"WAL checkpoint failed for {sync_mgr.db_path}: {_ckpt_err}")
-
-                # Setup updates reference explicitly to fix `updates is not defined` NameError traceback
-                updates = sel['updates']
-                _exec_result = res_data.get('result')
-                deletions = _exec_result.deleted_on_canvas if _exec_result else []
-                if updates or deletions:
-                    log_file_path = local_path / "☁️ Canvas Updates & Deletions.txt"
-
-                    import urllib.parse
-                    now = datetime.now()
-                    day = now.day
-                    ordinal = str(day) + ("th" if 4 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th"))
-                    if st.session_state.get('use_12h_format', False):
-                        nice_date = now.strftime(f"%A, %B {ordinal}, %Y")       # American: "Monday, April 28th, 2026"
-                    else:
-                        nice_date = now.strftime(f"%A the {ordinal} of %B, %Y")  # European: "Monday the 28th of April, 2026"
-
-                    course_name = friendly_course_name(res_data['pair']['course_name']) or 'Unnamed Course'
-
-                    try:
-                        with open(make_long_path(log_file_path), "a", encoding="utf-8") as lf:
-                            lf.write(f"\n{'='*60}\n")
-                            lf.write(f" ☁️ CANVAS DOWNLOADER: SYNC REPORT \n")
-                            lf.write(f" Course: {course_name}\n")
-                            from shared.helpers import format_time_display
-                            lf.write(f" Date:   {nice_date} at {format_time_display(now.strftime('%H:%M'))}\n")
-                            lf.write(f"{'='*60}\n\n")
-
-                            lf.write("💡 HOW TO USE THIS LOG:\n")
-                            lf.write("This document tracks files that were modified or deleted by your teacher on Canvas.\n")
-                            lf.write("Canvas Downloader NEVER deletes your local files. If a file is deleted on Canvas,\n")
-                            lf.write("it is listed here so you know the teacher removed it, but you still have your local copy.\n")
-                            lf.write("If a file was updated, we downloaded the new version and kept your old version safely alongside it.\n\n")
-
-                            if updates:
-                                lf.write("🔄 UPDATED FILES (New versions downloaded):\n")
-                                for f in updates:
-                                    clean_name = urllib.parse.unquote(f.filename)
-                                    lf.write(f"  - {clean_name}\n")
-                                lf.write("\n")
-                            if deletions:
-                                lf.write("🗑️ DELETED ON CANVAS (Your local copies are safe):\n")
-                                for si in deletions:
-                                    clean_name = urllib.parse.unquote(si.canvas_filename)
-                                    lf.write(f"  - {clean_name}\n")
-                            lf.write("\n")
-                    except Exception as e:
-                        logging.warning(f"Failed to write updates log: {e}")
 
         return synced_details, retry_selections, list(terminal_log), dict(synced_actual_rels)
 

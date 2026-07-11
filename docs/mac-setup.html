@@ -151,21 +151,27 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span {
-        display: none;
-      }
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
 
-      .btn-nav-ghost {
-        padding: 8px 10px;
-      }
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
     }
 
-    @media(max-width:520px) {
-      .nav-link {
-        display: none;
-      }
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
     }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
+    }
+
+    /* Long one-line snippets (e.g. the Terminal xattr command) must wrap on
+       phones instead of pushing the card wider than the viewport. */
+    code { overflow-wrap: anywhere; word-break: break-word; }
 
     /* ── HERO ── */
     .hero {
@@ -743,7 +749,8 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link active">How to set up</a>
+        <a href="mac-setup.html" class="nav-link active" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link">How It Works</a>
         <a href="index.html#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -752,7 +759,7 @@
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Download
+          <span>Download</span>
         </a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
@@ -772,6 +779,14 @@
       <p>Canvas Downloader is a free, indie app, so macOS asks you to approve it with a few one-time dialogs.
         The assistant below guides you through every step, tailored to your macOS version. It takes about two minutes.</p>
 
+      <div style="text-align: center; margin-top: 4px;">
+        <a href="win-setup.html"
+          style="display: inline-block; color: #64748b; font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
+          onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.04)';"
+          onmouseout="this.style.color='#64748b'; this.style.transform='scale(1)';">
+          On Windows? Open the Windows setup guide &#8594;
+        </a>
+      </div>
     </div>
   </div>
 
@@ -1125,11 +1140,24 @@
     <div class="container">
       <a href="index.html">Homepage</a>
       <a href="guide.html">How It Works</a>
+      <a href="releases.html">Downloads &amp; Releases</a>
       <a href="privacy.html">Privacy Policy</a>
+      <a href="win-setup.html">Windows Setup</a>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
-      <div class="meta">v2.0.0 &middot; Not affiliated with Instructure or Canvas LMS</div>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+          style="color:#f97316;">&hearts;</span> Support the project</a>
+      <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
     </div>
   </footer>
+
+  <script>
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
+  </script>
 
   <script src="mac-wizard.js"></script>
   <script>

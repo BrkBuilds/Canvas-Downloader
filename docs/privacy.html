@@ -173,20 +173,22 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span {
-        display: none;
-      }
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
 
-      .btn-nav-ghost {
-        padding: 8px 10px;
-      }
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
     }
 
-    @media(max-width:520px) {
-      .nav-link {
-        display: none;
-      }
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
     }
 
     /* ---- CONTENT ---- */
@@ -404,7 +406,8 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link">How to set up</a>
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link">How It Works</a>
         <a href="index.html#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -413,7 +416,7 @@
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Download
+          <span>Download</span>
         </a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
@@ -431,7 +434,7 @@
     <div class="container">
       <div class="label">Privacy</div>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 8 June 2026</p>
+      <p class="updated">Last updated: 11 July 2026</p>
 
       <div class="tldr">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -463,6 +466,10 @@
         <li><strong>Your own Canvas course data.</strong> When you start a download or sync, the app requests the
           courses, files, assignments, announcements, and similar content that <em>your</em> account already has access
           to.</li>
+        <li><strong>Your course's Panopto lecture recordings (optional).</strong> If you enable lecture recording
+          downloads, the app follows the Panopto links in your Canvas courses and fetches the recordings your account
+          can already watch, directly from your university's Panopto server. Transcription of those recordings happens
+          entirely on your own computer - audio is never uploaded anywhere.</li>
         <li><strong>The files you choose to download.</strong> These are saved to the folder you select on your own
           computer.</li>
         <li><strong>Local app settings.</strong> Your preferences, saved sync folders, and download history are stored
@@ -530,6 +537,15 @@
         <li><strong>Your university's Canvas (Instructure).</strong> The app connects directly to the Canvas server your
           token belongs to in order to fetch your content. Your use of Canvas is governed by your institution's and
           Instructure's own privacy policies.</li>
+        <li><strong>Your university's Panopto server (optional).</strong> Only if you enable lecture recording
+          downloads: the app connects to the Panopto instance your university links from Canvas, authenticated through
+          your own Canvas session, to fetch recordings you already have access to. Your use of Panopto is governed by
+          your institution's and Panopto's own privacy policies.</li>
+        <li><strong>Hugging Face (optional, one-time model download).</strong> Only if you set up local transcription:
+          the app downloads the speech-recognition model you pick from Hugging Face's public model hub, the same way a
+          browser downloads a file. No personal data, no account, and none of your content is sent - after the
+          download, transcription runs fully offline. (Similarly, opting into GPU acceleration downloads NVIDIA's
+          official CUDA libraries one time.)</li>
         <li><strong>Microsoft Store (Windows).</strong> If you install the app from the Microsoft Store, Microsoft
           handles distribution and updates. Any data Microsoft collects as the store operator is governed by the
           <a class="link" href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Microsoft
@@ -582,15 +598,27 @@
       <div class="foot-links">
         <a href="index.html">Homepage</a>
         <a href="guide.html">How It Works</a>
+        <a href="releases.html">Downloads &amp; Releases</a>
         <a href="privacy.html">Privacy Policy</a>
-        <a href="mac-setup.html">Setup Guide</a>
+        <a href="mac-setup.html" data-setup-link>Setup Guide</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
           rel="noopener">Report a Bug</a>
+        <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+            style="color:#f97316;">&hearts;</span> Support the project</a>
       </div>
-      <div class="foot-v">v2.0.0 - Not affiliated with Instructure or Canvas LMS</div>
+      <div class="foot-v">Not affiliated with Instructure or Canvas LMS</div>
     </div>
   </footer>
+
+  <script>
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
+  </script>
 </body>
 
 </html>

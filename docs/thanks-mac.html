@@ -137,20 +137,22 @@
       color: #fff;
     }
 
-    @media(max-width:760px) {
-      .btn-nav-ghost span {
-        display: none;
-      }
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
 
-      .btn-nav-ghost {
-        padding: 8px 10px;
-      }
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
     }
 
-    @media(max-width:520px) {
-      .nav-link {
-        display: none;
-      }
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
     }
 
     .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
@@ -201,7 +203,8 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link">How to set up</a>
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link">How It Works</a>
         <a href="index.html#get" class="btn-nav">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -210,7 +213,7 @@
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Download
+          <span>Download</span>
         </a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
@@ -228,7 +231,7 @@
     <div class="container">
       <h1>Your download has started! 🎉</h1>
       <p class="sub">Canvas Downloader is free and indie, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_v2.0.0_macOS.dmg" class="dl-fallback">&#8681;&nbsp; Download didn’t start? Click here</a>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="dmg-link" class="dl-fallback">&#8681;&nbsp; Download didn’t start? Click here</a>
     </div>
   </div>
 
@@ -254,19 +257,44 @@
     <div class="container">
       <a href="index.html">Homepage</a>
       <a href="guide.html">How It Works</a>
+      <a href="releases.html">Downloads &amp; Releases</a>
       <a href="privacy.html">Privacy Policy</a>
-      <a href="mac-setup.html">Setup Guide</a>
+      <a href="mac-setup.html" data-setup-link>Setup Guide</a>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
-      <div class="meta">v2.0.0 &middot; Not affiliated with Instructure or Canvas LMS</div>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+          style="color:#f97316;">&hearts;</span> Support the project</a>
+      <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
     </div>
   </footer>
 
   <script src="mac-wizard.js"></script>
   <script>
-    // Auto-trigger the download shortly after page load
-    setTimeout(function () {
-      window.location.href = 'https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/download/v2.0.0/Canvas_Downloader_v2.0.0_macOS.dmg';
-    }, 600);
+    // Resolve the newest .dmg from GitHub Releases (so this page never links a
+    // stale filename), then auto-trigger the download. If the API can't be
+    // reached, the fallback link simply opens the GitHub releases page.
+    fetch('https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases?per_page=30',
+      { headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (rels) {
+        for (var i = 0; i < (rels || []).length; i++) {
+          var rel = rels[i];
+          if (rel.draft) continue;
+          var dmg = (rel.assets || []).find(function (a) { return /\.dmg$/i.test(a.name); });
+          if (dmg) {
+            document.getElementById('dmg-link').href = dmg.browser_download_url;
+            setTimeout(function () { window.location.href = dmg.browser_download_url; }, 400);
+            return;
+          }
+        }
+      })
+      .catch(function () { /* keep the releases-page fallback link */ });
+
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
   </script>
 </body>
 </html>
