@@ -1419,10 +1419,15 @@ def render_login_page(fetch_courses_fn):
                             "Invalid URL Format",
                             detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://canvas.schoolname.edu or https://schoolname.instructure.com)."
                         )
+                    elif "expired" in err_text_lower:
+                        render_amber_notice(
+                            "Token Expired",
+                            detail="Your Canvas Access Token has expired. Access tokens are set to expire periodically for security. Please generate a new token (see 'How to get a Canvas Access Token?' below) and paste it here."
+                        )
                     elif any(kw in err_text_lower for kw in ["revoked", "invalid token", "unauthorized", "401"]):
                         render_amber_notice(
                             "Authentication Failed",
-                            detail="Your Canvas Access Token is invalid, expired, or has been revoked. Please expand the 'How to get a Canvas Access Token?' section below to generate a new one."
+                            detail="Your Canvas Access Token is invalid or has been revoked. Please expand the 'How to get a Canvas Access Token?' section below to generate a new one."
                         )
                     elif "403" in err_text_lower or "forbidden" in err_text_lower:
                         render_amber_notice(

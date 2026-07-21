@@ -824,22 +824,20 @@ def _import_courses_dialog():
             selectable.append((g_idx, group))
 
     if hidden_count:
-        _noun = "saved pair/group" if hidden_count == 1 else "saved pairs/groups"
-        _verb = "is" if hidden_count == 1 else "are"
+        if hidden_count == 1:
+            header_text = "1 saved pair/group is hidden because its folder is missing or was moved."
+            detail_text = "Fix the folder in Sync mode → Saved Groups & Pairs to make it available here again."
+        else:
+            header_text = f"{hidden_count} saved pairs/groups are hidden because their folders are missing or were moved."
+            detail_text = "Fix the folders in Sync mode → Saved Groups & Pairs to make them available here again."
+
         render_amber_notice(
-            f"{hidden_count} {_noun} {_verb} hidden because a folder is missing or "
-            f"was moved.",
-            detail="Fix the folder in Sync mode → Saved Groups & Pairs to make it "
-                   "available here again.",
+            header_text,
+            detail=detail_text,
             margin="0 0 12px 0",
         )
 
     if not selectable:
-        render_info_notice(
-            "No saved pairs or groups are available to add right now.",
-            detail="Every saved entry currently has a missing folder. Re-link them "
-                   "in Sync mode → Saved Groups & Pairs.",
-        )
         if st.button("Close", type="secondary", use_container_width=True,
                      key="today_import_done"):
             st.rerun(scope="app")

@@ -1396,7 +1396,10 @@ def render_course_selector(fetch_courses_fn):
         from core.canvas_logic import is_auth_error
         if is_auth_error(_fetch_err):
             from ui.auth import force_reauth
-            force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
+            if "expired" in str(_fetch_err).lower():
+                force_reauth("Your Canvas Access Token has expired. Please reconnect with a new token.")
+            else:
+                force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
         raise
     courses = [c for c in all_courses if c.is_favorite] if favorites_only else all_courses
 
