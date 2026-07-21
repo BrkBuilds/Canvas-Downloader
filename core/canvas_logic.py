@@ -454,7 +454,8 @@ def is_auth_error(exc) -> bool:
     return ('401' in msg
             or 'unauthorized' in msg
             or 'user not authorised' in msg
-            or 'invalid access token' in msg)
+            or 'invalid access token' in msg
+            or 'expired' in msg)
 
 
 class DownloadError:
