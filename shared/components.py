@@ -5,6 +5,7 @@ Extracted to ensure perfect visual parity between both modes.
 import streamlit as st
 from pathlib import Path
 from shared.helpers import open_folder, open_file, reveal_in_folder, esc, short_path
+from shared import theme
 from core.sync_manager import format_file_size
 from core.preset_manager import PresetManager
 
@@ -72,7 +73,8 @@ SVG_EDIT_WHITE_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 
 
 
 def live_enable_button(input_key: str, button_key: str, *,
-                       require_change_from: str | None = None) -> None:
+                       require_change_from: str | None = None,
+                       reason: str = "") -> None:
     """Make a Save button look enabled/disabled live as the user types, while
     keeping it GENUINELY clickable server-side so a single click always works.
 
@@ -103,6 +105,13 @@ def live_enable_button(input_key: str, button_key: str, *,
         require_change_from: if given, the button also looks disabled while the
                              trimmed input equals this baseline (used by rename
                              dialogs, where an unchanged name is a no-op).
+        reason:              why the button is unavailable, shown as a native
+                             tooltip while it is greyed. Set on the WRAPPER, not
+                             the button - the button carries
+                             ``pointer-events:none`` so a title on it would never
+                             fire a hover. Cannot be Streamlit's ``help=``: that
+                             is fixed at render time and so could not disappear
+                             once the field becomes valid.
     """
     import json
     import streamlit.components.v1 as components
@@ -114,20 +123,26 @@ def live_enable_button(input_key: str, button_key: str, *,
     require_change = "true" if require_change_from is not None else "false"
     style_id = f"cd-live-css-{button_key.lower()}"
     # CSS that paints the (genuinely enabled) button as disabled while invalid.
+    # Deliberately IDENTICAL to global.css's `button[disabled]` recipe, so a
+    # JS-gated button and a natively disabled one are visually the same state.
+    # They used to differ - this helper painted a flat rgba(255,255,255,0.075)
+    # slab while native disabled desaturated the real colours - which read as two
+    # unrelated "off" styles inside the same dialog. Keep the two in sync.
+    # `cursor` sits on the WRAPPER because pointer-events:none on the button
+    # stops it resolving there (and would also swallow the title tooltip).
     disabled_css = (
         f'div[class*="{btn_cls}"] button:not([data-cd-valid="1"]) {{'
-        '  background-color: rgba(255,255,255,0.075) !important;'
-        '  border-color: rgba(255,255,255,0.075) !important;'
-        '  color: rgba(255,255,255,0.25) !important;'
+        '  filter: brightness(0.5) saturate(0.5) !important;'
         '  box-shadow: none !important;'
         '  cursor: not-allowed !important;'
         '  pointer-events: none !important;'
         '}'
-        f'div[class*="{btn_cls}"] button:not([data-cd-valid="1"]) p {{'
-        '  color: rgba(255,255,255,0.25) !important;'
+        f'div[class*="{btn_cls}"]:has(button:not([data-cd-valid="1"])) {{'
+        '  cursor: not-allowed !important;'
         '}'
     )
     css_js = json.dumps(disabled_css)
+    reason_js = json.dumps(reason or "")
 
     components.html(
         f"""
@@ -141,6 +156,7 @@ def live_enable_button(input_key: str, button_key: str, *,
             var BASELINE = {baseline_js};
             var STYLE_ID = {json.dumps(style_id)};
             var CSS = {css_js};
+            var REASON = {reason_js};
 
             // Inject the "disabled look" CSS into the PARENT document once.
             if (!doc.getElementById(STYLE_ID)){{
@@ -162,10 +178,16 @@ def live_enable_button(input_key: str, button_key: str, *,
             function syncBtn(input){{
                 var btn = doc.querySelector(BTN_SEL);
                 if (!btn || !input) return;
+                var wrap = doc.querySelector(WRAP_SEL);
                 if (isValid(input.value)){{
                     btn.setAttribute('data-cd-valid', '1');
+                    // Drop the tooltip the moment it stops being true.
+                    if (wrap) wrap.removeAttribute('title');
                 }} else {{
                     btn.removeAttribute('data-cd-valid');
+                    // On the WRAPPER: the button has pointer-events:none, so a
+                    // title there would never be hovered.
+                    if (wrap && REASON) wrap.setAttribute('title', REASON);
                 }}
             }}
 
@@ -1257,6 +1279,49 @@ _ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 _ALERT_LIGHT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fca5a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E"
 
 
+def _course_id_from_sync_pairs(course_name: str):
+    """Resolve a Canvas course id from the sync pairs, by course name.
+
+    Sync mode has no ``courses_to_download`` (that is download-mode state), so
+    without this the error rows for a SYNC run could never resolve a course id and
+    every "Open in Canvas" link degraded to the course-less ``/files/<id>`` form.
+    The previous fallback here read a ``sync_state`` session key that is **written
+    nowhere in the codebase** - it always evaluated to ``{}``, so the branch could
+    never execute. ``sync_pairs`` is the real source of truth.
+
+    Matching is done on the friendly form of both sides: the engine reports the
+    full Canvas name ("IT-projektledelse (LA F26 BINTO1059U)") while a pair may
+    have been saved with the display name ("IT-projektledelse (LA)").
+    """
+    if not course_name:
+        return None
+    try:
+        from shared.helpers import friendly_course_name
+    except Exception:
+        def friendly_course_name(n):  # pragma: no cover - import guard only
+            return n
+
+    def _keys(name: str) -> set:
+        name = (name or '').strip()
+        out = {name.casefold()}
+        try:
+            out.add((friendly_course_name(name) or '').strip().casefold())
+        except Exception:
+            pass
+        return {k for k in out if k}
+
+    wanted = _keys(course_name)
+    for pair in st.session_state.get('sync_pairs', []) or []:
+        if not isinstance(pair, dict):
+            continue
+        cid = pair.get('course_id')
+        if not cid:
+            continue
+        if _keys(pair.get('course_name', '')) & wanted:
+            return cid
+    return None
+
+
 def render_error_section(error_list: list, error_log_paths: list = None,
                          dialog_fn=None, key_prefix: str = 'dl',
                          retry_btn_callback=None, has_retriable_errors: bool = False,
@@ -1303,10 +1368,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                             course_id = c.id
                             break
                     if not course_id:
-                        sync_state = st.session_state.get('sync_state', {})
-                        course_det = sync_state.get('course_details')
-                        if course_det and getattr(course_det, 'name', '') == err.course_name:
-                            course_id = course_det.id
+                        course_id = _course_id_from_sync_pairs(err.course_name)
 
                 canvas_url = None
                 if furl and ('/courses/' in furl or '/assignments/' in furl or '/discussion_topics/' in furl or '/quizzes/' in furl):
@@ -1510,6 +1572,117 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                          help=retry_tooltip):
                 retry_btn_callback()
 
+    # Retries exhausted: name the next step. This lives HERE, not at the call
+    # sites, so download mode and sync mode cannot drift apart - previously only
+    # sync/completion.py rendered it, so a download user whose retry was spent got
+    # a dead Retry button and no guidance at all. Rendered whenever retry_failed
+    # is set, including when there is no retry callback left to offer.
+    if retry_failed:
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "Retry didn't work - these files may be temporarily unavailable.",
+            detail="Check your internet connection and try again later, or download them directly from Canvas.",
+            margin="12px 0 2px 0",
+        )
+
+
+# Stop glyph for the cancelled card - lucide "octagon-x". An inline SVG, not the
+# old 🛑 emoji: the emoji was the last one left on these screens in an otherwise
+# all-SVG icon system, and it renders at a different weight per platform.
+_CANCEL_OCTAGON_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" '
+    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+    'stroke-linejoin="round" style="flex-shrink:0;">'
+    '<path d="m15 9-6 6"/><path d="m9 9 6 6"/>'
+    '<path d="M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 '
+    '2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 '
+    '0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 '
+    '1-1.414-.586z"/></svg>'
+)
+
+
+def cancel_summary_message(done: int, total: int) -> str:
+    """The one-line "how far did it get" summary on a cancelled screen.
+
+    Shared by download and sync so the wording cannot drift. ``total == 0`` means
+    the run was still enumerating courses when it was cancelled - no file count
+    exists yet, so saying "0 of 0 files" would be misleading.
+    """
+    if st.session_state.get('is_post_processing', False):
+        return "Cancelled during post-processing."
+    if total > 0:
+        return f"Cancelled after {done} of {total} file{'s' if total != 1 else ''}."
+    return "Cancelled during Course Analysis."
+
+
+def quit_office_once() -> None:
+    """macOS: force-close staged docs and quit idle Office apps, once per run.
+
+    Identical in both cancelled screens (and the completion screens), so it lives
+    here rather than being pasted at each call site. First force-closes any
+    document a cancelled conversion left open in a hidden Office process
+    (marker-matched, so the user's own documents are untouchable), then quits the
+    now-idle apps and purges our Recents entries. No-op off macOS.
+    """
+    import sys
+    if sys.platform != 'darwin' or st.session_state.get('_office_quit_fired'):
+        return
+    st.session_state['_office_quit_fired'] = True
+    try:
+        from engine.applescript_bridge import quit_idle_office_apps
+        quit_idle_office_apps()
+    except Exception:
+        pass
+
+
+def render_cancelled_card(what: str, done: int, total: int) -> None:
+    """Render the "<what> Cancelled" card. THE single implementation.
+
+    This card previously existed twice - once in app.py for download mode and once
+    in sync/completion.py - as ~30 lines of duplicated inline CSS, with a comment
+    in app.py saying it "matches sync_ui.py design". Two copies of one visual is
+    exactly the mechanism by which the two modes drift apart, so there is now one.
+
+    Deliberately renders NO error list: the user cancelled, so partial-run errors
+    are noise. Errors are surfaced only on the completion screens, via
+    render_error_section, where they are actionable.
+
+    Args:
+        what:  "Download" or "Sync" - used for both the heading and the sentence.
+        done:  items finished before the cancel.
+        total: items planned (0 when the run was still enumerating courses).
+    """
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
+        border: 1px solid {theme.ERROR};
+        border-radius: 12px;
+        padding: 28px 32px;
+        margin: 20px 0;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+    ">
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+                    color: {theme.ERROR};">
+            {_CANCEL_OCTAGON_SVG}
+            <h2 style="margin: 0; color: {theme.ERROR}; font-size: 1.5rem; font-weight: 700;">{esc(what)} Cancelled</h2>
+        </div>
+        <p style="color: {theme.TEXT_LIGHT}; font-size: 1rem; margin: 0 0 8px 0;">
+            {esc(what)} was cancelled.
+        </p>
+        <div style="
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            display: inline-block;
+        ">
+            <span style="color: {theme.ERROR_LIGHT}; font-size: 0.9rem; font-weight: 600;">
+                {esc(cancel_summary_message(done, total))}
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)  # audit-ignore: SVG constant + esc()'d text only
+
 
 def render_pp_warning(pp_failure_count: int):
     """Render post-processing failure warning if applicable."""
@@ -1691,7 +1864,10 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
         'convert_pptx': 'PPTX ➡ PDF',
         'convert_word': 'Legacy Word ➡ PDF',
         'convert_excel': 'Excel ➡ PDF & AI Data',
-        'convert_html': 'HTML ➡ PDF',
+        # Markdown, NOT PDF: the pipeline calls convert_html_to_md and writes .md
+        # (converters/md.py; shared/helpers.py's effective-extension map agrees,
+        # as does the sync post-processing label "HTML->Markdown").
+        'convert_html': 'Canvas Pages ➡ Markdown',
         'convert_code': 'Code ➡ .TXT',
         'convert_urls': 'Links ➡ TXT',
         'convert_video': 'Video ➡ MP3'
@@ -2198,10 +2374,6 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
         div.st-key-{card_key} p:last-child {{
             margin-bottom: 0 !important;
         }}
-        div.st-key-{card_key} > div[data-testid="stVerticalBlockBorderWrapper"] {{
-            border: none !important;
-            padding: 0 !important;
-        }}
         div.st-key-{close_key} {{
             position: absolute !important;
             top: 8px !important;
@@ -2254,7 +2426,7 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
     
     if show_button:
         with st.container(key=help_btn_key):
-            if st.button("Help", key=open_key, help="Click to open guide"):
+            if st.button("Help", key=open_key, help="Click to open guide."):
                 st.session_state[state_key] = not st.session_state[state_key]
                 st.rerun()
 
@@ -2273,10 +2445,6 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
             display: flex !important;
             justify-content: {justify_content} !important;
             animation: fadeInHelp_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }}
-        div.st-key-{help_btn_key} > div[data-testid="stVerticalBlockBorderWrapper"] {{
-            border: none !important;
-            padding: 0 !important;
         }}
         div.st-key-{open_key} button {{
             background: transparent !important;

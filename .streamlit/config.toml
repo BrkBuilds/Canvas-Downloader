@@ -5,5 +5,21 @@ secondaryBackgroundColor = "#161b24"
 textColor = "#fafafa"
 font = "sans serif"
 
+# ── Known harmless console noise (do NOT try to "fix" this again) ──────────────
+# The browser console logs three warnings per component render:
+#     Invalid color passed for widgetBackgroundColor in theme.sidebar: ""
+#     Invalid color passed for widgetBorderColor      in theme.sidebar: ""
+#     Invalid color passed for skeletonBackgroundColor in theme.sidebar: ""
+# This is a Streamlit 1.51 internal inconsistency, NOT our configuration: the
+# frontend's sidebar theme object validates those three fields, but the config
+# schema has no `theme.sidebar.widgetBackgroundColor` / `.widgetBorderColor` /
+# `.skeletonBackgroundColor` option to populate them, so they arrive empty.
+# Verified 2026-07-25 against streamlit 1.51.0 by enumerating
+# `config._config_options_template` - only `theme.sidebar.showWidgetBorder`
+# exists. Declaring them here does NOT silence the client warnings and DOES add
+# three "not a valid config option" warnings to the server log, so it is strictly
+# worse. There is no config-side fix; the sidebar renders correctly regardless.
+# Revisit only when upgrading Streamlit.
+
 [client]
 toolbarMode = "minimal"

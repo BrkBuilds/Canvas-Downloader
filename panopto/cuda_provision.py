@@ -122,12 +122,39 @@ def register_dll_dir() -> bool:
 
 
 def remove_provision() -> bool:
-    """Delete the provisioned libraries (frees ~1.3 GB)."""
+    """Delete the provisioned libraries (frees ~1.3 GB).
+
+    Returns True only when the directory is actually gone. This used to
+    ``rmtree(ignore_errors=True)`` and then ``return True`` unconditionally, which
+    made the honest failure path unreachable: on Windows the CUDA DLLs are loaded
+    into this process once GPU transcription has run, so rmtree silently skips
+    them and ~1.3 GB stays on disk while the UI reports success. The caller shows
+    a "they may be in use" notice on False - it could never fire.
+
+    Refuses while a provisioning download/extract is in flight; deleting the tree
+    underneath the extractor would corrupt a half-written install.
+    """
+    if is_running():
+        logger.warning("Refusing to remove CUDA libs while provisioning is running.")
+        return False
     try:
         d = cuda_libs_dir()
-        if d.exists():
-            shutil.rmtree(d, ignore_errors=True)
-        return True
+        if not d.exists():
+            return True                      # already absent - nothing to do
+        # ignore_errors so a single locked DLL does not abort the rest of the
+        # tree; the post-check below is what decides success.
+        shutil.rmtree(d, ignore_errors=True)
+        if not d.exists():
+            return True
+        # Partial delete: report the leftovers so the caller can tell the user
+        # something is holding them rather than claiming the space was freed.
+        try:
+            leftover = sum(1 for _ in d.rglob('*') if _.is_file())
+        except Exception:
+            leftover = -1
+        logger.warning("CUDA libs only partially removed - %s file(s) remain in %s "
+                       "(most likely loaded by this process).", leftover, d)
+        return False
     except Exception as e:
         logger.warning("Could not remove CUDA libs: %s", e)
         return False
@@ -207,14 +234,6 @@ def _resolve_wheel(pkg: str, major: int) -> dict:
         "sha256": wheel.get("digests", {}).get("sha256", ""),
         "filename": wheel["filename"],
     }
-
-
-def estimate_total_mb() -> float:
-    """Best-effort total download size (MB), resolved from PyPI; 0 on failure."""
-    try:
-        return sum(_resolve_wheel(p, m)["size"] for p, m in _PACKAGES) / (1024 * 1024)
-    except Exception:
-        return 0.0
 
 
 def _free_disk_bytes(path: Path) -> int:

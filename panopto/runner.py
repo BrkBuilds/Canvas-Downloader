@@ -628,9 +628,9 @@ def _run_panopto_batch(
     # excluded txt/srt) don't trigger a false "skipped transcription" notice.
     if not engine_ready and any(t.want_txt or t.want_srt for t in tasks):
         if not pmodels.whisper_available():
-            progress("warn", message="Transcription engine not installed — Transcript & Subtitle outputs will be skipped.")
+            progress("warn", message="Transcription engine not installed - Transcript & Subtitle outputs will be skipped.")
         else:
-            progress("warn", message="Transcription model not set up — Transcript & Subtitle outputs will be skipped.")
+            progress("warn", message="Transcription model not set up - Transcript & Subtitle outputs will be skipped.")
 
     _n_dl = sum(1 for t in tasks if t.need_video or t.need_audio)
     _n_tx = sum(1 for t in tasks if t.want_tx)
@@ -956,39 +956,6 @@ def _run_panopto_batch(
         "courses=%(courses)d", summary,
     )
     return summary
-
-
-def run_course_panopto(
-    cm,
-    course,
-    *,
-    save_dir=None,
-    course_root=None,
-    settings: dict,
-    download_mode: str,
-    progress=None,
-    is_cancelled=None,
-    debug_file=None,
-    record_fn=None,
-) -> dict:
-    """Backward-compatible single-course entry point (delegates to the batch).
-
-    Provide EITHER ``save_dir`` (download mode: course folder is
-    ``save_dir/<course>``) OR ``course_root`` (sync mode: the synced folder IS
-    the course folder).
-    """
-    if course_root is None:
-        course_root = Path(save_dir) / cm._sanitize_filename(course.name)
-    target = {
-        "course": course,
-        "course_root": Path(course_root),
-        "download_mode": download_mode,
-        "record_fn": record_fn,
-    }
-    return run_panopto_batch(
-        cm, [target], settings=settings, progress=progress,
-        is_cancelled=is_cancelled, debug_file=debug_file,
-    )
 
 
 def _resolve_delivery(session, panopto_base, video, canvas_token):

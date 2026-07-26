@@ -264,25 +264,19 @@ div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button:hover {
     transition: all 0.2s ease-in-out;
 }
 
-/* Compact cards inside Layer 2 - SCOPED to dialog only */
-div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] {
-    padding: 12px 15px !important;
-}
+/* (Removed: a three-rule "Compact cards inside Layer 2" block keyed off
+   stVerticalBlockBorderWrapper - padding 12px 15px, a 0.3rem nested gap, and a
+   35px button min-height. 1.51 renders no such element, so the hub dialogs have
+   been laid out without it and are signed off that way.
 
-div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
-    gap: 0.3rem !important;
-}
-
-div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] button {
-    min-height: 35px !important;
-    padding-top: 0.2rem !important;
-    padding-bottom: 0.2rem !important;
-}
+   Deliberately NOT migrated: the only 1.51 equivalent broad enough to stand in
+   is "every bordered container inside stDialog", which would repad and reflow
+   every card in every hub dialog at once. If Layer 2 ever needs compacting
+   again, scope it to that layer's own container keys - never to stDialog. */
 
 /* Clean positioning for Back buttons */
 div.st-key-btn_back_to_groups,
-div.st-key-btn_cancel_add_pair,
-div.st-key-hub_back_l3 {
+div.st-key-btn_cancel_add_pair {
     margin-bottom: 10px !important;
     margin-top: -30px !important;
 }

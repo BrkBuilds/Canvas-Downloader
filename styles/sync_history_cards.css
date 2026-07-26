@@ -38,7 +38,13 @@ div[class*="st-key-shist_run_"] {
  * Level 1  (run card header):          familiar   → #21252e
  * Level 2  (per-course section head):  emphasized → #282d38
  * Level 3  (file content body):        darkest    → #11141a
- * This makes nested sections clearly distinct at a glance. */
+ * This makes nested sections clearly distinct at a glance.
+ *
+ * These tiers sit deliberately close together - Level 3 is under 1.0 CIEDE2000
+ * from theme.BG_TERMINAL, and Level 1's hover is that close to Level 2. They
+ * encode NESTING DEPTH, not a visual difference, so the near-duplication is the
+ * design rather than drift. Rule 8 is suppressed for them on that basis; do not
+ * "consolidate" these onto tokens or the hierarchy collapses.  audit-ignore */
 /* Flush header(button) <-> body. Collapse EVERY vertical-block
    gap inside the run to 0 (descendant selector - this is the
    form that reliably matches Streamlit 1.51's wrapper depth),
@@ -98,23 +104,18 @@ div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-ca
 }
 .shist-time { display: flex; align-items: center; gap: 5px; color: #8b949e;
     font-size: 0.82rem; flex-shrink: 0; margin-left: 12px; }
-/* Kill the hollow bordered box entirely. Streamlit wraps a
-   border=True container in a stVerticalBlockBorderWrapper that
-   carries a stock 1px border + ~1rem padding; THAT is the
-   "empty box that boxes in emptiness". We don't rely on knowing
-   whether the key lands on the wrapper or the inner block - we
-   strip border / shadow / radius / padding / bg from BOTH, then
-   re-apply the indent + bottom padding once on the keyed block.
+/* Kill the hollow bordered box entirely - the "empty box that
+   boxes in emptiness". In 1.51 the stock 1px border + ~1rem
+   padding of a border=True container sit directly on the KEYED
+   block, so stripping it there is sufficient; the old belt-and-
+   braces pass over a separate stVerticalBlockBorderWrapper has
+   been dropped (1.51 renders no such element).
    NO divider - the darker body bg already separates it from the
    (lighter) header, and the content sits flush under it. */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_),
 div[class*="st-key-shist_body_"] {
     border: none !important; box-shadow: none !important;
     border-radius: 0 !important; background: transparent !important;
     margin: 0 !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-shist_body_) {
-    padding: 0 !important;
 }
 div[class*="st-key-shist_body_"] {
     /* flush top (content pulled up under header), comfy bottom
@@ -165,7 +166,7 @@ div[class*="st-key-shist_body_"]:not([class*="st-key-shist_body_today_"]) {
  * content - the 1.51 collapse only bites an AUTO-HEIGHT single child (which is
  * why the run HEADER, not this, needs the JS height bridge). */
 div[class*="st-key-shist_course_"] {
-    background: #11141a !important;                       /* Level 3: darkest body bg */
+    background: #11141a !important;   /* Level 3: darkest body bg - audit-ignore */
     border: 1px solid rgba(255,255,255,0.17) !important;
     border-radius: 10px !important;
     padding: 16px 18px 16px 18px !important;

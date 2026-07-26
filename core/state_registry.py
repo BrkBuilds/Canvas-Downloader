@@ -69,8 +69,6 @@ DOWNLOAD_DEFAULTS = {
     '_sync_cancel_warning_shown': False,
     # Sync mode flags (shared between download and sync)
     'sync_mode': False,
-    'analysis_result': None,
-    'sync_selected_files': {},
     'sync_manager': None,
     'current_mode': 'download',
     'sync_pairs': [],
@@ -96,7 +94,6 @@ DOWNLOAD_DEFAULTS = {
     'hub_is_adding_new_pair': False,
     'hub_cs_selected_id': None,
     'sync_d_selected_id': None,
-    'sync_filter_all_exts': True,
     'preset_hub_tab': 'user',
     'enable_cbs_filters': False,
     # File-size filter (Settings dialog)
@@ -114,19 +111,15 @@ DOWNLOAD_DEFAULTS = {
     'quick_org_mode': 'modules',
     # L-13: Sync history retention - number of past operations to keep.
     'sync_history_retention': 50,
-    # ── Panopto (premium hidden feature) ──
-    # Master visibility flag for the sidebar entry + whether Panopto runs are
-    # included in download/sync. Loaded from the persisted panopto settings on
-    # login; defaults keep the feature dormant until explicitly enabled.
-    'panopto_feature_enabled': True,   # show the sidebar nav entry (dev/testing)
-    'panopto_settings_loaded': False,  # one-shot guard for loading panopto config
+    # NOTE: no 'panopto_feature_enabled' / 'panopto_settings_loaded' here. Both
+    # were leftovers from the era when Panopto was a standalone sidebar page;
+    # nothing has read either since it became Section 4 of the download page, and
+    # the Panopto config is loaded on demand from its own JSON subtree.
 }
 
 SYNC_DEFAULTS = {
     'sync_pairs': [],
     'pending_sync_folder': None,
-    'analysis_result': None,
-    'sync_selected_files': {},
     'sync_manager': None,
     'sync_mode': False,
     'sync_cancelled': False,
@@ -137,7 +130,6 @@ SYNC_DEFAULTS = {
     'preset_hub_tab': 'user',
     'hub_cs_selected_id': None,
     'sync_d_selected_id': None,
-    'sync_filter_all_exts': True,
 }
 
 # Keys created transiently during download execution
@@ -153,9 +145,8 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'retry_attempted', 'retry_resolved_count', 'retry_total_attempted',
     'size_skipped_files', 'skipped_discovery_errors',
     # Panopto run state (Phase 2): per-run discovery/progress trackers.
-    'panopto_queue', 'panopto_done_count', 'panopto_failed_count',
-    'panopto_details', 'panopto_mb_tracker', 'panopto_run_started',
-    'panopto_total', '_panopto_warned', 'panopto_summary',
+    'panopto_mb_tracker', 'panopto_run_started',
+    '_panopto_warned', 'panopto_summary',
     # Persistent convert keys (generated dynamically)
     *[f'persistent_{k}' for k in NOTEBOOK_SUB_KEYS],
     *[f'persistent_{k}' for k in SECONDARY_CONTENT_KEYS],
@@ -165,7 +156,7 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'persistent_pan_layout',
     'log_content',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
-    '_office_primed', '_office_quit_fired', '_tcc_batch_active',
+    '_office_quit_fired', '_tcc_batch_active',
 }
 
 # Keys created transiently during sync execution
@@ -173,8 +164,7 @@ SYNC_TRANSIENT_KEYS = {
     'download_status', 'sync_analysis_results', 'sync_selections',
     'synced_count', 'synced_bytes', 'sync_cancel_requested',
     'sync_cancelled_file_count', 'sync_errors', 'sync_quick_mode',
-    'sync_confirm_count', 'sync_confirm_size',
-    'sync_confirm_folders', 'is_post_processing',
+    'is_post_processing',
     'retry_selections', 'analysis_pass',
     # Today dashboard (in-page daily/Quick Sync) run markers.
     'today_sync_active', 'today_sync_is_auto',
@@ -195,13 +185,13 @@ SYNC_TRANSIENT_KEYS = {
     # 'log_deque' rides along: the sync Panopto pass owns it while running
     # (recreated fresh each pass) - clearing it here stops a finished sync's
     # terminal lines from ever leaking into a later run's log.
-    'panopto_total', 'panopto_done_count', 'panopto_mb_tracker',
+    'panopto_mb_tracker',
     'panopto_run_started', '_panopto_warned', 'panopto_summary',
     'panopto_uptodate_total', '_sync_history_ts', 'log_deque',
     # M-8: reset per-run warning sentinels so they re-arm on the next sync
     '_sync_cancel_warning_shown',
     # macOS Office automation per-run sentinels (re-prime + re-quit next run).
-    '_office_primed', '_office_quit_fired', '_tcc_batch_active',
+    '_office_quit_fired', '_tcc_batch_active',
     # Sync history filters
     'sync_history_course', 'sync_hist_course_select', 'sync_history_filter',
 }
@@ -278,7 +268,6 @@ def cleanup_download_state() -> None:
     """
     for key in DOWNLOAD_TRANSIENT_KEYS:
         st.session_state.pop(key, None)
-    st.session_state.pop('course_selection_warning_shown', None)
 
     # Nuclear reset: clear threading.Event + session_state cancel flags
     from core.cancellation import reset_download_cancel

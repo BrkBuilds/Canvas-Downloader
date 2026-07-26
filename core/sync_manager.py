@@ -261,6 +261,14 @@ def secondary_id_type(canvas_file_id: int) -> str:
 
     Returns 'module_item' for legacy synthetics or 'unknown' if the ID is
     positive / does not fall into any known range.
+
+    The comparison is ``>=``, not ``>``: ``make_secondary_id(t, 0)`` yields
+    exactly ``-offset``, and with a strict ``>`` that landed one range too LOW -
+    e.g. ``make_secondary_id('submission', 0)`` == -80,000,000 was reported as
+    'calendar'. That is not cosmetic: `sync/execution.py` and `sync_manager`
+    gate real routing on ``secondary_id_type(...) == 'attachment'``, so a
+    misclassified id changes how a file is synced. Only the exact boundary
+    behaves differently, and only from wrong to right.
     """
     if canvas_file_id >= 0:
         return 'unknown'
@@ -268,7 +276,7 @@ def secondary_id_type(canvas_file_id: int) -> str:
     # Walk offsets in descending order so the first match wins.
     for etype, offset in sorted(SECONDARY_ID_OFFSETS.items(),
                                 key=lambda x: x[1], reverse=True):
-        if abs_id > offset:
+        if abs_id >= offset:
             return etype
     return 'module_item'
 
@@ -886,8 +894,15 @@ class SyncManager:
                     if matched_tier == 2:
                         files_section[file_id]['original_size'] = matched_orphan['size']
                         files_section[file_id]['original_md5'] = matched_orphan['md5']
-                except ValueError:
-                    pass
+                except ValueError as e:
+                    # relative_to() raises when the matched file is not under this
+                    # folder (junction/symlink, or a path from a different drive).
+                    # The heal is abandoned, so the rename stays undetected and the
+                    # file will be re-downloaded - worth a trace, not silence.
+                    logger.warning(
+                        "Rename heal abandoned for canvas_file_id=%s: '%s' is not "
+                        "inside the synced folder '%s' (%s)",
+                        file_id, matched_orphan.get('path'), self.local_path, e)
         
         manifest['files'] = files_section
         return manifest
@@ -1149,8 +1164,17 @@ class SyncManager:
                         sync_info.target_local_path = calc_path
                         result.uptodate_files.append((c_file, sync_info))
                         continue
-                    except ValueError:
-                        pass
+                    except ValueError as e:
+                        # relative_to() raises when the matched candidate sits
+                        # outside this folder. Adoption is abandoned and the file
+                        # falls through to "new", i.e. it gets re-downloaded even
+                        # though a copy exists. Rare, but never silent.
+                        logger.warning(
+                            "Auto-discovery adoption abandoned for canvas_file_id="
+                            "%s ('%s'): candidate '%s' is not inside '%s' (%s). "
+                            "The file will be re-downloaded.",
+                            file_id, getattr(c_file, 'filename', '?'),
+                            matched_cand.get('path'), self.local_path, e)
 
                 # Truly new file (stamp target path for the download router)
                 c_file._target_local_path = calc_path
@@ -2023,8 +2047,19 @@ class SyncManager:
                 if 'database is locked' in str(e) and attempt < max_retries - 1:
                     time.sleep(0.5)
                 else:
+                    # Never silent: this row is how the folder remembers it has the
+                    # file. Losing it is survivable (analyze_course's three-tier
+                    # auto-discovery re-adopts an on-disk file), but a systematic
+                    # failure - corrupt DB, full disk, read-only folder - would
+                    # otherwise leave no trace anywhere.
+                    logger.warning(
+                        "Manifest write failed for canvas_file_id=%s (%s): %s",
+                        info.get('canvas_file_id'), info.get('local_path', ''), e)
                     return False
-            except sqlite3.Error:
+            except sqlite3.Error as e:
+                logger.warning(
+                    "Manifest write failed for canvas_file_id=%s (%s): %s",
+                    info.get('canvas_file_id'), info.get('local_path', ''), e)
                 return False
         return False
     

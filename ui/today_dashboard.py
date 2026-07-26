@@ -119,7 +119,7 @@ _TODAY_HELP_TEXT = (
     "<div>"
     "<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 4px;'>2. Add them to your daily sync</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.6;'>"
-    "Click <b style='color: #ffffff;'>Add courses</b> below and tick the saved pairs and groups you want kept up to date. Your choice is saved and editable - come back any time to add or remove courses with <b style='color: #ffffff;'>Add courses</b> or the <b style='color: #ffffff;'>Remove</b> button on each card."
+    "Click <b style='color: #ffffff;'>Add courses</b> below and tick the saved pairs and groups you want kept up to date. Your choice is saved and editable - come back any time to add or remove courses with <b style='color: #ffffff;'>Add or manage courses</b> or the <b style='color: #ffffff;'>Remove</b> button on each card."
     "</div></div>"
 
     "<div>"
@@ -572,10 +572,16 @@ def _render_today_files(groups: list[dict]) -> None:
                     folder_exists = local_folder and Path(local_folder).exists()
                     col_btn_open, col_btn_all = st.columns(2)
                     with col_btn_open:
-                        if st.button("Open Folder", key=f"open_folder_today_{gid}", use_container_width=True, disabled=not folder_exists):
+                        if st.button("Open Folder", key=f"open_folder_today_{gid}", use_container_width=True, disabled=not folder_exists,
+                                     help=None if folder_exists else
+                                          "This course folder no longer exists on this computer."):
                             open_folder(local_folder)
                     with col_btn_all:
-                        if st.button("Open All Files", key=f"open_all_today_{gid}", use_container_width=True, disabled=not folder_exists or not files):
+                        if st.button("Open All Files", key=f"open_all_today_{gid}", use_container_width=True, disabled=not folder_exists or not files,
+                                     help=None if (folder_exists and files) else
+                                          ("This course folder no longer exists on this computer."
+                                           if not folder_exists else
+                                           "This run downloaded no files for this course.")):
                             for f_info in files:
                                 f_path = Path(local_folder) / (f_info.get("rel") or f_info.get("name") or "")
                                 open_file(str(f_path))
@@ -979,6 +985,8 @@ def _import_courses_dialog():
             with st.container(key=f"today_import_item_{g_idx}"):
                 st.button(group_name, key=btn_key, use_container_width=True,
                           disabled=locked,
+                          help=("Already included by another group you selected."
+                                if locked else None),
                           on_click=_toggle_import_btn, args=(sel_key,))
         _inject_import_pills_bridge(cards_data)
 
@@ -1198,7 +1206,9 @@ def _render_course_chips(pairs: list[dict]) -> None:
         for i, p in enumerate(pairs):
             name = friendly_course_name(p.get("course_name") or "Course")
             folder = p.get("local_folder", "") or ""
-            if st.button(name, key=f"today_chip_{i}", disabled=not folder):
+            if st.button(name, key=f"today_chip_{i}", disabled=not folder,
+                         help=None if folder else
+                              "No local folder is linked to this course yet."):
                 open_folder(folder)
 
 
@@ -1280,6 +1290,12 @@ def render_today_dashboard(fetch_courses_fn=None):
     )
     if not sync_running:
         st.session_state.pop("today_sync_active", None)
+
+    # Shared reason for every control this page locks during a run. Passed as
+    # help= ONLY while sync_running - a tooltip left on an enabled button would
+    # claim it is unavailable when it is not.
+    _SYNC_RUNNING_HELP = ("Unavailable while a sync is running. "
+                          "Wait for it to finish, or cancel it below.")
 
     cfg = load_today_config()
     inject_css("today.css")  # Force reload CSS changes v2
@@ -1402,12 +1418,14 @@ def render_today_dashboard(fetch_courses_fn=None):
                     # The toggle only makes sense when there's a summary to collapse into.
                     if has_courses and not manage_open:
                         if st.button("Manage", key="today_manage_btn",
-                                     use_container_width=True, disabled=sync_running):
+                                     use_container_width=True, disabled=sync_running,
+                                     help=_SYNC_RUNNING_HELP if sync_running else None):
                             st.session_state["today_manage_open"] = True
                             st.rerun()
                     elif has_courses and manage_open:
                         if st.button("Done", key="today_manage_done_btn",
-                                     use_container_width=True, disabled=sync_running):
+                                     use_container_width=True, disabled=sync_running,
+                                     help=_SYNC_RUNNING_HELP if sync_running else None):
                             st.session_state["today_manage_open"] = False
                             st.rerun()
 
@@ -1422,7 +1440,8 @@ def render_today_dashboard(fetch_courses_fn=None):
                     unsafe_allow_html=True,
                 )
                 if st.button("Add courses", use_container_width=True,
-                             key="today_add_courses_btn", disabled=sync_running):
+                             key="today_add_courses_btn", disabled=sync_running,
+                             help=_SYNC_RUNNING_HELP if sync_running else None):
                     _open_import_dialog()
             elif not manage_open:
                 # COLLAPSED (the day-to-day view) - clickable course chips (open folder).
@@ -1444,7 +1463,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                                 # title + subtitle into one st.markdown call.)
                                 st.markdown(
                                     f"<div class='today-pair-inner'>"
-                                    f"<div class='today-pair-title'>Course:&nbsp;&nbsp;"
+                                    f"<div class='today-pair-title'>Course:&nbsp;"
                                     f"{esc(name)}</div>"
                                     f"<div class='today-pair-folder'>{SVG_FOLDER_YELLOW}"  # audit-ignore: static SVG constant
                                     f"{esc(short_path(folder))}</div>"  # audit-ignore: folder is a local path
@@ -1457,9 +1476,11 @@ def render_today_dashboard(fetch_courses_fn=None):
                                 on_click=_remove_daily_pair_cb,
                                 args=(pair.get("course_id"), folder, name),
                                 disabled=sync_running,
+                                help=_SYNC_RUNNING_HELP if sync_running else None,
                             )
                     if st.button("Add or manage courses", use_container_width=True,
-                                 key="today_add_courses_btn", disabled=sync_running):
+                                 key="today_add_courses_btn", disabled=sync_running,
+                                 help=_SYNC_RUNNING_HELP if sync_running else None):
                         _open_import_dialog()
 
         # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────

@@ -113,17 +113,6 @@ def test_same_course_two_folders_is_two_entries(config_dir):
     assert len(today_store.load_today_config()["pairs"]) == 2
 
 
-def test_add_pairs_returns_actually_added_count(config_dir):
-    base = {"course_id": 1, "course_name": "A", "local_folder": "C:/a"}
-    today_store.set_today_pairs([base])
-    added = today_store.add_today_pairs([
-        dict(base),                                                    # dup -> 0
-        {"course_id": 2, "course_name": "B", "local_folder": "C:/b"},  # new -> 1
-    ])
-    assert added == 1
-    assert len(today_store.load_today_config()["pairs"]) == 2
-
-
 def test_remove_pair_by_signature(config_dir):
     today_store.set_today_pairs([
         {"course_id": 1, "course_name": "A", "local_folder": "C:/a"},

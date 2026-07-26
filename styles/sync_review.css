@@ -1,26 +1,9 @@
-/* Force Streamlit modal to vertically center */
-div[data-testid="stModal"] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-}
-
-div[data-testid="stModal"]>div[role="dialog"] {
-    position: relative !important;
-    top: 0 !important;
-    left: 0 !important;
-    transform: none !important;
-    margin: auto !important;
-    max-width: 480px !important;
-    width: 90vw !important;
-    border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
-    background-color: #1a1c1e !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}
+/* (Removed: two rules targeting [data-testid="stModal"], which Streamlit 1.51
+   no longer renders - it uses [data-testid="stDialog"]. Both were inert; the
+   dialogs get their centring, width and chrome from the live stDialog rules in
+   global.css and the per-dialog inline CSS. Restyling them through stDialog was
+   deliberately NOT done: it would have forced every sync-review dialog to a
+   480px max-width and a different background than they render with today.) */
 
 /* Make the bulk action buttons inside sync-review category expanders slightly shorter and subtle */
 div[class*="st-key-cat_"] [data-testid="stExpanderDetails"] button[kind="secondary"] {
@@ -54,10 +37,6 @@ div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary {
     background-color: rgba(16, 185, 129, 0.1) !important;
 }
 
-div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details summary {
-    background-color: rgba(245, 158, 11, 0.1) !important;
-}
-
 div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary {
     background-color: rgba(139, 92, 246, 0.1) !important;
 }
@@ -72,10 +51,6 @@ div[class*="st-key-cat_new"] div[data-testid="stExpander"] details {
 
 div[class*="st-key-cat_update"] div[data-testid="stExpander"] details {
     border: 1px solid rgba(16, 185, 129, 0.4) !important;
-}
-
-div[class*="st-key-cat_missing"] div[data-testid="stExpander"] details {
-    border: 1px solid rgba(245, 158, 11, 0.4) !important;
 }
 
 div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details {
@@ -132,8 +107,9 @@ div[class*="st-key-sync_review_file_list"] div[data-testid="stHorizontalBlock"] 
     padding-bottom: 0 !important;
 }
 
-/* Original 1. Remove border and padding from the container */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
+/* Original 1. Remove border and padding from the container.
+   (The companion :has(...) selector for the retired stVerticalBlockBorderWrapper
+   was dropped - the keyed block below already carries these declarations.) */
 .st-key-filetypes_flex_box {
     border: none !important;
     box-shadow: none !important;
@@ -211,7 +187,6 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-filetypes_flex_box),
     margin-bottom: 0 !important;
 }
 
-/* Force top margin on the button row wrapper */
-.st-key-bulk_action_buttons {
-    margin-top: 10px !important;
-}
+/* (Removed: .st-key-bulk_action_buttons margin rule - no widget uses that key.
+   The live bulk-action buttons are styled via div[class*="st-key-cat_"]
+   [data-testid="stExpanderDetails"] button[kind="secondary"] near the top.) */

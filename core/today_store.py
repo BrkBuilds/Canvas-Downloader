@@ -159,25 +159,6 @@ def set_today_pairs(pairs: list[dict]) -> None:
     _update(pairs=_dedupe(pairs))
 
 
-def add_today_pairs(pairs: list[dict]) -> int:
-    """Merge *pairs* into the curated set. Returns the count actually added.
-
-    De-duplicates against the existing set by (course_id, local_folder) so the
-    same course/folder is never queued twice.
-    """
-    with _lock:
-        data = load_today_config()
-        existing = data.get("pairs", [])
-        before = {(p["course_id"], p["local_folder"]) for p in existing}
-        merged = _dedupe(existing + list(pairs))
-        added = len(merged) - len(existing)
-        if added:
-            data["pairs"] = merged
-            _save(data)
-        # Recompute against the post-merge signatures for an accurate count.
-        return len({(p["course_id"], p["local_folder"]) for p in merged} - before)
-
-
 def remove_today_pair(course_id, local_folder) -> None:
     """Remove a single pair from the curated set by its signature."""
     with _lock:

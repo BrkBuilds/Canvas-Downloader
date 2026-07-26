@@ -16,14 +16,13 @@ from __future__ import annotations
 import os
 import urllib.parse
 from collections import defaultdict
-from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 
 from shared import theme
 from shared.components import SVG_FOLDER_YELLOW
-from core.sync_manager import SyncHistoryManager, SyncManager
+from core.sync_manager import SyncManager
 from shared.helpers import (
     esc,
     friendly_course_name,
@@ -83,12 +82,6 @@ def _update_pair_by_signature_lazy(old_sig, new_pair):
 def _add_pair_lazy(pair):
     from sync.persistence import add_pair
     add_pair(pair)
-
-def _remove_pairs_by_signature_lazy(sigs):
-    from sync.persistence import remove_pairs_by_signature
-    remove_pairs_by_signature(sigs)
-
-
 
 def render_filetype_selector(all_files, prefix, file_key_fn):
     """Bulk Selection Matrix - filetype unit checkboxes that act as remote controls.
@@ -250,10 +243,9 @@ def show_course_ignored_files(course_name, course_id, course_data):
         filelist_height = 340 if is_expanded else 480
 
         _css = f"""<style>
-            /* -- Dialog compact gaps -- */
-            div[role="dialog"] [data-testid="stDialogScrollableBody"] > div[data-testid="stVerticalBlock"] {{
-                gap: 0.25rem !important;
-            }}
+            /* (Removed: a 0.25rem "dialog compact gaps" rule keyed off
+               stDialogScrollableBody, which 1.51 does not render. The dialog's
+               gaps come from the live rules below and in sync_review.css.) */
             /* Smart Select outer card */
             div[class*="st-key-{prefix}_filter_box"] {{
                 background: rgba(255,255,255,0.03) !important;
@@ -262,9 +254,6 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 padding: 4px 14px {bottom_padding} 14px !important;
                 margin-top: -10px !important;
                 margin-bottom: -10px !important;
-            }}
-            div[class*="st-key-{prefix}_filter_box"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-                border: none !important; padding: 0 !important;
             }}
             div[class*="st-key-{prefix}_filter_box"] div[data-testid="stVerticalBlock"] {{
                 gap: 0.1rem !important;
@@ -306,9 +295,6 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 border: none !important; background: transparent !important;
                 box-shadow: none !important; padding: 0 !important; margin-top: -6px !important;
             }}
-            div[class*="st-key-{prefix}_ft_flex"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-                border: none !important; padding: 0 !important;
-            }}
             div[class*="st-key-{prefix}_ft_flex"] div[data-testid="stHorizontalBlock"] {{
                 flex-wrap: wrap !important; row-gap: 6px !important; column-gap: 6px !important;
                 margin-bottom: -12px !important;
@@ -324,9 +310,6 @@ def show_course_ignored_files(course_name, course_id, course_data):
             div[class*="st-key-{prefix}_bulk_btns"] {{
                 border: none !important; background: transparent !important;
                 box-shadow: none !important; padding: 0 !important; margin: 0 !important;
-            }}
-            div[class*="st-key-{prefix}_bulk_btns"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-                border: none !important; padding: 0 !important;
             }}
             div[class*="st-key-{prefix}_bulk_btns"] > div[data-testid="stVerticalBlock"] {{
                 gap: 0 !important; padding-bottom: 0 !important;
@@ -413,11 +396,6 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 margin-top: -6px !important;
                 margin-bottom: -6px !important;
             }}
-            /* Strip the inner border wrapper Streamlit adds for keyed containers */
-            div[data-testid="stDialog"] div[class*="st-key-ign_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-                border: none !important;
-                padding: 0 !important;
-            }}
             div[data-testid="stDialog"] div[class*="st-key-ign_row_"]:hover {{
                 background-color: rgba(255, 255, 255, 0.04) !important;
                 cursor: pointer !important;
@@ -449,6 +427,8 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 total = len(ext_keys)
                 selected = sum(1 for k in ext_keys if st.session_state.get(k, False))
                 if selected == 0:
+                    # Depth-ramp tiers, deliberately near their tokens - see
+                    # styles/sync_history_cards.css.  # audit-ignore
                     bg, bg_h = "#11141a", "#1a1e28"
                     bd, bd_h = "rgba(255,255,255,0.25)", "rgba(255,255,255,0.4)"
                 elif selected == total:
@@ -697,7 +677,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                     # re-queries SQLite and reflects the restored items.
                     st.session_state.pop('_ignored_files_cache', None)
 
-            btn_help = "Select items to restore" if checked_count == 0 else "Remove selected items from the ignored list so they are included in future syncs"
+            btn_help = "Select items to restore." if checked_count == 0 else "Remove selected items from the ignored list so they are included in future syncs."
             st.button(
                 btn_text, type="primary", disabled=(checked_count == 0),
                 use_container_width=True, key=f"{prefix}_restore",
@@ -765,11 +745,10 @@ def select_course_dialog_inner(courses, current_selected_id, ):
             div[data-testid="stVerticalBlock"]:has(> div[class*="st-key-sync_d_chk_"]) {
                 gap: 1rem !important;
             }
-            /* Reduce dialog scrollable body top padding so content sits closer
-               to the dialog title bar. */
-            div[role="dialog"] [data-testid="stDialogScrollableBody"] {
-                padding-top: 0.25rem !important;
-            }
+            /* (Removed: a padding-top:0.25rem on stDialogScrollableBody - 1.51
+               renders no padded body wrapper. Not migrated to
+               `div[role="dialog"] > div:first-child`, whose top padding must stay
+               >= ~1.5rem or the -70px custom header clips. See CLAUDE.md.) */
             /* Hide native X close button - closing without selecting would
                leave pending_sync_folder in a stale state. */
             div[data-testid="stDialog"] button[aria-label="Close"] {
@@ -857,9 +836,12 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
                 gap: 0.25rem !important;
             }
-            div[data-testid="stVerticalBlockBorderWrapper"]:has(.st-key-edit_form_container) {
-                padding: 12px 16px !important;
-            }
+            /* (Removed: a padding:12px 16px on the retired
+               stVerticalBlockBorderWrapper around this form. In 1.51 the
+               border=True padding sits on the keyed block itself; the form has
+               been rendering with Streamlit's stock padding and is signed off
+               that way, so re-applying 12px 16px now would be a change, not a
+               repair.) */
         </style>""")
         # (3) CSS for cancel button red styling (Moved to render_sync_step1 for global scope/no flash)
 

@@ -56,7 +56,7 @@ class PresetManager:
             'preset_id': 'builtin_full_canvas',
             'preset_name': 'Complete Canvas Download',
             'description': (
-                'Downloads everything as shown on Canvas — all files '
+                'Downloads everything as shown on Canvas - all files '
                 'organized by module, with assignments, syllabus, '
                 'discussions, quizzes, announcements, and submissions. '
                 'Panopto video recordings included.'
@@ -173,7 +173,7 @@ class PresetManager:
             'preset_id': 'builtin_slides_pdfs',
             'preset_name': 'Slides & PDFs Only',
             'description': (
-                'Downloads only lecture slides and PDFs — no Canvas '
+                'Downloads only lecture slides and PDFs - no Canvas '
                 'Content, no conversions, no Panopto. The fastest, '
                 'most focused download for studying core materials.'
             ),

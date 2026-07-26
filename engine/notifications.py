@@ -628,12 +628,6 @@ def _show_macos_notification(title: str, body: str):
         logger.debug(f"macOS osascript notification failed: {e}")
 
 
-def _macos_notify(title: str, body: str):
-    """Play the completion chime AND show a Notification Center alert on macOS."""
-    _play_macos_sound()
-    _show_macos_notification(title, body)
-
-
 # ── Public API ────────────────────────────────────────────────────────
 
 def play_completion_beep(

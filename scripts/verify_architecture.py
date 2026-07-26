@@ -20,6 +20,12 @@ Rules enforced:
     3. Bare except: or except BaseException:
     4. Variables interpolated into unsafe_allow_html=True not wrapped in esc()
     5. F-string <style> injections containing unescaped single CSS braces
+    6. CSS selectors naming a testid Streamlit 1.51 no longer renders
+    7. Literal HTML tags inside an st.html(<style>) block / closing style tag in .css
+    8. Hex colours within 1.0 CIEDE2000 of a shared/theme.py token (palette drift)
+
+Rules 6 and 8 blank comments before scanning: a retired selector or a ramp's hex
+quoted in a comment to explain the design is documentation, not a violation.
 """
 
 import ast
@@ -537,7 +543,376 @@ RULE_LABELS = {
     3: "Bare except: / except BaseException:",
     4: "Unescaped variable in unsafe_allow_html=True",
     5: "F-string <style> block with unescaped single CSS brace",
+    6: "CSS selector naming a testid Streamlit no longer renders",
+    7: "Literal angle-bracket tag name inside a CSS comment",
 }
+
+
+# ---------------------------------------------------------------------------
+# Rule 6: dead Streamlit testids
+# ---------------------------------------------------------------------------
+
+# Verified by live querySelectorAll counts against Streamlit 1.51 (2026-07-25):
+# every one of these returns 0 nodes, so any selector naming one is dead CSS
+# that fails silently. Value = what to use instead.
+DEAD_TESTIDS = {
+    "stVerticalBlockBorderWrapper": 'the keyed div itself, div[class*="st-key-x"]',
+    # NOTE: only the HYPHENATED form is dead. 1.51 renders the same element with
+    # data-testid="stElementContainer" AND class="stElementContainer element-container",
+    # so [data-testid="stElementContainer"], .stElementContainer and .element-container
+    # are all live - it is exactly and only the hyphenated TESTID that matches nothing.
+    "element-container": '[data-testid="stElementContainer"] or the class .stElementContainer',
+    "stToggle": 'st.toggle renders through [data-testid="stCheckbox"]',
+    "stDialogScrollableBody": "gone entirely - there is no padded dialog body wrapper",
+    "stModal": '[data-testid="stDialog"]',
+}
+
+# Matches a testid used as a SELECTOR - data-testid="X" - not a passing mention
+# in prose. Deliberately narrow so comments explaining the migration don't trip.
+_DEAD_TESTID_RE = re.compile(
+    r'data-testid\s*=\s*["\'](' + "|".join(re.escape(k) for k in DEAD_TESTIDS) + r')["\']'
+)
+
+# CSS block comments, and Python comments that own their whole line. Used ONLY by
+# Rule 6 (see _blank_comments) - Rule 7 must NOT strip comments, since a literal
+# tag inside a CSS comment is precisely the hazard it exists to catch.
+_CSS_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+_PY_LINE_COMMENT_RE = re.compile(r"^[ \t]*#.*$", re.MULTILINE)
+
+
+def _blank_comments(source: str, *, python: bool) -> str:
+    """Blank out comment bodies while preserving every newline and byte offset.
+
+    Rule 6 flags dead testids in *selectors*. A migration note that quotes the
+    retired selector verbatim - e.g. completion.css's "the old
+    [data-testid="stVerticalBlockBorderWrapper"] no longer exists" - is
+    documentation, not code, and flagging it punishes the exact commenting the
+    rule is meant to encourage. Replacing each comment character with a space
+    (newlines kept) keeps reported line numbers exact.
+
+    Only whole-line ``#`` comments are stripped for Python: a mid-line ``#`` is
+    far more likely to be a hex colour than a comment, and a selector is never
+    written inside one.
+    """
+    def _blank(m: re.Match) -> str:
+        return "".join("\n" if ch == "\n" else " " for ch in m.group(0))
+
+    out = _CSS_COMMENT_RE.sub(_blank, source)
+    if python:
+        out = _PY_LINE_COMMENT_RE.sub(_blank, out)
+    return out
+
+# A literal opening tag for a known HTML element inside a CSS block terminates
+# the <style> element and silently kills every rule after it (CLAUDE.md).
+# The rule is only ever as good as this list, so it enumerates the FULL set of
+# HTML elements plus the SVG elements this codebase inlines - not a hand-picked
+# subset. A short list is worse than useless: it reads as covered while letting
+# the next tag through. `b` was missing, and a `<b>` written in an explanatory
+# CSS comment silently detached the entire course-selector toolbar stylesheet on
+# 2026-07-26 (every rule gone; the toolbar fell back to Streamlit defaults).
+# `\b[^>]*>` keeps this off comparisons - `<=`, `< 5` and `x < y` cannot match,
+# since a tag name must follow `<` or `</` immediately.
+_HTML_TAGS = (
+    "a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|"
+    "button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|"
+    "dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|"
+    "h[1-6]|head|header|hgroup|hr|html|i|iframe|img|input|ins|kbd|label|legend|"
+    "li|link|main|map|mark|menu|meta|meter|nav|noscript|object|ol|optgroup|"
+    "option|output|p|param|picture|pre|progress|q|rp|rt|ruby|s|samp|script|"
+    "search|section|select|slot|small|source|span|strong|style|sub|summary|sup|"
+    "table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|u|ul|"
+    "var|video|wbr"
+)
+_SVG_TAGS = (
+    "svg|path|circle|rect|line|polyline|polygon|g|defs|use|text|tspan|ellipse|"
+    "mask|pattern|clipPath|linearGradient|radialGradient|stop|filter|"
+    "foreignObject|marker|symbol|image|animate"
+)
+_LITERAL_TAG_RE = re.compile(
+    r"</?(?:" + _HTML_TAGS + "|" + _SVG_TAGS + r")\b[^>]*>",
+    re.IGNORECASE,
+)
+
+# In a styles/*.css file only a CLOSING style tag is harmful (see the docstring
+# on check_literal_tags_in_style for why opening tags are inert there).
+_CLOSING_STYLE_RE = re.compile(r"</\s*style\s*>", re.IGNORECASE)
+
+
+def check_dead_testids(source: str, filepath: Path, suppressed: set[int]) -> list[Violation]:
+    """Flag CSS selectors that name a testid Streamlit 1.51 no longer renders.
+
+    Applies to .py (inline CSS) and .css files alike. The ghost-box purge rules
+    are deliberately inert and carry `audit-ignore`; see CLAUDE.md for why they
+    must NOT be migrated.
+
+    Comments are blanked first so a note that quotes a retired selector to
+    explain the migration is not itself reported as a violation.
+    """
+    violations = []
+    source = _blank_comments(source, python=filepath.suffix == ".py")
+    for m in _DEAD_TESTID_RE.finditer(source):
+        lineno = source[: m.start()].count("\n") + 1
+        name = m.group(1)
+        violations.append(Violation(
+            filepath=filepath,
+            lineno=lineno,
+            rule=6,
+            message=f'dead testid "{name}" - use {DEAD_TESTIDS[name]}',
+            note="",
+            suppressed=lineno in suppressed,
+        ))
+    return violations
+
+
+def _style_string_parts(call: ast.Call):
+    """Yield (text, lineno) for every string literal making up a call's first arg."""
+    if not call.args:
+        return
+    arg = call.args[0]
+    if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+        yield arg.value, arg.lineno
+    elif isinstance(arg, ast.JoinedStr):
+        for v in arg.values:
+            if isinstance(v, ast.Constant) and isinstance(v.value, str):
+                yield v.value, getattr(v, "lineno", arg.lineno)
+
+
+def check_literal_tags_in_style_py(tree: ast.AST, filepath: Path,
+                                   suppressed: set[int]) -> list[Violation]:
+    """Flag a literal HTML tag in a CSS comment inside an ``st.html()`` argument.
+
+    Deliberately narrow to ``st.html`` - the danger is API-specific:
+
+    * ``st.html()`` PARSES its input, so any literal tag (opening or closing)
+      restructures the DOM and detaches the whole style element, silently
+      killing every rule in it. One `label` tag in an explanatory comment wiped
+      the entire Settings-dialog stylesheet on 2026-07-25.
+    * ``st.markdown(unsafe_allow_html=True)`` passes the style element's content
+      through as RAW TEXT, so a tag name in a comment there is harmless. Flagging
+      it would be noise - two thirds of the candidate sites in this repo are
+      st.markdown and perfectly fine.
+
+    Matching is confined to `/* ... */` comments, which only ever appear in CSS
+    context. A tag in a real selector/value would be a syntax error anyway.
+    """
+    violations = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = node.func
+        if not (isinstance(fn, ast.Attribute) and fn.attr == "html"
+                and isinstance(fn.value, ast.Name) and fn.value.id == "st"):
+            continue
+        for text, base_line in _style_string_parts(node):
+            if "<style" not in text:
+                continue
+            for cm in re.finditer(r"/\*.*?\*/", text, re.DOTALL):
+                for tm in _LITERAL_TAG_RE.finditer(cm.group(0)):
+                    lineno = base_line + text[: cm.start() + tm.start()].count("\n")
+                    violations.append(Violation(
+                        filepath=filepath,
+                        lineno=lineno,
+                        rule=7,
+                        message=(f"literal {tm.group(0)!r} in a CSS comment inside "
+                                 f"st.html() - this terminates the style element and "
+                                 f"kills every rule in the block"),
+                        note="",
+                        suppressed=lineno in suppressed,
+                    ))
+    return violations
+
+
+def check_closing_style_in_css(source: str, filepath: Path,
+                               suppressed: set[int]) -> list[Violation]:
+    """Flag a closing style tag anywhere in a styles/*.css file.
+
+    ``styles.inject_css()`` wraps the whole file in a style element via
+    ``st.markdown(unsafe_allow_html=True)``, so an embedded closing tag ends the
+    element early and every rule after it is silently dead. Opening tags are
+    inert here - the content is parsed as raw text. (Proof: global.css carries a
+    literal button tag in a comment at line 134 of ~1300, and every rule after
+    it demonstrably still applies.)
+    """
+    violations = []
+    for tm in _CLOSING_STYLE_RE.finditer(source):
+        lineno = source[: tm.start()].count("\n") + 1
+        violations.append(Violation(
+            filepath=filepath,
+            lineno=lineno,
+            rule=7,
+            message=(f"literal {tm.group(0)!r} in a .css file - inject_css() already "
+                     f"wraps the file, so this ends the style element early and every "
+                     f"rule below it is dead"),
+            note="",
+            suppressed=lineno in suppressed,
+        ))
+    return violations
+
+
+def collect_css_files() -> list[Path]:
+    """Static stylesheets, scanned for Rules 6 and 7 only.
+
+    Note: EXCLUDE_DIRS deliberately contains "styles" (it exists to keep the
+    PYTHON scan out of that folder), so it must NOT be applied here - it would
+    filter out every file by its own parent directory name.
+    """
+    d = PROJECT_ROOT / "styles"
+    if not d.is_dir():
+        return []
+    _skip = {".venv", "venv", "__pycache__", ".git", "build", "dist"}
+    return sorted(p for p in d.rglob("*.css")
+                  if not any(ex in p.parts for ex in _skip))
+
+
+# ---------------------------------------------------------------------------
+# Rule 8: a hex colour that is a near-duplicate of a design token
+# ---------------------------------------------------------------------------
+
+_HEX_RE = re.compile(r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b")
+
+# CIEDE2000 distance below which two colours are indistinguishable to the eye.
+# 1.0 is the standard "not perceptible by human eyes" threshold, and is
+# deliberately strict: anything flagged here is drift, never a design decision.
+_COLOUR_TOLERANCE = 1.0
+
+
+def _hex_norm(h: str) -> str:
+    h = h.lower().lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return "#" + h
+
+
+def _hex_to_lab(h: str) -> tuple[float, float, float]:
+    """sRGB hex -> CIE L*a*b* (D65). Straight from the standard formulae."""
+    h = h.lstrip("#")
+    rgb = [int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
+    lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
+    r, g, b = lin
+    x = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047
+    y = (r * 0.2126729 + g * 0.7151522 + b * 0.0721750) / 1.00000
+    z = (r * 0.0193339 + g * 0.1191920 + b * 0.9503041) / 1.08883
+
+    def f(t: float) -> float:
+        return t ** (1 / 3) if t > 216 / 24389 else (841 / 108) * t + 4 / 29
+
+    fx, fy, fz = f(x), f(y), f(z)
+    return (116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
+
+
+def _ciede2000(lab1, lab2) -> float:
+    """Perceptual colour difference. Plain RGB distance badly misjudges the dark
+    navies that dominate this palette, which is why the full formula is used."""
+    import math
+    L1, a1, b1 = lab1
+    L2, a2, b2 = lab2
+    C1, C2 = math.hypot(a1, b1), math.hypot(a2, b2)
+    Cb = (C1 + C2) / 2
+    G = 0.5 * (1 - math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7))) if Cb > 0 else 0.0
+    a1p, a2p = (1 + G) * a1, (1 + G) * a2
+    C1p, C2p = math.hypot(a1p, b1), math.hypot(a2p, b2)
+    h1p = math.degrees(math.atan2(b1, a1p)) % 360 if (a1p or b1) else 0.0
+    h2p = math.degrees(math.atan2(b2, a2p)) % 360 if (a2p or b2) else 0.0
+    dLp, dCp = L2 - L1, C2p - C1p
+    if C1p * C2p == 0:
+        dhp = 0.0
+    elif abs(h2p - h1p) <= 180:
+        dhp = h2p - h1p
+    else:
+        dhp = h2p - h1p - 360 if h2p > h1p else h2p - h1p + 360
+    dHp = 2 * math.sqrt(C1p * C2p) * math.sin(math.radians(dhp) / 2)
+    Lbp, Cbp = (L1 + L2) / 2, (C1p + C2p) / 2
+    if C1p * C2p == 0:
+        hbp = h1p + h2p
+    elif abs(h1p - h2p) <= 180:
+        hbp = (h1p + h2p) / 2
+    elif h1p + h2p < 360:
+        hbp = (h1p + h2p + 360) / 2
+    else:
+        hbp = (h1p + h2p - 360) / 2
+    T = (1 - 0.17 * math.cos(math.radians(hbp - 30))
+         + 0.24 * math.cos(math.radians(2 * hbp))
+         + 0.32 * math.cos(math.radians(3 * hbp + 6))
+         - 0.20 * math.cos(math.radians(4 * hbp - 63)))
+    Sl = 1 + (0.015 * (Lbp - 50) ** 2) / math.sqrt(20 + (Lbp - 50) ** 2)
+    Sc = 1 + 0.045 * Cbp
+    Sh = 1 + 0.015 * Cbp * T
+    Rc = 2 * math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7)) if Cbp > 0 else 0.0
+    Rt = -math.sin(math.radians(2 * (30 * math.exp(-(((hbp - 275) / 25) ** 2))))) * Rc
+    return math.sqrt((dLp / Sl) ** 2 + (dCp / Sc) ** 2 + (dHp / Sh) ** 2
+                     + Rt * (dCp / Sc) * (dHp / Sh))
+
+
+def _load_tokens() -> dict[str, str]:
+    """Parse shared/theme.py for NAME = "#rrggbb" tokens (aliases resolved)."""
+    src = (PROJECT_ROOT / "shared" / "theme.py").read_text(encoding="utf-8")
+    tokens: dict[str, str] = {}
+    for m in re.finditer(r'^([A-Z_0-9]+)\s*=\s*"(#[0-9a-fA-F]{3,6})"', src, re.M):
+        tokens[m.group(1)] = _hex_norm(m.group(2))
+    return tokens
+
+
+_TOKEN_LABS: list[tuple[str, str, tuple[float, float, float]]] = []
+
+
+def check_near_duplicate_colours(source: str, filepath: Path,
+                                 suppressed: set[int]) -> list[Violation]:
+    """Flag a hex that sits within 1.0 CIEDE2000 of a token but is not that token.
+
+    A difference that small is invisible - so it is never an intentional design
+    choice, only drift. Left unchecked it is how the palette reached 229 distinct
+    values against 25 tokens (see the module docstring in shared/theme.py).
+
+    Deliberate near-neighbours are legitimate where they encode something other
+    than a visual difference - e.g. the documented 4-level depth ramp in
+    styles/sync_history_cards.css - and those carry an `audit-ignore`.
+
+    Comments are blanked first (same rule as check_dead_testids): a hex quoted in
+    a comment to DOCUMENT a ramp is documentation, not a colour declaration.
+    """
+    if not _TOKEN_LABS:
+        for name, hx in _load_tokens().items():
+            _TOKEN_LABS.append((name, hx, _hex_to_lab(hx)))
+
+    source = _blank_comments(source, python=filepath.suffix == ".py")
+    violations = []
+    for m in _HEX_RE.finditer(source):
+        hx = _hex_norm(m.group(0))
+        lab = _hex_to_lab(hx)
+        for name, token_hex, token_lab in _TOKEN_LABS:
+            if hx == token_hex:
+                break               # it IS the token - fine
+            d = _ciede2000(lab, token_lab)
+            if d <= _COLOUR_TOLERANCE:
+                lineno = source[: m.start()].count("\n") + 1
+                violations.append(Violation(
+                    filepath=filepath,
+                    lineno=lineno,
+                    rule=8,
+                    message=(f'{hx} is {d:.2f} CIEDE2000 from theme.{name} '
+                             f'({token_hex}) - visually identical; use the token'),
+                    note="",
+                    suppressed=lineno in suppressed,
+                ))
+                break
+    return violations
+
+
+def scan_css_file(filepath: Path) -> list[Violation]:
+    try:
+        source = filepath.read_text(encoding="utf-8", errors="replace")
+    except Exception as e:
+        return [Violation(filepath, 0, 0, f"Could not read file: {e}")]
+    # CSS comments carry the suppression marker as /* audit-ignore */
+    suppressed = {
+        i for i, line in enumerate(source.splitlines(), start=1)
+        if "audit-ignore" in line
+    }
+    # also suppress the line AFTER a marker-only comment line
+    extra = {i + 1 for i in suppressed}
+    return (check_dead_testids(source, filepath, suppressed | extra)
+            + check_closing_style_in_css(source, filepath, suppressed | extra)
+            + check_near_duplicate_colours(source, filepath, suppressed | extra))
 
 
 def scan_file(filepath: Path) -> list[Violation]:
@@ -560,20 +935,27 @@ def scan_file(filepath: Path) -> list[Violation]:
     violations.extend(check_bare_except(tree, filepath, suppressed))
     violations.extend(check_unsafe_html_escaping(tree, filepath, suppressed))
     violations.extend(check_css_fstring_braces(source, filepath, suppressed, source_lines))
+    violations.extend(check_dead_testids(source, filepath, suppressed))
+    violations.extend(check_literal_tags_in_style_py(tree, filepath, suppressed))
+    if filepath.name != "theme.py":          # theme.py DEFINES the tokens
+        violations.extend(check_near_duplicate_colours(source, filepath, suppressed))
 
     return violations
 
 
 def run_audit(fail_on_error: bool = False) -> int:
     files = collect_files()
+    css_files = collect_css_files()
 
     print(BOLD(f"\nCANVAS DOWNLOADER - ARCHITECTURE AUDIT"))
     print("=" * 50)
-    print(DIM(f"Scanning {len(files)} files...\n"))
+    print(DIM(f"Scanning {len(files)} python + {len(css_files)} css files...\n"))
 
     all_violations: list[Violation] = []
     for f in files:
         all_violations.extend(scan_file(f))
+    for f in css_files:
+        all_violations.extend(scan_css_file(f))
 
     # Group by rule
     by_rule: dict[int, list[Violation]] = {}

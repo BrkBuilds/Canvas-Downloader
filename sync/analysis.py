@@ -279,6 +279,35 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                 'output_srt': st.session_state.get('persistent_pan_out_srt', False),
                 'layout': st.session_state.get('persistent_pan_layout', 'match'),
             }
+            # Those persistent_* keys are session-only and reset to False at every
+            # app launch, so on a fresh launch this fallback disables Panopto
+            # outright. For a folder that ALREADY holds Panopto artifacts that is
+            # provably wrong - it only happens when the download-mode contract
+            # seed write failed (best-effort _save_metadata). Recover the contract
+            # from what is on disk rather than silently skipping the whole pass.
+            if not _pan_is_enabled(_pan_contract):
+                try:
+                    from panopto.settings import infer_contract_from_manifest
+                    _healed = infer_contract_from_manifest(
+                        sync_mgr.get_panopto_manifest())
+                except Exception as _e:
+                    _healed = None
+                    logger.debug(f"Panopto contract inference failed: {_e}")
+                if _healed:
+                    logger.warning(
+                        "No stored panopto_contract for '%s', but the folder holds "
+                        "Panopto artifacts - recovered the contract from the "
+                        "manifest (%s). Re-seeding it.",
+                        getattr(sync_mgr, 'local_path', '?'), _healed,
+                    )
+                    _pan_contract = _healed
+                    # Persist the recovery so the next sync reads it normally
+                    # instead of re-deriving (and so the UI shows it).
+                    try:
+                        sync_mgr._save_metadata('panopto_contract',
+                                                json.dumps(_healed))
+                    except Exception as _e:
+                        logger.warning(f"Could not re-seed panopto_contract: {_e}")
         _pan = _pan_compose(_pan_contract)
         if _pan_is_enabled(_pan_contract):
             from panopto.discovery import discover_course_videos
@@ -581,7 +610,8 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     # line + an animated bar (the analysis sub-steps mostly
                     # report total=1, so an indeterminate sweep reads better
                     # than a bar frozen near 0%).
-                    from engine.progress_dashboard import build_progress_bar_html
+                    from engine.progress_dashboard import (
+                        build_progress_bar_html, analyzing_heading_html)
                     _course_line = (
                         f"Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b>"
                         if total_pairs > 1 else f"<b>{esc(_display_name)}</b>"
@@ -596,7 +626,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     return
                 analysis_ui_placeholder.markdown(f"""
                 <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
-                    <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    {analyzing_heading_html()}
                     <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b></p>
                     <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
                     <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">

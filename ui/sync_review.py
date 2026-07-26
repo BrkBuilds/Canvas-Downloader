@@ -1109,8 +1109,11 @@ def show_analysis_review(on_confirm_sync):
 
                             if selected == 0:
                                 final_label = f"{ext_label} :grey[(none)]"
+                                # Level 3 / its hover from the sync-history depth
+                                # ramp - close to tokens on purpose, see
+                                # styles/sync_history_cards.css.  # audit-ignore
                                 bg_color = "#11141a"
-                                bg_color_hover = "#1a1e28"
+                                bg_color_hover = "#1a1e28"  # audit-ignore
                                 border_color = "rgba(255, 255, 255, 0.25)"
                                 border_color_hover = "rgba(255, 255, 255, 0.4)"
                                 text_color = "#ffffff"
@@ -1290,11 +1293,6 @@ def show_analysis_review(on_confirm_sync):
         padding: 0px 8px !important;
         margin-bottom: -10px !important;
     }}
-    /* Strip the inner border wrapper Streamlit adds for keyed containers */
-    div[class*="st-key-sync_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-        border: none !important;
-        padding: 0 !important;
-    }}
     div[class*="st-key-sync_row_"]:hover {{
         background-color: rgba(255, 255, 255, 0.04) !important;
         cursor: pointer !important;
@@ -1322,7 +1320,6 @@ def show_analysis_review(on_confirm_sync):
         justify-content: center !important;
         min-height: 32px !important;
     }}
-    div[class*="st-key-sync_row_"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
     div[class*="st-key-sync_row_"] [data-testid="stColumn"] [data-testid="stVerticalBlock"] {{
         display: flex !important;
         flex-direction: column !important;
@@ -1375,10 +1372,6 @@ def show_analysis_review(on_confirm_sync):
         transition: background-color 0.2s ease !important;
         padding: 0px 6px !important;
         margin-bottom: -10px !important;
-    }}
-    div[class*="st-key-ign_restore_row_"] > div[data-testid="stVerticalBlockBorderWrapper"] {{
-        border: none !important;
-        padding: 0 !important;
     }}
     /* Only highlight the row when user hovers the restore button */
     div[class*="st-key-ign_restore_row_"]:has(button:hover) {{
@@ -1710,7 +1703,7 @@ def show_analysis_review(on_confirm_sync):
                         st.checkbox(f"{c.title}  {_badges}{_size_clean}", key=key)
                     with col2:
                         st.button("​", key=f"ign_pan_{cid}_{c.video_id}",
-                                  help="Ignore this recording (remove from sync list)",
+                                  help="Ignore this recording (remove from sync list).",
                                   on_click=handle_ignore_panopto, args=(idx, c))
 
     # Per-folder results
@@ -1880,7 +1873,7 @@ def show_analysis_review(on_confirm_sync):
                                                 _size_clean = f" `{size}`" if size else ""
                                                 st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                             with col2:
-                                                st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
+                                                st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list).", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
                             if pan_new:
                                 _render_pan_subsection(idx, pair, pan_new, True, 'pannew')
@@ -1917,7 +1910,7 @@ def show_analysis_review(on_confirm_sync):
                                             _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                         with col2:
-                                            st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_clean_files', (canvas_file, sync_info)))
+                                            st.button("\u200b", key=f"ign_upd_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list).", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_clean_files', (canvas_file, sync_info)))
 
                 # Updates Available \u2014 You've Edited These \u2014 default UNCHECKED.
                 # Local file has been modified by the student; if they opt in, the
@@ -1953,7 +1946,7 @@ def show_analysis_review(on_confirm_sync):
                                             _size_clean = f" `{size}`" if size else ""
                                             st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                         with col2:
-                                            st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
+                                            st.button("\u200b", key=f"ign_updmod_{pair['course_id']}_{canvas_file.id}", help="Ignore this file (remove from sync list).", on_click=handle_ignore, args=(idx, canvas_file.id, 'updated_modified_files', (canvas_file, sync_info)))
 
                 # Missing files - always starts OPEN
                 # (Missing Files category retired \u2014 rolled into New Files.)
@@ -1989,7 +1982,7 @@ def show_analysis_review(on_confirm_sync):
                                                 _size_clean = f" `{format_file_size(sync_info.original_size)}`" if sync_info.original_size else ""
                                                 st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
                                             with col2:
-                                                st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list)", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
+                                                st.button("\u200b", key=f"ign_locdel_{pair['course_id']}_{sync_info.canvas_file_id}", help="Ignore this file (remove from sync list).", on_click=handle_ignore, args=(idx, sync_info.canvas_file_id, 'locally_deleted_files', sync_info))
 
                             if pan_restore:
                                 _render_pan_subsection(idx, pair, pan_restore, False, 'panlocdel')
@@ -2016,7 +2009,7 @@ def show_analysis_review(on_confirm_sync):
                     with st.container(key=f"cat_ignored_{pair['course_id']}"):
                         with st.expander(f"Ignored Files", expanded=is_ignored_open):
                             st.session_state['keep_ignored_open'] = False
-                            st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again")
+                            st.button("Restore All Ignored Files", key=f"restore_all_{pair['course_id']}", use_container_width=True, on_click=handle_restore_all, args=(idx,), help="Restore all these files to the sync list above, so they can be synced again.")
                             st.caption("These files are safely ignored and will not be synced.")
                             with st.container(key=f"sync_review_file_list_{idx}_ign"):
                                 for sync_info in (result.ignored_files if hasattr(result, 'ignored_files') else []):
@@ -2030,7 +2023,7 @@ def show_analysis_review(on_confirm_sync):
                                             _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
                                             st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
                                         with col2:
-                                            st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above", on_click=handle_restore, args=(idx, sync_info))
+                                            st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above.", on_click=handle_restore, args=(idx, sync_info))
 
                             # Ignored Panopto recordings (the whole recording entity).
                             if pan_ignored:
@@ -2056,7 +2049,7 @@ def show_analysis_review(on_confirm_sync):
                                             with col1:
                                                 st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(c.title)}{_badges_html}{_isize_html}</div>", unsafe_allow_html=True)
                                             with col2:
-                                                st.button("\u200b", key=f"restitem_pan_{pair['course_id']}_{c.video_id}", help="Restore this recording to the sync list above", on_click=handle_restore_panopto, args=(idx, c))
+                                                st.button("\u200b", key=f"restitem_pan_{pair['course_id']}_{c.video_id}", help="Restore this recording to the sync list above.", on_click=handle_restore_panopto, args=(idx, c))
             
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
